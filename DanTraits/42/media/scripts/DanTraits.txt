@@ -1,0 +1,216 @@
+module DanTraits {
+
+    character_trait_definition DanTraits:dependent
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:dependent,
+        Cost = -6,
+        UIName = UI_trait_DanDependent,
+        UIDescription = UI_trait_DanDependentdesc,
+    }
+
+    character_trait_definition DanTraits:brittle
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:brittle,
+        Cost = -8,
+        UIName = UI_trait_DanBrittle,
+        UIDescription = UI_trait_DanBrittledesc,
+    }
+
+    character_trait_definition DanTraits:fumbler
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:fumbler,
+        Cost = -8,
+        UIName = UI_trait_DanFumbler,
+        UIDescription = UI_trait_DanFumblerdesc,
+    }
+
+    character_trait_definition DanTraits:jinxed
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:jinxed,
+        Cost = -4,
+        UIName = UI_trait_DanJinxed,
+        UIDescription = UI_trait_DanJinxeddesc,
+    }
+
+    character_trait_definition DanTraits:spiraling
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:spiraling,
+        Cost = -8,
+        UIName = UI_trait_DanSpiraling,
+        UIDescription = UI_trait_DanSpiralingdesc,
+    }
+
+    character_trait_definition DanTraits:badday
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:badday,
+        Cost = -12,
+        UIName = UI_trait_DanBadDay,
+        UIDescription = UI_trait_DanBadDaydesc,
+    }
+
+    character_trait_definition DanTraits:schizophrenia
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:schizophrenia,
+        Cost = -2,
+        UIName = UI_trait_DanSchizophrenia,
+        UIDescription = UI_trait_DanSchizophreniadesc,
+    }
+
+    character_trait_definition DanTraits:asthma
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:asthma,
+        Cost = -8,
+        UIName = UI_trait_DanAsthma,
+        UIDescription = UI_trait_DanAsthmadesc,
+        MutuallyExclusiveTraits = base:asthmatic,
+    }
+
+    character_trait_definition DanTraits:gluten
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:gluten,
+        Cost = -4,
+        UIName = UI_trait_DanGluten,
+        UIDescription = UI_trait_DanGlutendesc,
+    }
+
+    character_trait_definition DanTraits:vegetarian
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:vegetarian,
+        Cost = -4,
+        UIName = UI_trait_DanVegetarian,
+        UIDescription = UI_trait_DanVegetariandesc,
+    }
+
+    character_trait_definition DanTraits:diabetes1
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:diabetes1,
+        Cost = -10,
+        UIName = UI_trait_DanDiabetes1,
+        UIDescription = UI_trait_DanDiabetes1desc,
+        MutuallyExclusiveTraits = DanTraits:diabetes2,
+    }
+
+    character_trait_definition DanTraits:diabetes2
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:diabetes2,
+        Cost = -5,
+        UIName = UI_trait_DanDiabetes2,
+        UIDescription = UI_trait_DanDiabetes2desc,
+        MutuallyExclusiveTraits = DanTraits:diabetes1,
+    }
+
+    /* Positive: a weekend of jousting and turkey legs every summer pays off. */
+    character_trait_definition DanTraits:renfaire
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:renfaire,
+        Cost = 10,
+        UIName = UI_trait_DanRenFaire,
+        UIDescription = UI_trait_DanRenFairedesc,
+        XPBoosts = Spear=1;LongBlade=1;Axe=1;Blacksmith=1,
+    }
+
+    /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
+       irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
+    item Inhaler
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Rescue Inhaler,
+        Weight = 0.1,
+        Icon = Inhaler,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Inhaler,
+        UseDelta = 0.1,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Diabetes: insulin pen (40 doses), glucose meter, test strips (25) and
+       metformin (10 pills). None carry the consumable tag on purpose: they
+       use their own actions in media/lua/shared/TimedActions/ISDiabetesAction.lua. */
+    item InsulinPen
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Insulin Pen,
+        Weight = 0.1,
+        Icon = InsulinPen,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_InsulinPen,
+        UseDelta = 0.025,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item GlucoseMeter
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:normal,
+        DisplayName = Glucose Meter,
+        Weight = 0.2,
+        Icon = GlucoseMeter,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_GlucoseMeter,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item TestStrips
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Test Strips,
+        Weight = 0.05,
+        Icon = TestStrips,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_TestStrips,
+        UseDelta = 0.04,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item Metformin
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Metformin,
+        Weight = 0.2,
+        Icon = Metformin,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Metformin,
+        UseDelta = 0.1,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+}

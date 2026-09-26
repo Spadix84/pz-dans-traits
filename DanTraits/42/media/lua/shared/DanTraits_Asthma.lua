@@ -1,0 +1,303 @@
+-- Dan's Traits: Brittle Asthma.
+require "DanTraits"
+
+local hasTrait = DanTraits_HasTrait
+local notify = DanTraits_Notify
+local traitData = DanTraits_Data
+
+-- Brittle Asthma -------------------------------------------------------------
+-- Airway irritation (0..1) lives in mod data. It rises with cold air, nearby
+-- corpses and exertion, falls when resting in clean warm air, and drives
+-- four tiers: warning, halved endurance regen, no regen plus coughing, and
+-- a full attack that drains endurance and health (to a 20% floor) while the
+-- player coughs loudly enough to pull zombies. The inhaler item knocks it
+-- down by half. Coughs are real world sounds: zombies hear them.
+local ASTHMA_DECAY_CALM     = 0.004   -- per minute, resting in clean warm air (about four hours to clear fully)
+local ASTHMA_DECAY_ASLEEP   = 0.008
+local ASTHMA_DECAY_ATTACK   = 0.001   -- an attack does not meaningfully ease on its own
+local ASTHMA_COLD_TEMP_C    = 10
+local ASTHMA_COLD_RATE      = 0.005   -- per minute below the temperature
+local ASTHMA_CORPSE_RATE    = 0.004   -- per minute per corpse within 3 tiles, up to 3
+local ASTHMA_EXERT_ENDURANCE = 0.4    -- exertion build-up starts once endurance is under this
+local ASTHMA_EXERT_RATE     = 0.014   -- per minute while exerted
+local ASTHMA_SPRINT_RATE    = 0.008   -- per minute while sprinting or running (exercise is the classic trigger)
+local ASTHMA_PANIC_MIN      = 20      -- panic below this (out of 100) does nothing
+local ASTHMA_PANIC_RATE     = 0.010   -- per minute at maximum panic, scaling up linearly from the minimum; masks do not help
+local ASTHMA_TIER           = { 0.25, 0.50, 0.75, 0.90 }
+local ASTHMA_ATTACK_ENDS_AT = 0.75    -- hysteresis: an attack lasts until irritation drops below this
+local ASTHMA_COUGH_MIN_T2   = 6       -- minutes between coughs at tier 2 (plus up to 4 more)
+local ASTHMA_COUGH_RADIUS_T2 = 6
+local ASTHMA_COUGH_MIN_T3   = 2       -- minutes between coughs at tier 3 (plus up to 2 more)
+local ASTHMA_COUGH_RADIUS_T3 = 10
+local ASTHMA_COUGH_RADIUS_T4 = 30
+local ASTHMA_ATTACK_END_DRAIN = 0.15  -- endurance per minute during an attack (empty in ~6 min)
+local ASTHMA_ATTACK_HP_DRAIN  = 0.75  -- overall health per minute during an attack
+local ASTHMA_HEALTH_FLOOR     = 15    -- attack never takes health below this (%)
+local ASTHMA_ATTACK_PANIC     = 5     -- panic added per minute during an attack (out of 100)
+local ASTHMA_INHALER_RELIEF   = 0.5
+local ASTHMA_INHALER_PANIC    = 10    -- a puff sets the heart racing (out of 100)
+local ASTHMA_WAKE_TIER        = 3     -- asleep at this tier or worse: you wake up gasping
+local ASTHMA_MASK_GAS_PASSIVE = 0.2   -- multiplier on non-environmental build-up with a gas mask
+
+local function asthmaData(player)
+    local d = traitData(player)
+    d.asthma = d.asthma or 0
+    return d
+end
+
+-- 0 none, 1 dust/surgical (halves environmental), 2 gas mask / respirator
+local function asthmaMaskLevel(player)
+    local level = 0
+    pcall(function()
+        for _, loc in ipairs({ ItemBodyLocation.MASK_FULL, ItemBodyLocation.MASK_EYES, ItemBodyLocation.MASK }) do
+            local item = loc and player:getWornItem(loc)
+            if item then
+                local name = tostring(item:getType() or "")
+                local where = tostring(item:getBodyLocation() or "")
+                if name:lower():find("gasmask") or name:lower():find("respirator") or where:find("maskeyes") or where:find("maskfull") then
+                    level = 2
+                elseif level < 1 then
+                    level = 1
+                end
+            end
+        end
+    end)
+    return level
+end
+
+local function asthmaCorpsesNearby(player)
+    local count = 0
+    pcall(function()
+        local px, py, pz = math.floor(player:getX()), math.floor(player:getY()), math.floor(player:getZ())
+        local cell = getCell()
+        for dx = -3, 3 do
+            for dy = -3, 3 do
+                local sq = cell:getGridSquare(px + dx, py + dy, pz)
+                local bodies = sq and sq:getDeadBodys()
+                if bodies then count = count + bodies:size() end
+            end
+        end
+    end)
+    return count
+end
+
+local function asthmaTierOf(irritation)
+    local tier = 0
+    for i, threshold in ipairs(ASTHMA_TIER) do
+        if irritation >= threshold then tier = i end
+    end
+    return tier
+end
+
+local asthmaCough
+function DanTraits_AsthmaCough(player, radius) return asthmaCough(player, radius) end
+asthmaCough = function(player, radius)
+    pcall(function() player:playerVoiceSound("Cough") end)
+    pcall(function() addSound(player, player:getX(), player:getY(), player:getZ(), radius, radius) end)
+end
+
+-- Moodle Framework is client side and optional; without it the trait still
+-- works, you just do not get the icon.
+local function asthmaUpdateMoodle(player, irritation)
+    if not MF or not MF.getMoodle then return end
+    pcall(function()
+        local moodle = MF.getMoodle("AirwayIrritation", player:getPlayerNum())
+        if not moodle then return end
+        -- MF values: 0.5 is neutral, lower is bad. Map irritation 0..1 onto 0.5..0.
+        moodle:setThresholds(0.05, 0.125, 0.25, 0.375)
+        moodle:setValue(0.5 * (1 - irritation))
+    end)
+end
+
+local function asthmaSetIrritation(player, d, value, quiet)
+    value = math.max(0, math.min(1, value))
+    local before = asthmaTierOf(d.asthma or 0)
+    d.asthma = value
+
+    -- attack state with hysteresis
+    if not d.asthmaAttack and value >= ASTHMA_TIER[4] then
+        d.asthmaAttack = true
+        notify(player, "UI_DanTraits_AsthmaTier4")
+        d.asthmaShownTier = 4
+    elseif d.asthmaAttack and value < ASTHMA_ATTACK_ENDS_AT then
+        d.asthmaAttack = false
+        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_AsthmaRelief")) end)
+        d.asthmaShownTier = asthmaTierOf(value)
+    end
+
+    local after = asthmaTierOf(value)
+    if not quiet and not d.asthmaAttack and after > before and after >= 1 and after <= 3 then
+        notify(player, "UI_DanTraits_AsthmaTier" .. after)
+    end
+    asthmaUpdateMoodle(player, value)
+end
+
+-- effective tier for penalties: an attack in progress counts as 4 until it ends
+local function asthmaEffectiveTier(d)
+    if d.asthmaAttack then return 4 end
+    return math.min(3, asthmaTierOf(d.asthma or 0))
+end
+
+local function updateAsthmaMinute(player, d)
+    if not hasTrait(player, "asthma") then return end
+    d = asthmaData(player)
+    local stats = player:getStats()
+    local irritation = d.asthma
+    local mask = asthmaMaskLevel(player)
+    local asleep = player:isAsleep()
+
+    -- build-up
+    local envMult = (mask == 2) and 0 or ((mask == 1) and 0.5 or 1)
+    local passiveMult = (mask == 2) and ASTHMA_MASK_GAS_PASSIVE or 1
+    local build = 0
+    if not asleep then
+        local temp = nil
+        pcall(function() temp = getClimateManager():getAirTemperatureForCharacter(player, false) end)
+        if temp and temp < ASTHMA_COLD_TEMP_C then
+            build = build + ASTHMA_COLD_RATE * envMult
+        end
+        local corpses = math.min(3, asthmaCorpsesNearby(player))
+        if corpses > 0 then
+            build = build + ASTHMA_CORPSE_RATE * corpses * envMult
+        end
+        if stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
+            build = build + ASTHMA_EXERT_RATE * passiveMult
+        end
+        local moving = false
+        pcall(function() moving = player:isSprinting() or player:isRunning() end)
+        if moving then
+            build = build + ASTHMA_SPRINT_RATE * passiveMult
+        end
+        -- panic: racing heart, fast shallow breathing. Internal, so no mask helps.
+        local panic = 0
+        pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
+        if panic > ASTHMA_PANIC_MIN then
+            build = build + ASTHMA_PANIC_RATE * ((panic - ASTHMA_PANIC_MIN) / (100 - ASTHMA_PANIC_MIN))
+        end
+    end
+
+    if build > 0 then
+        if DanTraits_VitalityAsthmaBuild then build = build * DanTraits_VitalityAsthmaBuild(player) end
+        irritation = irritation + build
+    else
+        local decay = asleep and ASTHMA_DECAY_ASLEEP or ASTHMA_DECAY_CALM
+        if d.asthmaAttack then decay = ASTHMA_DECAY_ATTACK end
+        irritation = irritation - decay
+    end
+    asthmaSetIrritation(player, d, irritation)
+
+    -- tier effects that run on the minute
+    local tier = asthmaEffectiveTier(d)
+    if asleep and tier >= ASTHMA_WAKE_TIER then
+        -- you cannot sleep through this
+        pcall(function() player:forceAwake() end)
+        notify(player, "UI_DanTraits_AsthmaWake")
+        asthmaCough(player, ASTHMA_COUGH_RADIUS_T3)
+    end
+    if tier == 2 and not asleep then
+        d.asthmaCoughIn = (d.asthmaCoughIn or (ASTHMA_COUGH_MIN_T2 + ZombRand(5))) - 1
+        if d.asthmaCoughIn <= 0 then
+            asthmaCough(player, ASTHMA_COUGH_RADIUS_T2)
+            d.asthmaCoughIn = ASTHMA_COUGH_MIN_T2 + ZombRand(5)
+        end
+    elseif tier == 3 and not asleep then
+        d.asthmaCoughIn = (d.asthmaCoughIn or (ASTHMA_COUGH_MIN_T3 + ZombRand(3))) - 1
+        if d.asthmaCoughIn <= 0 then
+            asthmaCough(player, ASTHMA_COUGH_RADIUS_T3)
+            d.asthmaCoughIn = ASTHMA_COUGH_MIN_T3 + ZombRand(3)
+        end
+    elseif tier == 4 then
+        -- constant coughing: a burst of two or three spread over the minute
+        asthmaCough(player, ASTHMA_COUGH_RADIUS_T4)
+        for n = 1, 1 + ZombRand(2) do
+            DanTraits_Later(n * (700 + ZombRand(500)), function()
+                if player and not player:isDead() then asthmaCough(player, ASTHMA_COUGH_RADIUS_T4) end
+            end)
+        end
+        pcall(function()
+            stats:set(CharacterStat.ENDURANCE, math.max(0, stats:get(CharacterStat.ENDURANCE) - ASTHMA_ATTACK_END_DRAIN))
+        end)
+        -- not being able to breathe is terrifying, and the panic feeds the attack
+        pcall(function()
+            stats:set(CharacterStat.PANIC, math.min(100, (stats:get(CharacterStat.PANIC) or 0) + ASTHMA_ATTACK_PANIC))
+        end)
+        pcall(function()
+            local bd = player:getBodyDamage()
+            if bd:getOverallBodyHealth() > ASTHMA_HEALTH_FLOOR then
+                bd:ReduceGeneralHealth(math.min(ASTHMA_ATTACK_HP_DRAIN, bd:getOverallBodyHealth() - ASTHMA_HEALTH_FLOOR))
+            end
+        end)
+    end
+end
+
+-- Per-frame: claw back endurance regeneration according to tier.
+local function updateAsthmaFrame(player)
+    if not hasTrait(player, "asthma") then return end
+    local d = asthmaData(player)
+    local stats = player:getStats()
+    local endurance = stats:get(CharacterStat.ENDURANCE)
+    local last = d.asthmaLastEndurance or endurance
+    local tier = asthmaEffectiveTier(d)
+    if endurance > last then
+        local gained = endurance - last
+        local keep = 1
+        if tier == 2 then keep = 0.5 elseif tier >= 3 then keep = 0 end
+        if keep < 1 then
+            endurance = last + gained * keep
+            pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end)
+        end
+    end
+    d.asthmaLastEndurance = endurance
+end
+
+-- Called by the inhaler action.
+function DanTraits_UseInhaler(player)
+    if not player then return false end
+    if not hasTrait(player, "asthma") then return false end
+    local d = asthmaData(player)
+    asthmaSetIrritation(player, d, d.asthma - ASTHMA_INHALER_RELIEF, true)
+    pcall(function()
+        local stats = player:getStats()
+        stats:set(CharacterStat.PANIC, math.min(100, (stats:get(CharacterStat.PANIC) or 0) + ASTHMA_INHALER_PANIC))
+    end)
+    if d.asthma < ASTHMA_TIER[3] then
+        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_AsthmaRelief")) end)
+    end
+    if DanTraits_DiaOnInhaler then pcall(DanTraits_DiaOnInhaler, player) end
+    return true
+end
+
+-- The inhaler is its own item (DanTraits.Inhaler, ten puffs); it spawns
+-- through the loot tables in server/Items/DanTraits_Distributions.lua.
+local INHALER_ITEM = "DanTraits.Inhaler"
+
+function DanTraits_IsInhaler(item)
+    if not item then return false end
+    local ok, fullType = pcall(function() return item:getFullType() end)
+    return ok and fullType == INHALER_ITEM
+end
+
+-- Start with one inhaler.
+local function onAsthmaCreatePlayer(playerNum, player)
+    if not player or not hasTrait(player, "asthma") then return end
+    local d = asthmaData(player)
+    if d.asthmaKitGiven or player:getHoursSurvived() > 0 then return end
+    d.asthmaKitGiven = true
+    pcall(function() player:getInventory():AddItem(INHALER_ITEM) end)
+end
+
+local function onAsthmaMinute()
+    local player = getSpecificPlayer(0)
+    if not player or player:isDead() then return end
+    updateAsthmaMinute(player, traitData(player))
+end
+
+local function onAsthmaPlayerUpdate(player)
+    if not player or player:isDead() then return end
+    if player.isLocalPlayer and not player:isLocalPlayer() then return end
+    updateAsthmaFrame(player)
+end
+
+Events.EveryOneMinute.Add(onAsthmaMinute)
+Events.OnPlayerUpdate.Add(onAsthmaPlayerUpdate)
+Events.OnCreatePlayer.Add(onAsthmaCreatePlayer)

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+Thumbs.db
+.DS_Store
+# files the game and the dashboard exchange live in ~/Zomboid/Lua, never here
+DanTraits_Telemetry.json
+DanTraits_Commands.txt

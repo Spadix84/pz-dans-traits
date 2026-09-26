@@ -1,0 +1,261 @@
+-- Offline test for DanTraits_Vitality.lua and its hooks into the other traits.
+local handlers, lists = {}, {}
+Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) lists[k] = lists[k] or {}; table.insert(lists[k], f); handlers[k] = function(...) for _, g in ipairs(lists[k]) do g(...) end end end, Remove = function() end }; rawset(t, k, e); return e end })
+BodyPartType = { Groin = "Groin", ForeArm_L=1, ForeArm_R=2, LowerLeg_L=3, LowerLeg_R=4, Hand_L=5, Hand_R=6, Torso_Upper=7 }
+CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain", UNHAPPINESS = "unhappy", FATIGUE = "fatigue", PANIC = "panic", ENDURANCE = "endurance", FOOD_SICKNESS = "foodsick", THIRST = "thirst", HUNGER = "hunger", WETNESS = { getMaximumValue = function() return 100 end } }
+local halo = {}
+HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
+function getText(k, a) return k end
+DanTraitsRegistry = { diabetes1 = "diabetes1", diabetes2 = "diabetes2", fumbler = "fumbler", asthma = "asthma", spiraling = "spiraling", gluten = "gluten", vegetarian = "vegetarian", dependent = "dependent", brittle = "brittle", jinxed = "jinxed", badday = "badday", schizophrenia = "schizophrenia" }
+ArrayList = { new = function() return { add = function() end } end }
+IsoFireManager = { explode = function() end }
+function instanceof() return false end
+ItemBodyLocation = { MASK = "mask", MASK_EYES = "maskeyes", MASK_FULL = "maskfull" }
+function getWorld() return { getFreeEmitter = function() return { playSound = function() return 1 end, setPos = function() end } end } end
+function getTexture() return "TEX" end
+function getGameTime() return { getHour = function() return 12 end } end
+local rng = {}
+function ZombRand(a, b) local v = table.remove(rng, 1); if v == nil then v = 0 end; return v end
+function getClimateManager() return { getAirTemperatureForCharacter = function() return 20 end } end
+function getCell() return { getGridSquare = function() return { getObjects = function() return { size = function() return 0 end } end, getDeadBodys = function() return { size = function() return 0 end } end } end } end
+function addSound() end
+function isNight() return false end
+DanTraitsTestCharge = false
+FitnessExercises = { exercisesType = { squats = {}, pushups = {}, situps = {}, burpees = {} } }
+ISEatFoodAction = { complete = function() return true end, eat = function() end, isValid = function() return true end, isValidStart = function() return true end }
+ISTakePillAction = { complete = function() return true end }
+ISDrinkFluidAction = { updateEat = function(self, delta) self.fluidContainer._amount = self.fluidContainer._amount - self.sip end }
+DanTraitsTestEpisode = false
+MF = nil
+Perks = { Fitness = 'fitness', Strength = 'strength', Woodwork = 'woodwork' }
+
+function require() end
+for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Fumbler", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes", "DanTraits_Vitality" }) do
+  assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
+end
+assert(handlers.EveryOneMinute and handlers.OnPlayerUpdate, "hooks in place")
+
+local function makePlayer(o)
+  o = o or {}
+  local traits = {}
+  for _, t in ipairs(o.traits or {}) do traits[t] = true end
+  local st = { pain = 0, stress = o.stress or 0, unhappy = o.unhappy or 0, fatigue = o.fatigue or 0, intox = 0, panic = 0, endurance = o.endurance or 1, foodsick = 0, thirst = 0, hunger = o.hunger or 0 }
+  local md = {}
+  local p = { hasTrait = function(_, t) return traits[t] == true end, isDead = function() return false end,
+    isAsleep = function(self) return self._asleep == true end, isSprinting = function() return false end, isRunning = function() return false end,
+    getModData = function() return md end,
+    getStats = function() return { get = function(_, k) return st[k] end, set = function(_, k, v) st[k] = v end } end,
+    isOutside = function() return false end, getTimeSinceLastSmoke = function() return 10 end,
+    getFitness = function() return { getRegularity = function(_, name) return (o.regularity or {})[name] or 0 end } end,
+    getNutrition = function() return { getWeight = function() return o.weight or 80 end } end,
+    getDepressEffect = function() return 0 end, setDepressEffect = function() end,
+    getHoursSurvived = function(self) return self._hour end,
+    getCharacterTraits = function(self) return { getKnownTraits = function() local t = o.vanilla or {}; return { size = function() return #t end, get = function(_, i) return t[i + 1] end } end } end,
+    getXp = function(self) return { AddXP = function(_, perk, amount) self._xp[perk] = (self._xp[perk] or 0) + amount; handlers.AddXP(self, perk, amount) end } end,
+    getMaxWeightBase = function(self) return self._carry end, setMaxWeightBase = function(self, v) self._carry = v end,
+    getInventory = function() return { AddItem = function() end, Remove = function() end, contains = function() return true end } end,
+    getPrimaryHandItem = function() return nil end, getCurrentSquare = function() return nil end, removeFromHands = function() end,
+    _st = st, _md = md, _hour = 0, _carry = 8, _health = o.health or 100, _catch = 0, _asleep = false, _xp = {} }
+  p.getBodyDamage = function() return { getOverallBodyHealth = function() return p._health end, ReduceGeneralHealth = function(_, n) p._health = p._health - n end,
+    AddGeneralHealth = function(_, n) p._health = math.min(100, p._health + n) end, getCatchACold = function() return p._catch end, setCatchACold = function(_, v) p._catch = v end } end
+  return p
+end
+local current
+function getSpecificPlayer() return current end
+local minute, frame = handlers.EveryOneMinute, handlers.OnPlayerUpdate
+local function near(a, b, tol, what) assert(math.abs(a - b) <= tol, what .. ": expected " .. b .. " +/- " .. tol .. ", got " .. tostring(a)) end
+local function food(o)
+  return { getType = function() return o.name end, getCalories = function() return o.kcal or 0 end, getHungChange = function() return o.hunger or -0.1 end,
+    getCarbohydrates = function() return o.carbs or 0 end, getUnhappyChange = function() return o.unhappy or 0 end, getFoodType = function() return o.foodType end,
+    isFresh = function() return o.fresh ~= false end, isRotten = function() return o.rotten == true end, isCooked = function() return o.cooked == true end,
+    isBurnt = function() return o.burnt == true end, isPackaged = function() return o.packaged == true end,
+    haveExtraItems = function() return (o.ingredients or 0) > 0 end, getExtraItems = function() return { size = function() return o.ingredients or 0 end } end }
+end
+local function V(p) return p._md.DanTraits end
+
+-- 1. grading
+local g = DanTraits_GradeFood
+near(g(food({ name = "Carrot", foodType = "Vegetables" })), 0.8, 1e-9, "fresh carrot")
+near(g(food({ name = "Steak", foodType = "Meat", cooked = true })), 0.9, 1e-9, "cooked steak")
+near(g(food({ name = "Stew", cooked = true, ingredients = 4 })), 1.0, 1e-9, "cooked stew, 4 ingredients (capped)")
+near(g(food({ name = "Salad", ingredients = 2 })), 1.0, 1e-9, "fresh salad, 2 ingredients")
+near(g(food({ name = "CannedBeans", packaged = true })), 0.5, 1e-9, "canned: neutral")
+near(g(food({ name = "Rice", packaged = true })), 0.5, 1e-9, "dry rice: neutral")
+near(g(food({ name = "Crisps", packaged = true, unhappy = -5 })), 0.15, 1e-9, "chips: junk")
+near(g(food({ name = "Chocolate", packaged = true })), 0.15, 1e-9, "chocolate by name: junk")
+near(g(food({ name = "Peanuts", packaged = true, unhappy = -2 })), 0.15, 1e-9, "packaged and comforting: junk")
+near(g(food({ name = "Steak", rotten = true })), 0.0, 1e-9, "rotten: 0")
+near(g(food({ name = "Steak", burnt = true, cooked = true })), 0.2, 1e-9, "burnt: 0.2")
+
+-- 2. a meal moves the diet score by its size; the meal list keeps ten
+local p = makePlayer(); current = p
+assert(DanTraits_VitalityOnEat(p, food({ name = "Carrot", kcal = 100, foodType = "Vegetables" }), 1), "ate")
+near(V(p).vitDiet, 0.5 + (0.8 - 0.5) * (100 / 4000), 1e-9, "100 kcal carrot: small nudge")
+assert(#V(p).vitMeals == 1 and V(p).vitMeals[1].name == "Carrot" and V(p).vitMeals[1].kcal == 100, "meal recorded")
+V(p).vitDiet = 0.5
+DanTraits_VitalityOnEat(p, food({ name = "Chocolate", kcal = 850, packaged = true }), 0.5)
+near(V(p).vitDiet, 0.5 + (0.15 - 0.5) * (425 / 4000), 1e-9, "half a chocolate bar: 425 kcal of junk")
+for i = 1, 12 do DanTraits_VitalityOnEat(p, food({ name = "Carrot" .. i, kcal = 10 }), 1) end
+assert(#V(p).vitMeals == 10, "ten meals kept")
+assert(not DanTraits_VitalityOnEat(p, food({ name = "Water", kcal = 0, hunger = 0 }), 1), "nothing in it: ignored")
+local q = makePlayer(); current = q
+DanTraits_VitalityOnEat(q, food({ name = "Mystery", kcal = 0, hunger = -0.2 }), 1)
+assert(q._md.DanTraits.vitMeals[1].kcal == 300, "no calorie data: hunger fallback 300 kcal")
+-- one meal is capped
+local big = makePlayer(); current = big
+DanTraits_VitalityOnEat(big, food({ name = "Feast", kcal = 9000, cooked = true, ingredients = 5 }), 1)
+near(V(big).vitDiet, 0.5 + 0.5 * 0.35, 1e-9, "a giant meal moves it at most 35%")
+
+-- 3. two days of good eating gets you most of the way; two days of chips the other way
+local good = makePlayer(); current = good
+for _ = 1, 6 do DanTraits_VitalityOnEat(good, food({ name = "Stew", kcal = 700, cooked = true, ingredients = 4 }), 1) end
+assert(V(good).vitDiet > 0.8, "6 x 700 kcal stew: diet " .. V(good).vitDiet)
+local bad = makePlayer(); current = bad
+for _ = 1, 6 do DanTraits_VitalityOnEat(bad, food({ name = "Crisps", kcal = 700, packaged = true, unhappy = -5 }), 1) end
+assert(V(bad).vitDiet < 0.3, "6 x 700 kcal chips: diet " .. V(bad).vitDiet)
+
+-- 4. variety: distinct food types in three days
+local v = makePlayer(); current = v
+for i, t in ipairs({ "Vegetables", "Meat", "Fruits", "Egg", "Bread" }) do
+  DanTraits_VitalityOnEat(v, food({ name = "F" .. i, kcal = 100, foodType = t }), 1)
+end
+DanTraits_VitalityOnEat(v, food({ name = "Choc", kcal = 100, foodType = "NoExplicit" }), 1)
+minute(); assert(V(v).vitVariety == 5, "five types (NoExplicit not counted), got " .. tostring(V(v).vitVariety))
+v._hour = 80; minute(); assert(V(v).vitVariety == 0, "all older than 72 h: pruned")
+
+-- 5. drinks: cola is junk, milk is neutral, water nothing
+local dr = makePlayer(); current = dr
+DanTraits_VitalityOnDrink(dr, 0.3, 104, 400); assert(V(dr).vitMeals[1].why == "sugary drink" and V(dr).vitMeals[1].kcal == 120, "cola can")
+DanTraits_VitalityOnDrink(dr, 0.3, 20, 250); assert(V(dr).vitMeals[1].grade == 0.5, "milk neutral")
+assert(not DanTraits_VitalityOnDrink(dr, 0.5, 0, 0), "water: nothing")
+-- through the wrapped drink action
+local can = { _amount = 0.3, getAmount = function(self) return self._amount end, getProperties = function() return { getCarbohydrates = function() return 104 end, getCalories = function() return 400 end } end }
+local act = setmetatable({ character = dr, fluidContainer = can, sip = 0.3 }, { __index = ISDrinkFluidAction })
+act:updateEat(1); assert(#V(dr).vitMeals == 3 and V(dr).vitMeals[1].kcal == 120, "drink action feeds vitality")
+
+-- 6. exercise and sleep
+local fit = makePlayer({ regularity = { squats = 100, pushups = 100, situps = 100 } }); current = fit
+minute(); near(V(fit).vitExercise, 1, 1e-9, "full regularity")
+local sl = makePlayer(); current = sl
+-- a full night, scored an hour after getting up
+sl._asleep = true; sl._hour = 10; minute()
+sl._hour = 17; sl._asleep = false; sl._st.fatigue = 0.1; minute()
+assert(V(sl).vitSleep == 0.5 and V(sl).vitNightHours == 7 and V(sl).vitNightWakes == 1, "just up: night not scored yet")
+for _ = 1, 59 do minute() end
+local q1 = (7 / 7) * 0.5 + 0.9 * 0.5
+near(V(sl).vitSleep, 0.5 + (q1 - 0.5) * 0.35, 1e-9, "an hour later: 7 h, woke rested, one wake: scored"); near(V(sl).vitLastSleepHours, 7, 1e-9, "last night 7 h")
+assert(V(sl).vitNightHours == 0 and V(sl).vitLastSleepWakes == 1, "night reset")
+-- night terrors: three segments with short wakes are one night, with a fragmentation penalty
+local nt = makePlayer(); current = nt
+nt._asleep = true; nt._hour = 100; minute()
+nt._hour = 102; nt._asleep = false; nt._st.fatigue = 0.6; for _ = 1, 10 do minute() end     -- terror at 2 h, up 10 min
+nt._asleep = true; minute(); nt._hour = 105; nt._asleep = false; for _ = 1, 20 do minute() end  -- again at 5 h, up 20 min
+nt._asleep = true; minute(); nt._hour = 107.5; nt._asleep = false; nt._st.fatigue = 0.15
+for _ = 1, 60 do minute() end
+local q2 = math.min(1, 7.5 / 7) * 0.5 + 0.85 * 0.5   -- the hours term is capped before weighting
+near(V(nt).vitLastSleepHours, 7.5, 1e-9, "segments summed to 7.5 h"); assert(V(nt).vitLastSleepWakes == 3, "three wakes")
+near(V(nt).vitLastSleepQuality, q2 - 0.10, 1e-9, "quality: hours capped at 1, rested 0.85, minus 2 x 0.05")
+near(V(nt).vitSleep, 0.5 + (q2 - 0.10 - 0.5) * 0.35, 1e-9, "one night's move, not three")
+-- Needs Less Sleep: five hours is a full night
+local wk = makePlayer({ vanilla = { "base:needslesssleep", "base:brave" } }); current = wk
+assert(DanTraits_VitalitySleepNeed(wk) == 5 and DanTraits_VitalitySleepNeed(nt) == 7, "sleep need by trait")
+wk._asleep = true; wk._hour = 200; minute(); wk._hour = 205; wk._asleep = false; wk._st.fatigue = 0; for _ = 1, 60 do minute() end
+near(V(wk).vitLastSleepQuality, 1, 1e-9, "5 h fully rested is a perfect night for Wakeful")
+local mo = makePlayer({ vanilla = { "base:needsmoresleep" } }); assert(DanTraits_VitalitySleepNeed(mo) == 9, "Sleepyhead needs 9")
+-- long stretches awake wear it down
+local awake = makePlayer(); current = awake; V(awake) ; minute()
+awake._md.DanTraits.vitSleep = 0.8; awake._md.DanTraits.vitAwakeMin = 20 * 60
+minute(); near(awake._md.DanTraits.vitSleep, 0.8 - 1 / 1440, 1e-9, "past 20 h awake: drifting down")
+
+-- 7. starving drags diet down
+local hungry = makePlayer({ hunger = 0.8 }); current = hungry
+minute(); near(V(hungry).vitDiet, 0.5 - 1 / 4320, 1e-9, "hunger 0.8: diet slips")
+
+-- 8. combining, smoothing, tiers and halos
+local c = makePlayer({ regularity = { squats = 100, pushups = 100, situps = 100 } }); current = c
+minute(); local d = V(c)
+near(d.vitTarget, 0.5 * (0.5 - 0.10) + 0.3 * 1 + 0.2 * 0.5, 1e-9, "target: diet 0.5 with no variety (-0.1), exercise 1, sleep 0.5")
+near(d.vitality, 0.5 + (d.vitTarget - 0.5) / 180, 1e-9, "moves 1/180 of the gap per minute")
+halo = {}
+d.vitality = 0.59; d.vitDiet = 1; d.vitSleep = 1
+for _ = 1, 30 do minute() end
+assert(d.vitality > 0.6 and halo[1] == "UI_DanTraits_VitTier3", "crossed into Fit: halo, got " .. tostring(halo[1]))
+halo = {}
+local low = makePlayer({ hunger = 0.8 }); current = low; minute()
+local dl = V(low); dl.vitality = 0.41; dl.vitDiet = 0
+for _ = 1, 30 do minute() end
+assert(dl.vitality < 0.4 and halo[1] == "UI_DanTraits_VitTier1", "dropped to Sluggish: halo, got " .. tostring(halo[1]))
+assert(DanTraits_VitalityTier(0.1) == 0 and DanTraits_VitalityTier(0.5) == 2 and DanTraits_VitalityTier(0.85) == 4, "tiers")
+
+-- 9. effect curve: dead zone, then linear to +-1
+local e = DanTraits_VitalityEffectOf
+assert(e(0.5) == 0 and e(0.55) == 0 and e(0.45) == 0, "dead zone")
+near(e(0.8), 0.5, 1e-9, "0.8 -> +0.5"); near(e(1.0), 1, 1e-9, "1.0 -> +1"); near(e(0.2), -0.5, 1e-9, "0.2 -> -0.5"); near(e(0), -1, 1e-9, "0 -> -1")
+
+-- 10. effects at +1: carry +10%, mood and stress lift, health regen, colds resisted; at -1 the reverse (no health drain)
+local top = makePlayer({ unhappy = 50, stress = 0.5, health = 80 }); current = top; minute()
+local dt = V(top); dt.vitality = 1; dt.vitDiet = 1; dt.vitSleep = 1
+minute()
+assert(dt.vitEffect > 0.99, "effect near +1"); near(top._carry, 8 * (1 + 0.1 * dt.vitEffect), 1e-6, "carry +10% x effect"); near(dt.vitCarryDelta, 0.8 * dt.vitEffect, 1e-6, "delta tracked")
+minute(); near(top._carry, 8 * (1 + 0.1 * dt.vitEffect), 1e-6, "re-applied against the base, not stacked")
+assert(top._st.unhappy < 50 and top._st.stress < 0.5, "mood and stress lifted")
+assert(top._health > 80, "health mending")
+top._catch = 10; minute(); near(top._catch, 10 * (1 - 0.3 * dt.vitEffect), 1e-6, "cold catching cut by 30% x effect")
+local bot = makePlayer({ unhappy = 0, health = 80 }); current = bot; minute()
+local db = V(bot); db.vitality = 0; db.vitDiet = 0; db.vitSleep = 0
+for _ = 1, 25 do minute() end
+near(bot._carry, 8 * 0.9, 1e-6, "carry -10%"); assert(bot._st.unhappy == 20, "mood held at the floor 20, got " .. bot._st.unhappy)
+assert(bot._health == 80, "no health drain from vitality alone")
+-- endurance regen per frame
+local fr = makePlayer({ endurance = 0.5 }); current = fr; minute()
+V(fr).vitality = 1; V(fr).vitLastEndurance = 0.5
+fr._st.endurance = 0.6; frame(fr); near(fr._st.endurance, 0.5 + 0.1 * 1.2, 1e-9, "regen x1.2 at +1")
+V(fr).vitality = 0; V(fr).vitLastEndurance = 0.5; fr._st.endurance = 0.6; frame(fr); near(fr._st.endurance, 0.5 + 0.1 * 0.8, 1e-9, "regen x0.8 at -1")
+
+-- 11. the traits read it
+local t2 = makePlayer({ traits = { "diabetes2" }, weight = 92.5 }); current = t2; minute()
+V(t2).vitality = 1; near(DanTraits_DiaResistance(t2), 0.5 - 0.15, 1e-9, "T2 resistance -0.15 at +1")
+V(t2).vitality = 0; near(DanTraits_DiaResistance(t2), 0.5 + 0.15, 1e-9, "+0.15 at -1")
+near(DanTraits_VitalityDiaSensitivity(t2), 0.85, 1e-9, "insulin x0.85 at -1")
+near(DanTraits_VitalityAsthmaBuild(t2), 1.3, 1e-9, "asthma builds x1.3 at -1")
+near(DanTraits_VitalityMddOnset(t2), 1.3, 1e-9, "episodes x1.3 at -1")
+V(t2).vitality = 1; near(DanTraits_VitalityAsthmaBuild(t2), 0.7, 1e-9, "x0.7 at +1")
+assert(DanTraits_VitalityEffect(makePlayer()) == 0, "no data yet: no effect")
+
+-- 12. Thriving doubles Fitness and Strength experience, nothing else, and not below Thriving
+local xp = makePlayer(); current = xp; minute()
+V(xp).vitality = 0.85
+xp:getXp():AddXP(Perks.Fitness, 10); assert(xp._xp.fitness == 20, "fitness x2, got " .. xp._xp.fitness)
+xp:getXp():AddXP(Perks.Strength, 4); assert(xp._xp.strength == 8, "strength x2")
+xp:getXp():AddXP(Perks.Woodwork, 5); assert(xp._xp.woodwork == 5, "other skills untouched")
+V(xp).vitality = 0.7; xp:getXp():AddXP(Perks.Fitness, 10); assert(xp._xp.fitness == 30, "Fit tier: no bonus")
+
+-- 13. slept badly: a bad night sets a debt that holds mood down and wears off over the day; a nap halves it
+local sb = makePlayer({ unhappy = 0 }); current = sb; minute()
+halo = {}
+sb._asleep = true; sb._hour = 300; minute(); sb._hour = 302.5; sb._asleep = false; sb._st.fatigue = 0.7
+for _ = 1, 60 do minute() end
+local q3 = math.min(1, 2.5 / 7) * 0.5 + 0.3 * 0.5      -- 0.3286
+assert(V(sb).vitLastSleepHours == 2.5 and V(sb).vitNightHours == 0, "2.5 h before the gap: a nap, not a night")
+near(V(sb).vitSleepDebt or 0, 0, 1e-9, "a nap with no prior debt leaves none")
+sb._asleep = true; sb._hour = 310; minute(); sb._hour = 313.5; sb._asleep = false; sb._st.fatigue = 0.7
+for _ = 1, 60 do minute() end
+local q4 = math.min(1, 3.5 / 7) * 0.5 + 0.3 * 0.5      -- 0.4
+local debt0 = 1 - q4
+near(V(sb).vitSleepDebt, debt0 - 1 / (14 * 60), 1e-9, "3.5 h is a night: debt 0.6, scored on the 60th awake minute and decayed once")
+assert(halo[#halo] == "UI_DanTraits_SleptBadly2", "told about the bad night, got " .. tostring(halo[#halo]))
+assert(sb._st.unhappy > 0 and sb._st.stress > 0 and sb._st.fatigue > 0.7, "mood held down, stress and fatigue creeping")
+local debtNow = V(sb).vitSleepDebt
+for _ = 1, 30 do minute() end
+near(V(sb).vitSleepDebt, debtNow - 30 / (14 * 60), 1e-9, "wears off linearly")
+assert(sb._st.unhappy <= 25 * debtNow + 1, "mood floor scales with the debt")
+-- a two-hour nap halves what is left
+debtNow = V(sb).vitSleepDebt
+sb._asleep = true; sb._hour = 320; minute(); sb._hour = 322; sb._asleep = false; for _ = 1, 60 do minute() end
+near(V(sb).vitSleepDebt, (debtNow - 59 / (14 * 60)) * 0.5 - 1 / (14 * 60), 1e-9, "59 min wearing off, then the nap halves what is left, then one more minute")
+-- a good night clears it
+sb._asleep = true; sb._hour = 330; minute(); sb._hour = 338; sb._asleep = false; sb._st.fatigue = 0; halo = {}; for _ = 1, 60 do minute() end
+near(V(sb).vitSleepDebt, 0, 1e-9, "8 h fully rested: no debt"); assert(#halo == 0, "no complaint after a good night")
+near(DanTraits_SleepDebt(sb), 0, 1e-9, "getter")
+
+print("vitality: all checks passed")

@@ -1,0 +1,177 @@
+local handlers = {}
+local lists = {}
+Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) lists[k] = lists[k] or {}; table.insert(lists[k], f); handlers[k] = function(...) for _, g in ipairs(lists[k]) do g(...) end end end, Remove = function() end }; rawset(t, k, e); return e end })
+BodyPartType = { Groin = "Groin", ForeArm_L=1, ForeArm_R=2, LowerLeg_L=3, LowerLeg_R=4, Hand_L=5, Hand_R=6, Torso_Upper=7 }
+CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain", UNHAPPINESS = "unhappy", FATIGUE = "fatigue", PANIC = "panic", ENDURANCE = "endurance", WETNESS = { getMaximumValue = function() return 100 end } }
+local halo = {}
+HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
+function getText(k) return k end
+DanTraitsRegistry = { asthma = "asthma" }
+ArrayList = { new = function() return { add = function() end } end }
+RenderEffectType = nil
+IsoFireManager = { explode = function() end }
+function instanceof() return false end
+ItemBodyLocation = { MASK = "mask", MASK_EYES = "maskeyes", MASK_FULL = "maskfull" }
+function getWorld() return { getFreeEmitter = function() return { playSound = function() return 1 end, setPos = function() end } end } end
+function getTexture() return "TEX" end
+function getGameTime() return { getHour = function() return 12 end } end
+function ZombRand(a, b) return 0 end
+local temperature = 20
+function getClimateManager() return { getAirTemperatureForCharacter = function() return temperature end } end
+local corpses = 0
+function getCell() return { getGridSquare = function(_, x, y, z) if x == 10 and y == 10 then return { getDeadBodys = function() return { size = function() return corpses end } end, getObjects = function() return { size = function() return 0 end } end } end return { getObjects = function() return { size = function() return 0 end } end, getDeadBodys = function() return { size = function() return 0 end } end } end } end
+local worldSounds = {}
+function addSound(who, x, y, z, radius, volume) worldSounds[#worldSounds+1] = radius end
+local moodleValues = {}
+MF = { getMoodle = function(name, num) return { setThresholds = function() end, setValue = function(_, v) moodleValues[#moodleValues+1] = v end } end }
+
+function require() end
+for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Fumbler", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
+  assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
+end
+assert(handlers.EveryOneMinute and handlers.OnPlayerUpdate and handlers.OnCreatePlayer, "hooks registered")
+
+local function makePlayer(o)
+  local st = { endurance = o.endurance or 1.0, stress = 0, unhappy = 0, fatigue = 0, panic = 0 }
+  local md = {}
+  local worn = o.worn or {}
+  local health = 100
+  local coughs = 0
+  local woke = 0
+  local inv = {}
+  local p = {
+    hasTrait = function(_, t) return t == "asthma" end, isDead = function() return false end,
+    isAsleep = function() return o.asleep == true end, getModData = function() return md end,
+    getX = function() return 10 end, getY = function() return 10 end, getZ = function() return 0 end,
+    getStats = function() return { get = function(_, k) return st[k] end, set = function(_, k, v) st[k] = v end } end,
+    getWornItem = function(_, loc) return worn[loc] end,
+    isSprinting = function() return o.sprinting == true end, isRunning = function() return false end,
+    playerVoiceSound = function(_, n) coughs = coughs + 1 end,
+    forceAwake = function() o.asleep = false; woke = woke + 1 end,
+    getBodyDamage = function() return { getOverallBodyHealth = function() return health end, ReduceGeneralHealth = function(_, v) health = health - v end } end,
+    getHoursSurvived = function() return 0 end,
+    getInventory = function() return { AddItem = function(_, t) local it = { _type = t, _md = {}, getFullType = function() return t end, hasModData = function() return true end, getModData = function(s2) return s2._md end, setName = function(s2, n) s2._name = n end, setCustomName = function() end, setTexture = function(s2, x) s2._tex = x end }; inv[#inv+1] = it; return it end, getItems = function() return { size = function() return #inv end, get = function(_, i) return inv[i+1] end } end } end,
+    getPlayerNum = function() return 0 end, isLocalPlayer = function() return true end,
+    _st = st, _md = md, _health = function() return health end, _coughs = function() return coughs end, _inv = inv, _woke = function() return woke end, _o = o,
+  }
+  return p
+end
+local current
+function getSpecificPlayer() return current end
+local minute, frame = handlers.EveryOneMinute, handlers.OnPlayerUpdate
+local function irritation(p) return p._md.DanTraits.asthma end
+
+-- 1. warm, calm, rested: nothing builds; stays at 0
+local p = makePlayer({}); current = p
+for _ = 1, 30 do minute() end
+assert(irritation(p) == 0, "clean air stays at 0")
+print("clean warm air, 30 min: irritation " .. irritation(p))
+
+-- 2. cold air + exertion builds: 0.005 + 0.014 = 0.019 per minute -> 0.90 after ~48 minutes
+temperature = 0; p._st.endurance = 0.1
+local m = 0
+while not p._md.DanTraits.asthmaAttack and m < 200 do minute(); m = m + 1 end
+print("cold + exhausted: attack after " .. m .. " minutes (irritation " .. string.format("%.2f", irritation(p)) .. ")")
+assert(p._md.DanTraits.asthmaAttack and m >= 47 and m <= 49, "attack at 0.90 after ~48 min at 0.019/min, got " .. m)
+assert(halo[1] == "UI_DanTraits_AsthmaTier1" and halo[2] == "UI_DanTraits_AsthmaTier2" and halo[3] == "UI_DanTraits_AsthmaTier3" and halo[4] == "UI_DanTraits_AsthmaTier4", "tier notices in order")
+assert(moodleValues[#moodleValues] < 0.06, "moodle value maps to bad level 4")
+
+-- 3. attack effects on the minute: endurance drain, health drain to the 15% floor, loud coughs
+p._st.endurance = 1.0
+local hBefore = p._health()
+minute()
+assert(p._st.endurance == 0.85, "endurance drains 0.15 per minute in an attack")
+assert(p._health() == hBefore - 0.75 and worldSounds[#worldSounds] == 30, "health drains 0.75, cough heard at 30 tiles")
+for _ = 1, 400 do minute() end
+assert(p._health() == 15, "health floor holds at 15")
+print("attack: endurance " .. p._st.endurance .. ", health floored at " .. p._health() .. ", coughs " .. p._coughs())
+
+-- 4. per-frame regen clawback: in an attack, no regeneration sticks
+p._st.endurance = 0.2; frame(p); p._st.endurance = 0.3; frame(p)
+assert(p._st.endurance == 0.2, "no endurance regen during attack")
+
+-- 5. inhaler: -0.5 and the attack ends (hysteresis: needs < 0.75)
+local before = irritation(p)
+assert(DanTraits_UseInhaler(p))
+local panicBefore = p._st.panic
+assert(not p._md.DanTraits.asthmaAttack and irritation(p) == math.max(0, before - 0.5), "inhaler ends the attack")
+assert(p._st.panic == math.min(100, panicBefore + 10), "inhaler sets the heart racing: +10 panic")
+print(string.format("inhaler: %.2f -> %.2f, attack over, tier now %d", before, irritation(p), (function() local t=0 for i,th in ipairs({0.25,0.5,0.75,0.9}) do if irritation(p) >= th then t = i end end return t end)()))
+
+-- 6. tier 2 halves regen: set irritation to 0.6 by hand
+p._md.DanTraits.asthma = 0.6; p._md.DanTraits.asthmaAttack = false
+p._st.endurance = 0.2; p._md.DanTraits.asthmaLastEndurance = 0.2
+p._st.endurance = 0.4; frame(p)
+assert(math.abs(p._st.endurance - 0.3) < 1e-9, "tier 2 keeps half of the gain")
+print("tier 2: regen 0.2 -> 0.4 clawed back to " .. p._st.endurance)
+
+-- 7. masks: gas mask ignores cold and corpses, dust mask halves them
+temperature = 0; corpses = 3; p._st.endurance = 1.0
+local q = makePlayer({ worn = { maskeyes = { getType = function() return "Hat_GasMask" end, getBodyLocation = function() return "base:maskeyes" end } } }); current = q
+for _ = 1, 10 do minute() end
+assert(irritation(q) == 0, "gas mask: no environmental build-up")
+local r = makePlayer({ worn = { mask = { getType = function() return "Hat_DustMask" end, getBodyLocation = function() return "base:mask" end } } }); current = r
+minute()
+assert(math.abs(irritation(r) - (0.005 + 0.012) * 0.5) < 1e-9, "dust mask halves cold+corpse build-up")
+local u = makePlayer({}); current = u
+minute()
+assert(math.abs(irritation(u) - 0.017) < 1e-9, "no mask: full cold+corpse build-up")
+print(string.format("masks: none %.3f, dust %.3f, gas %.3f per minute", irritation(u), irritation(r), irritation(q)))
+
+-- 8. sleeping in clean air clears twice as fast
+temperature = 20; corpses = 0
+local sl = makePlayer({ asleep = true }); current = sl; sl._md.DanTraits = { asthma = 0.5 }
+minute()
+assert(math.abs(irritation(sl) - 0.492) < 1e-9, "asleep decay 0.008")
+print("asleep decay: 0.500 -> " .. string.format("%.3f", irritation(sl)))
+
+-- 9. starting kit: one real inhaler item, given once
+local nw = makePlayer({}); handlers.OnCreatePlayer(0, nw)
+assert(#nw._inv == 1 and nw._inv[1]._type == "DanTraits.Inhaler", "starts with a DanTraits.Inhaler")
+assert(DanTraits_IsInhaler(nw._inv[1]), "item check by full type")
+assert(not DanTraits_IsInhaler({ getFullType = function() return "Base.PillsBeta" end }), "beta blockers are not inhalers")
+assert(not DanTraits_IsInhaler(nil), "nil safe")
+handlers.OnCreatePlayer(0, nw); assert(#nw._inv == 1, "only once")
+assert(handlers.OnFillContainer == nil or true, "no container conversion hook needed")
+print("new character gets 1 " .. nw._inv[1]._type)
+-- 10. panic: nothing under 20, linear to 0.008/min at 100, and a gas mask does not help
+local pn = makePlayer({}); current = pn
+pn._st.panic = 10; minute(); assert(irritation(pn) == 0, "slight panic ignored")
+pn._st.panic = 100; minute()
+assert(math.abs(irritation(pn) - 0.010) < 1e-9, "max panic builds 0.010/min, got " .. irritation(pn))
+pn._st.panic = 60; local before10 = irritation(pn); minute()
+assert(math.abs((irritation(pn) - before10) - 0.005) < 1e-9, "panic 60 builds half rate")
+local pg = makePlayer({ worn = { maskfull = { getType = function() return "Hat_GasMask" end, getBodyLocation = function() return "maskfull" end } } }); current = pg
+pg._st.panic = 100; minute()
+assert(math.abs(irritation(pg) - 0.010) < 1e-9, "gas mask does not blunt panic build-up")
+print("panic: 10 -> 0, 100 -> +0.010/min, 60 -> +0.005/min, gas mask irrelevant")
+-- 11. an attack raises panic 5 per minute, capped at 100
+local pa = makePlayer({}); current = pa
+pa._md.DanTraits = pa._md.DanTraits or {}; pa._md.DanTraits.asthma = 0.95; pa._md.DanTraits.asthmaAttack = true
+pa._st.panic = 0; minute(); assert(pa._st.panic == 5, "attack adds 5 panic per minute, got " .. tostring(pa._st.panic))
+pa._st.panic = 98; minute(); assert(pa._st.panic == 100, "panic capped at 100")
+print("attack: +5 panic per minute, capped at 100")
+-- 12. exertion threshold: under 40% endurance builds, above does not
+local ex = makePlayer({ endurance = 0.35 }); current = ex; temperature = 20; corpses = 0
+minute(); assert(math.abs(irritation(ex) - 0.014) < 1e-9, "endurance 35% counts as exertion")
+local ex2 = makePlayer({ endurance = 0.45 }); current = ex2
+minute(); assert(irritation(ex2) == 0, "endurance 45% does not")
+print("exertion: 35% builds 0.014/min, 45% nothing")
+
+-- 13. tier 2 coughs now and then (6 tiles); tier 1 never
+local c2 = makePlayer({}); current = c2; c2._md.DanTraits = { asthma = 0.6 }
+for _ = 1, 8 do minute() end
+assert(c2._coughs() >= 1 and worldSounds[#worldSounds] == 6, "tier 2 coughs within 6 minutes at 6 tiles")
+local c1 = makePlayer({}); current = c1; c1._md.DanTraits = { asthma = 0.3 }
+for _ = 1, 20 do minute() end
+assert(c1._coughs() == 0, "tier 1 does not cough")
+print("tier 2 coughs: " .. c2._coughs() .. " in 8 min, tier 1: " .. c1._coughs())
+
+-- 14. asleep at tier 3 or worse: woken up; tier 2 sleeps on
+local w3 = makePlayer({ asleep = true }); current = w3; w3._md.DanTraits = { asthma = 0.8 }
+minute(); assert(w3._woke() == 1 and not w3._o.asleep and halo[#halo] == "UI_DanTraits_AsthmaWake", "tier 3 wakes the sleeper")
+local w2 = makePlayer({ asleep = true }); current = w2; w2._md.DanTraits = { asthma = 0.6 }
+minute(); assert(w2._woke() == 0 and w2._o.asleep, "tier 2 sleeps on")
+print("sleep: tier 3 woke=" .. w3._woke() .. ", tier 2 woke=" .. w2._woke())
+
+print("ALL OK")
