@@ -135,6 +135,19 @@ module DanTraits {
         XPBoosts = Spear=1;LongBlade=1;Axe=1;Blacksmith=1,
     }
 
+    /* Positive, cheap: every exercise starts at regularity 50, like a Fitness
+       Instructor's 40 to 60. Applied once, to a new character, by
+       media/lua/shared/DanTraits_GymRegular.lua. */
+    character_trait_definition DanTraits:gymregular
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:gymregular,
+        Cost = 1,
+        UIName = UI_trait_DanGymRegular,
+        UIDescription = UI_trait_DanGymRegulardesc,
+    }
+
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler

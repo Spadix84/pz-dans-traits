@@ -10,10 +10,10 @@
 -- check outside) count as one night, hours are summed against what the
 -- character needs (five for Needs Less Sleep, nine for Needs More Sleep,
 -- seven otherwise), how rested they woke counts as much as the hours, and
--- each interruption costs a little. Above neutral: more carry weight, faster endurance
+-- each interruption costs a little. Above neutral: faster endurance
 -- recovery, a lift to mood and stress, slow health regeneration and better
--- resistance to catching a cold. Below neutral: the reverse (health is
--- never drained by this). The traits read the same value: asthma builds
+-- resistance to catching a cold, and at Thriving a kilo on the base carry
+-- weight. Below neutral: the reverse (health is never drained by this). The traits read the same value: asthma builds
 -- slower or faster, diabetes resistance and insulin sensitivity shift,
 -- depressive episodes come rarer or more often.
 require "DanTraits"
@@ -65,7 +65,8 @@ local VIT_SMOOTH            = 1 / 180 -- per minute toward the target (a few hou
 local VIT_TIER              = { 0.2, 0.4, 0.6, 0.8 }   -- Run Down | Sluggish | - | Fit | Thriving
 local VIT_DEADZONE          = 0.1     -- no effect within this of 0.5
 -- effects at full strength (e = -1 or +1)
-local VIT_CARRY             = 0.10    -- carry weight
+local VIT_CARRY_KG          = 1       -- kilos added to the base carry weight (an int, 8 by default, scaled by strength: about 12%) at Thriving, removed at Run Down
+local VIT_CARRY_EFFECT      = 0.5     -- |effect| needed for the step (0.5 is exactly the Thriving and Run Down tier lines)
 local VIT_ENDURANCE_REGEN   = 0.20
 local VIT_MOOD_LIFT         = 0.15    -- unhappiness removed per minute at +1
 local VIT_STRESS_LIFT       = 0.0005
@@ -343,14 +344,25 @@ local function updateVitalityMinute(player, d)
     local e = effectOf(d.vitality)
     d.vitEffect = e
     pcall(function()
-        -- carry weight: our delta is tracked so it can be replaced, not stacked
+        -- carry weight: the base is an int the game never saves or changes
+        -- (8 from the constructor, times a strength multiplier for the real
+        -- figure), so the effect is a whole kilo on it, applied against a
+        -- remembered base rather than reconstructed from the current value:
+        -- fractional writes were truncated and the reconstruction then
+        -- ratcheted the base down a kilo at a time. If the current value is
+        -- not what was last set (reload, another mod), adopt it as the base.
+        d.vitCarryDelta = nil
         local current = player:getMaxWeightBase()
-        local without = current - (d.vitCarryDelta or 0)
-        local delta = without * VIT_CARRY * e
-        if math.abs(delta - (d.vitCarryDelta or 0)) > 0.001 then
-            player:setMaxWeightBase(without + delta)
-            d.vitCarryDelta = delta
+        local applied = d.vitCarryKg or 0
+        local base = d.vitCarryBase
+        if base == nil or current ~= base + applied then
+            base, applied = current, 0
+            d.vitCarryBase = base
         end
+        local kg = 0
+        if e >= VIT_CARRY_EFFECT then kg = VIT_CARRY_KG elseif e <= -VIT_CARRY_EFFECT then kg = -VIT_CARRY_KG end
+        if kg ~= applied then player:setMaxWeightBase(base + kg) end
+        d.vitCarryKg = kg
     end)
     pcall(function()
         if e > 0 then

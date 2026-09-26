@@ -58,6 +58,8 @@
     "UI_DanTraits_DiaReading": "Blood sugar: %1",
     "UI_trait_DanRenFaire": "Renaissance Faire Geek",
     "UI_trait_DanRenFairedesc": "Every summer, the garb, the turkey legs, the sparring ring and a booth at the smithy. It turns out to have been training.<br><br>+1 Spear, +1 Long Blade, +1 Axe and +1 Blacksmithing, with the faster experience gain that comes with a starting level in each.<br>",
+    "UI_trait_DanGymRegular": "Gym Regular",
+    "UI_trait_DanGymRegulardesc": "Three mornings a week, without fail, right up until the end of the world.<br><br>Every exercise starts at half regularity (50 of 100) instead of none, the same head start a Fitness Instructor gets. That is the bar in the fitness window: reps come easier and stiffen you less, and your Vitality exercise score starts at neutral rather than empty, which also counts toward Type 2 insulin resistance and easing depressive episodes from day one.<br>It fades like any regularity does: keep training or lose it. Applied once, to a new character.<br>",
     "UI_DanTraits_VitTier0": "Running on empty",
     "UI_DanTraits_VitTier1": "Feeling sluggish",
     "UI_DanTraits_VitTier2": "Feeling normal again",

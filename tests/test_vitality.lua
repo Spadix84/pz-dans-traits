@@ -52,7 +52,7 @@ local function makePlayer(o)
     getHoursSurvived = function(self) return self._hour end,
     getCharacterTraits = function(self) return { getKnownTraits = function() local t = o.vanilla or {}; return { size = function() return #t end, get = function(_, i) return t[i + 1] end } end } end,
     getXp = function(self) return { AddXP = function(_, perk, amount) self._xp[perk] = (self._xp[perk] or 0) + amount; handlers.AddXP(self, perk, amount) end } end,
-    getMaxWeightBase = function(self) return self._carry end, setMaxWeightBase = function(self, v) self._carry = v end,
+    getMaxWeightBase = function(self) return self._carry end, setMaxWeightBase = function(self, v) self._carry = math.floor(v) end,   -- an int in the game: fractions are truncated
     getInventory = function() return { AddItem = function() end, Remove = function() end, contains = function() return true end } end,
     getPrimaryHandItem = function() return nil end, getCurrentSquare = function() return nil end, removeFromHands = function() end,
     _st = st, _md = md, _hour = 0, _carry = 8, _health = o.health or 100, _catch = 0, _asleep = false, _xp = {} }
@@ -192,20 +192,35 @@ local e = DanTraits_VitalityEffectOf
 assert(e(0.5) == 0 and e(0.55) == 0 and e(0.45) == 0, "dead zone")
 near(e(0.8), 0.5, 1e-9, "0.8 -> +0.5"); near(e(1.0), 1, 1e-9, "1.0 -> +1"); near(e(0.2), -0.5, 1e-9, "0.2 -> -0.5"); near(e(0), -1, 1e-9, "0 -> -1")
 
--- 10. effects at +1: carry +10%, mood and stress lift, health regen, colds resisted; at -1 the reverse (no health drain)
+-- 10. effects at +1: carry +1 kg on the base, mood and stress lift, health regen, colds resisted; at -1 the reverse (no health drain)
 local top = makePlayer({ unhappy = 50, stress = 0.5, health = 80 }); current = top; minute()
 local dt = V(top); dt.vitality = 1; dt.vitDiet = 1; dt.vitSleep = 1
 minute()
-assert(dt.vitEffect > 0.99, "effect near +1"); near(top._carry, 8 * (1 + 0.1 * dt.vitEffect), 1e-6, "carry +10% x effect"); near(dt.vitCarryDelta, 0.8 * dt.vitEffect, 1e-6, "delta tracked")
-minute(); near(top._carry, 8 * (1 + 0.1 * dt.vitEffect), 1e-6, "re-applied against the base, not stacked")
+assert(dt.vitEffect > 0.99, "effect near +1"); assert(top._carry == 9 and dt.vitCarryBase == 8 and dt.vitCarryKg == 1, "carry base 8 -> 9, got " .. top._carry)
+minute(); assert(top._carry == 9, "re-applied against the base, not stacked")
 assert(top._st.unhappy < 50 and top._st.stress < 0.5, "mood and stress lifted")
 assert(top._health > 80, "health mending")
 top._catch = 10; minute(); near(top._catch, 10 * (1 - 0.3 * dt.vitEffect), 1e-6, "cold catching cut by 30% x effect")
 local bot = makePlayer({ unhappy = 0, health = 80 }); current = bot; minute()
 local db = V(bot); db.vitality = 0; db.vitDiet = 0; db.vitSleep = 0
 for _ = 1, 25 do minute() end
-near(bot._carry, 8 * 0.9, 1e-6, "carry -10%"); assert(bot._st.unhappy == 20, "mood held at the floor 20, got " .. bot._st.unhappy)
+assert(bot._carry == 7 and V(bot).vitCarryKg == -1, "carry base 8 -> 7, got " .. bot._carry); assert(bot._st.unhappy == 20, "mood held at the floor 20, got " .. bot._st.unhappy)
 assert(bot._health == 80, "no health drain from vitality alone")
+-- 10b. the base is an int: a small, drifting effect must never grind it down (it once fell from 8 to 3 a kilo per change)
+local drift = makePlayer(); current = drift; minute()
+for i = 1, 200 do V(drift).vitality = 0.39 + 0.02 * ((i % 3) - 1); minute() end   -- 0.37..0.41: effect flickers around the Sluggish line
+assert(drift._carry == 8 and V(drift).vitCarryBase == 8, "small effect: base untouched, got " .. drift._carry)
+V(drift).vitality = 0.1; minute(); assert(drift._carry == 7, "Run Down: -1")
+V(drift).vitality = 0.5; minute(); assert(drift._carry == 8, "back to neutral: restored")
+V(drift).vitality = 0.81; minute(); assert(drift._carry == 9, "just over the Thriving line (effect 0.5): +1")
+V(drift).vitality = 0.79; minute(); assert(drift._carry == 8, "just under: nothing")
+-- a reload resets the game's base to 8 while mod data still says +1 was applied: adopt 8, apply again
+V(drift).vitality = 1; minute(); assert(drift._carry == 9)
+drift._carry = 8; minute(); assert(drift._carry == 9 and V(drift).vitCarryBase == 8, "reload: re-applied on the fresh base once, got " .. drift._carry)
+-- another mod moved the base: adopt it
+drift._carry = 12; minute(); assert(drift._carry == 13 and V(drift).vitCarryBase == 12, "external base change adopted, got " .. drift._carry)
+-- old saves carry the float delta field: cleared
+V(drift).vitCarryDelta = -0.0047; minute(); assert(V(drift).vitCarryDelta == nil, "legacy delta dropped")
 -- endurance regen per frame
 local fr = makePlayer({ endurance = 0.5 }); current = fr; minute()
 V(fr).vitality = 1; V(fr).vitLastEndurance = 0.5

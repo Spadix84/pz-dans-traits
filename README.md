@@ -19,8 +19,9 @@ A Project Zomboid (Build 42) mod: realistic, balanced traits that add complicati
 | Diabetes Type 1 | -10 | Hidden blood sugar model; insulin pen, glucose meter, test strips. |
 | Diabetes Type 2 | -5 | Same model with the body's own insulin, limited by weight; metformin. |
 | Renaissance Faire Geek | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
+| Gym Regular | +1 | Every exercise starts at regularity 50 (a Fitness Instructor's head start); Vitality's exercise score starts neutral instead of empty. |
 
-**Vitality** (everyone): diet, exercise and sleep roll into one slow score. Fit and Thriving give more carry weight, faster endurance recovery, mood and stress relief, slow healing, cold resistance and (Thriving) double Fitness and Strength experience; Run Down and Sluggish the reverse. The conditions above read it too. A bad night's sleep sets a same-day "Slept Badly" moodle.
+**Vitality** (everyone): diet, exercise and sleep roll into one slow score. Fit and Thriving give faster endurance recovery, mood and stress relief, slow healing and cold resistance, and Thriving adds a kilo of base carry weight and double Fitness and Strength experience; Run Down and Sluggish the reverse. The conditions above read it too. A bad night's sleep sets a same-day "Slept Badly" moodle.
 
 The airway, vitality and sleep moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
 
