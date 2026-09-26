@@ -161,7 +161,7 @@ DanTraits_VitalitySleepNeed = sleepNeed
 local function pruneTypes(d, hour)
     local count = 0
     for foodType, at in pairs(d.vitFoodTypes) do
-        if hour - at > VIT_VARIETY_HOURS then d.vitFoodTypes[foodType] = nil else count = count + 1 end
+        if hour - at > DanTraits_RunHooks("varietyHours", VIT_VARIETY_HOURS) then d.vitFoodTypes[foodType] = nil else count = count + 1 end
     end
     d.vitVariety = count
     return count
@@ -191,6 +191,7 @@ function DanTraits_VitalityOnEat(player, item, fraction)
     kcal = kcal * fraction
     if kcal <= 0 then return false end
     local grade, why = DanTraits_GradeFood(item)
+    grade = clamp01(DanTraits_RunHooks("foodGrade", grade, player, item, why))
     local name, foodType = "?", nil
     pcall(function() name = tostring(item:getType()) end)
     pcall(function() foodType = item:getFoodType() end)
@@ -298,7 +299,7 @@ local function updateVitalityMinute(player, d)
             local need = sleepNeed(player)
             local quality = clamp01(d.vitNightHours / need) * (1 - VIT_SLEEP_REST_WEIGHT) + (1 - (d.vitNightFatigue or 0)) * VIT_SLEEP_REST_WEIGHT
             quality = quality - math.min(VIT_NIGHT_WAKE_MAX, ((d.vitNightWakes or 1) - 1) * VIT_NIGHT_WAKE_COST)
-            quality = clamp01(quality)
+            quality = clamp01(DanTraits_RunHooks("nightQuality", quality, player, d, d.vitNightHours))
             d.vitSleep = clamp01(d.vitSleep + (quality - d.vitSleep) * VIT_SLEEP_W)
             d.vitLastSleepHours = d.vitNightHours
             d.vitLastSleepWakes = d.vitNightWakes

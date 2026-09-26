@@ -1,0 +1,181 @@
+-- Project Zomboid Vitality Project: Migraines.
+-- Every ten minutes there is a small chance of an attack, pushed up by a
+-- bad night (Vitality's sleep debt), thirst, stress, a hangover and bright
+-- daylight outdoors, and never within a day of the last one. An aura gives
+-- twenty minutes' warning. The attack lasts three to six hours by severity:
+-- pain (painkillers take the edge off and, taken once, shorten it), nausea,
+-- low mood and stress. Daylight outdoors slows the recovery to half and
+-- adds to the pain; sleeping it off is twice as fast.
+require "DanTraits"
+
+local hasTrait = DanTraits_HasTrait
+local notify = DanTraits_Notify
+local traitData = DanTraits_Data
+
+local MIG_BASE          = 0.3     -- percent per ten minutes, rested and calm
+local MIG_SLEEP_DEBT    = 2.5     -- added at a full sleep debt
+local MIG_THIRST        = 2.0     -- added at full thirst (from 30%)
+local MIG_THIRST_FROM   = 0.3
+local MIG_STRESS        = 2.0     -- added at full stress
+local MIG_LIGHT         = 1.5     -- added in bright daylight outdoors
+local MIG_HANGOVER      = 2.0     -- added at a full-strength hangover
+local MIG_REFRACTORY_H  = 24      -- no roll for this long after an attack ends
+local MIG_AURA_H        = 20 / 60 -- warning before the pain
+local MIG_SEV_MIN       = 0.5     -- severity is this plus up to 0.5
+local MIG_HOURS_BASE    = 3       -- attack length: this plus MIG_HOURS_SEV x severity
+local MIG_HOURS_SEV     = 3
+local MIG_PAIN          = 60      -- pain floor at severity 1 (skipped while painkillers work)
+local MIG_PAIN_LIGHT    = 15      -- extra floor in daylight outdoors
+local MIG_SICK          = 30      -- food sickness floor at severity 1
+local MIG_MOOD          = 15
+local MIG_RAMP          = 1
+local MIG_STRESS_RATE   = 0.0005  -- per minute
+local MIG_MEDS_CUT      = 0.6     -- painkillers, first time in an attack: hours left x this
+local MIG_LIGHT_RATE    = 0.5     -- recovery rate in daylight outdoors...
+local MIG_SLEEP_RATE    = 2.0     -- ...and asleep
+local MIG_NIGHT         = 0.3     -- night strength under this is day
+local MIG_CLOUD         = 0.5     -- cloud cover under this is bright
+local MIG_TIER          = { 0.01, 0.5, 0.8 }   -- Aura | Migraine | Splitting
+
+local function migData(player)
+    local d = traitData(player)
+    d.migSinceEnd = d.migSinceEnd or MIG_REFRACTORY_H
+    return d
+end
+
+local function clamp01(x) return math.max(0, math.min(1, x)) end
+
+-- bright daylight, outdoors: the trigger and the thing that makes an attack worse
+local function inBrightLight(player)
+    local bright = false
+    pcall(function()
+        if not player:isOutside() then return end
+        local climate = getClimateManager()
+        if climate:getNightStrength() >= MIG_NIGHT then return end
+        if (climate:getRainIntensity() or 0) > 0.1 then return end
+        if (climate:getCloudIntensity() or 0) >= MIG_CLOUD then return end
+        bright = true
+    end)
+    return bright
+end
+
+-- percent chance per ten minutes
+local function migraineChance(player)
+    local chance = MIG_BASE
+    pcall(function()
+        local stats = player:getStats()
+        local debt = DanTraits_SleepDebt and DanTraits_SleepDebt(player) or 0
+        chance = chance + MIG_SLEEP_DEBT * clamp01(debt)
+        local thirst = stats:get(CharacterStat.THIRST) or 0
+        if thirst > MIG_THIRST_FROM then chance = chance + MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
+        chance = chance + MIG_STRESS * clamp01(stats:get(CharacterStat.STRESS) or 0)
+        if DanTraits_HangoverStrength then chance = chance + MIG_HANGOVER * clamp01(DanTraits_HangoverStrength(player)) end
+    end)
+    if inBrightLight(player) then chance = chance + MIG_LIGHT end
+    return chance
+end
+DanTraits_MigraineChance = migraineChance
+
+local function updateMoodle(player, value)
+    if not MF or not MF.getMoodle then return end
+    pcall(function()
+        local moodle = MF.getMoodle("Migraine", player:getPlayerNum())
+        if not moodle then return end
+        moodle:setThresholds(nil, 0.5 * (1 - MIG_TIER[3]), 0.5 * (1 - MIG_TIER[2]), 0.5 * (1 - MIG_TIER[1]))
+        moodle:setValue(0.5 * (1 - value))
+    end)
+end
+
+local function floorUp(stats, stat, floor, ramp)
+    local value = stats:get(stat) or 0
+    if value < floor then stats:set(stat, math.min(floor, value + ramp)) end
+end
+
+local function startAura(player, d)
+    d.migAuraLeft = MIG_AURA_H
+    d.migSeverity = MIG_SEV_MIN + ZombRand(0, 51) / 100
+    notify(player, "UI_DanTraits_MigraineAura")
+end
+
+local function startAttack(player, d)
+    d.migAuraLeft = nil
+    d.migActive = true
+    d.migHoursLeft = MIG_HOURS_BASE + MIG_HOURS_SEV * d.migSeverity
+    d.migMedsUsed = false
+    notify(player, "UI_DanTraits_MigraineStart")
+end
+
+local function endAttack(player, d)
+    d.migActive = false
+    d.migHoursLeft = 0
+    d.migSinceEnd = 0
+    updateMoodle(player, 0)
+    pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_MigraineEnd")) end)
+end
+
+-- the ten-minute roll
+local function updateMigraineTen(player, d)
+    if not hasTrait(player, "migraine") then return end
+    d = migData(player)
+    if d.migActive or d.migAuraLeft then return end
+    if d.migSinceEnd < MIG_REFRACTORY_H then
+        d.migSinceEnd = d.migSinceEnd + 10 / 60
+        return
+    end
+    local chance = migraineChance(player)
+    d.migChance = chance
+    if ZombRand(10000) < chance * 100 then startAura(player, d) end
+end
+DanTraits_updateMigraineTen = updateMigraineTen
+
+local function updateMigraineMinute(player, d)
+    if not hasTrait(player, "migraine") then return end
+    d = migData(player)
+    if d.migAuraLeft then
+        d.migAuraLeft = d.migAuraLeft - 1 / 60
+        updateMoodle(player, MIG_TIER[1])
+        if d.migAuraLeft <= 1e-6 then startAttack(player, d) end
+        return
+    end
+    if not d.migActive then return end
+
+    local asleep, bright = false, inBrightLight(player)
+    pcall(function() asleep = player:isAsleep() end)
+    local rate = 1
+    if asleep then rate = MIG_SLEEP_RATE elseif bright then rate = MIG_LIGHT_RATE end
+    local meds = 0
+    pcall(function() meds = player:getPainEffect() or 0 end)
+    if meds > 0 and not d.migMedsUsed then
+        d.migMedsUsed = true
+        d.migHoursLeft = d.migHoursLeft * MIG_MEDS_CUT
+    end
+    d.migHoursLeft = d.migHoursLeft - rate / 60
+    if d.migHoursLeft <= 0 then endAttack(player, d) return end
+
+    local s = d.migSeverity or MIG_SEV_MIN
+    updateMoodle(player, s)
+    if asleep then return end
+    pcall(function()
+        local stats = player:getStats()
+        if meds <= 0 then floorUp(stats, CharacterStat.PAIN, MIG_PAIN * s + (bright and MIG_PAIN_LIGHT or 0), MIG_RAMP) end
+        floorUp(stats, CharacterStat.FOOD_SICKNESS, MIG_SICK * s, MIG_RAMP)
+        floorUp(stats, CharacterStat.UNHAPPINESS, MIG_MOOD, MIG_RAMP)
+        stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + MIG_STRESS_RATE * s))
+    end)
+end
+DanTraits_updateMigraineMinute = updateMigraineMinute
+
+local function onMigraineMinute()
+    local player = getSpecificPlayer(0)
+    if not player or player:isDead() then return end
+    updateMigraineMinute(player, traitData(player))
+end
+
+local function onMigraineTen()
+    local player = getSpecificPlayer(0)
+    if not player or player:isDead() then return end
+    updateMigraineTen(player, traitData(player))
+end
+
+Events.EveryOneMinute.Add(onMigraineMinute)
+Events.EveryTenMinutes.Add(onMigraineTen)

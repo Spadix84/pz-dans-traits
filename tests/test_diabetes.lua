@@ -6,7 +6,7 @@ CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain", UNHA
 local halo = {}
 HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
 function getText(k, a) if a then return k .. ":" .. tostring(a) end return k end
-DanTraitsRegistry = { diabetes1 = "diabetes1", diabetes2 = "diabetes2", fumbler = "fumbler", asthma = "asthma", spiraling = "spiraling", gluten = "gluten", vegetarian = "vegetarian" }
+DanTraitsRegistry = { diabetes1 = "diabetes1", diabetes2 = "diabetes2", arthritis = "arthritis", asthma = "asthma", spiraling = "spiraling", gluten = "gluten", vegetarian = "vegetarian" }
 ArrayList = { new = function() return { add = function() end } end }
 IsoFireManager = { explode = function() end }
 function instanceof() return false end
@@ -29,7 +29,7 @@ ISDrinkFluidAction = { updateEat = function(self, delta) self.fluidContainer._am
 DanTraitsTestEpisode = false
 
 function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Fumbler", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
+for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
   assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
 end
 assert(handlers.EveryOneMinute and handlers.OnCreatePlayer and ISDrinkFluidAction.DanTraitsWrapped, "hooks in place")
@@ -110,7 +110,7 @@ local low = makePlayer({ traits = { "diabetes1" } }); current = low
 low._md.DanTraits = { glucose = 60 }; minute()
 assert(DanTraits_ExtraFumble(low) == 4 and DanTraits_SwingDropChance(low) == 4, "under 70: +4% on every swing without Fumbler")
 assert(low._st.panic == 1 and low._st.endurance == 1, "tier 1: panic only")
-local low2 = makePlayer({ traits = { "diabetes1", "fumbler" } }); current = low2
+local low2 = makePlayer({ traits = { "diabetes1", "arthritis" } }); current = low2
 low2._md.DanTraits = { glucose = 50 }; minute()
 assert(DanTraits_ExtraFumble(low2) == 8 and math.abs(DanTraits_SwingDropChance(low2) - (1 + 8 + 2 / 100 * 6 + 0.003 * 5)) < 1e-9, "under 55 with Fumbler: 1 + 8 + panic and fatigue terms, got " .. DanTraits_SwingDropChance(low2))
 assert(math.abs(low2._st.endurance - 0.97) < 1e-9 and low2._st.unhappy == 2, "tier 2: endurance drains, mood ramps toward 25")

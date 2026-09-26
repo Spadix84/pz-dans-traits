@@ -106,6 +106,25 @@ local ITEMS = {
         bags = { HandbagsAndPurses = 0.02 },
         clutter = { ClosetItems = 0.01 },
     },
+    {
+        name = "DanTraits.IronPills",
+        procedural = {
+            BathroomCabinet = 1.5, BathroomCounter = 0.5, BathroomShelf = 0.5,
+            MedicalCabinet = 2, MedicalClinicDrugs = 3, MedicalStorageDrugs = 6, HospitalRoomShelves = 3,
+            DoctorTools = 3, NurseTools = 2, StoreShelfMedical = 4,
+            SafehouseMedical = 4, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
+            DerelictHouseDrugs = 1, ArmyStorageMedical = 1, TestingLab = 1,
+            KitchenRandom = 0.1, CrateMedical = 2, GroceryBag = 0.05,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 1.5 },
+            { { "all", "inventoryfemale", "items" }, 0.1 },
+            { { "all", "inventorymale", "items" }, 0.05 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 3 },
+        },
+        bags = { HandbagsAndPurses = 0.03 },
+        clutter = { ClosetItems = 0.01 },
+    },
 }
 
 local function append(list, name, weight)

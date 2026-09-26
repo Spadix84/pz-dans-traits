@@ -5,7 +5,7 @@ CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain", UNHA
 local halo = {}
 HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
 function getText(k) return k end
-DanTraitsRegistry = { spiraling = "spiraling", fumbler = "fumbler" }
+DanTraitsRegistry = { spiraling = "spiraling", arthritis = "arthritis" }
 ArrayList = { new = function() return { add = function() end } end }
 IsoFireManager = { explode = function() end }
 function instanceof() return false end
@@ -27,7 +27,7 @@ ISTakePillAction = { complete = function(self) pillsSwallowed = pillsSwallowed +
 DanTraitsTestEpisode = false
 
 function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Fumbler", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
+for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
   assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
 end
 
@@ -120,7 +120,7 @@ rng = { 141 }; ten(); assert(not fine._md.DanTraits.mddEpisode, "141 >= 140: cal
 rng = { 139 }; ten(); assert(fine._md.DanTraits.mddEpisode, "139 < 140 still can")
 
 -- 8. Fumbler: 1% base, up to +6 panic, +6 pain, +5 fatigue; ZombRand(1000) < chance x 10 drops the weapon
-local f = makePlayer({ trait = "fumbler" }); current = f
+local f = makePlayer({ trait = "arthritis" }); current = f
 assert(math.abs(DanTraits_FumbleChance(f) - 1) < 1e-9, "calm: 1%")
 rng = { 9 }; handlers.OnWeaponSwing(f, {}); assert(#f._dropped == 1, "9 < 10: dropped")
 rng = { 10 }; handlers.OnWeaponSwing(f, {}); assert(#f._dropped == 1, "10 >= 10: kept")

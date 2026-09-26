@@ -4,12 +4,15 @@
 -- take metformin).
 require "TimedActions/ISUseInhalerAction"
 require "TimedActions/ISDiabetesAction"
+require "TimedActions/ISVitalityPillAction"
 
 local ok = pcall(function() require "MF_ISMoodle" end)
 if ok and MF and MF.createMoodle then
     MF.createMoodle("AirwayIrritation")
     MF.createMoodle("Vitality")
     MF.createMoodle("SleptBadly")
+    MF.createMoodle("Hangover")
+    MF.createMoodle("Migraine")
 end
 
 local function actualItems(items)
@@ -130,6 +133,23 @@ local function diabetesMenu(playerNum, context, items)
     end
 end
 
+-- Iron pills (Anaemic) ---------------------------------------------------------
+local function onTakeIronPill(pills, playerObj)
+    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, pills)
+    ISTimedActionQueue.add(ISVitalityPillAction:new(playerObj, pills))
+end
+
+local function ironPillsMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_IsIronPills then return end
+    local pills = findFirst(items, DanTraits_IsIronPills)
+    if not pills then return end
+    pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+    local option = context:addOption(getText("ContextMenu_DanTraits_TakeIronPill"), pills, onTakeIronPill, playerObj)
+    if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_IronPillsEmpty") end
+end
+
 Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryObjectContextMenu)
+Events.OnFillInventoryObjectContextMenu.Add(ironPillsMenu)
 Events.OnFillInventoryObjectContextMenu.Add(greyOutMeat)
 Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)

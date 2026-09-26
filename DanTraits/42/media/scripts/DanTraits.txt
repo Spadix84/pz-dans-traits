@@ -20,16 +20,6 @@ module DanTraits {
         UIDescription = UI_trait_DanBrittledesc,
     }
 
-    character_trait_definition DanTraits:fumbler
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = DanTraits:fumbler,
-        Cost = -8,
-        UIName = UI_trait_DanFumbler,
-        UIDescription = UI_trait_DanFumblerdesc,
-    }
-
     character_trait_definition DanTraits:jinxed
     {
         IsProfessionTrait = false,
@@ -148,6 +138,88 @@ module DanTraits {
         UIDescription = UI_trait_DanGymRegulardesc,
     }
 
+    /* Fumbler folded in: stiff joints, flares in the cold and damp, slower attacks, dropped weapons. */
+    character_trait_definition DanTraits:arthritis
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:arthritis,
+        Cost = -10,
+        UIName = UI_trait_DanArthritis,
+        UIDescription = UI_trait_DanArthritisdesc,
+    }
+
+    character_trait_definition DanTraits:caffeine
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:caffeine,
+        Cost = -2,
+        UIName = UI_trait_DanCaffeine,
+        UIDescription = UI_trait_DanCaffeinedesc,
+    }
+
+    character_trait_definition DanTraits:migraine
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:migraine,
+        Cost = -6,
+        UIName = UI_trait_DanMigraine,
+        UIDescription = UI_trait_DanMigrainedesc,
+    }
+
+    character_trait_definition DanTraits:hemophilia
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:hemophilia,
+        Cost = -8,
+        UIName = UI_trait_DanHemophilia,
+        UIDescription = UI_trait_DanHemophiliadesc,
+    }
+
+    character_trait_definition DanTraits:anemia
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:anemia,
+        Cost = -4,
+        UIName = UI_trait_DanAnemia,
+        UIDescription = UI_trait_DanAnemiadesc,
+    }
+
+    /* Positive, cheap: the three below are one-shot starts and small hooks (DanTraits_Positives.lua). */
+    character_trait_definition DanTraits:ironstomach
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:ironstomach,
+        Cost = 1,
+        UIName = UI_trait_DanIronStomach,
+        UIDescription = UI_trait_DanIronStomachdesc,
+    }
+
+    character_trait_definition DanTraits:earlyriser
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:earlyriser,
+        Cost = 1,
+        UIName = UI_trait_DanEarlyRiser,
+        UIDescription = UI_trait_DanEarlyRiserdesc,
+    }
+
+    character_trait_definition DanTraits:mealprepper
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:mealprepper,
+        Cost = 1,
+        UIName = UI_trait_DanMealPrepper,
+        UIDescription = UI_trait_DanMealPrepperdesc,
+    }
+
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler
@@ -206,6 +278,23 @@ module DanTraits {
         Medical = true,
         Tooltip = Tooltip_DanTraits_TestStrips,
         UseDelta = 0.04,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Iron supplement for Anaemic: 30 pills, its own action
+       (media/lua/shared/TimedActions/ISVitalityPillAction.lua). */
+    item IronPills
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Iron Pills,
+        Weight = 0.2,
+        Icon = IronPills,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_IronPills,
+        UseDelta = 0.0334,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,

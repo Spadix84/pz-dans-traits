@@ -374,6 +374,7 @@ local function wrapDrinkAction()
             local litres = before - after
             if litres > 0 and perLitre > 0 then DanTraits_DiaOnDrink(self.character, litres * perLitre) end
             if litres > 0 and DanTraits_VitalityOnDrink then DanTraits_VitalityOnDrink(self.character, litres, perLitre, kcalPerLitre) end
+            if litres > 0 then DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, litres) end
         end)
         return result
     end

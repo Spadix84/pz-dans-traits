@@ -10,5 +10,7 @@
     "Tooltip_DanTraits_InsulinShort": "Not enough left in the pen.",
     "Tooltip_DanTraits_NoStrips": "No test strips.",
     "Tooltip_DanTraits_MetforminEmpty": "Empty.",
-    "Tooltip_DanTraits_NotDiabetic": "You have no reason to take this."
+    "Tooltip_DanTraits_NotDiabetic": "You have no reason to take this.",
+    "Tooltip_DanTraits_IronPills": "Iron supplement. One a day keeps anaemia at bay. 30 pills.",
+    "Tooltip_DanTraits_IronPillsEmpty": "Empty."
 }

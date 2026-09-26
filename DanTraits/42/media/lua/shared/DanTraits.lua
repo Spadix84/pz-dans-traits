@@ -46,6 +46,36 @@ DanTraits_HasTrait = hasTrait
 DanTraits_Notify = notify
 DanTraits_Data = traitData
 
+-- 0..1 fraction of a stat's range, for the ones the game keeps on other
+-- scales (intoxication is 0..100)
+function DanTraits_StatFraction(stats, stat)
+    local value, max = 0, 1
+    pcall(function() value = stats:get(stat) or 0 end)
+    pcall(function() max = stat:getMaximumValue() or 1 end)
+    if not max or max <= 0 then max = 1 end
+    if max == 1 and value > 1 then max = 100 end
+    return math.max(0, math.min(1, value / max))
+end
+
+-- Value hooks: a system (Vitality, mostly) offers a value, every file that
+-- registered for that name gets to adjust it, in load order. A hook returns
+-- the new value or nil to leave it. Errors in a hook are swallowed.
+DanTraits_Hooks = DanTraits_Hooks or {}
+function DanTraits_AddHook(name, fn)
+    local list = DanTraits_Hooks[name] or {}
+    DanTraits_Hooks[name] = list
+    list[#list + 1] = fn
+end
+function DanTraits_RunHooks(name, value, ...)
+    local list = DanTraits_Hooks[name]
+    if not list then return value end
+    for _, fn in ipairs(list) do
+        local ok, res = pcall(fn, value, ...)
+        if ok and res ~= nil then value = res end
+    end
+    return value
+end
+
 -- Tiny frame scheduler shared by the traits: run fn after that many frames.
 local laterPending = {}
 function DanTraits_Later(frames, fn)
@@ -85,6 +115,7 @@ function DanTraits_OnEat(player, item, fraction)
     if DanTraits_MddOnEat then pcall(function() DanTraits_MddOnEat(player, item) end) end
     if DanTraits_DiaOnEat then pcall(function() DanTraits_DiaOnEat(player, item, fraction) end) end
     if DanTraits_VitalityOnEat then pcall(function() DanTraits_VitalityOnEat(player, item, fraction) end) end
+    DanTraits_RunHooks("eat", nil, player, item, fraction)
     if not DanTraits_GlutenOnEat then return false end
     local ok, res = pcall(DanTraits_GlutenOnEat, player, item, fraction)
     return ok and res == true
@@ -147,7 +178,10 @@ local function wrapPillAction()
     function ISTakePillAction:complete(...)
         local result = originalComplete(self, ...)
         pcall(function()
-            if self.item and tostring(self.item:getType()) == "PillsAntiDep" then DanTraits_MddOnPill(self.character) end
+            if not self.item then return end
+            local kind = tostring(self.item:getType())
+            if kind == "PillsAntiDep" and DanTraits_MddOnPill then DanTraits_MddOnPill(self.character) end
+            DanTraits_RunHooks("pill", nil, self.character, kind)
         end)
         return result
     end

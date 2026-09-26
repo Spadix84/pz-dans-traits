@@ -94,9 +94,22 @@ function render(d){
   // gluten
   if(has('gluten')&&m.gluten!=null){ cards.push(card('Gluten Intolerance', `<div class="big ${m.gluten>=0.5?'bad':m.gluten>0?'warn':'ok'}">${Math.round(m.gluten*100)}<span class="dim" style="font-size:13px"> % flare</span></div>${bar(m.gluten,1,'var(--warn)')}` + row('pending doses',fmt(m.glutenPending,2)) + row('onset in',fmt(m.glutenOnset)+' min') + `<canvas id="c_gluten"></canvas>`)); }
   // dependent
-  if(has('dependent')&&m.dryHours!=null){ cards.push(card('Dependent', `<div class="big ${m.withdrawing?'bad':'ok'}">${fmt(m.dryHours,1)}<span class="dim" style="font-size:13px"> h dry</span></div>` + row('withdrawing',fmt(m.withdrawing)))); }
+  if(has('dependent')&&m.dryHours!=null){ cards.push(card('Dependent', `<div class="big ${m.withdrawing?'bad':'ok'}">${fmt(m.dryHours,1)}<span class="dim" style="font-size:13px"> h dry</span></div>` + row('withdrawing',fmt(m.withdrawing)) + row('tolerance',fmt(m.depTolerance,2)) + bar(m.depTolerance,1,'var(--warn)'))); }
+  // hangover (everyone)
+  if(m.hoLoad!=null){ const hs=m.hoActive?(m.hoSeverity||0)*Math.min(1,(m.hoHoursLeft||0)/2):0;
+    cards.push(card('Hangover', `<div class="big ${m.hoActive?'bad':m.hoPending?'warn':'ok'}">${m.hoActive?'HUNGOVER':m.hoPending?'waiting to wake':m.hoDrinking?'drinking':'clear'}</div>` + row('load (drunk-hours)',fmt(m.hoLoad,2)) + bar(m.hoLoad,3,'var(--warn)') + row('severity',fmt(m.hoSeverity,2)) + row('hours left',fmt(m.hoHoursLeft,1)) + row('strength now',fmt(hs,2)))); }
+  // caffeine
+  if(has('caffeine')&&m.cafLevel!=null){ cards.push(card('Caffeine Dependent', `<div class="big ${(m.cafWithdraw||0)>0?'bad':'ok'}">${Math.round(m.cafLevel)}<span class="dim" style="font-size:13px"> caffeine (60 = sated)</span></div>` + bar(m.cafLevel,400) + row('hours dry',fmt(m.cafDryHours,1)) + row('withdrawal',fmt(m.cafWithdraw,2)) + bar(m.cafWithdraw,1,'var(--bad)') + row('last dose',fmt(m.cafLastDose)))); }
+  // migraine
+  if(has('migraine')){ cards.push(card('Migraines', `<div class="big ${m.migActive?'bad':m.migAuraLeft?'warn':'ok'}">${m.migActive?'MIGRAINE':m.migAuraLeft?'AURA':'clear'}</div>` + row('chance / 10 min',fmt(m.migChance,2)+' %') + row('severity',fmt(m.migSeverity,2)) + row('hours left',fmt(m.migHoursLeft,1)) + row('aura left (h)',fmt(m.migAuraLeft,2)) + row('hours since end',fmt(m.migSinceEnd,1)) + row('painkillers used',fmt(m.migMedsUsed)))); }
+  // hemophilia
+  if(has('hemophilia')){ cards.push(card('Hemophilia', `<div class="big ${(m.hemoOpen||0)>0?'bad':'ok'}">${fmt(m.hemoOpen||0)}<span class="dim" style="font-size:13px"> open bleed(s)</span></div>`)); }
+  // anaemic
+  if(has('anemia')&&m.anIron!=null){ cards.push(card('Anaemic', `<div class="big ${(m.anDeficit||0)>=0.5?'bad':(m.anDeficit||0)>0?'warn':'ok'}">${Math.round(m.anIron*100)}<span class="dim" style="font-size:13px"> % iron (40 = enough)</span></div>` + bar(m.anIron,1,(m.anDeficit||0)>0?'var(--warn)':'var(--acc)') + row('deficit',fmt(m.anDeficit,2)) + row('last iron from',fmt(m.anLastIron)))); }
+  // arthritis
+  if(has('arthritis')){ cards.push(card('Arthritis', `<div class="big ${(m.artJoint||0)>=0.5?'bad':(m.artJoint||0)>0?'warn':'ok'}">${Math.round((m.artJoint||0)*100)}<span class="dim" style="font-size:13px"> % flare</span></div>` + bar(m.artJoint,1,'var(--warn)') + row('stiffness floor',fmt(m.artStiffTarget,1)) + row('combat speed set',fmt(m.artCombatSet,2)))); }
   // everything else in mod data
-  const shown=new Set(['glucose','diaFast','diaSlow','diaInsulin','diaMedMinutes','diaKetoHours','diaHaloIn','diaFumble','asthma','asthmaAttack','asthmaCoughIn','asthmaShownTier','mddSeverity','mddEpisode','mddHoursLeft','mddSinceEnd','mddOutside','mddSmokeTimer','mddFoodTimer','mddMedDays','mddMedStreak','mddWithdraw','gluten','glutenPending','glutenOnset','dryHours','withdrawing']);
+  const shown=new Set(['depTolerance','hoLoad','hoActive','hoPending','hoDrinking','hoSeverity','hoHoursLeft','hoAsleep','cafLevel','cafDryHours','cafWithdraw','cafWithdrawing','cafLastDose','migActive','migAuraLeft','migChance','migSeverity','migHoursLeft','migSinceEnd','migMedsUsed','hemoOpen','hemoWarned','anIron','anDeficit','anLastIron','anTier','anLastCatch','anLastEndurance','artJoint','artStiffTarget','artCombatSet','glucose','diaFast','diaSlow','diaInsulin','diaMedMinutes','diaKetoHours','diaHaloIn','diaFumble','asthma','asthmaAttack','asthmaCoughIn','asthmaShownTier','mddSeverity','mddEpisode','mddHoursLeft','mddSinceEnd','mddOutside','mddSmokeTimer','mddFoodTimer','mddMedDays','mddMedStreak','mddWithdraw','gluten','glutenPending','glutenOnset','dryHours','withdrawing']);
   const rest=Object.entries(m).filter(([k])=>!shown.has(k)).sort();
   cards.push(card('All mod data', `<table>${Object.entries(m).sort().map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}</td></tr>`).join('')}</table>`));
   cards.push(card('Log', `<pre>${arr(d.log).map(l=>l.text).join('\n')}</pre>`));

@@ -26,7 +26,7 @@ ISEatFoodAction = { complete = function(self) eaten[#eaten+1] = { "complete", se
                     eat = function(self, food, pct) eaten[#eaten+1] = { "eat", self.item.name, pct } end }
 
 function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Fumbler", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
+for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
   assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
 end
 assert(handlers.EveryOneMinute and ISEatFoodAction.DanTraitsWrapped, "hooks in place")

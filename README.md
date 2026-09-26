@@ -8,7 +8,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 |---|---|---|
 | Dependent | -6 | Withdrawal after a day without a drink: stress, then pain. |
 | Brittle | -8 | Solid hits can fracture a limb. |
-| Fumbler | -8 | Swings can throw the weapon out of your hands; worse when panicked, hurt or tired. |
+| Arthritis | -10 | Stiff joints: slower to move and swing, flares in the cold and damp, and swings can throw the weapon out of your hands. |
 | Jinxed | -4 | Freshly generated containers near you sometimes lose an item. |
 | Major Depressive Disorder | -8 | Episodes that hold mood down for days; drink, cigarettes, comfort food, exercise, time outdoors and a real antidepressant regimen all matter. |
 | A Really Bad Day | -12 | CDDA-style start: drunk, sick, a shard wound, no clothes, house on fire. |
@@ -20,8 +20,17 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Diabetes Type 2 | -5 | Same model with the body's own insulin, limited by weight; metformin. |
 | Renaissance Faire Geek | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
 | Gym Regular | +1 | Every exercise starts at regularity 50 (a Fitness Instructor's head start); Vitality's exercise score starts neutral instead of empty. |
+| Caffeine Dependent | -2 | Half a day without coffee, tea, cola or chocolate brings a headache, tiredness and low mood; a week dry breaks the habit. |
+| Migraines | -6 | Attacks brought on by bad sleep, thirst, stress, hangovers and bright daylight: hours of pain and nausea. |
+| Hemophilia | -8 | Bleeding never stops on its own and costs far more health; open wounds bleed again until bandaged. |
+| Anaemic | -4 | Needs fresh meat, fish, greens, eggs or iron pills; short of iron, endurance, energy and cold resistance suffer. |
+| Iron Stomach | +1 | Rotten and burnt food does half the harm; food sickness climbs half as fast. |
+| Early Riser | +1 | Starts well rested; every night scores a little better. |
+| Meal Prepper | +1 | Starts on a good diet; variety counts over five days. |
 
 **Vitality** (everyone): diet, exercise and sleep roll into one slow score. Fit and Thriving give faster endurance recovery, mood and stress relief, slow healing and cold resistance, and Thriving adds a kilo of base carry weight and double Fitness and Strength experience; Run Down and Sluggish the reverse. The conditions above read it too. A bad night's sleep sets a same-day "Slept Badly" moodle.
+
+**Hangovers** (everyone): drink past a light buzz and a hangover waits for you to sober up, or to wake: at least six hours of headache, low mood, thirst and tiredness, longer and with nausea after a heavy night. A drink hides it and stops the clock, and counts toward the next one. Dependent characters build tolerance: more drink to feel it, withdrawal sooner and harder, hangovers a little milder.
 
 The airway, vitality and sleep moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
 

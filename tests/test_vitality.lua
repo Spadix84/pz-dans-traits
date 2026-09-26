@@ -6,7 +6,7 @@ CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain", UNHA
 local halo = {}
 HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
 function getText(k, a) return k end
-DanTraitsRegistry = { diabetes1 = "diabetes1", diabetes2 = "diabetes2", fumbler = "fumbler", asthma = "asthma", spiraling = "spiraling", gluten = "gluten", vegetarian = "vegetarian", dependent = "dependent", brittle = "brittle", jinxed = "jinxed", badday = "badday", schizophrenia = "schizophrenia" }
+DanTraitsRegistry = { diabetes1 = "diabetes1", diabetes2 = "diabetes2", arthritis = "arthritis", asthma = "asthma", spiraling = "spiraling", gluten = "gluten", vegetarian = "vegetarian", dependent = "dependent", brittle = "brittle", jinxed = "jinxed", badday = "badday", schizophrenia = "schizophrenia" }
 ArrayList = { new = function() return { add = function() end } end }
 IsoFireManager = { explode = function() end }
 function instanceof() return false end
@@ -30,7 +30,7 @@ MF = nil
 Perks = { Fitness = 'fitness', Strength = 'strength', Woodwork = 'woodwork' }
 
 function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Fumbler", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes", "DanTraits_Vitality" }) do
+for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes", "DanTraits_Vitality" }) do
   assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
 end
 assert(handlers.EveryOneMinute and handlers.OnPlayerUpdate, "hooks in place")
