@@ -1,4 +1,4 @@
--- Dan's Traits: Jinxed.
+-- Project Zomboid Vitality Project: Jinxed.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

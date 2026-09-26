@@ -1,4 +1,4 @@
--- Dan's Traits: live telemetry and a command channel for the companion
+-- Project Zomboid Vitality Project: live telemetry and a command channel for the companion
 -- dashboard (tools/dashboard.py in the mod folder).
 --
 -- Twice a second (real time) the whole picture is written as JSON to
@@ -327,7 +327,14 @@ end
 
 local function runCommand(player, line)
     local args = {}
-    for word in string.gmatch(line, "%S+") do args[#args + 1] = word end
+    -- no string.gmatch in the game's Lua: walk the words with find
+    local pos = 1
+    while true do
+        local s, e = string.find(line, "%S+", pos)
+        if not s then break end
+        args[#args + 1] = string.sub(line, s, e)
+        pos = e + 1
+    end
     if #args == 0 then return nil end
     local name = string.lower(table.remove(args, 1))
     local handler = commands[name]

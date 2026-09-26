@@ -1,4 +1,4 @@
--- Dan's Traits: Vitality.
+-- Project Zomboid Vitality Project: Vitality.
 -- Not a trait: every character has it. Three slow scores (diet, exercise,
 -- sleep) roll into one Vitality value (0..1, 0.5 neutral) that takes about
 -- three days to cross a tier. Fresh produce, fresh meat and cooked dishes

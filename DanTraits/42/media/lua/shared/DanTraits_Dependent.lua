@@ -1,4 +1,4 @@
--- Dan's Traits: Dependent.
+-- Project Zomboid Vitality Project: Dependent.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

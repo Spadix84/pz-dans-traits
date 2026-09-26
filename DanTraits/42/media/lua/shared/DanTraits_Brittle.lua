@@ -1,4 +1,4 @@
--- Dan's Traits: Brittle.
+-- Project Zomboid Vitality Project: Brittle.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

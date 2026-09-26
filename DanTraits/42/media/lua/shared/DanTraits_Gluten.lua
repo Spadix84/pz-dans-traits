@@ -1,4 +1,4 @@
--- Dan's Traits: Gluten Intolerance.
+-- Project Zomboid Vitality Project: Gluten Intolerance.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

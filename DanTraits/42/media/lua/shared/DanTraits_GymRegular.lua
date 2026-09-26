@@ -1,4 +1,4 @@
--- Dan's Traits: Gym Regular.
+-- Project Zomboid Vitality Project: Gym Regular.
 -- Positive, cheap: a new character starts with every exercise's regularity
 -- at GYM_REGULARITY (0..100) instead of nothing, the same head start the
 -- game gives a Fitness Instructor (theirs is 40 to 60). Regularity is what

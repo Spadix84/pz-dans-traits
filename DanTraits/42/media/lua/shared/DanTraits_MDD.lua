@@ -1,4 +1,4 @@
--- Dan's Traits: Major Depressive Disorder (trait id "spiraling").
+-- Project Zomboid Vitality Project: Major Depressive Disorder (trait id "spiraling").
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

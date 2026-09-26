@@ -1,4 +1,4 @@
--- Dan's Traits: core.
+-- Project Zomboid Vitality Project: core.
 --
 -- The traits declared in media/scripts/DanTraits.txt each live in their own
 -- file next to this one (DanTraits_<Trait>.lua) and `require` this file for

@@ -1,6 +1,6 @@
-# Dan's Traits
+# Project Zomboid Vitality Project
 
-A Project Zomboid (Build 42) mod: realistic, balanced traits that add complications to work around, plus a Vitality system that makes fresh food, exercise and sleep matter for everyone.
+A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compatibility): realistic, balanced traits that add complications to work around, plus a Vitality system that makes fresh food, exercise and sleep matter for everyone.
 
 ## Traits
 
@@ -44,4 +44,4 @@ deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back)
 3. `python deploy.py` then restart the game (traits, items and Lua are read at boot).
 4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events.
 
-Lua files are limited to 200 locals each by the game's Kahlua; new traits go in their own file (`require "DanTraits"` for the shared helpers). Kahlua also lacks `next` and parts of `string.format`; the offline tests run on standard Lua and will not catch that.
+The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file's top level included, so new traits go in their own file (`require "DanTraits"` for the shared helpers). It also lacks `next`, `assert`, `xpcall`, `string.gmatch` and `string.rep`. The offline tests run on standard Lua and would not notice any of that, so `tests/lint_kahlua.py` (run first by `run_tests.py`) checks for it, and checks the translation files too: valid JSON, no duplicate keys, and no bare `%` (the game formats UI strings; write `%%` for a percent sign, `%1` for a placeholder).

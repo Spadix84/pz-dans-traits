@@ -1,9 +1,10 @@
-"""Run every offline test with fengari (standard Lua in Node; the game's Kahlua
-has gaps fengari does not catch, such as no `next`, so this is a first line,
-not the last word).
+"""Run the Kahlua lint (tests/lint_kahlua.py), then every offline test with
+fengari (standard Lua in Node). The lint covers the known gaps between the
+two: functions the game's Lua lacks, and the compiler's local and upvalue
+limits. Anything else Kahlua-specific still needs the game.
 
-    python tests/run_tests.py            all
-    python tests/run_tests.py vitality   just test_vitality.lua
+    python tests/run_tests.py            lint, then all tests
+    python tests/run_tests.py vitality   lint and test files matching "vitality"
 """
 import glob
 import os
@@ -20,6 +21,16 @@ def main():
     if only:
         tests = [t for t in tests if any(o in os.path.basename(t) for o in only)]
     failed = []
+    for label, args in (("lint_kahlua.py --selftest", ["--selftest"]), ("lint_kahlua.py", only)):
+        lint = subprocess.run([sys.executable, os.path.join(HERE, "lint_kahlua.py")] + args, cwd=HERE,
+                              capture_output=True, text=True)
+        print("%s %s" % ("PASS" if lint.returncode == 0 else "FAIL", label))
+        for l in (lint.stdout + lint.stderr).splitlines():
+            if lint.returncode == 0 and (l.startswith("lint:") or l.startswith("selftest:")):
+                continue
+            print("    " + l)
+        if lint.returncode != 0:
+            failed.append(label)
     for t in tests:
         name = os.path.basename(t)
         proc = subprocess.run(["npx", "-y", "-p", "fengari-node-cli", "fengari", name], cwd=HERE,
@@ -32,7 +43,7 @@ def main():
             failed.append(name)
             for l in lines[-12:]:
                 print("    " + l)
-    print("%d/%d passed" % (len(tests) - len(failed), len(tests)))
+    print("%d/%d passed" % (len(tests) + 2 - len(failed), len(tests) + 2))
     sys.exit(1 if failed else 0)
 
 

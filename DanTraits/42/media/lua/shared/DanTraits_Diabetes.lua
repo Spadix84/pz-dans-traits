@@ -1,4 +1,4 @@
--- Dan's Traits: Diabetes.
+-- Project Zomboid Vitality Project: Diabetes.
 -- Kept in its own file because DanTraits.lua is at Lua's 200-local limit.
 -- Depends on the helpers DanTraits.lua exports.
 require "DanTraits"

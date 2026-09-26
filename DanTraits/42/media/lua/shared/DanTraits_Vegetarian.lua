@@ -1,4 +1,4 @@
--- Dan's Traits: Vegetarian.
+-- Project Zomboid Vitality Project: Vegetarian.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

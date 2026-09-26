@@ -1,4 +1,4 @@
--- Dan's Traits: Brittle Asthma.
+-- Project Zomboid Vitality Project: Brittle Asthma.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

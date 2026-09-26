@@ -1,4 +1,4 @@
--- Loot for Dan's Traits.
+-- Loot for Project Zomboid Vitality Project.
 -- Each mod item spawns as itself, weighted like the other prescription
 -- bottles: common wherever medicine is kept, rare in pockets and bags.
 -- Weights are relative to the other entries in the same list (for scale:

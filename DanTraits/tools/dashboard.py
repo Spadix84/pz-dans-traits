@@ -1,4 +1,4 @@
-"""Dan's Traits live dashboard.
+"""Project Zomboid Vitality Project live dashboard.
 
 Serves a browser page on http://127.0.0.1:8642 that shows what the mod's
 telemetry file says twice a second and lets you send commands back to the
@@ -22,7 +22,7 @@ TELEMETRY = "DanTraits_Telemetry.json"
 COMMANDS = "DanTraits_Commands.txt"
 
 HTML = r"""<!doctype html>
-<html><head><meta charset="utf-8"><title>Dan's Traits</title>
+<html><head><meta charset="utf-8"><title>Project Zomboid Vitality Project</title>
 <style>
 :root{--bg:#14161a;--card:#1d2026;--line:#2b2f37;--fg:#e6e6e6;--dim:#8b919c;--ok:#5bbf7a;--warn:#e0b04a;--bad:#e05a5a;--acc:#5aa7e0}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,Segoe UI,sans-serif}
@@ -47,7 +47,7 @@ pre{margin:0;font:12px/1.4 monospace;white-space:pre-wrap;color:var(--dim);max-h
 table{width:100%;border-collapse:collapse;font:12px monospace}td{padding:2px 4px;border-bottom:1px solid var(--line);vertical-align:top}td:first-child{color:var(--dim);width:45%}
 details summary{cursor:pointer;color:var(--dim)}
 </style></head><body>
-<header><h1>Dan's Traits</h1><span id="clock" class="dim">-</span><span id="traits"></span><span id="status" class="stale">waiting for the game</span></header>
+<header><h1>Project Zomboid Vitality Project</h1><span id="clock" class="dim">-</span><span id="traits"></span><span id="status" class="stale">waiting for the game</span></header>
 <div class="layout"><main id="main"></main>
 <script>
 const H = {};            // history per key: [{t,v}]
@@ -214,7 +214,7 @@ def main():
     os.makedirs(a.dir, exist_ok=True)
     server = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     url = "http://127.0.0.1:%d/" % a.port
-    print("Dan's Traits dashboard: %s   (folder: %s)   Ctrl+C to stop" % (url, a.dir))
+    print("Project Zomboid Vitality Project dashboard: %s   (folder: %s)   Ctrl+C to stop" % (url, a.dir))
     if not a.no_browser:
         threading.Timer(0.5, lambda: webbrowser.open(url)).start()
     try:

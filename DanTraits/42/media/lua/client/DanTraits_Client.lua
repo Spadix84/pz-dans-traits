@@ -1,4 +1,4 @@
--- Client side pieces for Dan's Traits: the Airway Irritation moodle
+-- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, and the diabetes items (inject, check sugar,
 -- take metformin).

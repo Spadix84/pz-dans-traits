@@ -1,4 +1,4 @@
--- Dan's Traits: Hallucinations (trait id "schizophrenia").
+-- Project Zomboid Vitality Project: Hallucinations (trait id "schizophrenia").
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

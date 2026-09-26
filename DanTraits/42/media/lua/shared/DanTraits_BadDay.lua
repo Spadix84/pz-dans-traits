@@ -1,4 +1,4 @@
--- Dan's Traits: A Really Bad Day.
+-- Project Zomboid Vitality Project: A Really Bad Day.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

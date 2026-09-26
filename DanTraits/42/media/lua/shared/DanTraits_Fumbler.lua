@@ -1,4 +1,4 @@
--- Dan's Traits: Fumbler.
+-- Project Zomboid Vitality Project: Fumbler.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
