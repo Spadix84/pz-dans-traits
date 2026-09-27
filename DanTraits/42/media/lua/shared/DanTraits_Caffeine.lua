@@ -7,7 +7,8 @@
 -- the level has sat under CAF_SATED for twelve hours withdrawal starts: a
 -- headache, tiredness, low mood and creeping stress, at full strength from
 -- thirty hours dry, and then fading out over the rest of the week as the
--- habit breaks. Any real dose resets the clock.
+-- habit breaks. Any real dose resets the clock. Every dose, trait or not,
+-- is also passed to the sleep system: caffeine makes light wake you.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -48,7 +49,10 @@ local function cafData(player)
 end
 
 local function dose(player, amount, what)
-    if not player or not amount or amount <= 0 or not hasTrait(player, "caffeine") then return false end
+    if not player or not amount or amount <= 0 then return false end
+    -- anyone's sleep feels it (DanTraits_Sleep.lua); the habit is the trait's
+    if DanTraits_SleepOnCaffeine then pcall(DanTraits_SleepOnCaffeine, player, amount) end
+    if not hasTrait(player, "caffeine") then return false end
     local d = cafData(player)
     d.cafLevel = d.cafLevel + amount
     d.cafLastDose = what

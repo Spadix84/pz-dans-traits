@@ -220,6 +220,33 @@ module DanTraits {
         UIDescription = UI_trait_DanMealPrepperdesc,
     }
 
+    /* Wakeful folded in (granted with it; Wakeful itself is hidden at
+       character creation): light rarely wakes you and the dark does more
+       good. media/lua/shared/DanTraits_Sleep.lua. */
+    character_trait_definition DanTraits:deepsleeper
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:deepsleeper,
+        Cost = 6,
+        UIName = UI_trait_DanDeepSleeper,
+        UIDescription = UI_trait_DanDeepSleeperdesc,
+        MutuallyExclusiveTraits = base:needsmoresleep;base:insomniac,
+    }
+
+    /* Vanilla Cat's Eyes, re-costed from 3 to 1: light wakes you more
+       easily (DanTraits_Sleep.lua). Definitions are keyed by trait, so this
+       replaces the vanilla one. */
+    character_trait_definition base:nightvision
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = base:nightvision,
+        Cost = 1,
+        UIName = UI_trait_NightVision,
+        UIDescription = UI_trait_NightVisionDesc,
+    }
+
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler

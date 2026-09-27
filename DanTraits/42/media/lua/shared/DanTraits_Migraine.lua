@@ -1,11 +1,14 @@
 -- Project Zomboid Vitality Project: Migraines.
 -- Every ten minutes there is a small chance of an attack, pushed up by a
--- bad night (Vitality's sleep debt), thirst, stress, a hangover and bright
--- daylight outdoors, and never within a day of the last one. An aura gives
+-- bad night (Vitality's sleep debt), thirst, stress, a hangover, bright
+-- daylight outdoors and sleeping with the light on, and never within a day
+-- of the last one. An aura gives
 -- twenty minutes' warning. The attack lasts three to six hours by severity:
 -- pain (painkillers take the edge off and, taken once, shorten it), nausea,
 -- low mood and stress. Daylight outdoors slows the recovery to half and
--- adds to the pain; sleeping it off is twice as fast.
+-- adds to the pain; sleeping it off is twice as fast, in the dark (a lit
+-- room loses the benefit), and during an attack light wakes you twice as
+-- easily.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -32,7 +35,9 @@ local MIG_RAMP          = 1
 local MIG_STRESS_RATE   = 0.0005  -- per minute
 local MIG_MEDS_CUT      = 0.6     -- painkillers, first time in an attack: hours left x this
 local MIG_LIGHT_RATE    = 0.5     -- recovery rate in daylight outdoors...
-local MIG_SLEEP_RATE    = 2.0     -- ...and asleep
+local MIG_SLEEP_RATE    = 2.0     -- ...and asleep in the dark (fully lit room: 1)
+local MIG_SLEEP_LIGHT   = 1.0     -- percent per ten minutes added asleep in a fully lit room
+local MIG_SLEEP_WAKE    = 2       -- during an attack, light wakes you this much more easily
 local MIG_NIGHT         = 0.3     -- night strength under this is day
 local MIG_CLOUD         = 0.5     -- cloud cover under this is bright
 local MIG_TIER          = { 0.01, 0.5, 0.8 }   -- Aura | Migraine | Splitting
@@ -60,8 +65,19 @@ local function inBrightLight(player)
 end
 
 -- percent chance per ten minutes
+-- 0..1 how lit the room is, while asleep (the sleep system's reading)
+local function sleepLit(player)
+    local lit = 0
+    pcall(function()
+        if not player:isAsleep() then return end
+        local d = player:getModData().DanTraits
+        if d and d.slDark then lit = clamp01(-d.slDark) end
+    end)
+    return lit
+end
+
 local function migraineChance(player)
-    local chance = MIG_BASE
+    local chance = MIG_BASE + MIG_SLEEP_LIGHT * sleepLit(player)
     pcall(function()
         local stats = player:getStats()
         local debt = DanTraits_SleepDebt and DanTraits_SleepDebt(player) or 0
@@ -142,7 +158,7 @@ local function updateMigraineMinute(player, d)
     local asleep, bright = false, inBrightLight(player)
     pcall(function() asleep = player:isAsleep() end)
     local rate = 1
-    if asleep then rate = MIG_SLEEP_RATE elseif bright then rate = MIG_LIGHT_RATE end
+    if asleep then rate = MIG_SLEEP_RATE - (MIG_SLEEP_RATE - 1) * sleepLit(player) elseif bright then rate = MIG_LIGHT_RATE end
     local meds = 0
     pcall(function() meds = player:getPainEffect() or 0 end)
     if meds > 0 and not d.migMedsUsed then
@@ -176,6 +192,12 @@ local function onMigraineTen()
     if not player or player:isDead() then return end
     updateMigraineTen(player, traitData(player))
 end
+
+-- an attack makes the eyes sensitive: light wakes you more easily
+DanTraits_AddHook("sleepWake", function(m, player, d)
+    if not d or not d.migActive or not hasTrait(player, "migraine") then return nil end
+    return m * MIG_SLEEP_WAKE
+end)
 
 Events.EveryOneMinute.Add(onMigraineMinute)
 Events.EveryTenMinutes.Add(onMigraineTen)

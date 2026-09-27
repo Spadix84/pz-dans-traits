@@ -153,3 +153,28 @@ Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryObjectContextMenu)
 Events.OnFillInventoryObjectContextMenu.Add(ironPillsMenu)
 Events.OnFillInventoryObjectContextMenu.Add(greyOutMeat)
 Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)
+
+-- Character creation: Wakeful is folded into Deep Sleeper, so it is hidden
+-- from the list (Deep Sleeper grants it). Deep Sleeper follows vanilla's rule
+-- for the sleep traits: hidden on a server where sleep is off.
+local function wrapTraitList()
+    if not CharacterCreationProfession or CharacterCreationProfession.DanTraitsWrapped then return end
+    CharacterCreationProfession.DanTraitsWrapped = true
+    local original = CharacterCreationProfession.isTraitEnabled
+    function CharacterCreationProfession:isTraitEnabled(trait, ...)
+        local kind = nil
+        pcall(function() kind = trait:getType() end)
+        if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
+        if kind ~= nil and DanTraitsRegistry and kind == DanTraitsRegistry.deepsleeper and isMultiplayer() then
+            local ok, allowed = pcall(function()
+                return getServerOptions():getBoolean("SleepAllowed") and getServerOptions():getBoolean("SleepNeeded")
+            end)
+            if ok and not allowed then return false end
+        end
+        if original then return original(self, trait, ...) end
+        return true
+    end
+end
+wrapTraitList()
+Events.OnGameBoot.Add(wrapTraitList)
+Events.OnMainMenuEnter.Add(wrapTraitList)

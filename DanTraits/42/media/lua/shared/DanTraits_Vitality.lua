@@ -7,7 +7,8 @@
 -- same few things all week costs a little, variety earns a little. Exercise
 -- is the fitness system's regularity. Sleep is scored per night, not per
 -- nap: segments broken by less than an hour awake (night terrors, a quick
--- check outside) count as one night, hours are summed against what the
+-- check outside; three hours for Restless Sleeper, who sleeps in two
+-- halves) count as one night, hours are summed against what the
 -- character needs (five for Needs Less Sleep, nine for Needs More Sleep,
 -- seven otherwise), how rested they woke counts as much as the hours, and
 -- each interruption costs a little. Above neutral: faster endurance
@@ -139,17 +140,7 @@ function DanTraits_GradeFood(item)
     return clamp01(grade), why
 end
 
--- vanilla traits by id, as the game names them (lowercase "base:needslesssleep")
-local function hasVanillaTrait(player, id)
-    local found = false
-    pcall(function()
-        local known = player:getCharacterTraits():getKnownTraits()
-        for i = 0, known:size() - 1 do
-            if string.lower(tostring(known:get(i))) == id then found = true end
-        end
-    end)
-    return found
-end
+local hasVanillaTrait = DanTraits_HasVanillaTrait
 
 local function sleepNeed(player)
     if hasVanillaTrait(player, "base:needslesssleep") then return VIT_SLEEP_LESS_HOURS end
@@ -295,10 +286,12 @@ local function updateVitalityMinute(player, d)
             d.vitNightFatigue = fatigue
         end
         d.vitAwakeMin = (d.vitAwakeMin or 0) + 1
-        if (d.vitNightHours or 0) > 0 and d.vitAwakeMin >= VIT_NIGHT_GAP_MIN then
+        -- the gap and the wake count are offered to the traits (Restless Sleeper sleeps in two halves)
+        if (d.vitNightHours or 0) > 0 and d.vitAwakeMin >= DanTraits_RunHooks("nightGap", VIT_NIGHT_GAP_MIN, player) then
             local need = sleepNeed(player)
             local quality = clamp01(d.vitNightHours / need) * (1 - VIT_SLEEP_REST_WEIGHT) + (1 - (d.vitNightFatigue or 0)) * VIT_SLEEP_REST_WEIGHT
-            quality = quality - math.min(VIT_NIGHT_WAKE_MAX, ((d.vitNightWakes or 1) - 1) * VIT_NIGHT_WAKE_COST)
+            local wakes = DanTraits_RunHooks("nightWakes", d.vitNightWakes or 1, player)
+            quality = quality - math.min(VIT_NIGHT_WAKE_MAX, math.max(0, wakes - 1) * VIT_NIGHT_WAKE_COST)
             quality = clamp01(DanTraits_RunHooks("nightQuality", quality, player, d, d.vitNightHours))
             d.vitSleep = clamp01(d.vitSleep + (quality - d.vitSleep) * VIT_SLEEP_W)
             d.vitLastSleepHours = d.vitNightHours

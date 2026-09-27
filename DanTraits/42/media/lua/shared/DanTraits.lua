@@ -41,8 +41,21 @@ local function traitData(player)
     return md.DanTraits
 end
 
+-- vanilla traits by id, as the game names them (lowercase "base:needslesssleep")
+local function hasVanillaTrait(player, id)
+    local found = false
+    pcall(function()
+        local known = player:getCharacterTraits():getKnownTraits()
+        for i = 0, known:size() - 1 do
+            if string.lower(tostring(known:get(i))) == id then found = true end
+        end
+    end)
+    return found
+end
+
 -- shared with the trait files
 DanTraits_HasTrait = hasTrait
+DanTraits_HasVanillaTrait = hasVanillaTrait
 DanTraits_Notify = notify
 DanTraits_Data = traitData
 

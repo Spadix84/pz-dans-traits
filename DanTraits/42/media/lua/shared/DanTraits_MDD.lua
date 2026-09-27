@@ -8,7 +8,7 @@ local traitData = DanTraits_Data
 -- Major Depressive Disorder (trait id "spiraling") ---------------------------
 -- Two things run all the time: pain and stress drag mood down. On top of
 -- that, depressive episodes start at random (more likely when stressed,
--- hurting, exhausted or shut indoors), last days, and hold unhappiness up to
+-- hurting, exhausted, short of sleep or shut indoors), last days, and hold unhappiness up to
 -- a floor set by their severity. Books, TV and radio still work for a few
 -- minutes and then the floor reasserts itself. What actually lowers the
 -- floor is a drink (which quietly deepens the episode), a cigarette, a
@@ -19,6 +19,8 @@ local MDD_STRESS_WEIGHT     = 2.0     -- chance x (1 + stress x this)
 local MDD_PAIN_WEIGHT       = 1.5     -- chance x (1 + pain/100 x this)
 local MDD_FATIGUE_WEIGHT    = 1.0     -- chance x (1 + fatigue x this)
 local MDD_INDOORS_WEIGHT    = 1.0     -- chance x (1 + this) when under an hour outside in the last day
+local MDD_SLEEP_DEBT_WEIGHT = 1.0     -- chance x (1 + Vitality's sleep debt x this): a bad night
+local MDD_SLEEP_WAKE        = 1.5     -- during an episode, light wakes you this much more easily
 local MDD_REFRACTORY_HOURS  = 48      -- no new episode this soon after one ends
 local MDD_MIN_HOURS         = 24      -- an episode lasts at least a day
 local MDD_MAX_EXTRA_HOURS   = 120     -- plus up to five more
@@ -234,6 +236,7 @@ local function updateMddTen(player, d)
         * (1 + (stats:get(CharacterStat.PAIN) or 0) / 100 * MDD_PAIN_WEIGHT)
         * (1 + (stats:get(CharacterStat.FATIGUE) or 0) * MDD_FATIGUE_WEIGHT)
     if d.mddOutside < 60 then chance = chance * (1 + MDD_INDOORS_WEIGHT) end
+    if DanTraits_SleepDebt then chance = chance * (1 + MDD_SLEEP_DEBT_WEIGHT * DanTraits_SleepDebt(player)) end
     chance = chance * (1 - MDD_MED_ONSET_CUT * benefit)
     if DanTraits_VitalityMddOnset then chance = chance * DanTraits_VitalityMddOnset(player) end
     if ZombRand(100000) >= chance * 100000 then return end
@@ -243,6 +246,12 @@ local function updateMddTen(player, d)
     notify(player, "UI_DanTraits_MddStart")
 end
 DanTraits_updateMddTen = updateMddTen
+
+-- sleep is lighter during an episode: light wakes you more easily
+DanTraits_AddHook("sleepWake", function(m, player, d)
+    if not d or not d.mddEpisode or not hasTrait(player, "spiraling") then return nil end
+    return m * MDD_SLEEP_WAKE
+end)
 
 local function onMddMinute()
     local player = getSpecificPlayer(0)

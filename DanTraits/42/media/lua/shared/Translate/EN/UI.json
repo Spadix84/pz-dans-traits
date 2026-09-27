@@ -95,5 +95,10 @@
     "UI_DanTraits_Hangover1": "Hungover",
     "UI_DanTraits_Hangover2": "Rough morning",
     "UI_DanTraits_Hangover3": "Never drinking again",
-    "UI_DanTraits_HangoverOver": "Head clearing"
+    "UI_DanTraits_HangoverOver": "Head clearing",
+    "UI_trait_DanDeepSleeper": "Deep Sleeper",
+    "UI_trait_DanDeepSleeperdesc": "Sleeps like a rock.<br>Needs less sleep.<br>Light rarely wakes you, and costs less rest when it does not.<br>Sleeping in the dark does even more good.<br>Cannot be taken with Sleepyhead or Restless Sleeper.",
+    "UI_DanTraits_SleepLightWoke": "Too bright to sleep",
+    "UI_DanTraits_SleepNightmare": "Nightmare",
+    "UI_trait_NightVisionDesc": "Better vision at night.<br>Light wakes you more easily."
 }
