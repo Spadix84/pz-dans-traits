@@ -25,6 +25,7 @@
 --   antidep                  MDD: as if an antidepressant was swallowed
 --   attrib on|off|reset      which trait moved which stat (DanTraits_Attrib.lua)
 --   blood <vol> [cells] | blood debug on|off | blood reset   blood (DanTraits_Blood.lua)
+--   infect <part> [L] | contaminate <part> [min] | sepsis <0..1> | antibiotic | infection clear   (DanTraits_Infection.lua)
 --   wound <part> <kind>      a wound for testing: scratch | cut | deep | glass (deep, shard lodged)
 --   halo <text>
 --   echo <text>

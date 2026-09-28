@@ -122,5 +122,10 @@
     "UI_DanTraits_BloodDizzy": "Your head swims",
     "UI_DanTraits_BloodShock": "You're going into shock",
     "UI_DanTraits_BloodBleedingOut": "You're bleeding out",
-    "UI_DanTraits_BloodSteadier": "Your head is clearing"
+    "UI_DanTraits_BloodSteadier": "Your head is clearing",
+    "UI_DanTraits_InfectionLocal": "The wound is hot and red",
+    "UI_DanTraits_InfectionFever": "You're burning up",
+    "UI_DanTraits_InfectionSepsis": "Something is very wrong",
+    "UI_DanTraits_InfectionFeverBreaks": "The fever's breaking",
+    "UI_DanTraits_InfectionRelapse": "The fever's back"
 }

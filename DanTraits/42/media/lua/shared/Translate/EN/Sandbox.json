@@ -11,5 +11,7 @@
     "Sandbox_DanTraitsAgeBonus40s": "Profession Levels (40s)",
     "Sandbox_DanTraitsAgeBonus40s_tooltip": "Extra levels a new character in their 40s gets in their profession's main skill.",
     "Sandbox_DanTraitsBloodEnabled": "Blood Loss",
-    "Sandbox_DanTraitsBloodEnabled_tooltip": "Bleeding drains blood instead of health: pale, then light-headed, then shock. Blood comes back with water, food and rest.<br>Off: vanilla bleeding."
+    "Sandbox_DanTraitsBloodEnabled_tooltip": "Bleeding drains blood instead of health: pale, then light-headed, then shock. Blood comes back with water, food and rest.<br>Off: vanilla bleeding.",
+    "Sandbox_DanTraitsInfectionEnabled": "Wound Infection",
+    "Sandbox_DanTraitsInfectionEnabled_tooltip": "Wounds can take an infection that grows: local, then fever, then sepsis. Clean and dress wounds early; once it spreads, only a course of antibiotics (a dose every eight hours) stops it.<br>Off: vanilla wound infection."
 }

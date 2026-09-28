@@ -94,5 +94,21 @@
     "Moodles_BloodLoss_Good_lvl3": "",
     "Moodles_BloodLoss_Good_desc_lvl3": "",
     "Moodles_BloodLoss_Good_lvl4": "",
-    "Moodles_BloodLoss_Good_desc_lvl4": ""
+    "Moodles_BloodLoss_Good_desc_lvl4": "",
+    "Moodles_Infection_Bad_lvl1": "Infected Wound",
+    "Moodles_Infection_Bad_desc_lvl1": "A wound is infected: hot, swollen, sore, and not healing. Disinfectant or garlic can still beat it. Antibiotics certainly will.",
+    "Moodles_Infection_Bad_lvl2": "Fever",
+    "Moodles_Infection_Bad_desc_lvl2": "The infection is in your blood. Burning up, tired and thirsty. Only antibiotics will stop it now: a dose every eight hours, and finish the course.",
+    "Moodles_Infection_Bad_lvl3": "Sepsis",
+    "Moodles_Infection_Bad_desc_lvl3": "The infection is winning. High fever and getting weaker by the hour. Antibiotics, now.",
+    "Moodles_Infection_Bad_lvl4": "Septic Shock",
+    "Moodles_Infection_Bad_desc_lvl4": "Your body is shutting down.",
+    "Moodles_Infection_Good_lvl1": "",
+    "Moodles_Infection_Good_desc_lvl1": "",
+    "Moodles_Infection_Good_lvl2": "",
+    "Moodles_Infection_Good_desc_lvl2": "",
+    "Moodles_Infection_Good_lvl3": "",
+    "Moodles_Infection_Good_desc_lvl3": "",
+    "Moodles_Infection_Good_lvl4": "",
+    "Moodles_Infection_Good_desc_lvl4": ""
 }

@@ -17,3 +17,6 @@ option DanTraits.AgeBonus40s
 
 option DanTraits.BloodEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsBloodEnabled,}
+
+option DanTraits.InfectionEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsInfectionEnabled,}
