@@ -9,7 +9,7 @@
 -- back, tiredness, and nausea after a really heavy one. A drink while
 -- hungover hides the symptoms and stops the clock, and counts toward the
 -- next one. The night's sleep is scored lower too. Alcohol tolerance
--- (Dependent) blunts it a little.
+-- (Alcoholic) blunts it a little.
 require "DanTraits"
 
 local notify = DanTraits_Notify

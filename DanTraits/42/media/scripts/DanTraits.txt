@@ -5,7 +5,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:dependent,
-        Cost = -6,
+        Cost = -2,
         UIName = UI_trait_DanDependent,
         UIDescription = UI_trait_DanDependentdesc,
     }

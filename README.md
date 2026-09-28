@@ -6,7 +6,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 
 | Trait | Cost | What it does |
 |---|---|---|
-| Dependent | -6 | Withdrawal after a day without a drink: stress, then pain. |
+| Alcoholic | -2 | Withdrawal after a day without a drink: craving, low mood and poor sleep, then pain, nausea and the shakes, and for heavy drinkers hallucinations and seizures; sooner and harder the deeper the habit. Anyone who drinks too often gains it; a month without alcohol loses it, and any drink after that is a coin flip to relapse. |
 | Brittle | -8 | Solid hits can fracture a limb. |
 | Arthritis | -10 | Stiff joints: slower to move and swing, flares in the cold and damp, and swings can throw the weapon out of your hands. |
 | Jinxed | -4 | Freshly generated containers near you sometimes lose an item. |
@@ -35,7 +35,9 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 **Sleep and light** (everyone): the light on your square while asleep sets how deep the sleep is. In the dark, tiredness drains faster and the night scores better; in a lit room it drains slower, the night scores worse, and anything brighter than reading light can wake you (up to about half the hours fully lit). Exhaustion, drink and sleeping pills sleep through it. Close the curtains, turn off the lights.
 Light wakes some people more easily: Restless Sleeper, Night Owl and Cat's Eyes (re-costed from 3 to 1 for it), anyone within six hours of a mug of coffee, and during a depressive episode or a migraine. Restless Sleeper's two halves of a night, up to three hours apart, score as one night. Desensitized characters have nightmares. A bad night makes a depressive episode more likely; sleeping with the light on makes a migraine more likely and stops sleep from shortening an attack as much.
 
-**Hangovers** (everyone): drink past a light buzz and a hangover waits for you to sober up, or to wake: at least six hours of headache, low mood, thirst and tiredness, longer and with nausea after a heavy night. A drink hides it and stops the clock, and counts toward the next one. Dependent characters build tolerance: more drink to feel it, withdrawal sooner and harder, hangovers a little milder.
+**Hangovers** (everyone): drink past a light buzz and a hangover waits for you to sober up, or to wake: at least six hours of headache, low mood, thirst and tiredness, longer and with nausea after a heavy night. A drink hides it and stops the clock, and counts toward the next one. Alcoholics carry the habit as tolerance: more drink to feel it, withdrawal sooner and harder, hangovers a little milder.
+
+**Drink relief** (everyone): vanilla treats any sip of alcohol as a full dose of beta blockers and painkillers, however small. That is undone, and the relief follows the Drunk moodle instead: pain reduction of 20, 40, 60 or 80 by level, and panic that settles at a quarter, half, three quarters or the full beta-blocker rate.
 
 The airway, vitality and sleep moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
 

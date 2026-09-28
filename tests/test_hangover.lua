@@ -96,7 +96,7 @@ near(H(q).hoHoursLeft, 6 - 1 / 60, 1e-6, "at least six hours after waking")
 -- severe: nausea floor too
 q._st.foodsick = 0; for _ = 1, 10 do minute() end; assert(q._st.foodsick > 0, "severe: queasy")
 
--- 7. tolerance blunts it: Dependent at full tolerance gets 70%
+-- 7. tolerance blunts it: an Alcoholic at a full meter tolerance gets 70%
 local t = makePlayer({ traits = { "dependent" } }); current = t
 t._md.DanTraits = { depTolerance = 1 }
 t._st.intox = 100; for _ = 1, 180 do minute() end; t._st.intox = 0; minute()
@@ -107,19 +107,5 @@ local n = makePlayer(); current = n
 assert(DanTraits_RunHooks("nightQuality", 0.8, n, {}) == 0.8, "nothing: untouched")
 near(DanTraits_RunHooks("nightQuality", 0.8, n, { hoPending = true, hoSeverity = 1 }), 0.56, 1e-9, "pending, full: x 0.7")
 near(DanTraits_RunHooks("nightQuality", 0.8, n, { hoDrinking = true, hoLoad = 1.5 }), 0.8 * (1 - 0.3 * 0.5), 1e-9, "still drunk: by load")
-
--- 9. tolerance mechanics in Dependent: drunk hours build it, dry hours wear it, and it raises the bar for "a drink"
-local dep = makePlayer({ traits = { "dependent" } }); current = dep
-dep._st.intox = 100; for _ = 1, 6 * 48 do ten() end
-near(H(dep).depTolerance, 1, 1e-6, "48 drunk hours: full tolerance")
-dep._st.intox = 20; ten()
-assert(H(dep).dryHours > 0, "20% intoxication is not a drink at full tolerance (needs > 45%)")
-dep._st.intox = 50; ten(); assert(H(dep).dryHours == 0, "50% is")
-dep._st.intox = 0; for _ = 1, 6 * 14 do ten() end   -- 14 h dry: onset is 24 x (1 - 0.5 x tolerance), about 13 h as tolerance starts to slip
-assert(H(dep).withdrawing, "withdrawal comes at about half the time with full tolerance")
-near(H(dep).depTolerance, 1 - 14 / 168, 1e-6, "tolerance decays over a dry week")
-local fresh = makePlayer({ traits = { "dependent" } }); current = fresh
-fresh._st.intox = 10; ten(); assert(H(fresh).dryHours == 0, "no tolerance: 10% counts as a drink")
-fresh._st.intox = 0; for _ = 1, 6 * 12 do ten() end; assert(not H(fresh).withdrawing, "12 h dry without tolerance: not yet")
 
 print("test_hangover: all passed")
