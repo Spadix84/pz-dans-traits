@@ -10,6 +10,10 @@
 --
 -- Lua allows 200 locals per file: new traits go in new files, not here.
 
+-- before any handler is registered, so the dashboard can say which trait
+-- moved which stat
+require "DanTraits_Attrib"
+
 -- Trait lookup goes through the registry when it is available and falls back
 -- to the legacy string form, so this keeps working if either API shifts.
 -- A key with no registry entry means the game was not restarted after the
@@ -112,9 +116,10 @@ local function onTenMinutes()
     local player = getSpecificPlayer(0)
     if not player or player:isDead() then return end
     local d = traitData(player)
-    if DanTraits_updateDependent then DanTraits_updateDependent(player, d) end
-    if DanTraits_updateMddTen then DanTraits_updateMddTen(player, d) end
-    if DanTraits_updateSchizophrenia then DanTraits_updateSchizophrenia(player, d) end
+    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
+    if DanTraits_updateDependent then track("Dependent", DanTraits_updateDependent, player, d) end
+    if DanTraits_updateMddTen then track("MDD", DanTraits_updateMddTen, player, d) end
+    if DanTraits_updateSchizophrenia then track("Hallucinations", DanTraits_updateSchizophrenia, player, d) end
 end
 Events.EveryTenMinutes.Add(onTenMinutes)
 

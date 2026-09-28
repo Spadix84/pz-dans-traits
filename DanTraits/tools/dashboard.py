@@ -39,7 +39,7 @@ main{flex:1;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minm
 .bar{height:6px;background:#0d0f12;border-radius:3px;overflow:hidden;margin:4px 0 6px}.bar i{display:block;height:100%;background:var(--acc)}
 canvas{width:100%;height:56px;display:block;margin-top:6px}
 .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-.wide{grid-column:1/-1}
+.wide{grid-column:1/-1}.beside{grid-column:2/-1}@media(max-width:760px){.beside{grid-column:auto}}
 #cmd{display:flex;gap:8px}#cmd input{flex:1;background:#0d0f12;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:14px monospace}
 button{background:#262a32;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px}button:hover{border-color:var(--acc)}
 .groups{display:flex;flex-direction:column;gap:6px;margin-top:8px}.group{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:4px 0;border-top:1px dashed var(--line)}.group b{color:var(--dim);font-weight:600;font-size:11px;width:100%;text-transform:uppercase;letter-spacing:.04em}.group button{padding:3px 7px;font-size:12px}
@@ -75,6 +75,8 @@ function render(d){
   // vitals
   const vit=[['panic',100],['endurance',1],['fatigue',1],['thirst',1],['hunger',1],['unhappiness',100],['stress',1],['boredom',100],['intoxication',100],['food_sickness',100],['pain',100]];
   cards.push(card('Vitals', vit.filter(v=>s[v[0]]!=null).map(v=>`<div class="row"><span class="dim">${v[0]}</span><span>${fmt(s[v[0]])}</span></div>${bar(s[v[0]],v[1])}`).join('') + row('health',fmt(b.health,1)) + bar(b.health,100,'var(--ok)') + row('weight',fmt(b.weight,1)+' kg') + row('calories',fmt(b.calories)) + row('asleep / outside / running',`${fmt(b.asleep)} / ${fmt(b.outside)} / ${fmt(b.running)}`) + row('air temp',fmt(b.temperature,1)+' C')));
+  // what moved each stat
+  cards.push(attribCard(d));
   // diabetes
   if((has('diabetes1')||has('diabetes2'))&&m.glucose!=null){ const gl=m.glucose, cls=gl<70||gl>=180?(gl<55||gl>=250?'bad':'warn'):'ok';
     cards.push(card('Diabetes', `<div class="big ${cls}">${Math.round(gl)}<span class="dim" style="font-size:13px"> mg/dL</span></div><canvas id="c_glucose"></canvas>`
@@ -125,6 +127,55 @@ function render(d){
   wireCmd();
 }
 let failures=0;
+// Attribution: which trait moved which stat (DanTraits_Attrib.lua). Each
+// wrapped handler's before/after difference is credited to its file; the
+// rest of the net change is the game, other mods or actions (eating, reading).
+const AT={win:0,frozen:null,autoSent:false,userOff:false,open:{unhappiness:true,stress:true}};
+// stats where going up is good, for colouring
+const UP_GOOD=new Set(['endurance','health']);
+// where vanilla usually gets it from (moodles on the right say which apply now)
+const VANILLA={unhappiness:'boredom, wet / uncomfortable, pain, sickness, food eaten (stale, rotten, bland), dirty / bloody clothes, smoker craving',
+  stress:'zombies nearby, panic, pain, injuries, sickness, smoker craving',boredom:'idle or indoors a long time; TV, radio, books and outdoors lower it',
+  panic:'zombies in view, being grabbed, low light with zombies near',fatigue:'time awake, exertion; sleep lowers it',endurance:'running, fighting, heavy load; resting restores it',
+  pain:'injuries, fractures, burns, sickness',hunger:'time, exertion',thirst:'time, exertion, heat, alcohol',food_sickness:'bad food, rotten food',
+  sickness:'infection, cold, food poisoning',health:'injuries, sickness, starvation, dehydration',wetness:'rain, swimming; dries over time'};
+function atFmt(v){ if(v==null) return '-'; if(Math.abs(v)<1e-6) return '0'; const a=Math.abs(v); const s=a>=10?v.toFixed(1):a>=1?v.toFixed(2):a>=0.01?v.toFixed(3):v.toExponential(1); return (v>0?'+':'')+s; }
+function atCls(stat,v){ if(Math.abs(v)<1e-6) return 'dim'; const bad=UP_GOOD.has(stat)?v<0:v>0; return bad?'bad':'ok'; }
+function atToggle(stat){ AT.open[stat]=!AT.open[stat]; if(last) render(last); }
+function atWin(i){ AT.win=i; if(last) render(last); }
+function atFreeze(){ AT.frozen=AT.frozen?null:(last&&last.attrib)||null; if(last) render(last); }
+function atPower(on){ AT.userOff=!on; send('attrib '+(on?'on':'off')); }
+function attribCard(d){
+  const live=d.attrib||{}, a=AT.frozen||live, mood=d.moodles||{};
+  if(live.enabled===false&&!AT.autoSent&&!AT.userOff){ AT.autoSent=true; send('attrib on'); }
+  const moods=Object.entries(mood).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`<span class="chip">${k.replace(/_/g,' ')} ${v}</span>`).join(' ')||'<span class="dim">none</span>';
+  const ctl=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">`
+    + arr(a.windows).map((w,i)=>`<button onclick="atWin(${i})" style="${i===AT.win?'border-color:var(--acc)':''}">${w.name}</button>`).join('')
+    + `<button onclick="atFreeze()" style="${AT.frozen?'border-color:var(--warn);color:var(--warn)':''}">${AT.frozen?'frozen - click for live':'freeze'}</button>`
+    + `<button onclick="send('attrib reset')">reset</button>`
+    + (live.enabled?`<button onclick="atPower(false)">turn off</button>`:`<button onclick="atPower(true)">turn on</button>`)
+    + `<span class="dim" style="margin-left:auto">moodles now: ${moods}</span></div>`;
+  if(!a.enabled&&!AT.frozen) return card('What is moving each stat',ctl+`<div class="dim">attribution is off${live.enabled===undefined?' (the game has not loaded DanTraits_Attrib.lua; deploy and restart)':''}</div>`,'beside');
+  const w=arr(a.windows)[AT.win]||arr(a.windows)[0];
+  if(!w) return card('What is moving each stat',ctl+'<div class="dim">collecting...</div>','beside');
+  const total=w.total||{}, src=w.sources||{};
+  const stats=new Set(Object.keys(total)); for(const r of Object.values(src)) for(const k of Object.keys(r)) stats.add(k);
+  const order=['unhappiness','stress','boredom','panic','fatigue','endurance','pain','health','hunger','thirst','food_sickness','sickness','intoxication','wetness'];
+  const rank=k=>{ const n=order.indexOf(k); return n<0?99:n; }, list=[...stats].sort((x,y)=>rank(x)-rank(y));
+  const rows=list.map(stat=>{
+    const net=total[stat]||0; let credited=0; const parts=[];
+    for(const [label,r] of Object.entries(src)) if(r[stat]!=null){ credited+=r[stat]; parts.push([label,r[stat]]); }
+    const rest=net-credited; if(Math.abs(rest)>1e-6) parts.push(['game / other mods / actions',rest,true]);
+    parts.sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]));
+    const quiet=Math.abs(net)<1e-6&&parts.every(p=>Math.abs(p[1])<1e-6);
+    const open=AT.open[stat];
+    const detail=open?`<table style="margin:2px 0 8px">${parts.map(p=>`<tr><td>${p[2]?'<i>'+p[0]+'</i>':p[0]}</td><td class="${atCls(stat,p[1])}">${atFmt(p[1])}</td></tr>`).join('')||'<tr><td class="dim">nothing</td><td></td></tr>'}</table>`
+      +(VANILLA[stat]?`<div class="dim" style="font-size:12px;margin:-4px 0 8px">vanilla usually: ${VANILLA[stat]}</div>`:''):'';
+    return `<div class="row" style="cursor:pointer${quiet?';opacity:.5':''}" onclick="atToggle('${stat}')"><span>${open?'&#9662;':'&#9656;'} ${stat.replace(/_/g,' ')}</span><span class="${atCls(stat,net)}">net ${atFmt(net)}${parts.length?' <span class="dim">('+parts.length+' source'+(parts.length>1?'s':'')+')</span>':''}</span></div>`+detail;
+  }).join('');
+  const span=`<div class="dim" style="font-size:12px;margin-bottom:6px">${w.name}: covering the last ${w.span} game minute(s). Numbers are net change over the window in the stat's own units; click a stat to open it.</div>`;
+  return card('What is moving each stat'+(AT.frozen?' <span class="warn">(frozen)</span>':''),ctl+span+rows,'beside');
+}
 function setStatus(text,cls){ const el=document.getElementById('status'); el.textContent=text; el.className=cls; }
 async function poll(){
   try{

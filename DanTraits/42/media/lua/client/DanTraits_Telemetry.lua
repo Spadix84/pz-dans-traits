@@ -23,6 +23,7 @@
 --   cough [radius]           Asthma: one cough (zombies hear it)
 --   gluten <carbs> [now]     Gluten: dose in carbs; "now" skips the 20-minute onset
 --   antidep                  MDD: as if an antidepressant was swallowed
+--   attrib on|off|reset      which trait moved which stat (DanTraits_Attrib.lua)
 --   halo <text>
 --   echo <text>
 local TELEMETRY_FILE = "DanTraits_Telemetry.json"
@@ -169,6 +170,8 @@ local function snapshot(player)
     if has("spiraling") and DanTraits_MddBenefit then derived.mddBenefit = safe(function() return DanTraits_MddBenefit(player) end) end
     if DanTraits_MddRegularity then derived.exerciseRegularity = safe(function() return DanTraits_MddRegularity(player) end) end
     out.derived = derived
+    if DanTraits_AttribReport then out.attrib = safe(function() return DanTraits_AttribReport(player) end) end
+    if DanTraits_ActiveMoodles then out.moodles = safe(function() return DanTraits_ActiveMoodles(player) end) end
     if #log > 0 then out.log = log end   -- an empty Lua table would encode as {} and confuse the page
     return out
 end
@@ -313,6 +316,14 @@ end
 function commands.antidep(player)
     if not DanTraits_MddOnPill then return "antidep: mdd not loaded" end
     return "antidepressant: " .. tostring(DanTraits_MddOnPill(player))
+end
+
+function commands.attrib(player, args)
+    if not DanTraits_AttribSet then return "attrib: not loaded" end
+    if args[1] == "on" then DanTraits_AttribSet(true); return "attribution on"
+    elseif args[1] == "off" then DanTraits_AttribSet(false); return "attribution off"
+    elseif args[1] == "reset" then DanTraits_AttribReset(); return "attribution reset" end
+    return "attrib: on | off | reset"
 end
 
 function commands.halo(player, args)
