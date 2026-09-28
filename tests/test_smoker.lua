@@ -123,13 +123,15 @@ drunk = 0
 -- 5. withdrawal: irritability up to Angry, hungrier, sleeping badly
 s._st.nw = 0.51; H(s).nicLastW = 0.51
 mins(60)
-near(s._st.anger, 0.6, 1e-9, "full withdrawal: irritability 0.6")
+near(s._st.anger, 0.6, 0.003, "full withdrawal: irritability 0.6")
+s._st.anger = 0.55; DanTraits_updateSmokerFrame(s)   -- vanilla's drain between minutes
+assert(s._st.anger > 0.6, "held every frame: no dip under the level, no flicker")
 assert(s._st.hunger > 0.01, "hungrier")
 near(DanTraits_NicotineWithdrawal(s), 1, 1e-9, "withdrawal read by others")
 near(DanTraits_RunHooks("sleepWake", 1, s, H(s)), 2, 1e-9, "light sleep")
 near(DanTraits_RunHooks("nightQuality", 1, s, H(s)), 0.8, 1e-9, "poor night")
-s._asleep = true; s._st.anger = 0; minute(); s._asleep = false
-assert(s._st.anger == 0, "no irritability asleep")
+s._asleep = true; s._st.anger = 0; minute(); DanTraits_updateSmokerFrame(s); s._asleep = false
+assert(s._st.anger == 0, "no irritability asleep, and no hold")
 
 -- 6. relief is the craving answered: a lot in full withdrawal, next to nothing chain-smoked
 s._st.stress, s._st.unhappy = 0.5, 50
@@ -153,7 +155,7 @@ assert(halo[#halo] == "+UI_DanTraits_SmokerCured", "cured notice")
 -- 8. an ex-smoker: a bad moment brings a craving
 s._st.stress = 0.6; s._st.anger = 0; minute()
 assert(halo[#halo] == "UI_DanTraits_SmokerCue", "cue notice")
-mins(30); assert(s._st.anger > 0.15 and s._st.anger <= 0.2, "cue: irritable")
+mins(30); assert(s._st.anger > 0.15 and s._st.anger <= 0.21, "cue: irritable")
 local n = #halo; mins(60); assert(#halo == n, "one notice per cue")
 
 -- 9. relapse: the first smoke of a session is a coin flip; a miss still hooks twice as fast

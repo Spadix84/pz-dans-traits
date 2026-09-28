@@ -67,6 +67,7 @@ local NIC_FADE_FROM_H   = 72      -- withdrawal peaks for three days...
 local NIC_FADE_FLOOR    = 0.25    -- ...then its ceiling eases to this by the time the trait goes
 local NIC_ANGER         = 0.6     -- irritability floor (0..1) at full withdrawal
 local NIC_ANGER_RAMP    = 0.01    -- per minute
+local NIC_ANGER_MARGIN  = 0.002   -- held this far above the floor, clear of vanilla's per-tick drain
 local NIC_HUNGER        = 0.0002  -- hunger per minute at full withdrawal
 local NIC_SLEEP_WAKE    = 1       -- light wakes you (1 + this x withdrawal) times as easily
 local NIC_SLEEP_CUT     = 0.2     -- night quality x (1 - this x withdrawal)
@@ -149,16 +150,6 @@ local function addFrac(stats, stat, frac)
     end)
 end
 
--- raise a stat towards a floor (a fraction of its range), a step at a time
-local function floorUp(stats, stat, floor, ramp)
-    if not stat then return end
-    pcall(function()
-        local max = statMax(stat)
-        local value = stats:get(stat) or 0
-        if value < floor * max then stats:set(stat, math.min(floor * max, value + ramp * max)) end
-    end)
-end
-
 local function roll(percent)
     if ZombRand then return ZombRand(1000000) < percent * 10000 end
     return math.random() * 100 < percent
@@ -192,6 +183,33 @@ end
 
 local function wakeWithdrawalClock(player)
     pcall(function() player:setTimeSinceLastSmoke(0) end)
+end
+
+-- irritability ---------------------------------------------------------------
+-- Vanilla drains ANGER a little every tick. Topping it up once a minute let
+-- it dip under a moodle threshold between top-ups, so the moodle flickered.
+-- Instead the minute update sets a level (nicAnger, climbing a ramp at a
+-- time towards the floor) and every frame holds ANGER at or above it. When
+-- the floor goes, the hold goes, and vanilla's drain brings it down.
+local function holdAnger(stats, d)
+    local hold = d.nicAnger or 0
+    if hold <= 0 then return end
+    pcall(function()
+        if (stats:get(CharacterStat.ANGER) or 0) < hold then
+            stats:set(CharacterStat.ANGER, math.min(1, hold + NIC_ANGER_MARGIN))
+        end
+    end)
+end
+
+local function setAngerFloor(stats, d, floor)
+    if floor <= 0 then
+        d.nicAnger = 0
+        return
+    end
+    local now = 0
+    pcall(function() now = stats:get(CharacterStat.ANGER) or 0 end)
+    d.nicAnger = math.min(floor, math.max(d.nicAnger or 0, now) + NIC_ANGER_RAMP)
+    holdAnger(stats, d)
 end
 
 -- the trait, gained ------------------------------------------------------------
@@ -323,6 +341,7 @@ function DanTraits_ChewNicotineGum(player)
             player:setTimeSinceLastSmoke(w / statMax(ws))
         end)
         pcall(function() stats:set(CharacterStat.ANGER, (stats:get(CharacterStat.ANGER) or 0) * (1 - NIC_GUM_RELIEF)) end)
+        d.nicAnger = (d.nicAnger or 0) * (1 - NIC_GUM_RELIEF)
     end
     d.nicCueMin = 0
     d.nicStimH = math.max(d.nicStimH or 0, NIC_STIM_H * 0.5)
@@ -413,6 +432,7 @@ local function updateSmokerMinute(player, d)
     end
 
     local drunk = drunkLevel(player) >= NIC_DRUNK_LEVEL
+    local angerFloor = 0
     if smoker and ws then
         -- the craving builds at the habit's pace, capped as the habit winds down
         pcall(function()
@@ -430,7 +450,7 @@ local function updateSmokerMinute(player, d)
             d.nicWithdraw = clamp01(w / max)
         end)
         if not asleep and (d.nicWithdraw or 0) > 0 then
-            floorUp(stats, CharacterStat.ANGER, NIC_ANGER * d.nicWithdraw, NIC_ANGER_RAMP)
+            angerFloor = NIC_ANGER * d.nicWithdraw
             addFrac(stats, CharacterStat.HUNGER, NIC_HUNGER * d.nicWithdraw)
         end
     else
@@ -452,9 +472,10 @@ local function updateSmokerMinute(player, d)
         d.nicCue = cue
         if (d.nicCueMin or 0) > 0 then
             d.nicCueMin = d.nicCueMin - 1
-            if strength > 0 and not asleep then floorUp(stats, CharacterStat.ANGER, NIC_CUE_ANGER * strength, NIC_ANGER_RAMP) end
+            if strength > 0 and not asleep then angerFloor = math.max(angerFloor, NIC_CUE_ANGER * strength) end
         end
     end
+    setAngerFloor(stats, d, angerFloor)
 
     -- the cough, worst in the first hour after a real sleep
     if (d.nicCoughGap or 0) > 0 then d.nicCoughGap = d.nicCoughGap - 1 end
@@ -470,14 +491,16 @@ local function updateSmokerMinute(player, d)
 end
 DanTraits_updateSmokerMinute = updateSmokerMinute
 
--- per frame: damaged lungs recover endurance slower
+-- per frame: hold the irritability, and damaged lungs recover endurance slower
 local function updateSmokerFrame(player)
     local d = player:getModData().DanTraits
-    if not d or (d.nicLungs or 0) <= 0 then
-        if d then d.nicLastEndurance = nil end
+    if not d then return end
+    local stats = player:getStats()
+    holdAnger(stats, d)
+    if (d.nicLungs or 0) <= 0 then
+        d.nicLastEndurance = nil
         return
     end
-    local stats = player:getStats()
     local endurance = stats:get(CharacterStat.ENDURANCE)
     local last = d.nicLastEndurance or endurance
     if endurance > last then
