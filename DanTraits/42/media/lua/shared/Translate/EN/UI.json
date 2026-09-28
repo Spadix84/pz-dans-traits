@@ -127,5 +127,9 @@
     "UI_DanTraits_InfectionFever": "You're burning up",
     "UI_DanTraits_InfectionSepsis": "Something is very wrong",
     "UI_DanTraits_InfectionFeverBreaks": "The fever's breaking",
-    "UI_DanTraits_InfectionRelapse": "The fever's back"
+    "UI_DanTraits_InfectionRelapse": "The fever's back",
+    "UI_DanTraits_DressingSpent": "The dressing on your %1 needs changing",
+    "UI_DanTraits_StitchesTore": "Your stitches tore: %1",
+    "UI_DanTraits_WoundOpened": "The wound on your %1 opened up",
+    "UI_DanTraits_BadSet": "The bone in your %1 isn't set right"
 }

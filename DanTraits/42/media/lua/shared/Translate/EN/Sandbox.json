@@ -13,5 +13,7 @@
     "Sandbox_DanTraitsBloodEnabled": "Blood Loss",
     "Sandbox_DanTraitsBloodEnabled_tooltip": "Bleeding drains blood instead of health: pale, then light-headed, then shock. Blood comes back with water, food and rest.<br>Off: vanilla bleeding.",
     "Sandbox_DanTraitsInfectionEnabled": "Wound Infection",
-    "Sandbox_DanTraitsInfectionEnabled_tooltip": "Wounds can take an infection that grows: local, then fever, then sepsis. Clean and dress wounds early; once it spreads, only a course of antibiotics (a dose every eight hours) stops it.<br>Off: vanilla wound infection."
+    "Sandbox_DanTraitsInfectionEnabled_tooltip": "Wounds can take an infection that grows: local, then fever, then sepsis. Clean and dress wounds early; once it spreads, only a course of antibiotics (a dose every eight hours) stops it.<br>Off: vanilla wound infection.",
+    "Sandbox_DanTraitsWoundCareEnabled": "Wound Care",
+    "Sandbox_DanTraitsWoundCareEnabled_tooltip": "Dressings wear out and need changing, deep wounds heal slowly unstitched and can open again, fresh stitches can tear under strain, splints are set with a First Aid roll, and walking on a broken leg makes it worse.<br>Off: vanilla wound care."
 }

@@ -39,6 +39,8 @@ local function makePart(name)
   function p:bandaged() return self._bandaged end
   function p:stitched() return self._stitched end
   function p:haveGlass() return self._glass end
+  p._life = 5
+  function p:getBandageLife() return self._life end
   function p:haveBullet() return false end
   function p:IsBleedingStemmed() return false end
   function p:scratched() return false end
@@ -107,6 +109,7 @@ arm._time = 5; minute(); near(D(p).bloodLossMin, 0.004, 1e-12, "half the bleedin
 -- vanilla's bandage clears the bleeding flag and keeps the time
 arm._bandaged, arm._bleeding = true, false; minute(); near(D(p).bloodLossMin, 0.0004, 1e-12, "bandaged: a tenth, flag or no flag")
 assert(string.find(D(p).bloodSources, "(bandaged)", 1, true), "shown as bandaged")
+arm._life = 0; minute(); near(D(p).bloodLossMin, 0.002, 1e-12, "a spent, soaked bandage: only half"); arm._life = 5
 arm._glass = true; minute(); near(D(p).bloodLossMin, 0.004 * 0.35, 1e-12, "a shard under the bandage bleeds through")
 -- stitching zeroes the bleeding time
 arm._stitched, arm._time = true, 0; minute(); assert(D(p).bloodLossMin == 0, "stitched: stopped")

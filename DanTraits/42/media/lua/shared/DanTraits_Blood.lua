@@ -15,7 +15,8 @@
 -- Each bleeding part loses blood by its bleeding time (the game's own clock
 -- for how bad the bleed is), where it is (neck worst, then head, thigh,
 -- groin, torso) and how it is dressed: a bandage slows it to a tenth, a
--- shard or bullet left in bleeds through the bandage, stitches stop it.
+-- shard or bullet left in bleeds through the bandage, a spent (soaked)
+-- bandage only halves it, stitches stop it.
 --
 -- Vanilla's health loss from bleeding is given back tick by tick. What
 -- vanilla does (BodyPart.DamageUpdate, read from the jar), all x the part's
@@ -49,6 +50,7 @@ local fraction = DanTraits_StatFraction
 local BL_RATE          = 0.008   -- volume per game minute at bleeding time 10, unbandaged, an arm
 local BL_BANDAGED      = 0.1     -- x rate under a bandage
 local BL_LODGED        = 0.35    -- x rate under a bandage with a shard or bullet still in
+local BL_SOAKED        = 0.5     -- x rate under a spent (soaked, dirty) bandage
 local BL_PART = { Neck = 3.0, Head = 1.5, UpperLeg_L = 1.5, UpperLeg_R = 1.5, Groin = 1.5,
                   Torso_Upper = 1.2, Torso_Lower = 1.2, Hand_L = 0.7, Hand_R = 0.7, Foot_L = 0.7, Foot_R = 0.7 }
 local BL_TIER          = { 0.15, 0.30, 0.40, 0.45 }  -- volume lost: pale | light-headed | shock | bleeding out
@@ -150,7 +152,9 @@ local function partRate(part)
     local bandaged = partIs(part, "bandaged")
     if bandaged then
         local lodged = partIs(part, "haveGlass") or partIs(part, "haveBullet")
-        rate = rate * (lodged and BL_LODGED or BL_BANDAGED)
+        local soaked = false
+        pcall(function() soaked = part:getBandageLife() <= 0 end)
+        rate = rate * ((soaked and BL_SOAKED) or (lodged and BL_LODGED) or BL_BANDAGED)
     end
     return rate, name, bandaged
 end
