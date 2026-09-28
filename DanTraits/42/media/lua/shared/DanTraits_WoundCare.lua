@@ -353,6 +353,14 @@ DanTraits_ExtraCommands.breakbone = function(player, args)
     pcall(function() part:setFractureTime(tonumber(args[2]) or 50) end)
     return "broke " .. tostring(part:getType()) .. ", fracture time " .. tostring(num(part, "getFractureTime"))
 end
+DanTraits_ExtraCommands.firstaid = function(player, args)
+    local level = tonumber(args[1])
+    if not level then return "firstaid <level 0..10>" end
+    pcall(function() player:setPerkLevelDebug(Perks.Doctor, math.max(0, math.min(10, math.floor(level)))) end)
+    local now = -1
+    pcall(function() now = player:getPerkLevel(Perks.Doctor) end)
+    return "first aid " .. tostring(now)
+end
 DanTraits_ExtraCommands.badset = function(player, args)
     local part = partOf(player, args[1])
     if not part then return "badset <part>" end

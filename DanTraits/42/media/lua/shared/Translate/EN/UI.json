@@ -131,5 +131,22 @@
     "UI_DanTraits_DressingSpent": "The dressing on your %1 needs changing",
     "UI_DanTraits_StitchesTore": "Your stitches tore: %1",
     "UI_DanTraits_WoundOpened": "The wound on your %1 opened up",
-    "UI_DanTraits_BadSet": "The bone in your %1 isn't set right"
+    "UI_DanTraits_BadSet": "The bone in your %1 isn't set right",
+    "UI_DanTraits_health_Scratch": "Scratched",
+    "UI_DanTraits_health_Cut": "Cut",
+    "UI_DanTraits_health_BadCut": "A bad cut",
+    "UI_DanTraits_health_MaybeBroken": "Might be broken",
+    "UI_DanTraits_health_RedSwollen": "Red and swollen",
+    "UI_DanTraits_health_Infected": "Infected",
+    "UI_DanTraits_health_InfectionLocal": "Infected, still in the wound",
+    "UI_DanTraits_health_InfectionSpreading": "Infection spreading into the blood",
+    "UI_DanTraits_health_MightTurn": "Could be going bad",
+    "UI_DanTraits_health_DressingThin": "Dressing needs changing soon",
+    "UI_DanTraits_health_StitchesFresh": "Stitches fresh, go easy on it",
+    "UI_DanTraits_health_StitchesHolding": "Stitches holding",
+    "UI_DanTraits_health_StitchesSound": "Stitches sound",
+    "UI_DanTraits_health_SetBadly": "Bone set badly",
+    "UI_DanTraits_health_BoneEarly": "Bone: early days",
+    "UI_DanTraits_health_BoneKnitting": "Bone: knitting",
+    "UI_DanTraits_health_BoneNearly": "Bone: nearly healed"
 }
