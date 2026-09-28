@@ -78,5 +78,21 @@
     "Moodles_Migraine_Good_lvl3": "",
     "Moodles_Migraine_Good_desc_lvl3": "",
     "Moodles_Migraine_Good_lvl4": "",
-    "Moodles_Migraine_Good_desc_lvl4": ""
+    "Moodles_Migraine_Good_desc_lvl4": "",
+    "Moodles_BloodLoss_Bad_lvl1": "Pale",
+    "Moodles_BloodLoss_Bad_desc_lvl1": "Lost some blood. Weak, slow to get your breath back, thirsty. Stop the bleeding, drink, rest.",
+    "Moodles_BloodLoss_Bad_lvl2": "Light-headed",
+    "Moodles_BloodLoss_Bad_desc_lvl2": "Lost a lot of blood. The room tilts, the heart races; no sprinting. Stop the bleeding now.",
+    "Moodles_BloodLoss_Bad_lvl3": "Shock",
+    "Moodles_BloodLoss_Bad_desc_lvl3": "Too little blood to go round. Cold, weak, confused, getting worse. Every drop counts.",
+    "Moodles_BloodLoss_Bad_lvl4": "Bleeding Out",
+    "Moodles_BloodLoss_Bad_desc_lvl4": "Minutes left. Stop the bleeding or die.",
+    "Moodles_BloodLoss_Good_lvl1": "",
+    "Moodles_BloodLoss_Good_desc_lvl1": "",
+    "Moodles_BloodLoss_Good_lvl2": "",
+    "Moodles_BloodLoss_Good_desc_lvl2": "",
+    "Moodles_BloodLoss_Good_lvl3": "",
+    "Moodles_BloodLoss_Good_desc_lvl3": "",
+    "Moodles_BloodLoss_Good_lvl4": "",
+    "Moodles_BloodLoss_Good_desc_lvl4": ""
 }

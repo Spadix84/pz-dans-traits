@@ -24,6 +24,8 @@
 --   gluten <carbs> [now]     Gluten: dose in carbs; "now" skips the 20-minute onset
 --   antidep                  MDD: as if an antidepressant was swallowed
 --   attrib on|off|reset      which trait moved which stat (DanTraits_Attrib.lua)
+--   blood <vol> [cells] | blood debug on|off | blood reset   blood (DanTraits_Blood.lua)
+--   wound <part> <kind>      a wound for testing: scratch | cut | deep | glass (deep, shard lodged)
 --   halo <text>
 --   echo <text>
 local TELEMETRY_FILE = "DanTraits_Telemetry.json"
@@ -348,7 +350,8 @@ local function runCommand(player, line)
     end
     if #args == 0 then return nil end
     local name = string.lower(table.remove(args, 1))
-    local handler = commands[name]
+    -- other files add theirs to DanTraits_ExtraCommands
+    local handler = commands[name] or (DanTraits_ExtraCommands and DanTraits_ExtraCommands[name])
     if not handler then return "unknown command: " .. name end
     local ok, res = pcall(handler, player, args)
     if not ok then return name .. " failed: " .. tostring(res) end

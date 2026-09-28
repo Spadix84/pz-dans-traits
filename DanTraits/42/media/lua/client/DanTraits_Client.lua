@@ -13,6 +13,7 @@ if ok and MF and MF.createMoodle then
     MF.createMoodle("SleptBadly")
     MF.createMoodle("Hangover")
     MF.createMoodle("Migraine")
+    MF.createMoodle("BloodLoss")
 end
 
 local function actualItems(items)

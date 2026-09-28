@@ -5,6 +5,8 @@
 -- recovers slower, tiredness comes sooner, colds catch easier. A
 -- vegetarian lives on greens, eggs and pills. The eat hook reads the
 -- game's food type, so stews and dishes count by their main ingredient.
+-- After blood loss (DanTraits_Blood.lua) red cells rebuild at half speed,
+-- slower still short of iron, and rebuilding them spends iron.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -23,6 +25,8 @@ local AN_ENDURANCE_CUT  = 0.4     -- endurance recovery x (1 - this x deficit)
 local AN_FATIGUE        = 0.0004  -- per minute at full deficit
 local AN_COLD           = 0.5     -- cold catching x (1 + this x deficit)
 local AN_TIER           = { 0.5, 0.9 }   -- Feeling faint | Light-headed
+local AN_BLOOD_REBUILD  = 0.5     -- red cells rebuild x this, x (1 - deficit)
+local AN_BLOOD_IRON     = 2       -- iron spent per unit of red cells rebuilt (a tenth of the blood: a fifth of the iron)
 
 local MEAT_TYPES = { "meat", "fish", "game", "poultry", "seafood", "beef", "pork", "venison", "rabbit", "chicken", "insect" }
 local GREENS_TYPES = { "vegetables", "greens", "herb", "beans", "leafy" }
@@ -80,6 +84,18 @@ end)
 
 DanTraits_AddHook("pill", function(_, player, kind)
     if string.lower(tostring(kind or "")) == "ironpills" then addIron(player, AN_PILL, "iron pill") end
+    return nil
+end)
+
+DanTraits_AddHook("bloodCellRebuild", function(rate, player, d)
+    if not hasTrait(player, "anemia") then return nil end
+    return rate * AN_BLOOD_REBUILD * (1 - deficitOf(d))
+end)
+
+DanTraits_AddHook("bloodCellsRebuilt", function(_, player, amount)
+    if not hasTrait(player, "anemia") then return nil end
+    local d = anData(player)
+    d.anIron = clamp01(d.anIron - amount * AN_BLOOD_IRON)
     return nil
 end)
 

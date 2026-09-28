@@ -117,5 +117,10 @@
     "UI_DanTraits_SmokerCured": "Kicked the habit",
     "UI_DanTraits_SmokerCue": "Could really use a smoke",
     "UI_DanTraits_SmokerBuzz": "Head rush",
-    "UI_DanTraits_SmokerGum": "Takes the edge off"
+    "UI_DanTraits_SmokerGum": "Takes the edge off",
+    "UI_DanTraits_BloodPale": "You feel pale and weak",
+    "UI_DanTraits_BloodDizzy": "Your head swims",
+    "UI_DanTraits_BloodShock": "You're going into shock",
+    "UI_DanTraits_BloodBleedingOut": "You're bleeding out",
+    "UI_DanTraits_BloodSteadier": "Your head is clearing"
 }
