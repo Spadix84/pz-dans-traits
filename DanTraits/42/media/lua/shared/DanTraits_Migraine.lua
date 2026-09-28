@@ -1,6 +1,7 @@
 -- Project Zomboid Vitality Project: Migraines.
 -- Every ten minutes there is a small chance of an attack, pushed up by a
--- bad night (Vitality's sleep debt), thirst, stress, a hangover, bright
+-- bad night (Vitality's sleep debt), thirst, stress, a hangover, nicotine
+-- withdrawal, bright
 -- daylight outdoors and sleeping with the light on, and never within a day
 -- of the last one. An aura gives
 -- twenty minutes' warning. The attack lasts three to six hours by severity:
@@ -22,6 +23,7 @@ local MIG_THIRST_FROM   = 0.3
 local MIG_STRESS        = 2.0     -- added at full stress
 local MIG_LIGHT         = 1.5     -- added in bright daylight outdoors
 local MIG_HANGOVER      = 2.0     -- added at a full-strength hangover
+local MIG_NICOTINE      = 1.5     -- added at full nicotine withdrawal (Smoker)
 local MIG_REFRACTORY_H  = 24      -- no roll for this long after an attack ends
 local MIG_AURA_H        = 20 / 60 -- warning before the pain
 local MIG_SEV_MIN       = 0.5     -- severity is this plus up to 0.5
@@ -86,6 +88,7 @@ local function migraineChance(player)
         if thirst > MIG_THIRST_FROM then chance = chance + MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
         chance = chance + MIG_STRESS * clamp01(stats:get(CharacterStat.STRESS) or 0)
         if DanTraits_HangoverStrength then chance = chance + MIG_HANGOVER * clamp01(DanTraits_HangoverStrength(player)) end
+        if DanTraits_NicotineWithdrawal then chance = chance + MIG_NICOTINE * clamp01(DanTraits_NicotineWithdrawal(player)) end
     end)
     if inBrightLight(player) then chance = chance + MIG_LIGHT end
     return chance

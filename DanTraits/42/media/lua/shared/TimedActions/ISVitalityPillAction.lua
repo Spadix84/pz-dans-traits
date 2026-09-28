@@ -1,6 +1,6 @@
--- One pill from one of this mod's bottles, then the shared "pill" hook with
--- the item's type, so the trait that cares (iron pills: Anaemic) does the
--- rest. Same shape as taking metformin.
+-- One pill (or a piece of gum) from one of this mod's items, then the shared
+-- "pill" hook with the item's type, so the trait that cares (iron pills:
+-- Anaemic; nicotine gum: Smoker) does the rest. Same shape as taking metformin.
 require "TimedActions/ISBaseTimedAction"
 
 ISVitalityPillAction = ISBaseTimedAction:derive("ISVitalityPillAction")
@@ -21,7 +21,7 @@ function ISVitalityPillAction:update()
 end
 
 function ISVitalityPillAction:start()
-    self.item:setJobType(getText("ContextMenu_DanTraits_TakeIronPill"))
+    self.item:setJobType(getText(self.label or "ContextMenu_DanTraits_TakeIronPill"))
     self.item:setJobDelta(0.0)
     self:setOverrideHandModels(nil, self.item)
 end
@@ -40,9 +40,10 @@ function ISVitalityPillAction:perform()
     ISBaseTimedAction.perform(self)
 end
 
-function ISVitalityPillAction:new(character, item)
+function ISVitalityPillAction:new(character, item, label)
     local o = ISBaseTimedAction.new(self, character)
     o.item = item
+    o.label = label
     o.maxTime = 60
     if character:isTimedActionInstant() then o.maxTime = 1 end
     return o

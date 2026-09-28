@@ -12,5 +12,7 @@
     "Tooltip_DanTraits_MetforminEmpty": "Empty.",
     "Tooltip_DanTraits_NotDiabetic": "You have no reason to take this.",
     "Tooltip_DanTraits_IronPills": "Iron supplement. One a day keeps anaemia at bay. 30 pills.",
-    "Tooltip_DanTraits_IronPillsEmpty": "Empty."
+    "Tooltip_DanTraits_IronPillsEmpty": "Empty.",
+    "Tooltip_DanTraits_NicotineGum": "Takes most of the edge off a cigarette craving, without smoking. Quitting still takes three weeks without tobacco. 10 pieces.",
+    "Tooltip_DanTraits_NicotineGumEmpty": "Empty."
 }

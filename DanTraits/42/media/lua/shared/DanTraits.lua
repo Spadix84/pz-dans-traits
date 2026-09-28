@@ -189,6 +189,11 @@ local function wrapPillAction()
     ISTakePillAction.DanTraitsWrapped = true
     local originalComplete = ISTakePillAction.complete
     function ISTakePillAction:complete(...)
+        -- before the vanilla effect, for anything that wants the state it acts on
+        -- (cigarettes from a pack and chewing tobacco also come through here)
+        pcall(function()
+            if self.item then DanTraits_RunHooks("prePill", nil, self.character, tostring(self.item:getType()), self.item) end
+        end)
         local result = originalComplete(self, ...)
         pcall(function()
             if not self.item then return end

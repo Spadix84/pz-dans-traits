@@ -125,6 +125,24 @@ local ITEMS = {
         bags = { HandbagsAndPurses = 0.03 },
         clutter = { ClosetItems = 0.01 },
     },
+    {
+        -- not medicine here: it turns up rarely where the cigarettes are
+        -- (for scale, a pack is 20 to 50 behind a tobacco counter, 4 on a bar)
+        name = "DanTraits.NicotineGum",
+        procedural = {
+            StoreCounterTobacco = 1, GasStoreSpecial = 1, TobaccoStoreCigarettes = 2,
+            BarCounterMisc = 0.2, MechanicShelfMisc = 0.1, JanitorMisc = 0.1,
+            CarDealerDesk = 0.3, OfficeDeskStressed = 0.5, JackiesDesk = 0.2,
+            SafehouseFood_Mid = 0.3, KitchenRandom = 0.03, BedroomSidetable = 0.05,
+            SecurityDesk = 0.05, PrisonCellRandom = 0.05, StoreShelfMedical = 0.3,
+        },
+        suburbs = {
+            { { "all", "inventoryfemale", "items" }, 0.005 },
+            { { "all", "inventorymale", "items" }, 0.005 },
+        },
+        bags = { HandbagsAndPurses = 0.03 },
+        clutter = { DeskItems = 0.1 },
+    },
 }
 
 local function append(list, name, weight)

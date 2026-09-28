@@ -247,6 +247,20 @@ module DanTraits {
         UIDescription = UI_trait_NightVisionDesc,
     }
 
+    /* Vanilla Smoker, re-costed from -3 to -4 for the rework (dependence,
+       irritability, damaged lungs and a cough: DanTraits_Smoker.lua). Same
+       exclusion as vanilla: not with Athletic. */
+    character_trait_definition base:smoker
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = base:smoker,
+        Cost = -4,
+        UIName = UI_trait_Smoker,
+        UIDescription = UI_trait_SmokerDesc,
+        MutuallyExclusiveTraits = base:athletic,
+    }
+
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler
@@ -336,6 +350,24 @@ module DanTraits {
         Icon = Metformin,
         Medical = true,
         Tooltip = Tooltip_DanTraits_Metformin,
+        UseDelta = 0.1,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Nicotine gum for Smoker: 10 pieces, each takes most of the edge off a
+       craving without smoking (media/lua/shared/DanTraits_Smoker.lua). Its
+       own action, not the pill one. Rare, alongside the cigarettes. */
+    item NicotineGum
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Nicotine Gum,
+        Weight = 0.05,
+        Icon = NicotineGum,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_NicotineGum,
         UseDelta = 0.1,
         UseWhileEquipped = false,
         StaticModel = PillBottle,

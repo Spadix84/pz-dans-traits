@@ -15,7 +15,8 @@
 --     two sleeps up to three hours apart as one night and does not charge
 --     for the wake between them.
 --   Caffeine, anyone: a full dose (a mug of coffee) keeps you on edge for
---     six hours, less for a smaller one: x2 while it lasts.
+--     six hours, less for a smaller one: x2 while it lasts. A smoker clears
+--     it faster, so theirs wears off sooner.
 --   Other trait files add their own through the "sleepWake" hook
 --     (a depressive episode, a migraine).
 --   Deep Sleeper: x0.25.
@@ -113,6 +114,7 @@ function DanTraits_SleepOnCaffeine(player, amount)
     if not player or not amount or amount <= 0 then return end
     local d = traitData(player)
     local hours = CAF_HOURS * math.min(1, amount / CAF_FULL_DOSE)
+    hours = hours / DanTraits_RunHooks("caffeineClearance", 1, player)   -- a smoker's wears off sooner
     d.slCaffeineHours = math.max(d.slCaffeineHours or 0, hours)
 end
 

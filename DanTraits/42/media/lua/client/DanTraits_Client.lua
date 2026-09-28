@@ -1,7 +1,7 @@
 -- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
--- the Vegetarian grey-out, and the diabetes items (inject, check sugar,
--- take metformin).
+-- the Vegetarian grey-out, the diabetes items (inject, check sugar,
+-- take metformin), iron pills and nicotine gum.
 require "TimedActions/ISUseInhalerAction"
 require "TimedActions/ISDiabetesAction"
 require "TimedActions/ISVitalityPillAction"
@@ -149,7 +149,24 @@ local function ironPillsMenu(playerNum, context, items)
     if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_IronPillsEmpty") end
 end
 
+-- Nicotine gum (Smoker) ----------------------------------------------------------
+local function onChewGum(gum, playerObj)
+    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, gum)
+    ISTimedActionQueue.add(ISVitalityPillAction:new(playerObj, gum, "ContextMenu_DanTraits_ChewGum"))
+end
+
+local function nicotineGumMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_IsNicotineGum then return end
+    local gum = findFirst(items, DanTraits_IsNicotineGum)
+    if not gum then return end
+    pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+    local option = context:addOption(getText("ContextMenu_DanTraits_ChewGum"), gum, onChewGum, playerObj)
+    if usesOf(gum) <= 0 then greyOut(option, "Tooltip_DanTraits_NicotineGumEmpty") end
+end
+
 Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryObjectContextMenu)
+Events.OnFillInventoryObjectContextMenu.Add(nicotineGumMenu)
 Events.OnFillInventoryObjectContextMenu.Add(ironPillsMenu)
 Events.OnFillInventoryObjectContextMenu.Add(greyOutMeat)
 Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)

@@ -7,7 +7,8 @@
 -- the level has sat under CAF_SATED for twelve hours withdrawal starts: a
 -- headache, tiredness, low mood and creeping stress, at full strength from
 -- thirty hours dry, and then fading out over the rest of the week as the
--- habit breaks. Any real dose resets the clock. Every dose, trait or not,
+-- habit breaks. Any real dose resets the clock. Smoking speeds up the
+-- half-life (the "caffeineClearance" hook, DanTraits_Smoker.lua). Every dose, trait or not,
 -- is also passed to the sleep system: caffeine makes light wake you.
 require "DanTraits"
 
@@ -85,7 +86,8 @@ end
 local function updateCaffeineMinute(player, d)
     if not hasTrait(player, "caffeine") then return end
     d = cafData(player)
-    d.cafLevel = d.cafLevel * DECAY
+    -- smokers clear it faster (DanTraits_Smoker.lua)
+    d.cafLevel = d.cafLevel * DECAY ^ DanTraits_RunHooks("caffeineClearance", 1, player)
     if d.cafLevel < 0.5 then d.cafLevel = 0 end
     if d.cafLevel >= CAF_SATED then
         d.cafDryHours = 0

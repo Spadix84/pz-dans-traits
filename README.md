@@ -27,6 +27,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Iron Stomach | +1 | Rotten and burnt food does half the harm; food sickness climbs half as fast. |
 | Early Riser | +1 | Starts well rested; every night scores a little better. |
 | Meal Prepper | +1 | Starts on a good diet; variety counts over five days. |
+| Smoker (vanilla, reworked) | -4 | Cravings build faster the heavier the habit; withdrawal brings irritability (the vanilla Angry moodle), hunger and restless sleep, and a cigarette only relieves the craving it answers. To anyone else a cigarette is a buzz that fades as tolerance builds. Damaged lungs recover endurance slower and cough, worse on exertion and in the morning. Anyone who smokes regularly gains it; three weeks without tobacco loses it; after that drink and stress bring cravings back, and a smoke is a coin flip to relapse. Smoking speeds up caffeine clearance. Rare nicotine gum eases quitting. |
 | Deep Sleeper | +6 | Wakeful folded in (needs less sleep); light rarely wakes you and costs half the rest; the dark does more good. Wakeful is hidden at character creation. |
 
 **Vitality** (everyone): diet, exercise and sleep roll into one slow score. Fit and Thriving give faster endurance recovery, mood and stress relief, slow healing and cold resistance, and Thriving adds a kilo of base carry weight and double Fitness and Strength experience; Run Down and Sluggish the reverse. The conditions above read it too. A bad night's sleep sets a same-day "Slept Badly" moodle.

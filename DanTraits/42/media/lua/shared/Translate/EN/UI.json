@@ -100,5 +100,12 @@
     "UI_trait_DanDeepSleeperdesc": "Sleeps like a rock.<br>Needs less sleep.<br>Light rarely wakes you, and costs less rest when it does not.<br>Sleeping in the dark does even more good.<br>Cannot be taken with Sleepyhead or Restless Sleeper.",
     "UI_DanTraits_SleepLightWoke": "Too bright to sleep",
     "UI_DanTraits_SleepNightmare": "Nightmare",
-    "UI_trait_NightVisionDesc": "Better vision at night.<br>Light wakes you more easily."
+    "UI_trait_NightVisionDesc": "Better vision at night.<br>Light wakes you more easily.",
+    "UI_trait_SmokerDesc": "Cravings build between cigarettes, faster the heavier the habit.<br>Withdrawal brings irritability, hunger and restless sleep; a cigarette only relieves the craving it answers.<br>Damaged lungs: endurance recovers slower, and a cough that carries, worse on exertion and in the morning.<br>Three weeks without tobacco breaks the habit; nicotine gum eases the way. After that, a drink or a bad day brings the cravings back.<br>Anyone who smokes too often can become a Smoker.",
+    "UI_DanTraits_SmokerGained": "Hooked on cigarettes",
+    "UI_DanTraits_SmokerRelapse": "Back on the cigarettes",
+    "UI_DanTraits_SmokerCured": "Kicked the habit",
+    "UI_DanTraits_SmokerCue": "Could really use a smoke",
+    "UI_DanTraits_SmokerBuzz": "Head rush",
+    "UI_DanTraits_SmokerGum": "Takes the edge off"
 }
