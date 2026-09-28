@@ -48,6 +48,8 @@ local function makePart(name)
   function p:bandaged() return self._bandaged end
   function p:getBandageLife() return self._life end
   function p:isBandageDirty() return self._dirtyBandage end
+  p._bandageType = "Base.Bandage"
+  function p:getBandageType() return self._bandageType end
   function p:hasDirtyClothing() return self._dirty end
   function p:hasBloodyClothing() return self._bloody end
   function p:isInfectedWound() return self._infected end
@@ -90,6 +92,7 @@ a._t.deep = 10; near(DanTraits_InfectionHazard(p, a), 0.04, 1e-12, "open deep wo
 a._t.scratch = 5; near(DanTraits_InfectionHazard(p, a), 0.05, 1e-12, "plus a scratch")
 a._t.scratch = 0; a._glass = true; near(DanTraits_InfectionHazard(p, a), 0.10, 1e-12, "a shard left in")
 a._glass = false; a._bandaged, a._life = true, 3; near(DanTraits_InfectionHazard(p, a), 0.02, 1e-12, "clean bandage: half")
+a._bandageType = "Base.AlcoholBandage"; assert(DanTraits_InfectionHazard(p, a) == 0, "a fresh alcohol bandage: none"); a._bandageType = "Base.Bandage"
 a._life = 0; near(DanTraits_InfectionHazard(p, a), 0.12, 1e-12, "spent bandage: x3")
 a._bandaged = false; a._dirty, a._bloody = true, true; near(DanTraits_InfectionHazard(p, a), 0.04 * 2.25, 1e-12, "dirty and bloody clothes")
 a._dirty, a._bloody = false, false

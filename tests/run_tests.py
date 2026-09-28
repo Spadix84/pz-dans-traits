@@ -1,4 +1,5 @@
-"""Run the Kahlua lint (tests/lint_kahlua.py), then every offline test with
+"""Run the Kahlua lint (tests/lint_kahlua.py), the game API check
+(tests/check_api.py: method names against the installed game), then every offline test with
 fengari (standard Lua in Node). The lint covers the known gaps between the
 two: functions the game's Lua lacks, and the compiler's local and upvalue
 limits. Anything else Kahlua-specific still needs the game.
@@ -31,6 +32,13 @@ def main():
             print("    " + l)
         if lint.returncode != 0:
             failed.append(label)
+    # the mod's calls on the game's objects, against the installed game's jar
+    api = subprocess.run([sys.executable, os.path.join(HERE, "check_api.py")], cwd=HERE, capture_output=True, text=True)
+    print("%s check_api.py" % ("PASS" if api.returncode == 0 else "FAIL"))
+    if api.returncode != 0:
+        failed.append("check_api.py")
+        for l in (api.stdout + api.stderr).splitlines():
+            print("    " + l)
     for t in tests:
         name = os.path.basename(t)
         proc = subprocess.run(["npx", "-y", "-p", "fengari-node-cli", "fengari", name], cwd=HERE,
@@ -43,7 +51,7 @@ def main():
             failed.append(name)
             for l in lines[-12:]:
                 print("    " + l)
-    print("%d/%d passed" % (len(tests) + 2 - len(failed), len(tests) + 2))
+    print("%d/%d passed" % (len(tests) + 3 - len(failed), len(tests) + 3))
     sys.exit(1 if failed else 0)
 
 

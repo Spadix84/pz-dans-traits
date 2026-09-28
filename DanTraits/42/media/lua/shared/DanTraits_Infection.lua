@@ -111,6 +111,14 @@ local function infData(player)
     return d
 end
 
+-- a fresh alcohol-soaked dressing (BodyPart keeps that in a field with no
+-- getter; the dressing's type says it: Base.AlcoholBandage and so on)
+local function alcoholBandage(part)
+    local kind = ""
+    pcall(function() kind = tostring(part:getBandageType() or "") end)
+    return string.find(kind, "Alcohol", 1, true) ~= nil
+end
+
 -- chance per game hour this part takes an infection; 0 for no wound
 local function hazardOf(player, part, rec)
     local h = 0
@@ -126,7 +134,7 @@ local function hazardOf(player, part, rec)
     if is(part, "bandaged") then
         local life = num(part, "getBandageLife")
         if life <= 0 or is(part, "isBandageDirty") then h = h * INF_DIRTY_BANDAGE
-        elseif is(part, "isAlcoholicBandage") then return 0
+        elseif alcoholBandage(part) then return 0
         else h = h * INF_BANDAGED end
     end
     if is(part, "hasDirtyClothing") then h = h * INF_CLOTHES end
