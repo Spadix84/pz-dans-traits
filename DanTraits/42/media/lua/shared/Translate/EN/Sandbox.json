@@ -1,0 +1,13 @@
+{
+    "Sandbox_DanTraits": "Vitality Project",
+    "Sandbox_DanTraitsAgeEnabled": "Age",
+    "Sandbox_DanTraitsAgeEnabled_tooltip": "Characters are in their 20s, 30s or 40s, which changes their starting skills and how some traits work.<br>Off: the age traits do nothing.",
+    "Sandbox_DanTraitsAgeDefault": "Default Age",
+    "Sandbox_DanTraitsAgeDefault_tooltip": "The age of a character who takes neither age trait. Rounds down to the decade: 20-29, 30-39, 40-49.",
+    "Sandbox_DanTraitsAgeBonus20s": "Profession Levels (20s)",
+    "Sandbox_DanTraitsAgeBonus20s_tooltip": "Extra levels a new character in their 20s gets in their profession's main skill.",
+    "Sandbox_DanTraitsAgeBonus30s": "Profession Levels (30s)",
+    "Sandbox_DanTraitsAgeBonus30s_tooltip": "Extra levels a new character in their 30s gets in their profession's main skill.",
+    "Sandbox_DanTraitsAgeBonus40s": "Profession Levels (40s)",
+    "Sandbox_DanTraitsAgeBonus40s_tooltip": "Extra levels a new character in their 40s gets in their profession's main skill."
+}

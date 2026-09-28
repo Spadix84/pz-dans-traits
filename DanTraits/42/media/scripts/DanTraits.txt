@@ -247,6 +247,32 @@ module DanTraits {
         UIDescription = UI_trait_NightVisionDesc,
     }
 
+    /* Age: 30s is the default and has no trait. The 20s lose the
+       profession's extra level and can't take Handy or Arthritis, but
+       Gym Regular starts higher. The 40s make Handy stronger and Arthritis
+       harsher. media/lua/shared/DanTraits_Age.lua. */
+    character_trait_definition DanTraits:age20s
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:age20s,
+        Cost = -2,
+        UIName = UI_trait_DanAge20s,
+        UIDescription = UI_trait_DanAge20sdesc,
+        MutuallyExclusiveTraits = DanTraits:age40s;base:handy;DanTraits:arthritis,
+    }
+
+    character_trait_definition DanTraits:age40s
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:age40s,
+        Cost = 1,
+        UIName = UI_trait_DanAge40s,
+        UIDescription = UI_trait_DanAge40sdesc,
+        MutuallyExclusiveTraits = DanTraits:age20s,
+    }
+
     /* Vanilla Smoker, re-costed from -3 to -4 for the rework (dependence,
        irritability, damaged lungs and a cough: DanTraits_Smoker.lua). Same
        exclusion as vanilla: not with Athletic. */

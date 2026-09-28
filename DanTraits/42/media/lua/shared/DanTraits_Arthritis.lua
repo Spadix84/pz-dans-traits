@@ -55,7 +55,7 @@ DanTraits_ArthritisJoint = jointFactor
 
 local function updateArthritisMinute(player, d)
     if not hasTrait(player, "arthritis") then return end
-    local joint = jointFactor(player)
+    local joint = DanTraits_RunHooks("arthritisJoint", jointFactor(player), player)   -- Age: sooner in the 40s
     local before = d.artJoint or 0
     d.artJoint = joint
     if joint >= ART_FLARE_NOTICE and before < ART_FLARE_NOTICE then notify(player, "UI_DanTraits_ArthritisFlare") end
@@ -106,7 +106,7 @@ function DanTraits_SwingDropChance(player)
         local ok, extra = pcall(DanTraits_ExtraFumble, player)
         if ok and extra then chance = chance + extra end
     end
-    return chance
+    return DanTraits_RunHooks("swingDrop", chance, player)
 end
 
 -- drop whatever is in the primary hand at the character's feet; true if something dropped
