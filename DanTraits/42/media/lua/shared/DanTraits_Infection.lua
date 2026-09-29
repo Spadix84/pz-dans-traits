@@ -45,7 +45,7 @@
 require "DanTraits"
 
 local notify = DanTraits_Notify
-local notifyGood = DanTraits_NotifyGood or DanTraits_Notify
+local notifyGood = DanTraits_NotifyGood
 local traitData = DanTraits_Data
 local hasVanillaTrait = DanTraits_HasVanillaTrait
 
