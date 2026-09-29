@@ -7,7 +7,8 @@
 -- DanTraits_Wrap (the one way any file wraps a game method, so several files
 -- can layer on the same method), the cached vanilla trait lookup
 -- (DanTraits_HasVanillaTrait, DanTraits_TraitsChanged), the eat and pill action hooks that several
--- traits share, and the save mod-list fix. Each trait bails out immediately
+-- traits share, the one-time rename of old mod-data keys (DanTraits_MigrateModData),
+-- and the save mod-list fix. Each trait bails out immediately
 -- unless the player actually has it, so an unaffected character costs a
 -- handful of lookups.
 --
@@ -88,6 +89,39 @@ local function traitData(player)
     md.DanTraits = md.DanTraits or {}
     return md.DanTraits
 end
+
+-- Mod-data key hygiene: every key carries its system's prefix. Keys renamed
+-- for that (old -> new) are moved once per save, when the player loads
+-- (OnCreatePlayer runs before the trait files' own starts read the new
+-- names, OnGameStart covers the rest): copied only if the new key is not
+-- already set, then the old one is cleared. One log line with the count.
+-- Add a pair here whenever a saved key is renamed.
+local MODDATA_RENAMES = {
+    withdrawing        = "alcWithdrawing",
+    dryHours           = "alcDryHours",
+    depTolerance       = "alcMeter",
+    earlyRiserApplied  = "posEarlyRiser",
+    mealPrepperApplied = "posMealPrepper",
+    gymRegularApplied  = "gymApplied",
+    deepSleeperWakeful = "slWakefulGranted",
+}
+function DanTraits_MigrateModData(player)
+    if not player then return 0 end
+    local d = player:getModData().DanTraits
+    if not d then return 0 end
+    local n = 0
+    for old, new in pairs(MODDATA_RENAMES) do
+        if d[old] ~= nil then
+            if d[new] == nil then d[new] = d[old] end
+            d[old] = nil
+            n = n + 1
+        end
+    end
+    if n > 0 then print("[DanTraits] mod data: renamed " .. n .. " old key(s)") end
+    return n
+end
+Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_MigrateModData(player) end)
+Events.OnGameStart.Add(function() DanTraits_MigrateModData(getSpecificPlayer(0)) end)
 
 -- vanilla traits by id, as the game names them (lowercase "base:needslesssleep").
 -- Walking getKnownTraits is a Java list walk with a tostring and a lowercase

@@ -42,7 +42,7 @@ for name in pairs(FitnessExercises.exercisesType) do
 end
 assert(p._fit._inits == 1, "init called once")
 assert(p._fit._current == nil, "current exercise cleared")
-assert(p._md.DanTraits.gymRegularApplied == true, "marked applied")
+assert(p._md.DanTraits.gymApplied == true, "marked applied")
 local incs = p._fit._incs
 assert(incs > 7 * 700 and incs < 7 * 740, "about 726 steps per exercise, got " .. incs)
 
@@ -65,15 +65,15 @@ assert(old._fit._incs == 0, "existing character: untouched")
 -- 5. fitness not ready at creation: not marked done, retried at game start
 local late = newPlayer(); late._fit._broken = true
 H.fire("OnCreatePlayer", 0, late)
-assert(not (late._md.DanTraits or {}).gymRegularApplied, "failure is not marked applied")
+assert(not (late._md.DanTraits or {}).gymApplied, "failure is not marked applied")
 late._fit._broken = false; late._fit._map = {}
 H.current = late; H.fire("OnGameStart")
-assert(late._fit:getRegularity("situp") >= 50 and late._md.DanTraits.gymRegularApplied, "applied on the retry")
+assert(late._fit:getRegularity("situp") >= 50 and late._md.DanTraits.gymApplied, "applied on the retry")
 
 -- 6. a stuck incRegularity (value not moving) ends instead of spinning
 local stuck = newPlayer(); stuck._fit.incRegularity = function(self) self._incs = self._incs + 1 end
 H.fire("OnCreatePlayer", 0, stuck)
 assert(stuck._fit._incs == 7, "one probe per exercise, then stop; got " .. stuck._fit._incs)
-assert(not stuck._md.DanTraits.gymRegularApplied, "stuck: not marked applied")
+assert(not stuck._md.DanTraits.gymApplied, "stuck: not marked applied")
 
 H.pass()

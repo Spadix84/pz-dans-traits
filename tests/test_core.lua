@@ -93,4 +93,28 @@ do
   assert(DanTraits_HasVanillaTrait(p, "base:smoker") == false, "OnCreatePlayer invalidates")
 end
 
+-- 7. mod-data renames: old keys move to their prefixed names once, on OnCreatePlayer / OnGameStart;
+-- a new key that already exists wins and the old one is still cleared; a second run finds nothing
+do
+  local p = H.player()
+  p._md.DanTraits = { withdrawing = true, dryHours = 12, depTolerance = 0.4, earlyRiserApplied = true,
+    mealPrepperApplied = true, gymRegularApplied = true, deepSleeperWakeful = true, alcMeter = 0.9, vitDiet = 0.5 }
+  H.current = p
+  H.fire("OnGameStart")
+  local d = p._md.DanTraits
+  assert(d.alcWithdrawing == true and d.alcDryHours == 12, "withdrawing and dryHours moved")
+  assert(d.alcMeter == 0.9, "an existing new key is not clobbered by the old one")
+  assert(d.posEarlyRiser == true and d.posMealPrepper == true and d.gymApplied == true and d.slWakefulGranted == true, "the applied flags moved")
+  assert(d.withdrawing == nil and d.dryHours == nil and d.depTolerance == nil and d.earlyRiserApplied == nil
+    and d.mealPrepperApplied == nil and d.gymRegularApplied == nil and d.deepSleeperWakeful == nil, "old keys cleared")
+  assert(d.vitDiet == 0.5, "other keys untouched")
+  assert(DanTraits_MigrateModData(p) == 0, "second run: nothing left to do")
+
+  -- OnCreatePlayer migrates too (before the trait files' starts read the new names)
+  local q = H.player()
+  q._md.DanTraits = { depTolerance = 0.25, gymRegularApplied = false }
+  H.fire("OnCreatePlayer", 0, q)
+  assert(q._md.DanTraits.alcMeter == 0.25 and q._md.DanTraits.gymApplied == false and q._md.DanTraits.depTolerance == nil, "OnCreatePlayer migrates, false values included")
+end
+
 H.pass()

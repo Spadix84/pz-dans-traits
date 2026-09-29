@@ -138,11 +138,11 @@ do
   local function settle(p) p._st.unhappy = 0; for _ = 1, 40 do minute() end; return p._st.unhappy end
   local plainDrinker = newPlayer({}); H.current = plainDrinker; episode(plainDrinker)
   plainDrinker._st.intox = 20; assert(settle(plainDrinker) == 55, "no tolerance: intoxication 0.2 relieves (75 - 20)")
-  local al = newPlayer({ traits = { "spiraling", "dependent" } }); H.current = al; episode(al, { depTolerance = 1 })
+  local al = newPlayer({ traits = { "spiraling", "dependent" } }); H.current = al; episode(al, { alcMeter = 1 })
   al._st.intox = 20; assert(settle(al) == 75, "tolerance 1: intoxication 0.2 is not enough, no relief")
   al._st.intox = 40; assert(settle(al) == 55, "tolerance 1: intoxication 0.4 relieves")
   -- the same line for the severity creep
-  local sv = newPlayer({ traits = { "spiraling", "dependent" } }); H.current = sv; episode(sv, { depTolerance = 1, mddSeverity = 0.5 })
+  local sv = newPlayer({ traits = { "spiraling", "dependent" } }); H.current = sv; episode(sv, { alcMeter = 1, mddSeverity = 0.5 })
   sv._st.intox = 20; ten(); assert(math.abs(sv._md.DanTraits.mddSeverity - 0.5) < 1e-9, "a sip an Alcoholic shrugs off does not deepen the episode")
   sv._st.intox = 40; ten(); assert(math.abs(sv._md.DanTraits.mddSeverity - 0.51) < 1e-9, "a real drink does")
   -- smoke

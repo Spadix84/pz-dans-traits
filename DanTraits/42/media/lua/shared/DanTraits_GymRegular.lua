@@ -55,9 +55,9 @@ DanTraits_ApplyGymRegular = applyGymRegular
 local function onGymRegularCreate(player)
     if not player or not hasTrait(player, "gymregular") then return end
     local d = traitData(player)
-    if d.gymRegularApplied or player:getHoursSurvived() > 0 then return end
+    if d.gymApplied or player:getHoursSurvived() > 0 then return end
     local target = DanTraits_RunHooks("gymRegularity", GYM_REGULARITY, player)   -- Age: higher in the 20s
-    if applyGymRegular(player, target) then d.gymRegularApplied = true end
+    if applyGymRegular(player, target) then d.gymApplied = true end
 end
 
 local function onGymRegularCreatePlayer(playerNum, player)

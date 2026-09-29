@@ -75,7 +75,7 @@ q._st.foodsick = 0; for _ = 1, 10 do minute() end; assert(q._st.foodsick > 0, "s
 
 -- 7. tolerance blunts it: an Alcoholic at a full meter tolerance gets 70%
 local t = H.player({ traits = { "dependent" } }); H.current = t
-t._md.DanTraits = { depTolerance = 1 }
+t._md.DanTraits = { alcMeter = 1 }
 t._st.intox = 100; for _ = 1, 180 do minute() end; t._st.intox = 0; minute()
 near(md(t).hoSeverity, 0.7, 1e-6, "severity x 0.7 at full tolerance")
 

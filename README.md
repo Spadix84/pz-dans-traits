@@ -70,6 +70,8 @@ tests/                   offline tests (fengari); python tests/run_tests.py
 deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back)
 ```
 
+Mod data is one table per player (`getModData().DanTraits`) with a prefix per system (`alc*`, `nic*`, `inf*`, ...); the dashboard groups it by that prefix. A renamed key is moved by `DanTraits_MigrateModData` in the core.
+
 ## Workflow
 
 1. Edit in this repo.

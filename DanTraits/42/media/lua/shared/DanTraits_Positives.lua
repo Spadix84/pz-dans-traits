@@ -62,12 +62,12 @@ local function onPositivesCreate(player)
     pcall(function() hours = player:getHoursSurvived() or 0 end)
     if hours > 0 then return end
     local d = traitData(player)
-    if hasTrait(player, "earlyriser") and not d.earlyRiserApplied then
-        d.earlyRiserApplied = true
+    if hasTrait(player, "earlyriser") and not d.posEarlyRiser then
+        d.posEarlyRiser = true
         d.vitSleep = math.max(d.vitSleep or 0, ER_SLEEP_START)
     end
-    if hasTrait(player, "mealprepper") and not d.mealPrepperApplied then
-        d.mealPrepperApplied = true
+    if hasTrait(player, "mealprepper") and not d.posMealPrepper then
+        d.posMealPrepper = true
         d.vitDiet = math.max(d.vitDiet or 0, MP_DIET_START)
     end
 end

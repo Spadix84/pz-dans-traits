@@ -229,13 +229,13 @@ end)
 local function grantWakeful(player)
     if not player or not hasTrait(player, "deepsleeper") then return end
     local d = traitData(player)
-    if d.deepSleeperWakeful then return end
+    if d.slWakefulGranted then return end
     local ok = pcall(function()
         local traits = player:getCharacterTraits()
         if not traits:get(CharacterTrait.NEEDS_LESS_SLEEP) then traits:add(CharacterTrait.NEEDS_LESS_SLEEP) end
     end)
     DanTraits_TraitsChanged(player)
-    if ok then d.deepSleeperWakeful = true end
+    if ok then d.slWakefulGranted = true end
 end
 DanTraits_GrantWakeful = grantWakeful
 

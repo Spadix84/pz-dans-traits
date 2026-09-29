@@ -6,7 +6,7 @@ local notify = DanTraits_Notify
 local fraction = DanTraits_StatFraction
 
 -- Alcoholic -----------------------------------------------------------------
--- Everyone carries an alcoholism meter (0..1, saved as depTolerance). Drinking
+-- Everyone carries an alcoholism meter (0..1, saved as alcMeter). Drinking
 -- fills it, by intoxication and time, but only so much a day, so it is the
 -- habit that counts, not one big night; every sober hour drains it, full to
 -- empty in a month. Past ALC_GAIN the character becomes an Alcoholic.
@@ -63,7 +63,7 @@ local TICK_H            = 10 / 60
 function DanTraits_AlcoholTolerance(player)
     if not player or not hasTrait(player, "dependent") then return 0 end
     local d = player:getModData().DanTraits
-    return d and d.depTolerance or 0
+    return d and d.alcMeter or 0
 end
 
 local function setTrait(player, on)
@@ -85,7 +85,7 @@ end
 local add = DanTraits_StatAdd
 
 local function clearWithdrawal(d)
-    d.withdrawing, d.alcStage, d.alcW, d.alcShakes = false, 0, 0, 0
+    d.alcWithdrawing, d.alcStage, d.alcW, d.alcShakes = false, 0, 0, 0
 end
 
 -- a random hallucination from the Hallucinations trait's set, if it is loaded
@@ -116,14 +116,14 @@ local STAGE_NOTICE = { "UI_DanTraits_DependentCraving", "UI_DanTraits_AlcoholicS
 -- withdrawal and its relief, for a character who has the trait
 local function withdrawal(player, d, stats, intox, meter)
     if intox > DEP_SATED_MIN + DEP_SATED_TOL * meter then
-        d.dryHours = 0
-        if d.withdrawing then notify(player, "UI_DanTraits_DependentSated") end
+        d.alcDryHours = 0
+        if d.alcWithdrawing then notify(player, "UI_DanTraits_DependentSated") end
         clearWithdrawal(d)
         return
     end
 
-    local dry = (d.dryHours or 0) + TICK_H
-    d.dryHours = dry
+    local dry = (d.alcDryHours or 0) + TICK_H
+    d.alcDryHours = dry
     local onset = 1 - DEP_TOL_ONSET_CUT * meter
     local stage = 0
     if dry >= DRY_HOURS_STRESS * onset then stage = 1 end
@@ -133,7 +133,7 @@ local function withdrawal(player, d, stats, intox, meter)
 
     local fade = 1 - (1 - ALC_LINGER) * math.max(0, math.min(1, (dry - ALC_PEAK_H) / ALC_FADE_H))
     local w = meter * fade
-    d.withdrawing, d.alcW = true, w
+    d.alcWithdrawing, d.alcW = true, w
     if stage > (d.alcStage or 0) then notify(player, STAGE_NOTICE[stage]) end
     d.alcStage = stage
 
@@ -160,7 +160,7 @@ local function updateDependent(player, d)
     local stats = player:getStats()
     local intox = fraction(stats, CharacterStat.INTOXICATION)
     local has = hasTrait(player, "dependent")
-    local meter = d.depTolerance or 0
+    local meter = d.alcMeter or 0
 
     -- taken at creation (or carried over from before the meter existed)
     if has and not d.alcInit then
@@ -190,31 +190,31 @@ local function updateDependent(player, d)
         if drinking and not d.alcDrinking and d.alcEx and relapseRoll() and setTrait(player, true) then
             has = true
             meter = math.max(meter, ALC_RELAPSE)
-            d.alcInit, d.dryHours = true, 0
+            d.alcInit, d.alcDryHours = true, 0
             clearWithdrawal(d)
             notify(player, "UI_DanTraits_AlcoholicRelapse")
         elseif meter >= ALC_GAIN and setTrait(player, true) then
             has = true
-            d.alcInit, d.dryHours = true, 0
+            d.alcInit, d.alcDryHours = true, 0
             clearWithdrawal(d)
             notify(player, "UI_DanTraits_AlcoholicGained")
         end
     elseif d.alcSoberHours >= ALC_CURE_H - TICK_H / 2 and setTrait(player, false) then
         has = false
         meter = 0
-        d.alcEx, d.alcInit, d.dryHours = true, false, 0
+        d.alcEx, d.alcInit, d.alcDryHours = true, false, 0
         clearWithdrawal(d)
         DanTraits_NotifyGood(player, "UI_DanTraits_AlcoholicCured")
     end
     d.alcDrinking = drinking
-    d.depTolerance = meter
+    d.alcMeter = meter
 
     if has then withdrawal(player, d, stats, intox, meter) end
 end
 DanTraits_Every("ten", "Dependent", updateDependent, 10)
 
 local function withdrawalOf(player, d)
-    if not d or not d.withdrawing or not hasTrait(player, "dependent") then return 0 end
+    if not d or not d.alcWithdrawing or not hasTrait(player, "dependent") then return 0 end
     return d.alcW or 0
 end
 
