@@ -108,6 +108,11 @@ assert(run(player, "trait remove caffeine") == "trait remove dantraits:caffeine"
 assert(run(player, "trait add nope"):find("unknown", 1, true) and run(player, "trait"):find("add|remove", 1, true), "trait errors")
 run(player, "trait remove smoker")
 DanTraitsRegistry = savedRegistry
+-- lua runs a line with player and d in scope (the game has loadstring; Lua 5.3 has load)
+loadstring = loadstring or load
+assert(run(player, "lua d.luaProbe = 7; return d.luaProbe + 1") == "lua: 8" and md.DanTraits.luaProbe == 7, "lua command")
+assert(run(player, "lua return (("):find("^lua: "), "lua syntax error reported")
+md.DanTraits.luaProbe = nil
 for _, name in ipairs({ "metformin", "inhaler", "fracture", "drop", "gluten", "antidep", "attrib" }) do
   assert(run(player, name .. " on"):find("not loaded", 1, true), name .. ": says so when its file is missing")
 end

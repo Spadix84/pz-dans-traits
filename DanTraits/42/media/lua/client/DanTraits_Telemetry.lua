@@ -330,6 +330,16 @@ function commands.trait(player, args)
     return "trait " .. op .. " " .. tostring(entry)
 end
 
+-- lua <code>: run a line in game for testing; `player` and `d` (mod data) are
+-- in scope and the value of `return ...` is reported. Local command file only.
+function commands.lua(player, args)
+    if not loadstring then return "lua: loadstring not available" end
+    local code = table.concat(args, " ")
+    local fn, err = loadstring("local player, d = ...; " .. code)
+    if not fn then return "lua: " .. tostring(err) end
+    return "lua: " .. tostring(fn(player, modData(player)))
+end
+
 function commands.fracture(player)
     if not DanTraits_BrittleFracture then return "fracture: brittle not loaded" end
     return "fracture: " .. tostring(DanTraits_BrittleFracture(player))
