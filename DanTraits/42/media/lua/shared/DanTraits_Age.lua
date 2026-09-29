@@ -17,6 +17,13 @@
 --   Gym Regular  20s: regularity starts at 65 instead of 50.
 --   Arthritis    20s: can't be taken. 40s: the weather gets into the joints
 --                faster (joint factor x1.3), so flares come sooner.
+--   Red cells    (bloodCellRebuild, Blood) 20s: rebuild x1.15. 40s: x0.8.
+--   Concussion   (concussionHeal) 20s: heals x1.2. 40s: x0.75.
+--   Hangover     (hangoverSeverity) 20s: severity x0.85. 40s: x1.25.
+--   Type 2       (diaResistance, Diabetes) 20s: resistance -0.05. 40s: +0.1.
+--   Brittle      (brittleChance) 40s: the fracture chance x1.25.
+-- The 40s rows are all harsher negatives (the trait pays +1), the 20s rows
+-- gentler ones (the trait costs -2).
 --
 -- Sandbox (page DanTraits): AgeEnabled turns all of this off (the Age traits
 -- then do nothing), AgeBonus20s/30s/40s set the profession levels, and
@@ -31,6 +38,15 @@ local AGE_BONUS           = { [20] = 0, [30] = 1, [40] = 1 }  -- profession leve
 local AGE_HANDY_LEVELS    = 1       -- 40s with Handy: extra Carpentry levels
 local AGE_GYM_REGULARITY  = 65      -- 20s with Gym Regular: starting regularity
 local AGE_ARTHRITIS_MULT  = 1.3     -- 40s with Arthritis: joint factor x this
+local AGE_CELLS_20      = 1.15    -- red cells rebuild x this in the 20s...
+local AGE_CELLS_40      = 0.8     -- ...and this in the 40s
+local AGE_CONCUSSION_20 = 1.2     -- concussion heals x this in the 20s...
+local AGE_CONCUSSION_40 = 0.75    -- ...and this in the 40s
+local AGE_HANGOVER_20   = 0.85    -- hangover severity x this in the 20s...
+local AGE_HANGOVER_40   = 1.25    -- ...and this in the 40s
+local AGE_DIA_20        = -0.05   -- Type 2 resistance plus this in the 20s...
+local AGE_DIA_40        = 0.1     -- ...and this in the 40s
+local AGE_BRITTLE_40    = 1.25    -- Brittle: fracture chance x this in the 40s
 local AGE_MAX_LEVEL       = 10
 
 local function sandbox()
@@ -135,6 +151,50 @@ end)
 DanTraits_AddHook("arthritisJoint", function(joint, player)
     if not ageEnabled() or ageBand(player) ~= 40 then return nil end
     return math.min(1, joint * AGE_ARTHRITIS_MULT)
+end)
+
+-- the universal systems: the 40s pay for harsher ones (the trait gives +1), the
+-- 20s get gentler ones (the trait costs -2); nil in the 30s and with age off
+local function byBand(player, k20, k40)
+    if not ageEnabled() then return nil end
+    local band = ageBand(player)
+    if band == 20 then return k20 elseif band == 40 then return k40 end
+    return nil
+end
+
+-- red cells rebuild after blood loss (Blood)
+DanTraits_AddHook("bloodCellRebuild", function(rate, player)
+    local k = byBand(player, AGE_CELLS_20, AGE_CELLS_40)
+    if not k then return nil end
+    return rate * k
+end)
+
+-- concussion healing (Concussion)
+DanTraits_AddHook("concussionHeal", function(rate, player)
+    local k = byBand(player, AGE_CONCUSSION_20, AGE_CONCUSSION_40)
+    if not k then return nil end
+    return rate * k
+end)
+
+-- how bad a hangover is (Hangover)
+DanTraits_AddHook("hangoverSeverity", function(severity, player)
+    local k = byBand(player, AGE_HANGOVER_20, AGE_HANGOVER_40)
+    if not k then return nil end
+    return severity * k
+end)
+
+-- Type 2 resistance (Diabetes; added before the clamp)
+DanTraits_AddHook("diaResistance", function(res, player)
+    local plus = byBand(player, AGE_DIA_20, AGE_DIA_40)
+    if not plus then return nil end
+    return res + plus
+end)
+
+-- Brittle: older bones snap more easily (the 20s have nothing to add)
+DanTraits_AddHook("brittleChance", function(chance, player)
+    local k = byBand(player, 1, AGE_BRITTLE_40)
+    if not k or k == 1 then return nil end
+    return chance * k
 end)
 
 Events.OnCreatePlayer.Add(onAgeCreatePlayer)

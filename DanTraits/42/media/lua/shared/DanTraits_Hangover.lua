@@ -9,7 +9,8 @@
 -- back, tiredness, and nausea after a really heavy one. A drink while
 -- hungover hides the symptoms and stops the clock, and counts toward the
 -- next one. The night's sleep is scored lower too. Alcohol tolerance
--- (Alcoholic) blunts it a little.
+-- (Alcoholic) blunts it a little. Hook offered: hangoverSeverity (the
+-- severity from the night's load, before the tolerance cut; Age).
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -71,7 +72,8 @@ end
 
 local function armHangover(player, d, asleep)
     local tolerance = DanTraits_AlcoholTolerance and DanTraits_AlcoholTolerance(player) or 0
-    local severity = clamp01(math.max(HO_SEV_MIN, d.hoLoad / HO_LOAD_FULL) * (1 - HO_TOLERANCE_CUT * tolerance))
+    local raw = DanTraits_RunHooks("hangoverSeverity", math.max(HO_SEV_MIN, d.hoLoad / HO_LOAD_FULL), player)   -- Age
+    local severity = clamp01(raw * (1 - HO_TOLERANCE_CUT * tolerance))
     d.hoSeverity = math.max(d.hoActive and d.hoSeverity or 0, severity)
     d.hoLoad = 0
     if asleep then

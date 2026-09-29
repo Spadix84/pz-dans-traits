@@ -31,7 +31,7 @@ DanTraits_BrittleFracture = fracture
 local function onPlayerGetDamage(player, damageType, damage)
     if not hasTrait(player, "brittle") then return end
     if not damage or damage < 2 then return end
-    if ZombRand(100) >= FRACTURE_CHANCE then return end
+    if ZombRand(100) >= DanTraits_RunHooks("brittleChance", FRACTURE_CHANCE, player) then return end   -- Age: likelier in the 40s
     fracture(player)
 end
 

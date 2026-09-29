@@ -135,6 +135,7 @@ local function diaResistance(player, d)
     res = res - DIA_T2_EXERCISE_CUT * (DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0)
     if (d.diaMedMinutes or 0) > 0 then res = res - DIA_T2_PILL_CUT end
     if DanTraits_VitalityDiaResistance then res = res + DanTraits_VitalityDiaResistance(player) end   -- fit: lower, run down: higher
+    res = DanTraits_RunHooks("diaResistance", res, player, d)   -- Age: higher in the 40s, lower in the 20s
     return math.max(0, math.min(1, res))
 end
 DanTraits_DiaResistance = function(player) return diaResistance(player, diaData(player)) end
