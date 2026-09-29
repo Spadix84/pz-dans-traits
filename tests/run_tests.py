@@ -47,7 +47,8 @@ def main():
         failed.append("dashboard.py")
     # the mod's calls on the game's objects, against the installed game's jar
     api = subprocess.run([sys.executable, os.path.join(HERE, "check_api.py")], cwd=HERE, capture_output=True, text=True)
-    print("%s check_api.py" % ("PASS" if api.returncode == 0 else "FAIL"))
+    skip = [l for l in api.stdout.splitlines() if l.startswith("SKIP")]
+    print(skip[0] if api.returncode == 0 and skip else "%s check_api.py" % ("PASS" if api.returncode == 0 else "FAIL"))   # no jar: shown, not a failure
     if api.returncode != 0:
         failed.append("check_api.py")
         for l in (api.stdout + api.stderr).splitlines():
