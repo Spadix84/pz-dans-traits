@@ -53,6 +53,18 @@ p = newPlayer(); H.current = p; H.rollf = 0.51
 damage(p, "FALLDOWN", 9); assert(D(p).ccScore == nil, "roll 0.51: missed")
 damage(p, "FALLDOWN", 1000); assert(D(p) == nil or D(p).ccScore == nil, "a lethal fall is the game's business")
 
+-- 1b. crashes on their own scale: a bump into a sign (~20) nothing; 40 a third of a chance, moderate; 70 certain, severe
+p = newPlayer(); H.current = p; H.rollf = 0
+damage(p, "CARCRASHDAMAGE", 19.8)
+assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 19.8", "a low-speed bump: nothing, but noted")
+H.rollf = 0.34; damage(p, "CARCRASHDAMAGE", 40); assert(D(p).ccScore == nil, "40: a third of a chance, 0.34 misses")
+H.rollf = 0.32; damage(p, "CARCRASHDAMAGE", 40); near(D(p).ccScore, 0.25 + 0.012 * 15, 1e-9, "40: 0.43, moderate")
+if out(p) then wake(5) end
+p = newPlayer(); H.current = p; H.rollf = 0.99
+damage(p, "CARHITDAMAGE", 70); near(D(p).ccScore, 0.25 + 0.012 * 45, 1e-9, "hit by a car at 70: certain, 0.79")
+assert(out(p), "severe: knocked out"); wake(20)
+assert(string.find(DanTraits_ExtraCommands.concussion(newPlayer(), { "crash", "10" }), "a crash of 10: concussion 0", 1, true), "crash command")
+
 -- 2. mild: a notice, no blackout
 p = newPlayer(); H.current = p; H.rollf = 0.99; H.clearHalo()
 DanTraits_KnockHead(p, 1, 0.3)

@@ -16,7 +16,11 @@
 --   FALLDOWN       a fall: the amount is the health it cost (vanilla
 --                  IsoGameCharacter.handleLandingImpact; 1000 for a lethal
 --                  one). The last one is kept in ccLastImpact.
---   CARCRASHDAMAGE, CARHITDAMAGE   a car crash, being hit by a car
+--   CARCRASHDAMAGE, CARHITDAMAGE   a car crash, being hit by a car: on the
+--                  crash's own scale (BaseVehicle.addRandomDamageFromCrash:
+--                  up to 40 one body part hurt for 5 up to the amount; 40+ a
+--                  chance of a deep wound, 50+ a break; over 70 two or three
+--                  parts). In play a low-speed bump into a sign reports ~20.
 --   WEAPONHIT      a weapon hit (other players, or mods that add them) that
 --                  took health off the head
 -- A helmet (the head's clothing defense, CC_HELMET or more) makes a
@@ -31,12 +35,12 @@ local notifyGood = DanTraits_NotifyGood
 local traitData = DanTraits_Data
 local fraction = DanTraits_StatFraction
 
-local CC_MIN_IMPACT    = 3       -- a fall or crash costing under this: no concussion
-local CC_SURE_IMPACT   = 15      -- ...certain from here (in play a second-floor drop costs
-                                 -- about 5, a third-floor one about 7: the rest of a fall's
-                                 -- harm goes to the legs as wounds and breaks)
-local CC_BASE          = 0.25    -- how bad at the least...
-local CC_PER_IMPACT    = 0.04    -- ...plus this per point over the minimum
+-- falls and crashes each on their own scale: { no concussion under, certain from, how bad per point over }
+local CC_FALL          = { 3, 15, 0.04 }   -- in play a second-floor drop costs about 5, a third-floor
+                                           -- one about 7: the rest of a fall goes to the legs
+local CC_CRASH         = { 25, 70, 0.012 } -- a bump into a sign ~20: nothing; 40 (a wounding crash)
+                                           -- a third of a chance, moderate; 70 certain, severe
+local CC_BASE          = 0.25    -- how bad at the least, plus the scale's per point
 local CC_HEAD_SURE     = 20      -- a weapon taking this much off the head: certain
 local CC_HEAD_PER      = 0.025   -- how bad per point off the head, over CC_BASE
 local CC_HELMET        = 50      -- head clothing defense counted as a helmet
@@ -109,11 +113,12 @@ function DanTraits_KnockHead(player, chance, score)
     return new
 end
 
--- a fall or crash costing this much health
-local function impactKnock(player, amount)
-    if amount < CC_MIN_IMPACT or amount >= 1000 then return 0 end
-    local chance = clamp01((amount - CC_MIN_IMPACT) / (CC_SURE_IMPACT - CC_MIN_IMPACT))
-    local score = clamp01(CC_BASE + CC_PER_IMPACT * (amount - CC_MIN_IMPACT))
+-- a fall or crash of this amount, on its scale (CC_FALL, CC_CRASH)
+local function impactKnock(player, amount, scale)
+    scale = scale or CC_FALL
+    if amount < scale[1] or amount >= 1000 then return 0 end
+    local chance = clamp01((amount - scale[1]) / (scale[2] - scale[1]))
+    local score = clamp01(CC_BASE + scale[3] * (amount - scale[1]))
     return DanTraits_KnockHead(player, chance, score)
 end
 DanTraits_ImpactKnock = impactKnock
@@ -126,7 +131,7 @@ local function onConcussionDamage(character, damageType, amount)
     amount = tonumber(amount) or 0
     if damageType == "FALLDOWN" or damageType == "CARCRASHDAMAGE" or damageType == "CARHITDAMAGE" then
         traitData(player).ccLastImpact = damageType .. " " .. tostring(math.floor(amount * 100 + 0.5) / 100)
-        impactKnock(player, amount)
+        impactKnock(player, amount, damageType == "FALLDOWN" and CC_FALL or CC_CRASH)
     elseif damageType == "WEAPONHIT" then
         local head = headPart(player)
         local now = nil
@@ -240,8 +245,12 @@ DanTraits_ExtraCommands.concussion = function(player, args)
         local amount = tonumber(args[2]) or 30
         return "a fall costing " .. tostring(amount) .. ": concussion " .. tostring(impactKnock(player, amount))
     end
+    if args[1] == "crash" then
+        local amount = tonumber(args[2]) or 40
+        return "a crash of " .. tostring(amount) .. ": concussion " .. tostring(impactKnock(player, amount, CC_CRASH))
+    end
     local s = tonumber(args[1])
-    if not s then return "concussion <0..1> | concussion fall <amount> | concussion clear" end
+    if not s then return "concussion <0..1> | concussion fall <amount> | concussion crash <amount> | concussion clear" end
     return "concussion " .. tostring(DanTraits_KnockHead(player, 1, clamp01(s)))
 end
 
