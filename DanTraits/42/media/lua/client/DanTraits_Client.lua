@@ -181,13 +181,21 @@ Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)
 -- from the list (Deep Sleeper grants it). Deep Sleeper follows vanilla's rule
 -- for the sleep traits: hidden on a server where sleep is off. The Age traits
 -- are hidden when the sandbox switches Age off (they would do nothing).
+-- at character creation SandboxVars is still the previous copy: read the live
+-- sandbox options the way vanilla's creation screen does (NegativeTraitsPenalty)
+local function ageOffAtCreation()
+    local ok, value = pcall(function() return getSandboxOptions():getOptionByName("DanTraits.AgeEnabled"):getValue() end)
+    if ok and value ~= nil then return value == false end
+    return DanTraits_SandboxOn ~= nil and not DanTraits_SandboxOn("AgeEnabled")
+end
+
 local function wrapTraitList()
     DanTraits_Wrap(CharacterCreationProfession, "isTraitEnabled", "creation-hide-traits", function(original, self, trait, ...)
         local kind = nil
         pcall(function() kind = trait:getType() end)
         if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
         if kind ~= nil and DanTraitsRegistry and (kind == DanTraitsRegistry.age20s or kind == DanTraitsRegistry.age40s)
-                and DanTraits_SandboxOn and not DanTraits_SandboxOn("AgeEnabled") then
+                and ageOffAtCreation() then
             return false
         end
         if kind ~= nil and DanTraitsRegistry and kind == DanTraitsRegistry.deepsleeper and isMultiplayer() then

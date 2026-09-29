@@ -177,9 +177,17 @@ assert(list.isTraitEnabled(list, trait("base:brave")) == true, "others unaffecte
 -- the Age traits are hidden when the sandbox switches Age off
 multiplayer = false
 assert(list.isTraitEnabled(list, trait("age40s")) == true and list.isTraitEnabled(list, trait("age20s")) == true, "Age on: both offered")
-SandboxVars = { DanTraits = { AgeEnabled = false } }
-assert(list.isTraitEnabled(list, trait("age40s")) == false and list.isTraitEnabled(list, trait("age20s")) == false, "Age off: both hidden")
+-- at creation the live sandbox options decide (SandboxVars is still the previous game's copy)
+local ageOption = true
+function getSandboxOptions() return { getOptionByName = function(_, name) if name == "DanTraits.AgeEnabled" then return { getValue = function() return ageOption end } end end } end
+SandboxVars = { DanTraits = { AgeEnabled = true } }
+ageOption = false
+assert(list.isTraitEnabled(list, trait("age40s")) == false and list.isTraitEnabled(list, trait("age20s")) == false, "Age off in the new game's options: both hidden, whatever SandboxVars says")
 assert(list.isTraitEnabled(list, trait("base:brave")) == true, "others unaffected by Age off")
+ageOption = true
+assert(list.isTraitEnabled(list, trait("age40s")) == true, "Age on in the options: offered")
+getSandboxOptions = nil; SandboxVars = { DanTraits = { AgeEnabled = false } }
+assert(list.isTraitEnabled(list, trait("age40s")) == false, "no options object: SandboxVars decides")
 SandboxVars = nil
 multiplayer = false
 -- the wrap is applied once, however many times the boot events re-run it
