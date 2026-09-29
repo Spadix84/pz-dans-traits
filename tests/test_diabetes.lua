@@ -190,4 +190,10 @@ local eater = newPlayer(); H.current = eater
 local eatAct = setmetatable({ character = eater, item = item("Apple", 20), percentage = 0.5 }, { __index = ISEatFoodAction })
 eatAct:complete(); near(eater._md.DanTraits.diaFast, 10, 1e-9, "half an apple through the eat action")
 
+-- 17. illness raises blood sugar: +0.1 mg/dL a minute at full fever (DanTraits_InfectionFever)
+local well, sick = newPlayer(), newPlayer()
+H.current = well; minute(); local base = g(well) - 110
+H.current = sick; DanTraits_InfectionFever = function() return 1 end; minute(); DanTraits_InfectionFever = nil
+near(g(sick) - 110, base + 0.1, 1e-9, "full fever: +0.1 a minute")
+
 H.pass()

@@ -19,6 +19,8 @@
 --     it faster, so theirs wears off sooner.
 --   Other trait files add their own through the "sleepWake" hook
 --     (a depressive episode, a migraine).
+--   A wound infection's fever, anyone: the night scores x0.7 at full fever
+--     and light wakes you x1.5 as easily.
 --   Deep Sleeper: x0.25.
 -- Desensitized: the things you have seen come back at night. A chance each
 -- hour asleep of waking from a nightmare, stressed and low.
@@ -61,6 +63,8 @@ local DES_UNHAPPY       = 10
 local DS_WAKE           = 0.25    -- light wake chance x this
 local DS_REST_BRIGHT    = 0.5     -- bright-light rest and score penalties x this
 local DS_REST_DARK      = 1.5     -- dark rest and score bonuses x this
+local SL_FEVER_CUT      = 0.3     -- the night's score x (1 - this x fever)
+local SL_FEVER_WAKE     = 0.5     -- light wakes you x (1 + this x fever)
 
 local clamp01 = DanTraits_Clamp01
 
@@ -191,6 +195,23 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
     d.slLastNightDark = dark
     d.slNightDark, d.slNightMin = 0, 0
     return clamp01(quality + scaled(player, dark, SL_QUALITY_DARK, SL_QUALITY_BRIGHT))
+end)
+
+-- a fever is a bad night: a worse score, and lighter sleep (DanTraits_Infection.lua)
+local function feverOf(player)
+    local fever = 0
+    if DanTraits_InfectionFever then pcall(function() fever = clamp01(DanTraits_InfectionFever(player)) end) end
+    return fever
+end
+DanTraits_AddHook("nightQuality", function(quality, player)
+    local fever = feverOf(player)
+    if fever <= 0 then return nil end
+    return quality * (1 - SL_FEVER_CUT * fever)
+end)
+DanTraits_AddHook("sleepWake", function(m, player)
+    local fever = feverOf(player)
+    if fever <= 0 then return nil end
+    return m * (1 + SL_FEVER_WAKE * fever)
 end)
 
 -- Restless Sleeper: two halves are one night, and the wake between them is free

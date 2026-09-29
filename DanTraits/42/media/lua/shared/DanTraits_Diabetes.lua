@@ -77,6 +77,7 @@ local DIA_HIGH_FATIGUE      = { 0.0005, 0.0015, 0.003 }
 local DIA_HIGH_UNHAPPY_FLOOR = { 0, 15, 30 }
 local DIA_HIGH_SICK_FLOOR   = { 0, 20, 50 }       -- food sickness (Queasy, then Nauseous)
 local DIA_HIGH_HP_DRAIN     = 0.3                 -- per minute at the worst tier
+local DIA_FEVER_RISE        = 0.1                 -- mg/dL per minute at full fever: illness raises blood sugar (sick day rules)
 local DIA_HEALTH_FLOOR      = 15                  -- percent: symptoms stop short of this...
 local DIA_KETO_HOURS        = 24                  -- ...until you have spent this long above the top threshold, then the floor is gone
 local DIA_MDD_UNHAPPY_MULT  = 1.5                 -- high-sugar mood floor during a depressive episode
@@ -271,6 +272,7 @@ local function updateDiabetesMinute(player, d)
     if asleep then g = g - DIA_SLEEP_DROP end
     if drunk then g = g - DIA_ALCOHOL_DROP end
     if panic > DIA_PANIC_MIN then g = g + (panic - DIA_PANIC_MIN) / (100 - DIA_PANIC_MIN) * DIA_PANIC_RISE end
+    if DanTraits_InfectionFever then pcall(function() g = g + DIA_FEVER_RISE * DanTraits_InfectionFever(player) end) end
     if (d.diaMedMinutes or 0) > 0 then d.diaMedMinutes = d.diaMedMinutes - 1 end
 
     g = diaClamp(g)

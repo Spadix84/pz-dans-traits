@@ -29,6 +29,14 @@ H.climate.cloud = 0.8; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "overcast: n
 H.climate.rain = 0.5; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "rain: no glare"); H.climate.rain = 0
 p._outside = false; H.climate.night = 1
 
+-- 1b. a fever adds 2.0 at full fever (plan 10), guarded on the getter existing
+DanTraits_InfectionFever = function() return 0.5 end
+near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half a fever +1")
+DanTraits_InfectionFever = function() return 1 end
+near(DanTraits_MigraineChance(p), 0.3 + 2.0, 1e-9, "full fever +2")
+DanTraits_InfectionFever = nil
+near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Infection loaded: nothing")
+
 -- 2. no roll inside the 24 h refractory window from creation; then a roll that misses, then one that hits: aura first
 local q = newPlayer(); H.current = q
 q._md.DanTraits = { migSinceEnd = 0 }

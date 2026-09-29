@@ -142,4 +142,15 @@ near(DanTraits_RunHooks("nightWakes", 3, rs), 2, 0, "later ones still count")
 near(DanTraits_RunHooks("nightWakes", 1, rs), 1, 0, "never below one")
 near(DanTraits_RunHooks("nightWakes", 2, plain), 2, 0, "others: every wake counts")
 
+-- a fever is a bad night: the score x (1 - 0.3 fever), light wakes you x (1 + 0.5 fever)
+local feverish = newPlayer({ light = 0.9 }); H.current = feverish
+near(DanTraits_RunHooks("nightQuality", 0.5, feverish, {}), 0.5, 1e-9, "no fever: score untouched")
+near(DanTraits_SleepWakeMultiplier(feverish, {}), 1, 1e-9, "no fever: wake multiplier 1")
+DanTraits_InfectionFever = function() return 1 end
+near(DanTraits_RunHooks("nightQuality", 0.5, feverish, {}), 0.35, 1e-9, "full fever: score x0.7")
+near(DanTraits_SleepWakeMultiplier(feverish, {}), 1.5, 1e-9, "full fever: wakes x1.5")
+DanTraits_InfectionFever = function() return 0.5 end
+near(DanTraits_SleepWakeMultiplier(feverish, {}), 1.25, 1e-9, "half fever: wakes x1.25")
+DanTraits_InfectionFever = nil
+
 H.pass()

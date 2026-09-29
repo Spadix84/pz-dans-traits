@@ -32,6 +32,9 @@
 -- as an infection inside (on no wound) that only antibiotics clear.
 -- Vanilla's one-shot effect (ReduceInfectionPower 50) is undone.
 --
+-- Fever reaches other systems (each reads DanTraits_InfectionFever): a bad
+-- night, migraines, blood sugar, asthma, and with a full-blown sepsis a small
+-- chance a minute of a phantom episode (delirium) for anyone.
 -- Zombie infection is untouched.
 require "DanTraits"
 
@@ -64,6 +67,7 @@ local INF_SEPSIS       = 0.6     -- sepsis at this score
 local INF_SHOCK        = 0.85    -- septic shock at this score
 local INF_SICKNESS     = { 0.2, 0.9 }   -- SICKNESS from fever to septic shock (x2 C)
 local INF_HEALTH       = { 0.15, 1.5 }  -- health per minute from sepsis to the worst
+local INF_DELIRIUM      = 0.02    -- chance per minute, awake in sepsis, of a phantom episode (delirium)
 local INF_FATIGUE      = 0.0006  -- tiredness per minute at full fever, awake
 local INF_THIRST       = 0.0004  -- thirst per minute at full fever
 local INF_ABX_HALF     = 6       -- hours for the antibiotic level to halve
@@ -360,6 +364,16 @@ local function updateInfectionMinute(player, d)
         local t = (S - INF_SEPSIS) / (1 - INF_SEPSIS)
         local health = INF_HEALTH[1] + (INF_HEALTH[2] - INF_HEALTH[1]) * t
         pcall(function() player:getBodyDamage():ReduceGeneralHealth(health) end)
+        -- delirium: whoever you are, you hear things (the Hallucinations set)
+        local ep = DanTraits_Episodes
+        if ep and not DanTraits_Asleep(player) and roll(INF_DELIRIUM) then
+            local r = ZombRand(100)
+            local fn = (r < 40 and ep.whisper) or (r < 70 and ep.footsteps) or (r < 85 and ep.sound) or ep.thump
+            if fn then
+                local ok, done = pcall(fn, player)
+                if ok and done == false and ep.sound then pcall(ep.sound, player) end
+            end
+        end
     end
 end
 DanTraits_updateInfectionMinute = updateInfectionMinute

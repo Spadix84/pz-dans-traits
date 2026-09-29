@@ -134,4 +134,15 @@ local w2 = newPlayer({ asleep = true }); H.current = w2; w2._md.DanTraits = { as
 minute(); assert(w2._woke == 0 and w2._asleep, "tier 2 sleeps on")
 print("sleep: tier 3 woke=" .. w3._woke .. ", tier 2 woke=" .. w2._woke)
 
+-- 15. a fever irritates the airway: +0.004 a minute at full fever, whatever the mask (DanTraits_InfectionFever)
+local feverish = newPlayer({}); H.current = feverish; feverish._md.DanTraits = { asthma = 0.3 }
+minute(); H.near(irritation(feverish), 0.296, 1e-9, "no fever: calm air decays 0.004")
+feverish._md.DanTraits.asthma = 0.3
+DanTraits_InfectionFever = function() return 1 end
+minute(); H.near(irritation(feverish), 0.304, 1e-9, "full fever: +0.004, so no decay that minute")
+feverish._md.DanTraits.asthma = 0.3
+DanTraits_InfectionFever = function() return 0.5 end
+minute(); H.near(irritation(feverish), 0.302, 1e-9, "half fever: +0.002")
+DanTraits_InfectionFever = nil
+
 H.pass()

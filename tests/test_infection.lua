@@ -135,6 +135,17 @@ p._st.sickness = 0; DanTraits_ExtraCommands.infect(p, { "forearm_l", "7" })
 local h = p._health; D(p).infS = 0.8; minute()
 near(h - p._health, 0.15 + 1.35 * ((D(p).infS - 0.6) / 0.4), 1e-3, "sepsis takes health")
 assert(D(p).infStage == 4, "sepsis stage")
+-- sepsis is delirium: a phantom episode from the Hallucinations set, awake, at a small chance a minute
+local heard = 0
+DanTraits_Episodes = { whisper = function() heard = heard + 1 end, footsteps = function() heard = heard + 1 end,
+  sound = function() heard = heard + 1 end, thump = function() heard = heard + 1 end }
+H.rollf = 0.99; D(p).infS = 0.8; minute(); assert(heard == 0, "no roll, no delirium")
+H.rollf = 0.01; minute(); assert(heard == 1, "sepsis: an episode on a hit")
+D(p).infS = 0.5; minute(); assert(heard == 1, "fever alone is not delirium")
+D(p).infS = 0.8; p._asleep = true; minute(); assert(heard == 1, "asleep: none")
+p._asleep = false
+DanTraits_Episodes = nil; D(p).infS = 0.8; minute()
+H.rollf = 0.99
 
 -- 7. antibiotics: vanilla's pill is a dose; the level halves every 6 h; therapeutic from 0.5
 p = newPlayer(); H.current = p; a = arm(p); a._t.deep = 10

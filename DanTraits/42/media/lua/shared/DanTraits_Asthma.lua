@@ -7,7 +7,7 @@ local traitData = DanTraits_Data
 
 -- Brittle Asthma -------------------------------------------------------------
 -- Airway irritation (0..1) lives in mod data. It rises with cold air, nearby
--- corpses and exertion, falls when resting in clean warm air, and drives
+-- corpses, exertion and a wound infection's fever (no mask helps), falls when resting in clean warm air, and drives
 -- four tiers: warning, halved endurance recovery (the enduranceRegen hook of
 -- the stat delta pipeline), no recovery plus coughing, and
 -- a full attack that drains endurance and health (to a 20% floor) while the
@@ -38,6 +38,7 @@ local ASTHMA_ATTACK_PANIC     = 5     -- panic added per minute during an attack
 local ASTHMA_INHALER_RELIEF   = 0.5
 local ASTHMA_INHALER_PANIC    = 10    -- a puff sets the heart racing (out of 100)
 local ASTHMA_WAKE_TIER        = 3     -- asleep at this tier or worse: you wake up gasping
+local ASTHMA_FEVER_RATE     = 0.004   -- per minute at full fever (wound infection), passive: no mask helps
 local ASTHMA_MASK_GAS_PASSIVE = 0.2   -- multiplier on non-environmental build-up with a gas mask
 
 local function asthmaData(player)
@@ -170,6 +171,7 @@ local function updateAsthmaMinute(player, d)
         end
     end
 
+    if DanTraits_InfectionFever then pcall(function() build = build + ASTHMA_FEVER_RATE * DanTraits_InfectionFever(player) end) end
     if build > 0 then
         if DanTraits_VitalityAsthmaBuild then build = build * DanTraits_VitalityAsthmaBuild(player) end
         irritation = irritation + build

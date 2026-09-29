@@ -5,7 +5,7 @@ local hasTrait = DanTraits_HasTrait
 
 -- Schizophrenia -------------------------------------------------------------
 -- Episodes roll every ten minutes. The base chance never goes away; stress,
--- unhappiness, tiredness and night all push it up. Three kinds of episode:
+-- unhappiness, tiredness, night and a wound infection's fever all push it up. Three kinds of episode:
 -- a phantom zombie sound nearby, a door or window shaking as if thumped, or a
 -- sudden bout of panic with the startle sting. Sounds are audio only: they do
 -- not attract real zombies.
@@ -14,6 +14,7 @@ local SCHIZO_STRESS_WEIGHT   = 0.30   -- times stress (0..1)
 local SCHIZO_UNHAPPY_WEIGHT  = 0.20   -- times unhappiness/100
 local SCHIZO_FATIGUE_WEIGHT  = 0.20   -- times fatigue (0..1)
 local SCHIZO_NIGHT_BONUS     = 0.08
+local SCHIZO_FEVER_WEIGHT    = 0.30   -- times a wound infection's fever (0..1): delirium
 local SCHIZO_COOLDOWN_TICKS  = 0      -- ten-minute ticks to skip after an episode (0 = can fire every tick)
 local SCHIZO_SOUND_PANIC     = 8      -- panic added by a phantom sound or thump (0..100)
 local SCHIZO_BOUT_PANIC_MIN  = 35     -- panic bout adds this plus up to 20 more
@@ -415,8 +416,10 @@ local function schizoChance(player)
         + (stats:get(CharacterStat.UNHAPPINESS) / 100) * SCHIZO_UNHAPPY_WEIGHT
         + stats:get(CharacterStat.FATIGUE) * SCHIZO_FATIGUE_WEIGHT
     if isNight() then chance = chance + SCHIZO_NIGHT_BONUS end
+    if DanTraits_InfectionFever then pcall(function() chance = chance + SCHIZO_FEVER_WEIGHT * DanTraits_InfectionFever(player) end) end
     return chance
 end
+DanTraits_SchizoChance = schizoChance
 
 local function updateSchizophrenia(player, d)
     if not hasTrait(player, "schizophrenia") then return end
