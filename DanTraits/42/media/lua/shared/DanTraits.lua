@@ -5,7 +5,8 @@
 -- the shared helpers below. This file holds those helpers, the minute /
 -- ten-minute / frame drivers (DanTraits_Every), the frame scheduler,
 -- DanTraits_Wrap (the one way any file wraps a game method, so several files
--- can layer on the same method), the eat and pill action hooks that several
+-- can layer on the same method), the cached vanilla trait lookup
+-- (DanTraits_HasVanillaTrait, DanTraits_TraitsChanged), the eat and pill action hooks that several
 -- traits share, and the save mod-list fix. Each trait bails out immediately
 -- unless the player actually has it, so an unaffected character costs a
 -- handful of lookups.
@@ -87,17 +88,47 @@ local function traitData(player)
     return md.DanTraits
 end
 
--- vanilla traits by id, as the game names them (lowercase "base:needslesssleep")
-local function hasVanillaTrait(player, id)
-    local found = false
+-- vanilla traits by id, as the game names them (lowercase "base:needslesssleep").
+-- Walking getKnownTraits is a Java list walk with a tostring and a lowercase
+-- per element, and the trait files ask several times a minute, so the walk is
+-- cached: one snapshot { player, minute, set } for the (single) local player,
+-- rebuilt when the game minute changes, when the player object changes, or
+-- when a file that adds or removes a trait at runtime calls
+-- DanTraits_TraitsChanged(player) (also called on OnCreatePlayer / OnGameStart).
+-- A trait added by anything else shows up within a game minute. If the game
+-- clock cannot be read the snapshot is never reused.
+local vanillaCache = { player = nil, minute = nil, set = nil }
+
+local function gameMinute()
+    local ok, h = pcall(function() return getGameTime():getWorldAgeHours() end)
+    if ok and type(h) == "number" then return math.floor(h * 60) end
+    return nil
+end
+
+local function vanillaSet(player)
+    local minute = gameMinute()
+    local c = vanillaCache
+    if c.set and c.player == player and minute ~= nil and c.minute == minute then return c.set end
+    local set = {}
     pcall(function()
         local known = player:getCharacterTraits():getKnownTraits()
-        for i = 0, known:size() - 1 do
-            if string.lower(tostring(known:get(i))) == id then found = true end
-        end
+        for i = 0, known:size() - 1 do set[string.lower(tostring(known:get(i)))] = true end
     end)
-    return found
+    c.player, c.minute, c.set = player, minute, set
+    return set
 end
+
+local function hasVanillaTrait(player, id)
+    if not player then return false end
+    return vanillaSet(player)[id] == true
+end
+
+-- a trait was added or removed: the next lookup walks the list again
+function DanTraits_TraitsChanged(player)
+    vanillaCache.set = nil
+end
+Events.OnCreatePlayer.Add(function() vanillaCache.set = nil end)
+Events.OnGameStart.Add(function() vanillaCache.set = nil end)
 
 -- shared with the trait files
 DanTraits_HasTrait = hasTrait

@@ -213,6 +213,7 @@ local function grantWakeful(player)
         local traits = player:getCharacterTraits()
         if not traits:get(CharacterTrait.NEEDS_LESS_SLEEP) then traits:add(CharacterTrait.NEEDS_LESS_SLEEP) end
     end)
+    DanTraits_TraitsChanged(player)
     if ok then d.deepSleeperWakeful = true end
 end
 DanTraits_GrantWakeful = grantWakeful

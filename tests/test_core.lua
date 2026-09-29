@@ -2,7 +2,9 @@
 -- one way files wrap a game method. Wrapping twice with the same tag wraps
 -- once; different tags each add a layer and all of them run, innermost first;
 -- a class without the method is left alone; a derived class keeps its own
--- tags apart from its parent's.
+-- tags apart from its parent's. And DanTraits_HasVanillaTrait's cache: one walk
+-- of getKnownTraits per game minute, a re-walk after DanTraits_TraitsChanged,
+-- OnGameStart or OnCreatePlayer, and a separate answer per player object.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -47,5 +49,48 @@ DanTraits_Wrap(Parent, "run", "t", function(orig, self, x) return orig(self, x) 
 assert(DanTraits_Wrap(Child, "run", "t", function(orig, self, x) return orig(self, x) + 5000 end) == true, "child wraps despite the parent's tag")
 assert(Child:run(1) == 1 + 1 + 1000 + 5000, "child layer sits on the inherited parent method, got " .. tostring(Child:run(1)))
 assert(Parent:run(1) == 1 + 1 + 1000, "parent untouched by the child's wrap")
+
+-- 6. vanilla trait lookups are cached per game minute
+do
+  local walks = 0
+  local p = H.player({ vanilla = { "base:smoker" } })
+  local traits = p:getCharacterTraits()
+  local realKnown = traits.getKnownTraits
+  traits.getKnownTraits = function(...) walks = walks + 1; return realKnown(...) end
+  p.getCharacterTraits = function() return traits end
+  H.hours = 100
+  for _ = 1, 10 do assert(DanTraits_HasVanillaTrait(p, "base:smoker") == true, "smoker seen") end
+  assert(DanTraits_HasVanillaTrait(p, "base:asthmatic") == false, "an absent trait is absent")
+  assert(walks == 1, "eleven lookups in one minute walk once, walked " .. walks)
+
+  -- a trait added behind the mod's back is seen once the game minute moves on
+  traits:add("base:asthmatic")
+  assert(DanTraits_HasVanillaTrait(p, "base:asthmatic") == false, "still the snapshot within the minute")
+  H.hours = 100 + 1 / 60 + 0.001
+  assert(DanTraits_HasVanillaTrait(p, "base:asthmatic") == true, "seen the next minute")
+  assert(walks == 2, "one more walk for the new minute, walked " .. walks)
+
+  -- DanTraits_TraitsChanged forces a re-walk inside the same minute
+  traits:remove("base:smoker")
+  assert(DanTraits_HasVanillaTrait(p, "base:smoker") == true, "stale until told")
+  DanTraits_TraitsChanged(p)
+  assert(DanTraits_HasVanillaTrait(p, "base:smoker") == false, "TraitsChanged forces a re-walk")
+  assert(walks == 3, "walked " .. walks)
+
+  -- another player object gets its own walk; nil player is false
+  local q = H.player({ vanilla = { "base:smoker" } })
+  assert(DanTraits_HasVanillaTrait(q, "base:smoker") == true, "a different player is not answered from the cache")
+  assert(DanTraits_HasVanillaTrait(nil, "base:smoker") == false, "no player")
+
+  -- OnGameStart and OnCreatePlayer invalidate too
+  DanTraits_HasVanillaTrait(p, "base:smoker")
+  local before = walks
+  traits:add("base:smoker")
+  H.fire("OnGameStart")
+  assert(DanTraits_HasVanillaTrait(p, "base:smoker") == true and walks == before + 1, "OnGameStart invalidates")
+  traits:remove("base:smoker")
+  H.fire("OnCreatePlayer", 0, p)
+  assert(DanTraits_HasVanillaTrait(p, "base:smoker") == false, "OnCreatePlayer invalidates")
+end
 
 H.pass()

@@ -133,6 +133,7 @@ local function setSmoker(player, on)
         local traits = player:getCharacterTraits()
         if on then traits:add(trait) else traits:remove(trait) end
     end)
+    DanTraits_TraitsChanged(player)
     return ok and isSmoker(player) == on
 end
 
