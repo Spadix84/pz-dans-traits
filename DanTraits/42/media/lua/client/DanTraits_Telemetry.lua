@@ -19,7 +19,7 @@
 --   episode <name>           charge, sound, whisper, thump, glass, footsteps, panic
 --   give <Module.Item> [n]
 --   fracture                 Brittle: snap a random limb
---   drop                     Fumbler: drop the held weapon
+--   drop                     Arthritis: drop the held weapon
 --   cough [radius]           Asthma: one cough (zombies hear it)
 --   gluten <carbs> [now]     Gluten: dose in carbs; "now" skips the 20-minute onset
 --   antidep                  MDD: as if an antidepressant was swallowed
@@ -321,7 +321,7 @@ function commands.fracture(player)
 end
 
 function commands.drop(player)
-    if not DanTraits_FumbleDrop then return "drop: fumbler not loaded" end
+    if not DanTraits_FumbleDrop then return "drop: arthritis not loaded" end
     return "drop: " .. tostring(DanTraits_FumbleDrop(player))
 end
 

@@ -118,6 +118,7 @@ local function dropWeapon(player)
     player:removeFromHands(item)
     player:getInventory():Remove(item)
     square:AddWorldInventoryItem(item, 0.0, 0.0, 0.0)
+    -- the text key keeps its old Fumbler name so existing translations still match
     notify(player, "UI_DanTraits_FumblerDrop")
     return true
 end
