@@ -1,7 +1,10 @@
 -- Offline test for the story events in DanTraits.lua: notices are published
 -- as OnStoryEvent with source, kind, text and tone; the event is registered
 -- once; a broken listener or a missing event system never stops the halo.
-Events = {}
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+-- OnStoryEvent is absent until the core registers it, as in the game
+H.events({ absent = { OnStoryEvent = true } })
+H.stubs()
 local registered = 0
 LuaEventManager = { AddEvent = function(name)
   registered = registered + 1
@@ -11,16 +14,9 @@ end }
 function triggerEvent(name, ...)
   for _, f in ipairs(Events[name]._list) do f(...) end
 end
--- the rest of the core wants these to exist at load
-setmetatable(Events, { __index = function(t, k) if k == "OnStoryEvent" then return nil end; local e = { Add = function() end, Remove = function() end }; rawset(t, k, e); return e end })
-local halo = {}
-HaloTextHelper = { addBadText = function(_, t) halo[#halo + 1] = t end, addGoodText = function(_, t) halo[#halo + 1] = "+" .. t end }
+local halo = H.halo
 function getText(k) return "text:" .. k end
-DanTraitsRegistry = {}
-ISEatFoodAction = { complete = function() return true end, eat = function() end, isValid = function() return true end, isValidStart = function() return true end }
-ISTakePillAction = { complete = function() return true end }
-function require() end
-assert(loadfile("../DanTraits/42/media/lua/shared/DanTraits.lua"))()
+H.load("DanTraits")
 
 -- 1. registered once, and a second mod registering it too would find it there
 assert(registered == 1 and rawget(Events, "OnStoryEvent"), "event registered")
@@ -53,4 +49,4 @@ triggerEvent = nil
 DanTraits_Notify(player, "UI_DanTraits_Anemia1")
 assert(halo[4] == "text:UI_DanTraits_Anemia1" and #seen == 4, "quiet without triggerEvent")
 DanTraits_Story(nil, "x", "y")
-print("story: all checks passed")
+H.pass()

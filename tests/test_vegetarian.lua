@@ -1,23 +1,10 @@
-local handlers, lists = {}, {}
-Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) lists[k] = lists[k] or {}; table.insert(lists[k], f); handlers[k] = function(...) for _, g in ipairs(lists[k]) do g(...) end end end, Remove = function() end }; rawset(t, k, e); return e end })
-BodyPartType = { Groin = "Groin", ForeArm_L=1, ForeArm_R=2, LowerLeg_L=3, LowerLeg_R=4, Hand_L=5, Hand_R=6, Torso_Upper=7 }
-CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain", UNHAPPINESS = "unhappy", FATIGUE = "fatigue", PANIC = "panic", ENDURANCE = "endurance", FOOD_SICKNESS = "foodsick", WETNESS = { getMaximumValue = function() return 100 end } }
-local halo = {}
-HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
-function getText(k) return k end
-DanTraitsRegistry = { vegetarian = "vegetarian", gluten = "gluten" }
-ArrayList = { new = function() return { add = function() end } end }
-IsoFireManager = { explode = function() end }
-function instanceof() return false end
-ItemBodyLocation = { MASK = "mask", MASK_EYES = "maskeyes", MASK_FULL = "maskfull" }
-function getWorld() return { getFreeEmitter = function() return { playSound = function() return 1 end, setPos = function() end } end } end
-function getTexture() return "TEX" end
-function getGameTime() return { getHour = function() return 12 end } end
-function ZombRand() return 0 end
-function getClimateManager() return { getAirTemperatureForCharacter = function() return 20 end } end
-function getCell() return { getGridSquare = function() return { getObjects = function() return { size = function() return 0 end } end, getDeadBodys = function() return { size = function() return 0 end } end } end } end
-function addSound() end
-DanTraitsTestCharge = false
+
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+-- Offline test for DanTraits_Vegetarian.lua: what counts as meat (by food
+-- type, by name, and by ingredients), only vegetarians refuse and only meat,
+-- and the eat action will not start, validate or eat it, with one notice.
+H.events()
+H.stubs()
 
 local eaten = {}
 ISEatFoodAction = {
@@ -26,23 +13,16 @@ ISEatFoodAction = {
   complete = function(self) eaten[#eaten+1] = self.item.name; return true end,
   eat = function(self, food, pct) eaten[#eaten+1] = self.item.name .. "@" .. pct end }
 
-function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
-  assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
-end
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
 
+local halo = H.halo
 local function list(t) return { size = function() return #t end, get = function(_, i) return t[i + 1] end } end
 local function item(name, foodType, extras)
   return { name = name, getType = function() return name end, getFoodType = function() return foodType end,
     haveExtraItems = function() return extras ~= nil end, getExtraItems = function() return list(extras or {}) end,
     getCarbohydrates = function() return 0 end, getHungChange = function() return -0.1 end }
 end
-local function makePlayer(veg)
-  local st = {}
-  return { hasTrait = function(_, t) return veg and t == "vegetarian" end, isDead = function() return false end,
-    isAsleep = function() return false end, getModData = function() return {} end,
-    getStats = function() return { get = function(_, k) return st[k] or 0 end, set = function(_, k, v) st[k] = v end } end }
-end
+local function newPlayer(veg) return H.player({ traits = veg and { "vegetarian" } or {} }) end
 
 -- 1. what counts as meat
 local meat = { item("Steak", "Beef"), item("Chicken", "Poultry"), item("Salmon", "Fish"), item("Shrimp", "Seafood"), item("Worm", "Insect"),
@@ -57,7 +37,7 @@ for _, it in ipairs(veg) do assert(not DanTraits_IsMeat(it), it.name .. " should
 print("meat detection: " .. #meat .. " meat, " .. #veg .. " fine")
 
 -- 2. only vegetarians refuse, and only meat
-local v, plain = makePlayer(true), makePlayer(false)
+local v, plain = newPlayer(true), newPlayer(false)
 assert(DanTraits_RefusesFood(v, item("Steak", "Beef")) and not DanTraits_RefusesFood(v, item("Carrot", "Vegetables")), "vegetarian refuses meat only")
 assert(not DanTraits_RefusesFood(plain, item("Steak", "Beef")), "others eat anything")
 
@@ -73,4 +53,4 @@ ok:complete(); assert(eaten[1] == "Carrot", "and get eaten")
 local other = setmetatable({ character = plain, item = item("Steak", "Beef"), percentage = 1 }, { __index = ISEatFoodAction })
 assert(other:isValidStart() == "start-ok", "non-vegetarian eats steak")
 other:complete(); assert(eaten[2] == "Steak", "steak eaten by others")
-print("ALL OK")
+H.pass()

@@ -1,9 +1,14 @@
-local handlers = {}
-Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) handlers[k] = f end }; rawset(t, k, e); return e end })
+-- Offline test for server/Items/DanTraits_Distributions.lua: on
+-- OnPreDistributionMerge the Inhaler is appended (as name, weight) to every
+-- loot list it knows, at each list's own shape (procedural rooms, zombie
+-- pockets, bags, the flat clutter list, a nested path), and a list missing
+-- from this build is reported, not fatal.
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+H.events()
+H.stubs()
 local logged = {}
 local realprint = print
 print = function(s) logged[#logged+1] = s end
-function require() end
 local function L() return { "PillsBeta", 1 } end
 ProceduralDistributions = { list = {} }
 for _, n in ipairs({ "BathroomCabinet","BathroomCounter","BathroomShelf","MedicalCabinet","MedicalClinicDrugs","MedicalClinicOutfit","MedicalStorageDrugs","MedicalStorageOutfit","HospitalRoomShelves","DoctorTools","NurseTools","AmbulanceDriverTools","StoreShelfMedical","SafehouseMedical","SafehouseMedical_Mid","SafehouseMedical_Late","DerelictHouseDrugs","DrugShackDrugs","ArmyStorageMedical","ArmyBunkerMedical","TestingLab","KitchenRandom","PrisonCellRandom" }) do
@@ -13,9 +18,9 @@ SuburbsDistributions = { all = { medicine = { items = L() }, inventoryfemale = {
   Bag_FannyPackFront = { items = L() }, Bag_FannyPackBack = { items = L() }, MedicalCache1 = { MedicalBox = { items = L() } } }
 BagsAndContainers = { HandbagsAndPurses = { items = L() } }
 ClutterTables = { ClosetItems = L() }
-assert(loadfile("../DanTraits/42/media/lua/server/Items/DanTraits_Distributions.lua"))()
-assert(handlers.OnPreDistributionMerge, "hook registered")
-handlers.OnPreDistributionMerge()
+H.load("server/Items/DanTraits_Distributions.lua")
+H.expectHooks("OnPreDistributionMerge")
+H.fire("OnPreDistributionMerge")
 realprint(logged[1])
 assert(logged[1]:find("added to 31 loot lists") and not logged[1]:find("not found"), "all lists found")
 local bc = ProceduralDistributions.list.BathroomCabinet.items
@@ -26,6 +31,7 @@ assert(SuburbsDistributions.MedicalCache1.MedicalBox.items[4] == 5, "nested path
 -- a missing list is reported, not fatal
 ProceduralDistributions.list.TestingLab = nil
 logged = {}
-handlers.OnPreDistributionMerge()
+H.fire("OnPreDistributionMerge")
 assert(logged[1]:find("added to 30 loot lists; not found: TestingLab"), logged[1])
-realprint("distribution tests passed")
+print = realprint
+H.pass()

@@ -2,8 +2,9 @@
 -- rewords, drops and dedupes the installed doDrawItem's lines by First Aid
 -- level, closes up the gaps, adds this mod's own lines (infection, dressing,
 -- stitches, bone), and leaves the debug view alone.
-local handlers = {}
-Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) handlers[k] = f end }; rawset(t, k, e); return e end })
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+H.events()
+H.stubs()
 local TEXT = { IGUI_health_Scratched = "Scratched", IGUI_health_Cut = "Cut", IGUI_health_DeepWound = "Deep Wound",
   IGUI_health_Bitten = "Bitten", IGUI_health_Fracture = "Fracture", IGUI_health_Infected = "Infected",
   IGUI_health_Severe = "Severe", IGUI_health_Moderate = "Moderate", IGUI_health_Stitched = "Stitched",
@@ -22,9 +23,8 @@ function ISHealthBodyPartListBox:doDrawItem(y, item)
   return y + 5
 end
 
-function require() end
-assert(loadfile("../DanTraits/42/media/lua/client/DanTraits_HealthPanel.lua"))()
-handlers.OnGameStart()
+H.load("client/DanTraits_HealthPanel.lua")
+H.fire("OnGameStart")
 
 local function makePart(o)
   o = o or {}
@@ -105,6 +105,6 @@ assert(panel.doctorLevel == 7 and seenText[2] == "- Deep Wound Severe", "live le
 
 -- 9. wrapping twice (OnGameStart again) doesn't stack
 local before = ISHealthBodyPartListBox.doDrawItem
-handlers.OnGameStart(); assert(ISHealthBodyPartListBox.doDrawItem == before, "not wrapped twice")
+H.fire("OnGameStart"); assert(ISHealthBodyPartListBox.doDrawItem == before, "not wrapped twice")
 
-print("test_healthpanel: all passed")
+H.pass()

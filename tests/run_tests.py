@@ -1,8 +1,9 @@
 """Run the Kahlua lint (tests/lint_kahlua.py), the game API check
 (tests/check_api.py: method names against the installed game), then every offline test with
-fengari (standard Lua in Node). The lint covers the known gaps between the
-two: functions the game's Lua lacks, and the compiler's local and upvalue
-limits. Anything else Kahlua-specific still needs the game.
+fengari (standard Lua in Node). Every test loads tests/harness.lua and ends with H.pass(), which
+prints "<name>: all checks passed"; that exact suffix is what counts as a pass. The lint covers
+the known gaps between the two: functions the game's Lua lacks, and the compiler's local and
+upvalue limits. Anything else Kahlua-specific still needs the game.
 
     python tests/run_tests.py            lint, then all tests
     python tests/run_tests.py vitality   lint and test files matching "vitality"
@@ -13,7 +14,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NOISE = ("not registered", "[DanTraits] ate", "telemetry]", "SAMPLE:")
+NOISE = ("not registered", "[DanTraits] ate", "[DanTraits] character traits", "telemetry]", "SAMPLE:")
+PASS_SUFFIX = ": all checks passed"   # what tests/harness.lua's H.pass prints as the last line
 
 
 def main():
@@ -56,7 +58,7 @@ def main():
                               capture_output=True, text=True, shell=(os.name == "nt"))
         out = (proc.stdout + proc.stderr).splitlines()
         lines = [l for l in out if not any(n in l for n in NOISE)]
-        ok = proc.returncode == 0 and any(("passed" in l or "ALL OK" in l) for l in lines)
+        ok = proc.returncode == 0 and any(l.strip().endswith(PASS_SUFFIX) for l in lines)
         print("%s %s" % ("PASS" if ok else "FAIL", name))
         if not ok:
             failed.append(name)

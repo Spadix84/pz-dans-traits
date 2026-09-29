@@ -1,51 +1,27 @@
-local handlers = {}
-local lists = {}
-Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) lists[k] = lists[k] or {}; table.insert(lists[k], f); handlers[k] = function(...) for _, g in ipairs(lists[k]) do g(...) end end end, Remove = function() end }; rawset(t, k, e); return e end })
-BodyPartType = { Groin = "Groin", ForeArm_L=1, ForeArm_R=2, LowerLeg_L=3, LowerLeg_R=4, Hand_L=5, Hand_R=6, Torso_Upper=7 }
-CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain", UNHAPPINESS = "unhappy", FATIGUE = "fatigue", PANIC = "panic", ENDURANCE = "endurance", FOOD_SICKNESS = "foodsick", WETNESS = { getMaximumValue = function() return 100 end } }
-local halo = {}
-HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
-function getText(k) return k end
-DanTraitsRegistry = { gluten = "gluten" }
-ArrayList = { new = function() return { add = function() end } end }
-IsoFireManager = { explode = function() end }
-function instanceof() return false end
-ItemBodyLocation = { MASK = "mask", MASK_EYES = "maskeyes", MASK_FULL = "maskfull" }
-function getWorld() return { getFreeEmitter = function() return { playSound = function() return 1 end, setPos = function() end } end } end
-function getTexture() return "TEX" end
-function getGameTime() return { getHour = function() return 12 end } end
-function ZombRand() return 0 end
-function getClimateManager() return { getAirTemperatureForCharacter = function() return 20 end } end
-function getCell() return { getGridSquare = function() return { getObjects = function() return { size = function() return 0 end } end, getDeadBodys = function() return { size = function() return 0 end } end } end } end
-function addSound() end
-DanTraitsTestCharge = false
+
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+-- Offline test for DanTraits_Gluten.lua: what counts as wheat, the dose from
+-- eating it (through the wrapped eat action, whole or interrupted), the onset
+-- and ramp, the symptom floors, decay and a second meal during a flare.
+H.events()
+H.stubs()
 
 -- vanilla eat action stub
 local eaten = {}
 ISEatFoodAction = { complete = function(self) eaten[#eaten+1] = { "complete", self.item.name }; return true end,
                     eat = function(self, food, pct) eaten[#eaten+1] = { "eat", self.item.name, pct } end }
 
-function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
-  assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
-end
-assert(handlers.EveryOneMinute and ISEatFoodAction.DanTraitsWraps and ISEatFoodAction.DanTraitsWraps["complete:core-eat"], "hooks in place")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
+H.expectHooks("EveryOneMinute")
+assert(ISEatFoodAction.DanTraitsWraps and ISEatFoodAction.DanTraitsWraps["complete:core-eat"], "hooks in place")
 
 local function item(name, carbs, hunger)
   return { name = name, getType = function() return name end, getCarbohydrates = function() return carbs end, getHungChange = function() return hunger or -0.1 end }
 end
-local function makePlayer(hasGluten, asleep)
-  local st = { pain = 0, foodsick = 0, unhappy = 0, stress = 0, panic = 0, fatigue = 0, endurance = 1 }
-  local md = {}
-  return { hasTrait = function(_, t) return hasGluten and t == "gluten" end, isDead = function() return false end,
-    isAsleep = function() return asleep == true end, getModData = function() return md end,
-    getStats = function() return { get = function(_, k) return st[k] end, set = function(_, k, v) st[k] = v end } end,
-    getX = function() return 10 end, getY = function() return 10 end, getZ = function() return 0 end,
-    _st = st, _md = md }
-end
-local current
-function getSpecificPlayer() return current end
-local minute = handlers.EveryOneMinute
+local build = H.factory()
+local function newPlayer(hasGluten, asleep) return build({ traits = hasGluten and { "gluten" } or {}, asleep = asleep }) end
+local halo = H.halo
+local minute = H.on("EveryOneMinute")
 
 -- 1. what counts as wheat
 local yes = { "Bread", "BreadSlices", "BagelPlain", "PastaBowl", "Ramen", "NoodleSoup", "Cereal", "Crackers", "CookiesOatmeal", "PieApple", "PizzaWhole", "Sandwich", "Burger", "BeerBottle", "Gingerbreadman", "MeatSteamBun", "BunsHamburger", "Tortilla", "Cornbread", "PotatoPancakes" }
@@ -55,14 +31,14 @@ for _, n in ipairs(no) do assert(not DanTraits_IsWheat(item(n, 10)), n .. " shou
 print("wheat list: " .. #yes .. " wheat, " .. #no .. " safe")
 
 -- 2. eating: only the trait, only wheat, dose from carbs, fallback from hunger
-local p = makePlayer(true); current = p
-local plain = makePlayer(false)
+local p = newPlayer(true); H.current = p
+local plain = newPlayer(false)
 assert(not DanTraits_OnEat(plain, item("Bread", 99), 1) and plain._md.DanTraits == nil, "no trait: nothing")
 assert(not DanTraits_OnEat(p, item("Rice", 648), 1), "rice: nothing")
 assert(DanTraits_OnEat(p, item("Bread", 99), 1), "bread: dose")
 assert(math.abs(p._md.DanTraits.glutenPending - 1.98) < 1e-9 and p._md.DanTraits.glutenOnset == 20, "loaf = 1.98 doses, 20 min onset")
 assert(halo[#halo] == "UI_DanTraits_GlutenAte", "told what happened")
-local q = makePlayer(true); current = q
+local q = newPlayer(true); H.current = q
 assert(DanTraits_OnEat(q, item("BeerBottle", 0, -0.1), 1) and math.abs(q._md.DanTraits.glutenPending - 0.6) < 1e-9, "no nutrition data: 10 hunger x 3 = 30 carbs = 0.6")
 
 -- 3. the action wrapper: complete uses the action percentage; eat uses percentage x progress
@@ -75,7 +51,7 @@ q._md.DanTraits.glutenPending = 0
 act:eat(act.item, 0.97); assert(math.abs(q._md.DanTraits.glutenPending - 0.33) < 1e-9, "over 95% counts as all")
 
 -- 4. onset, ramp, tiers: nothing for 20 minutes, then a full flare 30 minutes later
-current = p; halo = {}
+H.current = p; H.clearHalo()
 for _ = 1, 20 do minute() end
 assert(p._md.DanTraits.gluten == 0 and p._st.pain == 0, "quiet during onset")
 minute(); assert(math.abs(p._md.DanTraits.gluten - 1/30) < 1e-9, "ramp starts")
@@ -92,12 +68,12 @@ p._st.pain = 80; minute(); assert(p._st.pain == 80, "a higher pain from a wound 
 while p._md.DanTraits.glutenPending > 0 do minute() end
 local f0 = p._md.DanTraits.gluten
 minute(); assert(math.abs((f0 - p._md.DanTraits.gluten) - 1/600) < 1e-9, "decays 1/600 per minute")
-local sl = makePlayer(true, true); current = sl; sl._md.DanTraits = { gluten = 0.5, glutenPending = 0 }
+local sl = newPlayer(true, true); H.current = sl; sl._md.DanTraits = { gluten = 0.5, glutenPending = 0 }
 minute(); assert(math.abs((0.5 - sl._md.DanTraits.gluten) - 1.5/600) < 1e-9, "asleep decays 1.5x")
 
 -- 7. a second meal during a flare stacks straight in, no new onset wait
-current = p; local g = p._md.DanTraits.gluten
+H.current = p; local g = p._md.DanTraits.gluten
 DanTraits_OnEat(p, item("Crackers", 12), 1)
 assert(p._md.DanTraits.glutenOnset == 0 or p._md.DanTraits.glutenOnset == nil or p._md.DanTraits.glutenOnset <= 0, "no fresh onset mid-flare")
 minute(); assert(p._md.DanTraits.gluten > g, "stacks")
-print("ALL OK")
+H.pass()

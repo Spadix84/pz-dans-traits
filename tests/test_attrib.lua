@@ -1,25 +1,17 @@
 -- Offline test for DanTraits_Attrib.lua: handler wrapping, crediting, nesting, windows.
-local added = {}
-local function event(name) return { Add = function(f) added[name] = added[name] or {}; table.insert(added[name], f) end, Remove = function(f)
-    for i, g in ipairs(added[name] or {}) do if g == f then table.remove(added[name], i) end end end } end
-Events = { EveryOneMinute = event("EveryOneMinute"), OnPlayerUpdate = event("OnPlayerUpdate"), EveryTenMinutes = event("EveryTenMinutes") }
-local function fire(name, ...) for _, f in ipairs(added[name] or {}) do f(...) end end
-CharacterStat = { UNHAPPINESS = "unhappy", STRESS = "stress", FATIGUE = "fatigue" }
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+H.events()
+H.stubs()
 MoodleType = { UNHAPPY = "UNHAPPY", WET = "WET", BORED = "BORED" }
-local worldHours = 10
-function getGameTime() return { getWorldAgeHours = function() return worldHours end } end
-local st = { unhappy = 10, stress = 0.1, fatigue = 0.2 }
-local player = {
-    getStats = function() return { get = function(_, k) return st[k] end } end,
-    getBodyDamage = function() return { getOverallBodyHealth = function() return 90 end } end,
-    getMoodles = function() return { getMoodleLevel = function(_, t) return ({ UNHAPPY = 2, WET = 1 })[t] or 0 end } end,
-}
-function getSpecificPlayer() return player end
+H.hours = 10
+local player = H.player({ unhappy = 10, stress = 0.1, fatigue = 0.2, health = 90, moodles = { UNHAPPY = 2, WET = 1 } })
+local st = player._st
+H.current = player
 -- which file each closure "came from"
 local fileOf = {}
 function getFilenameOfClosure(fn) return fileOf[fn] end
 
-assert(loadfile("../DanTraits/42/media/lua/shared/DanTraits_Attrib.lua"))()
+H.load("shared/DanTraits_Attrib.lua")
 
 local function mdd() st.unhappy = st.unhappy + 5 end
 local function vit() st.unhappy = st.unhappy - 1; st.stress = st.stress + 0.05 end
@@ -32,15 +24,15 @@ Events.OnPlayerUpdate.Add(vit)
 Events.EveryOneMinute.Add(other)
 
 -- 1. ours are wrapped, the other mod's handler is passed through as-is
-assert(added.EveryOneMinute[1] ~= mdd and added.OnPlayerUpdate[1] ~= vit, "ours wrapped")
-assert(added.EveryOneMinute[2] == other, "others untouched")
+assert(H.handlers.EveryOneMinute[1] ~= mdd and H.handlers.OnPlayerUpdate[1] ~= vit, "ours wrapped")
+assert(H.handlers.EveryOneMinute[2] == other, "others untouched")
 assert(#DanTraits_AttribState.wrapped == 2 and DanTraits_AttribState.wrapped[1] == "MDD / EveryOneMinute", DanTraits_AttribState.wrapped[1])
 Events.EveryOneMinute.Remove(mdd)
-assert(#added.EveryOneMinute == 1, "remove finds the wrapper")
+assert(#H.handlers.EveryOneMinute == 1, "remove finds the wrapper")
 Events.EveryOneMinute.Add(mdd)
 
 -- 2. off by default: handlers still run, nothing recorded
-fire("OnPlayerUpdate")
+H.fire("OnPlayerUpdate")
 assert(st.unhappy == 9, "handler ran while off")
 assert(DanTraits_AttribReport(player).enabled == false and DanTraits_AttribReport(player).windows == nil)
 
@@ -48,8 +40,8 @@ assert(DanTraits_AttribReport(player).enabled == false and DanTraits_AttribRepor
 DanTraits_AttribSet(true)
 st.unhappy = 10
 DanTraits_AttribReport(player)         -- opens this minute's bucket (in game, every tick does)
-fire("EveryOneMinute")                -- other +100 (unattributed), MDD +5
-fire("OnPlayerUpdate")                 -- Vitality -1, stress +0.05
+H.fire("EveryOneMinute")                -- other +100 (unattributed), MDD +5
+H.fire("OnPlayerUpdate")                 -- Vitality -1, stress +0.05
 st.unhappy = st.unhappy + 3            -- the game, between handlers
 local r = DanTraits_AttribReport(player)
 assert(r.enabled and #r.windows == 3, "10 min, 60 min, since reset")
@@ -64,7 +56,7 @@ assert(w.sources.Other == nil, "other mods are not named")
 local function tenMin() st.stress = st.stress + 0.2; DanTraits_Track("Dependent", function() st.stress = st.stress + 0.3 end) end
 fileOf[tenMin] = "shared/DanTraits.lua"
 Events.EveryTenMinutes.Add(tenMin)
-fire("EveryTenMinutes")
+H.fire("EveryTenMinutes")
 w = DanTraits_AttribReport(player).windows[1]
 assert(near(w.sources.core.stress, 0.2) and near(w.sources.Dependent.stress, 0.3), "nested split")
 
@@ -72,14 +64,14 @@ assert(near(w.sources.core.stress, 0.2) and near(w.sources.Dependent.stress, 0.3
 local function broken() st.unhappy = st.unhappy + 1; error("boom") end
 fileOf[broken] = "DanTraits_Broken.lua"
 Events.EveryOneMinute.Add(broken)
-local ok, err = pcall(added.EveryOneMinute[#added.EveryOneMinute])
+local ok, err = pcall(H.handlers.EveryOneMinute[#H.handlers.EveryOneMinute])
 assert(not ok and tostring(err):find("boom"), "error rethrown")
 w = DanTraits_AttribReport(player).windows[1]
 assert(near(w.sources.Broken.unhappiness, 1), "change before the error still credited")
 
 -- 6. windows: an hour later the 10-minute window has forgotten, since-reset has not
-worldHours = worldHours + 1
-fire("OnPlayerUpdate")
+H.hours = H.hours + 1
+H.fire("OnPlayerUpdate")
 r = DanTraits_AttribReport(player)
 assert(r.windows[1].sources.MDD == nil and near(r.windows[1].sources.Vitality.unhappiness, -1), "10 min window moved on")
 assert(near(r.windows[3].sources.MDD.unhappiness, 5), "since reset keeps it")
@@ -90,4 +82,4 @@ assert(r.windows[3].sources.MDD == nil, "reset clears")
 -- 7. moodles
 local m = DanTraits_ActiveMoodles(player)
 assert(m.unhappy == 2 and m.wet == 1 and m.bored == nil, "active moodles")
-print("attrib: all checks passed")
+H.pass()

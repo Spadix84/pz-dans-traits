@@ -1,21 +1,11 @@
 -- Offline test for DanTraits_Hemophilia.lua: bleeds never run down while
 -- unbandaged, open wounds reopen, extra health loss per open bleed, and a
 -- bandage stops all of it.
-local handlers, lists = {}, {}
-Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) lists[k] = lists[k] or {}; table.insert(lists[k], f); handlers[k] = function(...) for _, g in ipairs(lists[k]) do g(...) end end end, Remove = function() end }; rawset(t, k, e); return e end })
-CharacterStat = { INTOXICATION = "intox", STRESS = "stress", PAIN = "pain" }
-local halo = {}
-HaloTextHelper = { addBadText = function(_, t) halo[#halo+1] = t end, addGoodText = function(_, t) halo[#halo+1] = "+" .. t end }
-function getText(k) return k end
-DanTraitsRegistry = { hemophilia = "hemophilia" }
-ISEatFoodAction = { complete = function() return true end, eat = function() end, isValid = function() return true end, isValidStart = function() return true end }
-ISTakePillAction = { complete = function() return true end }
-
-function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Hemophilia" }) do
-  assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
-end
-assert(handlers.EveryOneMinute, "hooks in place")
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+H.events()
+H.stubs()
+H.load("Hemophilia")
+H.expectHooks("EveryOneMinute")
 
 local function part(o)
   o = o or {}
@@ -34,28 +24,13 @@ local function part(o)
   return p
 end
 
-local function makePlayer(o)
-  o = o or {}
-  local traits = {}
-  for _, t in ipairs(o.traits or { "hemophilia" }) do traits[t] = true end
-  local md = {}
-  local parts = o.parts or {}
-  local p = { hasTrait = function(_, t) return traits[t] == true end, isDead = function() return false end,
-    getModData = function() return md end, _md = md, _health = 100, _parts = parts }
-  p.getBodyDamage = function() return {
-    getBodyParts = function() return { size = function() return #parts end, get = function(_, i) return parts[i + 1] end } end,
-    getOverallBodyHealth = function() return p._health end,
-    ReduceGeneralHealth = function(_, n) p._health = p._health - n end,
-  } end
-  return p
-end
-local current
-function getSpecificPlayer() return current end
-local minute = handlers.EveryOneMinute
+local newPlayer = H.factory({ traits = { "hemophilia" } })
+local halo = H.halo
+local minute = H.on("EveryOneMinute")
 
 -- 1. an unbandaged bleed: its clock is held at the floor and health drops 0.35 a minute
 local a = part({ bleeding = true, time = 1.0 })
-local p = makePlayer({ parts = { a, part() } }); current = p
+local p = newPlayer({ parts = { a, part() } }); H.current = p
 minute()
 assert(a._time == 5.0, "bleeding time held up to 5, got " .. a._time)
 assert(math.abs(p._health - 99.65) < 1e-9, "0.35 health per open bleed per minute, got " .. p._health)
@@ -69,7 +44,7 @@ assert(a._time == 1.0 and p._health == h and p._md.DanTraits.hemoOpen == 0, "ban
 -- 3. an unbandaged scratch that is not bleeding starts bleeding again, with a notice; a stitched cut does not
 local s = part({ scratched = true })
 local st = part({ cut = true, stitched = true })
-local q = makePlayer({ parts = { s, st } }); current = q
+local q = newPlayer({ parts = { s, st } }); H.current = q
 minute()
 assert(s._bleeding and s._time == 5.0, "scratch reopened")
 assert(not st._bleeding, "stitched: closed")
@@ -79,13 +54,13 @@ assert(math.abs(q._health - (100 - 0.7)) < 1e-9, "two minutes of one open bleed"
 
 -- 4. two open bleeds: double the loss; health can reach zero but not below
 local b1, b2 = part({ bleeding = true, time = 9 }), part({ bleeding = true, time = 9 })
-local r = makePlayer({ parts = { b1, b2 } }); current = r
+local r = newPlayer({ parts = { b1, b2 } }); H.current = r
 minute(); assert(math.abs(r._health - 99.3) < 1e-9, "two bleeds: 0.7 a minute")
 r._health = 0.5; minute(); assert(r._health == 0, "clamped at zero")
 
 -- 5. no trait: nothing
 local x = part({ bleeding = true, time = 1.0 })
-local none = makePlayer({ traits = {}, parts = { x } }); current = none
+local none = newPlayer({ traits = {}, parts = { x } }); H.current = none
 minute(); assert(x._time == 1.0 and none._health == 100, "no trait: untouched")
 
-print("test_hemophilia: all passed")
+H.pass()

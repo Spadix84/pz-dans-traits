@@ -3,14 +3,10 @@
 -- once; different tags each add a layer and all of them run, innermost first;
 -- a class without the method is left alone; a derived class keeps its own
 -- tags apart from its parent's.
-local handlers, lists = {}, {}
-Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) lists[k] = lists[k] or {}; table.insert(lists[k], f); handlers[k] = function(...) for _, g in ipairs(lists[k]) do g(...) end end end, Remove = function() end }; rawset(t, k, e); return e end })
-HaloTextHelper = { addBadText = function() end, addGoodText = function() end }
-function getText(k) return k end
-DanTraitsRegistry = {}
-
-function require() end
-assert(loadfile("../DanTraits/42/media/lua/shared/DanTraits.lua"))()
+local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
+H.events()
+H.stubs()
+H.load("DanTraits")
 assert(type(DanTraits_Wrap) == "function", "DanTraits_Wrap is exported")
 
 local log = {}
@@ -52,4 +48,4 @@ assert(DanTraits_Wrap(Child, "run", "t", function(orig, self, x) return orig(sel
 assert(Child:run(1) == 1 + 1 + 1000 + 5000, "child layer sits on the inherited parent method, got " .. tostring(Child:run(1)))
 assert(Parent:run(1) == 1 + 1 + 1000, "parent untouched by the child's wrap")
 
-print("test_core: all passed")
+H.pass()
