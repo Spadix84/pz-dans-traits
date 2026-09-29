@@ -38,7 +38,7 @@ local function anData(player)
     return d
 end
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
 -- 0..1 how short of iron the character is
 local function deficitOf(d)
@@ -114,8 +114,7 @@ local function updateAnemiaMinute(player, d)
     if deficit <= 0 then return end
     pcall(function()
         local stats = player:getStats()
-        local asleep = false
-        pcall(function() asleep = player:isAsleep() end)
+        local asleep = DanTraits_Asleep(player)
         if not asleep then stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + AN_FATIGUE * deficit)) end
         local bd = player:getBodyDamage()
         local catching = bd:getCatchACold() or 0

@@ -42,7 +42,7 @@ local function hoData(player)
     return d
 end
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
 -- 0..1 current symptom strength (severity x fade), for the moodle and other systems
 local function hangoverStrength(d)
@@ -56,19 +56,10 @@ function DanTraits_HangoverStrength(player)
 end
 
 local function updateMoodle(player, strength)
-    if not MF or not MF.getMoodle then return end
-    pcall(function()
-        local moodle = MF.getMoodle("Hangover", player:getPlayerNum())
-        if not moodle then return end
-        moodle:setThresholds(nil, 0.5 * (1 - HO_TIER[3]), 0.5 * (1 - HO_TIER[2]), 0.5 * (1 - HO_TIER[1]))
-        moodle:setValue(0.5 * (1 - strength))
-    end)
+    DanTraits_BadMoodle(player, "Hangover", strength, HO_TIER)
 end
 
-local function floorUp(stats, stat, floor, ramp)
-    local value = stats:get(stat) or 0
-    if value < floor then stats:set(stat, math.min(floor, value + ramp)) end
-end
+local floorUp = DanTraits_FloorUp
 
 local function startHangover(player, d)
     d.hoActive = true
@@ -95,8 +86,7 @@ local function updateHangoverMinute(player, d)
     d = hoData(player)
     local stats = player:getStats()
     local intox = fraction(stats, CharacterStat.INTOXICATION)
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
 
     -- drinking: build the load; a drink mid-hangover pauses it
     local drinking = intox > HO_BUZZ

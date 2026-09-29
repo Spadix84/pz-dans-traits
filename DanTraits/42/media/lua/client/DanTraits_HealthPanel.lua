@@ -72,11 +72,7 @@ local function reword(body, level, part, rec)
     return nil
 end
 
-local function num(part, method)
-    local v = 0
-    pcall(function() v = part[method](part) or 0 end)
-    return tonumber(v) or 0
-end
+local num = DanTraits_PartNum
 
 -- this mod's own lines for a part, by level: { text, colour }
 local function extraLines(part, level, patient)

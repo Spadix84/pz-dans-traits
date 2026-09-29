@@ -59,30 +59,13 @@ local ARMS_R = { Hand_R = true, ForeArm_R = true, UpperArm_R = true }
 local ARMS_L = { Hand_L = true, ForeArm_L = true, UpperArm_L = true }
 local TORSO = { Torso_Upper = true, Torso_Lower = true }
 
-local function sandboxOn()
-    local sv = SandboxVars and SandboxVars.DanTraits
-    return not sv or sv.WoundCareEnabled ~= false
-end
+local function sandboxOn() return DanTraits_SandboxOn("WoundCareEnabled") end
 function DanTraits_WoundCareActive() return sandboxOn() end
 
-local function num(part, method)
-    local v = 0
-    pcall(function() v = part[method](part) or 0 end)
-    return tonumber(v) or 0
-end
-local function is(part, method)
-    local ok, res = pcall(function() return part[method](part) end)
-    return ok and res == true
-end
-local function roll(chance)
-    if chance <= 0 then return false end
-    if ZombRandFloat then return ZombRandFloat(0, 1) < chance end
-    return math.random() < chance
-end
-local function randRange(lo, hi)
-    if ZombRandFloat then return ZombRandFloat(lo, hi) end
-    return lo + math.random() * (hi - lo)
-end
+local num = DanTraits_PartNum
+local is = DanTraits_PartIs
+local roll = DanTraits_Roll
+local randRange = DanTraits_RandRange
 
 -- "Left Forearm" and so on, for the notices
 local function partLabel(part)
@@ -317,19 +300,7 @@ wrapSplint()
 Events.OnGameStart.Add(wrapSplint)
 
 -- console: tear <part> | dressing <part> <life> | badset <part> | breakbone <part> [time]
-local PARTS = {
-    hand_l = "Hand_L", hand_r = "Hand_R", forearm_l = "ForeArm_L", forearm_r = "ForeArm_R",
-    upperarm_l = "UpperArm_L", upperarm_r = "UpperArm_R", thigh_l = "UpperLeg_L", thigh_r = "UpperLeg_R",
-    shin_l = "LowerLeg_L", shin_r = "LowerLeg_R", foot_l = "Foot_L", foot_r = "Foot_R",
-    chest = "Torso_Upper", belly = "Torso_Lower", groin = "Groin", head = "Head", neck = "Neck",
-}
-local function partOf(player, arg)
-    local typeName = PARTS[string.lower(tostring(arg or ""))]
-    if not typeName then return nil end
-    local part = nil
-    pcall(function() part = player:getBodyDamage():getBodyPart(BodyPartType[typeName]) end)
-    return part
-end
+local partOf = DanTraits_PartOf
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.tear = function(player, args)
     local part = partOf(player, args[1])

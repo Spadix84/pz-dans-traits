@@ -78,10 +78,7 @@ local function withdrawal(hours)
 end
 DanTraits_CaffeineWithdrawal = withdrawal
 
-local function floorUp(stats, stat, floor, ramp)
-    local value = stats:get(stat) or 0
-    if value < floor then stats:set(stat, math.min(floor, value + ramp)) end
-end
+local floorUp = DanTraits_FloorUp
 
 local function updateCaffeineMinute(player, d)
     if not hasTrait(player, "caffeine") then return end
@@ -105,8 +102,7 @@ local function updateCaffeineMinute(player, d)
         DanTraits_NotifyGood(player, "UI_DanTraits_CaffeineBroken")
     end
     if w <= 0 then return end
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
     if asleep then return end
     pcall(function()
         local stats = player:getStats()

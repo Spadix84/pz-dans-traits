@@ -49,10 +49,7 @@ local function afraid(player)
 end
 DanTraits_FearOfBlood = afraid
 
-local function roll(chance)
-    if ZombRandFloat then return ZombRandFloat(0, 1) < chance end
-    return math.random() < chance
-end
+local roll = DanTraits_Roll
 
 local function faint(player, chance)
     if not DanTraits_PassOut or not roll(chance) then return false end
@@ -121,8 +118,7 @@ Events.OnGameStart.Add(wrapAll)
 local function updateFearMinute(player, d)
     if (d.hbGap or 0) > 0 then d.hbGap = d.hbGap - 1 end
     if not afraid(player) then return end
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
     if asleep then return end
     if (d.bloodLossMin or 0) >= HB_BLEED_FROM then faint(player, HB_BLEED_FAINT) end
 end

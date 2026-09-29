@@ -38,7 +38,7 @@ local function sandbox()
 end
 
 local function ageEnabled()
-    return sandbox().AgeEnabled ~= false
+    return DanTraits_SandboxOn("AgeEnabled")
 end
 
 -- 20, 30 or 40; age rounds down to its decade

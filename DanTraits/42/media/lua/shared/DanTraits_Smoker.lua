@@ -120,7 +120,7 @@ local NIC_ITEMS = {
 local INDUCE_DECAY = 0.5 ^ (1 / (CAF_INDUCE_HALF_H * 60))
 local MIN_H = 1 / 60
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
 local function isSmoker(player) return hasVanillaTrait(player, "base:smoker") end
 DanTraits_IsSmoker = isSmoker
@@ -135,26 +135,15 @@ local function setSmoker(player, on)
     return ok and isSmoker(player) == on
 end
 
-local function statMax(stat)
-    local max = 1
-    pcall(function() max = stat:getMaximumValue() or 1 end)
-    if not max or max <= 0 then max = 1 end
-    return max
-end
+local statMax = DanTraits_StatMax
 
 -- add a fraction of the stat's range, clamped to it
 local function addFrac(stats, stat, frac)
     if not stat then return end
-    pcall(function()
-        local max = statMax(stat)
-        stats:set(stat, math.max(0, math.min(max, (stats:get(stat) or 0) + frac * max)))
-    end)
+    DanTraits_StatAdd(stats, stat, frac * statMax(stat))
 end
 
-local function roll(percent)
-    if ZombRand then return ZombRand(1000000) < percent * 10000 end
-    return math.random() * 100 < percent
-end
+local roll = DanTraits_RollPercent
 
 local function drunkLevel(player)
     if not DanTraits_DrunkLevel then return 0 end
@@ -444,8 +433,7 @@ local function updateSmokerMinute(player, d)
     end
     if (d.nicStimH or 0) > 0 then d.nicStimH = math.max(0, d.nicStimH - MIN_H) end
 
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
     if asleep then
         d.nicSleptMin = (d.nicSleptMin or 0) + 1
     else

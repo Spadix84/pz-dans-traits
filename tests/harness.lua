@@ -210,15 +210,27 @@ local function loadFile(path)
   chunk()
 end
 
+-- The game loads the core, which requires DanTraits_Attrib then DanTraits_Util
+-- (require is a stub here). The util needs nothing, so it goes in first, once,
+-- before any file: the core, a trait file, or a client file that reads its globals.
+local function ensureUtil()
+  if loaded.DanTraits_Util then return end
+  loaded.DanTraits_Util = true
+  loadFile(H.root .. "/shared/DanTraits_Util.lua")
+end
+
 function H.load(...)
+  ensureUtil()
   for _, name in ipairs({ ... }) do
     if name:find("/", 1, true) then
       loadFile(H.root .. "/" .. name)
     else
       if not name:find("^DanTraits") then name = "DanTraits_" .. name end
-      if name ~= "DanTraits" and not loaded.DanTraits then H.load("DanTraits") end
-      loadFile(H.root .. "/shared/" .. name .. ".lua")
-      loaded[name] = true
+      if name ~= "DanTraits_Util" then
+        if name ~= "DanTraits" and not loaded.DanTraits then H.load("DanTraits") end
+        loadFile(H.root .. "/shared/" .. name .. ".lua")
+        loaded[name] = true
+      end
     end
   end
 end

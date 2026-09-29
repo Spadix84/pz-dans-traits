@@ -57,24 +57,13 @@ local CC_DIZZY         = 0.18    -- chance a minute of running of a dizzy fall x
 local CC_WAKE          = 1       -- light wakes you (1 + this x score) times as easily
 local CC_TIER          = { 0.02, CC_MODERATE, CC_SEVERE }
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
-local function sandboxOn()
-    local sv = SandboxVars and SandboxVars.DanTraits
-    return not sv or sv.ConcussionEnabled ~= false
-end
+local function sandboxOn() return DanTraits_SandboxOn("ConcussionEnabled") end
 function DanTraits_ConcussionActive() return sandboxOn() end
 
-local function roll(chance)
-    if chance <= 0 then return false end
-    if chance >= 1 then return true end
-    if ZombRandFloat then return ZombRandFloat(0, 1) < chance end
-    return math.random() < chance
-end
-local function randRange(lo, hi)
-    if ZombRandFloat then return ZombRandFloat(lo, hi) end
-    return lo + math.random() * (hi - lo)
-end
+local roll = DanTraits_Roll
+local randRange = DanTraits_RandRange
 
 -- 0..1, for other systems (Migraines, the health panel)
 function DanTraits_ConcussionStrength(player)
@@ -178,14 +167,7 @@ local function onConcussionSwing(character)
 end
 
 local function updateMoodle(player, s)
-    if not MF or not MF.getMoodle then return end
-    pcall(function()
-        local moodle = MF.getMoodle("Concussion", player:getPlayerNum())
-        if not moodle then return end
-        -- bad side only: 0.5 none, lower worse
-        moodle:setThresholds(nil, 0.5 * (1 - CC_TIER[3]), 0.5 * (1 - CC_TIER[2]), 0.5 * (1 - CC_TIER[1]))
-        moodle:setValue(0.5 * (1 - s))
-    end)
+    DanTraits_BadMoodle(player, "Concussion", s, CC_TIER)
 end
 
 local function inBright(player)
@@ -204,8 +186,7 @@ local function updateConcussionMinute(player, d)
         updateMoodle(player, 0)
         return
     end
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
     if strained then
         s = s + CC_STRAIN
     else

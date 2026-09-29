@@ -6,6 +6,8 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
+local floorUp = DanTraits_FloorUp
+local statAdd = DanTraits_StatAdd
 
 -- Diabetes (Type 1 "diabetes1", Type 2 "diabetes2") -------------------------
 -- A hidden blood sugar value (mg/dL) lives in mod data. Carbohydrates in
@@ -221,7 +223,7 @@ local function updateDiabetesMinute(player, d)
     local stats = player:getStats()
     local g = d.glucose
     local asleep, moving, drunk, endurance, panic = false, false, false, 1, 0
-    pcall(function() asleep = player:isAsleep() end)
+    asleep = DanTraits_Asleep(player)
     pcall(function() moving = player:isSprinting() or player:isRunning() end)
     pcall(function() drunk = (stats:get(CharacterStat.INTOXICATION) or 0) > 0.05 end)
     pcall(function() endurance = stats:get(CharacterStat.ENDURANCE) or 1 end)
@@ -276,13 +278,6 @@ local function updateDiabetesMinute(player, d)
     if low == 0 and high == 0 then return end
 
     pcall(function()
-        local function floorUp(stat, target, ramp)
-            local value = stats:get(stat) or 0
-            if value < target then stats:set(stat, math.min(100, value + math.min(ramp, target - value))) end
-        end
-        local function add(stat, amount, cap)
-            stats:set(stat, math.min(cap, (stats:get(stat) or 0) + amount))
-        end
         local function drainHealth(perMinute, floorOff)
             local bd = player:getBodyDamage()
             local floor = floorOff and 0 or DIA_HEALTH_FLOOR
@@ -292,17 +287,17 @@ local function updateDiabetesMinute(player, d)
         end
         if low > 0 then
             if DIA_LOW_END_DRAIN[low] > 0 then stats:set(CharacterStat.ENDURANCE, math.max(0, (stats:get(CharacterStat.ENDURANCE) or 0) - DIA_LOW_END_DRAIN[low])) end
-            add(CharacterStat.FATIGUE, DIA_LOW_FATIGUE[low], 1)
-            add(CharacterStat.PANIC, DIA_LOW_PANIC[low], 100)
-            floorUp(CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
+            statAdd(stats, CharacterStat.FATIGUE, DIA_LOW_FATIGUE[low])
+            statAdd(stats, CharacterStat.PANIC, DIA_LOW_PANIC[low])
+            floorUp(stats, CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
             if low >= 3 then drainHealth(DIA_LOW_HP_DRAIN, false) end
         else
-            add(CharacterStat.THIRST, DIA_HIGH_THIRST[high], 1)
-            add(CharacterStat.FATIGUE, DIA_HIGH_FATIGUE[high], 1)
+            statAdd(stats, CharacterStat.THIRST, DIA_HIGH_THIRST[high])
+            statAdd(stats, CharacterStat.FATIGUE, DIA_HIGH_FATIGUE[high])
             local mood = DIA_HIGH_UNHAPPY_FLOOR[high]
             if d.mddEpisode then mood = mood * DIA_MDD_UNHAPPY_MULT end
-            floorUp(CharacterStat.UNHAPPINESS, mood, DIA_STAT_RAMP)
-            floorUp(CharacterStat.FOOD_SICKNESS, DIA_HIGH_SICK_FLOOR[high], DIA_STAT_RAMP)
+            floorUp(stats, CharacterStat.UNHAPPINESS, mood, DIA_STAT_RAMP)
+            floorUp(stats, CharacterStat.FOOD_SICKNESS, DIA_HIGH_SICK_FLOOR[high], DIA_STAT_RAMP)
             if high >= 3 then drainHealth(DIA_HIGH_HP_DRAIN, d.diaKetoHours >= DIA_KETO_HOURS) end
         end
     end)

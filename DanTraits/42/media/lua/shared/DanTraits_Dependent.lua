@@ -72,14 +72,12 @@ local function setTrait(player, on)
     end)
 end
 
-local function rollRelapse()
+local function relapseRoll()
     if ZombRand then return ZombRand(100) < ALC_RELAPSE_ODDS end
     return math.random(100) <= ALC_RELAPSE_ODDS
 end
 
-local function add(stats, stat, amount, cap)
-    pcall(function() stats:set(stat, math.min(cap, (stats:get(stat) or 0) + amount)) end)
-end
+local add = DanTraits_StatAdd
 
 local function clearWithdrawal(d)
     d.withdrawing, d.alcStage, d.alcW, d.alcShakes = false, 0, 0, 0
@@ -105,9 +103,9 @@ local function seize(player, stats)
         player:setVariable("BumpFall", true)
         player:setVariable("BumpFallType", "pushedFront")
     end)
-    add(stats, CharacterStat.PAIN, ALC_SEIZE_PAIN, 100)
-    add(stats, CharacterStat.PANIC, ALC_SEIZE_PANIC, 100)
-    add(stats, CharacterStat.FATIGUE, ALC_SEIZE_FATIGUE, 1)
+    add(stats, CharacterStat.PAIN, ALC_SEIZE_PAIN)
+    add(stats, CharacterStat.PANIC, ALC_SEIZE_PANIC)
+    add(stats, CharacterStat.FATIGUE, ALC_SEIZE_FATIGUE)
     notify(player, "UI_DanTraits_AlcoholicSeizure")
 end
 
@@ -137,16 +135,15 @@ local function withdrawal(player, d, stats, intox, meter)
     if stage > (d.alcStage or 0) then notify(player, STAGE_NOTICE[stage]) end
     d.alcStage = stage
 
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
 
     -- STRESS is 0..1, the rest 0..100
-    add(stats, CharacterStat.STRESS, DEP_STRESS_RATE * w, 1)
-    add(stats, CharacterStat.UNHAPPINESS, ALC_MOOD_RATE * w, 100)
+    add(stats, CharacterStat.STRESS, DEP_STRESS_RATE * w)
+    add(stats, CharacterStat.UNHAPPINESS, ALC_MOOD_RATE * w)
     if stage < 2 then d.alcShakes = 0 return end
 
     d.alcShakes = ALC_SHAKE_DROP * w
-    add(stats, CharacterStat.PAIN, DEP_PAIN_RATE * w, 100)
+    add(stats, CharacterStat.PAIN, DEP_PAIN_RATE * w)
     pcall(function()
         local sick, floor = stats:get(CharacterStat.FOOD_SICKNESS) or 0, ALC_SICK * w
         if sick < floor then stats:set(CharacterStat.FOOD_SICKNESS, math.min(floor, sick + ALC_SICK_RAMP)) end
@@ -191,7 +188,7 @@ local function updateDependent(player, d)
 
     if not has then
         -- once an Alcoholic, the first drink of every session risks it all
-        if drinking and not d.alcDrinking and d.alcEx and rollRelapse() and setTrait(player, true) then
+        if drinking and not d.alcDrinking and d.alcEx and relapseRoll() and setTrait(player, true) then
             has = true
             meter = math.max(meter, ALC_RELAPSE)
             d.alcInit, d.dryHours = true, 0

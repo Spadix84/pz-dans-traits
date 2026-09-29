@@ -10,11 +10,18 @@
 -- unless the player actually has it, so an unaffected character costs a
 -- handful of lookups.
 --
+-- The small copy-and-paste helpers (clamp, floor a stat, dice, body-part
+-- lookups, the asleep check, the sandbox toggle, the Moodle Framework updater)
+-- live in DanTraits_Util.lua, required below.
+--
 -- Lua allows 200 locals per file: new traits go in new files, not here.
 
 -- before any handler is registered, so the dashboard can say which trait
 -- moved which stat
 require "DanTraits_Attrib"
+
+-- the shared one-liners (clamps, dice, part lookups, sandbox, moodle updater)
+require "DanTraits_Util"
 
 -- Trait lookup goes through the registry when it is available and falls back
 -- to the legacy string form, so this keeps working if either API shifts.

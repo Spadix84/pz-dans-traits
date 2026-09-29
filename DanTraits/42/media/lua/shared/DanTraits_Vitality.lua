@@ -100,7 +100,7 @@ local function vitData(player)
     return d
 end
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
 -- 0..1 grade for a portion of food: 0.5 is "does no harm"
 function DanTraits_GradeFood(item)
@@ -239,14 +239,7 @@ local function updateMoodle(player, v)
 end
 
 local function updateDebtMoodle(player, debt)
-    if not MF or not MF.getMoodle then return end
-    pcall(function()
-        local moodle = MF.getMoodle("SleptBadly", player:getPlayerNum())
-        if not moodle then return end
-        -- bad side only: 0.5 is neutral, lower is worse
-        moodle:setThresholds(nil, 0.5 * (1 - VIT_DEBT_TIER[3]), 0.5 * (1 - VIT_DEBT_TIER[2]), 0.5 * (1 - VIT_DEBT_TIER[1]))
-        moodle:setValue(0.5 * (1 - debt))
-    end)
+    DanTraits_BadMoodle(player, "SleptBadly", debt, VIT_DEBT_TIER)
 end
 
 function DanTraits_SleepDebt(player)
@@ -260,7 +253,7 @@ local function updateVitalityMinute(player, d)
     local stats = player:getStats()
     local hour, asleep, fatigue, hunger = 0, false, 0, 0
     pcall(function() hour = player:getHoursSurvived() end)
-    pcall(function() asleep = player:isAsleep() end)
+    asleep = DanTraits_Asleep(player)
     pcall(function() fatigue = stats:get(CharacterStat.FATIGUE) or 0 end)
     pcall(function() hunger = stats:get(CharacterStat.HUNGER) or 0 end)
 
@@ -314,11 +307,9 @@ local function updateVitalityMinute(player, d)
     updateDebtMoodle(player, debt)
     if debt > 0 and not asleep then
         pcall(function()
-            local floor = VIT_DEBT_MOOD_FLOOR * debt
-            local value = stats:get(CharacterStat.UNHAPPINESS) or 0
-            if value < floor then stats:set(CharacterStat.UNHAPPINESS, math.min(floor, value + VIT_MOOD_RAMP)) end
-            stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + VIT_DEBT_STRESS * debt))
-            stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + VIT_DEBT_FATIGUE * debt))
+            DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, VIT_DEBT_MOOD_FLOOR * debt, VIT_MOOD_RAMP)
+            DanTraits_StatAdd(stats, CharacterStat.STRESS, VIT_DEBT_STRESS * debt)
+            DanTraits_StatAdd(stats, CharacterStat.FATIGUE, VIT_DEBT_FATIGUE * debt)
         end)
     end
 
@@ -360,12 +351,10 @@ local function updateVitalityMinute(player, d)
     end)
     pcall(function()
         if e > 0 then
-            stats:set(CharacterStat.UNHAPPINESS, math.max(0, (stats:get(CharacterStat.UNHAPPINESS) or 0) - VIT_MOOD_LIFT * e))
-            stats:set(CharacterStat.STRESS, math.max(0, (stats:get(CharacterStat.STRESS) or 0) - VIT_STRESS_LIFT * e))
+            DanTraits_StatAdd(stats, CharacterStat.UNHAPPINESS, -VIT_MOOD_LIFT * e)
+            DanTraits_StatAdd(stats, CharacterStat.STRESS, -VIT_STRESS_LIFT * e)
         elseif e < 0 then
-            local floor = VIT_MOOD_FLOOR * -e
-            local value = stats:get(CharacterStat.UNHAPPINESS) or 0
-            if value < floor then stats:set(CharacterStat.UNHAPPINESS, math.min(floor, value + VIT_MOOD_RAMP)) end
+            DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, VIT_MOOD_FLOOR * -e, VIT_MOOD_RAMP)
         end
     end)
     pcall(function()

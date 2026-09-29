@@ -62,7 +62,7 @@ local DS_WAKE           = 0.25    -- light wake chance x this
 local DS_REST_BRIGHT    = 0.5     -- bright-light rest and score penalties x this
 local DS_REST_DARK      = 1.5     -- dark rest and score bonuses x this
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
 -- -1 (fully lit) .. +1 (fully dark), from a light level
 local function darknessOf(light)
@@ -142,7 +142,7 @@ local function updateSleepMinute(player, d)
     end
     local stats = player:getStats()
     local asleep, fatigue = false, 0
-    pcall(function() asleep = player:isAsleep() end)
+    asleep = DanTraits_Asleep(player)
     pcall(function() fatigue = stats:get(CharacterStat.FATIGUE) or 0 end)
     if not asleep then
         d.slAsleepMin, d.slLastFatigue = nil, nil

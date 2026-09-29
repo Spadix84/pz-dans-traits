@@ -51,7 +51,7 @@ local function migData(player)
     return d
 end
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
 -- bright daylight, outdoors: the trigger and the thing that makes an attack worse
 local function inBrightLight(player)
@@ -73,7 +73,7 @@ DanTraits_InBrightLight = inBrightLight
 local function sleepLit(player)
     local lit = 0
     pcall(function()
-        if not player:isAsleep() then return end
+        if not DanTraits_Asleep(player) then return end
         local d = player:getModData().DanTraits
         if d and d.slDark then lit = clamp01(-d.slDark) end
     end)
@@ -99,19 +99,10 @@ end
 DanTraits_MigraineChance = migraineChance
 
 local function updateMoodle(player, value)
-    if not MF or not MF.getMoodle then return end
-    pcall(function()
-        local moodle = MF.getMoodle("Migraine", player:getPlayerNum())
-        if not moodle then return end
-        moodle:setThresholds(nil, 0.5 * (1 - MIG_TIER[3]), 0.5 * (1 - MIG_TIER[2]), 0.5 * (1 - MIG_TIER[1]))
-        moodle:setValue(0.5 * (1 - value))
-    end)
+    DanTraits_BadMoodle(player, "Migraine", value, MIG_TIER)
 end
 
-local function floorUp(stats, stat, floor, ramp)
-    local value = stats:get(stat) or 0
-    if value < floor then stats:set(stat, math.min(floor, value + ramp)) end
-end
+local floorUp = DanTraits_FloorUp
 
 local function startAura(player, d)
     d.migAuraLeft = MIG_AURA_H
@@ -162,7 +153,7 @@ local function updateMigraineMinute(player, d)
     if not d.migActive then return end
 
     local asleep, bright = false, inBrightLight(player)
-    pcall(function() asleep = player:isAsleep() end)
+    asleep = DanTraits_Asleep(player)
     local rate = 1
     if asleep then rate = MIG_SLEEP_RATE - (MIG_SLEEP_RATE - 1) * sleepLit(player) elseif bright then rate = MIG_LIGHT_RATE end
     local meds = 0

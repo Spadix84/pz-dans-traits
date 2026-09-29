@@ -34,7 +34,7 @@ local FUMBLE_FLARE      = 4       -- added at a full flare
 
 local JOINTS = { "Hand_L", "Hand_R", "ForeArm_L", "ForeArm_R", "UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R" }
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
 -- 0..1 how much the weather is in the joints
 local function jointFactor(player)

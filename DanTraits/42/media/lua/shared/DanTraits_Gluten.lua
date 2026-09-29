@@ -4,6 +4,7 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
+local floorUp = DanTraits_FloorUp
 
 -- Gluten Intolerance ----------------------------------------------------------
 -- Wheat in a meal sets off a flare (0..1 in mod data): nothing for a while,
@@ -102,8 +103,7 @@ end
 local function updateGlutenMinute(player, d)
     if not hasTrait(player, "gluten") then return end
     d = glutenData(player)
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
     local before = d.gluten
 
     if d.glutenPending > 0 and (d.glutenOnset or 0) > 0 then
@@ -124,13 +124,9 @@ local function updateGlutenMinute(player, d)
 
     pcall(function()
         local stats = player:getStats()
-        local function floorUp(stat, target, ramp)
-            local value = stats:get(stat) or 0
-            if value < target then stats:set(stat, math.min(100, value + math.min(ramp, target - value))) end
-        end
-        floorUp(CharacterStat.PAIN, flare * GLUTEN_PAIN_MAX, GLUTEN_PAIN_RAMP)
-        floorUp(CharacterStat.FOOD_SICKNESS, flare * GLUTEN_SICK_MAX, GLUTEN_SICK_RAMP)
-        floorUp(CharacterStat.UNHAPPINESS, flare * GLUTEN_UNHAPPY_MAX, GLUTEN_UNHAPPY_RAMP)
+        floorUp(stats, CharacterStat.PAIN, flare * GLUTEN_PAIN_MAX, GLUTEN_PAIN_RAMP)
+        floorUp(stats, CharacterStat.FOOD_SICKNESS, flare * GLUTEN_SICK_MAX, GLUTEN_SICK_RAMP)
+        floorUp(stats, CharacterStat.UNHAPPINESS, flare * GLUTEN_UNHAPPY_MAX, GLUTEN_UNHAPPY_RAMP)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + flare * GLUTEN_STRESS_PER_MIN))
     end)
 end

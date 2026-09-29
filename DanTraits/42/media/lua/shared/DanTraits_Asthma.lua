@@ -99,14 +99,7 @@ end
 -- Moodle Framework is client side and optional; without it the trait still
 -- works, you just do not get the icon.
 local function asthmaUpdateMoodle(player, irritation)
-    if not MF or not MF.getMoodle then return end
-    pcall(function()
-        local moodle = MF.getMoodle("AirwayIrritation", player:getPlayerNum())
-        if not moodle then return end
-        -- MF values: 0.5 is neutral, lower is bad. Map irritation 0..1 onto 0.5..0.
-        moodle:setThresholds(0.05, 0.125, 0.25, 0.375)
-        moodle:setValue(0.5 * (1 - irritation))
-    end)
+    DanTraits_BadMoodle(player, "AirwayIrritation", irritation, { thresholds = { 0.05, 0.125, 0.25, 0.375 } })
 end
 
 local function asthmaSetIrritation(player, d, value, quiet)
@@ -144,7 +137,7 @@ local function updateAsthmaMinute(player, d)
     local stats = player:getStats()
     local irritation = d.asthma
     local mask = asthmaMaskLevel(player)
-    local asleep = player:isAsleep()
+    local asleep = DanTraits_Asleep(player)
 
     -- build-up
     local envMult = (mask == 2) and 0 or ((mask == 1) and 0.5 or 1)

@@ -105,8 +105,7 @@ local function updateAlcoholFrame(player)
     local stats = player:getStats()
     local panic = stats:get(CharacterStat.PANIC) or 0
     if panic <= 0 then return end
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
+    local asleep = DanTraits_Asleep(player)
     if asleep then return end
     local mult = 1
     pcall(function() mult = GameTime.getInstance():getThirtyFPSMultiplier() or 1 end)

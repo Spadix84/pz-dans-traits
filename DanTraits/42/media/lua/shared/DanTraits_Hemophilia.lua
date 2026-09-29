@@ -26,10 +26,7 @@ DanTraits_AddHook("bloodBleed", function(rate, player, _, bandaged)
     return rate * (bandaged and HEMO_BLOOD_BANDAGED or HEMO_BLOOD_OPEN)
 end)
 
-local function partIs(part, method)
-    local ok, res = pcall(function() return part[method](part) end)
-    return ok and res == true
-end
+local partIs = DanTraits_PartIs
 
 local function updateHemophiliaMinute(player, d)
     if not hasTrait(player, "hemophilia") then return end

@@ -153,16 +153,15 @@ local function updateMddMinute(player, d)
     pcall(function() if (player:getDepressEffect() or 0) > 0 then player:setDepressEffect(0) end end)
     if (d.mddMedDays or 0) > 0 and (d.mddMedStreak or 0) < MDD_MED_SIDE_DAYS then
         pcall(function()
-            local sick = stats:get(CharacterStat.FOOD_SICKNESS) or 0
-            if sick < MDD_MED_SIDE_SICK then stats:set(CharacterStat.FOOD_SICKNESS, math.min(MDD_MED_SIDE_SICK, sick + 1)) end
-            stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + MDD_MED_SIDE_FATIGUE))
+            DanTraits_FloorUp(stats, CharacterStat.FOOD_SICKNESS, MDD_MED_SIDE_SICK, 1)
+            DanTraits_StatAdd(stats, CharacterStat.FATIGUE, MDD_MED_SIDE_FATIGUE)
         end)
     end
     if (d.mddWithdraw or 0) > 0 then
         d.mddWithdraw = d.mddWithdraw - 1
         pcall(function()
-            stats:set(CharacterStat.UNHAPPINESS, math.min(100, (stats:get(CharacterStat.UNHAPPINESS) or 0) + MDD_MED_WITHDRAW_MOOD))
-            stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + MDD_MED_WITHDRAW_STRESS))
+            DanTraits_StatAdd(stats, CharacterStat.UNHAPPINESS, MDD_MED_WITHDRAW_MOOD)
+            DanTraits_StatAdd(stats, CharacterStat.STRESS, MDD_MED_WITHDRAW_STRESS)
         end)
     end
 
@@ -179,9 +178,7 @@ local function updateMddMinute(player, d)
     if d.mddEpisode then
         local relief = mddRelief(player, d)
         local floor = math.max(0, d.mddSeverity * MDD_FLOOR_MAX * (1 - MDD_MED_FLOOR_CUT * benefit) - relief)
-        if unhappy < floor then
-            stats:set(CharacterStat.UNHAPPINESS, math.min(floor, unhappy + MDD_FLOOR_RAMP))
-        end
+        DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, floor, MDD_FLOOR_RAMP)
     end
 end
 

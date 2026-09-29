@@ -55,6 +55,7 @@ local BL_PART = { Neck = 3.0, Head = 1.5, UpperLeg_L = 1.5, UpperLeg_R = 1.5, Gr
                   Torso_Upper = 1.2, Torso_Lower = 1.2, Hand_L = 0.7, Hand_R = 0.7, Foot_L = 0.7, Foot_R = 0.7 }
 local BL_TIER          = { 0.15, 0.30, 0.40, 0.45 }  -- volume lost: pale | light-headed | shock | bleeding out
 local BL_DEATH         = 0.50    -- volume lost: the heart stops
+local BL_MOODLE_TIER   = { BL_TIER[1] / BL_DEATH, BL_TIER[2] / BL_DEATH, BL_TIER[3] / BL_DEATH, BL_TIER[4] / BL_DEATH }  -- the moodle's tiers, as fractions of the way to death
 local BL_VOL_DAY       = 0.35    -- volume refilled per game day, well watered
 local BL_VOL_THIRST    = 1.5     -- thirst per unit of volume refilled
 local BL_THIRST_OK     = 0.25    -- refills at full rate under this thirst...
@@ -77,12 +78,9 @@ local BL_FAINT         = { 0, 0, 0.02, 0.06 }  -- chance a minute of passing out
 local BL_FAINT_MIN     = { 5, 15 }  -- game minutes out
 local BL_FAINT_GAP     = 30      -- minutes before it can happen again
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
-local function sandboxOn()
-    local sv = SandboxVars and SandboxVars.DanTraits
-    return not sv or sv.BloodEnabled ~= false
-end
+local function sandboxOn() return DanTraits_SandboxOn("BloodEnabled") end
 function DanTraits_BloodActive() return sandboxOn() end
 
 local function blData(player)
@@ -135,10 +133,7 @@ local function onBloodGetDamage(character, damageType, amount)
     end
 end
 
-local function partIs(part, method)
-    local ok, res = pcall(function() return part[method](part) end)
-    return ok and res == true
-end
+local partIs = DanTraits_PartIs
 
 -- volume lost per minute from one part, before hooks; nil when not bleeding.
 -- Read from the bleeding time, not the flag: a bandage clears the part's
@@ -184,12 +179,6 @@ local function bleedMinute(player, d)
     return total
 end
 
-local function asleepOf(player)
-    local asleep = false
-    pcall(function() asleep = player:isAsleep() end)
-    return asleep
-end
-
 local function refill(player, d, stats, asleep)
     -- volume: water drawn in from the gut, so it needs drinking
     if d.bloodVol < 1 then
@@ -220,22 +209,14 @@ end
 local TIER_NOTICE = { "UI_DanTraits_BloodPale", "UI_DanTraits_BloodDizzy", "UI_DanTraits_BloodShock", "UI_DanTraits_BloodBleedingOut" }
 
 local function updateMoodle(player, lost)
-    if not MF or not MF.getMoodle then return end
-    pcall(function()
-        local moodle = MF.getMoodle("BloodLoss", player:getPlayerNum())
-        if not moodle then return end
-        -- bad side only: 0.5 is none, lower is worse
-        moodle:setThresholds(0.5 * (1 - BL_TIER[4] / BL_DEATH), 0.5 * (1 - BL_TIER[3] / BL_DEATH),
-            0.5 * (1 - BL_TIER[2] / BL_DEATH), 0.5 * (1 - BL_TIER[1] / BL_DEATH))
-        moodle:setValue(0.5 * (1 - math.min(1, lost / BL_DEATH)))
-    end)
+    DanTraits_BadMoodle(player, "BloodLoss", math.min(1, lost / BL_DEATH), BL_MOODLE_TIER)
 end
 
 local function updateBloodMinute(player, d)
     if not sandboxOn() then return end
     d = blData(player)
     local stats = player:getStats()
-    local asleep = asleepOf(player)
+    local asleep = DanTraits_Asleep(player)
     local loss = math.min(d.bloodVol, bleedMinute(player, d))
     d.bloodLossMin = loss
     d.bloodVol = d.bloodVol - loss
@@ -366,18 +347,10 @@ end
 
 -- Wounds for testing, by short part name and kind. "glass" is a deep wound
 -- with the shard still in it (the game's own shard wound).
-local PARTS = {
-    hand_l = "Hand_L", hand_r = "Hand_R", forearm_l = "ForeArm_L", forearm_r = "ForeArm_R",
-    upperarm_l = "UpperArm_L", upperarm_r = "UpperArm_R", thigh_l = "UpperLeg_L", thigh_r = "UpperLeg_R",
-    shin_l = "LowerLeg_L", shin_r = "LowerLeg_R", foot_l = "Foot_L", foot_r = "Foot_R",
-    chest = "Torso_Upper", belly = "Torso_Lower", groin = "Groin", head = "Head", neck = "Neck",
-}
-
 function DanTraits_BloodTestWound(player, partName, kind)
-    local typeName = PARTS[string.lower(tostring(partName or ""))]
+    local typeName = DanTraits_PartNames[string.lower(tostring(partName or ""))]
     if not typeName then return "wound: part is one of hand/forearm/upperarm/thigh/shin/foot _l/_r, chest, belly, groin, head, neck" end
-    local part = nil
-    pcall(function() part = player:getBodyDamage():getBodyPart(BodyPartType[typeName]) end)
+    local part = DanTraits_PartOf(player, partName)
     if not part then return "wound: no body part " .. typeName end
     kind = string.lower(tostring(kind or "deep"))
     local ok, err

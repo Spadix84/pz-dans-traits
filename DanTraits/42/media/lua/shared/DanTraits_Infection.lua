@@ -75,32 +75,16 @@ local INF_RELAPSE_L    = 3       -- at this level
 
 local STAGE_NOTICE = { [2] = "UI_DanTraits_InfectionLocal", [3] = "UI_DanTraits_InfectionFever", [4] = "UI_DanTraits_InfectionSepsis" }
 
-local function clamp01(x) return math.max(0, math.min(1, x)) end
+local clamp01 = DanTraits_Clamp01
 
-local function sandboxOn()
-    local sv = SandboxVars and SandboxVars.DanTraits
-    return not sv or sv.InfectionEnabled ~= false
-end
+local function sandboxOn() return DanTraits_SandboxOn("InfectionEnabled") end
 function DanTraits_InfectionActive() return sandboxOn() end
 
-local function num(part, method)
-    local v = 0
-    pcall(function() v = part[method](part) or 0 end)
-    return tonumber(v) or 0
-end
-local function is(part, method)
-    local ok, res = pcall(function() return part[method](part) end)
-    return ok and res == true
-end
+local num = DanTraits_PartNum
+local is = DanTraits_PartIs
 
-local function roll(chance)
-    if ZombRandFloat then return ZombRandFloat(0, 1) < chance end
-    return math.random() < chance
-end
-local function randRange(lo, hi)
-    if ZombRandFloat then return ZombRandFloat(lo, hi) end
-    return lo + math.random() * (hi - lo)
-end
+local roll = DanTraits_Roll
+local randRange = DanTraits_RandRange
 
 local function infData(player)
     local d = traitData(player)
@@ -251,25 +235,18 @@ local function updatePart(player, d, part, name, perMin)
     return L
 end
 
+-- bad side only: 0.5 none; lvl1 local, lvl2 fever, lvl3 sepsis, lvl4 septic shock
+local INF_MOODLE_TIER = { thresholds = { 0.05, 0.15, 0.3, 0.45 } }
 local function updateMoodle(player, stage, S)
-    if not MF or not MF.getMoodle then return end
-    pcall(function()
-        local moodle = MF.getMoodle("Infection", player:getPlayerNum())
-        if not moodle then return end
-        -- bad side only: 0.5 none; lvl1 local, lvl2 fever, lvl3 sepsis, lvl4 septic shock
-        moodle:setThresholds(0.05, 0.15, 0.3, 0.45)
-        local v = 0.5
-        if stage >= 2 then v = 0.4 end
-        if stage >= 3 then v = 0.25 end
-        if stage >= 4 then v = 0.1 end
-        if S >= INF_SHOCK then v = 0 end
-        moodle:setValue(v)
-    end)
+    local v = 0
+    if stage >= 2 then v = 0.2 end
+    if stage >= 3 then v = 0.5 end
+    if stage >= 4 then v = 0.8 end
+    if S >= INF_SHOCK then v = 1 end
+    DanTraits_BadMoodle(player, "Infection", v, INF_MOODLE_TIER)
 end
 
-local function statAdd(stats, stat, amount)
-    pcall(function() stats:set(stat, math.min(1, (stats:get(stat) or 0) + amount)) end)
-end
+local statAdd = DanTraits_StatAdd
 
 local function updateInfectionMinute(player, d)
     if not sandboxOn() then return end
@@ -375,8 +352,7 @@ local function updateInfectionMinute(player, d)
     d.infSickness = sickness
     pcall(function() d.infBodyTemp = stats:get(CharacterStat.TEMPERATURE) end)
     if fever > 0 then
-        local asleep = false
-        pcall(function() asleep = player:isAsleep() end)
+        local asleep = DanTraits_Asleep(player)
         if not asleep then statAdd(stats, CharacterStat.FATIGUE, INF_FATIGUE * fever) end
         statAdd(stats, CharacterStat.THIRST, INF_THIRST * fever)
     end
@@ -416,13 +392,7 @@ function DanTraits_InfectionFever(player)
 end
 
 -- console: infect <part> [level] | contaminate <part> | sepsis <score> | antibiotic | infection clear
-local PARTS = {
-    hand_l = "Hand_L", hand_r = "Hand_R", forearm_l = "ForeArm_L", forearm_r = "ForeArm_R",
-    upperarm_l = "UpperArm_L", upperarm_r = "UpperArm_R", thigh_l = "UpperLeg_L", thigh_r = "UpperLeg_R",
-    shin_l = "LowerLeg_L", shin_r = "LowerLeg_R", foot_l = "Foot_L", foot_r = "Foot_R",
-    chest = "Torso_Upper", belly = "Torso_Lower", groin = "Groin", head = "Head", neck = "Neck",
-}
-local function partName(arg) return PARTS[string.lower(tostring(arg or ""))] end
+local function partName(arg) return DanTraits_PartNames[string.lower(tostring(arg or ""))] end
 
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.infect = function(player, args)

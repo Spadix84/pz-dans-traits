@@ -420,7 +420,7 @@ end
 
 local function updateSchizophrenia(player, d)
     if not hasTrait(player, "schizophrenia") then return end
-    if player:isAsleep() then return end
+    if DanTraits_Asleep(player) then return end
 
     if (d.schizoCooldown or 0) > 0 then
         d.schizoCooldown = d.schizoCooldown - 1
