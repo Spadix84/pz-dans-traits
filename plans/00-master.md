@@ -34,8 +34,8 @@ plan; in-game checks are listed where the suite cannot see the change.
 
 ## Progress
 
-Done: 01 (99f1ff6), 02 (7fc73dc), 03 (35718e1), 04 (f8386ef), 05 (12d2ce4).
-In progress: 06, 07.
+Done: 01 to 08 (phase 0 and 1 complete; plus the intoxication-scale fix in MDD and Diabetes found by 07).
+In progress: 09 to 17 as three bundles: A = 09, 15, 16; B = 10, 13, 14; C = 11, 12, 17.
 
 ## Order and dependencies
 
