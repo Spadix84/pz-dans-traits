@@ -32,6 +32,11 @@ plan; in-game checks are listed where the suite cannot see the change.
   line the session gives you. No "Co-Authored" from other agents.
 - Do not deploy. The user runs `python deploy.py` and restarts the game.
 
+## Progress
+
+Done: 01 (99f1ff6), 02 (7fc73dc), 03 (35718e1), 04 (f8386ef), 05 (12d2ce4).
+In progress: 06, 07.
+
 ## Order and dependencies
 
 Phase 0, ship today (tiny, standalone):
