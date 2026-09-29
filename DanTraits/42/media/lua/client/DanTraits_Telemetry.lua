@@ -315,6 +315,21 @@ function commands.give(player, args)
     return "gave " .. n .. " x " .. item
 end
 
+-- trait add|remove <key>: a mod key (caffeine, diabetes1) or a vanilla
+-- CharacterTrait name (smoker, thin_skinned). Creation-time extras (the
+-- diabetes kit) are not handed out; use give.
+function commands.trait(player, args)
+    local op, key = string.lower(args[1] or ""), args[2]
+    if (op ~= "add" and op ~= "remove") or not key then return "trait: add|remove <key>" end
+    local entry = DanTraitsRegistry and DanTraitsRegistry[string.lower(key)]
+    if not entry and CharacterTrait then entry = CharacterTrait[string.upper(key)] end
+    if not entry then return "trait: unknown " .. key end
+    local traits = player:getCharacterTraits()
+    if op == "add" then traits:add(entry) else traits:remove(entry) end
+    if DanTraits_TraitsChanged then DanTraits_TraitsChanged(player) end
+    return "trait " .. op .. " " .. tostring(entry)
+end
+
 function commands.fracture(player)
     if not DanTraits_BrittleFracture then return "fracture: brittle not loaded" end
     return "fracture: " .. tostring(DanTraits_BrittleFracture(player))

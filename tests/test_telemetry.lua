@@ -99,6 +99,15 @@ assert(snap:find('"clock":"4/8 14:30"', 1, true) and snap:find('"source":"OtherM
 -- 6. the console commands that hand off to a trait file: with the target global missing each says so
 -- ("not loaded"; cough is the exception, the util file always provides it), with a stub in place each calls it with the character and reports its answer
 local run = DanTraits_RunCommand
+-- trait add/remove takes a mod key or a vanilla name
+local savedRegistry = DanTraitsRegistry
+DanTraitsRegistry = { caffeine = "dantraits:caffeine" }
+assert(run(player, "trait add caffeine") == "trait add dantraits:caffeine" and player:hasTrait("dantraits:caffeine"), "trait add mod key")
+assert(run(player, "trait add SMOKER") == "trait add base:smoker" and player:hasTrait("base:smoker"), "trait add vanilla")
+assert(run(player, "trait remove caffeine") == "trait remove dantraits:caffeine" and not player:hasTrait("dantraits:caffeine"), "trait remove")
+assert(run(player, "trait add nope"):find("unknown", 1, true) and run(player, "trait"):find("add|remove", 1, true), "trait errors")
+run(player, "trait remove smoker")
+DanTraitsRegistry = savedRegistry
 for _, name in ipairs({ "metformin", "inhaler", "fracture", "drop", "gluten", "antidep", "attrib" }) do
   assert(run(player, name .. " on"):find("not loaded", 1, true), name .. ": says so when its file is missing")
 end
