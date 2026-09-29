@@ -21,7 +21,7 @@ local fraction = DanTraits_StatFraction
 -- of a drink: at a high meter a sip is not enough. A month without any
 -- alcohol cures the trait. After that the character is never quite free: the
 -- first drink of any drinking session is a coin flip to relapse.
-local ALC_ANY           = 0.01  -- intoxication (0..1) that counts as having had any alcohol
+local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- DRINK.any: had any alcohol
 local ALC_BUILD_H       = 10    -- intoxication-hours (1.0 intoxication for 1 h) to fill the meter...
 local ALC_DAY_CAP       = 0.08  -- ...but it fills at most this much a day
 local ALC_DECAY_H       = 720   -- sober hours to drain a full meter (30 days)
@@ -170,7 +170,7 @@ local function updateDependent(player, d)
     d.alcDayTicks = (d.alcDayTicks or 0) + 1
     if d.alcDayTicks >= 144 then d.alcDayTicks, d.alcDayGain = 0, 0 end
 
-    local drinking = intox >= ALC_ANY
+    local drinking = intox >= DRINK.any
     if drinking then
         local gain = math.min(intox * TICK_H / ALC_BUILD_H, ALC_DAY_CAP - (d.alcDayGain or 0))
         if gain > 0 then

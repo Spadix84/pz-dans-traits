@@ -15,6 +15,13 @@
 -- rate (a quarter per level). The floor is bookkept so it steps down as the
 -- character sobers up and never eats a painkilling fluid's own reduction.
 --
+-- This file is also the one definition of "drunk" for the rest of the mod:
+-- DanTraits_DRINK holds the named intoxication thresholds (0..1) that
+-- Dependent (any), Hangover (buzz, sober), MDD and Diabetes (tipsy) read, and
+-- DanTraits_Intoxication(player) reads the stat as 0..1. Smoker uses the
+-- Drunk moodle level (DanTraits_DrunkLevel) instead. Readers copy the table
+-- at load with a fallback of the same numbers, so load order does not matter.
+--
 -- ISDrinkFluidAction.updateEat is wrapped through DanTraits_Wrap with the tag
 -- "alcohol-relief"; DanTraits_Diabetes.lua adds its own layer ("drink-intake")
 -- on the same method, and the two chain, so both always run.
@@ -40,6 +47,18 @@ local function drunkLevel(player)
     return level
 end
 DanTraits_DrunkLevel = drunkLevel
+
+-- Named intoxication thresholds, 0..1. any: had a drink at all; tipsy: the
+-- liver is busy and mood lifts; buzz: hangover load starts to build; sober:
+-- below this a drinking session is over.
+DanTraits_DRINK = { any = 0.01, tipsy = 0.05, buzz = 0.20, sober = 0.05 }
+
+-- intoxication as a 0..1 fraction of its range
+function DanTraits_Intoxication(player)
+    local value = 0
+    pcall(function() value = fraction(player:getStats(), CharacterStat.INTOXICATION) end)
+    return value
+end
 
 -- Undo the vanilla dose ------------------------------------------------------
 local function snapshotMeds(player)

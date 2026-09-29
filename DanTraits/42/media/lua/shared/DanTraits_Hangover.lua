@@ -16,8 +16,7 @@ local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 local fraction = DanTraits_StatFraction
 
-local HO_BUZZ           = 0.20    -- intoxication (0..1) above which load builds
-local HO_SOBER          = 0.05    -- below this you are sober: the hangover can start
+local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- buzz: load builds above it; sober: below it a session ends
 local HO_LOAD_MIN       = 0.5     -- drunk-hours needed for any hangover at all
 local HO_LOAD_FULL      = 3.0     -- drunk-hours for a full-severity one
 local HO_SEV_MIN        = 0.25
@@ -89,11 +88,11 @@ local function updateHangoverMinute(player, d)
     local asleep = DanTraits_Asleep(player)
 
     -- drinking: build the load; a drink mid-hangover pauses it
-    local drinking = intox > HO_BUZZ
+    local drinking = intox > DRINK.buzz
     if drinking then
-        d.hoLoad = d.hoLoad + (intox - HO_BUZZ) / (1 - HO_BUZZ) / 60
+        d.hoLoad = d.hoLoad + (intox - DRINK.buzz) / (1 - DRINK.buzz) / 60
         d.hoDrinking = true
-    elseif intox < HO_SOBER and d.hoDrinking then
+    elseif intox < DRINK.sober and d.hoDrinking then
         d.hoDrinking = false
         if d.hoLoad >= HO_LOAD_MIN then armHangover(player, d, asleep) else d.hoLoad = 0 end
     end

@@ -23,6 +23,10 @@ H.expectEvery("frame", "Alcohol")
 local drinkWraps = ISDrinkFluidAction.DanTraitsWraps
 assert(drinkWraps and drinkWraps["updateEat:alcohol-relief"] and drinkWraps["updateEat:drink-intake"], "both drink layers installed")
 
+-- the one definition of drunk: named thresholds, and a 0..1 intoxication read
+assert(DanTraits_DRINK and DanTraits_DRINK.any == 0.01 and DanTraits_DRINK.tipsy == 0.05
+  and DanTraits_DRINK.buzz == 0.20 and DanTraits_DRINK.sober == 0.05, "DanTraits_DRINK thresholds")
+
 local newPlayer = H.factory({ moodles = {} }, function(p)
   p.DrinkFluid = function(self, container, delta)
     local alcohol = container:getProperties():getAlcohol()
@@ -55,6 +59,8 @@ assert(p._painFx == 0 and p._painD == 0, "painkiller timer put back")
 -- 1b. and the Diabetes layer on the same method still ran: the drink hook fired with the litres swallowed
 assert(#drinkHook == 1 and drinkHook[1].player == p and drinkHook[1].fluid == lastContainer and math.abs(drinkHook[1].litres - 0.1) < 1e-9,
   "drink hook fired once with player, fluid and litres")
+
+p._st.intox = 40; near(DanTraits_Intoxication(p), 0.4, 1e-9, "intoxication read as 0..1"); p._st.intox = 0
 
 -- 2. pills taken earlier keep working
 p._beta, p._betaD, p._painFx, p._painD = 3000, 1, 2000, 1

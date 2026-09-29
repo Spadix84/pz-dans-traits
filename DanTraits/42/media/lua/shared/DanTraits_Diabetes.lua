@@ -8,6 +8,8 @@ local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 local floorUp = DanTraits_FloorUp
 local statAdd = DanTraits_StatAdd
+local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- see DanTraits_Alcohol.lua
+-- "tipsy" compares the raw stat, as it always has here (no 0..1 conversion)
 
 -- Diabetes (Type 1 "diabetes1", Type 2 "diabetes2") -------------------------
 -- A hidden blood sugar value (mg/dL) lives in mod data. Carbohydrates in
@@ -206,7 +208,7 @@ local function diaHalo(player, d, low, high)
     local tier = math.max(low, high)
     if tier == 0 then d.diaHaloIn = nil; return end
     local drunk = false
-    pcall(function() drunk = (player:getStats():get(CharacterStat.INTOXICATION) or 0) > 0.05 end)
+    pcall(function() drunk = (player:getStats():get(CharacterStat.INTOXICATION) or 0) > DRINK.tipsy end)
     if drunk then return end   -- too drunk to notice
     d.diaHaloIn = (d.diaHaloIn or (DIA_HALO_MIN[tier] + ZombRand(DIA_HALO_MIN[tier]))) - 1
     if d.diaHaloIn > 0 then return end
@@ -225,7 +227,7 @@ local function updateDiabetesMinute(player, d)
     local asleep, moving, drunk, endurance, panic = false, false, false, 1, 0
     asleep = DanTraits_Asleep(player)
     pcall(function() moving = player:isSprinting() or player:isRunning() end)
-    pcall(function() drunk = (stats:get(CharacterStat.INTOXICATION) or 0) > 0.05 end)
+    pcall(function() drunk = (stats:get(CharacterStat.INTOXICATION) or 0) > DRINK.tipsy end)
     pcall(function() endurance = stats:get(CharacterStat.ENDURANCE) or 1 end)
     pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
     local res = diaResistance(player, d)
