@@ -101,7 +101,7 @@ for _ = 1, 9 do minute() end
 assert(#halo == 0, "no message for the first ten minutes")
 minute(); assert(#halo == 1 and halo[1] == "UI_DanTraits_DiaLow1", "then a vague one, got " .. tostring(halo[1]))
 H.clearHalo()
-local drunk = newPlayer({ intox = 1 }); H.current = drunk
+local drunk = newPlayer({ intox = 20 }); H.current = drunk
 drunk._md.DanTraits = { glucose = 60 }
 for _ = 1, 30 do minute() end
 assert(#halo == 0, "drunk: no warning signs")
@@ -113,7 +113,7 @@ for _ = 1, 3 do minute() end
 assert(halo[#halo] == "UI_DanTraits_DiaLow7", "at the worst tier the giveaway message is possible, got " .. tostring(halo[#halo]))
 
 -- 10. alcohol pulls sugar down; panic pushes it up; running pulls it down
-local booze = newPlayer({ intox = 1 }); H.current = booze; minute()
+local booze = newPlayer({ intox = 20 }); H.current = booze; minute()
 near(g(booze), 110 + 0.17 - 0.35, 1e-9, "drunk: -0.35 a minute")
 local scared = newPlayer({ panic = 100 }); H.current = scared; minute()
 near(g(scared), 110 + 0.17 + 0.15, 1e-9, "full panic: +0.15 a minute")

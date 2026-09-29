@@ -5,7 +5,11 @@ local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- see DanTraits_Alcohol.lua
--- "tipsy" compares the raw stat, as it always has here (no 0..1 conversion)
+-- 0..1 intoxication (the raw stat is 0..100); Alcohol.lua's reader, or core's fraction before it loads
+local function intoxOf(player)
+    if DanTraits_Intoxication then return DanTraits_Intoxication(player) end
+    return DanTraits_StatFraction(player:getStats(), CharacterStat.INTOXICATION)
+end
 
 -- Major Depressive Disorder (trait id "spiraling") ---------------------------
 -- Two things run all the time: pain and stress drag mood down. On top of
@@ -92,7 +96,7 @@ DanTraits_MddRegularity = mddRegularity
 local function mddRelief(player, d)
     local relief, habits = 0, 0
     pcall(function()
-        if (player:getStats():get(CharacterStat.INTOXICATION) or 0) > DRINK.tipsy then relief = relief + MDD_RELIEF_DRINK end
+        if intoxOf(player) > DRINK.tipsy then relief = relief + MDD_RELIEF_DRINK end
     end)
     if (d.mddSmokeTimer or 0) > 0 then relief = relief + MDD_RELIEF_SMOKE end
     if (d.mddFoodTimer or 0) > 0 then relief = relief + MDD_RELIEF_FOOD end
@@ -116,7 +120,7 @@ function DanTraits_MddOnPill(player)
     local d = mddData(player)
     local dose = MDD_MED_PILL_DAYS
     pcall(function()
-        if (player:getStats():get(CharacterStat.INTOXICATION) or 0) > DRINK.tipsy then dose = dose * 0.5 end
+        if intoxOf(player) > DRINK.tipsy then dose = dose * 0.5 end
     end)
     d.mddMedDays = math.min(MDD_MED_MAX_DAYS, (d.mddMedDays or 0) + dose)
     d.mddMedEverStarted = true
@@ -218,7 +222,7 @@ local function updateMddTen(player, d)
     if d.mddEpisode then
         local _, habits = mddRelief(player, d)
         d.mddHoursLeft = (d.mddHoursLeft or 0) - (1 / 6) * (1 + habits * MDD_RECOVERY_BONUS + benefit * MDD_MED_RECOVERY)
-        if (stats:get(CharacterStat.INTOXICATION) or 0) > DRINK.tipsy then
+        if intoxOf(player) > DRINK.tipsy then
             d.mddSeverity = math.min(1, d.mddSeverity + MDD_DRINK_SEVERITY)
         end
         if d.mddHoursLeft <= 0 then

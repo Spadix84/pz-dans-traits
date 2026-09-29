@@ -40,7 +40,7 @@ q._st.unhappy = 90; minute(); assert(q._st.unhappy == 90, "worse than the floor 
 
 -- 4. relief: drink 20, cigarette 10 (for 2 h), comfort food 10 (3 h), exercise up to 15, outdoors up to 15
 q._st.unhappy = 0
-q._st.intox = 0.5; for _ = 1, 40 do minute() end; assert(q._st.unhappy == 55, "drunk: floor 75-20, got " .. q._st.unhappy); q._st.intox = 0
+q._st.intox = 20; for _ = 1, 40 do minute() end; assert(q._st.unhappy == 55, "drunk: floor 75-20, got " .. q._st.unhappy); q._st.intox = 0
 q._since = 10; minute(); q._since = 0; minute()   -- the timer reset marks a cigarette
 q._st.unhappy = 0; for _ = 1, 40 do minute() end; assert(q._st.unhappy == 65, "after a cigarette: 75-10, got " .. q._st.unhappy)
 for _ = 1, 120 do minute() end; assert(q._st.unhappy == 75, "two hours later the cigarette has worn off")
@@ -67,7 +67,7 @@ assert(o._md.DanTraits.mddOutside < 25, "a day indoors fades most of it")
 
 -- 6. the episode runs its hours down, faster with healthy habits, drinking deepens it, then ends with a notice
 H.current = q; q._md.DanTraits.mddHoursLeft = 1; q._md.DanTraits.mddSeverity = 0.5
-q._st.intox = 0.5; ten(); assert(math.abs(q._md.DanTraits.mddSeverity - 0.51) < 1e-9, "drunk: severity +0.01 per 10 min"); q._st.intox = 0
+q._st.intox = 20; ten(); assert(math.abs(q._md.DanTraits.mddSeverity - 0.51) < 1e-9, "drunk: severity +0.01 per 10 min"); q._st.intox = 0
 assert(math.abs(q._md.DanTraits.mddHoursLeft - (1 - 1/6)) < 1e-9, "10 minutes off with no habits")
 q._regularity = { squats = 100, pushups = 100, situps = 100 }; q._md.DanTraits.mddOutside = 240
 ten(); assert(math.abs(q._md.DanTraits.mddHoursLeft - (1 - 1/6 - 2/6)) < 1e-9, "full habits: 20 minutes off per tick")
@@ -98,7 +98,7 @@ local pill = setmetatable({ character = m, item = { getType = function() return 
 pill:complete(); assert(pillsSwallowed == 1 and m._depress == 0, "swallowed, vanilla effect cancelled")
 assert(m._md.DanTraits.mddMedDays == 1, "one day of coverage")
 pill:complete(); pill:complete(); pill:complete(); assert(m._md.DanTraits.mddMedDays == 3, "capped at three days ahead")
-m._st.intox = 0.5; m._md.DanTraits.mddMedDays = 0; pill:complete(); assert(m._md.DanTraits.mddMedDays == 0.5, "drunk: half a dose"); m._st.intox = 0
+m._st.intox = 20; m._md.DanTraits.mddMedDays = 0; pill:complete(); assert(m._md.DanTraits.mddMedDays == 0.5, "drunk: half a dose"); m._st.intox = 0
 local other = setmetatable({ character = m, item = { getType = function() return "Pills" end } }, { __index = ISTakePillAction })
 m._md.DanTraits.mddMedDays = 0; other:complete(); assert(m._md.DanTraits.mddMedDays == 0, "painkillers are not antidepressants")
 m._depress = 6600; minute(); assert(m._depress == 0, "a lingering vanilla effect is zeroed every minute")
