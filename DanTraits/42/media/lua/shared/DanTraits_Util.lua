@@ -38,6 +38,9 @@
 --   DanTraits_DeltaRemember(d, name, value)
 --                                          tell the pipeline the stat's value
 --                                          after a later writer changed it
+--   DanTraits_PainFloor(player, d, source, floor, ramp)
+--                                          a system's pain floor for this minute,
+--                                          see "Pain floors" below
 --   DanTraits_BadMoodle(player, name, value01, tiers)
 --                                          Moodle Framework updater for a
 --                                          bad-side-only moodle (0.5 is none,
@@ -220,4 +223,52 @@ end
 function DanTraits_DeltaRemember(d, name, value)
     d.deltaLast = d.deltaLast or {}
     d.deltaLast[name] = value
+end
+
+-- Pain floors ---------------------------------------------------------------------
+-- Hangover, Caffeine, Migraine and Gluten hold the PAIN stat up. Painkillers (and
+-- drink) set the body's painReduction (0..100), the game subtracts it from wound
+-- pain every tick, and the floors follow the same model: a source registers its
+-- floor for the minute and the effective floor is floor - painReduction, never
+-- below 0. So a tablet halves a migraine's pain in proportion instead of erasing
+-- it, and a small floor under a big reduction does nothing.
+--
+--   DanTraits_PainFloor(player, d, source, floor, ramp)
+--     floor    the source's floor on the 0..100 pain scale (before reduction)
+--     ramp     how fast the stat may rise toward it per minute
+--     Stores d.painFloors[source] = { floor = effective, ramp = ramp } when the
+--     effective floor is above 0; a later call in the same minute by the same
+--     source replaces the earlier one. Does not touch the stat.
+--   DanTraits_ApplyPainFloors(player, d)
+--     A minute system at order 95 (registered in core, label "PainFloor"): the
+--     largest registered effective floor is applied once, through FloorUp, with
+--     the ramp of the source that set it. Then d.painFloors is emptied and the
+--     applied list is kept as d.painHurting[source] = effective floor for the
+--     health panel's "who is hurting". Floors are max-like, not additive.
+--
+-- Not floors: Dependent's shakes ADD pain per tick, Concussion writes the head
+-- part's additional pain (the game reduces that itself) and Migraine's "a pill
+-- taken once shortens the attack" still reads the painkiller timer.
+function DanTraits_PainFloor(player, d, source, floor, ramp)
+    if not d or not source then return end
+    local reduction = 0
+    pcall(function() reduction = player:getBodyDamage():getPainReduction() or 0 end)
+    local effective = math.max(0, (tonumber(floor) or 0) - (tonumber(reduction) or 0))
+    if effective <= 0 then return end
+    d.painFloors = d.painFloors or {}
+    d.painFloors[source] = { floor = effective, ramp = ramp or 1 }
+end
+
+function DanTraits_ApplyPainFloors(player, d)
+    local floors = d.painFloors
+    if not floors then return end
+    local best, ramp, hurting = 0, 1, {}
+    for source, f in pairs(floors) do
+        hurting[source] = f.floor
+        if f.floor > best then best, ramp = f.floor, f.ramp end
+    end
+    d.painFloors = nil
+    d.painHurting = hurting
+    if best <= 0 then return end
+    pcall(function() DanTraits_FloorUp(player:getStats(), CharacterStat.PAIN, best, ramp) end)
 end

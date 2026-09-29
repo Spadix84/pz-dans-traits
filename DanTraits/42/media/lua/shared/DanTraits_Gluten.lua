@@ -10,8 +10,9 @@ local floorUp = DanTraits_FloorUp
 -- Wheat in a meal sets off a flare (0..1 in mod data): nothing for a while,
 -- then it builds over half an hour and takes most of a day to fade. While it
 -- lasts it holds pain, food sickness (the vanilla Queasy moodle) and low mood
--- up to a floor that scales with the flare, so painkillers only buy a little
--- time. The game has no grain tag, so wheat is a name list; the dose is the
+-- up to a floor that scales with the flare (the pain one goes through
+-- DanTraits_PainFloor, so painkillers lower it by their strength but a big flare
+-- still hurts). The game has no grain tag, so wheat is a name list; the dose is the
 -- carbohydrates in the portion eaten, with a hunger-based fallback for foods
 -- that carry no nutrition data. Rice, potatoes, corn and fruit are safe.
 local GLUTEN_WORDS = {
@@ -124,7 +125,7 @@ local function updateGlutenMinute(player, d)
 
     pcall(function()
         local stats = player:getStats()
-        floorUp(stats, CharacterStat.PAIN, flare * GLUTEN_PAIN_MAX, GLUTEN_PAIN_RAMP)
+        DanTraits_PainFloor(player, d, "gluten", flare * GLUTEN_PAIN_MAX, GLUTEN_PAIN_RAMP)
         floorUp(stats, CharacterStat.FOOD_SICKNESS, flare * GLUTEN_SICK_MAX, GLUTEN_SICK_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, flare * GLUTEN_UNHAPPY_MAX, GLUTEN_UNHAPPY_RAMP)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + flare * GLUTEN_STRESS_PER_MIN))

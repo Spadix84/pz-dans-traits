@@ -2,11 +2,12 @@
 -- overshoots and respects the stat's maximum, StatAdd clamps both ways, Roll
 -- has hard edges at 0 and 1, RollPercent goes through ZombRand, BadMoodle
 -- maps 0 to 0.5 and 1 to 0 and hands the right thresholds to the framework,
--- and the part, asleep and sandbox helpers fail soft.
+-- the pain-floor rule (floor minus painReduction, the largest source wins, applied
+-- once a minute), and the part, asleep and sandbox helpers fail soft.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
-H.load("Util")
+H.load("Util", "DanTraits")   -- core too: the pain-floor applier is a system it registers
 local near = H.near
 
 -- Clamp01 / StatMax
@@ -31,6 +32,38 @@ assert(p._st.pain == 70, "above the floor: never lowered")
 p._st.stress = 0.9
 DanTraits_FloorUp(stats, STRESS, 250, 500)
 assert(p._st.stress == 1, "never above the stat's maximum")
+
+-- PainFloor: effective floor = floor - painReduction, the largest source wins, once a minute
+do
+  local q = H.player(); H.current = q
+  local d = q._md.DanTraits or {}; q._md.DanTraits = d
+  q._st.pain = 0
+  DanTraits_PainFloor(q, d, "a", 60, 5); DanTraits_PainFloor(q, d, "b", 40, 20)
+  assert(q._st.pain == 0, "registering does not touch the stat")
+  H.minute()
+  assert(q._st.pain == 5, "the larger floor (60) applies with its own ramp (5), not the smaller one's")
+  assert(d.painFloors == nil and d.painHurting.a == 60 and d.painHurting.b == 40, "cleared, and kept as the who-is-hurting list")
+  H.minute()
+  assert(q._st.pain == 5, "nothing registered: nothing applied")
+  q._pr = 30
+  DanTraits_PainFloor(q, d, "a", 60, 100); DanTraits_PainFloor(q, d, "b", 40, 100)
+  H.minute()
+  assert(q._st.pain == 30, "reduction 30 lowers 60 to 30, not to 0")
+  assert(d.painHurting.a == 30 and d.painHurting.b == 10, "the list holds effective floors")
+  q._st.pain = 0
+  DanTraits_PainFloor(q, d, "c", 15, 100)
+  assert(d.painFloors == nil or d.painFloors.c == nil, "a floor under the reduction registers nothing")
+  H.minute()
+  assert(q._st.pain == 0, "a floor of 15 with reduction 30 does nothing")
+  q._pr = 0; q._st.pain = 50
+  DanTraits_PainFloor(q, d, "a", 20, 100); H.minute()
+  assert(q._st.pain == 50, "never lowers pain already above the floor")
+  q._pr = 0; q._st.pain = 0
+  DanTraits_PainFloor(q, d, "a", 20, 100); DanTraits_PainFloor(q, d, "a", 35, 100); H.minute()
+  assert(q._st.pain == 35, "a source registering twice keeps its latest floor")
+  DanTraits_PainFloor(nil, nil, "a", 10, 1); DanTraits_PainFloor(q, d, nil, 10, 1)
+  H.current = nil
+end
 
 -- StatAdd: clamps to 0..max, quietly
 p._st.stress = 0.9

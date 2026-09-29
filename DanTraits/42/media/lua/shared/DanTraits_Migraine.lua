@@ -5,7 +5,7 @@
 -- daylight outdoors and sleeping with the light on, and never within a day
 -- of the last one. An aura gives
 -- twenty minutes' warning. The attack lasts three to six hours by severity:
--- pain (painkillers take the edge off and, taken once, shorten it), nausea,
+-- pain (a DanTraits_PainFloor floor: painkillers lower it by their strength and, taken once, shorten the attack), nausea,
 -- low mood and stress. Daylight outdoors slows the recovery to half and
 -- adds to the pain; sleeping it off is twice as fast, in the dark (a lit
 -- room loses the benefit), and during an attack light wakes you twice as
@@ -30,7 +30,7 @@ local MIG_AURA_H        = 20 / 60 -- warning before the pain
 local MIG_SEV_MIN       = 0.5     -- severity is this plus up to 0.5
 local MIG_HOURS_BASE    = 3       -- attack length: this plus MIG_HOURS_SEV x severity
 local MIG_HOURS_SEV     = 3
-local MIG_PAIN          = 60      -- pain floor at severity 1 (skipped while painkillers work)
+local MIG_PAIN          = 60      -- pain floor at severity 1 (lowered by the body's pain reduction, see DanTraits_PainFloor)
 local MIG_PAIN_LIGHT    = 15      -- extra floor in daylight outdoors
 local MIG_SICK          = 30      -- food sickness floor at severity 1
 local MIG_MOOD          = 15
@@ -170,7 +170,7 @@ local function updateMigraineMinute(player, d)
     if asleep then return end
     pcall(function()
         local stats = player:getStats()
-        if meds <= 0 then floorUp(stats, CharacterStat.PAIN, MIG_PAIN * s + (bright and MIG_PAIN_LIGHT or 0), MIG_RAMP) end
+        DanTraits_PainFloor(player, d, "migraine", MIG_PAIN * s + (bright and MIG_PAIN_LIGHT or 0), MIG_RAMP)
         floorUp(stats, CharacterStat.FOOD_SICKNESS, MIG_SICK * s, MIG_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, MIG_MOOD, MIG_RAMP)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + MIG_STRESS_RATE * s))

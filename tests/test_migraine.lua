@@ -51,7 +51,7 @@ near(q._st.foodsick, 30, 1.0, "nausea floor 30"); near(q._st.unhappy, 15, 1.0, "
 assert(q._st.stress > 0, "stress creeps")
 near(M(q).migHoursLeft, 6 - 40 / 60, 1e-9, "clock at full rate")
 
--- 4. daylight outdoors: half-speed recovery and more pain; painkillers hold the floor off and, once, cut the time by 40%
+-- 4. daylight outdoors: half-speed recovery and more pain; painkillers lower the floor and, once, cut the time by 40%
 q._outside = true; H.climate.night = 0
 local before = M(q).migHoursLeft
 q._st.pain = 0; for _ = 1, 10 do minute() end
@@ -61,7 +61,10 @@ q._outside = false; H.climate.night = 1
 before = M(q).migHoursLeft
 q._painFx = 1; q._st.pain = 0; minute()
 near(M(q).migHoursLeft, before * 0.6 - 1 / 60, 1e-9, "painkillers: remaining time x 0.6")
-assert(q._st.pain == 0, "no pain floor while they work")
+assert(q._st.pain == 1, "the painkiller timer alone does not stop the floor (it ramps 1 a minute)")
+q._pr = 30; q._st.pain = 0; for _ = 1, 45 do minute() end
+assert(q._st.pain == 30, "a pain reduction of 30 lowers the floor 60 to 30, not to 0: " .. q._st.pain)
+q._pr = 70; q._st.pain = 0; minute(); assert(q._st.pain == 0, "a reduction above the floor does nothing"); q._pr = 0
 before = M(q).migHoursLeft; minute(); near(M(q).migHoursLeft, before - 1 / 60, 1e-9, "the cut happens once")
 q._painFx = 0
 

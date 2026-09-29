@@ -35,8 +35,12 @@ near(p._st.pain, 35 / 3, 1.0, "headache floor ~11.7")
 near(p._st.unhappy, 25 / 3, 1.0, "mood floor ~8.3")
 assert(p._st.thirst > 0 and p._st.fatigue > 0, "thirst and fatigue creep")
 assert(p._st.foodsick == 0, "mild: no nausea")
--- painkillers: the pain floor is not enforced while they work
-p._st.pain = 0; p._painFx = 1; minute(); assert(p._st.pain == 0, "painkillers: no headache floor"); p._painFx = 0
+-- painkillers lower the floor by their strength instead of removing it
+p._st.pain = 0; p._pr = 30; for _ = 1, 5 do minute() end; assert(p._st.pain == 0, "a reduction of 30 swallows a floor of ~11")
+p._st.pain = 0; p._pr = 5; for _ = 1, 20 do minute() end
+assert(p._st.pain > 0 and p._st.pain < 35 / 3 - 4, "a reduction of 5 lowers the floor by 5, not to 0: " .. p._st.pain)
+p._pr = 0; p._painFx = 1; p._st.pain = 0; for _ = 1, 20 do minute() end
+assert(p._st.pain > 35 / 3 - 4, "the painkiller timer alone no longer switches the floor off"); p._painFx = 0
 
 -- 4. hair of the dog: a drink hides symptoms and stops the clock, and builds toward the next one
 local left = md(p).hoHoursLeft

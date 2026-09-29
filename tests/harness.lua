@@ -42,7 +42,8 @@
 --                      opts.st = { stat = value } plus the stat names as
 --                      shortcuts (stress = 0.5), asleep, outside, sprint, run,
 --                      hours, health, parts, weight, regularity, moodles (a
---                      table, else the player has no moodle API), noMoodles.
+--                      table, else the player has no moodle API), noMoodles,
+--                      painReduction (the body's pain reduction, default 0).
 --                      Fields for assertions: _st (stats by short name), _md,
 --                      _traits, _health, _pr, _painFx, _asleep, _inv, _dropped,
 --                      _coughs, _woke, _bump, _vars, _carry, _catch, _adds.
@@ -290,7 +291,7 @@ function H.player(o)
   p = {
     _st = st, _md = md, _traits = traits, _o = o, _parts = parts, _inv = inv, _dropped = dropped, _vars = {},
     _asleep = o.asleep == true, _outside = o.outside == true, _sprint = o.sprint == true, _run = o.run == true,
-    _moving = false, _health = o.health or 100, _hours = o.hours or 0, _carry = 8, _catch = 0, _pr = 0,
+    _moving = false, _health = o.health or 100, _hours = o.hours or 0, _carry = 8, _catch = 0, _pr = o.painReduction or 0,
     _painFx = 0, _painD = 0, _beta = 0, _betaD = 0, _depress = 0, _since = 10, _cs = 1.0, _light = 0,
     _tablets = 0, _coughs = 0, _woke = 0, _adds = 0, _cantSprint = false,
     _weight = o.weight or 80, _regularity = o.regularity or {},

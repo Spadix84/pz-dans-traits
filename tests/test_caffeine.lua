@@ -56,7 +56,10 @@ for _ = 1, 18 * 60 do minute() end
 near(C(d).cafWithdraw, 1, 1e-6, "full at 30 h")
 near(d._st.pain, 15, 1.0, "headache floor 15"); near(d._st.unhappy, 15, 1.0, "mood floor 15")
 assert(d._st.fatigue > 0 and d._st.stress > 0, "tired and stressed")
-d._st.pain = 0; d._painFx = 1; minute(); assert(d._st.pain == 0, "painkillers hold the headache off"); d._painFx = 0
+-- painkillers lower the floor by their strength: 15 - 5 = 10; 15 - 30 = nothing
+d._st.pain = 0; d._pr = 5; for _ = 1, 20 do minute() end; near(d._st.pain, 10, 1e-9, "a pain reduction of 5 lowers the floor 15 to 10")
+d._st.pain = 0; d._pr = 30; minute(); assert(d._st.pain == 0, "a reduction above the floor: no headache"); d._pr = 0
+d._st.pain = 0; d._painFx = 1; for _ = 1, 20 do minute() end; near(d._st.pain, 15, 1e-9, "the painkiller timer alone no longer switches the floor off"); d._painFx = 0
 d._asleep = true; d._st.pain = 0; minute(); assert(d._st.pain == 0, "nothing while asleep"); d._asleep = false
 DanTraits_RunHooks("drink", nil, d, container("Coffee"), 0.25)
 assert(not C(d).cafWithdrawing and C(d).cafDryHours == 0 and halo[#halo] == "+UI_DanTraits_CaffeineSated", "a coffee resets it")

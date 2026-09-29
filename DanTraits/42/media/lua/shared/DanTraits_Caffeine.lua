@@ -5,7 +5,7 @@
 -- beans, chocolate, cocoa and tea bags through the eat hook; the game's
 -- vitamin pills (pictured as caffeine pills) through the pill hook. Once
 -- the level has sat under CAF_SATED for twelve hours withdrawal starts: a
--- headache, tiredness, low mood and creeping stress, at full strength from
+-- headache (a DanTraits_PainFloor floor), tiredness, low mood and creeping stress, at full strength from
 -- thirty hours dry, and then fading out over the rest of the week as the
 -- habit breaks. Any real dose resets the clock. Smoking speeds up the
 -- half-life (the "caffeineClearance" hook, DanTraits_Smoker.lua). Every dose, trait or not,
@@ -23,7 +23,7 @@ local CAF_ONSET_H       = 12      -- dry hours before withdrawal
 local CAF_FULL_H        = 30      -- dry hours at full strength
 local CAF_FADE_FROM_H   = 72      -- from here the habit breaks...
 local CAF_FADE_TO_H     = 168     -- ...and by here it is gone
-local CAF_PAIN          = 15      -- pain floor at full withdrawal (skipped while painkillers work)
+local CAF_PAIN          = 15      -- pain floor at full withdrawal (lowered by the body's pain reduction, see DanTraits_PainFloor)
 local CAF_MOOD          = 15      -- unhappiness floor
 local CAF_RAMP          = 1
 local CAF_FATIGUE       = 0.0006  -- per minute at full withdrawal
@@ -106,9 +106,7 @@ local function updateCaffeineMinute(player, d)
     if asleep then return end
     pcall(function()
         local stats = player:getStats()
-        local meds = 0
-        pcall(function() meds = player:getPainEffect() or 0 end)
-        if meds <= 0 then floorUp(stats, CharacterStat.PAIN, CAF_PAIN * w, CAF_RAMP) end
+        DanTraits_PainFloor(player, d, "caffeine", CAF_PAIN * w, CAF_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, CAF_MOOD * w, CAF_RAMP)
         stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + CAF_FATIGUE * w))
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + CAF_STRESS * w))

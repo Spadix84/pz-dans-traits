@@ -14,8 +14,9 @@
 -- The small copy-and-paste helpers (clamp, floor a stat, dice, body-part
 -- lookups, the asleep check, the sandbox toggle, the Moodle Framework updater)
 -- and the stat delta pipeline live in DanTraits_Util.lua, required below; the
--- three pipeline hooks (enduranceRegen, catchCold, foodSicknessRise) are
--- registered here once the drivers exist.
+-- three pipeline hooks (enduranceRegen, catchCold, foodSicknessRise) and the
+-- pain-floor applier (minute, order 95, label "PainFloor") are registered here
+-- once the drivers exist.
 --
 -- Lua allows 200 locals per file: new traits go in new files, not here.
 
@@ -237,6 +238,7 @@ end
 --               MDD, Migraine, Smoker (floors and rates; among themselves by label)
 --           80  Positives (Iron Stomach)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
+--           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --   ten     10  Dependent
 --           40  MDD, Migraine
 --           90  Hallucinations
@@ -298,6 +300,8 @@ DanTraits_DeltaHook(nil, "catchCold", "minute", {
     set = function(player, value) player:getBodyDamage():setCatchACold(value) end,
 })
 DanTraits_DeltaHook(CharacterStat and CharacterStat.FOOD_SICKNESS, "foodSicknessRise", "minute")
+-- and the pain floors (Util): systems register floors, this applies the largest once
+DanTraits_Every("minute", "PainFloor", DanTraits_ApplyPainFloors, 95)
 
 
 -- Called by the eat action wrapper below with the portion actually eaten.
