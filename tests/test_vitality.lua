@@ -80,7 +80,8 @@ DanTraits_VitalityOnDrink(dr, 0.3, 104, 400); assert(V(dr).vitMeals[1].why == "s
 DanTraits_VitalityOnDrink(dr, 0.3, 20, 250); assert(V(dr).vitMeals[1].grade == 0.5, "milk neutral")
 assert(not DanTraits_VitalityOnDrink(dr, 0.5, 0, 0), "water: nothing")
 -- through the wrapped drink action
-local can = { _amount = 0.3, getAmount = function(self) return self._amount end, getProperties = function() return { getCarbohydrates = function() return 104 end, getCalories = function() return 400 end } end }
+-- (the game's properties are totals for what is in the container)
+local can = { _amount = 0.3, getAmount = function(self) return self._amount end, getProperties = function(self) return { getCarbohydrates = function() return 104 * self._amount end, getCalories = function() return 400 * self._amount end } end }
 local act = setmetatable({ character = dr, fluidContainer = can, sip = 0.3 }, { __index = ISDrinkFluidAction })
 act:updateEat(1); assert(#V(dr).vitMeals == 3 and V(dr).vitMeals[1].kcal == 120, "drink action feeds vitality")
 

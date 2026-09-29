@@ -369,15 +369,20 @@ DanTraits_Every("minute", "Diabetes", updateDiabetesMinute, 40)
 Events.OnCreatePlayer.Add(onDiabetesCreatePlayer)
 
 -- Drinks are fluid containers, not food: hook the drink action and read the
--- carbohydrates of the fluid times the litres that actually went down.
+-- carbohydrates of the fluid times the litres that actually went down. The
+-- container's properties are totals for what is in it (measured in game: a
+-- mug of 0.2 l cola reports 20.8 g, 0.1 l reports 10.4 g), so divide by the
+-- amount for per litre.
 local function wrapDrinkAction()
     DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "drink-intake", function(original, self, ...)
         local before, perLitre, kcalPerLitre = 0, 0, 0
         pcall(function()
             before = self.fluidContainer:getAmount() or 0
-            perLitre = self.fluidContainer:getProperties():getCarbohydrates() or 0
+            if before > 0 then perLitre = (self.fluidContainer:getProperties():getCarbohydrates() or 0) / before end
         end)
-        pcall(function() kcalPerLitre = self.fluidContainer:getProperties():getCalories() or 0 end)
+        pcall(function()
+            if before > 0 then kcalPerLitre = (self.fluidContainer:getProperties():getCalories() or 0) / before end
+        end)
         local result = original(self, ...)
         pcall(function()
             local after = self.fluidContainer:getAmount() or before

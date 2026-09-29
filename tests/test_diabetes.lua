@@ -145,22 +145,29 @@ for _ = 1, 120 do minute() end
 assert(g(lean) < 150 and g(lean) > 100, "no resistance: a spike mostly clears in two hours, got " .. g(lean))
 assert(not DanTraits_DiaOnPill(plain), "metformin does nothing for a non-diabetic")
 
--- 12. drinks: carbohydrates per litre x litres swallowed, always fast
+-- 12. drinks: carbohydrates per litre x litres swallowed, always fast; the game's properties are totals for what is in the container
 local sipper = newPlayer(); H.current = sipper
-local can = { _amount = 0.3, getAmount = function(self) return self._amount end, getProperties = function() return { getCarbohydrates = function() return 104 end } end }
+local can = { _amount = 0.3, getAmount = function(self) return self._amount end, getProperties = function(self) return { getCarbohydrates = function() return 104 * self._amount end } end }
 local act = setmetatable({ character = sipper, fluidContainer = can, sip = 0.3 }, { __index = ISDrinkFluidAction })
 act:updateEat(1)
 near(sipper._md.DanTraits.diaFast, 31.2, 1e-9, "a can of cola: 31.2 g of fast carbs")
 local water = { _amount = 1, getAmount = function(self) return self._amount end, getProperties = function() return { getCarbohydrates = function() return 0 end } end }
 local act2 = setmetatable({ character = sipper, fluidContainer = water, sip = 0.5 }, { __index = ISDrinkFluidAction })
 act2:updateEat(1); near(sipper._md.DanTraits.diaFast, 31.2, 1e-9, "water: nothing")
+-- the same can in three sips still adds up to the whole can
+local sips = newPlayer(); H.current = sips
+local can2 = { _amount = 0.3, getAmount = function(self) return self._amount end, getProperties = function(self) return { getCarbohydrates = function() return 104 * self._amount end } end }
+local act4 = setmetatable({ character = sips, fluidContainer = can2, sip = 0.1 }, { __index = ISDrinkFluidAction })
+for _ = 1, 3 do act4:updateEat(1) end
+near(sips._md.DanTraits.diaFast, 31.2, 1e-9, "three sips: 31.2 g")
+H.current = sipper
 
 -- 12b. Alcohol is loaded too and wraps the same method: the carbs and the drink hook still land
 -- (an alcoholic fluid: the Alcohol layer runs, its meds snapshot is skipped because this player cannot report them)
 local drinkHook = {}
 DanTraits_AddHook("drink", function(_, player, fluid, litres) drinkHook[#drinkHook + 1] = { player = player, fluid = fluid, litres = litres } end)
 local beer = { _amount = 0.5, getAmount = function(self) return self._amount end,
-               getProperties = function() return { getCarbohydrates = function() return 40 end, getAlcohol = function() return 0.05 end } end }
+               getProperties = function(self) return { getCarbohydrates = function() return 40 * self._amount end, getAlcohol = function() return 0.05 end } end }
 local act3 = setmetatable({ character = sipper, fluidContainer = beer, sip = 0.25 }, { __index = ISDrinkFluidAction })
 act3:updateEat(1)
 near(sipper._md.DanTraits.diaFast, 31.2 + 10, 1e-9, "a beer with Alcohol also loaded: 0.25 l x 40 g/l of carbs")
