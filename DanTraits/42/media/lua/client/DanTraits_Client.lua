@@ -206,6 +206,15 @@ local function wrapTraitList()
         end
         return original(self, trait, ...)
     end)
+    -- vanilla fills the lists once, when the screen is built at boot, before a
+    -- new game's sandbox options exist: fill them again each time it is shown
+    DanTraits_Wrap(CharacterCreationProfession, "setVisible", "creation-refresh-traits", function(original, self, visible, ...)
+        local result = original(self, visible, ...)
+        if visible and self.listboxTrait and self.listboxBadTrait and self.repopulateTraitLists then
+            pcall(self.repopulateTraitLists, self)
+        end
+        return result
+    end)
 end
 wrapTraitList()
 Events.OnGameBoot.Add(wrapTraitList)

@@ -21,7 +21,8 @@ ISUseInhalerAction = { new = function(_, player, item) return { kind = "inhaler"
 ISDiabetesAction = { new = function(_, player, item, kind, doses, strips)
   return { kind = kind, item = item, doses = doses, strips = strips } end }
 ISVitalityPillAction = { new = function(_, player, item, label) return { kind = "vitality", item = item, label = label } end }
-CharacterCreationProfession = { isTraitEnabled = function() return true end }
+CharacterCreationProfession = { isTraitEnabled = function() return true end, setVisible = function(self, v) self._shown = v end,
+  repopulateTraitLists = function(self) self._repopulated = (self._repopulated or 0) + 1 end }
 local multiplayer, serverAllows = false, true
 function isMultiplayer() return multiplayer end
 function getServerOptions() return { getBoolean = function() return serverAllows end } end
@@ -189,6 +190,10 @@ assert(list.isTraitEnabled(list, trait("age40s")) == true, "Age on in the option
 getSandboxOptions = nil; SandboxVars = { DanTraits = { AgeEnabled = false } }
 assert(list.isTraitEnabled(list, trait("age40s")) == false, "no options object: SandboxVars decides")
 SandboxVars = nil
+-- vanilla fills the lists once at boot; showing the screen fills them again (with the new game's options)
+local screen = setmetatable({ listboxTrait = {}, listboxBadTrait = {} }, { __index = CharacterCreationProfession })
+screen:setVisible(true); assert(screen._shown == true and screen._repopulated == 1, "shown: lists refilled")
+screen:setVisible(false); assert(screen._repopulated == 1, "hidden: not refilled")
 multiplayer = false
 -- the wrap is applied once, however many times the boot events re-run it
 local wrapped = list.isTraitEnabled
