@@ -87,6 +87,7 @@ H.now = H.now + 3100; tick(); assert(not out(p), "then round")
 p = newPlayer(); H.current = p; H.clearHalo()
 DanTraits_PassOut(p, 10)
 for _ = 1, 10 do tick() end; assert(out(p), "nothing happening: still out")
+H.now = H.now + 5000   -- past the landing
 p._wounds = 1; for _ = 1, 10 do tick() end
 assert(not out(p) and halo[#halo] == "UI_DanTraits_JoltedAwake", "bitten: jolted awake")
 p = newPlayer(); H.current = p

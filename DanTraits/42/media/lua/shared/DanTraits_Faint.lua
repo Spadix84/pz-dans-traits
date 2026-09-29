@@ -35,6 +35,7 @@ local notify = DanTraits_Notify
 
 local FT_MIN_REAL_S   = 8       -- never out for less than this, in real seconds
 local FT_SETTLE_MS    = 1500    -- let the fall play out before sitting down
+local FT_FALL_WOUND_MS = 4000   -- a scratch from the fall itself does not wake you (found in game: every diabetic blackout ended at once)
 
 function DanTraits_Collapse(player)
     if not player or player:isDead() then return false end
@@ -124,7 +125,9 @@ local function onFaintTick()
     hold.ticks = hold.ticks + 1
     if not hold.deep and hold.ticks % FT_CHECK_TICKS == 0 then
         local n = woundCount(player)
-        if n > hold.wounds then
+        if now - hold.startMs < FT_FALL_WOUND_MS then
+            n = math.max(n, hold.wounds)   -- still landing: what the fall did counts as already there
+        elseif n > hold.wounds then
             hold.textKey = "UI_DanTraits_JoltedAwake"
             comeRound(true)
             return

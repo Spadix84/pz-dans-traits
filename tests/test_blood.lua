@@ -237,10 +237,15 @@ assert(halo[#halo] == "UI_DanTraits_BloodComeTo", "and says so")
 H.clearHalo()
 assert(DanTraits_PassOut(p, 10, "UI_DanTraits_BloodComeTo"), "out again")
 for _ = 1, 10 do tick() end; assert(DanTraits_IsPassedOut(p), "nothing new: still out")
+-- the fall itself can scratch: while landing that does not wake you
+part(p, "UpperLeg_L")._scratchT = 10
+for _ = 1, 10 do tick() end; assert(DanTraits_IsPassedOut(p), "a scratch from the fall: still out")
+H.now = H.now + 5000
 part(p, "Hand_L")._scratchT = 5
 for _ = 1, 10 do tick() end
 assert(not DanTraits_IsPassedOut(p) and halo[#halo] == "UI_DanTraits_JoltedAwake", "a new wound wakes")
 assert(not p._blocked and faded == false, "free again")
 part(p, "Hand_L")._scratchT = nil
+part(p, "UpperLeg_L")._scratchT = nil
 
 H.pass()
