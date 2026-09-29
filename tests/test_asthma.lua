@@ -134,4 +134,41 @@ local w2 = newPlayer({ asleep = true }); H.current = w2; w2._md.DanTraits = { as
 minute(); assert(w2._woke == 0 and w2._asleep, "tier 2 sleeps on")
 print("sleep: tier 3 woke=" .. w3._woke .. ", tier 2 woke=" .. w2._woke)
 
+-- 15. an attack that has emptied endurance for three minutes running can black you out, once per attack
+local passCalls, passResult = {}, true
+DanTraits_PassOut = function(_, minutes, key, deep) passCalls[#passCalls + 1] = { minutes = minutes, key = key, deep = deep }; return passResult end
+local fa = newPlayer({}); H.current = fa
+fa._md.DanTraits = { asthma = 0.95, asthmaAttack = true }
+H.rollf = 0
+fa._st.endurance = 0; minute(); fa._st.endurance = 0; minute()
+assert(#passCalls == 0, "two empty minutes: not yet")
+fa._st.endurance = 0; minute()
+assert(#passCalls == 1 and passCalls[1].key == "UI_DanTraits_AsthmaBlackout" and passCalls[1].deep == true, "third empty minute: a deep faint")
+assert(passCalls[1].minutes >= 2 and passCalls[1].minutes <= 5, "for 2 to 5 minutes")
+assert(fa._md.DanTraits.asthmaAttack, "the attack is not cleared")
+for _ = 1, 5 do fa._st.endurance = 0; minute() end
+assert(#passCalls == 1, "once per attack")
+-- endurance coming back resets the count
+local fb = newPlayer({}); H.current = fb
+fb._md.DanTraits = { asthma = 0.95, asthmaAttack = true }
+fb._st.endurance = 0; minute(); fb._st.endurance = 0; minute(); fb._st.endurance = 1.0; minute(); fb._st.endurance = 0; minute()
+assert(#passCalls == 1, "a break in the empty run starts the count again")
+-- the attack ends, the next one can faint again; a refused faint (already out) is not spent
+H.current = fa; DanTraits_UseInhaler(fa)
+assert(not fa._md.DanTraits.asthmaAttack and not fa._md.DanTraits.asthmaFainted, "attack over: the once-per-attack flag clears")
+passResult = false
+fa._md.DanTraits.asthma = 0.95
+for _ = 1, 4 do fa._st.endurance = 0; minute() end
+assert(#passCalls == 3 and not fa._md.DanTraits.asthmaFainted, "a refused faint is not spent (asked again the third and fourth empty minute)")
+passResult = true; fa._st.endurance = 0; minute()
+assert(#passCalls == 4 and fa._md.DanTraits.asthmaFainted, "and the next attack faints")
+-- while out nothing builds and irritation decays at the attack rate
+DanTraits_IsPassedOut = function() return true end
+local fo = newPlayer({}); H.current = fo
+fo._md.DanTraits = { asthma = 0.95, asthmaAttack = true }; fo._st.panic = 100; fo._st.endurance = 0
+minute()
+H.near(fo._md.DanTraits.asthma, 0.95 - 0.001, 1e-9, "out: no exertion or panic build, the attack rate of decay")
+DanTraits_IsPassedOut = nil; DanTraits_PassOut = nil; H.rollf = 0.99
+print("asthma blackout: once per attack, after three empty minutes")
+
 H.pass()

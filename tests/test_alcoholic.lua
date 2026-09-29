@@ -6,6 +6,9 @@ H.events()
 H.stubs()
 H.roll = 9999
 H.load("Dependent")
+local collapsed, knocked = 0, {}
+DanTraits_Collapse = function() collapsed = collapsed + 1; return true end
+DanTraits_KnockHead = function(_, chance, score) knocked[#knocked + 1] = { chance, score }; return 0 end
 local halo, near = H.halo, H.near
 local ten = H.ten
 local function md(p) return p._md.DanTraits end
@@ -52,10 +55,11 @@ dt._md.DanTraits = { alcInit = true, depTolerance = 1 }
 run(dt, 0, 37.5); assert(md(dt).alcStage == 2, "37.5 h: shakes only")
 run(dt, 0, 1); assert(md(dt).alcStage == 3 and halo[#halo] == "UI_DanTraits_AlcoholicDelirium", "delirium by 38.5 h (72 x 0.525, the meter slipping)")
 H.roll = 0; local pain = dt._st.pain; ten(); H.roll = 9999
-assert(dt._bump == "stagger" and dt._vars.BumpFall == true, "seizure: knocked down")
+assert(collapsed == 1 and dt._bump == nil, "seizure: the shared fall, no fall code of its own")
+assert(#knocked == 1 and knocked[1][1] == 0.3 and knocked[1][2] == 0.35, "seizure: a chance to concuss")
 assert(dt._st.pain >= math.min(100, pain + 25) and dt._st.panic >= 40 and halo[#halo] == "UI_DanTraits_AlcoholicSeizure", "seizure: hurt and scared")
-dt._asleep = true; dt._bump = nil; H.roll = 0; ten(); H.roll = 9999; dt._asleep = false
-assert(dt._bump == nil, "no seizure asleep")
+dt._asleep = true; H.roll = 0; ten(); H.roll = 9999; dt._asleep = false
+assert(collapsed == 1 and #knocked == 1, "no seizure asleep")
 -- the acute phase holds five days, then fades to a fifth by day ten
 local wPeak = md(dt).alcW
 run(dt, 0, 240 - md(dt).dryHours)

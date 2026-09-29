@@ -17,7 +17,8 @@ local fraction = DanTraits_StatFraction
 --   shakes    (two days dry):     pain, nausea, and weapons slip from shaking hands
 --   delirium  (three days dry, meter 0.6+ only): hallucinations and seizures
 -- The acute phase holds for five days, then fades over the next five to a
--- lingering craving. A drink ends withdrawal, but the meter decides how much
+-- lingering craving. A seizure in delirium is a real fall (DanTraits_Collapse)
+-- and can concuss (DanTraits_KnockHead). A drink ends withdrawal, but the meter decides how much
 -- of a drink: at a high meter a sip is not enough. A month without any
 -- alcohol cures the trait. After that the character is never quite free: the
 -- first drink of any drinking session is a coin flip to relapse.
@@ -54,6 +55,8 @@ local ALC_SEIZE_CHANCE  = 0.005 -- seizure chance per tick at w = 1 (delirium): 
 local ALC_SEIZE_PAIN    = 25
 local ALC_SEIZE_PANIC   = 40
 local ALC_SEIZE_FATIGUE = 0.2
+local ALC_SEIZE_KNOCK   = 0.3   -- chance the fall concusses (DanTraits_KnockHead)...
+local ALC_SEIZE_SCORE   = 0.35  -- ...and how bad, 0..1
 local TICK_H            = 10 / 60
 
 -- 0..1, read by the hangover system: an Alcoholic's meter doubles as tolerance
@@ -96,15 +99,12 @@ local function hallucinate(player)
     if ok and done == false and ep.sound then pcall(ep.sound, player) end
 end
 
--- down on the floor, whatever was in hand dropped, hurt, scared and wiped out
+-- down on the floor (the shared fall in DanTraits_Faint.lua), whatever was in
+-- hand dropped, hurt, scared and wiped out; a fit on a hard floor can concuss
 local function seize(player, stats)
     if DanTraits_FumbleDrop then pcall(DanTraits_FumbleDrop, player) end
-    pcall(function()
-        player:setBumpType("stagger")
-        player:setVariable("BumpDone", false)
-        player:setVariable("BumpFall", true)
-        player:setVariable("BumpFallType", "pushedFront")
-    end)
+    if DanTraits_Collapse then DanTraits_Collapse(player) end
+    if DanTraits_KnockHead then DanTraits_KnockHead(player, ALC_SEIZE_KNOCK, ALC_SEIZE_SCORE) end
     add(stats, CharacterStat.PAIN, ALC_SEIZE_PAIN)
     add(stats, CharacterStat.PANIC, ALC_SEIZE_PANIC)
     add(stats, CharacterStat.FATIGUE, ALC_SEIZE_FATIGUE)

@@ -249,8 +249,9 @@ local function updateBloodMinute(player, d)
         local hit = ZombRandFloat and ZombRandFloat(0, 1) < chance or (not ZombRandFloat and math.random() < chance)
         if hit then
             local lo, hi = BL_FAINT_MIN[1], BL_FAINT_MIN[2]
-            DanTraits_PassOut(player, ZombRandFloat and ZombRandFloat(lo, hi) or (lo + hi) / 2, "UI_DanTraits_BloodComeTo")
-            d.bloodFaintGap = BL_FAINT_GAP
+            if DanTraits_PassOut(player, ZombRandFloat and ZombRandFloat(lo, hi) or (lo + hi) / 2, "UI_DanTraits_BloodComeTo") then
+                d.bloodFaintGap = BL_FAINT_GAP
+            end
         end
     end
     if tier >= 3 then

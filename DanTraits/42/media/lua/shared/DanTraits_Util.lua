@@ -33,6 +33,8 @@
 --   DanTraits_Asleep(player)               whether the player is asleep, false on failure
 --   DanTraits_SandboxOn(optionName)        SandboxVars.DanTraits[option] ~= false
 --                                          (true when the table is absent)
+--   DanTraits_Cough(player, radius, why, force)
+--                                          the one cough, see "The cough" below
 --   DanTraits_DeltaHook(stat, name, cadence [, access])
 --                                          the stat delta pipeline, see below
 --   DanTraits_DeltaRemember(d, name, value)
@@ -155,6 +157,36 @@ function DanTraits_BadMoodle(player, name, value01, tiers)
         end
         moodle:setValue(0.5 * (1 - value01))
     end)
+end
+
+-- The cough ------------------------------------------------------------------------
+-- Asthma and Smoker both cough. There is one primitive and one gap between coughs
+-- (COUGH_GAP_MIN game minutes, kept as the world-age hour it ends in
+-- d.coughGap), so the two never cough in the same minute:
+--
+--   DanTraits_Cough(player, radius, why, force)
+--     Tries the game's own player:triggerCough() (heard by zombies at its own
+--     radius). If the game has no such call, falls back to the voice sound plus
+--     an addSound at `radius`. Refused (false) inside the gap unless force is
+--     true (an asthma attack's burst); a cough that happens starts the gap, and
+--     records d.coughs and d.lastCoughWhy = why. Returns whether it coughed.
+local COUGH_GAP_MIN = 3
+
+function DanTraits_Cough(player, radius, why, force)
+    if not player or player:isDead() then return false end
+    local d = DanTraits_Data(player)
+    local now = 0
+    pcall(function() now = getGameTime():getWorldAgeHours() end)
+    if not force and (d.coughGap or 0) > now then return false end
+    local ok = pcall(function() player:triggerCough() end)
+    if not ok then
+        pcall(function() player:playerVoiceSound("Cough") end)
+        pcall(function() addSound(player, player:getX(), player:getY(), player:getZ(), radius or 10, radius or 10) end)
+    end
+    d.coughGap = now + COUGH_GAP_MIN / 60
+    d.coughs = (d.coughs or 0) + 1
+    d.lastCoughWhy = why
+    return true
 end
 
 -- The stat delta pipeline ---------------------------------------------------------

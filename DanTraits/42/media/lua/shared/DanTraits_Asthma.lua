@@ -13,6 +13,10 @@ local traitData = DanTraits_Data
 -- a full attack that drains endurance and health (to a 20% floor) while the
 -- player coughs loudly enough to pull zombies. The inhaler item knocks it
 -- down by half. Coughs are real world sounds: zombies hear them.
+-- An attack that has emptied endurance for ASTHMA_FAINT_AFTER_MIN minutes in a
+-- row can black you out (once per attack, a deep faint: DanTraits_PassOut).
+-- While out you are not exerting, so nothing builds and irritation decays at
+-- the attack rate; the attack itself carries on.
 local ASTHMA_DECAY_CALM     = 0.004   -- per minute, resting in clean warm air (about four hours to clear fully)
 local ASTHMA_DECAY_ASLEEP   = 0.008
 local ASTHMA_DECAY_ATTACK   = 0.001   -- an attack does not meaningfully ease on its own
@@ -35,6 +39,9 @@ local ASTHMA_ATTACK_END_DRAIN = 0.15  -- endurance per minute during an attack (
 local ASTHMA_ATTACK_HP_DRAIN  = 0.75  -- overall health per minute during an attack
 local ASTHMA_HEALTH_FLOOR     = 15    -- attack never takes health below this (%)
 local ASTHMA_ATTACK_PANIC     = 5     -- panic added per minute during an attack (out of 100)
+local ASTHMA_FAINT_AFTER_MIN = 3   -- consecutive minutes of an attack with endurance at 0...
+local ASTHMA_FAINT          = 0.15    -- ...then a chance per minute of passing out
+local ASTHMA_FAINT_MIN      = { 2, 5 }   -- game minutes out (deep: stays down)
 local ASTHMA_INHALER_RELIEF   = 0.5
 local ASTHMA_INHALER_PANIC    = 10    -- a puff sets the heart racing (out of 100)
 local ASTHMA_WAKE_TIER        = 3     -- asleep at this tier or worse: you wake up gasping
@@ -115,6 +122,7 @@ local function asthmaSetIrritation(player, d, value, quiet)
         d.asthmaShownTier = 4
     elseif d.asthmaAttack and value < ASTHMA_ATTACK_ENDS_AT then
         d.asthmaAttack = false
+        d.asthmaFainted, d.asthmaEmptyMin = nil, nil
         DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief")
         d.asthmaShownTier = asthmaTierOf(value)
     end
@@ -139,12 +147,13 @@ local function updateAsthmaMinute(player, d)
     local irritation = d.asthma
     local mask = asthmaMaskLevel(player)
     local asleep = DanTraits_Asleep(player)
+    local out = DanTraits_IsPassedOut and DanTraits_IsPassedOut(player)
 
     -- build-up
     local envMult = (mask == 2) and 0 or ((mask == 1) and 0.5 or 1)
     local passiveMult = (mask == 2) and ASTHMA_MASK_GAS_PASSIVE or 1
     local build = 0
-    if not asleep then
+    if not asleep then   -- (a faint ends the exertion and the panic, not the cold or the corpses)
         local temp = nil
         pcall(function() temp = getClimateManager():getAirTemperatureForCharacter(player, false) end)
         if temp and temp < ASTHMA_COLD_TEMP_C then
@@ -154,18 +163,18 @@ local function updateAsthmaMinute(player, d)
         if corpses > 0 then
             build = build + ASTHMA_CORPSE_RATE * corpses * envMult
         end
-        if stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
+        if not out and stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
             build = build + ASTHMA_EXERT_RATE * passiveMult
         end
         local moving = false
         pcall(function() moving = player:isSprinting() or player:isRunning() end)
-        if moving then
+        if moving and not out then
             build = build + ASTHMA_SPRINT_RATE * passiveMult
         end
         -- panic: racing heart, fast shallow breathing. Internal, so no mask helps.
         local panic = 0
         pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
-        if panic > ASTHMA_PANIC_MIN then
+        if panic > ASTHMA_PANIC_MIN and not out then
             build = build + ASTHMA_PANIC_RATE * ((panic - ASTHMA_PANIC_MIN) / (100 - ASTHMA_PANIC_MIN))
         end
     end
@@ -221,6 +230,16 @@ local function updateAsthmaMinute(player, d)
                 bd:ReduceGeneralHealth(math.min(ASTHMA_ATTACK_HP_DRAIN, bd:getOverallBodyHealth() - ASTHMA_HEALTH_FLOOR))
             end
         end)
+        -- an attack that has emptied you for a few minutes running can black you out
+        local empty = false
+        pcall(function() empty = (stats:get(CharacterStat.ENDURANCE) or 0) <= 0 end)
+        d.asthmaEmptyMin = empty and ((d.asthmaEmptyMin or 0) + 1) or 0
+        if d.asthmaEmptyMin >= ASTHMA_FAINT_AFTER_MIN and not d.asthmaFainted and not out and not asleep
+                and DanTraits_PassOut and DanTraits_Roll(ASTHMA_FAINT) then
+            if DanTraits_PassOut(player, DanTraits_RandRange(ASTHMA_FAINT_MIN[1], ASTHMA_FAINT_MIN[2]), "UI_DanTraits_AsthmaBlackout", true) then
+                d.asthmaFainted = true
+            end
+        end
     end
 end
 
