@@ -226,4 +226,24 @@ sb._asleep = true; sb._hours = 330; minute(); sb._hours = 338; sb._asleep = fals
 near(V(sb).vitSleepDebt, 0, 1e-9, "8 h fully rested: no debt"); assert(#halo == 0, "no complaint after a good night")
 near(DanTraits_SleepDebt(sb), 0, 1e-9, "getter")
 
+-- infection hooks: nothing at neutral, x(1 -/+ 0.25 e) either side
+local function allNil(name, ...) for _, fn in ipairs(DanTraits_Hooks[name]) do assert(fn(1, ...) == nil, name .. ": should say nothing here") end end
+local nv = newPlayer(); H.current = nv; minute(); V(nv).vitality = 0.5
+allNil("infectionHazard", nv, {}); allNil("infectionGrowth", nv)
+V(nv).vitality = 1.0
+near(DanTraits_RunHooks("infectionHazard", 1, nv, {}), 0.75, 1e-9, "Thriving: hazard x0.75")
+near(DanTraits_RunHooks("infectionGrowth", 1, nv), 0.75, 1e-9, "Thriving: growth x0.75")
+V(nv).vitality = 0.0
+near(DanTraits_RunHooks("infectionHazard", 1, nv, {}), 1.25, 1e-9, "Run Down: hazard x1.25")
+
+-- the four healing hooks: nothing at neutral, x (1 + k e) either side
+for _, h in ipairs({ { "infectionFight", 0.2, 0.3 }, { "concussionHeal", 0.25, 0.25 }, { "woundHeal", 0.35, 0.25 }, { "lungHeal", 0.001, 0.25 } }) do
+  V(nv).vitality = 0.5
+  for _, fn in ipairs(DanTraits_Hooks[h[1]]) do assert(fn(h[2], nv) == nil, h[1] .. ": nothing at neutral") end
+  V(nv).vitality = 1.0
+  near(DanTraits_RunHooks(h[1], h[2], nv), h[2] * (1 + h[3]), 1e-12, h[1] .. ": Thriving")
+  V(nv).vitality = 0.0
+  near(DanTraits_RunHooks(h[1], h[2], nv), h[2] * (1 - h[3]), 1e-12, h[1] .. ": Run Down")
+end
+
 H.pass()

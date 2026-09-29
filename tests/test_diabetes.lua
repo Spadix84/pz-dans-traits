@@ -216,5 +216,20 @@ assert(#passCalls == 4, "tier 2: no blackout")
 local sleepyLow = newPlayer({ asleep = true }); H.current = sleepyLow; sleepyLow._md.DanTraits = { glucose = 30 }; minute()
 assert(#passCalls == 4, "asleep: no blackout")
 H.rollf = 0.99; DanTraits_PassOut = nil
+-- infection hooks: only for a diabetic, and only above 180
+local function allNil(name, ...) for _, fn in ipairs(DanTraits_Hooks[name]) do assert(fn(1, ...) == nil, name .. ": should say nothing here") end end
+local nd = H.player(); H.current = nd
+DanTraits_Data(nd).glucose = 350
+allNil("infectionHazard", nd, {}); allNil("infectionGrowth", nd)
+local hd = newPlayer(); H.current = hd
+minute(); allNil("infectionHazard", hd, {}); allNil("infectionGrowth", hd)
+hd._md.DanTraits.glucose = 350
+near(DanTraits_RunHooks("infectionHazard", 0.04, hd, {}), 0.08, 1e-12, "diabetic at 350: hazard x2")
+near(DanTraits_RunHooks("infectionGrowth", 1, hd), 1.5, 1e-12, "diabetic at 350: growth x1.5")
+
+-- the diaResistance hook (Age) is added before the clamp, for Type 2 only
+DanTraits_AddHook("diaResistance", function(res) return res + 0.1 end)
+near(DanTraits_DiaResistance(lean), 0.1, 1e-9, "75 kg plus the hook's 0.1")
+near(DanTraits_DiaResistance(heavy), 1, 1e-9, "the clamp still holds")
 
 H.pass()

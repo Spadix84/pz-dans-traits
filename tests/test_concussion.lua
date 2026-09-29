@@ -143,4 +143,17 @@ assert(DanTraits_ExtraCommands.concussion(p, { "0.3" }) == "concussion 0.3", "se
 assert(DanTraits_ExtraCommands.concussion(p, { "clear" }) == "concussion cleared" and D(p).ccScore == nil, "clear")
 assert(string.find(DanTraits_ExtraCommands.faint(p, { "out", "5" }), "out for 5 game minutes: true", 1, true) and out(p), "faint out")
 
+-- 11. Vitality's reach: healing x (1 + 0.25 e)
+H.load("Vitality")   -- loaded last: it runs for everyone. Its effect is stubbed to +1 / -1 from here.
+local vitE = 0
+DanTraits_VitalityEffect = function() return vitE end
+for _, case in ipairs({ { 1, 1.25 }, { -1, 0.75 }, { 0, 1 } }) do
+  vitE = case[1]
+  p = newPlayer(); H.current = p; H.rollf = 0.99
+  DanTraits_KnockHead(p, 1, 0.3); s = D(p).ccScore
+  minute(); near(D(p).ccScore, s - 0.25 / 1440 * case[2], 1e-9, "concussion heals x" .. case[2] .. " at e = " .. case[1])
+end
+vitE = 1; p = newPlayer(); H.current = p; DanTraits_KnockHead(p, 1, 0.3); s = D(p).ccScore; p._asleep = true; minute(); p._asleep = false
+near(D(p).ccScore, s - 0.5 / 1440 * 1.25, 1e-9, "asleep: the factor rides on the doubled rate")
+
 H.pass()

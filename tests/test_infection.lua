@@ -203,4 +203,53 @@ assert(string.find(DanTraits_ExtraCommands.contaminate(p, { "forearm_l", "5" }),
 assert(DanTraits_ExtraCommands.infect(p, { "tail" }) == "infect <part> [level 0..10]", "usage")
 assert(DanTraits_ExtraCommands.infection(p, { "clear" }) == "infection cleared" and D(p).infS == 0, "clear")
 
+-- 13. the hook subscribers: hazard and growth move by the stated factor, and
+-- say nothing without their trait. Loaded only now: Vitality runs for
+-- everyone and would drift the earlier sections' numbers.
+H.load("Diabetes", "Vitality", "Anemia", "Smoker")
+p = newPlayer(); H.current = p; a = arm(p); a._t.deep = 10
+near(DanTraits_RunHooks("infectionGrowth", 1, p), 1, 1e-12, "nobody special: growth untouched")
+local function subject(o) local q = build(o); H.current = q; arm(q)._t.deep = 10; return q end
+local dia = subject({ traits = { "diabetes1" } }); DanTraits_Data(dia).glucose = 180
+near(DanTraits_InfectionHazard(dia, arm(dia)), 0.04, 1e-12, "Diabetes at 180: no effect")
+DanTraits_Data(dia).glucose = 350
+near(DanTraits_InfectionHazard(dia, arm(dia)), 0.08, 1e-12, "Diabetes at 350: hazard x2")
+near(DanTraits_RunHooks("infectionGrowth", 1, dia), 1.5, 1e-12, "Diabetes at 350: growth x1.5")
+DanTraits_Data(dia).glucose = 265
+near(DanTraits_RunHooks("infectionGrowth", 1, dia), 1.25, 1e-12, "Diabetes halfway up the band: x1.25")
+DanTraits_Data(dia).glucose = 350
+DanTraits_ExtraCommands.infect(dia, { "forearm_l", "2" }); minute()
+near(D(dia).infParts.ForeArm_L.L - 2, 2 / 1440 * 1.5, 1e-5, "Diabetes: the level itself climbs x1.5 a minute")
+local vit = subject({}); DanTraits_Data(vit).vitality = 1.0
+near(DanTraits_InfectionHazard(vit, arm(vit)), 0.03, 1e-12, "Thriving: hazard x0.75")
+near(DanTraits_RunHooks("infectionGrowth", 1, vit), 0.75, 1e-12, "Thriving: growth x0.75")
+DanTraits_Data(vit).vitality = 0.0
+near(DanTraits_InfectionHazard(vit, arm(vit)), 0.05, 1e-12, "Run Down: hazard x1.25")
+near(DanTraits_RunHooks("infectionGrowth", 1, vit), 1.25, 1e-12, "Run Down: growth x1.25")
+DanTraits_Data(vit).vitality = 0.5
+near(DanTraits_InfectionHazard(vit, arm(vit)), 0.04, 1e-12, "neutral Vitality: hazard untouched")
+local ane = subject({ traits = { "anemia" } }); DanTraits_Data(ane).anIron = 0
+near(DanTraits_RunHooks("infectionGrowth", 1, ane), 1.3, 1e-12, "no iron: growth x1.3")
+near(DanTraits_InfectionHazard(ane, arm(ane)), 0.04, 1e-12, "iron does not touch the hazard")
+DanTraits_Data(ane).anIron = 0.8
+near(DanTraits_RunHooks("infectionGrowth", 1, ane), 1, 1e-12, "plenty of iron: untouched")
+local smk = subject({ vanilla = { "base:smoker" } }); DanTraits_Data(smk).nicMeter = 1
+near(DanTraits_RunHooks("infectionGrowth", 1, smk), 1.2, 1e-12, "Smoker at a full meter: growth x1.2")
+DanTraits_Data(smk).nicMeter = 0.5
+near(DanTraits_RunHooks("infectionGrowth", 1, smk), 1.1, 1e-12, "half a meter: x1.1")
+local ex = subject({}); DanTraits_Data(ex).nicMeter = 1
+near(DanTraits_RunHooks("infectionGrowth", 1, ex), 1, 1e-12, "a meter without the trait: untouched")
+
+-- 14. Vitality's own hooks (its effect stubbed): the body clears an infection with nothing spreading x (1 + 0.3 e)
+local vitE = 0
+DanTraits_VitalityEffect = function() return vitE end
+for _, case in ipairs({ { 1, 1.3 }, { -1, 0.7 }, { 0, 1 } }) do
+  vitE = case[1]
+  p = build({}); H.current = p; DanTraits_Data(p).infS = 0.5
+  minute(); near(0.5 - D(p).infS, 0.2 / 1440 * case[2], 1e-9, "fight x" .. case[2] .. " at e = " .. case[1])
+end
+vitE = 1; p = build({}); H.current = p; arm(p)._t.deep = 10
+near(DanTraits_InfectionHazard(p, arm(p)), 0.03, 1e-12, "stubbed e = 1: hazard x0.75")
+vitE = -1; near(DanTraits_InfectionHazard(p, arm(p)), 0.05, 1e-12, "stubbed e = -1: hazard x1.25")
+
 H.pass()

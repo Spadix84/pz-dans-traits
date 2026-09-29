@@ -44,6 +44,11 @@
 -- as fast), which the Caffeine and Sleep files read through the
 -- "caffeineClearance" hook. It wears off within days of the last cigarette,
 -- so an ex-smoker's usual coffee hits much harder.
+--
+-- A Smoker's wound infection climbs faster, by the meter (the
+-- infectionGrowth hook of DanTraits_Infection.lua), and an unstitched deep
+-- wound heals slower (the woundHeal hook of DanTraits_WoundCare.lua). The
+-- lungs' recovery goes through the lungHeal hook (Vitality speeds it).
 require "DanTraits"
 
 local hasVanillaTrait = DanTraits_HasVanillaTrait
@@ -109,6 +114,8 @@ local COUGH_MORNING     = 5       -- x this in the first COUGH_MORNING_MIN after
 local COUGH_MORNING_MIN = 60
 local COUGH_RADIUS      = 35      -- only if the game's own cough is unavailable (it is 35)
 -- caffeine
+local NIC_INF_GROWTH   = 0.2     -- wound infection climb x (1 + this x meter), Smokers only
+local NIC_WOUND_HEAL   = 0.2     -- an unstitched deep wound heals x (1 - this x meter), Smokers only
 local CAF_INDUCE_PER_CIG = 0.1    -- caffeine clearance x (1 + induction), induction up to 1
 local CAF_INDUCE_HALF_H  = 39
 
@@ -430,7 +437,7 @@ local function updateSmokerMinute(player, d)
     if d.nicDryHours then d.nicDryHours = d.nicDryHours + MIN_H end
     if d.nicSmokeHours then d.nicSmokeHours = d.nicSmokeHours + MIN_H end
     if d.nicLungs > 0 and (d.nicSmokeHours or LUNG_HEAL_AFTER_H) >= LUNG_HEAL_AFTER_H then
-        d.nicLungs = math.max(0, d.nicLungs - MIN_H / LUNG_HEAL_H)
+        d.nicLungs = math.max(0, d.nicLungs - DanTraits_RunHooks("lungHeal", MIN_H / LUNG_HEAL_H, player, d))
     end
     if (d.nicInduce or 0) > 0 then
         d.nicInduce = d.nicInduce * INDUCE_DECAY
@@ -565,6 +572,20 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
     local w = DanTraits_NicotineWithdrawal(player)
     if w <= 0 then return nil end
     return quality * (1 - NIC_SLEEP_CUT * w)
+end)
+
+-- smoking slows wound healing: an infection climbs faster (DanTraits_Infection.lua)
+DanTraits_AddHook("infectionGrowth", function(k, player)
+    local d = player and player:getModData().DanTraits
+    if not d or (d.nicMeter or 0) <= 0 or not isSmoker(player) then return nil end
+    return k * (1 + NIC_INF_GROWTH * d.nicMeter)
+end)
+
+-- and so does an unstitched deep wound (DanTraits_WoundCare.lua)
+DanTraits_AddHook("woundHeal", function(rate, player)
+    local d = player and player:getModData().DanTraits
+    if not d or (d.nicMeter or 0) <= 0 or not isSmoker(player) then return nil end
+    return rate * (1 - NIC_WOUND_HEAL * d.nicMeter)
 end)
 
 DanTraits_Every("minute", "Smoker", updateSmokerMinute, 40)

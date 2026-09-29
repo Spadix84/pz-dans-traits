@@ -1,7 +1,9 @@
 -- Offline test for DanTraits_Age.lua: the age band (trait, else the sandbox
 -- default, rounded down), the profession's main-skill levels once per new
 -- character, Handy's extra Carpentry in the 40s, and the Gym Regular and
--- Arthritis hooks.
+-- Arthritis hooks; the universal ones (red cells, concussion, hangover,
+-- Type 2 resistance, Brittle): nil in the 30s and with age off, the stated
+-- factor in the 20s and 40s.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -103,5 +105,32 @@ local j = DanTraits_RunHooks("arthritisJoint", 0.5, newPlayer({ traits = { "age4
 assert(math.abs(j - 0.65) < 1e-9, "40s joint 0.5 -> 0.65, got " .. j)
 assert(DanTraits_RunHooks("arthritisJoint", 0.9, newPlayer({ traits = { "age40s" } })) == 1, "capped at 1")
 assert(DanTraits_RunHooks("arthritisJoint", 0.5, newPlayer()) == 0.5, "30s joint unchanged")
+
+-- 8. the universal hooks: [name, value, 20s result, 40s result], all nil in the 30s and with age off
+local young, mid, old = newPlayer({ traits = { "age20s" } }), newPlayer(), newPlayer({ traits = { "age40s" } })
+local function silent(name, value, player, msg)
+  for _, fn in ipairs(DanTraits_Hooks[name]) do assert(fn(value, player) == nil, name .. " should say nothing: " .. msg) end
+end
+local function eq(a, b, msg) assert(math.abs(a - b) < 1e-9, msg .. ": expected " .. b .. ", got " .. a) end
+local UNIVERSAL = {
+  { "bloodCellRebuild", 0.02, 0.02 * 1.15, 0.02 * 0.8 },
+  { "concussionHeal", 0.001, 0.001 * 1.2, 0.001 * 0.75 },
+  { "hangoverSeverity", 0.6, 0.6 * 0.85, 0.6 * 1.25 },
+  { "diaResistance", 0.5, 0.45, 0.6 },
+  { "brittleChance", 20, false, 25 },
+}
+for _, row in ipairs(UNIVERSAL) do
+  local name, value = row[1], row[2]
+  silent(name, value, mid, "30s")
+  if row[3] then eq(DanTraits_RunHooks(name, value, young), row[3], name .. " in the 20s") else silent(name, value, young, "20s") end
+  eq(DanTraits_RunHooks(name, value, old), row[4], name .. " in the 40s")
+  SandboxVars.DanTraits.AgeEnabled = false
+  silent(name, value, young, "age off, 20s"); silent(name, value, old, "age off, 40s")
+  SandboxVars.DanTraits.AgeEnabled = nil
+end
+SandboxVars.DanTraits.AgeDefault = 47
+eq(DanTraits_RunHooks("hangoverSeverity", 0.6, newPlayer()), 0.75, "sandbox default age 47 counts as the 40s")
+SandboxVars.DanTraits.AgeDefault = nil
+
 
 H.pass()

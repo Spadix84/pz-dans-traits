@@ -85,4 +85,10 @@ assert(DanTraits_RunHooks("nightQuality", 0.8, n, {}) == 0.8, "nothing: untouche
 near(DanTraits_RunHooks("nightQuality", 0.8, n, { hoPending = true, hoSeverity = 1 }), 0.56, 1e-9, "pending, full: x 0.7")
 near(DanTraits_RunHooks("nightQuality", 0.8, n, { hoDrinking = true, hoLoad = 1.5 }), 0.8 * (1 - 0.3 * 0.5), 1e-9, "still drunk: by load")
 
+-- the hangoverSeverity hook (Age) acts on the severity before the tolerance cut
+DanTraits_AddHook("hangoverSeverity", function(sev, player) if player._aged then return sev * 1.5 end return nil end)
+local ag = H.player(); H.current = ag; ag._aged = true
+ag._st.intox = 0; ag._md.DanTraits = { hoLoad = 1.0, hoDrinking = true }; minute()
+near(md(ag).hoSeverity, 0.5, 1e-6, "load 1.0 is 1/3, x1.5 from the hook")
+
 H.pass()

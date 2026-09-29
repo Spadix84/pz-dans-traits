@@ -8,7 +8,8 @@
 -- vegetarian lives on greens, eggs and pills. The eat hook reads the
 -- game's food type, so stews and dishes count by their main ingredient.
 -- After blood loss (DanTraits_Blood.lua) red cells rebuild at half speed,
--- slower still short of iron, and rebuilding them spends iron.
+-- slower still short of iron, and rebuilding them spends iron. A wound
+-- infection climbs faster too (the infectionGrowth hook).
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -28,6 +29,7 @@ local AN_FATIGUE        = 0.0004  -- per minute at full deficit
 local AN_COLD           = 0.5     -- cold catching x (1 + this x deficit)
 local AN_TIER           = { 0.5, 0.9 }   -- Feeling faint | Light-headed
 local AN_BLOOD_REBUILD  = 0.5     -- red cells rebuild x this, x (1 - deficit)
+local AN_INF_GROWTH      = 0.3     -- wound infection climb x (1 + this x deficit)
 local AN_BLOOD_IRON     = 2       -- iron spent per unit of red cells rebuilt (a tenth of the blood: a fifth of the iron)
 
 local MEAT_TYPES = { "meat", "fish", "game", "poultry", "seafood", "beef", "pork", "venison", "rabbit", "chicken", "insect" }
@@ -131,6 +133,13 @@ end)
 DanTraits_AddHook("catchCold", function(delta, player, d)
     if not d or d.anIron == nil or not hasTrait(player, "anemia") then return nil end
     return delta * (1 + AN_COLD * deficitOf(d))
+end)
+
+-- short of iron the body fights a wound infection slower (DanTraits_Infection.lua)
+DanTraits_AddHook("infectionGrowth", function(k, player)
+    local deficit = DanTraits_IronDeficit(player)
+    if deficit <= 0 then return nil end
+    return k * (1 + AN_INF_GROWTH * deficit)
 end)
 
 -- the pill bottle: 30 pills, its own action (see client)

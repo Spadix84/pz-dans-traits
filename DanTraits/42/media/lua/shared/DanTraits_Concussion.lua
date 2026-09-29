@@ -21,6 +21,9 @@
 --                  took health off the head
 -- A helmet (the head's clothing defense, CC_HELMET or more) makes a
 -- concussion less likely and less bad.
+--
+-- Hook offered: concussionHeal (the score healed a minute, player, d);
+-- Vitality speeds it up or slows it.
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -183,7 +186,7 @@ local function updateConcussionMinute(player, d)
     if strained then
         s = s + CC_STRAIN
     else
-        s = s - CC_HEAL_DAY / 1440 * (asleep and CC_HEAL_ASLEEP or 1)
+        s = s - DanTraits_RunHooks("concussionHeal", CC_HEAL_DAY / 1440 * (asleep and CC_HEAL_ASLEEP or 1), player, d)
     end
     s = clamp01(s)
     if s < 0.005 then s = 0 end

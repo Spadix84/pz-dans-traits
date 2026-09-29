@@ -6,8 +6,9 @@
 --              faster still soaking up blood. Spent (the game's "dirty":
 --              life 0), it only half slows a bleed (DanTraits_Blood.lua) and
 --              invites infection (DanTraits_Infection.lua). Change it.
---   deep       an unstitched deep wound heals at WC_UNSTITCHED of the speed,
---   wounds     and hard use of the limb can open it bleeding again.
+--   deep       an unstitched deep wound heals at WC_UNSTITCHED of the speed
+--   wounds     (the woundHeal hook: Vitality, Smoker), and hard use of the
+--              limb can open it bleeding again.
 --   stitches   fresh stitches can tear: sprinting or running on a stitched
 --              leg, swinging a weapon with a stitched arm, either on the
 --              torso. They hold better as they heal (the game's stitch
@@ -207,7 +208,7 @@ local function updatePart(player, d, part, name, wet, summary)
     if deep > 0 and num(part, "getStitchTime") <= 0 then
         rec = rec or recOf(d, name)
         if rec.deep and deep < rec.deep then
-            deep = rec.deep - (rec.deep - deep) * WC_UNSTITCHED
+            deep = rec.deep - (rec.deep - deep) * math.min(1, DanTraits_RunHooks("woundHeal", WC_UNSTITCHED, player, part))
             pcall(function() part:setDeepWoundTime(deep) end)
         end
         rec.deep = deep
