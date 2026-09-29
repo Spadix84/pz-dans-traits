@@ -150,7 +150,7 @@ H.current = fresh; fresh._hours = 25; minute()
 assert(V(fresh).vitTarget < 0.5, "from the second day the real target applies")
 assert(DanTraits_VitalityTier(0.1) == 0 and DanTraits_VitalityTier(0.5) == 2 and DanTraits_VitalityTier(0.85) == 4, "tiers")
 
--- 8b. activity: MET-minutes above 2 over a rolling day fill the exercise score up to neutral (0.5)
+-- 8b. activity: MET-minutes above 3 (walking does not count) over a rolling day fill the exercise score up to neutral (0.5)
 local function withMet(p)
   p._met = 1.5
   local bd = p.getBodyDamage
@@ -160,7 +160,10 @@ end
 local act = withMet(newPlayer({ hours = 30 })); H.current = act
 for _ = 1, 60 do minute() end
 assert((V(act).vitActivity or 0) == 0 and V(act).vitExercise == 0, "standing about: no activity")
-act._met = 6   -- running: 4 above rest a minute
+act._met = 3   -- walking: nothing
+for _ = 1, 30 do minute() end
+assert(V(act).vitActivity == 0, "walking does not count")
+act._met = 7   -- sprinting: 4 above the line a minute
 for _ = 1, 30 do minute() end
 near(V(act).vitExercise, 0.5 * V(act).vitActivity / 150, 1e-9, "half an hour running: part of the way")
 assert(V(act).vitActivity > 110 and V(act).vitActivity < 120, "about 120 MET-minutes, less a little decay: " .. V(act).vitActivity)

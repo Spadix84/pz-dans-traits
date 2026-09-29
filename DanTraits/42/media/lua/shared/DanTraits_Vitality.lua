@@ -74,8 +74,8 @@ local VIT_AWAKE_RATE        = 1 / 1440
 -- the body's metabolic rate (METs: about 1.5 standing idle), effort above
 -- VIT_ACTIVE_REST_MET summed as MET-minutes over a rolling day (d.vitActivity,
 -- decaying with a one-day time constant, so it settles at the daily total)
-local VIT_ACTIVE_REST_MET   = 2.0
-local VIT_ACTIVE_DAY_TARGET = 150     -- MET-minutes above rest a day for full credit (about 30 minutes running)
+local VIT_ACTIVE_REST_MET   = 3.0     -- measured in game: idle 1.5, walking about 3, chopping about 5.5, sprinting 7 to 8; walking does not count
+local VIT_ACTIVE_DAY_TARGET = 150     -- MET-minutes above rest a day for full credit (about 30 to 50 minutes of hard effort)
 local VIT_ACTIVE_CAP        = 0.5     -- the most the exercise score gets from activity alone
 local VIT_ACTIVE_DECAY      = 1 / 1440
 -- combine
