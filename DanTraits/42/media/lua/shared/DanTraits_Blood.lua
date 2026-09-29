@@ -9,7 +9,8 @@
 --              about a day with enough to drink (and makes you thirsty).
 --   red cells  lost with the blood, rebuilt over about a week: food, sleep
 --              and Vitality help (Anaemic rebuilds slower and spends iron).
---              While short, endurance recovers slower and tiredness comes
+--              While short, endurance recovers slower (through the enduranceRegen
+--              hook of the stat delta pipeline) and tiredness comes
 --              sooner, after the volume is back.
 --
 -- Each bleeding part loses blood by its bleeding time (the game's own clock
@@ -264,24 +265,32 @@ local function updateBloodMinute(player, d)
 end
 DanTraits_updateBloodMinute = updateBloodMinute
 
--- per frame: slower endurance recovery, an endurance ceiling in shock, no sprinting when light-headed
+-- slower endurance recovery, through the stat delta pipeline (DanTraits_Util.lua)
+DanTraits_AddHook("enduranceRegen", function(delta, player, d)
+    if not d or d.bloodVol == nil or not sandboxOn() then return nil end
+    local tier = d.bloodTier or 0
+    local weak = d.bloodWeak or 0
+    if tier <= 0 and weak <= 0 then return nil end
+    local cut = 1 - (tier > 0 and BL_ENDURANCE[tier] or 0)
+    return delta * cut * (1 - BL_WEAK_ENDURANCE * weak)
+end)
+
+-- per frame: an endurance ceiling in shock (not a delta, so not the pipeline's),
+-- no sprinting when light-headed
 local function updateBloodFrame(player)
     local d = player:getModData().DanTraits
     if not d or d.bloodVol == nil then return end
     local tier = d.bloodTier or 0
-    local weak = d.bloodWeak or 0
-    local stats = player:getStats()
-    local now = stats:get(CharacterStat.ENDURANCE)
-    local endurance = now
-    local last = d.bloodLastEndurance or endurance
-    if endurance > last and (tier > 0 or weak > 0) then
-        local cut = 1 - (tier > 0 and BL_ENDURANCE[tier] or 0)
-        cut = cut * (1 - BL_WEAK_ENDURANCE * weak)
-        endurance = last + (endurance - last) * cut
+    if tier > 0 then
+        local stats = player:getStats()
+        local endurance = stats:get(CharacterStat.ENDURANCE)
+        if endurance > BL_ENDURANCE_CAP[tier] then
+            endurance = BL_ENDURANCE_CAP[tier]
+            pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end)
+            -- tell the pipeline about the clamp so the next frame's regen is measured from it
+            DanTraits_DeltaRemember(d, "enduranceRegen", endurance)
+        end
     end
-    if tier > 0 and endurance > BL_ENDURANCE_CAP[tier] then endurance = BL_ENDURANCE_CAP[tier] end
-    if endurance ~= now then pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end) end
-    d.bloodLastEndurance = endurance
     if tier >= 2 then
         pcall(function() player:setSprinting(false) end)
         pcall(function() player:setMoodleCantSprint(true) end)

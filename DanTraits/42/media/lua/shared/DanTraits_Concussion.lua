@@ -4,7 +4,7 @@
 -- concussion, a score (ccScore, 0..1) that sets how bad it is:
 --   mild      (under CC_MODERATE) a headache, drowsy
 --   moderate  sick to the stomach too, light hurts, slow to get your breath
---             back, and running can bring on a dizzy spell (a fall)
+--             back (the enduranceRegen hook of the stat delta pipeline), and running can bring on a dizzy spell (a fall)
 --   severe    (CC_SEVERE and over) all of it worse; the blow itself knocks
 --             you out for 5 to 15 game minutes (DanTraits_Faint.lua)
 -- Rest heals it, sleep twice as fast; running, sprinting and fighting
@@ -135,30 +135,23 @@ local function onConcussionDamage(character, damageType, amount)
     end
 end
 
--- per frame: the head's health (for the next weapon hit), the legs, endurance
+-- per frame: the head's health (for the next weapon hit), whether the player ran
 local ran = false
 local function updateConcussionFrame(player)
     local head = headPart(player)
     if head then pcall(function() headWas = head:getHealth() end) end
-    local d = player:getModData().DanTraits
-    local s = d and d.ccScore or 0
     local okS, sprinting = pcall(function() return player:isSprinting() end)
     local okR, running = pcall(function() return player:isRunning() end)
     if (okS and sprinting) or (okR and running) then ran = true end
-    if s <= 0 then
-        if d then d.ccLastEndurance = nil end
-        return
-    end
-    local stats = player:getStats()
-    local endurance = stats:get(CharacterStat.ENDURANCE)
-    local last = d.ccLastEndurance or endurance
-    if endurance > last then
-        endurance = last + (endurance - last) * (1 - CC_ENDURANCE * s)
-        pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end)
-    end
-    d.ccLastEndurance = endurance
 end
 DanTraits_updateConcussionFrame = updateConcussionFrame
+
+-- slower endurance recovery, through the stat delta pipeline (DanTraits_Util.lua)
+DanTraits_AddHook("enduranceRegen", function(delta, player, d)
+    local s = d and d.ccScore or 0
+    if s <= 0 or not sandboxOn() then return nil end
+    return delta * (1 - CC_ENDURANCE * s)
+end)
 
 local fought = false
 local function onConcussionSwing(character)
@@ -212,11 +205,10 @@ local function updateConcussionMinute(player, d)
     local stats = player:getStats()
     if s >= CC_MODERATE then
         pcall(function()
+            -- straight to the floor (a ramp as wide as the stat), recorded as a mod floor
             local stat = CharacterStat.FOOD_SICKNESS
-            local max = 100
-            pcall(function() max = stat:getMaximumValue() or 100 end)
-            local floor = CC_SICK * s * max
-            if (stats:get(stat) or 0) < floor then stats:set(stat, floor) end
+            local max = DanTraits_StatMax(stat)
+            DanTraits_FloorUp(stats, stat, CC_SICK * s * max, max)
         end)
         if strained and not asleep and roll(CC_DIZZY * s) then
             if DanTraits_Collapse then DanTraits_Collapse(player) end

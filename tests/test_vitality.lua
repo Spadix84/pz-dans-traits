@@ -6,7 +6,7 @@ Perks = { Fitness = 'fitness', Strength = 'strength', Woodwork = 'woodwork' }
 
 H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes", "Vitality")
 H.expectEvery("minute", "Vitality")
-H.expectEvery("frame", "Vitality")
+H.expectEvery("frame", "Delta:enduranceRegen"); H.expectEvery("minute", "Delta:catchCold")   -- Vitality subscribes to the pipeline
 
 -- experience goes through the XP object, whose AddXP fires the game's AddXP event
 local newPlayer = H.factory(nil, function(p)
@@ -151,7 +151,9 @@ assert(dt.vitEffect > 0.99, "effect near +1"); assert(top._carry == 9 and dt.vit
 minute(); assert(top._carry == 9, "re-applied against the base, not stacked")
 assert(top._st.unhappy < 50 and top._st.stress < 0.5, "mood and stress lifted")
 assert(top._health > 80, "health mending")
-top._catch = 10; minute(); near(top._catch, 10 * (1 - 0.3 * dt.vitEffect), 1e-6, "cold catching cut by 30% x effect")
+-- the pipeline runs first in the minute, so it uses the effect of the score as it stood before this minute moved it
+local e0 = DanTraits_VitalityEffectOf(dt.vitality)
+top._catch = 10; minute(); near(top._catch, 10 * (1 - 0.3 * e0), 1e-6, "cold catching cut by 30% x effect")
 local bot = newPlayer({ unhappy = 0, health = 80 }); H.current = bot; minute()
 local db = V(bot); db.vitality = 0; db.vitDiet = 0; db.vitSleep = 0
 for _ = 1, 25 do minute() end
@@ -174,9 +176,9 @@ drift._carry = 12; minute(); assert(drift._carry == 13 and V(drift).vitCarryBase
 V(drift).vitCarryDelta = -0.0047; minute(); assert(V(drift).vitCarryDelta == nil, "legacy delta dropped")
 -- endurance regen per frame
 local fr = newPlayer({ endurance = 0.5 }); H.current = fr; minute()
-V(fr).vitality = 1; V(fr).vitLastEndurance = 0.5
+V(fr).vitality = 1; DanTraits_DeltaRemember(V(fr), "enduranceRegen", 0.5)
 fr._st.endurance = 0.6; frame(fr); near(fr._st.endurance, 0.5 + 0.1 * 1.2, 1e-9, "regen x1.2 at +1")
-V(fr).vitality = 0; V(fr).vitLastEndurance = 0.5; fr._st.endurance = 0.6; frame(fr); near(fr._st.endurance, 0.5 + 0.1 * 0.8, 1e-9, "regen x0.8 at -1")
+V(fr).vitality = 0; DanTraits_DeltaRemember(V(fr), "enduranceRegen", 0.5); fr._st.endurance = 0.6; frame(fr); near(fr._st.endurance, 0.5 + 0.1 * 0.8, 1e-9, "regen x0.8 at -1")
 
 -- 11. the traits read it
 local t2 = newPlayer({ traits = { "diabetes2" }, weight = 92.5 }); H.current = t2; minute()

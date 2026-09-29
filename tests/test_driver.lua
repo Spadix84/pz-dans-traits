@@ -30,7 +30,8 @@ assert(DanTraits_Every("minute", "Alpha", rec("alpha2"), 40))   -- same label an
 assert(DanTraits_Every("minute", "Blood", rec("blood"), 20))
 H.minute()
 assert(ran() == "sleep,blood,alpha,alpha2,zeta,vit,late", "minute order")
-assert(table.concat(labels, ",") == "Sleep,Blood,Alpha,Alpha,Zeta,Vitality,Late", "run under own labels: " .. table.concat(labels, ","))
+-- the stat delta pipeline (order 0) is registered by core and runs first
+assert(table.concat(labels, ",") == "Delta:catchCold,Delta:foodSicknessRise,Sleep,Blood,Alpha,Alpha,Zeta,Vitality,Late", "run under own labels: " .. table.concat(labels, ","))
 
 -- 2. the cadences are separate lists
 DanTraits_Every("ten", "MDD", rec("mdd"), 40)
@@ -81,7 +82,7 @@ assert(ran() == "fblood,fvit", "the local player runs")
 -- 6. bad registrations are refused, not stored
 assert(DanTraits_Every("hourly", "X", rec("x")) == false, "unknown cadence")
 assert(DanTraits_Every("minute", "X", nil) == false, "no function")
-assert(#DanTraits_Drivers.minute == 8, "refused ones were not added")
+assert(#DanTraits_Drivers.minute == 10, "refused ones were not added")
 
 -- 7. without Attrib (no DanTraits_Track) the systems still run
 DanTraits_Track = nil

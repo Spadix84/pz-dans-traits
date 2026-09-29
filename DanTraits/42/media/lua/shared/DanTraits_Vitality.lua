@@ -12,8 +12,9 @@
 -- character needs (five for Needs Less Sleep, nine for Needs More Sleep,
 -- seven otherwise), how rested they woke counts as much as the hours, and
 -- each interruption costs a little. Above neutral: faster endurance
--- recovery, a lift to mood and stress, slow health regeneration and better
--- resistance to catching a cold, and at Thriving a kilo on the base carry
+-- recovery (through the enduranceRegen hook of the stat delta pipeline), a lift
+-- to mood and stress, slow health regeneration and better resistance to
+-- catching a cold (the catchCold hook), and at Thriving a kilo on the base carry
 -- weight. Below neutral: the reverse (health is never drained by this). The traits read the same value: asthma builds
 -- slower or faster, diabetes resistance and insulin sensitivity shift,
 -- depressive episodes come rarer or more often.
@@ -360,34 +361,20 @@ local function updateVitalityMinute(player, d)
     pcall(function()
         local bd = player:getBodyDamage()
         if e > 0 and bd:getOverallBodyHealth() < 100 then bd:AddGeneralHealth(VIT_HEALTH_REGEN * e) end
-        -- cold catching: scale whatever the game added since last minute
-        local catching = bd:getCatchACold() or 0
-        local last = d.vitLastCatch or catching
-        if catching > last and e ~= 0 then
-            catching = last + (catching - last) * (1 - VIT_COLD * e)
-            bd:setCatchACold(catching)
-        end
-        d.vitLastCatch = catching
     end)
 end
 DanTraits_updateVitalityMinute = updateVitalityMinute
 
--- per frame: scale endurance recovery
-local function updateVitalityFrame(player)
-    if not VIT_ENABLED then return end
-    local d = player:getModData().DanTraits
-    if not d or d.vitality == nil then return end
-    local e = effectOf(d.vitality)
-    local stats = player:getStats()
-    local endurance = stats:get(CharacterStat.ENDURANCE)
-    local last = d.vitLastEndurance or endurance
-    if e ~= 0 and endurance > last then
-        endurance = last + (endurance - last) * (1 + VIT_ENDURANCE_REGEN * e)
-        endurance = math.min(1, endurance)
-        pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end)
-    end
-    d.vitLastEndurance = endurance
-end
+-- endurance recovery and cold catching go through the stat delta pipeline
+-- (DanTraits_Util.lua): Vitality only says by how much, the pipeline applies it
+DanTraits_AddHook("enduranceRegen", function(delta, player, d)
+    if not VIT_ENABLED or not d or d.vitality == nil then return nil end
+    return delta * (1 + VIT_ENDURANCE_REGEN * effectOf(d.vitality))
+end)
+DanTraits_AddHook("catchCold", function(delta, player, d)
+    if not VIT_ENABLED or not d or d.vitality == nil then return nil end
+    return delta * (1 - VIT_COLD * effectOf(d.vitality))
+end)
 
 -- what the traits read: multipliers and offsets from the current effect
 function DanTraits_VitalityAsthmaBuild(player) return 1 - VIT_ASTHMA_BUILD * DanTraits_VitalityEffect(player) end
@@ -411,4 +398,3 @@ end
 Events.AddXP.Add(onAddXP)
 
 DanTraits_Every("minute", "Vitality", updateVitalityMinute, 90)
-DanTraits_Every("frame", "Vitality", updateVitalityFrame, 90)

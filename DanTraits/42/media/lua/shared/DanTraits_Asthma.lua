@@ -8,7 +8,8 @@ local traitData = DanTraits_Data
 -- Brittle Asthma -------------------------------------------------------------
 -- Airway irritation (0..1) lives in mod data. It rises with cold air, nearby
 -- corpses and exertion, falls when resting in clean warm air, and drives
--- four tiers: warning, halved endurance regen, no regen plus coughing, and
+-- four tiers: warning, halved endurance recovery (the enduranceRegen hook of
+-- the stat delta pipeline), no recovery plus coughing, and
 -- a full attack that drains endurance and health (to a 20% floor) while the
 -- player coughs loudly enough to pull zombies. The inhaler item knocks it
 -- down by half. Coughs are real world sounds: zombies hear them.
@@ -223,25 +224,14 @@ local function updateAsthmaMinute(player, d)
     end
 end
 
--- Per-frame: claw back endurance regeneration according to tier.
-local function updateAsthmaFrame(player)
-    if not hasTrait(player, "asthma") then return end
-    local d = asthmaData(player)
-    local stats = player:getStats()
-    local endurance = stats:get(CharacterStat.ENDURANCE)
-    local last = d.asthmaLastEndurance or endurance
-    local tier = asthmaEffectiveTier(d)
-    if endurance > last then
-        local gained = endurance - last
-        local keep = 1
-        if tier == 2 then keep = 0.5 elseif tier >= 3 then keep = 0 end
-        if keep < 1 then
-            endurance = last + gained * keep
-            pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end)
-        end
-    end
-    d.asthmaLastEndurance = endurance
-end
+-- Claw back endurance regeneration according to tier, through the stat delta
+-- pipeline (DanTraits_Util.lua): half at tier 2, none from tier 3.
+DanTraits_AddHook("enduranceRegen", function(delta, player, d)
+    if not hasTrait(player, "asthma") then return nil end
+    local tier = asthmaEffectiveTier(asthmaData(player))
+    if tier == 2 then return delta * 0.5 elseif tier >= 3 then return 0 end
+    return nil
+end)
 
 -- Called by the inhaler action.
 function DanTraits_UseInhaler(player)
@@ -280,5 +270,4 @@ local function onAsthmaCreatePlayer(playerNum, player)
 end
 
 DanTraits_Every("minute", "Asthma", updateAsthmaMinute, 40)
-DanTraits_Every("frame", "Asthma", updateAsthmaFrame, 40)
 Events.OnCreatePlayer.Add(onAsthmaCreatePlayer)

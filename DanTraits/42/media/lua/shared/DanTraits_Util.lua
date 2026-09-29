@@ -14,7 +14,12 @@
 --   DanTraits_FloorUp(stats, stat, floor, ramp)
 --                                          raise the stat toward floor by at
 --                                          most ramp; never above floor or the
---                                          stat's maximum
+--                                          stat's maximum. When the stat has a
+--                                          delta hook (below) and the floor did
+--                                          raise it, records
+--                                          d.floorsThisMinute[hookName] = true
+--                                          so the pipeline can tell a mod floor
+--                                          from the game's own rise
 --   DanTraits_StatAdd(stats, stat, amount) add, clamped to 0..maximum (in pcall)
 --   DanTraits_Roll(chance01)               true with that chance (0 never, 1 always)
 --   DanTraits_RollPercent(pct)             the same on a 0..100 scale, in
@@ -28,6 +33,11 @@
 --   DanTraits_Asleep(player)               whether the player is asleep, false on failure
 --   DanTraits_SandboxOn(optionName)        SandboxVars.DanTraits[option] ~= false
 --                                          (true when the table is absent)
+--   DanTraits_DeltaHook(stat, name, cadence [, access])
+--                                          the stat delta pipeline, see below
+--   DanTraits_DeltaRemember(d, name, value)
+--                                          tell the pipeline the stat's value
+--                                          after a later writer changed it
 --   DanTraits_BadMoodle(player, name, value01, tiers)
 --                                          Moodle Framework updater for a
 --                                          bad-side-only moodle (0.5 is none,
@@ -45,10 +55,23 @@ function DanTraits_StatMax(stat)
     return max
 end
 
+-- stat object -> name of the delta hook registered for it (DanTraits_DeltaHook)
+DanTraits_DeltaKeys = {}
+
 function DanTraits_FloorUp(stats, stat, floor, ramp)
     local value = stats:get(stat) or 0
     floor = math.min(floor, DanTraits_StatMax(stat))
-    if value < floor then stats:set(stat, math.min(floor, value + ramp)) end
+    if value < floor then
+        stats:set(stat, math.min(floor, value + ramp))
+        local key = DanTraits_DeltaKeys[stat]
+        if key then
+            pcall(function()
+                local d = DanTraits_Data(getSpecificPlayer(0))
+                d.floorsThisMinute = d.floorsThisMinute or {}
+                d.floorsThisMinute[key] = true
+            end)
+        end
+    end
 end
 
 function DanTraits_StatAdd(stats, stat, amount)
@@ -129,4 +152,72 @@ function DanTraits_BadMoodle(player, name, value01, tiers)
         end
         moodle:setValue(0.5 * (1 - value01))
     end)
+end
+
+-- The stat delta pipeline ---------------------------------------------------------
+-- Several systems scale how fast one stat recovers (endurance: Vitality, Smoker
+-- lungs, Blood, Anemia, Concussion, Asthma; catch-a-cold: Vitality, Anemia; food
+-- sickness: Iron Stomach). Each used to remember its own "last" value and scale
+-- whatever had risen since, which made every handler's "gain" include the
+-- earlier handlers' cuts. Now there is one remembered value per stat and the
+-- systems only subscribe:
+--
+--   DanTraits_DeltaHook(stat, name, cadence [, access])
+--     Registered once (core does it for the three below). Once per cadence,
+--     before any other clock system (DanTraits_Every order 0): read the stat,
+--     take how much it ROSE since the pipeline last wrote it (the game's own
+--     change and anything else outside the pipeline; a fall passes through
+--     untouched), run the hook `name` with that delta, and write back
+--     last + the delta the hook returns, in 0..the stat's maximum. The
+--     remembered value is d.deltaLast[name].
+--     stat    a CharacterStat entry, or nil with `access`
+--     access  { get = fn(player), set = fn(player, value), max = number or nil }
+--             for a value that is not a CharacterStat (catch-a-cold)
+--
+--   DanTraits_AddHook(name, function(delta, player, d) return delta * k end)
+--     Subscribers are pure: they see the game's delta, never each other's
+--     writes, and the results multiply (two cuts of 0.5 leave 0.25). Return nil
+--     to leave the delta alone.
+--
+-- Registered in core: enduranceRegen (frame, CharacterStat.ENDURANCE),
+-- catchCold (minute, the body's catch-a-cold value) and foodSicknessRise
+-- (minute, CharacterStat.FOOD_SICKNESS).
+--
+-- Mod floors and food sickness: the floors other systems set (hangover,
+-- migraine, gluten, diabetes, concussion, MDD side effects) are rises too.
+-- DanTraits_FloorUp records d.floorsThisMinute[name] = true when it raised a
+-- stat that has a hook; the pipeline clears that flag after each run, so during
+-- the run the table says whether a mod floor moved the stat since the last one.
+-- A subscriber that must not touch mod-made rises (Iron Stomach) checks it.
+function DanTraits_DeltaHook(stat, name, cadence, access)
+    if stat then DanTraits_DeltaKeys[stat] = name end
+    local function read(player)
+        if access then return access.get(player) end
+        return player:getStats():get(stat)
+    end
+    return DanTraits_Every(cadence, "Delta:" .. name, function(player, d)
+        local now = tonumber(read(player))
+        if not now then return end
+        d.deltaLast = d.deltaLast or {}
+        local last = d.deltaLast[name]
+        if last and now > last then
+            local delta = tonumber(DanTraits_RunHooks(name, now - last, player, d)) or (now - last)
+            local max = access and access.max or (stat and DanTraits_StatMax(stat)) or nil
+            local new = last + math.max(0, delta)
+            if max and new > max then new = max end
+            if new ~= now then
+                pcall(function()
+                    if access then access.set(player, new) else player:getStats():set(stat, new) end
+                end)
+                now = new
+            end
+        end
+        d.deltaLast[name] = now
+        if d.floorsThisMinute then d.floorsThisMinute[name] = nil end
+    end, 0)
+end
+
+function DanTraits_DeltaRemember(d, name, value)
+    d.deltaLast = d.deltaLast or {}
+    d.deltaLast[name] = value
 end

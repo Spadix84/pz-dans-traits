@@ -6,7 +6,7 @@ H.events()
 H.stubs()
 H.load("Positives")
 H.expectHooks("OnCreatePlayer", "OnGameStart")
-H.expectEvery("minute", "Positives")
+H.expectEvery("minute", "Delta:foodSicknessRise")   -- Iron Stomach subscribes to the pipeline
 
 local near = H.near
 local minute = H.minute

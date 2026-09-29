@@ -6,7 +6,7 @@ H.events()
 H.stubs()
 H.load("Anemia")
 H.expectEvery("minute", "Anemia")
-H.expectEvery("frame", "Anemia")
+H.expectEvery("frame", "Delta:enduranceRegen"); H.expectEvery("minute", "Delta:catchCold")   -- Anemia subscribes to the pipeline
 
 local newPlayer = H.factory({ traits = { "anemia" }, endurance = 0.5 })
 local function food(name, foodType, kcal) return { getType = function() return name end, getFoodType = function() return foodType end, getCalories = function() return kcal end } end
@@ -36,7 +36,7 @@ d._md.DanTraits = { anIron = 0.2 + 1 / 7200 }
 minute(); near(A(d).anDeficit, 0.5, 1e-6, "deficit 0.5 at iron 0.2")
 assert(halo[#halo] == "UI_DanTraits_Anemia1", "faint")
 assert(d._st.fatigue > 0, "fatigue creeps")
-A(d).anLastEndurance = 0.5; d._st.endurance = 0.6; frame(d)
+DanTraits_DeltaRemember(A(d), "enduranceRegen", 0.5); d._st.endurance = 0.6; frame(d)
 near(d._st.endurance, 0.5 + 0.1 * 0.8, 1e-9, "endurance gain x 0.8")
 d._catch = 10; minute(); near(d._catch, 10 * 1.25, 0.01, "cold catching x 1.25 (deficit drifts a hair during the minute)")
 d._md.DanTraits.anIron = 0.01; minute(); assert(halo[#halo] == "UI_DanTraits_Anemia2", "light-headed at deficit 0.9+")

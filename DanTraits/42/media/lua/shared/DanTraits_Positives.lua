@@ -1,6 +1,8 @@
 -- Project Zomboid Vitality Project: the cheap positives.
 -- Iron Stomach: rotten and burnt food hurts the diet score half as much,
---   and food sickness climbs half as fast.
+--   and food sickness climbs half as fast (the foodSicknessRise hook of the
+--   stat delta pipeline; a rise made by a mod floor, like a hangover's, is
+--   left alone).
 -- Early Riser: a new character's sleep score starts high, and every night
 --   scores a little better.
 -- Meal Prepper: a new character's diet score starts high, and variety is
@@ -28,20 +30,17 @@ DanTraits_AddHook("foodGrade", function(grade, player, item, why)
     return 0.5 + (grade - 0.5) * IS_GRADE_CUT
 end)
 
-local function updateIronStomachMinute(player, d)
-    if not hasTrait(player, "ironstomach") then return end
-    pcall(function()
-        local stats = player:getStats()
-        local sick = stats:get(CharacterStat.FOOD_SICKNESS) or 0
-        local last = d.isLastSick or sick
-        if sick > last then
-            sick = last + (sick - last) * IS_SICK_CUT
-            stats:set(CharacterStat.FOOD_SICKNESS, sick)
-        end
-        d.isLastSick = sick
-    end)
-end
-DanTraits_updateIronStomachMinute = updateIronStomachMinute
+-- Food sickness climbs half as fast, through the stat delta pipeline
+-- (DanTraits_Util.lua). Only the game's own rise is halved: when a mod system
+-- (hangover, migraine, gluten, diabetes, concussion, MDD side effects,
+-- dependence) raised food sickness with a floor since the last run, that rise
+-- is theirs and Iron Stomach leaves it alone. The floor is a symptom of the
+-- condition, not something eaten.
+DanTraits_AddHook("foodSicknessRise", function(delta, player, d)
+    if not hasTrait(player, "ironstomach") then return nil end
+    if d and d.floorsThisMinute and d.floorsThisMinute.foodSicknessRise then return nil end
+    return delta * IS_SICK_CUT
+end)
 
 -- Early Riser ----------------------------------------------------------------
 DanTraits_AddHook("nightQuality", function(quality, player)
@@ -78,4 +77,3 @@ local function onPositivesGameStart() onPositivesCreate(getSpecificPlayer(0)) en
 
 Events.OnCreatePlayer.Add(onPositivesCreatePlayer)
 Events.OnGameStart.Add(onPositivesGameStart)
-DanTraits_Every("minute", "Positives", updateIronStomachMinute, 80)

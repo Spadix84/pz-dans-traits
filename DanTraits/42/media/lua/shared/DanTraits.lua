@@ -12,7 +12,9 @@
 --
 -- The small copy-and-paste helpers (clamp, floor a stat, dice, body-part
 -- lookups, the asleep check, the sandbox toggle, the Moodle Framework updater)
--- live in DanTraits_Util.lua, required below.
+-- and the stat delta pipeline live in DanTraits_Util.lua, required below; the
+-- three pipeline hooks (enduranceRegen, catchCold, foodSicknessRise) are
+-- registered here once the drivers exist.
 --
 -- Lua allows 200 locals per file: new traits go in new files, not here.
 
@@ -190,7 +192,10 @@ end
 -- Order decides which system sees which other system's floors and stat writes
 -- in the same minute, so it is written down here:
 --
---   minute  10  Sleep (light reading, wakes)
+--   minute   0  the stat delta pipeline (DanTraits_DeltaHook in Util): catchCold and
+--               foodSicknessRise, so subscribers see the game's rise, not floors written
+--               later in the same minute
+--           10  Sleep (light reading, wakes)
 --           20  Blood (loss this minute, sets bloodLossMin)
 --           21  Hemophilia (holds bleed times)
 --           22  WoundCare (reads BloodPartRate)
@@ -204,9 +209,10 @@ end
 --   ten     10  Dependent
 --           40  MDD, Migraine
 --           90  Hallucinations
---   frame   20  Blood        22  WoundCare (movement sampling)    24  Concussion
---           40  Alcohol (panic decay), Anemia, Arthritis, Asthma, Smoker
---           90  Vitality
+--   frame    0  the stat delta pipeline: enduranceRegen (Vitality, Smoker lungs, Blood,
+--               Anemia, Concussion, Asthma subscribe; the cuts multiply)
+--           20  Blood        22  WoundCare (movement sampling)    24  Concussion
+--           40  Alcohol (panic decay), Arthritis, Smoker (held anger)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
 --   are still registered by their own files.)
 local drivers = { minute = {}, ten = {}, frame = {} }
@@ -251,6 +257,16 @@ Events.OnPlayerUpdate.Add(function(player)
     if player.isLocalPlayer and not player:isLocalPlayer() then return end
     runDrivers(drivers.frame, player, traitData(player))
 end)
+
+-- The stat delta pipeline (see DanTraits_Util.lua): one place that scales how
+-- fast a stat recovers. Order 0, so it runs before every system that writes
+-- the stat in the same tick.
+DanTraits_DeltaHook(CharacterStat and CharacterStat.ENDURANCE, "enduranceRegen", "frame")
+DanTraits_DeltaHook(nil, "catchCold", "minute", {
+    get = function(player) return player:getBodyDamage():getCatchACold() or 0 end,
+    set = function(player, value) player:getBodyDamage():setCatchACold(value) end,
+})
+DanTraits_DeltaHook(CharacterStat and CharacterStat.FOOD_SICKNESS, "foodSicknessRise", "minute")
 
 
 -- Called by the eat action wrapper below with the portion actually eaten.

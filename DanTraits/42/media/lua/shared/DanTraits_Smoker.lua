@@ -31,7 +31,8 @@
 --
 -- Lungs (nicLungs, 0..1): every cigarette, cigar or pipe adds a little,
 -- chewing tobacco and gum nothing. A Smoker taken at creation starts with
--- years of it. Damaged lungs recover endurance slower, and cough, more
+-- years of it. Damaged lungs recover endurance slower (through the
+-- enduranceRegen hook of the stat delta pipeline), and cough, more
 -- often the worse the lungs and the stronger the habit, on exertion and
 -- in the first hour after waking. The cough is the game's own, heard by
 -- zombies. The lungs heal slowly once the smoking stops: months, not days.
@@ -519,25 +520,19 @@ local function updateSmokerMinute(player, d)
 end
 DanTraits_updateSmokerMinute = updateSmokerMinute
 
--- per frame: hold the irritability, and damaged lungs recover endurance slower
+-- per frame: hold the irritability
 local function updateSmokerFrame(player)
     local d = player:getModData().DanTraits
     if not d then return end
-    local stats = player:getStats()
-    holdAnger(stats, d)
-    if (d.nicLungs or 0) <= 0 then
-        d.nicLastEndurance = nil
-        return
-    end
-    local endurance = stats:get(CharacterStat.ENDURANCE)
-    local last = d.nicLastEndurance or endurance
-    if endurance > last then
-        endurance = last + (endurance - last) * (1 - LUNG_ENDURANCE * d.nicLungs)
-        pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end)
-    end
-    d.nicLastEndurance = endurance
+    holdAnger(player:getStats(), d)
 end
 DanTraits_updateSmokerFrame = updateSmokerFrame
+
+-- damaged lungs recover endurance slower: x (1 - LUNG_ENDURANCE x lungs)
+DanTraits_AddHook("enduranceRegen", function(delta, player, d)
+    if not d or (d.nicLungs or 0) <= 0 then return nil end
+    return delta * (1 - LUNG_ENDURANCE * d.nicLungs)
+end)
 
 -- read by other systems ----------------------------------------------------------
 -- 0..1 craving strength now, for a Smoker (Migraines reads it as a trigger)

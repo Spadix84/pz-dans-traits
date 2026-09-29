@@ -157,7 +157,7 @@ l._md.DanTraits = { nicMeter = 0, nicLungs = 0.5, nicSmokeHours = 0, nicEx = tru
 mins(60 * 23); near(md(l).nicLungs, 0.5, 1e-9, "no healing within a day")
 mins(60 * 25); assert(md(l).nicLungs < 0.5 and md(l).nicLungs > 0.49, "healing")
 -- endurance comes back slower
-l._st.endurance = 0.5; DanTraits_updateSmokerFrame(l); l._st.endurance = 0.6; DanTraits_updateSmokerFrame(l)
+l._st.endurance = 0.5; H.frame(l); l._st.endurance = 0.6; H.frame(l)
 near(l._st.endurance, 0.5 + 0.1 * (1 - 0.3 * md(l).nicLungs), 1e-9, "endurance recovery cut")
 
 -- 13. the cough: worse lungs, a stronger habit, exertion and mornings

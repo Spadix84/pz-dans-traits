@@ -144,10 +144,7 @@ local function withdrawal(player, d, stats, intox, meter)
 
     d.alcShakes = ALC_SHAKE_DROP * w
     add(stats, CharacterStat.PAIN, DEP_PAIN_RATE * w)
-    pcall(function()
-        local sick, floor = stats:get(CharacterStat.FOOD_SICKNESS) or 0, ALC_SICK * w
-        if sick < floor then stats:set(CharacterStat.FOOD_SICKNESS, math.min(floor, sick + ALC_SICK_RAMP)) end
-    end)
+    pcall(function() DanTraits_FloorUp(stats, CharacterStat.FOOD_SICKNESS, ALC_SICK * w, ALC_SICK_RAMP) end)
     if stage < 3 or asleep then return end
 
     if ZombRand(10000) < ALC_SEIZE_CHANCE * w * 10000 then

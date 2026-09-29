@@ -2,7 +2,9 @@
 -- An iron score (0..1) drains over about five days and is topped up by what
 -- the character eats: fresh meat, fish and game most, greens and eggs a
 -- little, an iron pill a lot. Under AN_LOW the deficit shows: endurance
--- recovers slower, tiredness comes sooner, colds catch easier. A
+-- recovers slower (through the enduranceRegen hook of the stat delta
+-- pipeline), tiredness comes sooner, colds catch easier (the catchCold
+-- hook). A
 -- vegetarian lives on greens, eggs and pills. The eat hook reads the
 -- game's food type, so stews and dishes count by their main ingredient.
 -- After blood loss (DanTraits_Blood.lua) red cells rebuild at half speed,
@@ -116,32 +118,20 @@ local function updateAnemiaMinute(player, d)
         local stats = player:getStats()
         local asleep = DanTraits_Asleep(player)
         if not asleep then stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + AN_FATIGUE * deficit)) end
-        local bd = player:getBodyDamage()
-        local catching = bd:getCatchACold() or 0
-        local last = d.anLastCatch or catching
-        if catching > last then
-            catching = last + (catching - last) * (1 + AN_COLD * deficit)
-            bd:setCatchACold(catching)
-        end
-        d.anLastCatch = catching
     end)
 end
 DanTraits_updateAnemiaMinute = updateAnemiaMinute
 
--- per frame: slower endurance recovery
-local function updateAnemiaFrame(player)
-    local d = player:getModData().DanTraits
-    if not d or d.anIron == nil or not hasTrait(player, "anemia") then return end
-    local deficit = deficitOf(d)
-    local stats = player:getStats()
-    local endurance = stats:get(CharacterStat.ENDURANCE)
-    local last = d.anLastEndurance or endurance
-    if deficit > 0 and endurance > last then
-        endurance = last + (endurance - last) * (1 - AN_ENDURANCE_CUT * deficit)
-        pcall(function() stats:set(CharacterStat.ENDURANCE, endurance) end)
-    end
-    d.anLastEndurance = endurance
-end
+-- slower endurance recovery and easier colds go through the stat delta pipeline
+-- (DanTraits_Util.lua): Anemia only says by how much, the pipeline applies it
+DanTraits_AddHook("enduranceRegen", function(delta, player, d)
+    if not d or d.anIron == nil or not hasTrait(player, "anemia") then return nil end
+    return delta * (1 - AN_ENDURANCE_CUT * deficitOf(d))
+end)
+DanTraits_AddHook("catchCold", function(delta, player, d)
+    if not d or d.anIron == nil or not hasTrait(player, "anemia") then return nil end
+    return delta * (1 + AN_COLD * deficitOf(d))
+end)
 
 -- the pill bottle: 30 pills, its own action (see client)
 function DanTraits_IsIronPills(item)
@@ -150,4 +140,3 @@ function DanTraits_IsIronPills(item)
 end
 
 DanTraits_Every("minute", "Anemia", updateAnemiaMinute, 40)
-DanTraits_Every("frame", "Anemia", updateAnemiaFrame, 40)

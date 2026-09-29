@@ -11,7 +11,7 @@ MF = { getMoodle = function(name, num) return { setThresholds = function() end, 
 H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
 H.expectHooks("OnCreatePlayer")
 H.expectEvery("minute", "Asthma")
-H.expectEvery("frame", "Asthma")
+H.expectEvery("frame", "Delta:enduranceRegen")   -- Asthma subscribes to the pipeline
 
 -- every player here has the trait
 local newPlayer = H.factory({ traits = { "asthma" } }, function(p, o)
@@ -60,7 +60,7 @@ print(string.format("inhaler: %.2f -> %.2f, attack over, tier now %d", before, i
 
 -- 6. tier 2 halves regen: set irritation to 0.6 by hand
 p._md.DanTraits.asthma = 0.6; p._md.DanTraits.asthmaAttack = false
-p._st.endurance = 0.2; p._md.DanTraits.asthmaLastEndurance = 0.2
+p._st.endurance = 0.2; DanTraits_DeltaRemember(p._md.DanTraits, "enduranceRegen", 0.2)
 p._st.endurance = 0.4; frame(p)
 assert(math.abs(p._st.endurance - 0.3) < 1e-9, "tier 2 keeps half of the gain")
 print("tier 2: regen 0.2 -> 0.4 clawed back to " .. p._st.endurance)
