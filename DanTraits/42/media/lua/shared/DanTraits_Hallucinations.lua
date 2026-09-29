@@ -5,7 +5,8 @@ local hasTrait = DanTraits_HasTrait
 
 -- Schizophrenia -------------------------------------------------------------
 -- Episodes roll every ten minutes. The base chance never goes away; stress,
--- unhappiness, tiredness, night and a wound infection's fever all push it up. Three kinds of episode:
+-- unhappiness, tiredness, night and the mod's own signals (sleep debt, a
+-- concussion, alcohol withdrawal, a wound infection's fever) all push it up. Three kinds of episode:
 -- a phantom zombie sound nearby, a door or window shaking as if thumped, or a
 -- sudden bout of panic with the startle sting. Sounds are audio only: they do
 -- not attract real zombies.
@@ -15,6 +16,9 @@ local SCHIZO_UNHAPPY_WEIGHT  = 0.20   -- times unhappiness/100
 local SCHIZO_FATIGUE_WEIGHT  = 0.20   -- times fatigue (0..1)
 local SCHIZO_NIGHT_BONUS     = 0.08
 local SCHIZO_FEVER_WEIGHT    = 0.30   -- times a wound infection's fever (0..1): delirium
+local SCHIZO_SLEEP_DEBT_WEIGHT  = 0.25 -- times Vitality's sleep debt (0..1)
+local SCHIZO_CONCUSSION_WEIGHT  = 0.20 -- times the concussion's strength (0..1)
+local SCHIZO_WITHDRAWAL_WEIGHT  = 0.30 -- times Alcoholic's withdrawal strength (0..1)
 local SCHIZO_COOLDOWN_TICKS  = 0      -- ten-minute ticks to skip after an episode (0 = can fire every tick)
 local SCHIZO_SOUND_PANIC     = 8      -- panic added by a phantom sound or thump (0..100)
 local SCHIZO_BOUT_PANIC_MIN  = 35     -- panic bout adds this plus up to 20 more
@@ -409,6 +413,14 @@ DanTraits_Episodes = {
     glass = episodeGlass, footsteps = episodeFootsteps, panic = episodePanicBout,
 }
 
+-- concussed or feverish: too far gone for a panic bout
+local function schizoDown(player)
+    local down = false
+    if DanTraits_ConcussionStrength then pcall(function() if DanTraits_ConcussionStrength(player) > 0 then down = true end end) end
+    if DanTraits_InfectionFever then pcall(function() if DanTraits_InfectionFever(player) > 0 then down = true end end) end
+    return down
+end
+
 local function schizoChance(player)
     local stats = player:getStats()
     local chance = SCHIZO_BASE_CHANCE
@@ -417,6 +429,9 @@ local function schizoChance(player)
         + stats:get(CharacterStat.FATIGUE) * SCHIZO_FATIGUE_WEIGHT
     if isNight() then chance = chance + SCHIZO_NIGHT_BONUS end
     if DanTraits_InfectionFever then pcall(function() chance = chance + SCHIZO_FEVER_WEIGHT * DanTraits_InfectionFever(player) end) end
+    if DanTraits_SleepDebt then pcall(function() chance = chance + SCHIZO_SLEEP_DEBT_WEIGHT * DanTraits_SleepDebt(player) end) end
+    if DanTraits_ConcussionStrength then pcall(function() chance = chance + SCHIZO_CONCUSSION_WEIGHT * DanTraits_ConcussionStrength(player) end) end
+    if DanTraits_AlcoholWithdrawal then pcall(function() chance = chance + SCHIZO_WITHDRAWAL_WEIGHT * DanTraits_AlcoholWithdrawal(player) end) end
     return chance
 end
 DanTraits_SchizoChance = schizoChance
@@ -439,6 +454,8 @@ local function updateSchizophrenia(player, d)
     d.schizoCooldown = SCHIZO_COOLDOWN_TICKS
 
     local roll = ZombRand(100)
+    -- already down (a concussion, a fever): no panic bout, a whisper instead
+    if roll < 15 and schizoDown(player) then roll = 40 end
     if roll < 15 then
         episodePanicBout(player)
     elseif roll < 40 then

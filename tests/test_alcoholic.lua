@@ -91,4 +91,13 @@ assert(halo[#halo] == "UI_DanTraits_AlcoholicRelapse", "relapse notice")
 -- 8. hangover tolerance only for Alcoholics
 assert(DanTraits_AlcoholTolerance(q) > 0 and DanTraits_AlcoholTolerance(p) == 0, "tolerance read")
 
+-- 9. withdrawal strength for other systems (Hallucinations): 0 without the trait or while not withdrawing, else the stored strength
+local other = H.player(); other._md.DanTraits = { withdrawing = true, alcW = 0.7 }
+assert(DanTraits_AlcoholWithdrawal(other) == 0, "no trait: 0")
+local dry = H.player({ traits = { "dependent" } }); dry._md.DanTraits = { withdrawing = true, alcW = 0.7 }
+near(DanTraits_AlcoholWithdrawal(dry), 0.7, 1e-12, "withdrawing: the strength")
+dry._md.DanTraits.withdrawing = false
+assert(DanTraits_AlcoholWithdrawal(dry) == 0, "not withdrawing: 0")
+assert(DanTraits_AlcoholWithdrawal(H.player({ traits = { "dependent" } })) == 0, "nothing tracked: 0")
+
 H.pass()

@@ -218,6 +218,12 @@ local function withdrawalOf(player, d)
     return d.alcW or 0
 end
 
+-- 0..1 alcohol withdrawal strength of this character now; read by Hallucinations
+function DanTraits_AlcoholWithdrawal(player)
+    if not player then return 0 end
+    return withdrawalOf(player, player:getModData().DanTraits)
+end
+
 -- withdrawal: light, broken sleep
 DanTraits_AddHook("sleepWake", function(m, player, d)
     local w = withdrawalOf(player, d)
