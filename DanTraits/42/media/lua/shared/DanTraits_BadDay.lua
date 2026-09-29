@@ -9,17 +9,30 @@ local traitData = DanTraits_Data
 -- The CDDA challenge's opening, as a trait: drunk, sick, a shard of glass in
 -- the groin and, if you start indoors, the house on fire. Each part is
 -- applied exactly once, tracked in mod data so reloads and respawns are safe.
+--
+-- What the opening costs under the health overhaul (blood, infection, wound
+-- care, hangover, the alcoholism meter): the shard is a deep wound in the
+-- groin, a 1.5x bleed site that bleeds through a bandage and carries the top
+-- infection hazard until it is pulled (pulling it is a Fear of Blood faint
+-- roll); intoxication 100 is a full Drunk 4, which keeps the pain floor at 80
+-- (what makes the shard survivable), arms a maximum hangover for when it
+-- wears off and feeds the day's alcoholism cap; a cold at strength 50 rides
+-- on top. With Hemophilia or Anaemic the start is probably unwinnable.
+--
+-- BALANCE PENDING PLAY (plans/21-bad-day-balance.md): none of the numbers
+-- above has been tuned for the overhaul yet. The dials are listed in the plan
+-- (a fixed low bleeding time on the shard, a starting bandage, a zeroed
+-- hangover load, Hemophilia exclusion) and wait for a play test. Replay the
+-- opening without a new character with the console command `badday`
+-- (`badday fire` also relights the house): DanTraits_BadDayReplay.
 local function badDayFresh(player)
     if not player or not hasTrait(player, "badday") then return nil end
     if player:getHoursSurvived() > 0 then return nil end
     return traitData(player)
 end
 
-local function onBadDayCreatePlayer(playerNum, player)
-    local d = badDayFresh(player)
-    if not d or d.badDayApplied then return end
-    d.badDayApplied = true
-
+-- the body of the opening: drunk, sick, the shard, no clothes and soaking wet
+local function applyBadDay(player)
     local stats = player:getStats()
     pcall(function() stats:set(CharacterStat.INTOXICATION, 100) end)
 
@@ -57,6 +70,13 @@ local function onBadDayCreatePlayer(playerNum, player)
             parts:get(i):setWetness(wet)
         end
     end)
+end
+
+local function onBadDayCreatePlayer(playerNum, player)
+    local d = badDayFresh(player)
+    if not d or d.badDayApplied then return end
+    d.badDayApplied = true
+    applyBadDay(player)
 end
 
 -- Pick where the fire starts: another room, never the kitchen or garage,
@@ -104,22 +124,45 @@ local function badDayFireSquare(player, building, playerRoom)
     return nil
 end
 
+-- light the fire; returns true if one was lit
+local function startBadDayFire(player)
+    local square = player:getCurrentSquare()
+    local room = square and square:getRoom()
+    local building = room and room:getBuilding()
+    if not building then return false end   -- outdoors: no house to burn
+
+    local tile = badDayFireSquare(player, building, room)
+    if not tile then return false end       -- nowhere far enough away: no fire
+
+    pcall(function() IsoFireManager.explode(getCell(), tile, 100000) end)
+    notify(player, "UI_DanTraits_BadDayFire")
+    return true
+end
+
 local function onBadDayGameStart()
     local player = getSpecificPlayer(0)
     local d = badDayFresh(player)
     if not d or d.badDayFireDone then return end
     d.badDayFireDone = true
+    startBadDayFire(player)
+end
 
-    local square = player:getCurrentSquare()
-    local room = square and square:getRoom()
-    local building = room and room:getBuilding()
-    if not building then return end   -- outdoors: no house to burn
-
-    local tile = badDayFireSquare(player, building, room)
-    if not tile then return end       -- nowhere far enough away: no fire
-
-    pcall(function() IsoFireManager.explode(getCell(), tile, 100000) end)
-    notify(player, "UI_DanTraits_BadDayFire")
+-- Console `badday [fire]` (Telemetry): replay the opening on the current
+-- character, for balancing it without a new game. The applied flags are
+-- cleared and the body's part is applied again (it does not undo what is
+-- already there: a second shard, another cold), skipping the first-hour gate
+-- and the trait check. The fire only with `fire`. Returns a line for the log.
+function DanTraits_BadDayReplay(player, withFire)
+    if not player then return "badday: no player" end
+    local d = traitData(player)
+    d.badDayApplied, d.badDayFireDone = true, nil
+    applyBadDay(player)
+    local text = "badday: opening replayed"
+    if withFire then
+        d.badDayFireDone = true
+        text = text .. (startBadDayFire(player) and ", fire started" or ", no fire (outdoors or no room far enough)")
+    end
+    return text
 end
 
 Events.OnCreatePlayer.Add(onBadDayCreatePlayer)
