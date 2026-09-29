@@ -12,8 +12,8 @@ local foodTags = DanTraits_FoodTags
 -- then it builds over half an hour and takes most of a day to fade. While it
 -- lasts it holds pain, food sickness (the vanilla Queasy moodle) and low mood
 -- up to a floor that scales with the flare (the pain one goes through
--- DanTraits_PainFloor, so painkillers lower it by their strength but a big flare
--- still hurts). The game has no grain tag, so wheat is a name list (the wheat tag of
+-- DanTraits_PainFloor: a painkiller clears it while it works, drink dulls
+-- it). The game has no grain tag, so wheat is a name list (the wheat tag of
 -- DanTraits_Food.lua, which also counts a wheat ingredient in a dish); the dose is the
 -- carbohydrates in the portion eaten, with a hunger-based fallback for foods
 -- that carry no nutrition data. Rice, potatoes, corn and fruit are safe.

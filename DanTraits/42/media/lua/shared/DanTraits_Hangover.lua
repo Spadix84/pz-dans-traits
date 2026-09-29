@@ -6,7 +6,7 @@
 -- waits for them to wake, and either way it lasts at least HO_BASE_HOURS
 -- after they are up, more for a heavier night. Symptoms scale with
 -- severity and fade over the last two hours: a headache (pain, a floor registered
--- through DanTraits_PainFloor: painkillers lower it by their strength), a low mood, thirst that keeps coming
+-- through DanTraits_PainFloor: a painkiller clears it while it works), a low mood, thirst that keeps coming
 -- back, tiredness, and nausea after a really heavy one. A drink while
 -- hungover hides the symptoms and stops the clock, and counts toward the
 -- next one. The night's sleep is scored lower too. Alcohol tolerance
@@ -27,7 +27,7 @@ local HO_EXTRA_HOURS    = 6       -- added at full severity
 local HO_FADE_HOURS     = 2       -- symptoms taper over the last two hours
 local HO_TOLERANCE_CUT  = 0.3     -- severity x (1 - this x tolerance)
 local HO_SLEEP_CUT      = 0.3     -- night quality x (1 - this x severity)
-local HO_PAIN           = 35      -- pain floor at full strength (lowered by the body's pain reduction, see DanTraits_PainFloor)
+local HO_PAIN           = 35      -- pain floor at full strength (see DanTraits_PainFloor)
 local HO_MOOD           = 25      -- unhappiness floor
 local HO_MOOD_RAMP      = 1
 local HO_FATIGUE        = 0.0008  -- per minute

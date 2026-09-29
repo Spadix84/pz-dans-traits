@@ -268,9 +268,12 @@ end
 -- the stat does nothing (measured in game 2026-09-29: PAIN set to 20 read 0
 -- a moment later). Pain goes on the head as additional pain instead: the stat
 -- settles at about PAIN_PART_RATIO times the part's pain, less the body's
--- painReduction (0..100, what pills and drink set), which the game subtracts
--- itself. So a tablet lowers a migraine in proportion instead of erasing it,
--- and a small floor under a big reduction does nothing. The game also decays
+-- painReduction (0..100, what drink relief sets), which the game subtracts
+-- itself, so a drink dulls a headache in proportion. Painkiller pills are
+-- vanilla's: their own timer (5400, about 45 game minutes) pulls the stat
+-- to 0 while it runs, and the headache returns when it ends (measured in
+-- game 2026-09-29; kept on purpose, it is how pills treat wound pain too).
+-- The game also decays
 -- additional pain by about 1 a minute, so the floor is topped up each minute
 -- and fades on its own once no source holds it.
 --
