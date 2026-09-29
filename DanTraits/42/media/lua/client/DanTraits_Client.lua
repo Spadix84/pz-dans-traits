@@ -215,6 +215,19 @@ local function wrapTraitList()
         end
         return result
     end)
+    -- and vanilla's sandbox screen shows the profession screen before it applies
+    -- the new settings (SandboxOptionsScreen: PLAY, then setSandboxVars), so fill
+    -- them again once the settings are in (found in play: AgeEnabled read true)
+    if SandboxOptionsScreen then
+        DanTraits_Wrap(SandboxOptionsScreen, "setSandboxVars", "creation-refresh-traits", function(original, self, ...)
+            local result = original(self, ...)
+            pcall(function()
+                local screen = MainScreen.instance.charCreationProfession
+                if screen and screen.listboxTrait and screen.listboxBadTrait then screen:repopulateTraitLists() end
+            end)
+            return result
+        end)
+    end
 end
 wrapTraitList()
 Events.OnGameBoot.Add(wrapTraitList)

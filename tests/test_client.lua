@@ -21,6 +21,8 @@ ISUseInhalerAction = { new = function(_, player, item) return { kind = "inhaler"
 ISDiabetesAction = { new = function(_, player, item, kind, doses, strips)
   return { kind = kind, item = item, doses = doses, strips = strips } end }
 ISVitalityPillAction = { new = function(_, player, item, label) return { kind = "vitality", item = item, label = label } end }
+SandboxOptionsScreen = { setSandboxVars = function() end }
+MainScreen = { instance = {} }
 CharacterCreationProfession = { isTraitEnabled = function() return true end, setVisible = function(self, v) self._shown = v end,
   repopulateTraitLists = function(self) self._repopulated = (self._repopulated or 0) + 1 end }
 local multiplayer, serverAllows = false, true
@@ -194,6 +196,11 @@ SandboxVars = nil
 local screen = setmetatable({ listboxTrait = {}, listboxBadTrait = {} }, { __index = CharacterCreationProfession })
 screen:setVisible(true); assert(screen._shown == true and screen._repopulated == 1, "shown: lists refilled")
 screen:setVisible(false); assert(screen._repopulated == 1, "hidden: not refilled")
+-- the sandbox screen applies the new settings after showing it: fill again then
+if SandboxOptionsScreen and MainScreen then
+  MainScreen.instance = { charCreationProfession = screen }
+  SandboxOptionsScreen.setSandboxVars({}); assert(screen._repopulated == 2, "settings applied: lists refilled")
+end
 multiplayer = false
 -- the wrap is applied once, however many times the boot events re-run it
 local wrapped = list.isTraitEnabled
