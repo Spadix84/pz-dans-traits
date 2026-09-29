@@ -3,8 +3,10 @@
 -- The traits declared in media/scripts/DanTraits.txt each live in their own
 -- file next to this one (DanTraits_<Trait>.lua) and `require` this file for
 -- the shared helpers below. This file holds those helpers, the ten-minute
--- driver, the frame scheduler, the eat and pill action hooks that several
--- traits share, and the save mod-list fix. Each trait bails out immediately
+-- driver, the frame scheduler, DanTraits_Wrap (the one way any file wraps a
+-- game method, so several files can layer on the same method), the eat and
+-- pill action hooks that several traits share, and the save mod-list fix.
+-- Each trait bails out immediately
 -- unless the player actually has it, so an unaffected character costs a
 -- handful of lookups.
 --
@@ -143,6 +145,27 @@ local function laterOnTick()
 end
 Events.OnTick.Add(laterOnTick)
 
+-- Wrap a method on a game class so several files can each add their own
+-- layer. `tag` is unique per caller (file + purpose); wrapping twice with
+-- the same tag is a no-op, so calling at load and again on OnGameStart is
+-- safe. `fn(original, self, ...)` must call original and return its result.
+-- (The tag table is read with rawget: a class that derives from another
+-- must not see its parent's tags and skip its own wrap.)
+function DanTraits_Wrap(class, method, tag, fn)
+    if not class or type(class[method]) ~= "function" then return false end
+    local wraps = rawget(class, "DanTraitsWraps")
+    if not wraps then
+        wraps = {}
+        class.DanTraitsWraps = wraps
+    end
+    local key = method .. ":" .. tag
+    if wraps[key] then return true end
+    wraps[key] = true
+    local original = class[method]
+    class[method] = function(self, ...) return fn(original, self, ...) end
+    return true
+end
+
 -- Ten-minute driver (the trait files hook in through globals) --------------------------------------------------------
 local function onTenMinutes()
     local player = getSpecificPlayer(0)
@@ -175,46 +198,37 @@ end
 -- with the progress so far when it is interrupted. Both call Eat on the
 -- character; the dose is read before that, since eating shrinks the item.
 local function wrapEatAction()
-    if not ISEatFoodAction or ISEatFoodAction.DanTraitsWrapped then return end
-    ISEatFoodAction.DanTraitsWrapped = true
     local function refused(action)
         if not DanTraits_RefusesFood then return false end
         local ok, res = pcall(function() return DanTraits_RefusesFood(action.character, action.item) end)
         return ok and res == true
     end
     for _, name in ipairs({ "isValidStart", "isValid" }) do
-        local original = ISEatFoodAction[name]
-        if original then
-            ISEatFoodAction[name] = function(self, ...)
-                if refused(self) then
-                    if not self.danTraitsRefusedShown then
-                        self.danTraitsRefusedShown = true
-                        notify(self.character, "UI_DanTraits_VegetarianRefuse")
-                    end
-                    return false
+        DanTraits_Wrap(ISEatFoodAction, name, "core-refuse-food", function(original, self, ...)
+            if refused(self) then
+                if not self.danTraitsRefusedShown then
+                    self.danTraitsRefusedShown = true
+                    notify(self.character, "UI_DanTraits_VegetarianRefuse")
                 end
-                return original(self, ...)
+                return false
             end
-        end
+            return original(self, ...)
+        end)
     end
-    local originalComplete = ISEatFoodAction.complete
-    function ISEatFoodAction:complete(...)
+    DanTraits_Wrap(ISEatFoodAction, "complete", "core-eat", function(original, self, ...)
         if refused(self) then return true end
         pcall(function() DanTraits_OnEat(self.character, self.item, self.percentage or 1) end)
-        return originalComplete(self, ...)
-    end
-    local originalEat = ISEatFoodAction.eat
-    if originalEat then
-        function ISEatFoodAction:eat(food, percentage, ...)
-            if refused(self) then return end
-            pcall(function()
-                local progress = percentage or 0
-                if progress > 0.95 then progress = 1 end
-                DanTraits_OnEat(self.character, self.item, (self.percentage or 1) * progress)
-            end)
-            return originalEat(self, food, percentage, ...)
-        end
-    end
+        return original(self, ...)
+    end)
+    DanTraits_Wrap(ISEatFoodAction, "eat", "core-eat", function(original, self, food, percentage, ...)
+        if refused(self) then return end
+        pcall(function()
+            local progress = percentage or 0
+            if progress > 0.95 then progress = 1 end
+            DanTraits_OnEat(self.character, self.item, (self.percentage or 1) * progress)
+        end)
+        return original(self, food, percentage, ...)
+    end)
 end
 wrapEatAction()
 Events.OnGameStart.Add(wrapEatAction)
@@ -222,16 +236,13 @@ Events.OnGameStart.Add(wrapEatAction)
 -- Antidepressants go through the pill action. The vanilla effect is applied
 -- inside complete() (JustTookPill), so it is cancelled straight after.
 local function wrapPillAction()
-    if not ISTakePillAction or ISTakePillAction.DanTraitsWrapped then return end
-    ISTakePillAction.DanTraitsWrapped = true
-    local originalComplete = ISTakePillAction.complete
-    function ISTakePillAction:complete(...)
+    DanTraits_Wrap(ISTakePillAction, "complete", "core-pill", function(original, self, ...)
         -- before the vanilla effect, for anything that wants the state it acts on
         -- (cigarettes from a pack and chewing tobacco also come through here)
         pcall(function()
             if self.item then DanTraits_RunHooks("prePill", nil, self.character, tostring(self.item:getType()), self.item) end
         end)
-        local result = originalComplete(self, ...)
+        local result = original(self, ...)
         pcall(function()
             if not self.item then return end
             local kind = tostring(self.item:getType())
@@ -239,7 +250,7 @@ local function wrapPillAction()
             DanTraits_RunHooks("pill", nil, self.character, kind)
         end)
         return result
-    end
+    end)
 end
 wrapPillAction()
 Events.OnGameStart.Add(wrapPillAction)

@@ -27,6 +27,8 @@
 -- times from the stitch time); under a bandage the times are set directly.
 -- A splint heals a fracture at 5e-5 x splintFactor a tick, (level + 1) / 2
 -- from ISSplint; unsplinted 5e-6.
+-- ISSplint.complete is wrapped through DanTraits_Wrap (DanTraits.lua), tag
+-- "woundcare-splint-set", so Fear of Blood can layer on the splint action too.
 require "DanTraits"
 
 local traitData = DanTraits_Data
@@ -301,10 +303,7 @@ DanTraits_WoundOnSwing = onSwing
 
 -- the splint action: roll the set once it is on
 local function wrapSplint()
-    if not ISSplint or ISSplint.DanTraitsWrapped then return end
-    ISSplint.DanTraitsWrapped = true
-    local original = ISSplint.complete
-    function ISSplint:complete(...)
+    DanTraits_Wrap(ISSplint, "complete", "woundcare-splint-set", function(original, self, ...)
         local result = original(self, ...)
         pcall(function()
             if self.doIt and self.bodyPart and self.bodyPart:isSplint() then
@@ -312,7 +311,7 @@ local function wrapSplint()
             end
         end)
         return result
-    end
+    end)
 end
 wrapSplint()
 Events.OnGameStart.Add(wrapSplint)

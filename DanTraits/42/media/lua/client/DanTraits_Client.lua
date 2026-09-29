@@ -1,7 +1,10 @@
 -- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
--- take metformin), iron pills and nicotine gum.
+-- take metformin), iron pills and nicotine gum, and the wrap that hides Wakeful
+-- (and Deep Sleeper on a no-sleep server) from the character creation list.
+-- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
+require "DanTraits"
 require "TimedActions/ISUseInhalerAction"
 require "TimedActions/ISDiabetesAction"
 require "TimedActions/ISVitalityPillAction"
@@ -178,10 +181,7 @@ Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)
 -- from the list (Deep Sleeper grants it). Deep Sleeper follows vanilla's rule
 -- for the sleep traits: hidden on a server where sleep is off.
 local function wrapTraitList()
-    if not CharacterCreationProfession or CharacterCreationProfession.DanTraitsWrapped then return end
-    CharacterCreationProfession.DanTraitsWrapped = true
-    local original = CharacterCreationProfession.isTraitEnabled
-    function CharacterCreationProfession:isTraitEnabled(trait, ...)
+    DanTraits_Wrap(CharacterCreationProfession, "isTraitEnabled", "creation-hide-traits", function(original, self, trait, ...)
         local kind = nil
         pcall(function() kind = trait:getType() end)
         if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
@@ -191,9 +191,8 @@ local function wrapTraitList()
             end)
             if ok and not allowed then return false end
         end
-        if original then return original(self, trait, ...) end
-        return true
-    end
+        return original(self, trait, ...)
+    end)
 end
 wrapTraitList()
 Events.OnGameBoot.Add(wrapTraitList)

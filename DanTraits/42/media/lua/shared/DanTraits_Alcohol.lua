@@ -14,6 +14,10 @@
 -- (ALC_PAIN_CUT), and panic decays each tick at a share of the beta-blocker
 -- rate (a quarter per level). The floor is bookkept so it steps down as the
 -- character sobers up and never eats a painkilling fluid's own reduction.
+--
+-- ISDrinkFluidAction.updateEat is wrapped through DanTraits_Wrap with the tag
+-- "alcohol-relief"; DanTraits_Diabetes.lua adds its own layer ("drink-intake")
+-- on the same method, and the two chain, so both always run.
 require "DanTraits"
 
 local traitData = DanTraits_Data
@@ -66,16 +70,12 @@ end
 -- character (DrinkFluid), on the client in single player and on the server
 -- in multiplayer; the timers are read before it and put back after.
 local function wrapDrinkAction()
-    if not ISDrinkFluidAction or ISDrinkFluidAction.DanTraitsWrapped then return end
-    ISDrinkFluidAction.DanTraitsWrapped = true
-    local original = ISDrinkFluidAction.updateEat
-    if not original then return end
-    function ISDrinkFluidAction:updateEat(...)
+    DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "alcohol-relief", function(original, self, ...)
         local snap = self.character and snapshotMeds(self.character)
         local result = original(self, ...)
         if snap and isAlcoholic(self.fluidContainer) then restoreMeds(self.character, snap) end
         return result
-    end
+    end)
 end
 wrapDrinkAction()
 Events.OnGameStart.Add(wrapDrinkAction)

@@ -29,10 +29,12 @@ ISDrinkFluidAction = { updateEat = function(self, delta) self.fluidContainer._am
 DanTraitsTestEpisode = false
 
 function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
+for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes", "DanTraits_Alcohol" }) do
   assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
 end
-assert(handlers.EveryOneMinute and handlers.OnCreatePlayer and ISDrinkFluidAction.DanTraitsWrapped, "hooks in place")
+assert(handlers.EveryOneMinute and handlers.OnCreatePlayer, "hooks in place")
+local drinkWraps = ISDrinkFluidAction.DanTraitsWraps
+assert(drinkWraps and drinkWraps["updateEat:drink-intake"] and drinkWraps["updateEat:alcohol-relief"], "both drink layers installed (Diabetes and Alcohol share updateEat)")
 
 local function makePlayer(o)
   o = o or {}
@@ -202,6 +204,17 @@ near(sipper._md.DanTraits.diaFast, 31.2, 1e-9, "a can of cola: 31.2 g of fast ca
 local water = { _amount = 1, getAmount = function(self) return self._amount end, getProperties = function() return { getCarbohydrates = function() return 0 end } end }
 local act2 = setmetatable({ character = sipper, fluidContainer = water, sip = 0.5 }, { __index = ISDrinkFluidAction })
 act2:updateEat(1); near(sipper._md.DanTraits.diaFast, 31.2, 1e-9, "water: nothing")
+
+-- 12b. Alcohol is loaded too and wraps the same method: the carbs and the drink hook still land
+-- (an alcoholic fluid: the Alcohol layer runs, its meds snapshot is skipped because this player cannot report them)
+local drinkHook = {}
+DanTraits_AddHook("drink", function(_, player, fluid, litres) drinkHook[#drinkHook + 1] = { player = player, fluid = fluid, litres = litres } end)
+local beer = { _amount = 0.5, getAmount = function(self) return self._amount end,
+               getProperties = function() return { getCarbohydrates = function() return 40 end, getAlcohol = function() return 0.05 end } end }
+local act3 = setmetatable({ character = sipper, fluidContainer = beer, sip = 0.25 }, { __index = ISDrinkFluidAction })
+act3:updateEat(1)
+near(sipper._md.DanTraits.diaFast, 31.2 + 10, 1e-9, "a beer with Alcohol also loaded: 0.25 l x 40 g/l of carbs")
+assert(#drinkHook == 1 and drinkHook[1].player == sipper and drinkHook[1].fluid == beer and math.abs(drinkHook[1].litres - 0.25) < 1e-9, "drink hook fired once with player, fluid and litres")
 
 -- 13. the meter reads the number and says whether it is out of range; non-diabetics read normal
 local reader = makePlayer(); current = reader; reader._md.DanTraits = { glucose = 143.4 }

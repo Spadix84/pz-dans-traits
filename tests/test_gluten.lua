@@ -29,7 +29,7 @@ function require() end
 for _, f in ipairs({ "DanTraits", "DanTraits_Dependent", "DanTraits_MDD", "DanTraits_Brittle", "DanTraits_Arthritis", "DanTraits_Jinxed", "DanTraits_BadDay", "DanTraits_Hallucinations", "DanTraits_Asthma", "DanTraits_Gluten", "DanTraits_Vegetarian", "DanTraits_Diabetes" }) do
   assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
 end
-assert(handlers.EveryOneMinute and ISEatFoodAction.DanTraitsWrapped, "hooks in place")
+assert(handlers.EveryOneMinute and ISEatFoodAction.DanTraitsWraps and ISEatFoodAction.DanTraitsWraps["complete:core-eat"], "hooks in place")
 
 local function item(name, carbs, hunger)
   return { name = name, getType = function() return name end, getCarbohydrates = function() return carbs end, getHungChange = function() return hunger or -0.1 end }

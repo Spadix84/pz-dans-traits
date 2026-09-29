@@ -18,6 +18,9 @@
 --     each minute your own blood is running out fast (HB_BLEED_*); once
 --     down, not again for HB_GAP minutes
 --   first aid on a wound takes longer, the hands shaking (HB_SLOW)
+-- The action classes are wrapped through DanTraits_Wrap (DanTraits.lua) with
+-- the tags "fear-faint" (complete), "fear-slow" (getDuration) and
+-- "fear-splint-slow" (ISSplint.new).
 require "DanTraits"
 
 local hasVanillaTrait = DanTraits_HasVanillaTrait
@@ -74,10 +77,7 @@ end
 
 -- the action, done: a chance of fainting
 local function wrapComplete(class, name)
-    if not class or not class.complete or class.DanTraitsFearWrapped then return end
-    class.DanTraitsFearWrapped = true
-    local original = class.complete
-    class.complete = function(self, ...)
+    DanTraits_Wrap(class, "complete", "fear-faint", function(original, self, ...)
         local bleeding = true
         if HB_NEEDS_BLEEDING[name] then
             pcall(function() bleeding = self.bodyPart:getBleedingTime() > 0 end)
@@ -87,31 +87,25 @@ local function wrapComplete(class, name)
             if self.doIt ~= false and bleeding and afraid(self.character) then faint(self.character, HB_FAINT[name]) end
         end)
         return result
-    end
+    end)
 end
 
 -- the hands shaking: longer to do
 local function wrapDuration(class)
-    if not class or not class.getDuration or class.DanTraitsFearSlow then return end
-    class.DanTraitsFearSlow = true
-    local original = class.getDuration
-    class.getDuration = function(self, ...)
+    DanTraits_Wrap(class, "getDuration", "fear-slow", function(original, self, ...)
         local t = original(self, ...)
         if type(t) == "number" and t > 1 and afraid(self.character) then t = t * HB_SLOW end
         return t
-    end
+    end)
 end
 
 -- the splint sets its time in new(), not getDuration()
 local function wrapSplint()
-    if not ISSplint or not ISSplint.new or ISSplint.DanTraitsFearSlow then return end
-    ISSplint.DanTraitsFearSlow = true
-    local original = ISSplint.new
-    ISSplint.new = function(self, character, ...)
+    DanTraits_Wrap(ISSplint, "new", "fear-splint-slow", function(original, self, character, ...)
         local o = original(self, character, ...)
         pcall(function() if o.maxTime and o.maxTime > 1 and afraid(character) then o.maxTime = o.maxTime * HB_SLOW end end)
         return o
-    end
+    end)
 end
 
 local function wrapAll()

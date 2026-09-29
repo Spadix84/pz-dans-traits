@@ -1,9 +1,28 @@
 -- Offline test for DanTraits_Alcohol.lua: a drink no longer counts as a
 -- beta blocker and a painkiller; instead the Drunk moodle floors the body's
--- pain reduction by level and speeds panic decay each tick.
+-- pain reduction by level and speeds panic decay each tick. DanTraits_Diabetes
+-- is loaded too: both wrap ISDrinkFluidAction.updateEat, and the meds restore
+-- and the `drink` hook must both work (they once shared a guard flag, so only
+-- one of them was ever installed).
 local handlers, lists = {}, {}
 Events = setmetatable({}, { __index = function(t, k) local e = { Add = function(f) lists[k] = lists[k] or {}; table.insert(lists[k], f); handlers[k] = function(...) for _, g in ipairs(lists[k]) do g(...) end end end, Remove = function() end }; rawset(t, k, e); return e end })
-CharacterStat = { INTOXICATION = { getMaximumValue = function() return 100 end }, PANIC = "panic", PAIN = "pain" }
+CharacterStat = { INTOXICATION = { getMaximumValue = function() return 100 end }, PANIC = "panic", PAIN = "pain", STRESS = "stress", UNHAPPINESS = "unhappy", FATIGUE = "fatigue", ENDURANCE = "endurance", FOOD_SICKNESS = "foodsick", THIRST = "thirst", WETNESS = { getMaximumValue = function() return 100 end } }
+-- stubs the Diabetes file wants at load (copied from test_diabetes.lua)
+BodyPartType = { Groin = "Groin", ForeArm_L=1, ForeArm_R=2, LowerLeg_L=3, LowerLeg_R=4, Hand_L=5, Hand_R=6, Torso_Upper=7 }
+ArrayList = { new = function() return { add = function() end } end }
+IsoFireManager = { explode = function() end }
+function instanceof() return false end
+ItemBodyLocation = { MASK = "mask", MASK_EYES = "maskeyes", MASK_FULL = "maskfull" }
+function getWorld() return { getFreeEmitter = function() return { playSound = function() return 1 end, setPos = function() end } end } end
+function getTexture() return "TEX" end
+function getGameTime() return { getHour = function() return 12 end } end
+function ZombRand() return 0 end
+function getClimateManager() return { getAirTemperatureForCharacter = function() return 20 end } end
+function getCell() return { getGridSquare = function() return { getObjects = function() return { size = function() return 0 end } end, getDeadBodys = function() return { size = function() return 0 end } end } end } end
+function addSound() end
+function isNight() return false end
+DanTraitsTestCharge = false
+FitnessExercises = { exercisesType = { squats = {}, pushups = {}, situps = {}, burpees = {} } }
 MoodleType = { DRUNK = "drunk" }
 GameTime = { getInstance = function() return { getThirtyFPSMultiplier = function() return 1 end } end }
 HaloTextHelper = { addBadText = function() end, addGoodText = function() end }
@@ -13,18 +32,21 @@ ISEatFoodAction = { complete = function() return true end, eat = function() end,
 ISTakePillAction = { complete = function() return true end }
 
 -- vanilla-shaped drink action: updateEat reaches DrinkFluid, which for any
--- alcohol at all sets the beta-blocker and painkiller timers in full
+-- alcohol at all sets the beta-blocker and painkiller timers in full; the
+-- container also loses a sip, as the real fluid container does
 ISDrinkFluidAction = {}
 function ISDrinkFluidAction:updateEat(delta)
   self.character:DrinkFluid(self.fluidContainer, delta)
+  self.fluidContainer._amount = self.fluidContainer._amount - 0.1
 end
 
 function require() end
-for _, f in ipairs({ "DanTraits", "DanTraits_Alcohol" }) do
+for _, f in ipairs({ "DanTraits", "DanTraits_Diabetes", "DanTraits_Alcohol" }) do
   assert(loadfile("../DanTraits/42/media/lua/shared/" .. f .. ".lua"))()
 end
 assert(handlers.EveryOneMinute and handlers.OnPlayerUpdate, "hooks in place")
-assert(ISDrinkFluidAction.DanTraitsWrapped, "drink action wrapped")
+local drinkWraps = ISDrinkFluidAction.DanTraitsWraps
+assert(drinkWraps and drinkWraps["updateEat:alcohol-relief"] and drinkWraps["updateEat:drink-intake"], "both drink layers installed")
 
 local function makePlayer(o)
   o = o or {}
@@ -52,8 +74,17 @@ local function makePlayer(o)
   end
   return p
 end
-local function container(alcohol) return { getProperties = function() return { getAlcohol = function() return alcohol end } end } end
-local function drink(p, alcohol) ISDrinkFluidAction.updateEat({ character = p, fluidContainer = container(alcohol) }, 0.1) end
+local function container(alcohol)
+  return { _amount = 1, getAmount = function(self) return self._amount end,
+           getProperties = function() return { getAlcohol = function() return alcohol end, getCarbohydrates = function() return 0 end } end }
+end
+local lastContainer
+local function drink(p, alcohol)
+  lastContainer = container(alcohol)
+  ISDrinkFluidAction.updateEat({ character = p, fluidContainer = lastContainer }, 0.1)
+end
+local drinkHook = {}
+DanTraits_AddHook("drink", function(_, player, fluid, litres) drinkHook[#drinkHook + 1] = { player = player, fluid = fluid, litres = litres } end)
 local current
 function getSpecificPlayer() return current end
 local minute, frame = handlers.EveryOneMinute, handlers.OnPlayerUpdate
@@ -65,6 +96,10 @@ drink(p, 0.004)
 assert(p._beta == 0 and p._betaD == 0, "beta-blocker timer put back")
 assert(p._painFx == 0 and p._painD == 0, "painkiller timer put back")
 
+-- 1b. and the Diabetes layer on the same method still ran: the drink hook fired with the litres swallowed
+assert(#drinkHook == 1 and drinkHook[1].player == p and drinkHook[1].fluid == lastContainer and math.abs(drinkHook[1].litres - 0.1) < 1e-9,
+  "drink hook fired once with player, fluid and litres")
+
 -- 2. pills taken earlier keep working
 p._beta, p._betaD, p._painFx, p._painD = 3000, 1, 2000, 1
 drink(p, 0.4)
@@ -75,6 +110,7 @@ local soft = makePlayer(); current = soft; soft._level = 0
 soft.DrinkFluid = function(self) self._painFx = 7 end   -- some other effect on the character
 drink(soft, 0)
 assert(soft._painFx == 7, "non-alcoholic: nothing restored")
+assert(#drinkHook == 3 and drinkHook[3].player == soft, "every drink (pills-taken case included) fires the drink hook, soft drinks too")
 
 -- 4. pain: the reduction floor follows the Drunk level, steps down as you sober, keeps other sources
 current = p

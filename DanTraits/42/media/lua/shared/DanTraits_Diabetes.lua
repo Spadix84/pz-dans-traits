@@ -21,6 +21,10 @@ local traitData = DanTraits_Data
 -- insulin, and either type can go low from it. Symptoms are deliberately
 -- vague: the same "can't focus" shows up high or low. A glucose meter and
 -- test strips give a number.
+-- Drinks reach the character through ISDrinkFluidAction.updateEat, wrapped
+-- here through DanTraits_Wrap with the tag "drink-intake" (carbohydrates, the
+-- Vitality drink hook and the `drink` hook); Alcohol adds its own layer to the
+-- same method and the two chain.
 local DIA_START             = 110
 local DIA_MIN, DIA_MAX      = 20, 600
 local DIA_CARB_MGDL         = 4.0     -- mg/dL per gram of carbohydrate absorbed with nothing to meet it
@@ -357,18 +361,14 @@ Events.OnCreatePlayer.Add(onDiabetesCreatePlayer)
 -- Drinks are fluid containers, not food: hook the drink action and read the
 -- carbohydrates of the fluid times the litres that actually went down.
 local function wrapDrinkAction()
-    if not ISDrinkFluidAction or ISDrinkFluidAction.DanTraitsWrapped then return end
-    ISDrinkFluidAction.DanTraitsWrapped = true
-    local originalUpdateEat = ISDrinkFluidAction.updateEat
-    if not originalUpdateEat then return end
-    function ISDrinkFluidAction:updateEat(...)
+    DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "drink-intake", function(original, self, ...)
         local before, perLitre, kcalPerLitre = 0, 0, 0
         pcall(function()
             before = self.fluidContainer:getAmount() or 0
             perLitre = self.fluidContainer:getProperties():getCarbohydrates() or 0
         end)
         pcall(function() kcalPerLitre = self.fluidContainer:getProperties():getCalories() or 0 end)
-        local result = originalUpdateEat(self, ...)
+        local result = original(self, ...)
         pcall(function()
             local after = self.fluidContainer:getAmount() or before
             local litres = before - after
@@ -377,7 +377,7 @@ local function wrapDrinkAction()
             if litres > 0 then DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, litres) end
         end)
         return result
-    end
+    end)
 end
 wrapDrinkAction()
 Events.OnGameStart.Add(wrapDrinkAction)
