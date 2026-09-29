@@ -59,4 +59,29 @@ H.rollf = 0.02; minute(); assert(#fainted == 4, "fast bleed: fainted")
 -- 7. wrapping again changes nothing
 H.fire("OnGameStart"); assert(ISStitch.getDuration({ character = p }) == 125, "not wrapped twice")
 
+-- 8. end to end with the real DanTraits_Faint.lua (the sections above stub PassOut): Fear of Blood
+-- after a stitch passes out, and comes round only after the real-time floor (H.now advanced) and the game minute
+local faded
+UIManager = { FadeOut = function() faded = true end, FadeIn = function() faded = false end }
+H.load("Faint")
+local tick = H.on("OnTick")
+p = newPlayer(true); H.current = p
+p.setBlockMovement = function(_, b) p._blocked = b end
+p.setIgnoreMovement = function() end
+p.setAuthorizeMeleeAction = function() end
+p.setAuthorizeShoveStomp = function() end
+p.isSitOnGround = function() return p._sitting == true end
+p.reportEvent = function(_, e) if e == "EventSitOnGround" then p._sitting = true end end
+local halo = H.halo
+H.clearHalo(); H.now = 500000; H.hours = 900
+H.rollf = 0.24; ISStitch.complete({ character = p, bodyPart = part(0), doIt = true })
+assert(DanTraits_IsPassedOut(p), "stitched: passed out for real")
+assert(p._bump == "stagger" and p._blocked and faded == true, "fell, held, screen black")
+-- the game minute is up almost at once (HB_FAINT_MIN is 1), but the real-time floor (8 s) is not
+H.hours = H.hours + 2 / 60; H.now = H.now + 7000; tick()
+assert(DanTraits_IsPassedOut(p) and p._blocked, "8 real seconds have not passed: still out")
+H.now = H.now + 1500; tick()
+assert(not DanTraits_IsPassedOut(p) and not p._blocked and faded == false, "then comes round")
+assert(halo[#halo] == "UI_DanTraits_FaintBlood", "the notice is the faint's own text key, got " .. tostring(halo[#halo]))
+
 H.pass()

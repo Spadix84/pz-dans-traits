@@ -16,7 +16,11 @@ What is checked, and why (all confirmed against the game's jar, B42):
     has byte, char, find, format, gsub, len, lower, match, reverse, sub,
     upper, plus the game's split, trim, contains).
   * table.unpack (it is the global unpack), goto and the // operator (Lua 5.2+).
-  * string.format specifiers outside d i u c x X o e E f g G q s and %%.
+  * string.format specifiers outside d i u c x X o e E f g G q s and %%, and %s
+    given an argument that is plainly a number (a numeric literal, #x, math.*(),
+    or arithmetic): Kahlua's format is partial and only trusts %s with strings,
+    so write tostring(n) or format a number with %d / %f.
+  * unpack: fine as the global; only table.unpack is flagged (see above).
   * More than 200 local variables in one function (the file's top level is a
     function too) or more than 60 upvalues (enclosing locals a function
     reaches for, counting those its nested functions need). Both are
@@ -149,6 +153,60 @@ class Linter:
             if m.group(1) not in FORMAT_OK:
                 self.report(line, "string.format specifier '%s' is not supported by the game's Lua" % m.group(0))
 
+    def format_args(self, i):
+        """Token lists of the arguments of the format( call whose format string is token i, or None."""
+        j = i + 1
+        if self.tok(j)[1] == ",":
+            j += 1
+        args, cur, depth = [], [], 0
+        while j < len(self.toks):
+            k, t, _ = self.toks[j]
+            if k == "sym" and t in ("(", "{", "["):
+                depth += 1
+            elif k == "sym" and t in (")", "}", "]"):
+                if depth == 0:
+                    if cur:
+                        args.append(cur)
+                    return args
+                depth -= 1
+            elif k == "sym" and t == "," and depth == 0:
+                args.append(cur)
+                cur = []
+                j += 1
+                continue
+            cur.append(self.toks[j])
+            j += 1
+        return None
+
+    @staticmethod
+    def plainly_number(arg):
+        """An argument that is certainly a number: a literal, #x, math.f(), or arithmetic at the top level."""
+        if not arg or any(t[1] == ".." for t in arg):
+            return False
+        if arg[0][0] == "number" or arg[0][1] == "#":
+            return True
+        if arg[0][1] == "math" and len(arg) > 1 and arg[1][1] == ".":
+            return True
+        depth = 0
+        for k, t, _ in arg:
+            if k == "sym" and t in ("(", "{", "["):
+                depth += 1
+            elif k == "sym" and t in (")", "}", "]"):
+                depth -= 1
+            elif depth == 0 and k == "sym" and t in ("+", "*", "/", "%", "^", "-"):
+                return True
+        return False
+
+    def check_string_args(self, i, text, line):
+        """%s given a number, in string.format(fmt, args...) with the format string at token i."""
+        args = self.format_args(i)
+        if args is None:
+            return
+        specs = [m.group(1) for m in re.finditer(r"%[-+ #0]*\d*(?:\.\d+)?([A-Za-z%])", text) if m.group(1) != "%"]
+        for n, spec in enumerate(specs):
+            if spec == "s" and n < len(args) and self.plainly_number(args[n]):
+                self.report(line, "string.format: a number is given for a %s specifier; Kahlua's format is partial, use tostring(n), %d or %f")
+
     def inspect(self, i):
         """Symbol and string checks for token i (names are handled by the caller)."""
         kind, text, line = self.toks[i]
@@ -173,6 +231,8 @@ class Linter:
                 j -= 1
             if j >= 0 and self.toks[j][1] == "format" and self.toks[j][2] == line:
                 self.check_format(text, line)
+                if kind == "string" and self.tok(i - 1)[1] == "(":
+                    self.check_string_args(i, text, line)
 
     def is_reference(self, i):
         """Token i is a name used as a value, not a field or a table key."""
@@ -364,6 +424,15 @@ SELFTEST = [
     ("local s = string.format('%5.2f %d %s %x %%', a, b, c, d)", 0, "supported format specifiers"),
     ("local s = string.format('%z %a', a, b)", 2, "unsupported format specifiers"),
     ("local s = ('%q'):format(x)", 0, "format via method"),
+    ("local s = string.format('%s', 5)", 1, "%s with a numeric literal"),
+    ("local s = string.format('%d %s', n, #t)", 1, "%s with a length"),
+    ("local s = string.format('%s', math.floor(x))", 1, "%s with math.*"),
+    ("local s = string.format('%s', a + 1)", 1, "%s with arithmetic"),
+    ("local s = string.format('%s %s', name, tostring(n))", 0, "%s with strings is fine"),
+    ("local s = string.format('%s', a .. 1 + 2)", 0, "%s with a concatenation is a string"),
+    ("local s = string.format('%d of %s', 5, name)", 0, "a number for %d is fine"),
+    ("local s = string.format('%5.1f%%', n * 100)", 0, "arithmetic for %f is fine"),
+    ("local a, b = unpack(t)", 0, "the global unpack is fine"),
     ("local t = { next = 1, rep = 2 }; local v = t.next + t.rep; t.assert = 3", 0, "fields are not globals"),
     ("local next = 5; local v = next + 1", 0, "a local shadows the missing global"),
     (NL.join("local v%d = %d" % (i, i) for i in range(201)), 1, "201 top-level locals"),

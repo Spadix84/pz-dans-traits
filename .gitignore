@@ -6,3 +6,4 @@ DanTraits_Commands.txt
 DanTraits_Telemetry.json
 Thumbs.db
 __pycache__/
+tests/node_modules/

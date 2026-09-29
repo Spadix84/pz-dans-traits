@@ -7,9 +7,10 @@ the method tables out of the installed game's projectzomboid.jar (with
 superclasses) and checks every call on a receiver whose type is known by
 its name:
 
-    part:foo()  bodyPart:foo()  is(part, "foo")  num(part, "foo")  partIs(part, "foo")   BodyPart
+    part:foo()  bodyPart:foo()  head:foo()  is(part, "foo")  num(part, "foo")  partIs(part, "foo")   BodyPart
     getBodyDamage():foo()  bd:foo()                                                        BodyDamage
-    player:foo()  character:foo()  playerObj:foo()  patient:foo()                          IsoPlayer
+    player:foo()  character:foo()  self.character:foo()  playerObj:foo()  patient:foo()  p:foo()   IsoPlayer
+    zombie:foo()                                                                           IsoZombie
     getStats():foo()  stats:foo()                                                          Stats
     weapon:foo()                                                                           HandWeapon
     BodyPartType.foo(                                                                      BodyPartType (statics)
@@ -18,6 +19,7 @@ Receivers the table does not know are not checked. Without the game
 installed (or with PZ_JAR pointing nowhere) it says so and passes.
 
     python tests/check_api.py
+    python tests/check_api.py --selftest   check the patterns against fixture lines (needs the game too)
 """
 import glob
 import os
@@ -37,13 +39,15 @@ CLASSES = {
     "Stats": "zombie/characters/Stats",
     "HandWeapon": "zombie/inventory/types/HandWeapon",
     "BodyPartType": "zombie/characters/BodyDamage/BodyPartType",
+    "IsoZombie": "zombie/characters/IsoZombie",
 }
 PATTERNS = [
-    (r"\b(?:part|bodyPart):(\w+)\(", "BodyPart"),
+    (r"\b(?:part|bodyPart|head):(\w+)\(", "BodyPart"),
     (r"\b(?:is|num|partIs)\((?:part|bodyPart), \"(\w+)\"\)", "BodyPart"),
     (r"getBodyDamage\(\):(\w+)\(", "BodyDamage"),
     (r"\bbd:(\w+)\(", "BodyDamage"),
-    (r"\b(?:player|character|playerObj|patient):(\w+)\(", "IsoPlayer"),
+    (r"\b(?:player|character|playerObj|patient|p):(\w+)\(", "IsoPlayer"),   # self.character: matches on "character"
+    (r"\bzombie:(\w+)\(", "IsoZombie"),
     (r"getStats\(\):(\w+)\(", "Stats"),
     (r"\bstats:(\w+)\(", "Stats"),
     (r"\bweapon:(\w+)\(", "HandWeapon"),
@@ -115,22 +119,64 @@ def all_methods(z, path):
     return out
 
 
+def unknown_calls(line, tables):
+    """(class, method) for every call on a known receiver that the game's class lacks."""
+    code = line.split("--", 1)[0]
+    return [(cls, name) for pattern, cls in PATTERNS for name in re.findall(pattern, code)
+            if name not in tables[cls]]
+
+
+# (fixture line, expected unknown methods): a bad name on every receiver pattern must be caught,
+# a real method must not
+SELFTEST = [
+    ("part:zzBogus()", [("BodyPart", "zzBogus")]),
+    ("head:zzBogus()", [("BodyPart", "zzBogus")]),
+    ("is(part, \"zzBogus\")", [("BodyPart", "zzBogus")]),
+    ("getBodyDamage():zzBogus()", [("BodyDamage", "zzBogus")]),
+    ("bd:zzBogus()", [("BodyDamage", "zzBogus")]),
+    ("player:zzBogus()", [("IsoPlayer", "zzBogus")]),
+    ("character:zzBogus()", [("IsoPlayer", "zzBogus")]),
+    ("self.character:zzBogus()", [("IsoPlayer", "zzBogus")]),
+    ("patient:zzBogus()", [("IsoPlayer", "zzBogus")]),
+    ("p:zzBogus()", [("IsoPlayer", "zzBogus")]),
+    ("getStats():zzBogus()", [("Stats", "zzBogus")]),
+    ("stats:zzBogus()", [("Stats", "zzBogus")]),
+    ("weapon:zzBogus()", [("HandWeapon", "zzBogus")]),
+    ("zombie:zzBogus()", [("IsoZombie", "zzBogus")]),
+    ("BodyPartType.zzBogus(", [("BodyPartType", "zzBogus")]),
+    ("player:getStats() -- player:zzBogus()", []),   # comments are not code
+    ("player:getStats()", []),
+    ("part:getHealth()", []),
+    ("unknownReceiver:zzBogus()", []),                # receivers the table does not know are not checked
+]
+
+
+def selftest(tables):
+    bad = 0
+    for line, expected in SELFTEST:
+        got = unknown_calls(line, tables)
+        if got != expected:
+            bad += 1
+            print("selftest FAIL: %r: expected %s, got %s" % (line, expected, got))
+    print("check_api selftest: %d case(s), %d failed" % (len(SELFTEST), bad))
+    return 1 if bad else 0
+
+
 def main():
     if not os.path.exists(JAR):
         print("check_api: game not found at %s; skipped" % JAR)
         return 0
     z = zipfile.ZipFile(JAR)
     tables = {k: all_methods(z, v) for k, v in CLASSES.items()}
+    if sys.argv[1:] == ["--selftest"]:
+        return selftest(tables)
     problems = []
     for path in sorted(glob.glob(os.path.join(LUA, "**", "*.lua"), recursive=True)):
         rel = os.path.relpath(path, os.path.join(HERE, ".."))
         with open(path, encoding="utf-8") as f:
             for lineno, line in enumerate(f, 1):
-                code = line.split("--", 1)[0]
-                for pattern, cls in PATTERNS:
-                    for name in re.findall(pattern, code):
-                        if name not in tables[cls]:
-                            problems.append("%s:%d: %s has no %s" % (rel, lineno, cls, name))
+                for cls, name in unknown_calls(line, tables):
+                    problems.append("%s:%d: %s has no %s" % (rel, lineno, cls, name))
     for p in problems:
         print(p)
     print("check_api: %d problem(s)" % len(problems))
