@@ -21,7 +21,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Renaissance Faire Geek | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
 | Gym Regular | +1 | Every exercise starts at regularity 50 (a Fitness Instructor's head start); Vitality's exercise score starts neutral instead of empty. |
 | Caffeine Dependent | -2 | Half a day without coffee, tea, cola or chocolate brings a headache, tiredness and low mood; a week dry breaks the habit. |
-| Migraines | -6 | Attacks brought on by bad sleep, thirst, stress, hangovers and bright daylight: hours of pain and nausea. |
+| Migraines | -6 | Attacks brought on by bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever and bright daylight: hours of pain and nausea. |
 | Hemophilia | -8 | Bleeding never stops on its own and open wounds bleed again until bandaged. With **Blood**: bleeds lose half as much again, and a bandage only slows one to two fifths, so stitches are what stop it (without Blood, open bleeds cost extra health). |
 | Anaemic | -4 | Needs fresh meat, fish, greens, eggs or iron pills; short of iron, endurance, energy and cold resistance suffer. After blood loss, red cells rebuild at half speed, slower still short of iron, and rebuilding them spends iron. |
 | Iron Stomach | +1 | Rotten and burnt food does half the harm; food sickness climbs half as fast. |

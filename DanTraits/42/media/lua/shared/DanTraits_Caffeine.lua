@@ -10,6 +10,7 @@
 -- habit breaks. Any real dose resets the clock. Smoking speeds up the
 -- half-life (the "caffeineClearance" hook, DanTraits_Smoker.lua). Every dose, trait or not,
 -- is also passed to the sleep system: caffeine makes light wake you.
+-- Migraines read the withdrawal (DanTraits_CaffeineWithdrawalOf).
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -77,6 +78,13 @@ local function withdrawal(hours)
     return 0
 end
 DanTraits_CaffeineWithdrawal = withdrawal
+
+-- 0..1 withdrawal strength of this character now (0 without the trait); read by Migraine
+function DanTraits_CaffeineWithdrawalOf(player)
+    if not player or not hasTrait(player, "caffeine") then return 0 end
+    local d = player:getModData().DanTraits
+    return (d and d.cafWithdraw) or 0
+end
 
 local floorUp = DanTraits_FloorUp
 

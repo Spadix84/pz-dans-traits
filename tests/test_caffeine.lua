@@ -71,4 +71,13 @@ local b = newPlayer(); H.current = b
 for _ = 1, 168 * 60 + 1 do minute() end
 assert(C(b).cafWithdraw == 0 and not C(b).cafWithdrawing and halo[#halo] == "+UI_DanTraits_CaffeineBroken", "habit broken after a week")
 
+-- 7. the getter Migraine reads: 0 without the trait, the current withdrawal with it, 0 before any minute has run
+local plainOne = newPlayer({ traits = {} }); plainOne._md.DanTraits = { cafWithdraw = 1 }
+assert(DanTraits_CaffeineWithdrawalOf(plainOne) == 0, "no trait: 0 even with a stale value")
+local dryOne = newPlayer(); H.current = dryOne
+assert(DanTraits_CaffeineWithdrawalOf(dryOne) == 0, "trait, nothing tracked yet: 0")
+dryOne._md.DanTraits = { cafLevel = 0, cafDryHours = 20 }; minute()
+near(DanTraits_CaffeineWithdrawalOf(dryOne), (20 + 1 / 60 - 12) / (30 - 12), 1e-9, "trait: the withdrawal now")
+near(DanTraits_CaffeineWithdrawalOf(dryOne), C(dryOne).cafWithdraw, 1e-12, "it is the stored one")
+
 H.pass()

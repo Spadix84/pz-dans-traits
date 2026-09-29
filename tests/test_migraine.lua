@@ -37,6 +37,15 @@ near(DanTraits_MigraineChance(p), 0.3 + 2.0, 1e-9, "full fever +2")
 DanTraits_InfectionFever = nil
 near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Infection loaded: nothing")
 
+-- 1c. caffeine withdrawal adds 2.0 at full withdrawal, guarded on the getter existing
+local withdrawal = 0
+DanTraits_CaffeineWithdrawalOf = function() return withdrawal end
+near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no withdrawal: nothing")
+withdrawal = 1; near(DanTraits_MigraineChance(p), 0.3 + 2.0, 1e-9, "full caffeine withdrawal +2")
+withdrawal = 0.5; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half +1")
+DanTraits_CaffeineWithdrawalOf = nil
+near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Caffeine loaded: nothing")
+
 -- 2. no roll inside the 24 h refractory window from creation; then a roll that misses, then one that hits: aura first
 local q = newPlayer(); H.current = q
 q._md.DanTraits = { migSinceEnd = 0 }
