@@ -174,6 +174,13 @@ assert(list.isTraitEnabled(list, trait("deepsleeper")) == true, "and on a server
 serverAllows = false
 assert(list.isTraitEnabled(list, trait("deepsleeper")) == false, "hidden on a server where sleep is off")
 assert(list.isTraitEnabled(list, trait("base:brave")) == true, "others unaffected by the server")
+-- the Age traits are hidden when the sandbox switches Age off
+multiplayer = false
+assert(list.isTraitEnabled(list, trait("age40s")) == true and list.isTraitEnabled(list, trait("age20s")) == true, "Age on: both offered")
+SandboxVars = { DanTraits = { AgeEnabled = false } }
+assert(list.isTraitEnabled(list, trait("age40s")) == false and list.isTraitEnabled(list, trait("age20s")) == false, "Age off: both hidden")
+assert(list.isTraitEnabled(list, trait("base:brave")) == true, "others unaffected by Age off")
+SandboxVars = nil
 multiplayer = false
 -- the wrap is applied once, however many times the boot events re-run it
 local wrapped = list.isTraitEnabled

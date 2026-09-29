@@ -26,7 +26,7 @@
 -- gentler ones (the trait costs -2).
 --
 -- Sandbox (page DanTraits): AgeEnabled turns all of this off (the Age traits
--- then do nothing), AgeBonus20s/30s/40s set the profession levels, and
+-- are then hidden at character creation, DanTraits_Client.lua), AgeBonus20s/30s/40s set the profession levels, and
 -- AgeDefault is the age of a character who picks neither trait.
 require "DanTraits"
 

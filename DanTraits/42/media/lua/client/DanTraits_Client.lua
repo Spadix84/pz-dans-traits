@@ -179,12 +179,17 @@ Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)
 
 -- Character creation: Wakeful is folded into Deep Sleeper, so it is hidden
 -- from the list (Deep Sleeper grants it). Deep Sleeper follows vanilla's rule
--- for the sleep traits: hidden on a server where sleep is off.
+-- for the sleep traits: hidden on a server where sleep is off. The Age traits
+-- are hidden when the sandbox switches Age off (they would do nothing).
 local function wrapTraitList()
     DanTraits_Wrap(CharacterCreationProfession, "isTraitEnabled", "creation-hide-traits", function(original, self, trait, ...)
         local kind = nil
         pcall(function() kind = trait:getType() end)
         if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
+        if kind ~= nil and DanTraitsRegistry and (kind == DanTraitsRegistry.age20s or kind == DanTraitsRegistry.age40s)
+                and DanTraits_SandboxOn and not DanTraits_SandboxOn("AgeEnabled") then
+            return false
+        end
         if kind ~= nil and DanTraitsRegistry and kind == DanTraitsRegistry.deepsleeper and isMultiplayer() then
             local ok, allowed = pcall(function()
                 return getServerOptions():getBoolean("SleepAllowed") and getServerOptions():getBoolean("SleepNeeded")
