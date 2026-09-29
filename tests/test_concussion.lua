@@ -64,6 +64,20 @@ p = newPlayer(); H.current = p; H.rollf = 0.99
 damage(p, "CARHITDAMAGE", 70); near(D(p).ccScore, 0.25 + 0.012 * 45, 1e-9, "hit by a car at 70: certain, 0.79")
 assert(out(p), "severe: knocked out"); wake(20)
 assert(string.find(DanTraits_ExtraCommands.concussion(newPlayer(), { "crash", "10" }), "a crash of 10: concussion 0", 1, true), "crash command")
+-- 1c. in a car the top speed in the second before decides (the game's amount levels off: measured 42 at 49 km/h, 47 at 71)
+local function drive(p, kmh) p.getVehicle = function() return { getCurrentSpeedKmHour = function() return kmh end } end; H.frame(p) end
+p = newPlayer(); H.current = p; H.now = 500000; H.rollf = 0
+drive(p, 11); H.now = H.now + 200; drive(p, 3)   -- the crash slows the car; the top speed stands
+damage(p, "CARCRASHDAMAGE", 41.5)
+assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 41.5 at 11 km/h", "11 km/h: nothing, whatever the amount says: " .. tostring(D(p).ccLastImpact))
+H.now = H.now + 5000; drive(p, 49); H.rollf = 0.5; damage(p, "CARCRASHDAMAGE", 42.3)
+near(D(p).ccScore, 0.25 + 0.01 * 24, 1e-9, "49 km/h: about half a chance (roll 0.5 takes), moderate 0.49")
+if out(p) then wake(5) end
+p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0.99
+drive(p, 71); damage(p, "CARCRASHDAMAGE", 46.7)
+assert((D(p).ccScore or 0) >= 0.7 and out(p), "71 km/h: certain and severe, knocked out, though the amount was only 46.7")
+wake(20)
+p.getVehicle = nil
 
 -- 2. mild: a notice, no blackout
 p = newPlayer(); H.current = p; H.rollf = 0.99; H.clearHalo()

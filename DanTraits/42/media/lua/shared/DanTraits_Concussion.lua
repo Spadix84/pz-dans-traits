@@ -20,7 +20,11 @@
 --                  crash's own scale (BaseVehicle.addRandomDamageFromCrash:
 --                  up to 40 one body part hurt for 5 up to the amount; 40+ a
 --                  chance of a deep wound, 50+ a break; over 70 two or three
---                  parts). In play a low-speed bump into a sign reports ~20.
+--                  parts). A crash in a car is judged by the car's top speed in
+--                  the second before (CC_CRASH_KMH): the game's amount levels
+--                  off, 42 at 49 km/h and 47 at 71 (measured in play), so it
+--                  cannot tell a hard crash from a very hard one. Being hit
+--                  by a car on foot has no speed to read and uses the amount.
 --   WEAPONHIT      a weapon hit (other players, or mods that add them) that
 --                  took health off the head
 -- A helmet (the head's clothing defense, CC_HELMET or more) makes a
@@ -40,6 +44,9 @@ local CC_FALL          = { 3, 15, 0.04 }   -- in play a second-floor drop costs 
                                            -- one about 7: the rest of a fall goes to the legs
 local CC_CRASH         = { 25, 70, 0.012 } -- a bump into a sign ~20: nothing; 40 (a wounding crash)
                                            -- a third of a chance, moderate; 70 certain, severe
+local CC_CRASH_KMH     = { 25, 70, 0.01 }  -- in a car, by top speed: under 25 km/h nothing; 50 about half
+                                           -- a chance, moderate; 70 certain, severe
+local CC_SPEED_WINDOW_MS = 1000  -- the top speed is taken over this much of the drive before the crash
 local CC_BASE          = 0.25    -- how bad at the least, plus the scale's per point
 local CC_HEAD_SURE     = 20      -- a weapon taking this much off the head: certain
 local CC_HEAD_PER      = 0.025   -- how bad per point off the head, over CC_BASE
@@ -123,6 +130,21 @@ local function impactKnock(player, amount, scale)
 end
 DanTraits_ImpactKnock = impactKnock
 
+-- the car's top speed over about the last second (the crash itself slows it)
+local speedTop, speedTopMs = 0, 0
+local function trackSpeed(player)
+    local kmh = nil
+    pcall(function() local v = player:getVehicle(); if v then kmh = math.abs(v:getCurrentSpeedKmHour() or 0) end end)
+    if not kmh then return end   -- on foot: nothing to track
+    local now = getTimestampMs and getTimestampMs() or 0
+    if kmh >= speedTop or now - speedTopMs > CC_SPEED_WINDOW_MS then speedTop, speedTopMs = kmh, now end
+end
+local function recentTopSpeed()
+    local now = getTimestampMs and getTimestampMs() or 0
+    if speedTopMs <= 0 or now - speedTopMs > CC_SPEED_WINDOW_MS * 1.5 then return nil end
+    return speedTop
+end
+
 local headWas = nil   -- the head's health last frame, for weapon hits
 local function onConcussionDamage(character, damageType, amount)
     if not sandboxOn() then return end
@@ -130,8 +152,15 @@ local function onConcussionDamage(character, damageType, amount)
     if not player or character ~= player then return end
     amount = tonumber(amount) or 0
     if damageType == "FALLDOWN" or damageType == "CARCRASHDAMAGE" or damageType == "CARHITDAMAGE" then
-        traitData(player).ccLastImpact = damageType .. " " .. tostring(math.floor(amount * 100 + 0.5) / 100)
-        impactKnock(player, amount, damageType == "FALLDOWN" and CC_FALL or CC_CRASH)
+        local note = damageType .. " " .. tostring(math.floor(amount * 100 + 0.5) / 100)
+        local kmh = damageType == "CARCRASHDAMAGE" and recentTopSpeed() or nil
+        if kmh then
+            traitData(player).ccLastImpact = note .. " at " .. tostring(math.floor(kmh + 0.5)) .. " km/h"
+            impactKnock(player, kmh, CC_CRASH_KMH)
+        else
+            traitData(player).ccLastImpact = note
+            impactKnock(player, amount, damageType == "FALLDOWN" and CC_FALL or CC_CRASH)
+        end
     elseif damageType == "WEAPONHIT" then
         local head = headPart(player)
         local now = nil
@@ -257,6 +286,6 @@ end
 Events.OnPlayerGetDamage.Add(onConcussionDamage)
 DanTraits_Every("minute", "Concussion", updateConcussionMinute, 24)
 DanTraits_Every("frame", "Concussion", function(player)
-    if sandboxOn() then updateConcussionFrame(player) end
+    if sandboxOn() then trackSpeed(player); updateConcussionFrame(player) end
 end, 24)
 Events.OnWeaponSwing.Add(onConcussionSwing)
