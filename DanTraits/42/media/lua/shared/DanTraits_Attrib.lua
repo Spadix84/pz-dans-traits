@@ -14,7 +14,7 @@
 -- dashboard switches it on when it opens ("attrib on" / "attrib off").
 -- Single player only; nothing is installed on a server.
 
-local STATS = { "UNHAPPINESS", "STRESS", "BOREDOM", "PANIC", "FATIGUE", "ENDURANCE", "PAIN", "HUNGER", "THIRST",
+local STATS = { "UNHAPPINESS", "STRESS", "ANGER", "BOREDOM", "PANIC", "FATIGUE", "ENDURANCE", "PAIN", "HUNGER", "THIRST",
     "FOOD_SICKNESS", "SICKNESS", "INTOXICATION", "WETNESS" }
 local EVENTS = { "EveryOneMinute", "EveryTenMinutes", "EveryHours", "OnPlayerUpdate", "OnTick", "OnTickEvenPaused",
     "OnWeaponSwing", "OnPlayerGetDamage", "AddXP" }

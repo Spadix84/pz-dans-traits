@@ -68,6 +68,7 @@ local NIC_FADE_FLOOR    = 0.25    -- ...then its ceiling eases to this by the ti
 local NIC_ANGER         = 0.6     -- irritability floor (0..1) at full withdrawal
 local NIC_ANGER_RAMP    = 0.01    -- per minute
 local NIC_ANGER_MARGIN  = 0.002   -- held this far above the floor, clear of vanilla's per-tick drain
+local NIC_CRAVE_ANGER   = 0.25    -- irritability that counts as showing, if the Angry moodle cannot be read
 local NIC_HUNGER        = 0.0002  -- hunger per minute at full withdrawal
 local NIC_SLEEP_WAKE    = 1       -- light wakes you (1 + this x withdrawal) times as easily
 local NIC_SLEEP_CUT     = 0.2     -- night quality x (1 - this x withdrawal)
@@ -189,8 +190,11 @@ end
 -- Vanilla drains ANGER a little every tick. Topping it up once a minute let
 -- it dip under a moodle threshold between top-ups, so the moodle flickered.
 -- Instead the minute update sets a level (nicAnger, climbing a ramp at a
--- time towards the floor) and every frame holds ANGER at or above it. When
--- the floor goes, the hold goes, and vanilla's drain brings it down.
+-- time towards the floor) and every frame holds ANGER at or above it.
+-- Vanilla never raises ANGER and drains it slowly, so when the craving eases
+-- (a cigarette, sleep, the habit winding down) the irritability it was
+-- holding up is taken off with it; left to the drain, the Angry moodle
+-- lingered for hours after the craving had gone.
 local function holdAnger(stats, d)
     local hold = d.nicAnger or 0
     if hold <= 0 then return end
@@ -201,15 +205,39 @@ local function holdAnger(stats, d)
     end)
 end
 
+-- the craving eased: take `by` off the hold and off ANGER with it
+local function easeAnger(stats, d, by)
+    by = math.min(by, d.nicAnger or 0)
+    if by <= 0 then return end
+    d.nicAnger = d.nicAnger - by
+    pcall(function() stats:set(CharacterStat.ANGER, math.max(0, (stats:get(CharacterStat.ANGER) or 0) - by)) end)
+end
+
 local function setAngerFloor(stats, d, floor)
-    if floor <= 0 then
-        d.nicAnger = 0
-        return
+    local held = d.nicAnger or 0
+    local hold = 0
+    if floor > 0 then
+        local now = 0
+        pcall(function() now = stats:get(CharacterStat.ANGER) or 0 end)
+        hold = math.min(floor, math.max(held, now) + NIC_ANGER_RAMP)
     end
-    local now = 0
-    pcall(function() now = stats:get(CharacterStat.ANGER) or 0 end)
-    d.nicAnger = math.min(floor, math.max(d.nicAnger or 0, now) + NIC_ANGER_RAMP)
+    if hold < held then
+        easeAnger(stats, d, held - hold)
+    else
+        d.nicAnger = hold
+    end
     holdAnger(stats, d)
+end
+
+local function angryLevel(player, stats)
+    local level
+    if MoodleType and MoodleType.ANGRY then
+        pcall(function() level = player:getMoodles():getMoodleLevel(MoodleType.ANGRY) end)
+    end
+    if level then return level end
+    local anger = 0
+    pcall(function() anger = stats:get(CharacterStat.ANGER) or 0 end)
+    return anger >= NIC_CRAVE_ANGER and 1 or 0
 end
 
 -- the trait, gained ------------------------------------------------------------
@@ -235,6 +263,9 @@ local function applyDose(player, dose, smoked, pre)
         addFrac(stats, CharacterStat.STRESS, -NIC_RELIEF_STRESS * pre.w * one)
         addFrac(stats, CharacterStat.UNHAPPINESS, -NIC_RELIEF_MOOD * pre.w * one)
     end
+    -- and the irritability goes with the craving it came from (an ex-smoker's cue too)
+    easeAnger(stats, d, (d.nicAnger or 0) * one)
+    if one >= 1 then d.nicCueMin = 0 end
 
     -- to anyone else a buzz, fading with tolerance, and so does the nausea
     local tolerance = pre.smoker and 1 or clamp01(pre.meter / NIC_GAIN)
@@ -244,7 +275,7 @@ local function applyDose(player, dose, smoked, pre)
         addFrac(stats, CharacterStat.BOREDOM, -NIC_BUZZ_BOREDOM * buzz)
         addFrac(stats, CharacterStat.FATIGUE, -NIC_BUZZ_FATIGUE * buzz)
         if buzz >= NIC_BUZZ_SHOW then
-            pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_SmokerBuzz")) end)
+            DanTraits_NotifyGood(player, "UI_DanTraits_SmokerBuzz")
         end
     end
     if tolerance > 0 and pre.sick then
@@ -345,7 +376,7 @@ function DanTraits_ChewNicotineGum(player)
     end
     d.nicCueMin = 0
     d.nicStimH = math.max(d.nicStimH or 0, NIC_STIM_H * 0.5)
-    pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_SmokerGum")) end)
+    DanTraits_NotifyGood(player, "UI_DanTraits_SmokerGum")
     return true
 end
 
@@ -428,7 +459,7 @@ local function updateSmokerMinute(player, d)
         smoker = false
         d.nicMeter, d.nicEx, d.nicInit, d.nicExHours, d.nicWithdraw = 0, true, false, 0, 0
         if ws then pcall(function() stats:set(ws, 0) end) end
-        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_SmokerCured")) end)
+        DanTraits_NotifyGood(player, "UI_DanTraits_SmokerCured")
     end
 
     local drunk = drunkLevel(player) >= NIC_DRUNK_LEVEL
@@ -476,6 +507,15 @@ local function updateSmokerMinute(player, d)
         end
     end
     setAngerFloor(stats, d, angerFloor)
+    -- say why, once, when the craving first shows as the Angry moodle
+    if smoker and (d.nicAnger or 0) > 0 then
+        if not d.nicCraveShown and angryLevel(player, stats) > 0 then
+            d.nicCraveShown = true
+            notify(player, "UI_DanTraits_SmokerCraving")
+        end
+    elseif (d.nicAnger or 0) <= 0 then
+        d.nicCraveShown = nil
+    end
 
     -- the cough, worst in the first hour after a real sleep
     if (d.nicCoughGap or 0) > 0 then d.nicCoughGap = d.nicCoughGap - 1 end

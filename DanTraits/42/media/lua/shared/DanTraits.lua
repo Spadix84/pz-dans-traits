@@ -35,8 +35,39 @@ local function hasTrait(player, key)
     return ok and res == true
 end
 
+-- Story events: every notice is also published as the Lua event
+--   OnStoryEvent(player, { source, kind, text, tone })
+-- so a diary (PZ Chronicle), the dashboard, or any other mod can tell the
+-- day's story. kind is the text key without its "UI_DanTraits_" prefix
+-- ("SmokerCraving"), tone is "good" or "bad". Other mods are welcome to
+-- publish their own the same way: register the event if it is missing, then
+-- triggerEvent. Listeners never see our errors and we never see theirs.
+local STORY_EVENT = "OnStoryEvent"
+pcall(function()
+    if LuaEventManager and not Events[STORY_EVENT] then LuaEventManager.AddEvent(STORY_EVENT) end
+end)
+
+function DanTraits_Story(player, kind, text, tone)
+    if not player or not triggerEvent then return end
+    pcall(function()
+        triggerEvent(STORY_EVENT, player, { source = "DanTraits", kind = kind, text = text, tone = tone or "bad" })
+    end)
+end
+
+local function storyKind(textKey)
+    return (string.gsub(textKey, "^UI_DanTraits_", ""))
+end
+
 local function notify(player, textKey)
-    pcall(function() HaloTextHelper.addBadText(player, getText(textKey)) end)
+    local text = getText(textKey)
+    pcall(function() HaloTextHelper.addBadText(player, text) end)
+    DanTraits_Story(player, storyKind(textKey), text, "bad")
+end
+
+local function notifyGood(player, textKey)
+    local text = getText(textKey)
+    pcall(function() HaloTextHelper.addGoodText(player, text) end)
+    DanTraits_Story(player, storyKind(textKey), text, "good")
 end
 
 local function traitData(player)
@@ -61,6 +92,7 @@ end
 DanTraits_HasTrait = hasTrait
 DanTraits_HasVanillaTrait = hasVanillaTrait
 DanTraits_Notify = notify
+DanTraits_NotifyGood = notifyGood
 DanTraits_Data = traitData
 
 -- 0..1 fraction of a stat's range, for the ones the game keeps on other

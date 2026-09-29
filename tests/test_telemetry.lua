@@ -94,4 +94,15 @@ assert(DanTraits_RunCommand(player, "set mddEpisode false") == "set mddEpisode =
 assert(DanTraits_RunCommand(player, "set glucose nil") == "set glucose = nil" and md.DanTraits.glucose == nil)
 assert(DanTraits_RunCommand(player, "stat NOPE 1"):find("unknown"), "bad stat reported")
 assert(DanTraits_RunCommand(player, "   ") == nil, "blank ignored")
+
+-- 5. story events land in the snapshot, newest first, stamped with the game clock
+assert(handlers.OnStoryEvent, "listens for story events")
+handlers.OnStoryEvent(player, { source = "DanTraits", kind = "SmokerCraving", text = "I need a cigarette", tone = "bad" })
+handlers.OnStoryEvent(player, { source = "OtherMod", kind = "Found", text = "Found a <photo>", tone = "good" })
+handlers.OnStoryEvent(player, "not a table")
+now = 4000; handlers.OnTick()
+snap = files["DanTraits_Telemetry.json"]
+local a, b = snap:find('"text":"Found a <photo>"', 1, true), snap:find('"text":"I need a cigarette"', 1, true)
+assert(a and b and a < b, "both events, newest first: " .. snap)
+assert(snap:find('"clock":"4/8 14:30"', 1, true) and snap:find('"source":"OtherMod"', 1, true), snap)
 print("telemetry: all checks passed")

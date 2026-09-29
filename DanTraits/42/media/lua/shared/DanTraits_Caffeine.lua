@@ -61,7 +61,7 @@ local function dose(player, amount, what)
         d.cafDryHours = 0
         if d.cafWithdrawing then
             d.cafWithdrawing = false
-            pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_CaffeineSated")) end)
+            DanTraits_NotifyGood(player, "UI_DanTraits_CaffeineSated")
         end
     end
     return true
@@ -102,7 +102,7 @@ local function updateCaffeineMinute(player, d)
         notify(player, "UI_DanTraits_CaffeineCraving")
     elseif w <= 0 and d.cafWithdrawing and d.cafDryHours >= CAF_FADE_TO_H then
         d.cafWithdrawing = false
-        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_CaffeineBroken")) end)
+        DanTraits_NotifyGood(player, "UI_DanTraits_CaffeineBroken")
     end
     if w <= 0 then return end
     local asleep = false

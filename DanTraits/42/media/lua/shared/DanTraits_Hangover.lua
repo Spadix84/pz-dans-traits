@@ -130,7 +130,7 @@ local function updateHangoverMinute(player, d)
         if d.hoHoursLeft <= 0 then
             d.hoActive, d.hoHoursLeft, d.hoSeverity = false, 0, 0
             updateMoodle(player, 0)
-            pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_HangoverOver")) end)
+            DanTraits_NotifyGood(player, "UI_DanTraits_HangoverOver")
             return
         end
     end

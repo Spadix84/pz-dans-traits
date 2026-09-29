@@ -73,7 +73,7 @@ function render(d){
   document.getElementById('traits').innerHTML=arr(d.traits).map(t=>`<span class="chip">${t.replace(/^dantraits:/i,'')}</span>`).join(' ');
   const cards=[];
   // vitals
-  const vit=[['panic',100],['endurance',1],['fatigue',1],['thirst',1],['hunger',1],['unhappiness',100],['stress',1],['boredom',100],['intoxication',100],['food_sickness',100],['pain',100]];
+  const vit=[['panic',100],['endurance',1],['fatigue',1],['thirst',1],['hunger',1],['unhappiness',100],['stress',1],['anger',1],['boredom',100],['intoxication',100],['food_sickness',100],['pain',100]];
   cards.push(card('Vitals', vit.filter(v=>s[v[0]]!=null).map(v=>`<div class="row"><span class="dim">${v[0]}</span><span>${fmt(s[v[0]])}</span></div>${bar(s[v[0]],v[1])}`).join('') + row('health',fmt(b.health,1)) + bar(b.health,100,'var(--ok)') + row('weight',fmt(b.weight,1)+' kg') + row('calories',fmt(b.calories)) + row('asleep / outside / running',`${fmt(b.asleep)} / ${fmt(b.outside)} / ${fmt(b.running)}`) + row('air temp',fmt(b.temperature,1)+' C')));
   // what moved each stat
   cards.push(attribCard(d));
@@ -134,6 +134,8 @@ function render(d){
   const shown=new Set(['ccLastImpact','ccScore','ccTier','ccLastEndurance','faintWake','bloodFaintGap','wcParts','wcLife','wcSummary','wcMoved','infBodyTemp','infParts','infS','infAbx','infDoses','infMaxL','infStage','infFever','infSickness','infActive','infUnfinished','infOffH','infFocus','bloodVol','bloodCells','bloodTier','bloodWeak','bloodLossMin','bloodSources','bloodRefunded','bloodLastEndurance','bloodDebug','bloodDbgParts','bloodDbgHealth','bloodDbgHealthMin','bloodDbgRefundMin','bloodDbgRefundLast','depTolerance','alcStage','alcW','alcShakes','alcSoberHours','alcDayGain','alcEx','hoLoad','hoActive','hoPending','hoDrinking','hoSeverity','hoHoursLeft','hoAsleep','cafLevel','cafDryHours','cafWithdraw','cafWithdrawing','cafLastDose','migActive','migAuraLeft','migChance','migSeverity','migHoursLeft','migSinceEnd','migMedsUsed','hemoOpen','hemoWarned','anIron','anDeficit','anLastIron','anTier','anLastCatch','anLastEndurance','artJoint','artStiffTarget','artCombatSet','glucose','diaFast','diaSlow','diaInsulin','diaMedMinutes','diaKetoHours','diaHaloIn','diaFumble','asthma','asthmaAttack','asthmaCoughIn','asthmaShownTier','mddSeverity','mddEpisode','mddHoursLeft','mddSinceEnd','mddOutside','mddSmokeTimer','mddFoodTimer','mddMedDays','mddMedStreak','mddWithdraw','gluten','glutenPending','glutenOnset','dryHours','withdrawing']);
   const rest=Object.entries(m).filter(([k])=>!shown.has(k)).sort();
   cards.push(card('All mod data', `<table>${Object.entries(m).sort().map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}</td></tr>`).join('')}</table>`));
+  const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+  cards.push(card('Story', arr(d.story).length ? `<table>${arr(d.story).map(e=>`<tr><td class="dim">${esc(e.clock||'')}</td><td class="${e.tone==='good'?'ok':'bad'}">${esc(e.text)}</td><td class="dim">${esc(e.kind)}</td></tr>`).join('')}</table>` : '<div class="dim">nothing yet: trait notices land here as they happen</div>'));
   cards.push(card('Log', `<pre>${arr(d.log).map(l=>l.text).join('\n')}</pre>`));
   cards.push(card('Raw telemetry', `<details><summary>show JSON</summary><pre>${JSON.stringify(d,null,1)}</pre></details>`,'wide'));
   document.getElementById('main').innerHTML=cards.join('');
@@ -151,7 +153,8 @@ const AT={win:0,frozen:null,autoSent:false,userOff:false,open:{unhappiness:true,
 const UP_GOOD=new Set(['endurance','health']);
 // where vanilla usually gets it from (moodles on the right say which apply now)
 const VANILLA={unhappiness:'boredom, wet / uncomfortable, pain, sickness, food eaten (stale, rotten, bland), dirty / bloody clothes, smoker craving',
-  stress:'zombies nearby, panic, pain, injuries, sickness, smoker craving',boredom:'idle or indoors a long time; TV, radio, books and outdoors lower it',
+  stress:'zombies nearby, panic, pain, injuries, sickness, smoker craving',
+  anger:'nothing: the game only drains it; Smoker withdrawal (this mod) and More Traits Alcoholic withdrawal raise it',boredom:'idle or indoors a long time; TV, radio, books and outdoors lower it',
   panic:'zombies in view, being grabbed, low light with zombies near',fatigue:'time awake, exertion; sleep lowers it',endurance:'running, fighting, heavy load; resting restores it',
   pain:'injuries, fractures, burns, sickness',hunger:'time, exertion',thirst:'time, exertion, heat, alcohol',food_sickness:'bad food, rotten food',
   sickness:'infection, cold, food poisoning',health:'injuries, sickness, starvation, dehydration',wetness:'rain, swimming; dries over time'};
@@ -176,7 +179,7 @@ function attribCard(d){
   if(!w) return card('What is moving each stat',ctl+'<div class="dim">collecting...</div>','beside');
   const total=w.total||{}, src=w.sources||{};
   const stats=new Set(Object.keys(total)); for(const r of Object.values(src)) for(const k of Object.keys(r)) stats.add(k);
-  const order=['unhappiness','stress','boredom','panic','fatigue','endurance','pain','health','hunger','thirst','food_sickness','sickness','intoxication','wetness'];
+  const order=['unhappiness','stress','anger','boredom','panic','fatigue','endurance','pain','health','hunger','thirst','food_sickness','sickness','intoxication','wetness'];
   const rank=k=>{ const n=order.indexOf(k); return n<0?99:n; }, list=[...stats].sort((x,y)=>rank(x)-rank(y));
   const rows=list.map(stat=>{
     const net=total[stat]||0; let credited=0; const parts=[];
@@ -231,6 +234,8 @@ poll();
 </div></div></div>
 </body></html>
 """
+
+
 class Handler(BaseHTTPRequestHandler):
     folder = None
     last_good = {}

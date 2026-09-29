@@ -330,7 +330,7 @@ local function updateVitalityMinute(player, d)
     local tier = tierOf(d.vitality)
     if tier ~= before and tier ~= 2 then notify(player, "UI_DanTraits_VitTier" .. tier) end
     if tier ~= before and tier == 2 then
-        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_VitTier2")) end)
+        DanTraits_NotifyGood(player, "UI_DanTraits_VitTier2")
     end
     updateMoodle(player, d.vitality)
 

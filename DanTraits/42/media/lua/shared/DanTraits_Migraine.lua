@@ -132,7 +132,7 @@ local function endAttack(player, d)
     d.migHoursLeft = 0
     d.migSinceEnd = 0
     updateMoodle(player, 0)
-    pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_MigraineEnd")) end)
+    DanTraits_NotifyGood(player, "UI_DanTraits_MigraineEnd")
 end
 
 -- the ten-minute roll

@@ -161,8 +161,10 @@ end
 -- So: set the flag, toggle, restore the flag. Doors already locked by key,
 -- barricaded doors, open doors, and doors the player has the key for are
 -- skipped, because the toggle would unlock or open those instead.
--- Player-built doors only rattle when the player is outdoors. Windows have
--- no wobble at all. Anything skipped is sound only.
+-- Doors only rattle when the player is outdoors: from inside, the game lets
+-- the player through a locked door, so the toggle opens it. Windows have
+-- no wobble at all. Anything skipped is sound only. Returns "opened" if the
+-- door opened anyway (it is shut again), so the caller stops rattling it.
 local function rattleDoor(obj, player)
     if RenderEffectType and RenderEffectType.Hit_Door then
         local ok = pcall(function() obj:setRenderEffect(RenderEffectType.Hit_Door, true) end)
@@ -173,7 +175,7 @@ local function rattleDoor(obj, player)
     local isBuilt = (not isDoor) and instanceof(obj, "IsoThumpable")
     if not isDoor and not isBuilt then return false end
     if obj:isOpen() or obj:isBarricaded() or obj:isLockedByKey() then return false end
-    if isBuilt and not player:isOutside() then return false end
+    if not player:isOutside() then return false end
 
     local hasKey = false
     pcall(function() hasKey = player:getInventory():haveThisKeyId(obj:getKeyId()) ~= nil end)
@@ -191,7 +193,7 @@ local function rattleDoor(obj, player)
     if obj:isOpen() then
         -- should be impossible given the checks above; put it back regardless
         pcall(function() obj:ToggleDoorActual(player) end)
-        return false
+        return "opened"
     end
     return ok
 end
@@ -204,8 +206,9 @@ local function episodeThump(player)
     local target = targets[ZombRand(#targets) + 1]
     local obj, sound, extra = target.obj, target.sound, target.extra
     local hits = 2 + ZombRand(3)
+    local canRattle = true
     local function thump()
-        rattleDoor(obj, player)
+        if canRattle and rattleDoor(obj, player) == "opened" then canRattle = false end
         pcall(function() playSoundAt(sound, obj:getX(), obj:getY(), obj:getZ()) end)
         if extra then pcall(function() playSoundAt(extra, obj:getX(), obj:getY(), obj:getZ()) end) end
     end

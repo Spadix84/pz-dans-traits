@@ -225,7 +225,7 @@ local function updateMddTen(player, d)
         if d.mddHoursLeft <= 0 then
             d.mddEpisode = false
             d.mddSinceEnd = 0
-            pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_MddEnd")) end)
+            DanTraits_NotifyGood(player, "UI_DanTraits_MddEnd")
         end
         return
     end

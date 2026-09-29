@@ -44,6 +44,26 @@ local function logLine(text)
     print("[DanTraits telemetry] " .. tostring(text))
 end
 
+-- the story so far: OnStoryEvent from any mod (DanTraits.lua), newest first,
+-- stamped with the game clock
+local STORY_KEEP = 40
+local story = {}
+local function onStoryEvent(player, ev)
+    if type(ev) ~= "table" then return end
+    local clock
+    pcall(function()
+        local gt = getGameTime()
+        -- whole numbers by hand: Kahlua's tostring can say "4.0"
+        local function int(n) return (string.gsub(tostring(math.floor(n or 0)), "%.0+$", "")) end
+        local function two(n) n = math.floor(n or 0); return (n < 10 and "0" or "") .. int(n) end
+        -- the game counts days and months from 0
+        clock = int(gt:getDay() + 1) .. "/" .. int(gt:getMonth() + 1) .. " " .. two(gt:getHour()) .. ":" .. two(gt:getMinutes())
+    end)
+    table.insert(story, 1, { clock = clock, source = tostring(ev.source or "?"), kind = tostring(ev.kind or "?"),
+        text = tostring(ev.text or ""), tone = tostring(ev.tone or "") })
+    while #story > STORY_KEEP do table.remove(story) end
+end
+
 -- JSON --------------------------------------------------------------------------
 local function jsonString(s)
     s = s:gsub('[%c"\\]', function(c)
@@ -112,7 +132,7 @@ DanTraits_JsonEncode = encode
 
 -- Snapshot ------------------------------------------------------------------------
 local STAT_NAMES = { "PANIC", "ENDURANCE", "FATIGUE", "THIRST", "HUNGER", "UNHAPPINESS", "STRESS", "BOREDOM",
-    "INTOXICATION", "FOOD_SICKNESS", "PAIN", "WETNESS", "DRUNKENNESS", "SICKNESS" }
+    "INTOXICATION", "FOOD_SICKNESS", "PAIN", "WETNESS", "DRUNKENNESS", "SICKNESS", "ANGER", "NICOTINE_WITHDRAWAL" }
 
 local function safe(fn, default)
     local ok, res = pcall(fn)
@@ -178,6 +198,7 @@ local function snapshot(player)
     if DanTraits_AttribReport then out.attrib = safe(function() return DanTraits_AttribReport(player) end) end
     if DanTraits_ActiveMoodles then out.moodles = safe(function() return DanTraits_ActiveMoodles(player) end) end
     if #log > 0 then out.log = log end   -- an empty Lua table would encode as {} and confuse the page
+    if #story > 0 then out.story = story end
     return out
 end
 
@@ -408,3 +429,4 @@ end
 local tickEvent = Events.OnTickEvenPaused or Events.OnTick
 tickEvent.Add(onTick)
 Events.OnGameStart.Add(function() logLine("telemetry started") end)
+if Events.OnStoryEvent then Events.OnStoryEvent.Add(onStoryEvent) end

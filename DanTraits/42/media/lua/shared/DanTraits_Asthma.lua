@@ -121,7 +121,7 @@ local function asthmaSetIrritation(player, d, value, quiet)
         d.asthmaShownTier = 4
     elseif d.asthmaAttack and value < ASTHMA_ATTACK_ENDS_AT then
         d.asthmaAttack = false
-        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_AsthmaRelief")) end)
+        DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief")
         d.asthmaShownTier = asthmaTierOf(value)
     end
 
@@ -261,7 +261,7 @@ function DanTraits_UseInhaler(player)
         stats:set(CharacterStat.PANIC, math.min(100, (stats:get(CharacterStat.PANIC) or 0) + ASTHMA_INHALER_PANIC))
     end)
     if d.asthma < ASTHMA_TIER[3] then
-        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_AsthmaRelief")) end)
+        DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief")
     end
     if DanTraits_DiaOnInhaler then pcall(DanTraits_DiaOnInhaler, player) end
     return true

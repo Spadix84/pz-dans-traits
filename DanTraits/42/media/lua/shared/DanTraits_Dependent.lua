@@ -208,7 +208,7 @@ local function updateDependent(player, d)
         meter = 0
         d.alcEx, d.alcInit, d.dryHours = true, false, 0
         clearWithdrawal(d)
-        pcall(function() HaloTextHelper.addGoodText(player, getText("UI_DanTraits_AlcoholicCured")) end)
+        DanTraits_NotifyGood(player, "UI_DanTraits_AlcoholicCured")
     end
     d.alcDrinking = drinking
     d.depTolerance = meter

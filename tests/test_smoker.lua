@@ -130,14 +130,19 @@ assert(s._st.hunger > 0.01, "hungrier")
 near(DanTraits_NicotineWithdrawal(s), 1, 1e-9, "withdrawal read by others")
 near(DanTraits_RunHooks("sleepWake", 1, s, H(s)), 2, 1e-9, "light sleep")
 near(DanTraits_RunHooks("nightQuality", 1, s, H(s)), 0.8, 1e-9, "poor night")
-s._asleep = true; s._st.anger = 0; minute(); DanTraits_updateSmokerFrame(s); s._asleep = false
-assert(s._st.anger == 0, "no irritability asleep, and no hold")
+local craving = 0
+for _, t in ipairs(halo) do if t == "UI_DanTraits_SmokerCraving" then craving = craving + 1 end end
+assert(craving == 1, "says why it is angry, once: got " .. craving)
+s._asleep = true; minute(); DanTraits_updateSmokerFrame(s); s._asleep = false
+assert(s._st.anger < 0.01 and H(s).nicAnger == 0, "asleep: the irritability goes with the hold, not left to vanilla's drain")
+mins(60); near(s._st.anger, 0.6, 0.003, "awake: back to irritable")
 
 -- 6. relief is the craving answered: a lot in full withdrawal, next to nothing chain-smoked
 s._st.stress, s._st.unhappy = 0.5, 50
 smoke(s, nil, vanillaSmoker)
 near(s._st.stress, 0.45 - 0.1, 1e-9, "full craving: stress relief")
 near(s._st.unhappy, 40, 1e-9, "full craving: mood relief")
+assert(s._st.anger < 0.01 and H(s).nicAnger == 0, "full craving: the irritability goes with it, got " .. s._st.anger)
 assert(H(s).nicLastW == 0, "next craving starts from zero")
 smoke(s, nil, vanillaSmoker)
 near(s._st.stress, 0.30, 1e-9, "chain-smoked: vanilla's bit only")
