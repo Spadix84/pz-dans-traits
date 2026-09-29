@@ -4,7 +4,8 @@
 -- three days to cross a tier. Fresh produce, fresh meat and cooked dishes
 -- with several ingredients score high; canned and dried food is neutral;
 -- packaged snacks, candy, soda, rotten and burnt food score low; eating the
--- same few things all week costs a little, variety earns a little. Exercise
+-- same few things all week costs a little, variety earns a little (what
+-- counts as junk, fresh or cooked is read from the tags of DanTraits_Food.lua). Exercise
 -- is the fitness system's regularity. Sleep is scored per night, not per
 -- nap: segments broken by less than an hour awake (night terrors, a quick
 -- check outside; three hours for Restless Sleeper, who sleeps in two
@@ -27,6 +28,7 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
+local foodTags = DanTraits_FoodTags
 
 local VIT_ENABLED           = true
 -- diet
@@ -94,13 +96,6 @@ local VIT_LUNG_HEAL         = 0.25    -- a smoker's lungs recovering x (1 + this
 local VIT_XP_TIER           = 4       -- Thriving: Fitness and Strength experience is multiplied...
 local VIT_XP_MULT           = 2       -- ...by this
 
-local JUNK_WORDS = {
-    "candy", "chocolate", "chips", "crisps", "soda", "pop", "cola", "cookie", "cake", "donut", "doughnut", "gum",
-    "lollipop", "marshmallow", "icecream", "tvdinner", "twinkie", "hostess", "jerky", "poptart", "cupcake", "candycane",
-    "gummy", "caramel", "toffee", "fudge", "sugar",
-}
-local JUNK_SAFE = { "sugarcane", "chipsbowl" }
-
 local function vitData(player)
     local d = traitData(player)
     d.vitDiet = d.vitDiet or 0.5
@@ -115,35 +110,24 @@ local clamp01 = DanTraits_Clamp01
 
 -- 0..1 grade for a portion of food: 0.5 is "does no harm"
 function DanTraits_GradeFood(item)
-    local name = ""
-    pcall(function() name = string.lower(tostring(item:getType() or "")) end)
-    local function flag(method)
-        local ok, res = pcall(function() return item[method](item) end)
-        return ok and res == true
-    end
-    if flag("isRotten") then return 0.5 + VIT_GRADE_ROTTEN, "rotten" end
-    if flag("isBurnt") then return 0.5 + VIT_GRADE_BURNT, "burnt" end
-    local packaged = flag("isPackaged")
+    local tags = foodTags(item)
+    if tags.rotten then return 0.5 + VIT_GRADE_ROTTEN, "rotten" end
+    if tags.burnt then return 0.5 + VIT_GRADE_BURNT, "burnt" end
+    local packaged = tags.packaged
     local unhappy = 0
     pcall(function() unhappy = item:getUnhappyChange() or 0 end)
-    local junk = false
-    for _, safe in ipairs(JUNK_SAFE) do if name:find(safe, 1, true) then junk = nil end end
-    if junk ~= nil then
-        for _, word in ipairs(JUNK_WORDS) do if name:find(word, 1, true) then junk = true end end
-        if packaged and unhappy < 0 then junk = true end
-    end
+    local junk = tags.junk
+    if not tags.junkSafe and packaged and unhappy < 0 then junk = true end
     if junk then return 0.5 + VIT_GRADE_JUNK, "junk" end
     local grade, why = 0.5, "plain"
-    local ingredients = 0
-    pcall(function() if item:haveExtraItems() then ingredients = item:getExtraItems():size() end end)
-    local cooked = flag("isCooked")
-    if packaged or name:find("canned", 1, true) or name:find("dried", 1, true) then
+    local ingredients = tags.ingredients
+    if packaged or tags.canned then
         why = "packaged"
-    elseif flag("isFresh") then
+    elseif tags.fresh then
         grade = grade + VIT_GRADE_FRESH
         why = "fresh"
     end
-    if cooked then grade = grade + VIT_GRADE_COOKED; why = why .. ", cooked" end
+    if tags.cooked then grade = grade + VIT_GRADE_COOKED; why = why .. ", cooked" end
     if ingredients > 0 then
         grade = grade + math.min(3, ingredients) * VIT_GRADE_INGREDIENT
         why = why .. ", " .. ingredients .. " ingredient" .. (ingredients > 1 and "s" or "")

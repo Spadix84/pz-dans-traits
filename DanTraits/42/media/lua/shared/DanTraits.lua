@@ -27,6 +27,9 @@ require "DanTraits_Attrib"
 -- the shared one-liners (clamps, dice, part lookups, sandbox, moodle updater)
 require "DanTraits_Util"
 
+-- the one food classifier (wheat, meat, junk, sugar, iron, caffeine by item)
+require "DanTraits_Food"
+
 -- Trait lookup goes through the registry when it is available and falls back
 -- to the legacy string form, so this keeps working if either API shifts.
 -- A key with no registry entry means the game was not restarted after the
