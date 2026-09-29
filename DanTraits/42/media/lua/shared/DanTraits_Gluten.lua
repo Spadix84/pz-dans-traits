@@ -5,6 +5,7 @@ local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 local floorUp = DanTraits_FloorUp
+local foodTags = DanTraits_FoodTags
 
 -- Gluten Intolerance ----------------------------------------------------------
 -- Wheat in a meal sets off a flare (0..1 in mod data): nothing for a while,
@@ -12,17 +13,10 @@ local floorUp = DanTraits_FloorUp
 -- lasts it holds pain, food sickness (the vanilla Queasy moodle) and low mood
 -- up to a floor that scales with the flare (the pain one goes through
 -- DanTraits_PainFloor, so painkillers lower it by their strength but a big flare
--- still hurts). The game has no grain tag, so wheat is a name list; the dose is the
+-- still hurts). The game has no grain tag, so wheat is a name list (the wheat tag of
+-- DanTraits_Food.lua, which also counts a wheat ingredient in a dish); the dose is the
 -- carbohydrates in the portion eaten, with a hunger-based fallback for foods
 -- that carry no nutrition data. Rice, potatoes, corn and fruit are safe.
-local GLUTEN_WORDS = {
-    "bread", "bagel", "baguette", "croissant", "pasta", "macaroni", "spaghetti", "lasagn", "ramen", "noodle",
-    "cereal", "cracker", "cookie", "cake", "pie", "dough", "pancake", "waffle", "sandwich", "burger", "pizza",
-    "beer", "biscuit", "muffin", "cupcake", "donut", "pretzel", "flour", "toast", "buns", "steambun", "pastry",
-    "tortilla", "burrito", "dumpling", "gingerbread",
-}
-local GLUTEN_SAFE_PART  = { "crappie", "poppies", "piece", "chips", "cornflour", "rice" }   -- anywhere in the name
-local GLUTEN_SAFE_EXACT = { "oatmeal", "oatsraw", "granolabar" }                              -- whole name
 local GLUTEN_DOSE_FULL     = 50      -- carbs of wheat in one sitting for a full flare (a loaf is 99, a slice 33)
 local GLUTEN_CARBS_PER_HUNGER = 3    -- carbs assumed per hunger point for foods with no nutrition data
 local GLUTEN_ONSET_MIN     = 20      -- minutes before the first symptoms
@@ -54,18 +48,7 @@ local function glutenTier(flare)
 end
 
 function DanTraits_IsWheat(item)
-    local ok, name = pcall(function() return string.lower(tostring(item:getType())) end)
-    if not ok or not name then return false end
-    for _, exact in ipairs(GLUTEN_SAFE_EXACT) do
-        if name == exact then return false end
-    end
-    for _, part in ipairs(GLUTEN_SAFE_PART) do
-        if name:find(part, 1, true) then return false end
-    end
-    for _, word in ipairs(GLUTEN_WORDS) do
-        if name:find(word, 1, true) then return true end
-    end
-    return false
+    return foodTags(item).wheat == true
 end
 
 -- carbs in the portion about to be eaten

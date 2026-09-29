@@ -8,6 +8,7 @@ local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 local floorUp = DanTraits_FloorUp
 local statAdd = DanTraits_StatAdd
+local foodTags = DanTraits_FoodTags
 local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- see DanTraits_Alcohol.lua
 -- 0..1 intoxication (the raw stat is 0..100); Alcohol.lua's reader, or core's fraction before it loads
 local function intoxOf(player)
@@ -99,15 +100,6 @@ local METER_ITEM     = "DanTraits.GlucoseMeter"
 local STRIPS_ITEM    = "DanTraits.TestStrips"
 local METFORMIN_ITEM = "DanTraits.Metformin"
 
--- foods whose sugar hits fast; everything else with carbohydrates is slow
-local DIA_FAST_WORDS = {
-    "candy", "chocolate", "lollipop", "sugar", "honey", "jam", "marmalade", "syrup", "icecream", "cone",
-    "cake", "cookie", "donut", "muffin", "cupcake", "pie", "gingerbread", "pancake", "waffle", "cereal", "juice",
-    "soda", "cola", "apple", "banana", "orange", "grape", "berr", "cherr", "peach", "pear", "melon", "mango",
-    "pineapple", "lemon", "lime", "raisin", "fruit", "milk", "yogurt", "pudding", "custard", "jelly", "marshmallow",
-    "caramel", "toffee", "fudge", "granola",
-}
-
 local function diaHas(player)
     return hasTrait(player, "diabetes1") or hasTrait(player, "diabetes2")
 end
@@ -125,13 +117,9 @@ end
 
 local function diaClamp(g) return math.max(DIA_MIN, math.min(DIA_MAX, g)) end
 
+-- foods whose sugar hits fast (the fastCarb tag of DanTraits_Food.lua); everything else with carbohydrates is slow
 function DanTraits_IsFastCarb(item)
-    local ok, name = pcall(function() return string.lower(tostring(item:getType())) end)
-    if not ok or not name then return false end
-    for _, word in ipairs(DIA_FAST_WORDS) do
-        if name:find(word, 1, true) then return true end
-    end
-    return false
+    return foodTags(item).fastCarb == true
 end
 
 -- 0..1 insulin resistance for Type 2 (always 0 for Type 1)

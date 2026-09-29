@@ -3,7 +3,8 @@
 -- Coffee, tea, cola, coffee liqueur and hot chocolate add to it through the
 -- drink hook by fluid and litres; instant coffee, chocolate-covered coffee
 -- beans, chocolate, cocoa and tea bags through the eat hook; the game's
--- vitamin pills (pictured as caffeine pills) through the pill hook. Once
+-- vitamin pills (pictured as caffeine pills) through the pill hook (the food
+-- amounts are the caffeine tag of DanTraits_Food.lua; fluids and pills stay here). Once
 -- the level has sat under CAF_SATED for twelve hours withdrawal starts: a
 -- headache (a DanTraits_PainFloor floor), tiredness, low mood and creeping stress, at full strength from
 -- thirty hours dry, and then fading out over the rest of the week as the
@@ -16,6 +17,7 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
+local foodTags = DanTraits_FoodTags
 
 local CAF_HALF_LIFE_H   = 5       -- hours for the level to halve
 local CAF_SATED         = 60      -- level above which the dry clock does not run
@@ -34,11 +36,6 @@ local CAF_STRESS        = 0.0002
 local CAF_FLUID = {
     coffee = 400, tea = 150, cola = 100, coladiet = 100, coffeeliqueur = 100, milkchocolate = 20, sodapop = 40,
 }
--- per whole item eaten (scaled by the fraction actually eaten)
-local CAF_FOOD = {
-    coffee2 = 600, chocolatecoveredcoffeebeans = 300, cocoapowder = 30, teabag2 = 40,
-}
-local CAF_CHOCOLATE = 15          -- any food whose type starts with "chocolate"
 local CAF_PILL = { pillsvitamins = 200 }
 
 local DECAY = 0.5 ^ (1 / (CAF_HALF_LIFE_H * 60))
@@ -154,9 +151,8 @@ local function onEat(player, item, fraction)
     if not player or not item then return false end
     local name = ""
     pcall(function() name = string.lower(tostring(item:getType() or "")) end)
-    local amount = CAF_FOOD[name]
-    if not amount and string.find(name, "chocolate", 1, true) == 1 then amount = CAF_CHOCOLATE end
-    if not amount then return false end
+    local amount = foodTags(item).caffeine   -- per whole item: instant coffee, beans, cocoa, tea bags, chocolate
+    if amount <= 0 then return false end
     return dose(player, amount * math.max(0, math.min(1, fraction or 1)), name)
 end
 DanTraits_CaffeineOnEat = onEat

@@ -5,8 +5,9 @@
 -- recovers slower (through the enduranceRegen hook of the stat delta
 -- pipeline), tiredness comes sooner, colds catch easier (the catchCold
 -- hook). A
--- vegetarian lives on greens, eggs and pills. The eat hook reads the
--- game's food type, so stews and dishes count by their main ingredient.
+-- vegetarian lives on greens, eggs and pills. The eat hook reads the iron,
+-- egg and greens tags of DanTraits_Food.lua (the game's food type, then the
+-- name), so stews and dishes count by their main ingredient.
 -- After blood loss (DanTraits_Blood.lua) red cells rebuild at half speed,
 -- slower still short of iron, and rebuilding them spends iron. A wound
 -- infection climbs faster too (the infectionGrowth hook).
@@ -15,6 +16,7 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
+local foodTags = DanTraits_FoodTags
 
 local AN_START          = 0.6     -- a new character's iron
 local AN_DRAIN_DAYS     = 5       -- full to empty
@@ -31,10 +33,6 @@ local AN_TIER           = { 0.5, 0.9 }   -- Feeling faint | Light-headed
 local AN_BLOOD_REBUILD  = 0.5     -- red cells rebuild x this, x (1 - deficit)
 local AN_INF_GROWTH      = 0.3     -- wound infection climb x (1 + this x deficit)
 local AN_BLOOD_IRON     = 2       -- iron spent per unit of red cells rebuilt (a tenth of the blood: a fifth of the iron)
-
-local MEAT_TYPES = { "meat", "fish", "game", "poultry", "seafood", "beef", "pork", "venison", "rabbit", "chicken", "insect" }
-local GREENS_TYPES = { "vegetables", "greens", "herb", "beans", "leafy" }
-local EGG_TYPES = { "egg" }
 
 local function anData(player)
     local d = traitData(player)
@@ -54,11 +52,6 @@ function DanTraits_IronDeficit(player)
     return deficitOf(player:getModData().DanTraits)
 end
 
-local function matches(name, list)
-    for _, word in ipairs(list) do if string.find(name, word, 1, true) then return true end end
-    return false
-end
-
 local function addIron(player, amount, what)
     if not player or amount <= 0 or not hasTrait(player, "anemia") then return false end
     local d = anData(player)
@@ -71,16 +64,15 @@ DanTraits_AddIron = addIron
 DanTraits_AddHook("eat", function(_, player, item, fraction)
     if not player or not item or not hasTrait(player, "anemia") then return nil end
     fraction = clamp01(fraction or 1)
-    local foodType, name, kcal = "", "", 0
-    pcall(function() foodType = string.lower(tostring(item:getFoodType() or "")) end)
+    local name, kcal = "", 0
     pcall(function() name = string.lower(tostring(item:getType() or "")) end)
     pcall(function() kcal = item:getCalories() or 0 end)
-    local key = foodType .. " " .. name
-    if matches(key, MEAT_TYPES) then
-        addIron(player, AN_MEAT * clamp01(kcal / AN_MEAT_KCAL) * fraction, name)
-    elseif matches(key, EGG_TYPES) then
+    local tags = foodTags(item)
+    if tags.iron > 0 then
+        addIron(player, AN_MEAT * tags.iron * clamp01(kcal / AN_MEAT_KCAL) * fraction, name)
+    elseif tags.egg then
         addIron(player, AN_EGG * fraction, name)
-    elseif matches(key, GREENS_TYPES) then
+    elseif tags.greens then
         addIron(player, AN_GREENS * fraction, name)
     end
     return nil
