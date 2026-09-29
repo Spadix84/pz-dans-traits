@@ -34,8 +34,8 @@ plan; in-game checks are listed where the suite cannot see the change.
 
 ## Progress
 
-Done: 01 to 17 (phases 0, 1 and 2; plus the intoxication-scale fix in MDD and Diabetes found by 07).
-In progress: 18, 19, 20 in parallel; 21 (instrumentation and test only, dials await play) and 22 as one bundle.
+Done: 01 to 22, all merged on master 2026-09-28 (plus the intoxication-scale fix in MDD and Diabetes found by 07).
+Open: plan 21 steps 2 to 4, the Bad Day play test and dial choice, which need the user in game. Nothing has been deployed or played yet: `python deploy.py`, restart, play a session with the dashboard open.
 
 ## Order and dependencies
 
