@@ -27,10 +27,10 @@ for _ = 1, 30 do minute() end
 assert(irritation(p) == 0, "clean air stays at 0")
 print("clean warm air, 30 min: irritation " .. irritation(p))
 
--- 2. cold air + exertion builds: 0.005 + 0.014 = 0.019 per minute -> 0.90 after ~48 minutes
-H.climate.temp = 0; p._st.endurance = 0.1
+-- 2. cold air + exertion (endurance low and still being spent) builds: 0.005 + 0.014 = 0.019 per minute -> 0.90 after ~48 minutes
+H.climate.temp = 0; p._st.endurance = 0.3
 local m = 0
-while not p._md.DanTraits.asthmaAttack and m < 200 do minute(); m = m + 1 end
+while not p._md.DanTraits.asthmaAttack and m < 200 do p._st.endurance = math.max(0.001, p._st.endurance - 0.002); minute(); m = m + 1 end
 print("cold + exhausted: attack after " .. m .. " minutes (irritation " .. string.format("%.2f", irritation(p)) .. ")")
 assert(p._md.DanTraits.asthmaAttack and m >= 47 and m <= 49, "attack at 0.90 after ~48 min at 0.019/min, got " .. m)
 assert(halo[1] == "UI_DanTraits_AsthmaTier1" and halo[2] == "UI_DanTraits_AsthmaTier2" and halo[3] == "UI_DanTraits_AsthmaTier3" and halo[4] == "UI_DanTraits_AsthmaTier4", "tier notices in order")
@@ -116,12 +116,17 @@ pa._md.DanTraits = pa._md.DanTraits or {}; pa._md.DanTraits.asthma = 0.95; pa._m
 pa._st.panic = 0; minute(); assert(pa._st.panic == 5, "attack adds 5 panic per minute, got " .. tostring(pa._st.panic))
 pa._st.panic = 98; minute(); assert(pa._st.panic == 100, "panic capped at 100")
 print("attack: +5 panic per minute, capped at 100")
--- 12. exertion threshold: under 40% endurance builds, above does not
-local ex = newPlayer({ endurance = 0.35 }); H.current = ex; H.climate.temp = 20; H.corpses = 0
-minute(); assert(math.abs(irritation(ex) - 0.014) < 1e-9, "endurance 35% counts as exertion")
-local ex2 = newPlayer({ endurance = 0.45 }); H.current = ex2
-minute(); assert(irritation(ex2) == 0, "endurance 45% does not")
-print("exertion: 35% builds 0.014/min, 45% nothing")
+-- 12. exertion: under 40% endurance and still being spent builds; above 40%, or worn down but resting, does not
+local ex = newPlayer({ endurance = 0.36 }); H.current = ex; H.climate.temp = 20; H.corpses = 0
+minute(); ex._st.endurance = 0.35; minute()
+assert(math.abs(irritation(ex) - 0.014) < 1e-9, "endurance falling at 35% counts as exertion")
+local ex2 = newPlayer({ endurance = 0.46 }); H.current = ex2
+minute(); ex2._st.endurance = 0.45; minute(); assert(irritation(ex2) == 0, "endurance 45% does not")
+local worn = newPlayer({ endurance = 0.21 }); H.current = worn
+for _ = 1, 30 do minute() end
+assert(irritation(worn) == 0, "worn down to 21% (blood loss, anaemia) but resting: nothing builds")
+worn._st.endurance = 0.22; minute(); assert(irritation(worn) == 0, "recovering: nothing builds")
+print("exertion: spending at 35% builds 0.014/min; 45%, or resting worn down, nothing")
 
 -- 13. tier 2 coughs now and then (6 tiles); tier 1 never
 local c2 = newPlayer({}); H.current = c2; c2._md.DanTraits = { asthma = 0.6 }
@@ -240,11 +245,11 @@ do
   local nonAsthmatic = H.player({ traits = {} }); H.current = nonAsthmatic
   assert(not DanTraits_AsthmaSmoked(nonAsthmatic, 1), "no trait: nothing")
   -- damaged lungs: exertion builds 1.5x and every recovery is 0.7x
-  local lg = newPlayer({ endurance = 0.35 }); H.current = lg; lg._md.DanTraits = { asthma = 0, nicLungs = 1 }
+  local lg = newPlayer({ endurance = 0.35 }); H.current = lg; lg._md.DanTraits = { asthma = 0, asthmaEndPrev = 0.36, nicLungs = 1 }
   minute(); H.near(lg._md.DanTraits.asthma, 0.014 * 1.5, 1e-9, "nicLungs = 1: exertion build x 1.5")
   local lg2 = newPlayer({ asleep = true }); H.current = lg2; lg2._md.DanTraits = { asthma = 0.5, nicLungs = 1 }
   minute(); H.near(lg2._md.DanTraits.asthma, 0.5 - 0.008 * 0.7, 1e-9, "nicLungs = 1: decay x 0.7")
-  local lg3 = newPlayer({ endurance = 0.35 }); H.current = lg3; lg3._md.DanTraits = { asthma = 0, nicLungs = 0.5 }
+  local lg3 = newPlayer({ endurance = 0.35 }); H.current = lg3; lg3._md.DanTraits = { asthma = 0, asthmaEndPrev = 0.36, nicLungs = 0.5 }
   minute(); H.near(lg3._md.DanTraits.asthma, 0.014 * 1.25, 1e-9, "half-damaged lungs: x 1.25")
   print("one cough shared, cigarette irritates, lungs speed the build")
 end

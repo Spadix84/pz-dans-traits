@@ -29,7 +29,8 @@ local ASTHMA_DECAY_ATTACK   = 0.001   -- an attack does not meaningfully ease on
 local ASTHMA_COLD_TEMP_C    = 10
 local ASTHMA_COLD_RATE      = 0.005   -- per minute below the temperature
 local ASTHMA_CORPSE_RATE    = 0.004   -- per minute per corpse within 3 tiles, up to 3
-local ASTHMA_EXERT_ENDURANCE = 0.4    -- exertion build-up starts once endurance is under this
+local ASTHMA_EXERT_ENDURANCE = 0.4    -- exertion build-up: endurance under this AND still falling (being spent);
+                                       -- worn down but resting (blood loss, anaemia) does not count
 local ASTHMA_EXERT_RATE     = 0.014   -- per minute while exerted
 local ASTHMA_SPRINT_RATE    = 0.008   -- per minute while sprinting or running (exercise is the classic trigger)
 local ASTHMA_PANIC_MIN      = 20      -- panic below this (out of 100) does nothing
@@ -176,7 +177,9 @@ local function updateAsthmaMinute(player, d)
         if corpses > 0 then
             build = build + ASTHMA_CORPSE_RATE * corpses * envMult
         end
-        if not out and not attack and stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
+        local endurance = stats:get(CharacterStat.ENDURANCE) or 1
+        local spending = endurance < (d.asthmaEndPrev or endurance) - 1e-6
+        if not out and not attack and spending and endurance < ASTHMA_EXERT_ENDURANCE then
             build = build + ASTHMA_EXERT_RATE * passiveMult * (1 + ASTHMA_LUNGS_BUILD * lungs)
         end
         local moving = false
@@ -201,6 +204,7 @@ local function updateAsthmaMinute(player, d)
         if d.asthmaAttack then decay = ASTHMA_DECAY_ATTACK end
         irritation = irritation - decay * (1 - ASTHMA_LUNGS_DECAY * lungs)
     end
+    pcall(function() d.asthmaEndPrev = stats:get(CharacterStat.ENDURANCE) end)
     asthmaSetIrritation(player, d, irritation)
 
     -- tier effects that run on the minute
