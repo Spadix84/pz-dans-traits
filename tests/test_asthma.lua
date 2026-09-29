@@ -55,6 +55,11 @@ local before = irritation(p)
 assert(DanTraits_UseInhaler(p))
 local panicBefore = p._st.panic
 assert(not p._md.DanTraits.asthmaAttack and irritation(p) == math.max(0, before - 0.5), "inhaler ends the attack")
+do
+  local n = 0
+  for _, t in ipairs(halo) do if t == "+UI_DanTraits_AsthmaRelief" then n = n + 1 end end
+  assert(n == 1, "one relief notice, not two, got " .. n)
+end
 assert(p._st.panic == math.min(100, panicBefore + 10), "inhaler sets the heart racing: +10 panic")
 print(string.format("inhaler: %.2f -> %.2f, attack over, tier now %d", before, irritation(p), (function() local t=0 for i,th in ipairs({0.25,0.5,0.75,0.9}) do if irritation(p) >= th then t = i end end return t end)()))
 

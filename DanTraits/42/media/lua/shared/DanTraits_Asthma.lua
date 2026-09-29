@@ -131,7 +131,7 @@ local function asthmaSetIrritation(player, d, value, quiet)
     elseif d.asthmaAttack and value < ASTHMA_ATTACK_ENDS_AT then
         d.asthmaAttack = false
         d.asthmaFainted, d.asthmaEmptyMin = nil, nil
-        DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief")
+        if not quiet then DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief") end   -- the inhaler says it itself
         d.asthmaShownTier = asthmaTierOf(value)
     end
 
