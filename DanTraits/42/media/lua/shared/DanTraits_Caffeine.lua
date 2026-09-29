@@ -29,7 +29,7 @@ local CAF_FADE_TO_H     = 168     -- ...and by here it is gone
 local CAF_PAIN          = 15      -- pain floor at full withdrawal (lowered by the body's pain reduction, see DanTraits_PainFloor)
 local CAF_MOOD          = 15      -- unhappiness floor
 local CAF_RAMP          = 1
-local CAF_FATIGUE       = 0.0006  -- per minute at full withdrawal
+local CAF_FATIGUE       = 0.0003  -- per minute at full withdrawal (about a third faster tiring; 0.0006 felt inhumane in play)
 local CAF_STRESS        = 0.0002
 
 -- per litre of fluid
