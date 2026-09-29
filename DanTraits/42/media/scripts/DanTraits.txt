@@ -236,7 +236,12 @@ module DanTraits {
 
     /* Vanilla Cat's Eyes, re-costed from 3 to 1: light wakes you more
        easily (DanTraits_Sleep.lua). Definitions are keyed by trait, so this
-       replaces the vanilla one. */
+       replaces the vanilla one. Whole-block override: a
+       field a game update adds to the vanilla definition is lost here, so
+       after a game update compare with media/scripts/generated/characters/
+       character_traits.txt in the game folder. Vanilla fields copied (game
+       42.21.0, Steam build 25485521): IsProfessionTrait, DisabledInMultiplayer,
+       CharacterTrait, Cost (3, changed to 1), UIName, UIDescription. */
     character_trait_definition base:nightvision
     {
         IsProfessionTrait = false,
@@ -276,7 +281,13 @@ module DanTraits {
     /* Vanilla Fear of Blood, re-costed from -5 to -6 for the rework
        (fainting at first aid and heavy bleeding, slower first aid:
        DanTraits_Hemophobia.lua); vanilla's panic and stress stay. Same
-       exclusion as vanilla: not with Desensitized. */
+       exclusion as vanilla: not with Desensitized. Whole-block override: a
+       field a game update adds to the vanilla definition is lost here, so
+       after a game update compare with media/scripts/generated/characters/
+       character_traits.txt in the game folder. Vanilla fields copied (game
+       42.21.0, Steam build 25485521): IsProfessionTrait, DisabledInMultiplayer,
+       CharacterTrait, Cost (-5, changed to -6), UIName, UIDescription,
+       MutuallyExclusiveTraits. */
     character_trait_definition base:hemophobic
     {
         IsProfessionTrait = false,
@@ -290,7 +301,13 @@ module DanTraits {
 
     /* Vanilla Smoker, re-costed from -3 to -4 for the rework (dependence,
        irritability, damaged lungs and a cough: DanTraits_Smoker.lua). Same
-       exclusion as vanilla: not with Athletic. */
+       exclusion as vanilla: not with Athletic. Whole-block override: a
+       field a game update adds to the vanilla definition is lost here, so
+       after a game update compare with media/scripts/generated/characters/
+       character_traits.txt in the game folder. Vanilla fields copied (game
+       42.21.0, Steam build 25485521): IsProfessionTrait, DisabledInMultiplayer,
+       CharacterTrait, Cost (-3, changed to -4), UIName, UIDescription,
+       MutuallyExclusiveTraits. */
     character_trait_definition base:smoker
     {
         IsProfessionTrait = false,
