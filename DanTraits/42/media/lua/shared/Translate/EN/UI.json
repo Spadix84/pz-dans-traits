@@ -32,6 +32,8 @@
     "UI_DanTraits_AsthmaTier4": "ASTHMA ATTACK",
     "UI_DanTraits_AsthmaRelief": "Breathing easier",
     "UI_DanTraits_AsthmaWake": "Woke up gasping for air",
+    "UI_DanTraits_AsthmaBlackout": "You come round, wheezing on the floor",
+    "UI_DanTraits_DiaBlackout": "You come round on the floor, shaking",
     "UI_trait_DanGluten": "Gluten Intolerance",
     "UI_trait_DanGlutendesc": "Wheat makes you ill.<br>Bread, pasta, cereal, pastry and beer bring cramps, nausea and low mood.<br>Worse the more you ate. Takes hours to clear.",
     "UI_DanTraits_GlutenAte": "That had wheat in it",

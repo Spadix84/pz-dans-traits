@@ -144,5 +144,80 @@ feverish._md.DanTraits.asthma = 0.3
 DanTraits_InfectionFever = function() return 0.5 end
 minute(); H.near(irritation(feverish), 0.302, 1e-9, "half fever: +0.002")
 DanTraits_InfectionFever = nil
+-- 15. an attack that has emptied endurance for three minutes running can black you out, once per attack
+local passCalls, passResult = {}, true
+DanTraits_PassOut = function(_, minutes, key, deep) passCalls[#passCalls + 1] = { minutes = minutes, key = key, deep = deep }; return passResult end
+local fa = newPlayer({}); H.current = fa
+fa._md.DanTraits = { asthma = 0.95, asthmaAttack = true }
+H.rollf = 0
+fa._st.endurance = 0; minute(); fa._st.endurance = 0; minute()
+assert(#passCalls == 0, "two empty minutes: not yet")
+fa._st.endurance = 0; minute()
+assert(#passCalls == 1 and passCalls[1].key == "UI_DanTraits_AsthmaBlackout" and passCalls[1].deep == true, "third empty minute: a deep faint")
+assert(passCalls[1].minutes >= 2 and passCalls[1].minutes <= 5, "for 2 to 5 minutes")
+assert(fa._md.DanTraits.asthmaAttack, "the attack is not cleared")
+for _ = 1, 5 do fa._st.endurance = 0; minute() end
+assert(#passCalls == 1, "once per attack")
+-- endurance coming back resets the count
+local fb = newPlayer({}); H.current = fb
+fb._md.DanTraits = { asthma = 0.95, asthmaAttack = true }
+fb._st.endurance = 0; minute(); fb._st.endurance = 0; minute(); fb._st.endurance = 1.0; minute(); fb._st.endurance = 0; minute()
+assert(#passCalls == 1, "a break in the empty run starts the count again")
+-- the attack ends, the next one can faint again; a refused faint (already out) is not spent
+H.current = fa; DanTraits_UseInhaler(fa)
+assert(not fa._md.DanTraits.asthmaAttack and not fa._md.DanTraits.asthmaFainted, "attack over: the once-per-attack flag clears")
+passResult = false
+fa._md.DanTraits.asthma = 0.95
+for _ = 1, 4 do fa._st.endurance = 0; minute() end
+assert(#passCalls == 3 and not fa._md.DanTraits.asthmaFainted, "a refused faint is not spent (asked again the third and fourth empty minute)")
+passResult = true; fa._st.endurance = 0; minute()
+assert(#passCalls == 4 and fa._md.DanTraits.asthmaFainted, "and the next attack faints")
+-- while out nothing builds and irritation decays at the attack rate
+DanTraits_IsPassedOut = function() return true end
+local fo = newPlayer({}); H.current = fo
+fo._md.DanTraits = { asthma = 0.95, asthmaAttack = true }; fo._st.panic = 100; fo._st.endurance = 0
+minute()
+H.near(fo._md.DanTraits.asthma, 0.95 - 0.001, 1e-9, "out: no exertion or panic build, the attack rate of decay")
+DanTraits_IsPassedOut = nil; DanTraits_PassOut = nil; H.rollf = 0.99
+print("asthma blackout: once per attack, after three empty minutes")
+
+-- 16. one cough: a single gap across callers, the attack's burst forces it, a cigarette irritates, lungs hurt
+do
+  local cg = newPlayer({}); H.current = cg; cg._md.DanTraits = { asthma = 0.6 }
+  H.hours = H.hours + 1
+  cg._md.DanTraits.asthmaCoughIn = 1; minute()
+  assert(cg._coughs == 1, "tier 2 window: a cough")
+  cg._md.DanTraits.asthmaCoughIn = 1; minute()
+  assert(cg._coughs == 1, "a second window in the same three minutes: no second cough")
+  H.hours = H.hours + 3 / 60 + 1e-6
+  cg._md.DanTraits.asthmaCoughIn = 1; minute()
+  assert(cg._coughs == 2, "gap passed: coughs again")
+  assert(cg._md.DanTraits.lastCoughWhy == "asthma" and cg._md.DanTraits.coughs == 2, "recorded")
+  -- an attack coughs through the gap
+  cg._md.DanTraits.asthma = 0.95; cg._md.DanTraits.asthmaAttack = true
+  local n = cg._coughs; minute()
+  assert(cg._coughs >= n + 1, "attack: forced past the gap")
+  -- the shared gap: a smoker's cough right before blocks a tier 2 window
+  local cs = newPlayer({}); H.current = cs; cs._md.DanTraits = { asthma = 0.6 }
+  H.hours = H.hours + 1
+  assert(DanTraits_Cough(cs, 35, "smoker") and cs._coughs == 1)
+  cs._md.DanTraits.asthmaCoughIn = 1; minute()
+  assert(cs._coughs == 1, "Smoker's cough and Asthma's share the gap")
+  -- a cigarette adds 0.12 irritation per dose, for a Brittle Asthma character only, mask or none
+  local sm = newPlayer({ worn = { maskeyes = { getType = function() return "Hat_GasMask" end, getBodyLocation = function() return "base:maskeyes" end } } }); H.current = sm
+  sm._md.DanTraits = { asthma = 0.1 }
+  assert(DanTraits_AsthmaSmoked(sm, 1)); H.near(sm._md.DanTraits.asthma, 0.22, 1e-9, "a cigarette: +0.12, no mask help")
+  DanTraits_AsthmaSmoked(sm, 0.5); H.near(sm._md.DanTraits.asthma, 0.28, 1e-9, "half a dose: half")
+  local nonAsthmatic = H.player({ traits = {} }); H.current = nonAsthmatic
+  assert(not DanTraits_AsthmaSmoked(nonAsthmatic, 1), "no trait: nothing")
+  -- damaged lungs: exertion builds 1.5x and every recovery is 0.7x
+  local lg = newPlayer({ endurance = 0.35 }); H.current = lg; lg._md.DanTraits = { asthma = 0, nicLungs = 1 }
+  minute(); H.near(lg._md.DanTraits.asthma, 0.014 * 1.5, 1e-9, "nicLungs = 1: exertion build x 1.5")
+  local lg2 = newPlayer({ asleep = true }); H.current = lg2; lg2._md.DanTraits = { asthma = 0.5, nicLungs = 1 }
+  minute(); H.near(lg2._md.DanTraits.asthma, 0.5 - 0.008 * 0.7, 1e-9, "nicLungs = 1: decay x 0.7")
+  local lg3 = newPlayer({ endurance = 0.35 }); H.current = lg3; lg3._md.DanTraits = { asthma = 0, nicLungs = 0.5 }
+  minute(); H.near(lg3._md.DanTraits.asthma, 0.014 * 1.25, 1e-9, "half-damaged lungs: x 1.25")
+  print("one cough shared, cigarette irritates, lungs speed the build")
+end
 
 H.pass()

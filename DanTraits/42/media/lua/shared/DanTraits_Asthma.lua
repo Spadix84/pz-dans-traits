@@ -12,7 +12,17 @@ local traitData = DanTraits_Data
 -- the stat delta pipeline), no recovery plus coughing, and
 -- a full attack that drains endurance and health (to a 20% floor) while the
 -- player coughs loudly enough to pull zombies. The inhaler item knocks it
--- down by half. Coughs are real world sounds: zombies hear them.
+-- down by half. Coughs are real world sounds: zombies hear them. They go
+-- through the one shared cough (DanTraits_Cough in DanTraits_Util.lua, one gap
+-- of a few minutes across Asthma and Smoker); only an attack's burst forces it.
+-- Smoking makes it worse two ways (Smoker lives in DanTraits_Smoker.lua): each
+-- cigarette adds airway irritation (DanTraits_AsthmaSmoked, called from
+-- Smoker's dose), and damaged lungs (d.nicLungs, read straight from mod data)
+-- raise the exertion and sprint build and slow every recovery.
+-- An attack that has emptied endurance for ASTHMA_FAINT_AFTER_MIN minutes in a
+-- row can black you out (once per attack, a deep faint: DanTraits_PassOut).
+-- While out you are not exerting, so nothing builds and irritation decays at
+-- the attack rate; the attack itself carries on.
 local ASTHMA_DECAY_CALM     = 0.004   -- per minute, resting in clean warm air (about four hours to clear fully)
 local ASTHMA_DECAY_ASLEEP   = 0.008
 local ASTHMA_DECAY_ATTACK   = 0.001   -- an attack does not meaningfully ease on its own
@@ -35,6 +45,12 @@ local ASTHMA_ATTACK_END_DRAIN = 0.15  -- endurance per minute during an attack (
 local ASTHMA_ATTACK_HP_DRAIN  = 0.75  -- overall health per minute during an attack
 local ASTHMA_HEALTH_FLOOR     = 15    -- attack never takes health below this (%)
 local ASTHMA_ATTACK_PANIC     = 5     -- panic added per minute during an attack (out of 100)
+local ASTHMA_SMOKE        = 0.12    -- irritation added per cigarette (times the dose), no mask helps
+local ASTHMA_LUNGS_BUILD    = 0.5     -- exertion and sprint build x (1 + this x lungs)
+local ASTHMA_LUNGS_DECAY    = 0.3     -- decay x (1 - this x lungs)
+local ASTHMA_FAINT_AFTER_MIN = 3   -- consecutive minutes of an attack with endurance at 0...
+local ASTHMA_FAINT          = 0.15    -- ...then a chance per minute of passing out
+local ASTHMA_FAINT_MIN      = { 2, 5 }   -- game minutes out (deep: stays down)
 local ASTHMA_INHALER_RELIEF   = 0.5
 local ASTHMA_INHALER_PANIC    = 10    -- a puff sets the heart racing (out of 100)
 local ASTHMA_WAKE_TIER        = 3     -- asleep at this tier or worse: you wake up gasping
@@ -91,11 +107,9 @@ local function asthmaTierOf(irritation)
     return tier
 end
 
-local asthmaCough
-function DanTraits_AsthmaCough(player, radius) return asthmaCough(player, radius) end
-asthmaCough = function(player, radius)
-    pcall(function() player:playerVoiceSound("Cough") end)
-    pcall(function() addSound(player, player:getX(), player:getY(), player:getZ(), radius, radius) end)
+-- the shared cough (Util): one gap for everyone, an attack's burst forces it
+local function asthmaCough(player, radius, force)
+    return DanTraits_Cough(player, radius, "asthma", force)
 end
 
 -- Moodle Framework is client side and optional; without it the trait still
@@ -116,6 +130,7 @@ local function asthmaSetIrritation(player, d, value, quiet)
         d.asthmaShownTier = 4
     elseif d.asthmaAttack and value < ASTHMA_ATTACK_ENDS_AT then
         d.asthmaAttack = false
+        d.asthmaFainted, d.asthmaEmptyMin = nil, nil
         DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief")
         d.asthmaShownTier = asthmaTierOf(value)
     end
@@ -140,12 +155,14 @@ local function updateAsthmaMinute(player, d)
     local irritation = d.asthma
     local mask = asthmaMaskLevel(player)
     local asleep = DanTraits_Asleep(player)
+    local out = DanTraits_IsPassedOut and DanTraits_IsPassedOut(player)
+    local lungs = d.nicLungs or 0   -- a smoker's lungs (Smoker keeps it for everyone who has ever smoked)
 
     -- build-up
     local envMult = (mask == 2) and 0 or ((mask == 1) and 0.5 or 1)
     local passiveMult = (mask == 2) and ASTHMA_MASK_GAS_PASSIVE or 1
     local build = 0
-    if not asleep then
+    if not asleep then   -- (a faint ends the exertion and the panic, not the cold or the corpses)
         local temp = nil
         pcall(function() temp = getClimateManager():getAirTemperatureForCharacter(player, false) end)
         if temp and temp < ASTHMA_COLD_TEMP_C then
@@ -155,18 +172,18 @@ local function updateAsthmaMinute(player, d)
         if corpses > 0 then
             build = build + ASTHMA_CORPSE_RATE * corpses * envMult
         end
-        if stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
-            build = build + ASTHMA_EXERT_RATE * passiveMult
+        if not out and stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
+            build = build + ASTHMA_EXERT_RATE * passiveMult * (1 + ASTHMA_LUNGS_BUILD * lungs)
         end
         local moving = false
         pcall(function() moving = player:isSprinting() or player:isRunning() end)
-        if moving then
-            build = build + ASTHMA_SPRINT_RATE * passiveMult
+        if moving and not out then
+            build = build + ASTHMA_SPRINT_RATE * passiveMult * (1 + ASTHMA_LUNGS_BUILD * lungs)
         end
         -- panic: racing heart, fast shallow breathing. Internal, so no mask helps.
         local panic = 0
         pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
-        if panic > ASTHMA_PANIC_MIN then
+        if panic > ASTHMA_PANIC_MIN and not out then
             build = build + ASTHMA_PANIC_RATE * ((panic - ASTHMA_PANIC_MIN) / (100 - ASTHMA_PANIC_MIN))
         end
     end
@@ -178,7 +195,7 @@ local function updateAsthmaMinute(player, d)
     else
         local decay = asleep and ASTHMA_DECAY_ASLEEP or ASTHMA_DECAY_CALM
         if d.asthmaAttack then decay = ASTHMA_DECAY_ATTACK end
-        irritation = irritation - decay
+        irritation = irritation - decay * (1 - ASTHMA_LUNGS_DECAY * lungs)
     end
     asthmaSetIrritation(player, d, irritation)
 
@@ -203,11 +220,11 @@ local function updateAsthmaMinute(player, d)
             d.asthmaCoughIn = ASTHMA_COUGH_MIN_T3 + ZombRand(3)
         end
     elseif tier == 4 then
-        -- constant coughing: a burst of two or three spread over the minute
-        asthmaCough(player, ASTHMA_COUGH_RADIUS_T4)
+        -- constant coughing: a burst of two or three spread over the minute (forced past the gap)
+        asthmaCough(player, ASTHMA_COUGH_RADIUS_T4, true)
         for n = 1, 1 + ZombRand(2) do
             DanTraits_Later(n * (700 + ZombRand(500)), function()
-                if player and not player:isDead() then asthmaCough(player, ASTHMA_COUGH_RADIUS_T4) end
+                if player and not player:isDead() then asthmaCough(player, ASTHMA_COUGH_RADIUS_T4, true) end
             end)
         end
         pcall(function()
@@ -223,6 +240,16 @@ local function updateAsthmaMinute(player, d)
                 bd:ReduceGeneralHealth(math.min(ASTHMA_ATTACK_HP_DRAIN, bd:getOverallBodyHealth() - ASTHMA_HEALTH_FLOOR))
             end
         end)
+        -- an attack that has emptied you for a few minutes running can black you out
+        local empty = false
+        pcall(function() empty = (stats:get(CharacterStat.ENDURANCE) or 0) <= 0 end)
+        d.asthmaEmptyMin = empty and ((d.asthmaEmptyMin or 0) + 1) or 0
+        if d.asthmaEmptyMin >= ASTHMA_FAINT_AFTER_MIN and not d.asthmaFainted and not out and not asleep
+                and DanTraits_PassOut and DanTraits_Roll(ASTHMA_FAINT) then
+            if DanTraits_PassOut(player, DanTraits_RandRange(ASTHMA_FAINT_MIN[1], ASTHMA_FAINT_MIN[2]), "UI_DanTraits_AsthmaBlackout", true) then
+                d.asthmaFainted = true
+            end
+        end
     end
 end
 
@@ -234,6 +261,15 @@ DanTraits_AddHook("enduranceRegen", function(delta, player, d)
     if tier == 2 then return delta * 0.5 elseif tier >= 3 then return 0 end
     return nil
 end)
+
+-- Called by Smoker's dose (a cigarette, cigar or pipe: not gum or chewing tobacco):
+-- the smoke itself irritates the airway, whatever mask is worn.
+function DanTraits_AsthmaSmoked(player, dose)
+    if not player or not hasTrait(player, "asthma") then return false end
+    local d = asthmaData(player)
+    asthmaSetIrritation(player, d, d.asthma + ASTHMA_SMOKE * (tonumber(dose) or 1))
+    return true
+end
 
 -- Called by the inhaler action.
 function DanTraits_UseInhaler(player)

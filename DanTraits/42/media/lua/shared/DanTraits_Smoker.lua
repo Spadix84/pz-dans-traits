@@ -35,7 +35,10 @@
 -- enduranceRegen hook of the stat delta pipeline), and cough, more
 -- often the worse the lungs and the stronger the habit, on exertion and
 -- in the first hour after waking. The cough is the game's own, heard by
--- zombies. The lungs heal slowly once the smoking stops: months, not days.
+-- zombies, through the one shared cough (DanTraits_Util.lua: a single gap
+-- across Smoker and Asthma). A Brittle Asthma character's airway is irritated
+-- by every cigarette (DanTraits_AsthmaSmoked) and by damaged lungs (Asthma
+-- reads nicLungs). The lungs heal slowly once the smoking stops: months, not days.
 --
 -- Smoking also speeds up how fast the body clears caffeine (up to twice
 -- as fast), which the Caffeine and Sleep files read through the
@@ -104,7 +107,6 @@ local COUGH_EXERT       = 4       -- x this exerted (running, or endurance under
 local COUGH_EXERT_ENDURANCE = 0.5
 local COUGH_MORNING     = 5       -- x this in the first COUGH_MORNING_MIN after waking
 local COUGH_MORNING_MIN = 60
-local COUGH_GAP_MIN     = 3
 local COUGH_RADIUS      = 35      -- only if the game's own cough is unavailable (it is 35)
 -- caffeine
 local CAF_INDUCE_PER_CIG = 0.1    -- caffeine clearance x (1 + induction), induction up to 1
@@ -293,6 +295,8 @@ local function applyDose(player, dose, smoked, pre)
         d.nicDayGain = (d.nicDayGain or 0) + gain
     end
     d.nicTotal = (d.nicTotal or 0) + dose
+    if smoked and DanTraits_AsthmaSmoked then DanTraits_AsthmaSmoked(player, dose) end
+    if DanTraits_MddOnSmoke then DanTraits_MddOnSmoke(player, dose, smoked) end   -- MDD's relief (not the vanilla smoke clock)
 
     if not isSmoker(player) then
         if d.nicEx and newSession and roll(NIC_RELAPSE_ODDS) then
@@ -367,6 +371,7 @@ function DanTraits_ChewNicotineGum(player)
     end
     d.nicCueMin = 0
     d.nicStimH = math.max(d.nicStimH or 0, NIC_STIM_H * 0.5)
+    if DanTraits_MddOnSmoke then DanTraits_MddOnSmoke(player, 0.4, false) end   -- a lesser relief for MDD
     DanTraits_NotifyGood(player, "UI_DanTraits_SmokerGum")
     return true
 end
@@ -389,11 +394,9 @@ local function fadeCeiling(dryHours)
     return 1 - (1 - NIC_FADE_FLOOR) * t
 end
 
+-- the shared cough keeps the gap between coughs (Asthma's included)
 local function cough(player, d)
-    d.nicCoughGap = COUGH_GAP_MIN
-    d.nicCoughs = (d.nicCoughs or 0) + 1
-    local ok = pcall(function() player:triggerCough() end)
-    if not ok and DanTraits_AsthmaCough then DanTraits_AsthmaCough(player, COUGH_RADIUS) end
+    if DanTraits_Cough(player, COUGH_RADIUS, "smoker") then d.nicCoughs = (d.nicCoughs or 0) + 1 end
 end
 
 local function exerted(player, stats)
@@ -508,8 +511,7 @@ local function updateSmokerMinute(player, d)
     end
 
     -- the cough, worst in the first hour after a real sleep
-    if (d.nicCoughGap or 0) > 0 then d.nicCoughGap = d.nicCoughGap - 1 end
-    if not asleep and (d.nicCoughGap or 0) <= 0 then
+    if not asleep then
         local chance = COUGH_RATE * (COUGH_LUNGS * d.nicLungs + (smoker and COUGH_METER * d.nicMeter or 0))
         if chance > 0 then
             if exerted(player, stats) then chance = chance * COUGH_EXERT end

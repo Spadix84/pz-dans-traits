@@ -164,14 +164,17 @@ near(l._st.endurance, 0.5 + 0.1 * (1 - 0.3 * md(l).nicLungs), 1e-9, "endurance r
 local c = H.player({ traits = { "base:smoker" } }); H.current = c
 c._md.DanTraits = { nicInit = true, nicMeter = 1, nicLungs = 1, nicDryHours = 0 }
 H.roll = 5000                      -- a 0.5 % roll: beats 0.4 %/min resting, not 1.6 % exerted
-md(c).nicLastW = 0; mins(5); assert(c._coughs == 0, "resting: no cough on this roll")
-c._run = true; minute(); c._run = false
+-- the shared cough (Util) keeps its gap in world-age hours, so the clock moves a minute with each one
+local function tick() H.hours = H.hours + 1 / 60; minute() end
+md(c).nicLastW = 0; mins(5, tick); assert(c._coughs == 0, "resting: no cough on this roll")
+c._run = true; tick(); c._run = false
 assert(c._coughs == 1, "exerted: cough")
-minute(); c._run = true; minute(); c._run = false
+tick(); c._run = true; tick(); c._run = false
 assert(c._coughs == 1, "three minutes between coughs")
-c._asleep = true; mins(90); c._asleep = false
+c._asleep = true; mins(90, tick); c._asleep = false
 assert(c._coughs == 1, "no cough asleep")
-mins(3); assert(c._coughs == 2, "morning cough")
+mins(3, tick); assert(c._coughs == 2, "morning cough")
+assert(md(c).coughs == 2 and md(c).lastCoughWhy == "smoker" and md(c).nicCoughs == 2, "the shared cough records who coughed")
 H.roll = 999999
 
 -- 14. caffeine: smoking speeds its clearance, and it wears off in days
@@ -183,5 +186,31 @@ near(DanTraits_RunHooks("caffeineClearance", 1, k), 1.5, 1e-3, "39 h later: half
 local z = H.player(); H.current = z
 assert(DanTraits_RunHooks("caffeineClearance", 1, z) == 1, "never smoked: unchanged")
 minute(); assert(md(z) == nil or md(z).nicMeter == nil, "never smoked: nothing stored")
+
+-- 15. a dose tells Asthma (cigarettes and cigars only, not gum or chewing tobacco)
+do
+  local seen = {}
+  DanTraits_AsthmaSmoked = function(_, dose) seen[#seen + 1] = dose end
+  local a = H.player(); H.current = a
+  smoke(a, "CigaretteSingle", vanillaNonSmoker); assert(#seen == 1 and seen[1] == 1, "a cigarette: dose 1 to Asthma")
+  smoke(a, "Cigar", vanillaNonSmoker); assert(#seen == 2 and seen[2] == 3, "a cigar is three")
+  DanTraits_ChewNicotineGum(a); assert(#seen == 2, "gum: not smoke")
+  DanTraits_AsthmaSmoked = nil
+end
+
+-- 16. and tells MDD: a full dose, a cigar capped, the gum as 0.4 and not smoke; becoming a smoker is not a dose
+do
+  local seen = {}
+  DanTraits_MddOnSmoke = function(_, dose, smoked) seen[#seen + 1] = { dose, smoked } end
+  local a = H.player(); H.current = a
+  smoke(a, "CigaretteSingle", vanillaNonSmoker); assert(#seen == 1 and seen[1][1] == 1 and seen[1][2] == true, "a cigarette: dose 1, smoked")
+  smoke(a, "Cigar", vanillaNonSmoker); assert(#seen == 2 and seen[2][1] == 3 and seen[2][2] == true, "a cigar: dose 3 (MDD caps it)")
+  DanTraits_ChewNicotineGum(a); assert(#seen == 3 and seen[3][1] == 0.4 and seen[3][2] == false, "gum: dose 0.4, not smoked")
+  local before = #seen
+  local b = H.player({ traits = { "base:smoker" } }); H.current = b
+  b._md.DanTraits = { nicInit = false, nicMeter = 0.1, nicLungs = 0, nicDryHours = 0 }
+  minute(); assert(#seen == before, "becoming a smoker at creation tells MDD nothing")
+  DanTraits_MddOnSmoke = nil
+end
 
 H.pass()

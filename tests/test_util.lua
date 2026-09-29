@@ -160,4 +160,22 @@ DanTraits_BadMoodle(p, "Hangover", 1, { 0.25, 0.5, 0.75 })
 assert(seen == nil, "nothing was set")
 MF = nil
 
+-- Cough: the game's own triggerCough at radius 35 or unspecified, voice sound plus addSound for a quieter
+-- one; one gap (3 game minutes) across callers unless forced; who and how many are recorded
+do
+  local cp = H.player(); H.current = cp
+  H.sounds = {}; local base = cp._coughs
+  assert(DanTraits_Cough(cp, 35, "smoker") and cp._coughs == base + 1 and #H.sounds == 0, "radius 35: the game's own cough, no extra sound")
+  assert(not DanTraits_Cough(cp, 35, "asthma") and cp._coughs == base + 1, "inside the gap: refused")
+  assert(DanTraits_Cough(cp, 35, "asthma", true) and cp._coughs == base + 2, "forced: goes through")
+  H.hours = H.hours + 2 / 60
+  assert(not DanTraits_Cough(cp, 6, "asthma"), "two minutes on: still inside the gap")
+  H.hours = H.hours + 1 / 60 + 1e-6
+  assert(DanTraits_Cough(cp, 6, "asthma") and H.sounds[#H.sounds] == 6, "three minutes on: a quiet cough is a sound at its radius")
+  local dd = cp._md.DanTraits
+  assert(dd.coughs == 3 and dd.lastCoughWhy == "asthma", "records the count and the last reason")
+  local bare = H.player(); bare.triggerCough = nil; H.current = bare; H.sounds = {}
+  assert(DanTraits_Cough(bare, 35, "smoker") and H.sounds[#H.sounds] == 35, "no triggerCough: falls back to a sound at the radius")
+end
+
 H.pass()

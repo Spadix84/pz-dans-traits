@@ -29,6 +29,9 @@ end
 -- insulin, and either type can go low from it. Symptoms are deliberately
 -- vague: the same "can't focus" shows up high or low. A glucose meter and
 -- test strips give a number.
+-- At the worst low (under 40) there is also a small chance each minute of
+-- blacking out for 5 to 20 game minutes (a shallow faint: a wound wakes you),
+-- not more than once in half an hour; the health drain carries on meanwhile.
 -- Drinks reach the character through ISDrinkFluidAction.updateEat, wrapped
 -- here through DanTraits_Wrap with the tag "drink-intake" (carbohydrates, the
 -- Vitality drink hook and the `drink` hook); Alcohol adds its own layer to the
@@ -72,6 +75,9 @@ local DIA_LOW_FATIGUE       = { 0.001, 0.003, 0.005 }
 local DIA_LOW_PANIC         = { 1, 2, 4 }         -- per minute (out of 100): adrenaline, which also pushes sugar back up
 local DIA_LOW_UNHAPPY_FLOOR = { 10, 25, 40 }
 local DIA_LOW_HP_DRAIN      = 0.5                 -- per minute at the worst tier, down to the floor
+local DIA_LOW_FAINT         = 0.04                -- per minute at the worst tier: a chance of blacking out
+local DIA_LOW_FAINT_MIN     = { 5, 20 }           -- game minutes out (shallow: a new wound wakes you)
+local DIA_LOW_FAINT_GAP     = 30                  -- minutes between blackouts (d.diaFaintGap)
 local DIA_HIGH_THIRST       = { 0.002, 0.004, 0.006 }  -- per minute (0..1)
 local DIA_HIGH_FATIGUE      = { 0.0005, 0.0015, 0.003 }
 local DIA_HIGH_UNHAPPY_FLOOR = { 0, 15, 30 }
@@ -224,6 +230,15 @@ local function diaHalo(player, d, low, high)
     notify(player, prefix .. (ZombRand(n) + 1))
 end
 
+-- a bad low can put you on the floor (DanTraits_Faint.lua); glucose keeps falling while out.
+-- A refused faint (already out) does not spend the gap.
+local function diaBlackout(player, d)
+    if not DanTraits_PassOut or (d.diaFaintGap or 0) > 0 or not DanTraits_Roll(DIA_LOW_FAINT) then return end
+    if DanTraits_PassOut(player, DanTraits_RandRange(DIA_LOW_FAINT_MIN[1], DIA_LOW_FAINT_MIN[2]), "UI_DanTraits_DiaBlackout") then
+        d.diaFaintGap = DIA_LOW_FAINT_GAP
+    end
+end
+
 local function updateDiabetesMinute(player, d)
     if not diaHas(player) then return end
     d = diaData(player)
@@ -282,6 +297,7 @@ local function updateDiabetesMinute(player, d)
     local low, high = diaTier(g)
     if high >= 3 then d.diaKetoHours = d.diaKetoHours + 1 / 60 else d.diaKetoHours = math.max(0, d.diaKetoHours - 1 / 60) end
     diaHalo(player, d, low, high)
+    if (d.diaFaintGap or 0) > 0 then d.diaFaintGap = d.diaFaintGap - 1 end
     d.diaFumble = low > 0 and DIA_LOW_FUMBLE[low] or 0
     if low == 0 and high == 0 then return end
 
@@ -298,7 +314,10 @@ local function updateDiabetesMinute(player, d)
             statAdd(stats, CharacterStat.FATIGUE, DIA_LOW_FATIGUE[low])
             statAdd(stats, CharacterStat.PANIC, DIA_LOW_PANIC[low])
             floorUp(stats, CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
-            if low >= 3 then drainHealth(DIA_LOW_HP_DRAIN, false) end
+            if low >= 3 then
+                drainHealth(DIA_LOW_HP_DRAIN, false)
+                if not asleep then diaBlackout(player, d) end
+            end
         else
             statAdd(stats, CharacterStat.THIRST, DIA_HIGH_THIRST[high])
             statAdd(stats, CharacterStat.FATIGUE, DIA_HIGH_FATIGUE[high])

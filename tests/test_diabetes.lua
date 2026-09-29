@@ -195,5 +195,26 @@ local well, sick = newPlayer(), newPlayer()
 H.current = well; minute(); local base = g(well) - 110
 H.current = sick; DanTraits_InfectionFever = function() return 1 end; minute(); DanTraits_InfectionFever = nil
 near(g(sick) - 110, base + 0.1, 1e-9, "full fever: +0.1 a minute")
+-- 17. a bad low (under 40) can black you out: a shallow faint, at most once in 30 minutes,
+--     and a PassOut that returns false (already out) does not spend the gap
+local passCalls, passResult = {}, false
+DanTraits_PassOut = function(_, minutes, key, deep) passCalls[#passCalls + 1] = { minutes = minutes, key = key, deep = deep }; return passResult end
+local fnt = newPlayer(); H.current = fnt; fnt._md.DanTraits = { glucose = 30 }
+H.rollf = 0.99; minute(); assert(#passCalls == 0, "no roll, no faint")
+H.rollf = 0
+passResult = false; minute(); minute()
+assert(#passCalls == 2 and not (fnt._md.DanTraits.diaFaintGap and fnt._md.DanTraits.diaFaintGap > 0), "a refused faint does not spend the gap")
+passResult = true; minute()
+assert(#passCalls == 3 and passCalls[3].key == "UI_DanTraits_DiaBlackout" and not passCalls[3].deep, "faint: the blackout text, shallow")
+assert(passCalls[3].minutes >= 5 and passCalls[3].minutes <= 20, "for 5 to 20 minutes")
+assert(fnt._md.DanTraits.diaFaintGap == 30, "gap of 30 minutes")
+for _ = 1, 29 do minute() end
+assert(#passCalls == 3, "no second faint inside the gap")
+minute(); assert(#passCalls == 4, "and one when the gap has passed")
+local mildLow = newPlayer(); H.current = mildLow; mildLow._md.DanTraits = { glucose = 50 }; minute()
+assert(#passCalls == 4, "tier 2: no blackout")
+local sleepyLow = newPlayer({ asleep = true }); H.current = sleepyLow; sleepyLow._md.DanTraits = { glucose = 30 }; minute()
+assert(#passCalls == 4, "asleep: no blackout")
+H.rollf = 0.99; DanTraits_PassOut = nil
 
 H.pass()
