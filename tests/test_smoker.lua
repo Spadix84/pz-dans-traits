@@ -191,4 +191,22 @@ local nm = H.player(); H.current = nm; nm._md.DanTraits = { nicMeter = 1 }; allN
 local sm = H.player({ traits = { "base:smoker" } }); H.current = sm; minute()
 near(DanTraits_RunHooks("infectionGrowth", 1, sm), 1 + 0.2 * md(sm).nicMeter, 1e-12, "a Smoker: growth x (1 + 0.2 x meter)")
 
+-- 14. Vitality's reach on the lungs: recovery x (1 + 0.25 e); and a Smoker's slower wound healing
+H.load("Vitality")   -- loaded last: it runs for everyone. Its effect is stubbed from here.
+local vitE = 0
+DanTraits_VitalityEffect = function() return vitE end
+for _, case in ipairs({ { 1, 1.25 }, { -1, 0.75 }, { 0, 1 } }) do
+  vitE = case[1]
+  local lg = H.player(); H.current = lg
+  lg._md.DanTraits = { nicMeter = 0, nicLungs = 0.5, nicSmokeHours = 30, nicEx = true, nicExHours = 99999 }
+  minute(); near(0.5 - md(lg).nicLungs, (1 / 60) / 2880 * case[2], 1e-9, "lungs heal x" .. case[2] .. " at e = " .. case[1])
+end
+vitE = 0
+local wh = H.player({ traits = { "base:smoker" } }); H.current = wh; wh._md.DanTraits = { nicMeter = 1 }
+near(DanTraits_RunHooks("woundHeal", 0.35, wh), 0.35 * 0.8, 1e-12, "a Smoker at a full meter: unstitched deep wounds heal x0.8")
+wh._md.DanTraits.nicMeter = 0.5
+near(DanTraits_RunHooks("woundHeal", 0.35, wh), 0.35 * 0.9, 1e-12, "half a meter: x0.9")
+local nw = H.player(); H.current = nw; nw._md.DanTraits = { nicMeter = 1 }
+near(DanTraits_RunHooks("woundHeal", 0.35, nw), 0.35, 1e-12, "a meter without the trait: untouched")
+
 H.pass()

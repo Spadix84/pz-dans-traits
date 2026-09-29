@@ -146,4 +146,15 @@ assert(DanTraits_ExtraCommands.badset(p, { "shin_l" }) == "badly set LowerLeg_L"
 assert(DanTraits_ExtraCommands.tear(p, { "tail" }) == "tear <part>", "usage")
 assert(string.find(DanTraits_ExtraCommands.breakbone(p, { "shin_l" }), "^broke LowerLeg_L") and part(p, "LowerLeg_L")._fracture == 50, "breakbone")
 
+-- 13. Vitality's reach: an unstitched deep wound heals x (1 + 0.25 e), never past full speed
+H.load("Vitality")   -- loaded last: it runs for everyone. Its effect is stubbed to +1 / -1 from here.
+local vitE = 0
+DanTraits_VitalityEffect = function() return vitE end
+for _, case in ipairs({ { 1, 0.4375 }, { -1, 0.2625 }, { 0, 0.35 } }) do
+  vitE = case[1]
+  p = newPlayer(); H.current = p; arm = part(p, "ForeArm_L")
+  arm._deep = 10; minute(); arm._deep = 9; minute()
+  near(arm._deep, 10 - case[2], 1e-9, "a point of healing becomes " .. case[2] .. " at e = " .. case[1])
+end
+
 H.pass()

@@ -229,4 +229,16 @@ near(DanTraits_RunHooks("infectionGrowth", 1, smk), 1.1, 1e-12, "half a meter: x
 local ex = subject({}); DanTraits_Data(ex).nicMeter = 1
 near(DanTraits_RunHooks("infectionGrowth", 1, ex), 1, 1e-12, "a meter without the trait: untouched")
 
+-- 14. Vitality's own hooks (its effect stubbed): the body clears an infection with nothing spreading x (1 + 0.3 e)
+local vitE = 0
+DanTraits_VitalityEffect = function() return vitE end
+for _, case in ipairs({ { 1, 1.3 }, { -1, 0.7 }, { 0, 1 } }) do
+  vitE = case[1]
+  p = build({}); H.current = p; DanTraits_Data(p).infS = 0.5
+  minute(); near(0.5 - D(p).infS, 0.2 / 1440 * case[2], 1e-9, "fight x" .. case[2] .. " at e = " .. case[1])
+end
+vitE = 1; p = build({}); H.current = p; arm(p)._t.deep = 10
+near(DanTraits_InfectionHazard(p, arm(p)), 0.03, 1e-12, "stubbed e = 1: hazard x0.75")
+vitE = -1; near(DanTraits_InfectionHazard(p, arm(p)), 0.05, 1e-12, "stubbed e = -1: hazard x1.25")
+
 H.pass()

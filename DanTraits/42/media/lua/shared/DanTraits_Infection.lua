@@ -34,9 +34,11 @@
 --
 -- Zombie infection is untouched.
 --
--- Hooks offered: infectionHazard (h, player, part) and infectionGrowth (1,
--- player). Subscribers: Diabetes (high sugar: both), Vitality (both, both
--- ways), Anemia (growth), Smoker (growth, by the meter).
+-- Hooks offered: infectionHazard (h, player, part), infectionGrowth (1,
+-- player) and infectionFight (INF_S_FIGHT, player, d: the per-day clearance
+-- with nothing spreading). Subscribers: Diabetes (high sugar: hazard and
+-- growth), Vitality (all three, both ways), Anemia (growth), Smoker (growth,
+-- by the meter).
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -296,7 +298,7 @@ local function updateInfectionMinute(player, d)
     elseif maxL >= INF_SPREAD_L then
         S = S + INF_S_GROW * perMin * (maxL - INF_SPREAD_L + 1) / (10 - INF_SPREAD_L + 1) * DanTraits_RunHooks("infectionGrowth", 1, player)
     else
-        S = S - INF_S_FIGHT * perMin
+        S = S - DanTraits_RunHooks("infectionFight", INF_S_FIGHT, player, d) * perMin
     end
     S = clamp01(S)
     d.infS = S

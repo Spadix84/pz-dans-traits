@@ -19,7 +19,9 @@
 -- slower or faster, diabetes resistance and insulin sensitivity shift,
 -- depressive episodes come rarer or more often; a wound infection is less or
 -- more likely to take hold and to climb (the infectionHazard and
--- infectionGrowth hooks).
+-- infectionGrowth hooks), and the body clears an infection, a concussion, an
+-- unstitched deep wound and a smoker's lungs faster or slower (the
+-- infectionFight, concussionHeal, woundHeal and lungHeal hooks).
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -85,6 +87,10 @@ local VIT_DIA_SENSITIVITY   = 0.15    -- insulin effect x (1 + this x e)
 local VIT_MDD_ONSET         = 0.30    -- episode chance x (1 - this x e)
 local VIT_INF_HAZARD        = 0.25    -- wound infection chance x (1 - this x e)
 local VIT_INF_GROWTH        = 0.25    -- infection climb x (1 - this x e)
+local VIT_INF_FIGHT         = 0.30    -- the body's clearance of an infection with nothing spreading x (1 + this x e)
+local VIT_CC_HEAL           = 0.25    -- concussion healing x (1 + this x e)
+local VIT_WOUND_HEAL        = 0.25    -- unstitched deep wound healing x (1 + this x e)
+local VIT_LUNG_HEAL         = 0.25    -- a smoker's lungs recovering x (1 + this x e)
 local VIT_XP_TIER           = 4       -- Thriving: Fitness and Strength experience is multiplied...
 local VIT_XP_MULT           = 2       -- ...by this
 
@@ -397,6 +403,20 @@ DanTraits_AddHook("infectionGrowth", function(k, player)
     if e == 0 then return nil end
     return k * (1 - VIT_INF_GROWTH * e)
 end)
+
+-- how fast the body clears what ails it: an infection, a concussion, an
+-- unstitched deep wound, a smoker's lungs (each system offers the hook)
+local function healsBy(k)
+    return function(rate, player)
+        local e = DanTraits_VitalityEffect(player)
+        if e == 0 then return nil end
+        return rate * (1 + k * e)
+    end
+end
+DanTraits_AddHook("infectionFight", healsBy(VIT_INF_FIGHT))
+DanTraits_AddHook("concussionHeal", healsBy(VIT_CC_HEAL))
+DanTraits_AddHook("woundHeal", healsBy(VIT_WOUND_HEAL))
+DanTraits_AddHook("lungHeal", healsBy(VIT_LUNG_HEAL))
 
 -- Thriving: Fitness and Strength experience is doubled. The event fires after
 -- the game adds the experience; the same amount is added again, guarded

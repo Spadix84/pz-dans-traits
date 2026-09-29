@@ -236,4 +236,14 @@ near(DanTraits_RunHooks("infectionGrowth", 1, nv), 0.75, 1e-9, "Thriving: growth
 V(nv).vitality = 0.0
 near(DanTraits_RunHooks("infectionHazard", 1, nv, {}), 1.25, 1e-9, "Run Down: hazard x1.25")
 
+-- the four healing hooks: nothing at neutral, x (1 + k e) either side
+for _, h in ipairs({ { "infectionFight", 0.2, 0.3 }, { "concussionHeal", 0.25, 0.25 }, { "woundHeal", 0.35, 0.25 }, { "lungHeal", 0.001, 0.25 } }) do
+  V(nv).vitality = 0.5
+  for _, fn in ipairs(DanTraits_Hooks[h[1]]) do assert(fn(h[2], nv) == nil, h[1] .. ": nothing at neutral") end
+  V(nv).vitality = 1.0
+  near(DanTraits_RunHooks(h[1], h[2], nv), h[2] * (1 + h[3]), 1e-12, h[1] .. ": Thriving")
+  V(nv).vitality = 0.0
+  near(DanTraits_RunHooks(h[1], h[2], nv), h[2] * (1 - h[3]), 1e-12, h[1] .. ": Run Down")
+end
+
 H.pass()
