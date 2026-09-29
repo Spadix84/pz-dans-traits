@@ -26,6 +26,11 @@ print = function(s) printed[#printed + 1] = tostring(s) end
 
 H.load("client/DanTraits_Telemetry.lua")
 print = realPrint
+-- 0. off for an ordinary player: no file written, no command run
+SandboxVars = { DanTraits = {} }
+function isClient() return false end
+function isServer() return false end
+function isDebugEnabled() return false end
 local tickName = H.handlers.OnTick and "OnTick" or "OnTickEvenPaused"
 local tick = H.on(tickName)
 H.expectHooks(tickName, "OnGameStart")
@@ -54,6 +59,19 @@ local injected
 DanTraits_DiaInject = function(_, n) injected = n; return n end
 local episodes = {}
 DanTraits_Episodes = { charge = function() episodes[#episodes + 1] = "charge" end }
+
+files["DanTraits_Commands.txt"] = "health 10\n"
+tick()
+assert(files["DanTraits_Telemetry.json"] == nil and st.health ~= 10, "off by default: nothing written or run")
+function isDebugEnabled() return true end
+assert(DanTraits_TelemetryEnabled(), "on in debug mode")
+function isDebugEnabled() return false end
+SandboxVars.DanTraits.DevTools = true
+function isClient() return true end
+assert(not DanTraits_TelemetryEnabled(), "never in multiplayer")
+function isClient() return false end
+assert(DanTraits_TelemetryEnabled(), "on with the sandbox option")
+files["DanTraits_Commands.txt"] = nil
 
 tick()                       -- first tick: writes (lastWrite 0 -> now 1000)
 assert(files["DanTraits_Telemetry.json"], "telemetry written")
