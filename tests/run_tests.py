@@ -32,6 +32,17 @@ def main():
             print("    " + l)
         if lint.returncode != 0:
             failed.append(label)
+    # the dashboard (Python holding a page of HTML in a string) must at least parse
+    import ast
+    dash = os.path.join(HERE, "..", "DanTraits", "tools", "dashboard.py")
+    try:
+        with open(dash, encoding="utf-8") as f:
+            ast.parse(f.read())
+        print("PASS dashboard.py parses")
+    except SyntaxError as e:
+        print("FAIL dashboard.py parses")
+        print("    line %s: %s" % (e.lineno, e.msg))
+        failed.append("dashboard.py")
     # the mod's calls on the game's objects, against the installed game's jar
     api = subprocess.run([sys.executable, os.path.join(HERE, "check_api.py")], cwd=HERE, capture_output=True, text=True)
     print("%s check_api.py" % ("PASS" if api.returncode == 0 else "FAIL"))
@@ -51,7 +62,7 @@ def main():
             failed.append(name)
             for l in lines[-12:]:
                 print("    " + l)
-    print("%d/%d passed" % (len(tests) + 3 - len(failed), len(tests) + 3))
+    print("%d/%d passed" % (len(tests) + 4 - len(failed), len(tests) + 4))
     sys.exit(1 if failed else 0)
 
 

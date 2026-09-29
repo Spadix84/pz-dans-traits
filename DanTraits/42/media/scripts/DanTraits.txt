@@ -273,6 +273,21 @@ module DanTraits {
         MutuallyExclusiveTraits = DanTraits:age20s,
     }
 
+    /* Vanilla Fear of Blood, re-costed from -5 to -6 for the rework
+       (fainting at first aid and heavy bleeding, slower first aid:
+       DanTraits_Hemophobia.lua); vanilla's panic and stress stay. Same
+       exclusion as vanilla: not with Desensitized. */
+    character_trait_definition base:hemophobic
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = base:hemophobic,
+        Cost = -6,
+        UIName = UI_trait_Hemophobic,
+        UIDescription = UI_trait_HemophobicDesc,
+        MutuallyExclusiveTraits = base:desensitized,
+    }
+
     /* Vanilla Smoker, re-costed from -3 to -4 for the rework (dependence,
        irritability, damaged lungs and a cough: DanTraits_Smoker.lua). Same
        exclusion as vanilla: not with Athletic. */

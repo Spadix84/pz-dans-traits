@@ -160,5 +160,7 @@
     "UI_DanTraits_health_ConcussionMild": "Mild concussion",
     "UI_DanTraits_health_ConcussionModerate": "Concussion",
     "UI_DanTraits_health_ConcussionSevere": "Severe concussion",
-    "UI_DanTraits_JoltedAwake": "Pain jolts you awake"
+    "UI_DanTraits_JoltedAwake": "Pain jolts you awake",
+    "UI_trait_HemophobicDesc": "The sight of blood is too much.<br>Panics at your own bleeding, and gets stressed when bloody.<br>Treating a wound takes longer, and stitching, pulling out glass or a bullet, or dressing a bleeding wound can make you faint.<br>Losing blood fast can make you faint.<br>Cannot perform first aid on others.",
+    "UI_DanTraits_FaintBlood": "You come round, pale and shaking"
 }
