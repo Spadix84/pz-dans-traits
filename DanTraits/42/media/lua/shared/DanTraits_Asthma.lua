@@ -227,8 +227,11 @@ local function updateAsthmaMinute(player, d)
         -- constant coughing: a burst of two or three spread over the minute (forced past the gap)
         asthmaCough(player, ASTHMA_COUGH_RADIUS_T4, true)
         for n = 1, 1 + ZombRand(2) do
-            DanTraits_Later(n * (700 + ZombRand(500)), function()
-                if player and not player:isDead() then asthmaCough(player, ASTHMA_COUGH_RADIUS_T4, true) end
+            -- DanTraits_Later counts frames: 20 to 60 apart keeps the burst inside a second or so
+            -- (it was 700 to 1200, meant as ms, which at 60 fps landed minutes of game time later)
+            DanTraits_Later(n * (20 + ZombRand(40)), function()
+                -- a burst that lands after the attack ended (inhaler, or a pause) is dropped
+                if player and not player:isDead() and d.asthmaAttack then asthmaCough(player, ASTHMA_COUGH_RADIUS_T4, true) end
             end)
         end
         pcall(function()

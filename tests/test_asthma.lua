@@ -216,6 +216,16 @@ do
   cg._md.DanTraits.asthma = 0.95; cg._md.DanTraits.asthmaAttack = true
   local n = cg._coughs; minute()
   assert(cg._coughs >= n + 1, "attack: forced past the gap")
+  -- the rest of the burst lands within about a second (Later counts frames), and not after the attack ends
+  local tick = H.on("OnTick")
+  local first = cg._coughs
+  for _ = 1, 150 do tick() end
+  assert(cg._coughs >= first + 1, "the burst's later coughs land within 150 frames")
+  cg._md.DanTraits.asthma = 0.95; cg._md.DanTraits.asthmaAttack = true
+  minute(); local afterMinute = cg._coughs
+  cg._md.DanTraits.asthmaAttack = false   -- the inhaler, before the burst lands
+  for _ = 1, 150 do tick() end
+  assert(cg._coughs == afterMinute, "a burst landing after the attack ended is dropped")
   -- the shared gap: a smoker's cough right before blocks a tier 2 window
   local cs = newPlayer({}); H.current = cs; cs._md.DanTraits = { asthma = 0.6 }
   H.hours = H.hours + 1
