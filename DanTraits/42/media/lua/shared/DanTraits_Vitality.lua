@@ -7,7 +7,8 @@
 -- packaged snacks, candy, soda, rotten and burnt food score low; eating the
 -- same few things all week costs a little, variety earns a little (what
 -- counts as junk, fresh or cooked is read from the tags of DanTraits_Food.lua). Exercise
--- is the fitness system's regularity. Sleep is scored per night, not per
+-- is the fitness system's regularity, or a day's activity (the metabolic rate
+-- above rest) up to neutral. Sleep is scored per night, not per
 -- nap: segments broken by less than an hour awake (night terrors, a quick
 -- check outside; three hours for Restless Sleeper, who sleeps in two
 -- halves) count as one night, hours are summed against what the
@@ -68,6 +69,15 @@ local VIT_DEBT_FATIGUE      = 0.0006  -- fatigue per minute at a full debt (you 
 local VIT_DEBT_TIER         = { 0.25, 0.5, 0.75 }   -- Rough Night | Bad Night's Sleep | Barely Slept
 local VIT_AWAKE_TIRED_HOURS = 20      -- awake longer than this and the sleep score drifts down
 local VIT_AWAKE_RATE        = 1 / 1440
+-- activity: a hard day's running, fighting and work counts as exercise up to
+-- neutral; past that only training (fitness regularity) lifts it. Read from
+-- the body's metabolic rate (METs: about 1.5 standing idle), effort above
+-- VIT_ACTIVE_REST_MET summed as MET-minutes over a rolling day (d.vitActivity,
+-- decaying with a one-day time constant, so it settles at the daily total)
+local VIT_ACTIVE_REST_MET   = 2.0
+local VIT_ACTIVE_DAY_TARGET = 150     -- MET-minutes above rest a day for full credit (about 30 minutes running)
+local VIT_ACTIVE_CAP        = 0.5     -- the most the exercise score gets from activity alone
+local VIT_ACTIVE_DECAY      = 1 / 1440
 -- combine
 local VIT_W_DIET, VIT_W_EXERCISE, VIT_W_SLEEP = 0.5, 0.3, 0.2
 local VIT_SMOOTH            = 1 / 180 -- per minute toward the target (a few hours)
@@ -274,8 +284,13 @@ local function updateVitalityMinute(player, d)
     local variety = pruneTypes(d, hour)
     local dietEffective = clamp01(d.vitDiet + VIT_VARIETY[math.min(6, variety)])
 
-    -- exercise: the fitness system's regularity
-    d.vitExercise = clamp01(DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0)
+    -- exercise: the fitness system's regularity, or the day's activity up to neutral
+    local met = 0
+    if not asleep then pcall(function() met = player:getBodyDamage():getThermoregulator():getMetabolicRate() or 0 end) end
+    d.vitActivity = (d.vitActivity or 0) * (1 - VIT_ACTIVE_DECAY) + math.max(0, met - VIT_ACTIVE_REST_MET)
+    local active = VIT_ACTIVE_CAP * math.min(1, d.vitActivity / VIT_ACTIVE_DAY_TARGET)
+    local trained = DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0
+    d.vitExercise = clamp01(math.max(trained, active))
 
     -- sleep: segments accumulate into a night; the night is scored once the
     -- character has been up for an hour. Long stretches awake wear the score down.

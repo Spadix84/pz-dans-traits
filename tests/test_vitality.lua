@@ -150,6 +150,30 @@ H.current = fresh; fresh._hours = 25; minute()
 assert(V(fresh).vitTarget < 0.5, "from the second day the real target applies")
 assert(DanTraits_VitalityTier(0.1) == 0 and DanTraits_VitalityTier(0.5) == 2 and DanTraits_VitalityTier(0.85) == 4, "tiers")
 
+-- 8b. activity: MET-minutes above 2 over a rolling day fill the exercise score up to neutral (0.5)
+local function withMet(p)
+  p._met = 1.5
+  local bd = p.getBodyDamage
+  p.getBodyDamage = function(self) local b = bd(self); b.getThermoregulator = function() return { getMetabolicRate = function() return p._met end } end; return b end
+  return p
+end
+local act = withMet(newPlayer({ hours = 30 })); H.current = act
+for _ = 1, 60 do minute() end
+assert((V(act).vitActivity or 0) == 0 and V(act).vitExercise == 0, "standing about: no activity")
+act._met = 6   -- running: 4 above rest a minute
+for _ = 1, 30 do minute() end
+near(V(act).vitExercise, 0.5 * V(act).vitActivity / 150, 1e-9, "half an hour running: part of the way")
+assert(V(act).vitActivity > 110 and V(act).vitActivity < 120, "about 120 MET-minutes, less a little decay: " .. V(act).vitActivity)
+for _ = 1, 30 do minute() end
+near(V(act).vitExercise, 0.5, 1e-9, "an hour running: capped at neutral")
+act._met = 1.5; act._asleep = true
+local before = V(act).vitActivity
+for _ = 1, 60 do minute() end
+assert(V(act).vitActivity < before, "asleep: nothing added, it fades")
+act._asleep = false
+for _ = 1, 1440 do minute() end
+near(V(act).vitActivity, before * (1 - 1 / 1440) ^ 1500, 1e-6, "a day of rest: about a third left")
+
 -- 9. effect curve: dead zone, then linear to +-1
 local e = DanTraits_VitalityEffectOf
 assert(e(0.5) == 0 and e(0.55) == 0 and e(0.45) == 0, "dead zone")
