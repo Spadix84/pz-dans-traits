@@ -1,5 +1,6 @@
 -- Project Zomboid Vitality Project: Vitality.
--- Not a trait: every character has it. Three slow scores (diet, exercise,
+-- Not a trait: every character has it (sandbox option VitalityEnabled; off:
+-- nothing scores or moves, DanTraits_VitalityEffect is 0 so every reader is neutral). Three slow scores (diet, exercise,
 -- sleep) roll into one Vitality value (0..1, 0.5 neutral) that takes about
 -- three days to cross a tier. Fresh produce, fresh meat and cooked dishes
 -- with several ingredients score high; canned and dried food is neutral;
@@ -28,7 +29,7 @@ local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 
-local VIT_ENABLED           = true
+local function vitOn() return DanTraits_SandboxOn("VitalityEnabled") end
 -- diet
 local VIT_MEAL_KCAL_FULL    = 4000    -- calories of consistent eating to move the diet score most of the way (about two days)
 local VIT_MEAL_W_MAX        = 0.35    -- one meal can never move it more than this
@@ -181,7 +182,7 @@ end
 
 -- called from the core eat hook with the portion actually eaten
 function DanTraits_VitalityOnEat(player, item, fraction)
-    if not VIT_ENABLED or not player or not item then return false end
+    if not vitOn() or not player or not item then return false end
     fraction = math.max(0, math.min(1, fraction or 1))
     if fraction <= 0 then return false end
     local d = vitData(player)
@@ -208,7 +209,7 @@ end
 
 -- called from the drink hook: litres swallowed, and the fluid's per-litre carbohydrates and calories
 function DanTraits_VitalityOnDrink(player, litres, carbsPerLitre, kcalPerLitre)
-    if not VIT_ENABLED or not player or not litres or litres <= 0 then return false end
+    if not vitOn() or not player or not litres or litres <= 0 then return false end
     local kcal = (kcalPerLitre or 0) * litres
     if kcal <= 0 then return false end
     local grade, why = 0.5, "drink"
@@ -226,7 +227,7 @@ end
 DanTraits_VitalityEffectOf = effectOf
 
 function DanTraits_VitalityEffect(player)
-    if not VIT_ENABLED or not player then return 0 end
+    if not vitOn() or not player then return 0 end
     local d = player:getModData().DanTraits
     if not d or d.vitality == nil then return 0 end
     return effectOf(d.vitality)
@@ -259,7 +260,16 @@ function DanTraits_SleepDebt(player)
 end
 
 local function updateVitalityMinute(player, d)
-    if not VIT_ENABLED then return end
+    if not vitOn() then
+        d = player:getModData().DanTraits
+        if d and d.vitCarryKg and d.vitCarryKg ~= 0 then   -- switched off: give back the kilo
+            pcall(function() player:setMaxWeightBase(d.vitCarryBase or (player:getMaxWeightBase() - d.vitCarryKg)) end)
+            d.vitCarryKg = 0
+        end
+        updateMoodle(player, 0.5)
+        updateDebtMoodle(player, 0)
+        return
+    end
     d = vitData(player)
     local stats = player:getStats()
     local hour, asleep, fatigue, hunger = 0, false, 0, 0
@@ -378,11 +388,11 @@ DanTraits_updateVitalityMinute = updateVitalityMinute
 -- endurance recovery and cold catching go through the stat delta pipeline
 -- (DanTraits_Util.lua): Vitality only says by how much, the pipeline applies it
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)
-    if not VIT_ENABLED or not d or d.vitality == nil then return nil end
+    if not vitOn() or not d or d.vitality == nil then return nil end
     return delta * (1 + VIT_ENDURANCE_REGEN * effectOf(d.vitality))
 end)
 DanTraits_AddHook("catchCold", function(delta, player, d)
-    if not VIT_ENABLED or not d or d.vitality == nil then return nil end
+    if not vitOn() or not d or d.vitality == nil then return nil end
     return delta * (1 - VIT_COLD * effectOf(d.vitality))
 end)
 
@@ -423,7 +433,7 @@ DanTraits_AddHook("lungHeal", healsBy(VIT_LUNG_HEAL))
 -- against re-entry since that addition fires the event too.
 local xpReentry = false
 local function onAddXP(player, perk, amount)
-    if xpReentry or not VIT_ENABLED or not player or not perk or not amount or amount <= 0 then return end
+    if xpReentry or not vitOn() or not player or not perk or not amount or amount <= 0 then return end
     if not (Perks and (perk == Perks.Fitness or perk == Perks.Strength)) then return end
     local d = player:getModData().DanTraits
     if not d or d.vitality == nil or tierOf(d.vitality) < VIT_XP_TIER then return end

@@ -1,5 +1,7 @@
 -- Project Zomboid Vitality Project: sleep and light.
--- Not a trait: every character has it. While asleep, the light on the
+-- Not a trait: every character has it (sandbox option SleepLightEnabled; off:
+-- the light reads as neutral, so no faster or slower rest, no light wakes, and
+-- the night's score ignores it). While asleep, the light on the
 -- character's square is read every minute (the same per-player light level
 -- the game's reading check uses). Dark sleep is deeper: tiredness drains
 -- faster and the night scores better. Light sleep is shallow: tiredness
@@ -154,7 +156,7 @@ local function updateSleepMinute(player, d)
     end
     local light = lightLevel(player)
     if light == nil then return end
-    local dark = darknessOf(light)
+    local dark = DanTraits_SandboxOn("SleepLightEnabled") and darknessOf(light) or 0   -- off: light counts as neutral everywhere
     d.slLight, d.slDark = light, dark
     d.slAsleepMin = (d.slAsleepMin or 0) + 1
     d.slNightDark = (d.slNightDark or 0) + dark

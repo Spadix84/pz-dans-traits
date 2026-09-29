@@ -26,3 +26,15 @@ option DanTraits.WoundCareEnabled
 
 option DanTraits.ConcussionEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsConcussionEnabled,}
+
+option DanTraits.VitalityEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsVitalityEnabled,}
+
+option DanTraits.SleepLightEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsSleepLightEnabled,}
+
+option DanTraits.HangoverEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsHangoverEnabled,}
+
+option DanTraits.DrinkReliefEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsDrinkReliefEnabled,}

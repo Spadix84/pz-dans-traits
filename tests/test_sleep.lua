@@ -153,4 +153,14 @@ DanTraits_InfectionFever = function() return 0.5 end
 near(DanTraits_SleepWakeMultiplier(feverish, {}), 1.25, 1e-9, "half fever: wakes x1.25")
 DanTraits_InfectionFever = nil
 
+-- sandbox: SleepLightEnabled = false reads light as neutral: no faster or slower rest, no light wake
+SandboxVars = { DanTraits = { SleepLightEnabled = false } }
+H.roll = 0
+local off = newPlayer({ light = 0.9, fatigue = 0.5 }); H.current = off
+local wokenBefore = #woken
+minute(); off._st.fatigue = 0.4; minute()
+near(off._st.fatigue, 0.4, 1e-9, "off: rest is the game's")
+for _ = 1, 60 do minute() end
+assert(#woken == wokenBefore and off._asleep, "off: bright light does not wake")
+SandboxVars = nil
 H.pass()

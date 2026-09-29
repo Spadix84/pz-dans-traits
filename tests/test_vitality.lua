@@ -246,4 +246,17 @@ for _, h in ipairs({ { "infectionFight", 0.2, 0.3 }, { "concussionHeal", 0.25, 0
   near(DanTraits_RunHooks(h[1], h[2], nv), h[2] * (1 - h[3]), 1e-12, h[1] .. ": Run Down")
 end
 
+-- sandbox: VitalityEnabled = false makes every reader neutral and stops the minute update
+SandboxVars = { DanTraits = { VitalityEnabled = false } }
+local off = newPlayer(); H.current = off; SandboxVars.DanTraits.VitalityEnabled = true; minute(); SandboxVars.DanTraits.VitalityEnabled = false
+V(off).vitality = 1.0; off._st.unhappiness = 50
+assert(DanTraits_VitalityEffect(off) == 0, "off: effect 0")
+for _, fn in ipairs(DanTraits_Hooks.infectionHazard) do assert(fn(1, off, {}) == nil, "off: infection hook silent") end
+for _, fn in ipairs(DanTraits_Hooks.enduranceRegen) do assert(fn(1, off, V(off)) == nil, "off: endurance hook silent") end
+for _, fn in ipairs(DanTraits_Hooks.catchCold) do assert(fn(1, off, V(off)) == nil, "off: cold hook silent") end
+assert(not DanTraits_VitalityOnEat(off, food({ name = "Carrot", kcal = 100, foodType = "Vegetables" }), 1), "off: meals not scored")
+minute(); assert(V(off).vitality == 1.0 and off._st.unhappiness == 50, "off: nothing moves")
+SandboxVars = nil
+near(DanTraits_VitalityEffect(off), 1, 1e-9, "on again (unset): the effect is back")
+
 H.pass()

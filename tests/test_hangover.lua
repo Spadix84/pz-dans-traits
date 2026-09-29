@@ -91,4 +91,13 @@ local ag = H.player(); H.current = ag; ag._aged = true
 ag._st.intox = 0; ag._md.DanTraits = { hoLoad = 1.0, hoDrinking = true }; minute()
 near(md(ag).hoSeverity, 0.5, 1e-6, "load 1.0 is 1/3, x1.5 from the hook")
 
+-- sandbox: HangoverEnabled = false builds no load and ends a hangover in progress
+local so = H.player(); H.current = so
+so._md.DanTraits = { hoLoad = 0, hoActive = true, hoSeverity = 0.5, hoHoursLeft = 8 }
+SandboxVars = { DanTraits = { HangoverEnabled = false } }
+minute(); assert(not md(so).hoActive and md(so).hoLoad == 0 and md(so).hoHoursLeft == 0, "off: the hangover ends")
+so._st.intox = 60; for _ = 1, 60 do minute() end
+assert(md(so).hoLoad == 0 and not md(so).hoDrinking, "off: drinking builds nothing")
+SandboxVars = nil
+
 H.pass()
