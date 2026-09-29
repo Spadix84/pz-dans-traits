@@ -164,7 +164,7 @@ def selftest(tables):
 
 def main():
     if not os.path.exists(JAR):
-        print("check_api: game not found at %s; skipped" % JAR)
+        print("SKIP check_api.py (no jar at %s)" % JAR)
         return 0
     z = zipfile.ZipFile(JAR)
     tables = {k: all_methods(z, v) for k, v in CLASSES.items()}

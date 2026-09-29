@@ -70,10 +70,12 @@ def main():
         api = subprocess.run([sys.executable, os.path.join(HERE, "check_api.py")] + args, cwd=HERE,
                              capture_output=True, text=True)
         out = (api.stdout + api.stderr).splitlines()
-        report(label, api.returncode == 0, out, results=results)
-        for l in out:
-            if l.startswith("check_api: game not found"):
-                print("    " + l)
+        skip = [l for l in out if l.startswith("SKIP")]
+        if api.returncode == 0 and skip:
+            print(skip[0])          # no jar on this machine: shown, counted as a pass, not hidden
+            results.append((label, True))
+        else:
+            report(label, api.returncode == 0, out, results=results)
     parsed, crash = run_lua_tests(tests) if tests else ([], None)
     if crash is not None:
         for t in tests:

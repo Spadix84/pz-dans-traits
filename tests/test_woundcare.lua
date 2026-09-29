@@ -7,6 +7,8 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 BodyPartType.getDisplayName = function(t) return "the " .. t end
+local stories = {}
+function triggerEvent(name, pl, ev) if name == "OnStoryEvent" then stories[#stories + 1] = ev end end
 local splintCompleted = 0
 ISSplint = { complete = function(self) splintCompleted = splintCompleted + 1; self.bodyPart._splint = true; self.bodyPart._factor = (self.doctorLevel + 1) / 2 end }
 
@@ -86,6 +88,7 @@ p = newPlayer(); H.current = p; rf = part(p, "ForeArm_R")
 rf._stitch, rf._stitched = 4, true   -- 10% strong: 2% x 0.9 = 1.8% a swing
 H.rollf = 0.017; swing(p, {}); assert(rf._stitch == 0 and rf._deep == 7.5 and rf._bleed == 4.5 and rf._deepWounded and rf._bleeding, "torn: open and bleeding")
 assert(halo[#halo] == "UI_DanTraits_StitchesTore:the ForeArm_R", "notice")
+assert(stories[#stories].kind == "StitchesTore" and stories[#stories].text == "UI_DanTraits_StitchesTore:the ForeArm_R" and stories[#stories].tone == "bad", "the tear reaches the story event")
 rf._stitch, rf._stitched, rf._deep, rf._bleed = 40, true, 0, 0
 H.rollf = 0; swing(p, {}); assert(rf._stitch == 40, "sound stitches hold")
 rf._stitch, rf._stitched, rf._bandaged, rf._bleeding = 4, false, true, false

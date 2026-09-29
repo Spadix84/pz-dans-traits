@@ -100,4 +100,11 @@ q._st.intox = 15; assert(DanTraits_DrunkLevel(q) == 1, "15%: tipsy")
 q._st.intox = 55; assert(DanTraits_DrunkLevel(q) == 3, "55%: level 3")
 q._st.intox = 90; minute(); near(q._pr, 80, 1e-9, "90%: level 4 floor")
 
+-- 7. sandbox: DrinkReliefEnabled = false is vanilla: no floor, no panic decay
+SandboxVars = { DanTraits = { DrinkReliefEnabled = false } }
+local r = newPlayer(); H.current = r
+r._st.intox = 90; r._st.panic = 50; r._moodles.drunk = 4; minute(); frame(r)
+assert(r._pr == 0 and r._st.panic == 50, "off: no pain floor, no panic decay")
+SandboxVars = nil
+
 H.pass()

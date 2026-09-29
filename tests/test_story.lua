@@ -49,4 +49,13 @@ triggerEvent = nil
 DanTraits_Notify(player, "UI_DanTraits_Anemia1")
 assert(halo[4] == "text:UI_DanTraits_Anemia1" and #seen == 4, "quiet without triggerEvent")
 DanTraits_Story(nil, "x", "y")
+
+-- 7. a notice with arguments: formatted text (getText takes the arguments), halo and story alike
+local told = {}
+function triggerEvent(name, p, ev) told[#told + 1] = ev end
+function getText(k, a) return k .. ":" .. tostring(a) end
+DanTraits_NotifyFmt(player, "UI_DanTraits_StitchesTore", "Hand")
+assert(halo[#halo] == "UI_DanTraits_StitchesTore:Hand" and told[1].kind == "StitchesTore" and told[1].text == "UI_DanTraits_StitchesTore:Hand" and told[1].tone == "bad", "fmt bad")
+DanTraits_NotifyFmtGood(player, "UI_DanTraits_DiaReading", 5)
+assert(halo[#halo] == "+UI_DanTraits_DiaReading:5" and told[2].kind == "DiaReading" and told[2].tone == "good", "fmt good")
 H.pass()

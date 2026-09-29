@@ -55,11 +55,8 @@ function ISDiabetesAction:perform()
         if DanTraits_DiaRead then
             local value, bad = DanTraits_DiaRead(self.character)
             if value then
-                local text = getText("UI_DanTraits_DiaReading", value)
-                pcall(function()
-                    if bad then HaloTextHelper.addBadText(self.character, text) else HaloTextHelper.addGoodText(self.character, text) end
-                end)
-                if DanTraits_Story then DanTraits_Story(self.character, "DiaReading", text, bad and "bad" or "good") end
+                if bad then DanTraits_NotifyFmt(self.character, "UI_DanTraits_DiaReading", value)
+                else DanTraits_NotifyFmtGood(self.character, "UI_DanTraits_DiaReading", value) end
                 pcall(function()
                     self.item:setName(getText("ItemName_DanTraits.GlucoseMeter") .. " (" .. value .. ")")
                     self.item:setCustomName(true)

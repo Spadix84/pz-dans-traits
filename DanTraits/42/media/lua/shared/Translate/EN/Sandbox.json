@@ -17,5 +17,13 @@
     "Sandbox_DanTraitsWoundCareEnabled": "Wound Care",
     "Sandbox_DanTraitsWoundCareEnabled_tooltip": "Dressings wear out and need changing, deep wounds heal slowly unstitched and can open again, fresh stitches can tear under strain, splints are set with a First Aid roll, and walking on a broken leg makes it worse.<br>Off: vanilla wound care.",
     "Sandbox_DanTraitsConcussionEnabled": "Concussion",
-    "Sandbox_DanTraitsConcussionEnabled_tooltip": "Hard falls, car crashes and blows to the head can concuss: headache, nausea, dizzy spells, light hurts; a bad one knocks you out. Rest heals it; a helmet helps.<br>Off: no concussion."
+    "Sandbox_DanTraitsConcussionEnabled_tooltip": "Hard falls, car crashes and blows to the head can concuss: headache, nausea, dizzy spells, light hurts; a bad one knocks you out. Rest heals it; a helmet helps.<br>Off: no concussion.",
+    "Sandbox_DanTraitsVitalityEnabled": "Vitality",
+    "Sandbox_DanTraitsVitalityEnabled_tooltip": "Diet, exercise and sleep roll into a slow Vitality score: run down or thriving changes recovery, mood, health and how the traits behave, and Thriving doubles Fitness and Strength experience.<br>Off: no score and no effects.",
+    "Sandbox_DanTraitsSleepLightEnabled": "Sleep and Light",
+    "Sandbox_DanTraitsSleepLightEnabled_tooltip": "Dark sleep is deeper and scores better; a bright room makes sleep shallow and light can wake you. Curtains and switches matter.<br>Off: light does not affect sleep.",
+    "Sandbox_DanTraitsHangoverEnabled": "Hangovers",
+    "Sandbox_DanTraitsHangoverEnabled_tooltip": "Drinking past a buzz builds a hangover for the morning after: headache, low mood, thirst, tiredness, and a worse night's sleep.<br>Off: no hangovers.",
+    "Sandbox_DanTraitsDrinkReliefEnabled": "Drink Relief",
+    "Sandbox_DanTraitsDrinkReliefEnabled_tooltip": "Drink eases pain and panic in proportion to how drunk you are, instead of one sip counting as a full dose of painkiller and beta blocker.<br>Off: vanilla, any drink is a full dose."
 }

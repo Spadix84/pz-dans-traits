@@ -1,5 +1,6 @@
 -- Project Zomboid Vitality Project: Hangovers.
--- Not a trait: every character has it. Drinking past a light buzz builds a
+-- Not a trait: every character has it (sandbox option HangoverEnabled; off: no
+-- load builds and a hangover in progress ends). Drinking past a light buzz builds a
 -- "load" (drunk-hours weighted by how drunk). When the character sobers up
 -- with enough load behind them a hangover is set: if they are asleep it
 -- waits for them to wake, and either way it lasts at least HO_BASE_HOURS
@@ -85,6 +86,13 @@ end
 
 local function updateHangoverMinute(player, d)
     d = hoData(player)
+    if not DanTraits_SandboxOn("HangoverEnabled") then   -- off: nothing builds, and any hangover in progress ends
+        if d.hoActive or d.hoPending or d.hoDrinking or d.hoLoad > 0 then
+            d.hoActive, d.hoPending, d.hoDrinking, d.hoLoad, d.hoHoursLeft, d.hoSeverity = false, false, false, 0, 0, 0
+            updateMoodle(player, 0)
+        end
+        return
+    end
     local stats = player:getStats()
     local intox = fraction(stats, CharacterStat.INTOXICATION)
     local asleep = DanTraits_Asleep(player)

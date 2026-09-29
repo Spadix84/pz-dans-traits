@@ -1,5 +1,7 @@
 -- Project Zomboid Vitality Project: drink relief tied to the Drunk moodle.
--- Not a trait: every character has it.
+-- Not a trait: every character has it (sandbox option DrinkReliefEnabled; off:
+-- vanilla's full pill dose from any drink, no pain floor, no panic decay; the
+-- definition of drunk below is not affected).
 --
 -- Vanilla (B42) hands any alcoholic drink to BodyDamage.JustDrankBoozeFluid,
 -- which raises intoxication by the amount drunk and then calls the same
@@ -92,7 +94,7 @@ local function wrapDrinkAction()
     DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "alcohol-relief", function(original, self, ...)
         local snap = self.character and snapshotMeds(self.character)
         local result = original(self, ...)
-        if snap and isAlcoholic(self.fluidContainer) then restoreMeds(self.character, snap) end
+        if snap and DanTraits_SandboxOn("DrinkReliefEnabled") and isAlcoholic(self.fluidContainer) then restoreMeds(self.character, snap) end
         return result
     end)
 end
@@ -105,7 +107,7 @@ Events.OnGameStart.Add(wrapDrinkAction)
 -- somewhere else (a medicinal fluid) and is left to decay as vanilla intends.
 local function updateAlcoholMinute(player, d)
     local level = drunkLevel(player)
-    local target = ALC_PAIN_CUT[level] or 0
+    local target = DanTraits_SandboxOn("DrinkReliefEnabled") and ALC_PAIN_CUT[level] or 0   -- off: the floor steps down and stays 0
     local applied = d.alcPainCut or 0
     if target == 0 and applied == 0 then return end
     pcall(function()
@@ -120,7 +122,7 @@ DanTraits_updateAlcoholMinute = updateAlcoholMinute
 -- Panic: decay each tick at (level / 4) of the beta-blocker rate ------------
 local function updateAlcoholFrame(player)
     local level = drunkLevel(player)
-    if level <= 0 then return end
+    if level <= 0 or not DanTraits_SandboxOn("DrinkReliefEnabled") then return end
     local stats = player:getStats()
     local panic = stats:get(CharacterStat.PANIC) or 0
     if panic <= 0 then return end
