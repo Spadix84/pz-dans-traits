@@ -326,9 +326,9 @@ function commands.drop(player)
 end
 
 function commands.cough(player, args)
-    if not DanTraits_AsthmaCough then return "cough: asthma not loaded" end
+    if not DanTraits_Cough then return "cough: util not loaded" end
     local radius = tonumber(args[1]) or 10
-    DanTraits_AsthmaCough(player, radius)
+    DanTraits_Cough(player, radius, "console", true)
     return "cough, radius " .. radius
 end
 

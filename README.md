@@ -13,7 +13,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Major Depressive Disorder | -8 | Episodes that hold mood down for days; drink, cigarettes, comfort food, exercise, time outdoors and a real antidepressant regimen all matter. |
 | A Really Bad Day | -12 | CDDA-style start: drunk, sick, a shard wound, no clothes, house on fire. |
 | Hallucinations | -2 | Phantom zombies, sounds, thumps, whispers and panic bouts. |
-| Brittle Asthma | -8 | Airway irritation from cold, corpses, exertion and panic; four tiers up to an attack (an attack that empties you can black you out); rescue inhaler item. |
+| Brittle Asthma | -8 | Airway irritation from cold, corpses, exertion and panic; four tiers up to an attack (an attack that empties you can black you out); smoking, and a smoker's lungs, make it worse; rescue inhaler item. |
 | Gluten Intolerance | -4 | Wheat brings on a flare: cramps, nausea, low mood. |
 | Vegetarian | -4 | Meat, fish, insects and anything cooked with them are refused. |
 | Diabetes Type 1 | -10 | Hidden blood sugar model; insulin pen, glucose meter, test strips; a bad low can put you on the floor. |
