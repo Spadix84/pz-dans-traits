@@ -162,6 +162,10 @@ local function updateAsthmaMinute(player, d)
     local envMult = (mask == 2) and 0 or ((mask == 1) and 0.5 or 1)
     local passiveMult = (mask == 2) and ASTHMA_MASK_GAS_PASSIVE or 1
     local build = 0
+    -- during an attack its own endurance drain and panic do not feed it, or it
+    -- could never end: resting in clean warm air it eases at the attack rate
+    -- (about four hours), running or cold air still keep it going
+    local attack = d.asthmaAttack == true
     if not asleep then   -- (a faint ends the exertion and the panic, not the cold or the corpses)
         local temp = nil
         pcall(function() temp = getClimateManager():getAirTemperatureForCharacter(player, false) end)
@@ -172,7 +176,7 @@ local function updateAsthmaMinute(player, d)
         if corpses > 0 then
             build = build + ASTHMA_CORPSE_RATE * corpses * envMult
         end
-        if not out and stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
+        if not out and not attack and stats:get(CharacterStat.ENDURANCE) < ASTHMA_EXERT_ENDURANCE then
             build = build + ASTHMA_EXERT_RATE * passiveMult * (1 + ASTHMA_LUNGS_BUILD * lungs)
         end
         local moving = false
@@ -183,7 +187,7 @@ local function updateAsthmaMinute(player, d)
         -- panic: racing heart, fast shallow breathing. Internal, so no mask helps.
         local panic = 0
         pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
-        if panic > ASTHMA_PANIC_MIN and not out then
+        if panic > ASTHMA_PANIC_MIN and not out and not attack then
             build = build + ASTHMA_PANIC_RATE * ((panic - ASTHMA_PANIC_MIN) / (100 - ASTHMA_PANIC_MIN))
         end
     end

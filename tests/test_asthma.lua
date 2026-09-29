@@ -180,6 +180,20 @@ minute()
 H.near(fo._md.DanTraits.asthma, 0.95 - 0.001, 1e-9, "out: no exertion or panic build, the attack rate of decay")
 DanTraits_IsPassedOut = nil; DanTraits_PassOut = nil; H.rollf = 0.99
 print("asthma blackout: once per attack, after three empty minutes")
+-- an attack's own drain and panic do not feed it: resting in warm clean air it
+-- eases at the attack rate and ends in about four hours; running keeps it going
+local rest = newPlayer({}); H.current = rest; H.climate.temp = 20; H.corpses = 0
+rest._md.DanTraits = { asthma = 1.0, asthmaAttack = true }; rest._st.panic = 100; rest._st.endurance = 0
+minute()
+H.near(rest._md.DanTraits.asthma, 1.0 - 0.001, 1e-9, "resting: empty and panicking, yet it eases")
+local mins = 1
+while rest._md.DanTraits.asthmaAttack and mins < 400 do rest._st.panic = 100; rest._st.endurance = 0; minute(); mins = mins + 1 end
+assert(not rest._md.DanTraits.asthmaAttack and mins >= 240 and mins <= 260, "ends after about four hours at rest, got " .. mins .. " min")
+local runner = newPlayer({ sprint = true }); H.current = runner
+runner._md.DanTraits = { asthma = 0.95, asthmaAttack = true }; runner._st.endurance = 0
+minute()
+assert(runner._md.DanTraits.asthma > 0.95, "running through an attack still feeds it")
+print("attack at rest ends in about four hours; running feeds it")
 
 -- 16. one cough: a single gap across callers, the attack's burst forces it, a cigarette irritates, lungs hurt
 do
