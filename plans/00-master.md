@@ -34,8 +34,8 @@ plan; in-game checks are listed where the suite cannot see the change.
 
 ## Progress
 
-Done: 01 to 08 (phase 0 and 1 complete; plus the intoxication-scale fix in MDD and Diabetes found by 07).
-In progress: 09 to 17 as three bundles: A = 09, 15, 16; B = 10, 13, 14; C = 11, 12, 17.
+Done: 01 to 17 (phases 0, 1 and 2; plus the intoxication-scale fix in MDD and Diabetes found by 07).
+In progress: 18, 19, 20 in parallel; 21 (instrumentation and test only, dials await play) and 22 as one bundle.
 
 ## Order and dependencies
 
