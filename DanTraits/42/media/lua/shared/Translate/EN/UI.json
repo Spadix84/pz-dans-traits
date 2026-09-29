@@ -88,7 +88,7 @@
     "UI_DanTraits_MigraineStart": "MIGRAINE",
     "UI_DanTraits_MigraineEnd": "The pounding stops",
     "UI_trait_DanHemophilia": "Hemophilia",
-    "UI_trait_DanHemophiliadesc": "Blood does not clot.<br>Bleeding never stops on its own and costs far more health.<br>Open wounds bleed again until bandaged.<br>A scratch is a bandage or a slow death.",
+    "UI_trait_DanHemophiliadesc": "Blood does not clot.<br>Bleeding never stops on its own and you lose far more blood.<br>Open wounds bleed again until bandaged.<br>A scratch is a bandage or a slow death.",
     "UI_DanTraits_HemoBleeding": "Bleeding won't stop",
     "UI_trait_DanAnemia": "Anaemic",
     "UI_trait_DanAnemiadesc": "Short of iron.<br>Without fresh meat, fish, greens, eggs or iron pills the deficit shows within days.<br>Endurance recovers slower, tiredness comes sooner, colds catch easier.",
