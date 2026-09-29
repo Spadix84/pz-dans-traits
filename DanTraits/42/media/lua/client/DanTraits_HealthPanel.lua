@@ -110,6 +110,17 @@ local function extraLines(part, level, patient)
         local key = stitch >= 40 and "StitchesSound" or (stitch >= 15 and "StitchesHolding" or "StitchesFresh")
         out[#out + 1] = { t(key), key == "StitchesFresh" and ORANGE or GREEN }
     end
+    -- a knock to the head
+    if name == "Head" then
+        local s = d.ccScore or 0
+        if s > 0 then
+            if level < HP_VAGUE_BELOW then
+                out[#out + 1] = { t("KnockToHead"), ORANGE }
+            else
+                out[#out + 1] = { t(s >= 0.7 and "ConcussionSevere" or (s >= 0.4 and "ConcussionModerate" or "ConcussionMild")), ORANGE }
+            end
+        end
+    end
     -- the bone
     local fracture = num(part, "getFractureTime")
     if fracture > 0 then

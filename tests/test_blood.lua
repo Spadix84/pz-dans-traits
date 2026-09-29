@@ -137,6 +137,22 @@ assert(D(p).bloodTier == 3 and p._st.panic >= 40, "shock: tier 3, panic floor 40
 D(p).bloodVol = 0.49; h = p.overall(); minute(); near(h - p.overall(), 10, 0.02, "past half: 10 a minute")
 assert(D(p).bloodTier == 4, "bleeding out")
 
+-- 5b. shock: fainting spells, 2% a minute (6% bleeding out), not again for half an hour
+local fainted = {}
+function DanTraits_PassOut(pl, minutes, key) fainted[#fainted + 1] = { minutes = minutes, key = key } return true end
+local rollAt = 0.5
+function ZombRandFloat(lo, hi) if lo == 0 and hi == 1 then return rollAt end return (lo + hi) / 2 end
+p = makePlayer(); current = p
+p._md.DanTraits = { bloodVol = 0.58, bloodCells = 0.58 }
+rollAt = 0.03; minute(); assert(#fainted == 0, "shock: 3% roll misses 2%")
+rollAt = 0.01; minute(); assert(#fainted == 1 and fainted[1].minutes == 10 and fainted[1].key == "UI_DanTraits_BloodComeTo", "shock: out for 5-15 (the middle, 10)")
+for _ = 1, 29 do minute() end; assert(#fainted == 1, "not again for half an hour")
+minute(); assert(#fainted == 2, "then it can")
+D(p).bloodVol = 0.54; D(p).bloodFaintGap = 0; rollAt = 0.05; minute(); assert(#fainted == 3, "bleeding out: 6%")
+local r = makePlayer(); current = r; r._md.DanTraits = { bloodVol = 0.65, bloodCells = 1 }
+rollAt = 0; minute(); assert(#fainted == 3, "light-headed: no fainting")
+DanTraits_PassOut, ZombRandFloat = nil, nil
+
 -- 6. frame effects: endurance recovers slower, capped in shock, no sprinting when light-headed
 p = makePlayer(); current = p
 p._md.DanTraits = { bloodVol = 0.65, bloodCells = 1 }; minute()   -- 35% lost: tier 2

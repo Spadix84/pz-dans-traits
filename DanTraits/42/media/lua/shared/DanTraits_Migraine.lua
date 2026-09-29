@@ -24,6 +24,7 @@ local MIG_STRESS        = 2.0     -- added at full stress
 local MIG_LIGHT         = 1.5     -- added in bright daylight outdoors
 local MIG_HANGOVER      = 2.0     -- added at a full-strength hangover
 local MIG_NICOTINE      = 1.5     -- added at full nicotine withdrawal (Smoker)
+local MIG_CONCUSSION    = 3.0     -- added at the worst concussion
 local MIG_REFRACTORY_H  = 24      -- no roll for this long after an attack ends
 local MIG_AURA_H        = 20 / 60 -- warning before the pain
 local MIG_SEV_MIN       = 0.5     -- severity is this plus up to 0.5
@@ -65,6 +66,7 @@ local function inBrightLight(player)
     end)
     return bright
 end
+DanTraits_InBrightLight = inBrightLight
 
 -- percent chance per ten minutes
 -- 0..1 how lit the room is, while asleep (the sleep system's reading)
@@ -89,6 +91,7 @@ local function migraineChance(player)
         chance = chance + MIG_STRESS * clamp01(stats:get(CharacterStat.STRESS) or 0)
         if DanTraits_HangoverStrength then chance = chance + MIG_HANGOVER * clamp01(DanTraits_HangoverStrength(player)) end
         if DanTraits_NicotineWithdrawal then chance = chance + MIG_NICOTINE * clamp01(DanTraits_NicotineWithdrawal(player)) end
+        if DanTraits_ConcussionStrength then chance = chance + MIG_CONCUSSION * clamp01(DanTraits_ConcussionStrength(player)) end
     end)
     if inBrightLight(player) then chance = chance + MIG_LIGHT end
     return chance

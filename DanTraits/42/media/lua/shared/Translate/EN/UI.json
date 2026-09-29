@@ -148,5 +148,17 @@
     "UI_DanTraits_health_SetBadly": "Bone set badly",
     "UI_DanTraits_health_BoneEarly": "Bone: early days",
     "UI_DanTraits_health_BoneKnitting": "Bone: knitting",
-    "UI_DanTraits_health_BoneNearly": "Bone: nearly healed"
+    "UI_DanTraits_health_BoneNearly": "Bone: nearly healed",
+    "UI_DanTraits_ComeTo": "You come round on the floor",
+    "UI_DanTraits_BloodComeTo": "You come round, cold and shaking",
+    "UI_DanTraits_ConcussionMild": "You hit your head",
+    "UI_DanTraits_ConcussionModerate": "Your ears are ringing",
+    "UI_DanTraits_ConcussionComeTo": "You come round. What happened?",
+    "UI_DanTraits_ConcussionDizzy": "The world spins",
+    "UI_DanTraits_ConcussionClear": "Your head is clear again",
+    "UI_DanTraits_health_KnockToHead": "Took a knock to the head",
+    "UI_DanTraits_health_ConcussionMild": "Mild concussion",
+    "UI_DanTraits_health_ConcussionModerate": "Concussion",
+    "UI_DanTraits_health_ConcussionSevere": "Severe concussion",
+    "UI_DanTraits_JoltedAwake": "Pain jolts you awake"
 }

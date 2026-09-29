@@ -110,5 +110,21 @@
     "Moodles_Infection_Good_lvl3": "",
     "Moodles_Infection_Good_desc_lvl3": "",
     "Moodles_Infection_Good_lvl4": "",
-    "Moodles_Infection_Good_desc_lvl4": ""
+    "Moodles_Infection_Good_desc_lvl4": "",
+    "Moodles_Concussion_Bad_lvl1": "Dazed",
+    "Moodles_Concussion_Bad_desc_lvl1": "A knock to the head. A headache and drowsy; rest it off.",
+    "Moodles_Concussion_Bad_lvl2": "Concussed",
+    "Moodles_Concussion_Bad_desc_lvl2": "Headache, queasy, light hurts, the world spins if you run. Rest and sleep heal it; running and fighting drag it out.",
+    "Moodles_Concussion_Bad_lvl3": "Badly Concussed",
+    "Moodles_Concussion_Bad_desc_lvl3": "A bad head injury. Another knock now would be much worse. Lie low.",
+    "Moodles_Concussion_Bad_lvl4": "",
+    "Moodles_Concussion_Bad_desc_lvl4": "",
+    "Moodles_Concussion_Good_lvl1": "",
+    "Moodles_Concussion_Good_desc_lvl1": "",
+    "Moodles_Concussion_Good_lvl2": "",
+    "Moodles_Concussion_Good_desc_lvl2": "",
+    "Moodles_Concussion_Good_lvl3": "",
+    "Moodles_Concussion_Good_desc_lvl3": "",
+    "Moodles_Concussion_Good_lvl4": "",
+    "Moodles_Concussion_Good_desc_lvl4": ""
 }

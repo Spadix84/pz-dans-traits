@@ -38,8 +38,8 @@
 -- Vanilla's regeneration also goes only to parts under 100, so overall
 -- health moves differently depending on which parts are damaged.
 --
--- Fainting in shock waits on the fainting test (see the health overhaul
--- plan); until then shock drains health and endurance.
+-- In shock you can pass out for 5 to 15 game minutes (DanTraits_Faint.lua),
+-- 2% a minute, 6% bleeding out, no more than once in half an hour.
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -73,6 +73,9 @@ local BL_ENDURANCE_CAP = { 1, 1, 0.3, 0.15 }        -- endurance ceiling, by tie
 local BL_SHOCK_HEALTH  = 0.5     -- health per minute entering shock...
 local BL_SHOCK_HEALTH_MAX = 3    -- ...rising to this by BL_DEATH
 local BL_DEATH_HEALTH  = 10      -- health per minute past BL_DEATH
+local BL_FAINT         = { 0, 0, 0.02, 0.06 }  -- chance a minute of passing out, by tier (shock, bleeding out)
+local BL_FAINT_MIN     = { 5, 15 }  -- game minutes out
+local BL_FAINT_GAP     = 30      -- minutes before it can happen again
 
 local function clamp01(x) return math.max(0, math.min(1, x)) end
 
@@ -256,6 +259,17 @@ local function updateBloodMinute(player, d)
             local floor = BL_PANIC[tier] * max
             if (stats:get(panic) or 0) < floor then stats:set(panic, floor) end
         end)
+    end
+    -- fainting spells in shock (DanTraits_Faint.lua)
+    if (d.bloodFaintGap or 0) > 0 then d.bloodFaintGap = d.bloodFaintGap - 1 end
+    if not asleep and (BL_FAINT[tier] or 0) > 0 and (d.bloodFaintGap or 0) <= 0 and DanTraits_PassOut then
+        local chance = BL_FAINT[tier]
+        local hit = ZombRandFloat and ZombRandFloat(0, 1) < chance or (not ZombRandFloat and math.random() < chance)
+        if hit then
+            local lo, hi = BL_FAINT_MIN[1], BL_FAINT_MIN[2]
+            DanTraits_PassOut(player, ZombRandFloat and ZombRandFloat(lo, hi) or (lo + hi) / 2, "UI_DanTraits_BloodComeTo")
+            d.bloodFaintGap = BL_FAINT_GAP
+        end
     end
     if tier >= 3 then
         local over = (lost - BL_TIER[3]) / (BL_DEATH - BL_TIER[3])

@@ -23,3 +23,6 @@ option DanTraits.InfectionEnabled
 
 option DanTraits.WoundCareEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsWoundCareEnabled,}
+
+option DanTraits.ConcussionEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsConcussionEnabled,}

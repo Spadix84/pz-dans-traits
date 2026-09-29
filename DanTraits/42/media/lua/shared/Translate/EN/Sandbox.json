@@ -15,5 +15,7 @@
     "Sandbox_DanTraitsInfectionEnabled": "Wound Infection",
     "Sandbox_DanTraitsInfectionEnabled_tooltip": "Wounds can take an infection that grows: local, then fever, then sepsis. Clean and dress wounds early; once it spreads, only a course of antibiotics (a dose every eight hours) stops it.<br>Off: vanilla wound infection.",
     "Sandbox_DanTraitsWoundCareEnabled": "Wound Care",
-    "Sandbox_DanTraitsWoundCareEnabled_tooltip": "Dressings wear out and need changing, deep wounds heal slowly unstitched and can open again, fresh stitches can tear under strain, splints are set with a First Aid roll, and walking on a broken leg makes it worse.<br>Off: vanilla wound care."
+    "Sandbox_DanTraitsWoundCareEnabled_tooltip": "Dressings wear out and need changing, deep wounds heal slowly unstitched and can open again, fresh stitches can tear under strain, splints are set with a First Aid roll, and walking on a broken leg makes it worse.<br>Off: vanilla wound care.",
+    "Sandbox_DanTraitsConcussionEnabled": "Concussion",
+    "Sandbox_DanTraitsConcussionEnabled_tooltip": "Hard falls, car crashes and blows to the head can concuss: headache, nausea, dizzy spells, light hurts; a bad one knocks you out. Rest heals it; a helmet helps.<br>Off: no concussion."
 }
