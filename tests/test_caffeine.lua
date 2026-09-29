@@ -66,6 +66,16 @@ assert(not C(d).cafWithdrawing and C(d).cafDryHours == 0 and halo[#halo] == "+UI
 DanTraits_RunHooks("eat", nil, d, food("Chocolate"), 1)   -- 15: too small to reset the clock
 minute(); assert(C(d).cafDryHours == 0, "still sated from the coffee")
 
+-- 5b. a mug sipped in pieces each under the dose minimum still ends the craving once the level is sated
+local sip = newPlayer(); H.current = sip
+for _ = 1, 30 * 60 do minute() end
+assert(C(sip).cafWithdrawing, "withdrawing before the mug")
+for _ = 1, 8 do DanTraits_RunHooks("drink", nil, sip, container("Coffee"), 0.025) end   -- 8 sips of 10
+assert(C(sip).cafWithdrawing, "no single sip counts as a real dose")
+minute()
+assert(not C(sip).cafWithdrawing and C(sip).cafWithdraw == 0 and halo[#halo] == "+UI_DanTraits_CaffeineSated", "sated level clears the flag and says so")
+H.current = d
+
 -- 6. a week dry breaks the habit: withdrawal fades to nothing and says so
 local b = newPlayer(); H.current = b
 for _ = 1, 168 * 60 + 1 do minute() end

@@ -94,6 +94,12 @@ local function updateCaffeineMinute(player, d)
     if d.cafLevel >= CAF_SATED then
         d.cafDryHours = 0
         d.cafWithdraw = 0
+        -- a mug arrives in sips each under CAF_DOSE_MIN, so dose() may never
+        -- have cleared the flag; without this the next craving never shows
+        if d.cafWithdrawing then
+            d.cafWithdrawing = false
+            DanTraits_NotifyGood(player, "UI_DanTraits_CaffeineSated")
+        end
         return
     end
     d.cafDryHours = d.cafDryHours + 1 / 60
