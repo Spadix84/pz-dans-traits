@@ -17,10 +17,15 @@ local traitData = DanTraits_Data
 -- roll); intoxication 100 is a full Drunk 4, which keeps the pain floor at 80
 -- (what makes the shard survivable), arms a maximum hangover for when it
 -- wears off and feeds the day's alcoholism cap; a cold at strength 50 rides
--- on top. With Hemophilia or Anaemic the start is probably unwinnable.
+-- on top. Hemophilia and Bad Day are mutually exclusive (scripts/DanTraits.txt);
+-- with Anaemic the start is probably unwinnable.
 --
--- BALANCE PENDING PLAY (plans/21-bad-day-balance.md): none of the numbers
--- above has been tuned for the overhaul yet. The dials are listed in the plan
+-- BALANCE PENDING (plans/21-bad-day-balance.md). Played 2026-09-30, plain
+-- character: the shard bled 1.6% a minute (bleeding time about 13.6); pulled
+-- and bandaged at 16 minutes with 27% lost, each bandage soaked in 5 to 6
+-- minutes, 48% lost by 49 minutes. Without stitching supplies the opening
+-- kills even a plain character. Left as it is for now by choice; only the
+-- Hemophilia exclusion was taken. The dials are listed in the plan
 -- (a fixed low bleeding time on the shard, a starting bandage, a zeroed
 -- hangover load, Hemophilia exclusion) and wait for a play test. Replay the
 -- opening without a new character with the console command `badday`

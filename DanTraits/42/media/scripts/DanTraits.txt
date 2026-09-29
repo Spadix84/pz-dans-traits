@@ -48,6 +48,7 @@ module DanTraits {
         Cost = -12,
         UIName = UI_trait_DanBadDay,
         UIDescription = UI_trait_DanBadDaydesc,
+        MutuallyExclusiveTraits = DanTraits:hemophilia,
     }
 
     character_trait_definition DanTraits:schizophrenia
@@ -177,6 +178,7 @@ module DanTraits {
         Cost = -8,
         UIName = UI_trait_DanHemophilia,
         UIDescription = UI_trait_DanHemophiliadesc,
+        MutuallyExclusiveTraits = DanTraits:badday,
     }
 
     character_trait_definition DanTraits:anemia
