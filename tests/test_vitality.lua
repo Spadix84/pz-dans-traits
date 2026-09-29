@@ -133,10 +133,21 @@ d.vitality = 0.59; d.vitDiet = 1; d.vitSleep = 1
 for _ = 1, 30 do minute() end
 assert(d.vitality > 0.6 and halo[1] == "UI_DanTraits_VitTier3", "crossed into Fit: halo, got " .. tostring(halo[1]))
 H.clearHalo()
-local low = newPlayer({ hunger = 0.8 }); H.current = low; minute()
+local low = newPlayer({ hunger = 0.8, hours = 30 }); H.current = low; minute()
 local dl = V(low); dl.vitality = 0.41; dl.vitDiet = 0
 for _ = 1, 30 do minute() end
 assert(dl.vitality < 0.4 and halo[1] == "UI_DanTraits_VitTier1", "dropped to Sluggish: halo, got " .. tostring(halo[1]))
+-- a new character starts neutral: on the first day the target never falls below 0.5, a lift still counts
+H.clearHalo()
+local fresh = newPlayer({ hours = 1 }); H.current = fresh
+for _ = 1, 600 do minute() end
+near(V(fresh).vitTarget, 0.5, 1e-9, "first day: no exercise and no variety, but the target stays neutral")
+near(V(fresh).vitality, 0.5, 1e-9, "and Vitality with it")
+assert(halo[1] == nil, "no Sluggish notice on the first day")
+local keen = newPlayer({ hours = 1 }); H.current = keen; minute(); V(keen).vitDiet = 1; minute()   -- a week of fresh food
+assert(V(keen).vitTarget > 0.5, "a lift above neutral still counts on the first day")
+H.current = fresh; fresh._hours = 25; minute()
+assert(V(fresh).vitTarget < 0.5, "from the second day the real target applies")
 assert(DanTraits_VitalityTier(0.1) == 0 and DanTraits_VitalityTier(0.5) == 2 and DanTraits_VitalityTier(0.85) == 4, "tiers")
 
 -- 9. effect curve: dead zone, then linear to +-1
@@ -155,7 +166,7 @@ assert(top._health > 80, "health mending")
 -- the pipeline runs first in the minute, so it uses the effect of the score as it stood before this minute moved it
 local e0 = DanTraits_VitalityEffectOf(dt.vitality)
 top._catch = 10; minute(); near(top._catch, 10 * (1 - 0.3 * e0), 1e-6, "cold catching cut by 30% x effect")
-local bot = newPlayer({ unhappy = 0, health = 80 }); H.current = bot; minute()
+local bot = newPlayer({ unhappy = 0, health = 80, hours = 30 }); H.current = bot; minute()
 local db = V(bot); db.vitality = 0; db.vitDiet = 0; db.vitSleep = 0
 for _ = 1, 25 do minute() end
 assert(bot._carry == 7 and V(bot).vitCarryKg == -1, "carry base 8 -> 7, got " .. bot._carry); assert(bot._st.unhappy == 20, "mood held at the floor 20, got " .. bot._st.unhappy)

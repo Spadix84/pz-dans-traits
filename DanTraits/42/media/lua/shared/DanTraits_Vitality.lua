@@ -73,6 +73,13 @@ local VIT_W_DIET, VIT_W_EXERCISE, VIT_W_SLEEP = 0.5, 0.3, 0.2
 local VIT_SMOOTH            = 1 / 180 -- per minute toward the target (a few hours)
 local VIT_TIER              = { 0.2, 0.4, 0.6, 0.8 }   -- Run Down | Sluggish | - | Fit | Thriving
 local VIT_DEADZONE          = 0.1     -- no effect within this of 0.5
+-- a new character starts neutral: for the first day the target never falls
+-- below 0.5 (exercise regularity starts at 0 and variety at none, which alone
+-- pull a fresh character to Sluggish within hours). Anything that lifts it,
+-- a positive trait, still counts.
+local VIT_GRACE_HOURS       = 24
+-- negative Vitality traits (none yet) go here: they skip the grace
+local VIT_NO_GRACE_TRAITS   = {}
 -- effects at full strength (e = -1 or +1)
 local VIT_CARRY_KG          = 1       -- kilos added to the base carry weight (an int, 8 by default, scaled by strength: about 12%) at Thriving, removed at Run Down
 local VIT_CARRY_EFFECT      = 0.5     -- |effect| needed for the step (0.5 is exactly the Thriving and Run Down tier lines)
@@ -320,6 +327,11 @@ local function updateVitalityMinute(player, d)
 
     -- combine, slowly
     local target = VIT_W_DIET * dietEffective + VIT_W_EXERCISE * d.vitExercise + VIT_W_SLEEP * d.vitSleep
+    if hour < VIT_GRACE_HOURS then
+        local grace = true
+        for _, key in ipairs(VIT_NO_GRACE_TRAITS) do if hasTrait(player, key) then grace = false end end
+        if grace then target = math.max(target, 0.5) end
+    end
     d.vitTarget = target
     local before = tierOf(d.vitality)
     d.vitality = clamp01(d.vitality + (target - d.vitality) * VIT_SMOOTH)
