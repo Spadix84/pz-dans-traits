@@ -258,8 +258,25 @@ end
 
 local statAdd = DanTraits_StatAdd
 
+-- switched off mid-game (sandbox, a server admin): stand down once, so the
+-- fever, the sickness it held and the moodle do not stay on for good. The
+-- infection itself is kept and resumes if it is switched back on.
+local function standDown(player, d)
+    if not d or ((d.infFever or 0) <= 0 and (d.infSickness or 0) <= 0 and (d.infStage or 0) <= 0) then return end
+    d.infFever = 0
+    local held = d.infSickness or 0
+    pcall(function()
+        local stats = player:getStats()
+        local now = stats:get(CharacterStat.SICKNESS) or 0
+        if held > 0 and math.abs(now - held) < 0.002 then stats:set(CharacterStat.SICKNESS, 0) end
+    end)
+    d.infSickness = 0
+    d.infStage = 0
+    updateMoodle(player, 0, 0)
+end
+
 local function updateInfectionMinute(player, d)
-    if not sandboxOn() then return end
+    if not sandboxOn() then standDown(player, d) return end
     d = infData(player)
     local perMin = 1 / 1440
     -- vanilla's one antibiotic, spent here instead
@@ -407,6 +424,7 @@ end)
 
 -- 0..1 fever, for other systems
 function DanTraits_InfectionFever(player)
+    if not sandboxOn() then return 0 end
     local d = player and player:getModData().DanTraits
     return (d and d.infFever) or 0
 end

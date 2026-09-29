@@ -196,6 +196,16 @@ SandboxVars = { DanTraits = { InfectionEnabled = false } }
 p = newPlayer(); H.current = p; a = arm(p); a._t.cut = 5; a._infected, a._level = true, 2; minute()
 assert(a._infected and a._level == 2, "off: vanilla's infection stands")
 SandboxVars = nil
+-- switched off mid-fever: the fever, the sickness it held and the stage stand down; the infection is kept
+p = newPlayer(); H.current = p; a = arm(p); a._t.cut = 5
+DanTraits_ExtraCommands.infect(p, { "forearm_l", "7" }); DanTraits_ExtraCommands.sepsis(p, { "0.55" }); minute()
+assert(DanTraits_InfectionFever(p) > 0.4 and p._st.sickness > 0.4, "fever running")
+SandboxVars = { DanTraits = { InfectionEnabled = false } }
+minute()
+assert(DanTraits_InfectionFever(p) == 0 and D(p).infFever == 0 and p._st.sickness == 0 and D(p).infStage == 0, "off: fever, sickness and stage stand down")
+assert(D(p).infParts.ForeArm_L and D(p).infS > 0.5, "the infection itself is kept")
+p._st.sickness = 0.3; minute(); assert(p._st.sickness == 0.3, "off: someone else's sickness is left alone")
+SandboxVars = nil
 
 -- 12. commands
 p = newPlayer(); H.current = p
