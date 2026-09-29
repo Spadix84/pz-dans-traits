@@ -12,7 +12,7 @@ local halo, near, mins = H.halo, H.near, H.mins
 local drunk = 0
 DanTraits_DrunkLevel = function() return drunk end
 
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 local function md(p) return p._md.DanTraits end
 local function item(kind) return { getType = function() return kind end, getOnEat = function() return "" end } end
 

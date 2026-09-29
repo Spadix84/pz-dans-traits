@@ -5,10 +5,11 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Positives")
-H.expectHooks("OnCreatePlayer", "OnGameStart", "EveryOneMinute")
+H.expectHooks("OnCreatePlayer", "OnGameStart")
+H.expectEvery("minute", "Positives")
 
 local near = H.near
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 
 -- 1. Iron Stomach: rotten food's grade penalty halved (0.0 -> 0.25); burnt likewise; fresh untouched; without the trait untouched
 local iron = H.player({ traits = { "ironstomach" } }); H.current = iron

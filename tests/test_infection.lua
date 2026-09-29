@@ -13,7 +13,7 @@ local later = {}
 H.load("Infection")
 function DanTraits_Later(_, fn) later[#later + 1] = fn end
 local function runLater() for _, fn in ipairs(later) do fn() end later = {} end
-H.expectHooks("EveryOneMinute")
+H.expectEvery("minute", "Infection")
 
 local function makePart(name)
   local p = { _name = name, _t = { scratch = 0, cut = 0, deep = 0, bite = 0, burn = 0, stitch = 0 }, _alcohol = 0, _garlic = 0,
@@ -56,7 +56,7 @@ local build = H.factory(nil, function(p)
 end)
 local function newPlayer(vanillaTraits) return build({ vanilla = vanillaTraits }) end
 local halo, near, mins = H.halo, H.near, H.mins
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 local function D(p) return p._md.DanTraits end
 local function arm(p) return p._parts[2] end
 

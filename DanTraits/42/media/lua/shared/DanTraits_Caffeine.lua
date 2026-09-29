@@ -162,10 +162,4 @@ DanTraits_AddHook("pill", function(_, player, kind)
     return nil
 end)
 
-local function onCaffeineMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateCaffeineMinute(player, traitData(player))
-end
-
-Events.EveryOneMinute.Add(onCaffeineMinute)
+DanTraits_Every("minute", "Caffeine", updateCaffeineMinute, 40)

@@ -5,10 +5,10 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Dependent", "Hangover")
-H.expectHooks("EveryOneMinute", "EveryTenMinutes")
+H.expectEvery("minute", "Hangover")
 
 local halo, near = H.halo, H.near
-local minute, ten = H.on("EveryOneMinute"), H.on("EveryTenMinutes")
+local minute, ten = H.minute, H.ten
 local function md(p) return p._md.DanTraits end
 
 -- 1. a light buzz builds nothing; two hours at 60% intoxication builds one drunk-hour

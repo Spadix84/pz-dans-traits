@@ -455,5 +455,4 @@ end
 
 Events.OnTick.Add(schizoOnTick)
 
--- exposed for the ten-minute driver in the core file
-DanTraits_updateSchizophrenia = updateSchizophrenia
+DanTraits_Every("ten", "Hallucinations", updateSchizophrenia, 90)

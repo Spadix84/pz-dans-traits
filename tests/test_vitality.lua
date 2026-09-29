@@ -5,7 +5,8 @@ H.stubs()
 Perks = { Fitness = 'fitness', Strength = 'strength', Woodwork = 'woodwork' }
 
 H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes", "Vitality")
-H.expectHooks("EveryOneMinute", "OnPlayerUpdate")
+H.expectEvery("minute", "Vitality")
+H.expectEvery("frame", "Vitality")
 
 -- experience goes through the XP object, whose AddXP fires the game's AddXP event
 local newPlayer = H.factory(nil, function(p)
@@ -13,7 +14,7 @@ local newPlayer = H.factory(nil, function(p)
   p.getXp = function() return { AddXP = function(_, perk, amount) p._xp[perk] = (p._xp[perk] or 0) + amount; H.fire("AddXP", p, perk, amount) end } end
 end)
 local halo, near = H.halo, H.near
-local minute, frame = H.on("EveryOneMinute"), H.on("OnPlayerUpdate")
+local minute, frame = H.minute, H.frame
 local function food(o)
   return { getType = function() return o.name end, getCalories = function() return o.kcal or 0 end, getHungChange = function() return o.hunger or -0.1 end,
     getCarbohydrates = function() return o.carbs or 0 end, getUnhappyChange = function() return o.unhappy or 0 end, getFoodType = function() return o.foodType end,

@@ -7,7 +7,7 @@ H.stubs()
 H.roll = 9999
 H.load("Dependent")
 local halo, near = H.halo, H.near
-local ten = H.on("EveryTenMinutes")
+local ten = H.ten
 local function md(p) return p._md.DanTraits end
 local function run(p, intox, hours) p._st.intox = intox; for _ = 1, math.floor(hours * 6 + 0.5) do ten() end end
 

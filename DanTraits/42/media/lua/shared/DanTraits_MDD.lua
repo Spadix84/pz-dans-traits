@@ -242,7 +242,6 @@ local function updateMddTen(player, d)
     d.mddHoursLeft = MDD_MIN_HOURS + ZombRand(MDD_MAX_EXTRA_HOURS + 1)
     notify(player, "UI_DanTraits_MddStart")
 end
-DanTraits_updateMddTen = updateMddTen
 
 -- sleep is lighter during an episode: light wakes you more easily
 DanTraits_AddHook("sleepWake", function(m, player, d)
@@ -250,9 +249,5 @@ DanTraits_AddHook("sleepWake", function(m, player, d)
     return m * MDD_SLEEP_WAKE
 end)
 
-local function onMddMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateMddMinute(player, traitData(player))
-end
-Events.EveryOneMinute.Add(onMddMinute)
+DanTraits_Every("minute", "MDD", updateMddMinute, 40)
+DanTraits_Every("ten", "MDD", updateMddTen, 40)

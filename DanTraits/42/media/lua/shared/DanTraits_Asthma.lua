@@ -279,18 +279,6 @@ local function onAsthmaCreatePlayer(playerNum, player)
     pcall(function() player:getInventory():AddItem(INHALER_ITEM) end)
 end
 
-local function onAsthmaMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateAsthmaMinute(player, traitData(player))
-end
-
-local function onAsthmaPlayerUpdate(player)
-    if not player or player:isDead() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateAsthmaFrame(player)
-end
-
-Events.EveryOneMinute.Add(onAsthmaMinute)
-Events.OnPlayerUpdate.Add(onAsthmaPlayerUpdate)
+DanTraits_Every("minute", "Asthma", updateAsthmaMinute, 40)
+DanTraits_Every("frame", "Asthma", updateAsthmaFrame, 40)
 Events.OnCreatePlayer.Add(onAsthmaCreatePlayer)

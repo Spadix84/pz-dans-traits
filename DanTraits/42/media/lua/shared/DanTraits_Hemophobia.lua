@@ -136,11 +136,4 @@ DanTraits_ExtraCommands.fearofblood = function(player, args)
     return "fear of blood: " .. tostring(afraid(player))
 end
 
-local function onFearMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
-    track("FearOfBlood", updateFearMinute, player, traitData(player))
-end
-
-Events.EveryOneMinute.Add(onFearMinute)
+DanTraits_Every("minute", "FearOfBlood", updateFearMinute, 25)

@@ -143,23 +143,11 @@ local function updateAnemiaFrame(player)
     d.anLastEndurance = endurance
 end
 
-local function onAnemiaMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateAnemiaMinute(player, traitData(player))
-end
-
-local function onAnemiaPlayerUpdate(player)
-    if not player or player:isDead() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateAnemiaFrame(player)
-end
-
 -- the pill bottle: 30 pills, its own action (see client)
 function DanTraits_IsIronPills(item)
     local ok, res = pcall(function() return item:getFullType() == "DanTraits.IronPills" end)
     return ok and res == true
 end
 
-Events.EveryOneMinute.Add(onAnemiaMinute)
-Events.OnPlayerUpdate.Add(onAnemiaPlayerUpdate)
+DanTraits_Every("minute", "Anemia", updateAnemiaMinute, 40)
+DanTraits_Every("frame", "Anemia", updateAnemiaFrame, 40)

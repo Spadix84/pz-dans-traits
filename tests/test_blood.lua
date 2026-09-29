@@ -13,7 +13,9 @@ BodyPartType = { getDamageModifyer = function(i) return MODS[i] end }
 for _, n in ipairs(NAMES) do BodyPartType[n] = n end
 
 H.load("Blood", "Hemophilia", "Anemia")
-H.expectHooks("OnPlayerGetDamage", "EveryOneMinute", "OnPlayerUpdate")
+H.expectHooks("OnPlayerGetDamage")
+H.expectEvery("minute", "Blood")
+H.expectEvery("frame", "Blood")
 
 local made = {}
 local function makePart(name)
@@ -63,7 +65,7 @@ local function newPlayer(traits) return build({ traits = traits }) end
 local function part(p, name) for _, x in ipairs(p._parts) do if x._name == name then return x end end end
 
 local halo, near, mins = H.halo, H.near, H.mins
-local minute, damage, frame = H.on("EveryOneMinute"), H.on("OnPlayerGetDamage"), H.on("OnPlayerUpdate")
+local minute, damage, frame = H.minute, H.on("OnPlayerGetDamage"), H.frame
 local function D(p) return p._md.DanTraits end
 
 -- 1. the refund: vanilla's ReduceGeneralHealth then the report; every part ends where it was

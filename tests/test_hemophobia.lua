@@ -19,7 +19,7 @@ ISSplint = { new = function(self, character) return { maxTime = 140, character =
 H.load("Hemophobia")
 
 local function newPlayer(afraid) return H.player({ vanilla = afraid and { "base:hemophobic" } or {} }) end
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 local function part(bleed) return { getBleedingTime = function() return bleed end } end
 
 -- 1. stitching: 25%; the action still completes first

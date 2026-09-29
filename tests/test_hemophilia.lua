@@ -5,7 +5,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Hemophilia")
-H.expectHooks("EveryOneMinute")
+H.expectEvery("minute", "Hemophilia")
 
 local function part(o)
   o = o or {}
@@ -26,7 +26,7 @@ end
 
 local newPlayer = H.factory({ traits = { "hemophilia" } })
 local halo = H.halo
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 
 -- 1. an unbandaged bleed: its clock is held at the floor and health drops 0.35 a minute
 local a = part({ bleeding = true, time = 1.0 })

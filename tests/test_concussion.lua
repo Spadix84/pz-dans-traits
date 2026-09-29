@@ -13,7 +13,9 @@ local faded = nil
 UIManager = { FadeOut = function() faded = true end, FadeIn = function() faded = false end }
 
 H.load("Faint", "Concussion")
-H.expectHooks("OnPlayerGetDamage", "EveryOneMinute", "OnPlayerUpdate", "OnWeaponSwing")
+H.expectHooks("OnPlayerGetDamage", "OnWeaponSwing")
+H.expectEvery("minute", "Concussion")
+H.expectEvery("frame", "Concussion")
 
 -- a head that reports its health and pain, and one limb whose wounds are counted (a faint ends on a wound)
 local newPlayer = H.factory(nil, function(p)
@@ -35,7 +37,7 @@ local newPlayer = H.factory(nil, function(p)
     getBodyParts = function() return { size = function() return 1 end, get = function() return limb end } end } end
 end)
 local halo, near = H.halo, H.near
-local minute, damage, frame, swing, tick = H.on("EveryOneMinute"), H.on("OnPlayerGetDamage"), H.on("OnPlayerUpdate"), H.on("OnWeaponSwing"), H.on("OnTick")
+local minute, damage, frame, swing, tick = H.minute, H.on("OnPlayerGetDamage"), H.frame, H.on("OnWeaponSwing"), H.on("OnTick")
 local function out(p) return DanTraits_IsPassedOut(p) end
 -- let a blackout run its course: game minutes and real seconds
 local function wake(minutes) H.hours = H.hours + minutes / 60; H.now = H.now + 60000; tick() end

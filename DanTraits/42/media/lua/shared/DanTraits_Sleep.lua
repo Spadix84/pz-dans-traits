@@ -220,12 +220,6 @@ DanTraits_GrantWakeful = grantWakeful
 local function onSleepCreatePlayer(playerNum, player) grantWakeful(player) end
 local function onSleepGameStart() grantWakeful(getSpecificPlayer(0)) end
 
-local function onSleepMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateSleepMinute(player, traitData(player))
-end
-
 Events.OnCreatePlayer.Add(onSleepCreatePlayer)
 Events.OnGameStart.Add(onSleepGameStart)
-Events.EveryOneMinute.Add(onSleepMinute)
+DanTraits_Every("minute", "Sleep", updateSleepMinute, 10)

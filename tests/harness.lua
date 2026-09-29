@@ -15,6 +15,12 @@
 --   H.on(name)         a function that fires name (for `local minute = ...`).
 --   H.only(name)       assert exactly one handler is registered; return it.
 --   H.expectHooks(...) assert each named event has a handler ("hooks in place").
+--   H.minute()         fire core's one EveryOneMinute handler (it runs every loaded
+--   H.ten()            system in DanTraits_Every order); H.ten fires EveryTenMinutes.
+--   H.frame(player)    fire core's one OnPlayerUpdate handler for that player (the
+--                      frame systems run on it, like a frame of the game).
+--   H.expectEvery(cadence, label)  assert the loaded file registered that system
+--                      with DanTraits_Every ("minute" | "ten" | "frame").
 --   H.stubs()          the common game stubs (see the list in the function).
 --                      Knobs: H.halo (every notice; good ones are "+" prefixed;
 --                      H.clearHalo() empties it in place), H.rng (a queue of
@@ -43,8 +49,8 @@
 --   H.factory(defaults, decorate)  a player constructor with defaults merged
 --                      under the caller's opts, and decorate(p, opts) to add
 --                      what only one test needs.
---   H.near(a, b, eps, msg), H.mins(n[, fn]) (fn defaults to the minute
---   handlers), H.pass([name]) prints "<name>: all checks passed".
+--   H.near(a, b, eps, msg), H.mins(n[, fn]) (fn defaults to H.minute),
+--   H.pass([name]) prints "<name>: all checks passed".
 local H = {}
 
 local here = (debug.getinfo(1, "S").source:sub(2):match("^(.*)[/\\]")) or "."
@@ -108,6 +114,18 @@ function H.expectHooks(...)
   for _, name in ipairs({ ... }) do
     assert(H.handlers[name] and #H.handlers[name] > 0, "hooks in place: " .. name)
   end
+end
+
+-- the clock drivers: core registers one handler per cadence (DanTraits_Every)
+function H.minute() return H.only("EveryOneMinute")() end
+function H.ten() return H.only("EveryTenMinutes")() end
+function H.frame(player) return H.only("OnPlayerUpdate")(player) end
+
+function H.expectEvery(cadence, label)
+  for _, e in ipairs(DanTraits_Drivers[cadence] or {}) do
+    if e.label == label then return end
+  end
+  error("DanTraits_Every: nothing registered for " .. cadence .. " " .. label, 2)
 end
 
 -- stubs ----------------------------------------------------------------------
@@ -408,7 +426,7 @@ function H.near(a, b, eps, msg)
 end
 
 function H.mins(n, fn)
-  fn = fn or H.on("EveryOneMinute")
+  fn = fn or H.minute
   for _ = 1, n do fn() end
 end
 

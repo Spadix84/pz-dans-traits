@@ -250,20 +250,9 @@ DanTraits_ExtraCommands.concussion = function(player, args)
     return "concussion " .. tostring(DanTraits_KnockHead(player, 1, clamp01(s)))
 end
 
-local function onConcussionMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
-    track("Concussion", updateConcussionMinute, player, traitData(player))
-end
-
-local function onConcussionPlayerUpdate(player)
-    if not player or player:isDead() or not sandboxOn() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateConcussionFrame(player)
-end
-
 Events.OnPlayerGetDamage.Add(onConcussionDamage)
-Events.EveryOneMinute.Add(onConcussionMinute)
-Events.OnPlayerUpdate.Add(onConcussionPlayerUpdate)
+DanTraits_Every("minute", "Concussion", updateConcussionMinute, 24)
+DanTraits_Every("frame", "Concussion", function(player)
+    if sandboxOn() then updateConcussionFrame(player) end
+end, 24)
 Events.OnWeaponSwing.Add(onConcussionSwing)

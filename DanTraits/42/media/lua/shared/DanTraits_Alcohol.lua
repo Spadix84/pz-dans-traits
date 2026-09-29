@@ -113,17 +113,5 @@ local function updateAlcoholFrame(player)
 end
 DanTraits_updateAlcoholFrame = updateAlcoholFrame
 
-local function onAlcoholMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateAlcoholMinute(player, traitData(player))
-end
-
-local function onAlcoholPlayerUpdate(player)
-    if not player or player:isDead() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    pcall(updateAlcoholFrame, player)
-end
-
-Events.EveryOneMinute.Add(onAlcoholMinute)
-Events.OnPlayerUpdate.Add(onAlcoholPlayerUpdate)
+DanTraits_Every("minute", "Alcohol", updateAlcoholMinute, 40)
+DanTraits_Every("frame", "Alcohol", updateAlcoholFrame, 40)

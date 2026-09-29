@@ -9,14 +9,16 @@ local moodleValues = {}
 MF = { getMoodle = function(name, num) return { setThresholds = function() end, setValue = function(_, v) moodleValues[#moodleValues+1] = v end } end }
 
 H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
-H.expectHooks("EveryOneMinute", "OnPlayerUpdate", "OnCreatePlayer")
+H.expectHooks("OnCreatePlayer")
+H.expectEvery("minute", "Asthma")
+H.expectEvery("frame", "Asthma")
 
 -- every player here has the trait
 local newPlayer = H.factory({ traits = { "asthma" } }, function(p, o)
   p.getWornItem = function(_, loc) return (o.worn or {})[loc] end
 end)
 local halo = H.halo
-local minute, frame = H.on("EveryOneMinute"), H.on("OnPlayerUpdate")
+local minute, frame = H.minute, H.frame
 local function irritation(p) return p._md.DanTraits.asthma end
 
 -- 1. warm, calm, rested: nothing builds; stays at 0

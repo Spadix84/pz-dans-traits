@@ -4,13 +4,14 @@ H.events()
 H.stubs()
 
 H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes", "Alcohol")
-H.expectHooks("EveryOneMinute", "OnCreatePlayer")
+H.expectHooks("OnCreatePlayer")
+H.expectEvery("minute", "Diabetes")
 local drinkWraps = ISDrinkFluidAction.DanTraitsWraps
 assert(drinkWraps and drinkWraps["updateEat:drink-intake"] and drinkWraps["updateEat:alcohol-relief"], "both drink layers installed (Diabetes and Alcohol share updateEat)")
 
 local newPlayer = H.factory({ traits = { "diabetes1" } })
 local halo, near = H.halo, H.near
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 local function item(name, carbs) return { getType = function() return name end, getCarbohydrates = function() return carbs end, getHungChange = function() return -0.1 end, getUnhappyChange = function() return 0 end } end
 local function g(p) return p._md.DanTraits.glucose end
 

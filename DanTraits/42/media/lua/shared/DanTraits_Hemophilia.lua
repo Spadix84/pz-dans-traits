@@ -68,10 +68,4 @@ local function updateHemophiliaMinute(player, d)
 end
 DanTraits_updateHemophiliaMinute = updateHemophiliaMinute
 
-local function onHemophiliaMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateHemophiliaMinute(player, traitData(player))
-end
-
-Events.EveryOneMinute.Add(onHemophiliaMinute)
+DanTraits_Every("minute", "Hemophilia", updateHemophiliaMinute, 21)

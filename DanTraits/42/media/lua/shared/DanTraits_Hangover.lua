@@ -152,10 +152,4 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
     return quality * (1 - HO_SLEEP_CUT * severity)
 end)
 
-local function onHangoverMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateHangoverMinute(player, traitData(player))
-end
-
-Events.EveryOneMinute.Add(onHangoverMinute)
+DanTraits_Every("minute", "Hangover", updateHangoverMinute, 40)

@@ -18,7 +18,8 @@ function ISDrinkFluidAction:updateEat(delta)
 end
 
 H.load("Diabetes", "Alcohol")
-H.expectHooks("EveryOneMinute", "OnPlayerUpdate")
+H.expectEvery("minute", "Alcohol")
+H.expectEvery("frame", "Alcohol")
 local drinkWraps = ISDrinkFluidAction.DanTraitsWraps
 assert(drinkWraps and drinkWraps["updateEat:alcohol-relief"] and drinkWraps["updateEat:drink-intake"], "both drink layers installed")
 
@@ -42,7 +43,7 @@ local function drink(p, alcohol)
 end
 local drinkHook = {}
 DanTraits_AddHook("drink", function(_, player, fluid, litres) drinkHook[#drinkHook + 1] = { player = player, fluid = fluid, litres = litres } end)
-local minute, frame = H.on("EveryOneMinute"), H.on("OnPlayerUpdate")
+local minute, frame = H.minute, H.frame
 local near = H.near
 
 -- 1. a sip of whiskey no longer sets the pill timers

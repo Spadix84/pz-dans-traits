@@ -4,7 +4,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Caffeine")
-H.expectHooks("EveryOneMinute")
+H.expectEvery("minute", "Caffeine")
 
 local newPlayer = H.factory({ traits = { "caffeine" } })
 local function container(fluid, ratio)
@@ -12,7 +12,7 @@ local function container(fluid, ratio)
 end
 local function food(name) return { getType = function() return name end } end
 local halo, near = H.halo, H.near
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 local function C(p) return p._md.DanTraits end
 
 -- 1. a mug of coffee (0.25 L of the Coffee fluid) is 100; tea 37.5; a can of cola (0.3 L) 30; water nothing; a 50/50 mix half

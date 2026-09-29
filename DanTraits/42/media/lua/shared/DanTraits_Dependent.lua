@@ -212,7 +212,7 @@ local function updateDependent(player, d)
 
     if has then withdrawal(player, d, stats, intox, meter) end
 end
-DanTraits_updateDependent = updateDependent
+DanTraits_Every("ten", "Dependent", updateDependent, 10)
 
 local function withdrawalOf(player, d)
     if not d or not d.withdrawing or not hasTrait(player, "dependent") then return 0 end

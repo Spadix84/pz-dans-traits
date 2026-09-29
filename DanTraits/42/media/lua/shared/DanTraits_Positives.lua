@@ -76,12 +76,6 @@ end
 local function onPositivesCreatePlayer(playerNum, player) onPositivesCreate(player) end
 local function onPositivesGameStart() onPositivesCreate(getSpecificPlayer(0)) end
 
-local function onPositivesMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateIronStomachMinute(player, traitData(player))
-end
-
 Events.OnCreatePlayer.Add(onPositivesCreatePlayer)
 Events.OnGameStart.Add(onPositivesGameStart)
-Events.EveryOneMinute.Add(onPositivesMinute)
+DanTraits_Every("minute", "Positives", updateIronStomachMinute, 80)

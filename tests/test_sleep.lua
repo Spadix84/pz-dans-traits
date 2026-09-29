@@ -12,14 +12,15 @@ local woken = {}
 function getSleepingEvent() return { wakeUp = function(_, p) woken[#woken + 1] = p; p._asleep = false end } end
 
 H.load("Caffeine", "Sleep")
-H.expectHooks("OnCreatePlayer", "OnGameStart", "EveryOneMinute")
+H.expectHooks("OnCreatePlayer", "OnGameStart")
+H.expectEvery("minute", "Sleep")
 
 -- a sleeper by default, half tired, in a room with this much light and this many sleeping-pill hours
 local newPlayer = H.factory({ fatigue = 0.5, asleep = true }, function(p, o)
   p._light, p._tablets = o.light or 0, o.tablets or 0
 end)
 local halo, near = H.halo, H.near
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 
 -- 1. darkness: +1 at or below 0.25, -1 at or above 0.6, 0 at the reading line
 near(DanTraits_SleepDarkness(0.0), 1, 1e-9, "pitch dark")

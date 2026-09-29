@@ -8,8 +8,10 @@
 -- (eating, reading, pills), and the dashboard shows it as the remainder
 -- next to the active moodles.
 --
--- Loaded by DanTraits.lua before any trait file registers a handler. Handlers
--- from other mods pass through untouched. Measuring costs two reads of each
+-- Loaded by DanTraits.lua before any trait file registers a handler. The
+-- clock systems (minute, ten-minute, frame) register with DanTraits_Every and
+-- are credited by the label they give there; every other handler is credited
+-- by its file's name. Handlers from other mods pass through untouched. Measuring costs two reads of each
 -- tracked stat per handler call, so it only runs while switched on: the
 -- dashboard switches it on when it opens ("attrib on" / "attrib off").
 -- Single player only; nothing is installed on a server.
@@ -79,8 +81,9 @@ local function credit(src, label, i, d)
     row[i] = (row[i] or 0) + d
 end
 
--- Measuring: frames nest (the ten-minute driver in DanTraits.lua runs several
--- traits); each frame credits only what its children did not.
+-- Measuring: frames nest (the minute, ten-minute and frame drivers in
+-- DanTraits.lua run every system through DanTraits_Track); each frame credits
+-- only what its children did not.
 local depth = 0
 local befores, afters, childs = {}, {}, {}
 
@@ -113,7 +116,7 @@ local function run(label, fn, ...)
     if not ok then error(err) end
 end
 
--- for code that runs several traits from one handler (the ten-minute driver)
+-- for code that runs several systems from one handler (the drivers in DanTraits.lua, DanTraits_Every)
 function DanTraits_Track(label, fn, ...)
     return run(label, fn, ...)
 end

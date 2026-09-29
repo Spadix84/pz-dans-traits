@@ -5,12 +5,13 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Anemia")
-H.expectHooks("EveryOneMinute", "OnPlayerUpdate")
+H.expectEvery("minute", "Anemia")
+H.expectEvery("frame", "Anemia")
 
 local newPlayer = H.factory({ traits = { "anemia" }, endurance = 0.5 })
 local function food(name, foodType, kcal) return { getType = function() return name end, getFoodType = function() return foodType end, getCalories = function() return kcal end } end
 local halo, near = H.halo, H.near
-local minute, frame = H.on("EveryOneMinute"), H.on("OnPlayerUpdate")
+local minute, frame = H.minute, H.frame
 local function A(p) return p._md.DanTraits end
 
 -- 1. starts at 0.6 and drains: a day takes 0.2

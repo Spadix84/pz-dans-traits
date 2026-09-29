@@ -11,7 +11,9 @@ local splintCompleted = 0
 ISSplint = { complete = function(self) splintCompleted = splintCompleted + 1; self.bodyPart._splint = true; self.bodyPart._factor = (self.doctorLevel + 1) / 2 end }
 
 H.load("WoundCare")
-H.expectHooks("EveryOneMinute", "OnPlayerUpdate", "OnWeaponSwing")
+H.expectHooks("OnWeaponSwing")
+H.expectEvery("minute", "WoundCare")
+H.expectEvery("frame", "WoundCare")
 
 local function makePart(name)
   local p = { _name = name, _bandaged = false, _life = 0, _stitch = 0, _stitched = false, _deep = 0, _deepWounded = false,
@@ -43,7 +45,7 @@ local newPlayer = H.factory(nil, function(p)
   for i, n in ipairs(NAMES) do p._parts[i] = makePart(n) end
 end)
 local halo, near, mins = H.halo, H.near, H.mins
-local minute, frame, swing = H.on("EveryOneMinute"), H.on("OnPlayerUpdate"), H.on("OnWeaponSwing")
+local minute, frame, swing = H.minute, H.frame, H.on("OnWeaponSwing")
 local function D(p) return p._md.DanTraits end
 local function part(p, n) for _, x in ipairs(p._parts) do if x._name == n then return x end end end
 

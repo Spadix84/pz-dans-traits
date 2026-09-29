@@ -410,17 +410,5 @@ local function onAddXP(player, perk, amount)
 end
 Events.AddXP.Add(onAddXP)
 
-local function onVitalityMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateVitalityMinute(player, traitData(player))
-end
-
-local function onVitalityPlayerUpdate(player)
-    if not player or player:isDead() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateVitalityFrame(player)
-end
-
-Events.EveryOneMinute.Add(onVitalityMinute)
-Events.OnPlayerUpdate.Add(onVitalityPlayerUpdate)
+DanTraits_Every("minute", "Vitality", updateVitalityMinute, 90)
+DanTraits_Every("frame", "Vitality", updateVitalityFrame, 90)

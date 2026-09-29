@@ -345,12 +345,7 @@ local function onDiabetesCreatePlayer(playerNum, player)
     end)
 end
 
-local function onDiabetesMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateDiabetesMinute(player, traitData(player))
-end
-Events.EveryOneMinute.Add(onDiabetesMinute)
+DanTraits_Every("minute", "Diabetes", updateDiabetesMinute, 40)
 Events.OnCreatePlayer.Add(onDiabetesCreatePlayer)
 
 -- Drinks are fluid containers, not food: hook the drink action and read the

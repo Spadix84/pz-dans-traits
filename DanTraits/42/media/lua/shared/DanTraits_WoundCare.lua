@@ -340,19 +340,8 @@ DanTraits_ExtraCommands.badset = function(player, args)
     return "badly set " .. tostring(part:getType())
 end
 
-local function onWoundMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
-    track("WoundCare", updateWoundMinute, player, traitData(player))
-end
-
-local function onWoundPlayerUpdate(player)
-    if not player or player:isDead() or not sandboxOn() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateWoundFrame(player)
-end
-
-Events.EveryOneMinute.Add(onWoundMinute)
-Events.OnPlayerUpdate.Add(onWoundPlayerUpdate)
+DanTraits_Every("minute", "WoundCare", updateWoundMinute, 22)
+DanTraits_Every("frame", "WoundCare", function(player)
+    if sandboxOn() then updateWoundFrame(player) end
+end, 22)
 Events.OnWeaponSwing.Add(onSwing)

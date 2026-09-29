@@ -569,17 +569,5 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
     return quality * (1 - NIC_SLEEP_CUT * w)
 end)
 
-local function onSmokerMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateSmokerMinute(player, traitData(player))
-end
-
-local function onSmokerPlayerUpdate(player)
-    if not player or player:isDead() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateSmokerFrame(player)
-end
-
-Events.EveryOneMinute.Add(onSmokerMinute)
-Events.OnPlayerUpdate.Add(onSmokerPlayerUpdate)
+DanTraits_Every("minute", "Smoker", updateSmokerMinute, 40)
+DanTraits_Every("frame", "Smoker", updateSmokerFrame, 40)

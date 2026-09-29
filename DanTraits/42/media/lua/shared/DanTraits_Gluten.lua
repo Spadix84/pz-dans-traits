@@ -131,9 +131,4 @@ local function updateGlutenMinute(player, d)
     end)
 end
 
-local function onGlutenMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateGlutenMinute(player, traitData(player))
-end
-Events.EveryOneMinute.Add(onGlutenMinute)
+DanTraits_Every("minute", "Gluten", updateGlutenMinute, 40)

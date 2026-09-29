@@ -14,7 +14,7 @@ H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucin
 -- the trait under test is Spiraling unless a test asks for another
 local newPlayer = H.factory({ traits = { "spiraling" } })
 local halo = H.halo
-local minute, ten = H.on("EveryOneMinute"), H.on("EveryTenMinutes")
+local minute, ten = H.minute, H.ten
 
 -- 1. pain and stress drag mood down all the time, episode or not
 local p = newPlayer({ pain = 50, stress = 0.5 }); H.current = p

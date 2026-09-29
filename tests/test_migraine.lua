@@ -8,11 +8,12 @@ function DanTraits_SleepDebt() return debt end
 function DanTraits_HangoverStrength() return hangover end
 
 H.load("Migraine")
-H.expectHooks("EveryOneMinute", "EveryTenMinutes")
+H.expectEvery("minute", "Migraine")
+H.expectEvery("ten", "Migraine")
 
 local newPlayer = H.factory({ traits = { "migraine" } })
 local halo, near = H.halo, H.near
-local minute, ten = H.on("EveryOneMinute"), H.on("EveryTenMinutes")
+local minute, ten = H.minute, H.ten
 local function M(p) return p._md.DanTraits end
 
 -- 1. the chance: 0.3% calm; sleep debt, thirst, stress, hangover and bright daylight outdoors add

@@ -131,18 +131,6 @@ local function onWeaponSwing(player, weapon)
     dropWeapon(player)
 end
 
-local function onArthritisMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateArthritisMinute(player, traitData(player))
-end
-
-local function onArthritisPlayerUpdate(player)
-    if not player or player:isDead() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateArthritisFrame(player)
-end
-
 Events.OnWeaponSwing.Add(onWeaponSwing)
-Events.EveryOneMinute.Add(onArthritisMinute)
-Events.OnPlayerUpdate.Add(onArthritisPlayerUpdate)
+DanTraits_Every("minute", "Arthritis", updateArthritisMinute, 40)
+DanTraits_Every("frame", "Arthritis", updateArthritisFrame, 40)

@@ -12,7 +12,7 @@ ISEatFoodAction = { complete = function(self) eaten[#eaten+1] = { "complete", se
                     eat = function(self, food, pct) eaten[#eaten+1] = { "eat", self.item.name, pct } end }
 
 H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
-H.expectHooks("EveryOneMinute")
+H.expectEvery("minute", "Gluten")
 assert(ISEatFoodAction.DanTraitsWraps and ISEatFoodAction.DanTraitsWraps["complete:core-eat"], "hooks in place")
 
 local function item(name, carbs, hunger)
@@ -21,7 +21,7 @@ end
 local build = H.factory()
 local function newPlayer(hasGluten, asleep) return build({ traits = hasGluten and { "gluten" } or {}, asleep = asleep }) end
 local halo = H.halo
-local minute = H.on("EveryOneMinute")
+local minute = H.minute
 
 -- 1. what counts as wheat
 local yes = { "Bread", "BreadSlices", "BagelPlain", "PastaBowl", "Ramen", "NoodleSoup", "Cereal", "Crackers", "CookiesOatmeal", "PieApple", "PizzaWhole", "Sandwich", "Burger", "BeerBottle", "Gingerbreadman", "MeatSteamBun", "BunsHamburger", "Tortilla", "Cornbread", "PotatoPancakes" }

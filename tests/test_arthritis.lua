@@ -5,7 +5,9 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Arthritis")
-H.expectHooks("OnWeaponSwing", "EveryOneMinute", "OnPlayerUpdate")
+H.expectHooks("OnWeaponSwing")
+H.expectEvery("minute", "Arthritis")
+H.expectEvery("frame", "Arthritis")
 
 -- every named body part gets a stiffness; the joint parts are the ones the trait touches
 local newPlayer = H.factory({ traits = { "arthritis" } }, function(p)
@@ -15,7 +17,7 @@ local newPlayer = H.factory({ traits = { "arthritis" } }, function(p)
   p.getBodyDamage = function() return { getBodyPart = function(_, name) return parts[name] end } end
 end)
 local halo, near = H.halo, H.near
-local minute, frame, swing = H.on("EveryOneMinute"), H.on("OnPlayerUpdate"), H.on("OnWeaponSwing")
+local minute, frame, swing = H.minute, H.frame, H.on("OnWeaponSwing")
 
 -- 1. the joint factor: warm and dry 0; 7.5 C half; 0 C full; rain outdoors 0.7 x intensity; soaked 0.7; humid 0.35
 local p = newPlayer(); H.current = p

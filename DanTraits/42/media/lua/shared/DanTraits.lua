@@ -2,11 +2,11 @@
 --
 -- The traits declared in media/scripts/DanTraits.txt each live in their own
 -- file next to this one (DanTraits_<Trait>.lua) and `require` this file for
--- the shared helpers below. This file holds those helpers, the ten-minute
--- driver, the frame scheduler, DanTraits_Wrap (the one way any file wraps a
--- game method, so several files can layer on the same method), the eat and
--- pill action hooks that several traits share, and the save mod-list fix.
--- Each trait bails out immediately
+-- the shared helpers below. This file holds those helpers, the minute /
+-- ten-minute / frame drivers (DanTraits_Every), the frame scheduler,
+-- DanTraits_Wrap (the one way any file wraps a game method, so several files
+-- can layer on the same method), the eat and pill action hooks that several
+-- traits share, and the save mod-list fix. Each trait bails out immediately
 -- unless the player actually has it, so an unaffected character costs a
 -- handful of lookups.
 --
@@ -173,17 +173,84 @@ function DanTraits_Wrap(class, method, tag, fn)
     return true
 end
 
--- Ten-minute driver (the trait files hook in through globals) --------------------------------------------------------
-local function onTenMinutes()
+-- The drivers: one minute handler, one ten-minute handler, one frame handler ----------------------------------------
+-- Every system that runs on the clock registers here instead of on
+-- Events.EveryOneMinute / EveryTenMinutes / OnPlayerUpdate:
+--
+--   DanTraits_Every(cadence, label, fn, order)
+--     cadence  "minute" | "ten" | "frame"
+--     label    the system's name for the dashboard's attribution card ("Blood")
+--     fn       fn(player, d), d = the player's mod data
+--     order    number, lower runs first, default 100; equal orders run by label
+--
+-- Core registers the only three handlers. Each does the preamble once (the
+-- local player, dead check; the frame one also skips non-local players), then
+-- runs every registration in order through DanTraits_Track(label, ...) inside
+-- pcall, so one system's error is logged once and never stops the next.
+-- Order decides which system sees which other system's floors and stat writes
+-- in the same minute, so it is written down here:
+--
+--   minute  10  Sleep (light reading, wakes)
+--           20  Blood (loss this minute, sets bloodLossMin)
+--           21  Hemophilia (holds bleed times)
+--           22  WoundCare (reads BloodPartRate)
+--           23  Infection
+--           24  Concussion
+--           25  FearOfBlood (reads bloodLossMin)
+--           40  Alcohol, Anemia, Arthritis, Asthma, Caffeine, Diabetes, Gluten, Hangover,
+--               MDD, Migraine, Smoker (floors and rates; among themselves by label)
+--           80  Positives (Iron Stomach)
+--           90  Vitality (reads everything above, scores the night, applies lifts)
+--   ten     10  Dependent
+--           40  MDD, Migraine
+--           90  Hallucinations
+--   frame   20  Blood        22  WoundCare (movement sampling)    24  Concussion
+--           40  Alcohol (panic decay), Anemia, Arthritis, Asthma, Smoker
+--           90  Vitality
+--   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
+--   are still registered by their own files.)
+local drivers = { minute = {}, ten = {}, frame = {} }
+DanTraits_Drivers = drivers      -- read-only view for the tests and the dashboard
+local driverFailed = {}
+
+function DanTraits_Every(cadence, label, fn, order)
+    local list = drivers[cadence]
+    if not list or type(fn) ~= "function" then return false end
+    label = tostring(label or "")
+    order = order or 100
+    local at = #list
+    while at >= 1 and (list[at].order > order or (list[at].order == order and list[at].label > label)) do at = at - 1 end
+    table.insert(list, at + 1, { cadence = cadence, label = label, fn = fn, order = order })
+    return true
+end
+
+local function runDrivers(list, player, d)
+    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
+    for i = 1, #list do
+        local entry = list[i]
+        local ok, err = pcall(track, entry.label, entry.fn, player, d)
+        if not ok then
+            local key = entry.cadence .. ":" .. entry.label
+            if not driverFailed[key] then
+                driverFailed[key] = true
+                print("[DanTraits] " .. entry.label .. " (" .. entry.cadence .. ") failed: " .. tostring(err))
+            end
+        end
+    end
+end
+
+local function runClock(list)
     local player = getSpecificPlayer(0)
     if not player or player:isDead() then return end
-    local d = traitData(player)
-    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
-    if DanTraits_updateDependent then track("Dependent", DanTraits_updateDependent, player, d) end
-    if DanTraits_updateMddTen then track("MDD", DanTraits_updateMddTen, player, d) end
-    if DanTraits_updateSchizophrenia then track("Hallucinations", DanTraits_updateSchizophrenia, player, d) end
+    runDrivers(list, player, traitData(player))
 end
-Events.EveryTenMinutes.Add(onTenMinutes)
+Events.EveryOneMinute.Add(function() runClock(drivers.minute) end)
+Events.EveryTenMinutes.Add(function() runClock(drivers.ten) end)
+Events.OnPlayerUpdate.Add(function(player)
+    if not player or player:isDead() then return end
+    if player.isLocalPlayer and not player:isLocalPlayer() then return end
+    runDrivers(drivers.frame, player, traitData(player))
+end)
 
 
 -- Called by the eat action wrapper below with the portion actually eaten.

@@ -376,21 +376,11 @@ DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.blood = DanTraits_BloodCommand
 DanTraits_ExtraCommands.wound = function(player, args) return DanTraits_BloodTestWound(player, args[1], args[2]) end
 
-local function onBloodMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    local d = traitData(player)
-    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
-    track("Blood", updateBloodMinute, player, d)
-    updateBloodDebug(player, d)
-end
-
-local function onBloodPlayerUpdate(player)
-    if not player or player:isDead() or not sandboxOn() then return end
-    if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    updateBloodFrame(player)
-end
-
 Events.OnPlayerGetDamage.Add(onBloodGetDamage)
-Events.EveryOneMinute.Add(onBloodMinute)
-Events.OnPlayerUpdate.Add(onBloodPlayerUpdate)
+DanTraits_Every("minute", "Blood", function(player, d)
+    updateBloodMinute(player, d)
+    updateBloodDebug(player, d)
+end, 20)
+DanTraits_Every("frame", "Blood", function(player)
+    if sandboxOn() then updateBloodFrame(player) end
+end, 20)

@@ -424,11 +424,4 @@ DanTraits_ExtraCommands.infection = function(player, args)
     return "infection cleared"
 end
 
-local function onInfectionMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
-    track("Infection", updateInfectionMinute, player, traitData(player))
-end
-
-Events.EveryOneMinute.Add(onInfectionMinute)
+DanTraits_Every("minute", "Infection", updateInfectionMinute, 23)

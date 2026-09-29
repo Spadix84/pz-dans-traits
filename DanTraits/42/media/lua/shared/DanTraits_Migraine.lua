@@ -178,23 +178,11 @@ local function updateMigraineMinute(player, d)
 end
 DanTraits_updateMigraineMinute = updateMigraineMinute
 
-local function onMigraineMinute()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateMigraineMinute(player, traitData(player))
-end
-
-local function onMigraineTen()
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    updateMigraineTen(player, traitData(player))
-end
-
 -- an attack makes the eyes sensitive: light wakes you more easily
 DanTraits_AddHook("sleepWake", function(m, player, d)
     if not d or not d.migActive or not hasTrait(player, "migraine") then return nil end
     return m * MIG_SLEEP_WAKE
 end)
 
-Events.EveryOneMinute.Add(onMigraineMinute)
-Events.EveryTenMinutes.Add(onMigraineTen)
+DanTraits_Every("minute", "Migraine", updateMigraineMinute, 40)
+DanTraits_Every("ten", "Migraine", updateMigraineTen, 40)
