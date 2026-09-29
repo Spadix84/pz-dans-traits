@@ -93,8 +93,12 @@ end
 local function wrapDrinkAction()
     DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "alcohol-relief", function(original, self, ...)
         local snap = self.character and snapshotMeds(self.character)
+        -- read before the sip: the last one empties the container, and an
+        -- empty container reports no alcohol (found in game: finishing a
+        -- shot left full beta-blocker and painkiller timers)
+        local alcoholic = snap and isAlcoholic(self.fluidContainer)
         local result = original(self, ...)
-        if snap and DanTraits_SandboxOn("DrinkReliefEnabled") and isAlcoholic(self.fluidContainer) then restoreMeds(self.character, snap) end
+        if alcoholic and DanTraits_SandboxOn("DrinkReliefEnabled") then restoreMeds(self.character, snap) end
         return result
     end)
 end

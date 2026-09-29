@@ -56,6 +56,17 @@ drink(p, 0.004)
 assert(p._beta == 0 and p._betaD == 0, "beta-blocker timer put back")
 assert(p._painFx == 0 and p._painD == 0, "painkiller timer put back")
 
+-- 1a. the last sip, which empties the container: an empty container reports no
+-- alcohol, so the check must be made before the sip (found in game)
+local last = newPlayer(); H.current = last; last._moodles.drunk = 0
+local shot = { _amount = 0.1, getAmount = function(self) return self._amount end,
+               getProperties = function(self) return { getAlcohol = function() return self._amount > 1e-9 and 0.4 or 0 end, getCarbohydrates = function() return 0 end } end }
+ISDrinkFluidAction.updateEat({ character = last, fluidContainer = shot }, 1)
+assert(shot._amount <= 1e-9, "the shot is gone")
+assert(last._beta == 0 and last._painFx == 0, "the emptying sip's timers are put back too")
+H.current = p
+for i = #drinkHook, 1, -1 do if drinkHook[i].player == last then table.remove(drinkHook, i) end end
+
 -- 1b. and the Diabetes layer on the same method still ran: the drink hook fired with the litres swallowed
 assert(#drinkHook == 1 and drinkHook[1].player == p and drinkHook[1].fluid == lastContainer and math.abs(drinkHook[1].litres - 0.1) < 1e-9,
   "drink hook fired once with player, fluid and litres")
