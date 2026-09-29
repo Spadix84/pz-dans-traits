@@ -184,4 +184,11 @@ local z = H.player(); H.current = z
 assert(DanTraits_RunHooks("caffeineClearance", 1, z) == 1, "never smoked: unchanged")
 minute(); assert(md(z) == nil or md(z).nicMeter == nil, "never smoked: nothing stored")
 
+-- infection growth: a Smoker's meter only
+local function allNil(name, ...) for _, fn in ipairs(DanTraits_Hooks[name]) do assert(fn(1, ...) == nil, name .. ": should say nothing here") end end
+allNil("infectionGrowth", z)
+local nm = H.player(); H.current = nm; nm._md.DanTraits = { nicMeter = 1 }; allNil("infectionGrowth", nm)
+local sm = H.player({ traits = { "base:smoker" } }); H.current = sm; minute()
+near(DanTraits_RunHooks("infectionGrowth", 1, sm), 1 + 0.2 * md(sm).nicMeter, 1e-12, "a Smoker: growth x (1 + 0.2 x meter)")
+
 H.pass()

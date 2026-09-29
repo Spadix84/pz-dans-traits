@@ -33,6 +33,10 @@
 -- Vanilla's one-shot effect (ReduceInfectionPower 50) is undone.
 --
 -- Zombie infection is untouched.
+--
+-- Hooks offered: infectionHazard (h, player, part) and infectionGrowth (1,
+-- player). Subscribers: Diabetes (high sugar: both), Vitality (both, both
+-- ways), Anemia (growth), Smoker (growth, by the meter).
 require "DanTraits"
 
 local notify = DanTraits_Notify

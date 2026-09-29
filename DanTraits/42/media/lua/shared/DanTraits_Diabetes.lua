@@ -28,7 +28,8 @@ end
 -- settles and the longer a meal takes to clear. Either type can inject
 -- insulin, and either type can go low from it. Symptoms are deliberately
 -- vague: the same "can't focus" shows up high or low. A glucose meter and
--- test strips give a number.
+-- test strips give a number. Sugar above 180 also feeds wound infection and
+-- slows healing (the Infection file's hazard and growth hooks).
 -- Drinks reach the character through ISDrinkFluidAction.updateEat, wrapped
 -- here through DanTraits_Wrap with the tag "drink-intake" (carbohydrates, the
 -- Vitality drink hook and the `drink` hook); Alcohol adds its own layer to the
@@ -82,6 +83,8 @@ local DIA_KETO_HOURS        = 24                  -- ...until you have spent thi
 local DIA_MDD_UNHAPPY_MULT  = 1.5                 -- high-sugar mood floor during a depressive episode
 local DIA_HALO_MIN          = { 10, 5, 3 }        -- minutes between symptom messages by tier, plus up to as many again
 local DIA_STAT_RAMP         = 2                   -- per minute towards a mood/sickness floor
+local DIA_INF_HAZARD       = 1.0                 -- wound infection chance x (1 + this x t), t = 0 at DIA_HIGH[1] up to 1 at DIA_HIGH[3]
+local DIA_INF_GROWTH       = 0.5                 -- infection climb x (1 + this x t): high sugar feeds it and slows healing
 
 local INSULIN_ITEM   = "DanTraits.InsulinPen"
 local METER_ITEM     = "DanTraits.GlucoseMeter"
@@ -378,3 +381,22 @@ end
 wrapDrinkAction()
 Events.OnGameStart.Add(wrapDrinkAction)
 
+
+-- high blood sugar feeds a wound infection and slows healing: the Infection
+-- file's hazard and growth hooks, scaled by how far up the high band we are
+local function infectionSugar(player)
+    if not diaHas(player) then return 0 end
+    local d = player:getModData().DanTraits
+    if not d or not d.glucose then return 0 end
+    return math.max(0, math.min(1, (d.glucose - DIA_HIGH[1]) / (DIA_HIGH[3] - DIA_HIGH[1])))
+end
+DanTraits_AddHook("infectionHazard", function(h, player)
+    local t = infectionSugar(player)
+    if t <= 0 then return nil end
+    return h * (1 + DIA_INF_HAZARD * t)
+end)
+DanTraits_AddHook("infectionGrowth", function(k, player)
+    local t = infectionSugar(player)
+    if t <= 0 then return nil end
+    return k * (1 + DIA_INF_GROWTH * t)
+end)

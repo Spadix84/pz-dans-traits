@@ -17,7 +17,9 @@
 -- catching a cold (the catchCold hook), and at Thriving a kilo on the base carry
 -- weight. Below neutral: the reverse (health is never drained by this). The traits read the same value: asthma builds
 -- slower or faster, diabetes resistance and insulin sensitivity shift,
--- depressive episodes come rarer or more often.
+-- depressive episodes come rarer or more often; a wound infection is less or
+-- more likely to take hold and to climb (the infectionHazard and
+-- infectionGrowth hooks).
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -81,6 +83,8 @@ local VIT_ASTHMA_BUILD      = 0.30    -- irritation build-up x (1 - this x e)
 local VIT_DIA_RESISTANCE    = 0.15    -- Type 2 resistance - this x e
 local VIT_DIA_SENSITIVITY   = 0.15    -- insulin effect x (1 + this x e)
 local VIT_MDD_ONSET         = 0.30    -- episode chance x (1 - this x e)
+local VIT_INF_HAZARD        = 0.25    -- wound infection chance x (1 - this x e)
+local VIT_INF_GROWTH        = 0.25    -- infection climb x (1 - this x e)
 local VIT_XP_TIER           = 4       -- Thriving: Fitness and Strength experience is multiplied...
 local VIT_XP_MULT           = 2       -- ...by this
 
@@ -381,6 +385,18 @@ function DanTraits_VitalityAsthmaBuild(player) return 1 - VIT_ASTHMA_BUILD * Dan
 function DanTraits_VitalityDiaResistance(player) return -VIT_DIA_RESISTANCE * DanTraits_VitalityEffect(player) end
 function DanTraits_VitalityDiaSensitivity(player) return 1 + VIT_DIA_SENSITIVITY * DanTraits_VitalityEffect(player) end
 function DanTraits_VitalityMddOnset(player) return 1 - VIT_MDD_ONSET * DanTraits_VitalityEffect(player) end
+
+-- wound infection (DanTraits_Infection.lua): Run Down invites it, Thriving fights it
+DanTraits_AddHook("infectionHazard", function(h, player)
+    local e = DanTraits_VitalityEffect(player)
+    if e == 0 then return nil end
+    return h * (1 - VIT_INF_HAZARD * e)
+end)
+DanTraits_AddHook("infectionGrowth", function(k, player)
+    local e = DanTraits_VitalityEffect(player)
+    if e == 0 then return nil end
+    return k * (1 - VIT_INF_GROWTH * e)
+end)
 
 -- Thriving: Fitness and Strength experience is doubled. The event fires after
 -- the game adds the experience; the same amount is added again, guarded

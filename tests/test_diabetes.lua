@@ -190,4 +190,15 @@ local eater = newPlayer(); H.current = eater
 local eatAct = setmetatable({ character = eater, item = item("Apple", 20), percentage = 0.5 }, { __index = ISEatFoodAction })
 eatAct:complete(); near(eater._md.DanTraits.diaFast, 10, 1e-9, "half an apple through the eat action")
 
+-- infection hooks: only for a diabetic, and only above 180
+local function allNil(name, ...) for _, fn in ipairs(DanTraits_Hooks[name]) do assert(fn(1, ...) == nil, name .. ": should say nothing here") end end
+local nd = H.player(); H.current = nd
+DanTraits_Data(nd).glucose = 350
+allNil("infectionHazard", nd, {}); allNil("infectionGrowth", nd)
+local hd = newPlayer(); H.current = hd
+minute(); allNil("infectionHazard", hd, {}); allNil("infectionGrowth", hd)
+hd._md.DanTraits.glucose = 350
+near(DanTraits_RunHooks("infectionHazard", 0.04, hd, {}), 0.08, 1e-12, "diabetic at 350: hazard x2")
+near(DanTraits_RunHooks("infectionGrowth", 1, hd), 1.5, 1e-12, "diabetic at 350: growth x1.5")
+
 H.pass()

@@ -46,4 +46,10 @@ local n = newPlayer({ traits = {} }); H.current = n
 minute(); assert(n._md.DanTraits == nil or n._md.DanTraits.anIron == nil, "no trait: nothing tracked")
 DanTraits_RunHooks("eat", nil, n, food("Steak", "Meat", 300), 1); assert(n._md.DanTraits == nil or n._md.DanTraits.anIron == nil, "no trait: food ignored")
 
+-- infection growth: only with the trait, only short of iron
+local function allNil(name, ...) for _, fn in ipairs(DanTraits_Hooks[name]) do assert(fn(1, ...) == nil, name .. ": should say nothing here") end end
+allNil("infectionGrowth", n)
+p = newPlayer(); H.current = p; minute(); allNil("infectionGrowth", p)
+A(p).anIron = 0; near(DanTraits_RunHooks("infectionGrowth", 1, p), 1.3, 1e-12, "no iron: x1.3")
+
 H.pass()
