@@ -20,6 +20,13 @@ end
 -- floor is a drink (which quietly deepens the episode), a cigarette, a
 -- comforting meal, regular exercise and time outdoors; the last two also
 -- shorten the episode.
+-- What counts as a drink is the same for the relief and for the deepening:
+-- intoxication above the tipsy line plus MDD_TOLERANCE_NEEDS x the drinker's
+-- tolerance (DanTraits_AlcoholTolerance: an Alcoholic's meter, 0 for anyone
+-- else), so a sip that does nothing for an Alcoholic's withdrawal does nothing
+-- here either. A cigarette is told to us by Smoker's dose (DanTraits_MddOnSmoke,
+-- called after every dose): a full one is worth MDD_SMOKE_MINUTES, nicotine
+-- gum (dose 0.4) a little, and becoming a smoker nothing.
 local MDD_EPISODE_BASE      = 0.0014  -- per 10 min: about one episode a week when nothing else is wrong
 local MDD_STRESS_WEIGHT     = 2.0     -- chance x (1 + stress x this)
 local MDD_PAIN_WEIGHT       = 1.5     -- chance x (1 + pain/100 x this)
@@ -37,7 +44,8 @@ local MDD_STRESS_MOOD       = 0.8     -- unhappiness per minute at full stress, 
 local MDD_RELIEF_DRINK      = 20      -- floor reduction while intoxicated
 local MDD_DRINK_SEVERITY    = 0.01    -- severity added per 10 min drunk: it helps now and costs later
 local MDD_RELIEF_SMOKE      = 10      -- floor reduction after a cigarette
-local MDD_SMOKE_MINUTES     = 120
+local MDD_SMOKE_MINUTES     = 120     -- relief from a full dose; a smaller dose lasts proportionally less
+local MDD_TOLERANCE_NEEDS   = 0.3     -- drinking counts above tipsy + this x tolerance (0..1)
 local MDD_RELIEF_FOOD       = 10      -- floor reduction after a comforting meal
 local MDD_FOOD_MINUTES      = 180
 local MDD_RELIEF_EXERCISE   = 15      -- floor reduction at full exercise regularity
@@ -92,12 +100,18 @@ local function mddRegularity(player)
 end
 DanTraits_MddRegularity = mddRegularity
 
+-- drinking enough to matter: past tipsy, and past what this drinker's tolerance shrugs off
+local function mddDrinking(player)
+    local tolerance = DanTraits_AlcoholTolerance and DanTraits_AlcoholTolerance(player) or 0
+    local drinking = false
+    pcall(function() drinking = intoxOf(player) > DRINK.tipsy + MDD_TOLERANCE_NEEDS * tolerance end)
+    return drinking
+end
+
 -- floor reduction from the things that help, and a 0..1 "healthy habits" score
 local function mddRelief(player, d)
     local relief, habits = 0, 0
-    pcall(function()
-        if intoxOf(player) > DRINK.tipsy then relief = relief + MDD_RELIEF_DRINK end
-    end)
+    if mddDrinking(player) then relief = relief + MDD_RELIEF_DRINK end
     if (d.mddSmokeTimer or 0) > 0 then relief = relief + MDD_RELIEF_SMOKE end
     if (d.mddFoodTimer or 0) > 0 then relief = relief + MDD_RELIEF_FOOD end
     local regular = mddRegularity(player)
@@ -129,6 +143,15 @@ function DanTraits_MddOnPill(player)
     return true
 end
 
+-- called from Smoker's dose (after every cigarette, cigar, pipe or chew) and by nicotine
+-- gum (dose 0.4, smoked false): relief for MDD_SMOKE_MINUTES x the dose, up to one full dose
+function DanTraits_MddOnSmoke(player, dose, smoked)
+    if not player or not hasTrait(player, "spiraling") then return false end
+    local d = mddData(player)
+    d.mddSmokeTimer = math.max(d.mddSmokeTimer or 0, MDD_SMOKE_MINUTES * math.min(1, tonumber(dose) or 0))
+    return true
+end
+
 -- called from the eat hook: comfort food
 function DanTraits_MddOnEat(player, item)
     if not hasTrait(player, "spiraling") then return end
@@ -142,15 +165,10 @@ local function updateMddMinute(player, d)
     d = mddData(player)
     local stats = player:getStats()
 
-    -- bookkeeping: outdoors (rolling minutes per day), cigarettes, comfort food
+    -- bookkeeping: outdoors (rolling minutes per day), the cigarette and comfort food timers
     local outside = false
     pcall(function() outside = player:isOutside() end)
     d.mddOutside = d.mddOutside * (1 - 1 / 1440) + (outside and 1 or 0)
-    pcall(function()
-        local since = player:getTimeSinceLastSmoke()
-        if d.mddLastSmokeSince ~= nil and since < d.mddLastSmokeSince then d.mddSmokeTimer = MDD_SMOKE_MINUTES end
-        d.mddLastSmokeSince = since
-    end)
     if (d.mddSmokeTimer or 0) > 0 then d.mddSmokeTimer = d.mddSmokeTimer - 1 end
     if (d.mddFoodTimer or 0) > 0 then d.mddFoodTimer = d.mddFoodTimer - 1 end
 
@@ -222,7 +240,7 @@ local function updateMddTen(player, d)
     if d.mddEpisode then
         local _, habits = mddRelief(player, d)
         d.mddHoursLeft = (d.mddHoursLeft or 0) - (1 / 6) * (1 + habits * MDD_RECOVERY_BONUS + benefit * MDD_MED_RECOVERY)
-        if intoxOf(player) > DRINK.tipsy then
+        if mddDrinking(player) then
             d.mddSeverity = math.min(1, d.mddSeverity + MDD_DRINK_SEVERITY)
         end
         if d.mddHoursLeft <= 0 then

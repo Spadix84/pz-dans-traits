@@ -296,6 +296,7 @@ local function applyDose(player, dose, smoked, pre)
     end
     d.nicTotal = (d.nicTotal or 0) + dose
     if smoked and DanTraits_AsthmaSmoked then DanTraits_AsthmaSmoked(player, dose) end
+    if DanTraits_MddOnSmoke then DanTraits_MddOnSmoke(player, dose, smoked) end   -- MDD's relief (not the vanilla smoke clock)
 
     if not isSmoker(player) then
         if d.nicEx and newSession and roll(NIC_RELAPSE_ODDS) then
@@ -370,6 +371,7 @@ function DanTraits_ChewNicotineGum(player)
     end
     d.nicCueMin = 0
     d.nicStimH = math.max(d.nicStimH or 0, NIC_STIM_H * 0.5)
+    if DanTraits_MddOnSmoke then DanTraits_MddOnSmoke(player, 0.4, false) end   -- a lesser relief for MDD
     DanTraits_NotifyGood(player, "UI_DanTraits_SmokerGum")
     return true
 end

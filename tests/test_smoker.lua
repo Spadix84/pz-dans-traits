@@ -198,4 +198,19 @@ do
   DanTraits_AsthmaSmoked = nil
 end
 
+-- 16. and tells MDD: a full dose, a cigar capped, the gum as 0.4 and not smoke; becoming a smoker is not a dose
+do
+  local seen = {}
+  DanTraits_MddOnSmoke = function(_, dose, smoked) seen[#seen + 1] = { dose, smoked } end
+  local a = H.player(); H.current = a
+  smoke(a, "CigaretteSingle", vanillaNonSmoker); assert(#seen == 1 and seen[1][1] == 1 and seen[1][2] == true, "a cigarette: dose 1, smoked")
+  smoke(a, "Cigar", vanillaNonSmoker); assert(#seen == 2 and seen[2][1] == 3 and seen[2][2] == true, "a cigar: dose 3 (MDD caps it)")
+  DanTraits_ChewNicotineGum(a); assert(#seen == 3 and seen[3][1] == 0.4 and seen[3][2] == false, "gum: dose 0.4, not smoked")
+  local before = #seen
+  local b = H.player({ traits = { "base:smoker" } }); H.current = b
+  b._md.DanTraits = { nicInit = false, nicMeter = 0.1, nicLungs = 0, nicDryHours = 0 }
+  minute(); assert(#seen == before, "becoming a smoker at creation tells MDD nothing")
+  DanTraits_MddOnSmoke = nil
+end
+
 H.pass()

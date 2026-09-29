@@ -10,7 +10,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Brittle | -8 | Solid hits can fracture a limb. |
 | Arthritis | -10 | Stiff joints: slower to move and swing, flares in the cold and damp, and swings can throw the weapon out of your hands. |
 | Jinxed | -4 | Freshly generated containers near you sometimes lose an item. |
-| Major Depressive Disorder | -8 | Episodes that hold mood down for days; drink, cigarettes, comfort food, exercise, time outdoors and a real antidepressant regimen all matter. |
+| Major Depressive Disorder | -8 | Episodes that hold mood down for days; drink, cigarettes, comfort food, a piece of nicotine gum a little, exercise, time outdoors and a real antidepressant regimen all matter. |
 | A Really Bad Day | -12 | CDDA-style start: drunk, sick, a shard wound, no clothes, house on fire. |
 | Hallucinations | -2 | Phantom zombies, sounds, thumps, whispers and panic bouts. |
 | Brittle Asthma | -8 | Airway irritation from cold, corpses, exertion and panic; four tiers up to an attack (an attack that empties you can black you out); smoking, and a smoker's lungs, make it worse; rescue inhaler item. |

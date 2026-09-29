@@ -41,7 +41,7 @@ q._st.unhappy = 90; minute(); assert(q._st.unhappy == 90, "worse than the floor 
 -- 4. relief: drink 20, cigarette 10 (for 2 h), comfort food 10 (3 h), exercise up to 15, outdoors up to 15
 q._st.unhappy = 0
 q._st.intox = 20; for _ = 1, 40 do minute() end; assert(q._st.unhappy == 55, "drunk: floor 75-20, got " .. q._st.unhappy); q._st.intox = 0
-q._since = 10; minute(); q._since = 0; minute()   -- the timer reset marks a cigarette
+assert(DanTraits_MddOnSmoke(q, 1, true) and q._md.DanTraits.mddSmokeTimer == 120, "a cigarette: two hours of relief")
 q._st.unhappy = 0; for _ = 1, 40 do minute() end; assert(q._st.unhappy == 65, "after a cigarette: 75-10, got " .. q._st.unhappy)
 for _ = 1, 120 do minute() end; assert(q._st.unhappy == 75, "two hours later the cigarette has worn off")
 DanTraits_MddOnEat(q, { getUnhappyChange = function() return -10 end })
@@ -129,4 +129,32 @@ n._st.unhappy = 0; n._st.stress = 0; minute(); assert(n._st.unhappy >= 0.3 and n
 for _ = 1, 143 do ten() end; assert(n._md.DanTraits.mddMedStreak < 10 - 2.9, "streak drains 3 days per day off them, now " .. n._md.DanTraits.mddMedStreak)
 local short = newPlayer({}); H.current = short; short._md.DanTraits = { mddMedDays = 0, mddMedStreak = 3, mddSinceEnd = 0 }
 ten(); assert((short._md.DanTraits.mddWithdraw or 0) == 0, "a three-day streak lapsing does not cause discontinuation")
+-- 17. drinking counts past tipsy + 0.3 x tolerance; smoke is told by Smoker's dose, gum a little, the vanilla clock not at all
+do
+  local function episode(p, extra)
+    p._md.DanTraits = { mddEpisode = true, mddSeverity = 1, mddHoursLeft = 48, mddSinceEnd = 0, alcInit = true }
+    for k, v in pairs(extra or {}) do p._md.DanTraits[k] = v end
+  end
+  local function settle(p) p._st.unhappy = 0; for _ = 1, 40 do minute() end; return p._st.unhappy end
+  local plainDrinker = newPlayer({}); H.current = plainDrinker; episode(plainDrinker)
+  plainDrinker._st.intox = 20; assert(settle(plainDrinker) == 55, "no tolerance: intoxication 0.2 relieves (75 - 20)")
+  local al = newPlayer({ traits = { "spiraling", "dependent" } }); H.current = al; episode(al, { depTolerance = 1 })
+  al._st.intox = 20; assert(settle(al) == 75, "tolerance 1: intoxication 0.2 is not enough, no relief")
+  al._st.intox = 40; assert(settle(al) == 55, "tolerance 1: intoxication 0.4 relieves")
+  -- the same line for the severity creep
+  local sv = newPlayer({ traits = { "spiraling", "dependent" } }); H.current = sv; episode(sv, { depTolerance = 1, mddSeverity = 0.5 })
+  sv._st.intox = 20; ten(); assert(math.abs(sv._md.DanTraits.mddSeverity - 0.5) < 1e-9, "a sip an Alcoholic shrugs off does not deepen the episode")
+  sv._st.intox = 40; ten(); assert(math.abs(sv._md.DanTraits.mddSeverity - 0.51) < 1e-9, "a real drink does")
+  -- smoke
+  local sm = newPlayer({}); H.current = sm; episode(sm)
+  DanTraits_MddOnSmoke(sm, 3, true); assert(sm._md.DanTraits.mddSmokeTimer == 120, "a cigar is capped at one full dose")
+  local gum = newPlayer({}); H.current = gum; episode(gum)
+  DanTraits_MddOnSmoke(gum, 0.4, false); assert(math.abs(gum._md.DanTraits.mddSmokeTimer - 48) < 1e-9, "gum: 40% of the time")
+  DanTraits_MddOnSmoke(gum, 0.4, false); assert(math.abs(gum._md.DanTraits.mddSmokeTimer - 48) < 1e-9, "gum never shortens an existing relief")
+  assert(settle(gum) == 65, "and it gives the same 10 while it lasts")
+  gum._since = 10; minute(); gum._since = 0; minute(); gum._md.DanTraits.mddSmokeTimer = 0
+  assert(settle(gum) == 75, "the vanilla smoke clock going down means nothing now")
+  local nonMdd = H.player({ traits = {} }); assert(not DanTraits_MddOnSmoke(nonMdd, 1, true), "no trait: nothing")
+end
+
 H.pass()
