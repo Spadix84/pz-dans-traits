@@ -75,7 +75,7 @@ local function partLabel(part)
     return label or tostring(part:getType())
 end
 local function say(player, key, part)
-    pcall(function() HaloTextHelper.addBadText(player, getText(key, partLabel(part))) end)
+    DanTraits_NotifyFmt(player, key, partLabel(part))
 end
 
 local function wcData(player)

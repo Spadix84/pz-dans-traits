@@ -83,6 +83,20 @@ local function notifyGood(player, textKey)
     DanTraits_Story(player, storyKind(textKey), text, "good")
 end
 
+-- notices whose text takes arguments: getText(key, ...) formats it, and the
+-- story event gets the formatted text. Bad by default, Good for the other tone.
+function DanTraits_NotifyFmt(player, textKey, ...)
+    local text = getText(textKey, ...)
+    pcall(function() HaloTextHelper.addBadText(player, text) end)
+    DanTraits_Story(player, storyKind(textKey), text, "bad")
+end
+
+function DanTraits_NotifyFmtGood(player, textKey, ...)
+    local text = getText(textKey, ...)
+    pcall(function() HaloTextHelper.addGoodText(player, text) end)
+    DanTraits_Story(player, storyKind(textKey), text, "good")
+end
+
 local function traitData(player)
     local md = player:getModData()
     md.DanTraits = md.DanTraits or {}
