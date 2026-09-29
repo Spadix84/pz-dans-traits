@@ -66,10 +66,12 @@ end
 local function setTrait(player, on)
     local entry = DanTraitsRegistry and DanTraitsRegistry.dependent
     if not entry then return false end
-    return pcall(function()
+    local ok = pcall(function()
         local traits = player:getCharacterTraits()
         if on then traits:add(entry) else traits:remove(entry) end
     end)
+    DanTraits_TraitsChanged(player)
+    return ok
 end
 
 local function relapseRoll()

@@ -133,6 +133,7 @@ DanTraits_ExtraCommands.fearofblood = function(player, args)
         if on and not traits:get(CharacterTrait.HEMOPHOBIC) then traits:add(CharacterTrait.HEMOPHOBIC) end
         if not on and traits:get(CharacterTrait.HEMOPHOBIC) then traits:remove(CharacterTrait.HEMOPHOBIC) end
     end)
+    DanTraits_TraitsChanged(player)
     return "fear of blood: " .. tostring(afraid(player))
 end
 
