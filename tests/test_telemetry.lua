@@ -96,4 +96,46 @@ snap = files["DanTraits_Telemetry.json"]
 local a, b = snap:find('"text":"Found a <photo>"', 1, true), snap:find('"text":"I need a cigarette"', 1, true)
 assert(a and b and a < b, "both events, newest first: " .. snap)
 assert(snap:find('"clock":"4/8 14:30"', 1, true) and snap:find('"source":"OtherMod"', 1, true), snap)
+-- 6. the console commands that hand off to a trait file: with the target global missing each says so
+-- ("not loaded"; cough is the exception, the util file always provides it), with a stub in place each calls it with the character and reports its answer
+local run = DanTraits_RunCommand
+for _, name in ipairs({ "metformin", "inhaler", "fracture", "drop", "gluten", "antidep", "attrib" }) do
+  assert(run(player, name .. " on"):find("not loaded", 1, true), name .. ": says so when its file is missing")
+end
+local calls = {}
+local function stub(global, result)
+  _G[global] = function(...) calls[#calls + 1] = { global, ... }; return result end
+end
+local function last() return calls[#calls] end
+
+stub("DanTraits_DiaOnPill", "taken")
+assert(run(player, "metformin") == "metformin: taken" and last()[1] == "DanTraits_DiaOnPill" and last()[2] == player, "metformin")
+stub("DanTraits_UseInhaler", true)
+assert(run(player, "inhaler") == "inhaler: true" and last()[1] == "DanTraits_UseInhaler" and last()[2] == player, "inhaler")
+stub("DanTraits_BrittleFracture", true)
+assert(run(player, "fracture") == "fracture: true" and last()[1] == "DanTraits_BrittleFracture" and last()[2] == player, "fracture")
+stub("DanTraits_FumbleDrop", true)
+local dropped = run(player, "drop")
+assert(dropped:find("^drop") and not dropped:find("not loaded", 1, true) and last()[1] == "DanTraits_FumbleDrop" and last()[2] == player, "drop: " .. tostring(dropped))
+stub("DanTraits_Cough")
+assert(run(player, "cough") == "cough, radius 10" and last()[1] == "DanTraits_Cough" and last()[3] == 10 and last()[4] == "console" and last()[5] == true, "cough default radius")
+assert(run(player, "cough 25") == "cough, radius 25" and last()[3] == 25, "cough radius")
+stub("DanTraits_GlutenDose")
+assert(run(player, "gluten") == "gluten dose 50 carbs" and last()[3] == 50 and last()[4] == false, "gluten default dose, onset wait")
+assert(run(player, "gluten 80 now") == "gluten dose 80 carbs (no onset wait)" and last()[3] == 80 and last()[4] == true, "gluten now")
+stub("DanTraits_MddOnPill", "ok")
+assert(run(player, "antidep") == "antidepressant: ok" and last()[1] == "DanTraits_MddOnPill" and last()[2] == player, "antidep")
+local attribution
+DanTraits_AttribSet = function(on) attribution = on end
+DanTraits_AttribReset = function() attribution = "reset" end
+assert(run(player, "attrib on") == "attribution on" and attribution == true, "attrib on")
+assert(run(player, "attrib off") == "attribution off" and attribution == false, "attrib off")
+assert(run(player, "attrib reset") == "attribution reset" and attribution == "reset", "attrib reset")
+assert(run(player, "attrib what"):find("^attrib:"), "attrib usage")
+assert(run(player, "echo hello  there world") == "hello there world", "echo joins the words")
+assert(run(player, "echo") == "", "echo with nothing")
+-- a handler that throws is reported, not raised
+DanTraits_UseInhaler = function() error("boom") end
+assert(run(player, "inhaler"):find("^inhaler failed"), "a failing command is reported")
+
 H.pass()

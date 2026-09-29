@@ -34,6 +34,11 @@ local function makePart(name)
   p._life = 5
   function p:getBandageLife() return self._life end
   function p:haveBullet() return false end
+  -- open-wound clocks, which the real Faint counts to notice a new wound
+  function p:getScratchTime() return self._scratchT or 0 end
+  function p:getCutTime() return 0 end
+  function p:getBiteTime() return 0 end
+  function p:getDeepWoundTime() return 0 end
   function p:IsBleedingStemmed() return false end
   function p:scratched() return false end
   function p:isCut() return false end
@@ -202,5 +207,40 @@ local r = DanTraits_ExtraCommands.wound(p, { "forearm_l", "glass" })
 assert(made[#made] == "glass ForeArm_L" and string.find(r, "bleeding time 9", 1, true), r)
 DanTraits_BloodTestWound(p, "NECK", "deep"); assert(made[#made] == "deep Neck", "neck, any case")
 assert(string.find(DanTraits_BloodTestWound(p, "tail", "deep"), "part is one of", 1, true), "unknown part")
+
+-- 13. end to end with the real DanTraits_Faint.lua (sections above stub PassOut): shock at tier 3 with a
+-- seeded roll passes out, the tick holds movement, coming round by time, and a new wound wakes a faint
+local faded
+UIManager = { FadeOut = function() faded = true end, FadeIn = function() faded = false end }
+function ZombRandFloat(lo, hi) if lo == 0 and hi == 1 then return H.rollf end return (lo + hi) / 2 end
+H.load("Faint")
+local tick = H.on("OnTick")
+p = newPlayer(); H.current = p
+p.setBlockMovement = function(_, b) p._blocked = b end
+p.setIgnoreMovement = function() end
+p.setAuthorizeMeleeAction = function() end
+p.setAuthorizeShoveStomp = function() end
+p.isSitOnGround = function() return p._sitting == true end
+p.reportEvent = function(_, e) if e == "EventSitOnGround" then p._sitting = true end end
+p._md.DanTraits = { bloodVol = 0.58, bloodCells = 0.58 }
+H.clearHalo(); H.now = 100000; H.hours = 500
+H.rollf = 0.5; minute(); assert(not DanTraits_IsPassedOut(p), "shock, roll 0.5: keeps his feet")
+H.rollf = 0.01; minute()
+assert(DanTraits_IsPassedOut(p), "shock at tier 3, roll under 2%: passed out")
+assert(p._bump == "stagger" and p._blocked and faded == true, "fell, movement blocked, screen black")
+p._blocked = false; tick(); assert(p._blocked, "the tick holds movement")
+H.hours = H.hours + 9 / 60; H.now = H.now + 60000; tick(); assert(DanTraits_IsPassedOut(p), "10 game minutes: not yet")
+H.hours = H.hours + 2 / 60; tick()
+assert(not DanTraits_IsPassedOut(p) and not p._blocked and faded == false, "comes round on time")
+assert(halo[#halo] == "UI_DanTraits_BloodComeTo", "and says so")
+-- a faint is shallow: a new wound (a scratch here) brings you round at once
+H.clearHalo()
+assert(DanTraits_PassOut(p, 10, "UI_DanTraits_BloodComeTo"), "out again")
+for _ = 1, 10 do tick() end; assert(DanTraits_IsPassedOut(p), "nothing new: still out")
+part(p, "Hand_L")._scratchT = 5
+for _ = 1, 10 do tick() end
+assert(not DanTraits_IsPassedOut(p) and halo[#halo] == "UI_DanTraits_JoltedAwake", "a new wound wakes")
+assert(not p._blocked and faded == false, "free again")
+part(p, "Hand_L")._scratchT = nil
 
 H.pass()

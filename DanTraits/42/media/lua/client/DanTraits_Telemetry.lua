@@ -362,6 +362,11 @@ function commands.echo(player, args)
     return table.concat(args, " ")
 end
 
+function commands.badday(player, args)
+    if not DanTraits_BadDayReplay then return "badday: not loaded" end
+    return DanTraits_BadDayReplay(player, args[1] == "fire")
+end
+
 local function runCommand(player, line)
     local args = {}
     -- no string.gmatch in the game's Lua: walk the words with find
