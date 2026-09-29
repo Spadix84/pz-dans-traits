@@ -40,9 +40,10 @@
 --   DanTraits_DeltaRemember(d, name, value)
 --                                          tell the pipeline the stat's value
 --                                          after a later writer changed it
---   DanTraits_PainFloor(player, d, source, floor, ramp)
+--   DanTraits_PainFloor(player, d, source, floor, ramp, hold)
 --                                          a system's pain floor for this minute,
 --                                          see "Pain floors" below
+--   DanTraits_PainBurst(player, amount)    a one-off jolt of pain that fades
 --   DanTraits_BadMoodle(player, name, value01, tiers)
 --                                          Moodle Framework updater for a
 --                                          bad-side-only moodle (0.5 is none,
@@ -262,49 +263,90 @@ function DanTraits_DeltaRemember(d, name, value)
 end
 
 -- Pain floors ---------------------------------------------------------------------
--- Hangover, Caffeine, Migraine and Gluten hold the PAIN stat up. Painkillers (and
--- drink) set the body's painReduction (0..100), the game subtracts it from wound
--- pain every tick, and the floors follow the same model: a source registers its
--- floor for the minute and the effective floor is floor - painReduction, never
--- below 0. So a tablet halves a migraine's pain in proportion instead of erasing
--- it, and a small floor under a big reduction does nothing.
+-- Hangover, Caffeine, Migraine, Gluten and alcohol withdrawal hold pain up.
+-- The game rebuilds the PAIN stat from the body parts every tick, so writing
+-- the stat does nothing (measured in game 2026-09-29: PAIN set to 20 read 0
+-- a moment later). Pain goes on the head as additional pain instead: the stat
+-- settles at about PAIN_PART_RATIO times the part's pain, less the body's
+-- painReduction (0..100, what pills and drink set), which the game subtracts
+-- itself. So a tablet lowers a migraine in proportion instead of erasing it,
+-- and a small floor under a big reduction does nothing. The game also decays
+-- additional pain by about 1 a minute, so the floor is topped up each minute
+-- and fades on its own once no source holds it.
 --
---   DanTraits_PainFloor(player, d, source, floor, ramp)
---     floor    the source's floor on the 0..100 pain scale (before reduction)
+--   DanTraits_PainFloor(player, d, source, floor, ramp, hold)
+--     floor    the source's floor on the 0..100 pain stat scale
 --     ramp     how fast the stat may rise toward it per minute
---     Stores d.painFloors[source] = { floor = effective, ramp = ramp } when the
---     effective floor is above 0; a later call in the same minute by the same
---     source replaces the earlier one. Does not touch the stat.
+--     hold     minutes the floor stays registered (default 1; a ten-minute
+--              system passes 11 so its floor bridges to its next run)
+--     Stores d.painFloors[source]; a later call by the same source replaces
+--     the earlier one. Does not touch the body.
 --   DanTraits_ApplyPainFloors(player, d)
 --     A minute system at order 95 (registered in core, label "PainFloor"): the
---     largest registered effective floor is applied once, through FloorUp, with
---     the ramp of the source that set it. Then d.painFloors is emptied and the
---     applied list is kept as d.painHurting[source] = effective floor for the
---     health panel's "who is hurting". Floors are max-like, not additive.
+--     largest registered floor is applied once, with the ramp of the source
+--     that set it, by raising the head's additional pain (never lowering it:
+--     Concussion and wounds write it too). Floors whose hold has run out are
+--     dropped, and d.painHurting[source] = floor is the health panel's "who
+--     is hurting" list. Floors are max-like, not additive.
+--   DanTraits_PainBurst(player, amount)
+--     A one-off jolt of about `amount` on the stat (a seizure) that fades as
+--     the game decays it.
 --
--- Not floors: Dependent's shakes ADD pain per tick, Concussion writes the head
--- part's additional pain (the game reduces that itself) and Migraine's "a pill
--- taken once shortens the attack" still reads the painkiller timer.
-function DanTraits_PainFloor(player, d, source, floor, ramp)
+-- Migraine's "a pill taken once shortens the attack" still reads the
+-- painkiller timer.
+local PAIN_PART_RATIO = 0.79    -- stat per point of part pain (measured: 30 -> 23.5, 60 -> 47.5)
+DanTraits_PAIN_PART_RATIO = PAIN_PART_RATIO
+
+local function headPart(player)
+    local head
+    pcall(function() head = player:getBodyDamage():getBodyPart(BodyPartType.Head) end)
+    return head
+end
+
+local function raiseHead(head, value)
+    pcall(function()
+        if (head:getAdditionalPain() or 0) < value then head:setAdditionalPain(math.min(100, value)) end
+    end)
+end
+
+function DanTraits_PainFloor(player, d, source, floor, ramp, hold)
     if not d or not source then return end
-    local reduction = 0
-    pcall(function() reduction = player:getBodyDamage():getPainReduction() or 0 end)
-    local effective = math.max(0, (tonumber(floor) or 0) - (tonumber(reduction) or 0))
-    if effective <= 0 then return end
+    floor = tonumber(floor) or 0
+    if floor <= 0 then return end
     d.painFloors = d.painFloors or {}
-    d.painFloors[source] = { floor = effective, ramp = ramp or 1 }
+    d.painFloors[source] = { floor = floor, ramp = ramp or 1, hold = hold or 1 }
 end
 
 function DanTraits_ApplyPainFloors(player, d)
     local floors = d.painFloors
-    if not floors then return end
-    local best, ramp, hurting = 0, 1, {}
+    if not floors then
+        d.painHurting = nil
+        d.painAdd = nil
+        return
+    end
+    local best, ramp, hurting, keep = 0, 1, {}, nil
     for source, f in pairs(floors) do
         hurting[source] = f.floor
         if f.floor > best then best, ramp = f.floor, f.ramp end
+        local left = (f.hold or 1) - 1
+        if left > 0 then
+            keep = keep or {}
+            keep[source] = { floor = f.floor, ramp = f.ramp, hold = left }
+        end
     end
-    d.painFloors = nil
+    d.painFloors = keep
     d.painHurting = hurting
-    if best <= 0 then return end
-    pcall(function() DanTraits_FloorUp(player:getStats(), CharacterStat.PAIN, best, ramp) end)
+    local head = headPart(player)
+    if best <= 0 or not head then return end
+    local value = math.min(best / PAIN_PART_RATIO, (d.painAdd or 0) + ramp / PAIN_PART_RATIO)
+    d.painAdd = value
+    raiseHead(head, value)
+end
+
+function DanTraits_PainBurst(player, amount)
+    local head = player and headPart(player)
+    if not head or not amount or amount <= 0 then return end
+    pcall(function()
+        head:setAdditionalPain(math.min(100, (head:getAdditionalPain() or 0) + amount / PAIN_PART_RATIO))
+    end)
 end

@@ -31,30 +31,30 @@ assert(halo[#halo] == "UI_DanTraits_Hangover1", "notice")
 
 -- 3. symptoms: pain and mood floors ramp at 1 a minute toward severity x strength; thirst creeps
 for _ = 1, 20 do minute() end
-near(p._st.pain, 35 / 3, 1.0, "headache floor ~11.7")
+near(H.pain(p), 35 / 3, 1.0, "headache floor ~11.7")
 near(p._st.unhappy, 25 / 3, 1.0, "mood floor ~8.3")
 assert(p._st.thirst > 0 and p._st.fatigue > 0, "thirst and fatigue creep")
 assert(p._st.foodsick == 0, "mild: no nausea")
 -- painkillers lower the floor by their strength instead of removing it
-p._st.pain = 0; p._pr = 30; for _ = 1, 5 do minute() end; assert(p._st.pain == 0, "a reduction of 30 swallows a floor of ~11")
-p._st.pain = 0; p._pr = 5; for _ = 1, 20 do minute() end
-assert(p._st.pain > 0 and p._st.pain < 35 / 3 - 4, "a reduction of 5 lowers the floor by 5, not to 0: " .. p._st.pain)
-p._pr = 0; p._painFx = 1; p._st.pain = 0; for _ = 1, 20 do minute() end
-assert(p._st.pain > 35 / 3 - 4, "the painkiller timer alone no longer switches the floor off"); p._painFx = 0
+H.setPain(p, 0); p._pr = 30; for _ = 1, 5 do minute() end; assert(H.pain(p) == 0, "a reduction of 30 swallows a floor of ~11")
+H.setPain(p, 0); p._pr = 5; for _ = 1, 20 do minute() end
+assert(H.pain(p) > 0 and H.pain(p) < 35 / 3 - 4, "a reduction of 5 lowers the floor by 5, not to 0: " .. H.pain(p))
+p._pr = 0; p._painFx = 1; H.setPain(p, 0); for _ = 1, 20 do minute() end
+assert(H.pain(p) > 35 / 3 - 4, "the painkiller timer alone no longer switches the floor off"); p._painFx = 0
 
 -- 4. hair of the dog: a drink hides symptoms and stops the clock, and builds toward the next one
 local left = md(p).hoHoursLeft
-p._st.intox = 50; p._st.pain = 0; for _ = 1, 30 do minute() end
+p._st.intox = 50; H.setPain(p, 0); for _ = 1, 30 do minute() end
 assert(md(p).hoHoursLeft == left, "clock paused while drinking")
-assert(p._st.pain == 0, "no headache while drunk")
+assert(H.pain(p) == 0, "no headache while drunk")
 assert(md(p).hoLoad > 0, "the next one is building")
 p._st.intox = 0; minute()
 assert(md(p).hoActive and md(p).hoLoad == 0 and math.abs(md(p).hoHoursLeft - (left - 1 / 60)) < 1e-9, "sobering with a small load (< 0.5): no new hangover, the old one just resumes")
 
 -- 5. it ends after its time; the last two hours fade
-local d = md(p); d.hoHoursLeft = 1.0; d.hoSeverity = 1.0; p._st.pain = 0
-minute(); near(p._st.pain, 1, 1e-6, "ramping toward a faded floor (35 x 0.5)")
-for _ = 1, 30 do minute() end; near(p._st.pain, 13.5, 1.0, "climbs at 1 a minute until it meets the falling floor (35 x (60-k)/120 at minute k: k = 13.5)")
+local d = md(p); d.hoHoursLeft = 1.0; d.hoSeverity = 1.0; H.setPain(p, 0)
+minute(); near(H.pain(p), 1, 1e-6, "ramping toward a faded floor (35 x 0.5)")
+for _ = 1, 30 do minute() end; near(H.pain(p), 13.5, 1.0, "climbs at 1 a minute until it meets the falling floor (35 x (60-k)/120 at minute k: k = 13.5)")
 for _ = 1, 40 do minute() end
 assert(not md(p).hoActive and md(p).hoSeverity == 0, "over")
 assert(halo[#halo] == "+UI_DanTraits_HangoverOver", "good news")

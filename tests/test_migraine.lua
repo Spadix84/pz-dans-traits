@@ -63,7 +63,7 @@ for _ = 1, 20 do minute() end
 assert(M(q).migActive and halo[#halo] == "UI_DanTraits_MigraineStart", "attack started")
 near(M(q).migHoursLeft, 6, 1e-9, "six hours")
 for _ = 1, 40 do minute() end
-near(q._st.pain, 40, 1.0, "pain ramping toward 60 at 1 a minute (40 minutes in)")
+near(H.pain(q), 40, 1.0, "pain ramping toward 60 at 1 a minute (40 minutes in)")
 near(q._st.foodsick, 30, 1.0, "nausea floor 30"); near(q._st.unhappy, 15, 1.0, "mood floor 15")
 assert(q._st.stress > 0, "stress creeps")
 near(M(q).migHoursLeft, 6 - 40 / 60, 1e-9, "clock at full rate")
@@ -71,24 +71,25 @@ near(M(q).migHoursLeft, 6 - 40 / 60, 1e-9, "clock at full rate")
 -- 4. daylight outdoors: half-speed recovery and more pain; painkillers lower the floor and, once, cut the time by 40%
 q._outside = true; H.climate.night = 0
 local before = M(q).migHoursLeft
-q._st.pain = 0; for _ = 1, 10 do minute() end
+H.setPain(q, 0); for _ = 1, 10 do minute() end
 near(M(q).migHoursLeft, before - 5 / 60, 1e-9, "half rate in the glare")
-assert(q._st.pain == 10, "pain climbing toward 75 (60 + 15 glare)")
+assert(H.pain(q) == 10, "pain climbing toward 75 (60 + 15 glare)")
 q._outside = false; H.climate.night = 1
 before = M(q).migHoursLeft
-q._painFx = 1; q._st.pain = 0; minute()
+q._painFx = 1; H.setPain(q, 0); minute()
 near(M(q).migHoursLeft, before * 0.6 - 1 / 60, 1e-9, "painkillers: remaining time x 0.6")
-assert(q._st.pain == 1, "the painkiller timer alone does not stop the floor (it ramps 1 a minute)")
-q._pr = 30; q._st.pain = 0; for _ = 1, 45 do minute() end
-assert(q._st.pain == 30, "a pain reduction of 30 lowers the floor 60 to 30, not to 0: " .. q._st.pain)
-q._pr = 70; q._st.pain = 0; minute(); assert(q._st.pain == 0, "a reduction above the floor does nothing"); q._pr = 0
+assert(H.pain(q) == 1, "the painkiller timer alone does not stop the floor (it ramps 1 a minute)")
+-- the head climbs to the full 60 at 1 a minute and the game takes the 30 off
+q._pr = 30; H.setPain(q, 0); for _ = 1, 60 do minute() end
+assert(H.pain(q) == 30, "a pain reduction of 30 lowers the floor 60 to 30, not to 0: " .. H.pain(q))
+q._pr = 70; H.setPain(q, 0); minute(); assert(H.pain(q) == 0, "a reduction above the floor does nothing"); q._pr = 0
 before = M(q).migHoursLeft; minute(); near(M(q).migHoursLeft, before - 1 / 60, 1e-9, "the cut happens once")
 q._painFx = 0
 
 -- 5. sleeping it off runs the clock at double speed; it ends, refractory starts, moodle cleared
-q._asleep = true; q._st.pain = 0
+q._asleep = true; H.setPain(q, 0)
 before = M(q).migHoursLeft; for _ = 1, 30 do minute() end
-near(M(q).migHoursLeft, before - 1, 1e-9, "double rate asleep"); assert(q._st.pain == 0, "no symptoms applied while asleep")
+near(M(q).migHoursLeft, before - 1, 1e-9, "double rate asleep"); assert(H.pain(q) == 0, "no symptoms applied while asleep")
 M(q).migHoursLeft = 1 / 60; q._asleep = false; minute()
 assert(not M(q).migActive and M(q).migSinceEnd == 0 and halo[#halo] == "+UI_DanTraits_MigraineEnd", "over")
 H.rng = { 0, 0 }; ten(); assert(not M(q).migAuraLeft, "refractory again")

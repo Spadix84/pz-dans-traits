@@ -44,7 +44,8 @@ local DEP_TOL_ONSET_CUT = 0.5   -- withdrawal starts this much sooner at a full 
 -- strength w = meter x fade (0..1); the rates below are per ten minutes at w = 1
 local DEP_STRESS_RATE   = 0.02  -- stress (0..1)
 local ALC_MOOD_RATE     = 2     -- unhappiness (0..100)
-local DEP_PAIN_RATE     = 1     -- pain (0..100)
+local DEP_PAIN          = 20    -- aches: pain floor (0..100) at full withdrawal, a DanTraits_PainFloor
+local DEP_PAIN_RAMP     = 1
 local ALC_SICK          = 40    -- nausea floor (food sickness, 0..100) at w = 1...
 local ALC_SICK_RAMP     = 3     -- ...climbing this much a tick
 local ALC_SHAKE_DROP    = 10    -- percent chance a swing drops the weapon at w = 1
@@ -105,7 +106,7 @@ local function seize(player, stats)
     if DanTraits_FumbleDrop then pcall(DanTraits_FumbleDrop, player) end
     if DanTraits_Collapse then DanTraits_Collapse(player) end
     if DanTraits_KnockHead then DanTraits_KnockHead(player, ALC_SEIZE_KNOCK, ALC_SEIZE_SCORE) end
-    add(stats, CharacterStat.PAIN, ALC_SEIZE_PAIN)
+    if DanTraits_PainBurst then DanTraits_PainBurst(player, ALC_SEIZE_PAIN) end
     add(stats, CharacterStat.PANIC, ALC_SEIZE_PANIC)
     add(stats, CharacterStat.FATIGUE, ALC_SEIZE_FATIGUE)
     notify(player, "UI_DanTraits_AlcoholicSeizure")
@@ -145,7 +146,8 @@ local function withdrawal(player, d, stats, intox, meter)
     if stage < 2 then d.alcShakes = 0 return end
 
     d.alcShakes = ALC_SHAKE_DROP * w
-    add(stats, CharacterStat.PAIN, DEP_PAIN_RATE * w)
+    -- held 11 minutes so it bridges to the next ten-minute run
+    DanTraits_PainFloor(player, d, "withdrawal", DEP_PAIN * w, DEP_PAIN_RAMP, 11)
     pcall(function() DanTraits_FloorUp(stats, CharacterStat.FOOD_SICKNESS, ALC_SICK * w, ALC_SICK_RAMP) end)
     if stage < 3 or asleep then return end
 

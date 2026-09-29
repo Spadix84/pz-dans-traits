@@ -33,35 +33,44 @@ p._st.stress = 0.9
 DanTraits_FloorUp(stats, STRESS, 250, 500)
 assert(p._st.stress == 1, "never above the stat's maximum")
 
--- PainFloor: effective floor = floor - painReduction, the largest source wins, once a minute
+-- PainFloor: the largest source wins, once a minute, on the head; the game takes the pain reduction off (H.pain models it)
 do
   local q = H.player(); H.current = q
   local d = q._md.DanTraits or {}; q._md.DanTraits = d
-  q._st.pain = 0
+  H.setPain(q, 0)
   DanTraits_PainFloor(q, d, "a", 60, 5); DanTraits_PainFloor(q, d, "b", 40, 20)
-  assert(q._st.pain == 0, "registering does not touch the stat")
+  assert(H.pain(q) == 0, "registering does not touch the stat")
   H.minute()
-  assert(q._st.pain == 5, "the larger floor (60) applies with its own ramp (5), not the smaller one's")
+  assert(H.pain(q) == 5, "the larger floor (60) applies with its own ramp (5), not the smaller one's")
   assert(d.painFloors == nil and d.painHurting.a == 60 and d.painHurting.b == 40, "cleared, and kept as the who-is-hurting list")
   H.minute()
-  assert(q._st.pain == 5, "nothing registered: nothing applied")
+  assert(H.pain(q) == 5, "nothing registered: nothing applied")
   q._pr = 30
   DanTraits_PainFloor(q, d, "a", 60, 100); DanTraits_PainFloor(q, d, "b", 40, 100)
   H.minute()
-  assert(q._st.pain == 30, "reduction 30 lowers 60 to 30, not to 0")
-  assert(d.painHurting.a == 30 and d.painHurting.b == 10, "the list holds effective floors")
-  q._st.pain = 0
+  assert(H.pain(q) == 30, "reduction 30 lowers 60 to 30, not to 0")
+  assert(d.painHurting.a == 60 and d.painHurting.b == 40, "the list holds the floors as registered")
+  H.setPain(q, 0)
   DanTraits_PainFloor(q, d, "c", 15, 100)
-  assert(d.painFloors == nil or d.painFloors.c == nil, "a floor under the reduction registers nothing")
   H.minute()
-  assert(q._st.pain == 0, "a floor of 15 with reduction 30 does nothing")
-  q._pr = 0; q._st.pain = 50
+  assert(H.pain(q) == 0, "a floor of 15 with reduction 30 does nothing")
+  q._pr = 0; H.setPain(q, 50)
   DanTraits_PainFloor(q, d, "a", 20, 100); H.minute()
-  assert(q._st.pain == 50, "never lowers pain already above the floor")
-  q._pr = 0; q._st.pain = 0
+  assert(H.pain(q) == 50, "never lowers pain already above the floor")
+  q._pr = 0; H.setPain(q, 0)
   DanTraits_PainFloor(q, d, "a", 20, 100); DanTraits_PainFloor(q, d, "a", 35, 100); H.minute()
-  assert(q._st.pain == 35, "a source registering twice keeps its latest floor")
+  assert(H.pain(q) == 35, "a source registering twice keeps its latest floor")
   DanTraits_PainFloor(nil, nil, "a", 10, 1); DanTraits_PainFloor(q, d, nil, 10, 1)
+  -- a held floor outlives its minute (a ten-minute system passes 11), then drops
+  d.painFloors = nil
+  DanTraits_PainFloor(q, d, "w", 20, 1, 3)
+  H.minute(); H.minute()
+  assert(d.painFloors and d.painFloors.w and d.painFloors.w.hold == 1, "held for its minutes")
+  H.minute()
+  assert(d.painFloors == nil, "then dropped")
+  -- a burst adds on top of the head and fades with it
+  H.setPain(q, 0); DanTraits_PainBurst(q, 25)
+  assert(H.pain(q) == 25, "a burst of 25")
   H.current = nil
 end
 

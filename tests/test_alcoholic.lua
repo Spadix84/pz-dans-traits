@@ -40,8 +40,8 @@ run(w, 0, 1); assert(md(w).alcWithdrawing, "craving by 18.5 h")
 assert(halo[#halo] == "UI_DanTraits_DependentCraving", "craving notice")
 local s = w._st.stress; ten(); near(w._st.stress - s, 0.02 * md(w).alcMeter, 1e-9, "stress 0.02 x meter")
 assert(w._st.unhappy > 0, "low mood")
-assert(w._st.pain == 0, "no pain yet")
-run(w, 0, 20); assert(w._st.pain > 0, "pain by 38 h (48 x 0.76)")
+assert(H.pain(w) == 0, "no pain yet")
+run(w, 0, 20); H.minute(); assert(H.pain(w) > 0, "pain by 38 h (48 x 0.76)")
 assert(halo[#halo] == "UI_DanTraits_AlcoholicShakes" and md(w).alcStage == 2, "the shakes")
 assert(w._st.foodsick > 0 and w._st.foodsick <= 40 * 0.5, "nausea floor 40 x w")
 near(DanTraits_RunHooks("swingDrop", 1, w), 1 + 10 * md(w).alcW, 1e-9, "shaking hands: swing drop chance")
@@ -54,10 +54,10 @@ local dt = H.player({ traits = { "dependent" } }); H.current = dt
 dt._md.DanTraits = { alcInit = true, alcMeter = 1 }
 run(dt, 0, 37.5); assert(md(dt).alcStage == 2, "37.5 h: shakes only")
 run(dt, 0, 1); assert(md(dt).alcStage == 3 and halo[#halo] == "UI_DanTraits_AlcoholicDelirium", "delirium by 38.5 h (72 x 0.525, the meter slipping)")
-H.roll = 0; local pain = dt._st.pain; ten(); H.roll = 9999
+H.roll = 0; local pain = H.pain(dt); ten(); H.roll = 9999
 assert(collapsed == 1 and dt._bump == nil, "seizure: the shared fall, no fall code of its own")
 assert(#knocked == 1 and knocked[1][1] == 0.3 and knocked[1][2] == 0.35, "seizure: a chance to concuss")
-assert(dt._st.pain >= math.min(100, pain + 25) and dt._st.panic >= 40 and halo[#halo] == "UI_DanTraits_AlcoholicSeizure", "seizure: hurt and scared")
+assert(H.pain(dt) >= math.min(100, pain + 25) and dt._st.panic >= 40 and halo[#halo] == "UI_DanTraits_AlcoholicSeizure", "seizure: hurt and scared")
 dt._asleep = true; H.roll = 0; ten(); H.roll = 9999; dt._asleep = false
 assert(collapsed == 1 and #knocked == 1, "no seizure asleep")
 -- the acute phase holds five days, then fades to a fifth by day ten

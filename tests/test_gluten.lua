@@ -53,19 +53,20 @@ act:eat(act.item, 0.97); assert(math.abs(q._md.DanTraits.glutenPending - 0.33) <
 -- 4. onset, ramp, tiers: nothing for 20 minutes, then a full flare 30 minutes later
 H.current = p; H.clearHalo()
 for _ = 1, 20 do minute() end
-assert(p._md.DanTraits.gluten == 0 and p._st.pain == 0, "quiet during onset")
+assert(p._md.DanTraits.gluten == 0 and H.pain(p) == 0, "quiet during onset")
 minute(); assert(math.abs(p._md.DanTraits.gluten - 1/30) < 1e-9, "ramp starts")
 for _ = 1, 29 do minute() end
 assert(p._md.DanTraits.gluten == 1, "full flare after 30 min of ramp")
 assert(halo[1] == "UI_DanTraits_GlutenTier1" and halo[2] == "UI_DanTraits_GlutenTier2" and halo[3] == "UI_DanTraits_GlutenTier3", "tier notices in order")
 
 -- 5. symptoms held up to floors that scale with the flare; painkillers lower the pain floor by their strength
-assert(p._st.pain == 45 and p._st.foodsick == 55 and p._st.unhappy == 25 and p._st.stress > 0, string.format("floors: pain %s sick %s unhappy %s stress %s", p._st.pain, p._st.foodsick, p._st.unhappy, p._st.stress))
-p._st.pain = 0; minute(); assert(p._st.pain == 3, "pain climbs back 3 per minute after painkillers")
-p._st.pain = 80; minute(); assert(p._st.pain == 80, "a higher pain from a wound is left alone")
-p._pr = 30; p._st.pain = 0; for _ = 1, 10 do minute() end
-assert(p._st.pain == 15, "a pain reduction of 30 lowers the floor 45 to 15: " .. p._st.pain)
-p._pr = 60; p._st.pain = 0; minute(); assert(p._st.pain == 0, "a reduction above the floor does nothing"); p._pr = 0
+assert(H.pain(p) == 45 and p._st.foodsick == 55 and p._st.unhappy == 25 and p._st.stress > 0, string.format("floors: pain %s sick %s unhappy %s stress %s", H.pain(p), p._st.foodsick, p._st.unhappy, p._st.stress))
+H.setPain(p, 0); minute(); assert(H.pain(p) == 3, "pain climbs back 3 per minute after painkillers")
+H.setPain(p, 80); minute(); assert(H.pain(p) == 80, "a higher pain from a wound is left alone")
+-- the head climbs to the full 45 at 3 a minute and the game takes the 30 off
+p._pr = 30; H.setPain(p, 0); for _ = 1, 15 do minute() end
+assert(H.pain(p) == 15, "a pain reduction of 30 lowers the floor 45 to 15: " .. H.pain(p))
+p._pr = 60; H.setPain(p, 0); minute(); assert(H.pain(p) == 0, "a reduction above the floor does nothing"); p._pr = 0
 
 -- 6. decay once the dose is spent: ten hours awake, faster asleep
 while p._md.DanTraits.glutenPending > 0 do minute() end

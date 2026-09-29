@@ -118,6 +118,22 @@ function H.expectHooks(...)
 end
 
 -- the clock drivers: core registers one handler per cadence (DanTraits_Every)
+-- the pain stat as the game builds it from the head's additional pain (the
+-- pain floors write there; see DanTraits_Util.lua): part pain x ratio, less
+-- the body's pain reduction. setPain puts the head where the stat reads v.
+local function headOf(p) return p:getBodyDamage():getBodyPart("Head") end
+function H.pain(p)
+  local v = (headOf(p):getAdditionalPain() or 0) * DanTraits_PAIN_PART_RATIO - (p._pr or 0)
+  return math.floor(math.max(0, v) * 1e6 + 0.5) / 1e6
+end
+function H.setPain(p, v)
+  local part = v > 0 and (v + (p._pr or 0)) / DanTraits_PAIN_PART_RATIO or 0
+  headOf(p):setAdditionalPain(part)
+  -- the floors ramp from what they last applied; start them from here
+  local d = p._md.DanTraits
+  if d and d.painAdd then d.painAdd = part end
+end
+
 function H.minute() return H.only("EveryOneMinute")() end
 function H.ten() return H.only("EveryTenMinutes")() end
 function H.frame(player) return H.only("OnPlayerUpdate")(player) end
@@ -182,7 +198,7 @@ function H.stubs()
   CharacterTrait = { SMOKER = "base:smoker", NEEDS_LESS_SLEEP = "base:needslesssleep" }
   MoodleType = { DRUNK = "drunk" }
   ItemBodyLocation = { MASK = "mask", MASK_EYES = "maskeyes", MASK_FULL = "maskfull" }
-  BodyPartType = {}
+  BodyPartType = { Head = "Head" }
   for _, n in ipairs({ "Groin", "Head", "Neck", "Torso_Upper", "Hand_L", "Hand_R", "ForeArm_L", "ForeArm_R",
                        "UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R" }) do BodyPartType[n] = n end
   Perks = setmetatable({}, { __index = function(_, k) return k end })
@@ -315,6 +331,12 @@ function H.player(o)
   p.getY = function() return 10 end
   p.getZ = function() return 0 end
 
+  -- a head for pain floors when the test gives no parts of its own
+  p._head = { _pain = 0 }
+  function p._head:getType() return "Head" end
+  function p._head:getAdditionalPain() return self._pain end
+  function p._head:setAdditionalPain(v) self._pain = v end
+
   p.hasTrait = function(_, t) return traits[t] == true end
   p.getCharacterTraits = function()
     return {
@@ -351,7 +373,10 @@ function H.player(o)
       getPainReduction = function() return p._pr end, setPainReduction = function(_, v) p._pr = v end,
       isInfected = function() return false end,
       getBodyParts = function() return { size = function() return #parts end, get = function(_, i) return parts[i + 1] end } end,
-      getBodyPart = function(_, t) for _, x in ipairs(parts) do if x:getType() == t then return x end end end,
+      getBodyPart = function(_, t)
+        for _, x in ipairs(parts) do if x:getType() == t then return x end end
+        if t == "Head" then return p._head end
+      end,
     }
   end
 
