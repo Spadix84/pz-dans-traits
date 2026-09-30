@@ -104,7 +104,7 @@ H.clearHalo()
 test:perform()
 assert(strips._used == 1 and meter._used == 0, "one strip used, the meter is not")
 assert(H.halo[#H.halo] == "+UI_DanTraits_DiaReading:6.2", "reading announced, got " .. tostring(H.halo[#H.halo]))
-assert(meter._name == "ItemName_DanTraits.GlucoseMeter (6.2)" and meter._custom == true, "meter renamed with the reading")
+assert(meter._name == "Glucose Meter (6.2)" and meter._custom == true, "meter renamed with the reading")
 -- no strips, or empty strips: invalid
 local me5 = character(meter)
 assert(not ISDiabetesAction:new(me5, meter, "test", nil, nil):isValid(), "no strips: invalid")
