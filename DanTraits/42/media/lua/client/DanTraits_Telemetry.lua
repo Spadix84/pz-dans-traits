@@ -7,6 +7,10 @@
 -- Once a second <user>/Zomboid/Lua/DanTraits_Commands.txt is read, each
 -- line run as a command, and the file emptied. Single player only.
 --
+-- Off unless the game runs in debug mode (-debug) or the "Developer Tools"
+-- sandbox option is on: the command channel can give items, set health and
+-- run Lua, so it never runs for an ordinary player or in multiplayer.
+--
 -- Commands (one per line):
 --   set <key> <value>        mod-data field: set glucose 40 / set asthma 0.9 / set mddEpisode true / set x nil
 --   stat <NAME> <value>      CharacterStat: stat PANIC 100 / stat ENDURANCE 0.2
@@ -438,8 +442,21 @@ local function readCommands(player)
 end
 
 -- Driver --------------------------------------------------------------------------
+local function enabled()
+    local mp = false
+    pcall(function() mp = isClient() or isServer() end)
+    if mp then return false end
+    local debug = false
+    pcall(function() debug = isDebugEnabled() == true end)
+    if debug then return true end
+    local sv = SandboxVars and SandboxVars.DanTraits
+    return sv ~= nil and sv.DevTools == true
+end
+DanTraits_TelemetryEnabled = enabled
+
 local lastWrite, lastRead = 0, 0
 local function onTick()
+    if not enabled() then return end
     local now = getTimestampMs()
     if now - lastWrite < WRITE_EVERY_MS and now - lastRead < READ_EVERY_MS then return end
     local player = getSpecificPlayer(0)
@@ -458,5 +475,5 @@ end
 -- event does not exist).
 local tickEvent = Events.OnTickEvenPaused or Events.OnTick
 tickEvent.Add(onTick)
-Events.OnGameStart.Add(function() logLine("telemetry started") end)
+Events.OnGameStart.Add(function() if enabled() then logLine("telemetry started") end end)
 if Events.OnStoryEvent then Events.OnStoryEvent.Add(onStoryEvent) end

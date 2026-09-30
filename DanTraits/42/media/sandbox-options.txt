@@ -44,3 +44,6 @@ option DanTraits.SunburnEnabled
 
 option DanTraits.DehydrationEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsDehydrationEnabled,}
+
+option DanTraits.DevTools
+{type = boolean, default = false, page = DanTraits, translation = DanTraitsDevTools,}

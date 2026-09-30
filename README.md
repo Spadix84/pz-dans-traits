@@ -76,13 +76,15 @@ The airway, vitality, sleep, blood loss, infection and concussion moodles need [
 ## Layout
 
 ```
-DanTraits/42/            the mod as the game sees it (mod.info, media/...)
+DanTraits/42/            the mod as the game sees it (mod.info, poster.png, media/...)
+DanTraits/common/        empty; Build 42 expects it beside 42/
   media/lua/shared/      one file per trait + DanTraits.lua (core helpers, eat/pill hooks)
   media/lua/client/      context menus, moodles, telemetry for the dashboard
   media/scripts/         trait and item definitions
 DanTraits/tools/         dashboard.py + Dashboard.bat (live readout and command console)
 tests/                   offline tests (fengari); python tests/run_tests.py
-deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back)
+workshop/                workshop.txt and preview.png for the Steam Workshop page
+deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back, or --workshop)
 ```
 
 Mod data is one table per player (`getModData().DanTraits`) with a prefix per system (`alc*`, `nic*`, `inf*`, ...); the dashboard groups it by that prefix. A renamed key is moved by `DanTraits_MigrateModData` in the core.
@@ -92,6 +94,12 @@ Mod data is one table per player (`getModData().DanTraits`) with a prefix per sy
 1. Edit in this repo.
 2. `python tests/run_tests.py`
 3. `python deploy.py` then restart the game (traits, items and Lua are read at boot).
-4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events.
+4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events. The game side of it (telemetry file and command channel) only runs in debug mode (start the game with `-debug`) or with **Developer Tools** on in the Vitality Project sandbox page, and never in multiplayer.
+
+To publish: `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` (workshop.txt, preview.png and `Contents/mods/DanTraits` without the dev tools), then upload it from the game's main menu, Workshop. After the first upload the game writes the item's `id=` into that workshop.txt; the build keeps it, so later uploads update the same item.
 
 The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file's top level included, so new traits go in their own file (`require "DanTraits"` for the shared helpers). It also lacks `next`, `assert`, `xpcall`, `string.gmatch` and `string.rep`. The offline tests run on standard Lua and would not notice any of that, so `tests/lint_kahlua.py` (run first by `run_tests.py`) checks for it, and checks the translation files too: valid JSON, no duplicate keys, and no bare `%` (the game formats UI strings; write `%%` for a percent sign, `%1` for a placeholder). Calling a Java method an object doesn't have fails quietly inside `pcall` but dumps a stack trace to the log every time, and the tests' stand-ins can't notice, so `tests/check_api.py` (also run by `run_tests.py`) checks the method names called on body parts, body damage, players, stats and weapons against the installed game's jar.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

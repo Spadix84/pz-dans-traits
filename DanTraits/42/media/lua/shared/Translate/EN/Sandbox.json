@@ -29,5 +29,7 @@
     "Sandbox_DanTraitsSunburnEnabled": "Sunburn",
     "Sandbox_DanTraitsSunburnEnabled_tooltip": "Hours in the summer sun on bare skin burn it: a day of pain on each burnt part, and a worse night. Clothing, a hat and shade protect.<br>Off: no sunburn.",
     "Sandbox_DanTraitsDehydrationEnabled": "Dehydration",
-    "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only."
+    "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only.",
+    "Sandbox_DanTraitsDevTools": "Developer Tools",
+    "Sandbox_DanTraitsDevTools_tooltip": "For testing the mod: writes a live readout for the companion dashboard and runs the commands it sends (items, stats, wounds). On by itself in debug mode; never in multiplayer.<br>Leave off for a normal game."
 }
