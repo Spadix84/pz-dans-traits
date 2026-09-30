@@ -1,9 +1,10 @@
 -- Project Zomboid Vitality Project: Tinnitus.
 --
 -- Damaged ears. Every shot you fire adds to a noise load, more for a louder
--- gun (the weapon's own sound radius), and the load halves every ten game
--- minutes. A burst of shooting (about half a dozen pistol shots, or three or
--- four from a shotgun, close together) leaves you half deaf and ringing: the
+-- gun (the weapon's own sound radius: 100 for the game's pistol, 70 for the
+-- M1911, 150 to 170 for the rifles, 200 for the shotguns), and the load halves
+-- every ten game minutes. A burst of shooting (half a dozen pistol shots, or
+-- three from a shotgun, close together) leaves you half deaf and ringing: the
 -- vanilla Hard of Hearing trait is put on for half an hour, and longer the
 -- louder it got; more shooting while it lasts adds to the time. Keen Hearing
 -- is taken off while it lasts and given back after. The ringing also makes
@@ -23,8 +24,8 @@ local hasVanillaTrait = DanTraits_HasVanillaTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 
-local TN_RADIUS_UNIT   = 50      -- a shot of this sound radius adds 1 to the load
-local TN_SHOT_MAX      = 3       -- no single shot adds more than this
+local TN_RADIUS_UNIT   = 100     -- a shot of this sound radius (the pistol's) adds 1 to the load
+local TN_SHOT_MAX      = 2       -- no single shot adds more than this (a shotgun's)
 local TN_HALF_MIN      = 10      -- minutes for the load to halve
 local TN_DEAF_AT       = 6       -- load at which the ears give out
 local TN_DEAF_MIN      = 30      -- minutes half deaf when they do...

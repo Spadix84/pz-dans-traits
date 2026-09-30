@@ -8,6 +8,10 @@
 --   your fresh stitches tear half as often under strain (the stitchTear hook)
 --   stitching, pulling out glass or a bullet, and splinting take a quarter
 --     less time
+-- Hands that shake are not steady: while alcohol withdrawal has the shakes on
+-- (DanTraits_Dependent.lua) or a diabetic low does (DanTraits_Diabetes.lua),
+-- the work done then gets none of it (the splint and the speed; stitches
+-- already in hold as well as they were sewn).
 -- Not with Dexterous (it is already in here) or All Thumbs.
 require "DanTraits"
 
@@ -18,7 +22,25 @@ local SH_TEAR          = 0.5     -- stitch tear chance x this
 local SH_FAST          = 0.75    -- first aid time x this
 local SH_FAST_ACTIONS  = { "ISStitch", "ISRemoveGlass", "ISRemoveBullet" }
 
-local function steady(player) return player ~= nil and hasTrait(player, "steadyhands") end
+local function has(player) return player ~= nil and hasTrait(player, "steadyhands") end
+
+-- whether something has this character's hands shaking now
+local function shaking(player)
+    local shakes = false
+    pcall(function()
+        local d = player:getModData().DanTraits
+        if d and (d.alcShakes or 0) > 0 then shakes = true end
+    end)
+    if not shakes and DanTraits_DiaLow then
+        local ok, low = pcall(DanTraits_DiaLow, player)
+        shakes = ok and (tonumber(low) or 0) > 0
+    end
+    return shakes
+end
+DanTraits_HandsShaking = shaking
+
+-- steady now: the trait, and nothing shaking the hands
+local function steady(player) return has(player) and not shaking(player) end
 
 DanTraits_AddHook("splintBadSet", function(chance, setter)
     if not steady(setter) then return nil end
@@ -26,7 +48,7 @@ DanTraits_AddHook("splintBadSet", function(chance, setter)
 end)
 
 DanTraits_AddHook("stitchTear", function(chance, player)
-    if not steady(player) then return nil end
+    if not has(player) then return nil end
     return chance * SH_TEAR
 end)
 

@@ -37,10 +37,18 @@ assert(p._st.foodsick <= 35, "no worse than Queasy")
 H.mins(400); assert(d.lacFlare == 0, "gone in about six hours")
 
 -- 3. half a glass of milk through the drink hook: half a flare
-local milk = { getPrimaryFluid = function() return { getFluidTypeString = function() return "Milk" end } end }
+-- (the game's fluid is CowMilk, not Milk)
+local function fluid(name) return { getPrimaryFluid = function() return { getFluidTypeString = function() return name end } end } end
+local milk = fluid("CowMilk")
 DanTraits_RunHooks("drink", nil, p, milk, 0.15)
 near(d.lacPending, 0.5, 1e-9, "0.15 l is half a dose")
-local water = { getPrimaryFluid = function() return { getFluidTypeString = function() return "Water" end } end }
+for _, n in ipairs({ "cowmilk", "sheepmilk", "animalmilk", "milkchocolate", "cream" }) do
+  assert(DanTraits_IsDairyFluid(n), n .. " is a dairy fluid")
+end
+for _, n in ipairs({ "water", "coffee", "coconutmilk", "soymilk", "beer" }) do
+  assert(not DanTraits_IsDairyFluid(n), n .. " is not")
+end
+local water = fluid("Water")
 DanTraits_RunHooks("drink", nil, p, water, 1)
 near(d.lacPending, 0.5, 1e-9, "water: nothing")
 

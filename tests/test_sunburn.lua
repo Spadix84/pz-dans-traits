@@ -1,6 +1,7 @@
 -- Offline test for DanTraits_Sunburn.lua: bare skin in full sun burns in
--- about three hours, clothing and shade protect, cool weather and cloud
--- slow it, a burn hurts for a day and heals, and the sandbox switch.
+-- about three hours, clothing and shade protect, cool weather, cloud and
+-- the hour slow it, a burn hurts for a day and heals, skin toughens, sun
+-- block keeps the sun off for eight hours, and the sandbox switch.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -34,6 +35,16 @@ H.climate.cloud = 0; H.climate.temp = 12.5; near(DanTraits_SunOn(p), 0.5, 1e-9, 
 H.climate.temp = 25; H.climate.night = 1; near(DanTraits_SunOn(p), 0, 1e-9, "night")
 H.climate.night = 0; p._outside = false; near(DanTraits_SunOn(p), 0, 1e-9, "indoors")
 p._outside = true
+-- by the clock: full from 11 to 3, half at 9 and 5, nothing by 7 either end
+near(DanTraits_SunHeight(13), 1, 1e-9, "midday")
+near(DanTraits_SunHeight(11), 1, 1e-9, "eleven"); near(DanTraits_SunHeight(15), 1, 1e-9, "three")
+near(DanTraits_SunHeight(9), 0.5, 1e-9, "nine"); near(DanTraits_SunHeight(17), 0.5, 1e-9, "five")
+near(DanTraits_SunHeight(7), 0, 1e-9, "seven"); near(DanTraits_SunHeight(20.5), 0, 1e-9, "evening")
+local clock = getGameTime
+getGameTime = function() return { getTimeOfDay = function() return 9 end } end
+near(DanTraits_SunOn(p), 0.5, 1e-9, "nine in the morning: half the sun")
+getGameTime = clock
+near(DanTraits_SunOn(p), 1, 1e-9, "noon again")
 
 -- 2. two hours: covered parts untouched, bare ones warming, the hot-skin warning
 H.mins(130)
@@ -53,6 +64,8 @@ H.minute()
 assert(H.pain(p) > 0, "it hurts")
 near(DanTraits_SunburnShare(p), 4 / 17, 1e-9, "four parts of seventeen")
 assert(DanTraits_RunHooks("nightQuality", 1, p, d) < 1, "a worse night")
+near(d.sbTan, 0.25, 1e-3, "the skin toughens a little with the burn")
+near(DanTraits_SunBurnMinutes(d), 180 * 1.5, 0.5, "and takes half as long again to burn next time")
 
 -- 4. indoors: exposure fades; a day later the burns have healed
 p._outside = false
@@ -61,13 +74,43 @@ assert(not d.sbBurn, "healed in a day")
 assert(H.halo[#H.halo] == "+UI_DanTraits_SunburnHealed", "healed notice")
 assert(not d.sbExp.Head, "exposure faded")
 
--- 5. the sandbox switch clears everything
+-- 5. a tan: three hours no longer burns, and a full tan takes three times the sun
+p._outside = true
+H.mins(200)
+assert(not d.sbBurn, "toughened skin: three hours and a bit is not enough now")
+d.sbTan = 1
+near(DanTraits_SunBurnMinutes(d), 540, 1e-9, "a full tan: nine hours")
+d.sbTan, d.sbExp = nil, nil
+p._outside = false
+H.minute()
+
+-- 6. sun block: the item through the pill hook, eight hours of nothing getting through,
+--    a notice when it wears off, and then the sun again
+assert(DanTraits_IsSunblock({ getFullType = function() return "DanTraits.Sunblock" end }), "the item is recognised")
+assert(not DanTraits_IsSunblock({ getFullType = function() return "Base.Soap2" end }), "soap is not")
+H.clearHalo()
+DanTraits_RunHooks("pill", nil, p, "Sunblock")
+assert(d.sbBlockMin == 480 and H.halo[#H.halo] == "+UI_DanTraits_SunblockOn", "applied: eight hours")
+near(DanTraits_SunblockLeft(p), 480, 1e-9, "read by the moodle")
+p._outside = true
+H.mins(479)
+assert(not d.sbBurn and not d.sbExp.Head, "eight hours of summer sun: nothing")
+H.minute()
+assert(not d.sbBlockMin and H.halo[#H.halo] == "UI_DanTraits_SunblockOff", "worn off, and told so")
+H.mins(10)
+near(d.sbExp.Head, 10 / 180, 1e-9, "the sun gets through again")
+DanTraits_ApplySunblock(p); DanTraits_ApplySunblock(p)
+assert(d.sbBlockMin == 480, "a second coat does not stack")
+d.sbBlockMin = nil
+
+-- 7. the sandbox switch clears everything
 p._outside = true
 H.mins(200)
 assert(d.sbBurn, "burnt again")
+d.sbBlockMin = 100
 SandboxVars = { DanTraits = { SunburnEnabled = false } }
 H.minute()
-assert(not d.sbBurn and not d.sbExp, "off: nothing")
+assert(not d.sbBurn and not d.sbExp and not d.sbBlockMin, "off: nothing")
 SandboxVars = nil
 
 H.pass()

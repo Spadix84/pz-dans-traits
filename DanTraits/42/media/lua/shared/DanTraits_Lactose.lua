@@ -3,7 +3,9 @@
 -- Gluten Intolerance's milder cousin. Dairy (the dairy tag of
 -- DanTraits_Food.lua: milk, cheese, butter, cream, yogurt, ice cream, pizza,
 -- lasagne, a dish with cheese in it) and milk drunk from a carton or glass
--- (the drink hook, by the fluid's name) set off a flare (0..1): half an hour
+-- (the drink hook, by the fluid's name: the game's are CowMilk, SheepMilk,
+-- AnimalMilk and MilkChocolate, so any fluid with milk or cream in its name
+-- counts, plant milks aside) set off a flare (0..1): half an hour
 -- of nothing, then it builds over half an hour and takes about six hours to
 -- fade. While it lasts it holds a little pain (cramps, through
 -- DanTraits_PainFloor), food sickness (the vanilla Queasy moodle) and a low
@@ -33,7 +35,8 @@ local LAC_SICK_RAMP     = 2
 local LAC_UNHAPPY_MAX   = 15
 local LAC_UNHAPPY_RAMP  = 1
 local LAC_TIER          = { 0.25, 0.6 }
-local LAC_FLUIDS        = { milk = true, cream = true }   -- fluid names (lowercase) that count
+local LAC_FLUID_WORDS   = { "milk", "cream" }             -- a fluid name (lowercase) with one of these in it counts...
+local LAC_FLUID_SAFE    = { "coconut", "soy", "almond", "oat" }   -- ...unless it has one of these
 
 local function lacData(player)
     local d = traitData(player)
@@ -51,6 +54,19 @@ end
 function DanTraits_IsDairy(item)
     return foodTags(item).dairy == true
 end
+
+-- a fluid's name (lowercase, as DanTraits_FluidName gives it) -> whether it is dairy
+local function dairyFluid(name)
+    if type(name) ~= "string" then return false end
+    for _, word in ipairs(LAC_FLUID_SAFE) do
+        if string.find(name, word, 1, true) then return false end
+    end
+    for _, word in ipairs(LAC_FLUID_WORDS) do
+        if string.find(name, word, 1, true) then return true end
+    end
+    return false
+end
+DanTraits_IsDairyFluid = dairyFluid
 
 -- a dose in full-flare units; the onset clock starts if nothing is brewing
 local function addDose(player, units, now)
@@ -78,7 +94,7 @@ end)
 DanTraits_AddHook("drink", function(_, player, container, litres)
     if not hasTrait(player, "lactose") or not litres or litres <= 0 then return nil end
     local name = DanTraits_FluidName and DanTraits_FluidName(container)
-    if name and LAC_FLUIDS[name] then addDose(player, litres / LAC_LITRES_FULL) end
+    if dairyFluid(name) then addDose(player, litres / LAC_LITRES_FULL) end
     return nil
 end)
 

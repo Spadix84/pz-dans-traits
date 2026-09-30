@@ -10,7 +10,8 @@
 -- matters most in a depressive episode or after a bad fright. Nicotine gum
 -- is not tobacco and is allowed.
 --
--- Not with Alcoholic, Smoker or Hollow Legs.
+-- Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day (which starts
+-- the character blind drunk).
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait

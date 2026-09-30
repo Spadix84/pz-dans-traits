@@ -11,7 +11,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Arthritis | -10 | Stiff joints: slower to move and swing, flares in the cold and damp, and swings can throw the weapon out of your hands. |
 | Jinxed | -4 | Freshly generated containers near you sometimes lose an item. |
 | Major Depressive Disorder | -8 | Episodes that hold mood down for days; drink, cigarettes, comfort food, a piece of nicotine gum a little, exercise, time outdoors and a real antidepressant regimen all matter. |
-| A Really Bad Day | -12 | CDDA-style start: drunk, sick, a shard wound, no clothes, house on fire. Very hard under the health overhaul: find a way to stitch the shard wound. Not with Hemophilia. |
+| A Really Bad Day | -12 | CDDA-style start: drunk, sick, a shard wound, no clothes, house on fire. Very hard under the health overhaul: find a way to stitch the shard wound. Not with Hemophilia or Straight Edge. |
 | Hallucinations | -2 | Phantom zombies, sounds, thumps, whispers and panic bouts. More likely on stress, tiredness and night, and with a sleep debt, a concussion, alcohol withdrawal or a fever; a concussed or feverish character gets a whisper, not a panic bout. |
 | Brittle Asthma | -8 | Airway irritation from cold, corpses, exertion (spending endurance when it is low, not just being worn down) and panic; four tiers up to an attack (an attack that empties you can black you out; at rest it eases over about four hours, the inhaler ends it at once); smoking, and a smoker's lungs, make it worse; rescue inhaler item. |
 | Gluten Intolerance | -4 | Wheat brings on a flare: cramps, nausea, low mood. |
@@ -31,16 +31,16 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Fear of Blood (vanilla, reworked) | -6 | Vanilla's panic at your own bleeding and stress when bloody stay. Treating a wound takes a quarter longer, and stitching (25%), pulling out a bullet (35%) or glass (20%), or dressing a bleeding wound (10%) can make you faint (about eight seconds, woken by anything that wounds you); so can losing blood fast. Still can't perform first aid on others. |
 | Cat's Eyes (vanilla, re-costed) | 1 | Better vision at night, as vanilla (re-costed from 3 to 1); light wakes you more easily, see **Sleep and light**. |
 | Deep Sleeper | +6 | Wakeful folded in (needs less sleep); light rarely wakes you and costs half the rest; the dark does more good. Wakeful is hidden at character creation. |
-| Heart Condition | -10 | Only while the Endurance moodle (the lungs) shows: a chance of chest pain, higher the deeper the moodle, and with panic, the 40s, a smoking habit, caffeine or a Run Down body. Chest pain holds pain and slows endurance recovery for 15 to 30 minutes, twice as fast to pass at rest; pushing on through it can bring a heart attack: down for 5 to 15 minutes, health lost, a day of weak recovery. Beta blockers (vanilla's pills), one every 12 hours, cut both to a quarter. Starts with a bottle. |
-| Epilepsy | -6 | Seizures, about one in eight days when rested and well; tiredness, alcohol withdrawal, a hangover, fever, concussion, stress and bright sun make them likelier. An aura, then you drop what you hold and are out for 2 to 5 minutes (can concuss), then an hour of headache and low mood. Anticonvulsants (new item), one every 12 hours, cut seizures to a tenth. Starts with a bottle. |
-| Tinnitus | -2 | A burst of your own gunfire (by the gun's loudness) puts vanilla Hard of Hearing on for half an hour or more, Keen Hearing off while it lasts; the ringing makes light sleep lighter. Not with Hard of Hearing or Deaf. |
+| Heart Condition | -10 | Only while the Endurance moodle (the lungs) shows: a chance of chest pain, higher the deeper the moodle, and with panic, the 40s, a smoking habit, caffeine or a Run Down body. Chest pain holds pain and slows endurance recovery for 15 to 30 minutes, twice as fast to pass at rest; pushing on through it (sprinting, or still spending endurance at Endurance moodle 2 or worse; standing still worn out is rest) can bring a heart attack: down for 5 to 15 minutes, health lost, a day of weak recovery. Beta blockers (vanilla's pills), one every 12 hours, cut both to a quarter; you are told when they wear off. Starts with two bottles. |
+| Epilepsy | -6 | Seizures, about one in eight days when rested and well; tiredness, alcohol withdrawal, a hangover, fever, concussion, stress, dehydration, a diabetic low and bright sun make them likelier. An aura five to ten minutes ahead, then you drop what you hold and are out for 2 to 5 minutes (can concuss), then an hour of headache and low mood. Asleep, a seizure wakes you and spoils the night instead. Anticonvulsants (new item), one every 12 hours, cut seizures to a tenth; you are told when they wear off. Starts with a bottle. |
+| Tinnitus | -2 | A burst of your own gunfire (by the gun's loudness: half a dozen pistol shots, three from a shotgun) puts vanilla Hard of Hearing on for half an hour or more, Keen Hearing off while it lasts; the ringing makes light sleep lighter. Not with Hard of Hearing or Deaf. |
 | Lactose Intolerance | -1 | Dairy (and milk from a carton) brings a mild flare: cramps, queasiness, low mood, gone in about six hours. |
-| Germaphobe | -3 | Dirty or bloody skin and dirty clothes build stress and hold mood down; getting clean is a real relief. Wounds a fifth less likely to take an infection. |
-| Straight Edge | -2 | Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief. Not with Alcoholic, Smoker or Hollow Legs. |
-| Steady Hands | +6 | Dexterous folded in (granted; not with Dexterous or All Thumbs). Splints you set go wrong half as often, your fresh stitches tear half as often, and stitching, glass, bullets and splints take a quarter less time. |
+| Germaphobe | -3 | Dirty or bloody skin (the four worst parts count, not the average) and dirty clothes build stress and hold mood down; getting clean is a real relief. Wounds a fifth less likely to take an infection. |
+| Straight Edge | -1 | Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief. Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day (which starts you drunk). |
+| Steady Hands | +5 | Dexterous folded in (granted; not with Dexterous or All Thumbs). Splints you set go wrong half as often, your fresh stitches tear half as often, and stitching, glass, bullets and splints take a quarter less time. Not while your hands shake (alcohol withdrawal, a diabetic low). |
 | Night Shift | +1 | Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest. Not with Early Riser. |
-| Hollow Legs | +1 | Drink goes to your head a fifth slower; hangovers milder (x0.6) and shorter (x0.7). Not with Straight Edge. |
-| Fast Recovery | +5 | Fast Healer folded in (granted; not with Fast Healer or Slow Healer). After a bleed, blood volume and red cells come back half as fast again. |
+| Hollow Legs | +1 | Every drink goes to your head a fifth less (so it takes more to dull pain too); hangovers milder (x0.6) and shorter (x0.7). Not with Straight Edge. |
+| Fast Recovery | +8 | Fast Healer (6 in vanilla) folded in (granted; not with Fast Healer or Slow Healer). After a bleed, blood volume and red cells come back half as fast again. |
 | In Their 20s | -2 | No extra profession level; can't take Handy or Arthritis; Gym Regular starts at 65. See **Age**. |
 | In Their 40s | +1 | One extra profession level; Handy gives +1 Carpentry more; Arthritis flares sooner. See **Age**. |
 
@@ -63,7 +63,7 @@ Light wakes some people more easily: Restless Sleeper, Night Owl and Cat's Eyes 
 
 **Passing out** (shock, concussion, Fear of Blood): you fall, end up sitting on the floor, the screen goes black and you can't do anything until you come round, in real time (no time skip), for game minutes but never under eight real seconds. Zombies can still get to you. A faint is shallow: anything wounding you jolts you awake. A concussion knockout is not.
 
-**Sunburn** (everyone): not a wound, nothing to bandage. Outdoors in sunshine (day, no rain, less under cloud, nothing at 5 C and full from 20 C), every body part no worn clothing covers builds exposure; about three hours of summer sun on bare skin burns it ("your skin feels hot" first). A burnt part hurts for a day, easing over the last six hours, and more of you burnt hurts more (a pain floor up to 35) and makes for a worse night; the health panel shows "Sunburnt" on the part. Shade or indoors lets exposure fade. A sandbox option turns it off.
+**Sunburn** (everyone): not a wound, nothing to bandage. Outdoors in sunshine (day, no rain, less under cloud, nothing at 5 C and full from 20 C, full from 11 to 3 and falling to nothing by 7 in the morning and evening), every body part no worn clothing covers builds exposure; about three hours of midday summer sun on bare skin burns it ("your skin feels hot" first). A burnt part hurts for a day, easing over the last six hours, and more of you burnt hurts more (a pain floor up to 35) and makes for a worse night; the health panel shows "Sunburnt" on the part. Shade or indoors lets exposure fade. Skin toughens: each burn makes the next take longer (half as long again after one, three times as long after four), and the tan fades over a month. **Sun block** (new item, as common as toothpaste: bathrooms, toiletry shelves, lockers, camping gear, handbags, glove boxes; 8 coats) keeps the sun off all bare skin for 8 hours a coat, and you are told when it wears off. A sandbox option turns sunburn off.
 
 **Dehydration** (everyone): vanilla thirst only costs health at the top end. Hours at Thirsty or worse (twice as fast Parched, three times Dying of Thirst) now build a load that brings a headache, tiredness and slower endurance recovery; it drains in about two hours once you have drunk. A sandbox option turns it off.
 
@@ -71,7 +71,9 @@ Light wakes some people more easily: Restless Sleeper, Night Owl and Cat's Eyes 
 
 **Drink relief** (everyone): vanilla treats any sip of alcohol as a full dose of beta blockers and painkillers, however small. That is undone, and the relief follows the Drunk moodle instead: pain reduction of 20, 40, 60 or 80 by level, and panic that settles at a quarter, half, three quarters or the full beta-blocker rate.
 
-The airway, vitality, sleep, blood loss, infection and concussion moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
+**Moodles**: every effect that lasts has one. The older systems feed their own (airway irritation, vitality, a bad night, hangover, migraine, blood loss, infection, concussion); the rest are fed from one place (`DanTraits_Moodles.lua`): chest pain, seizure (the aura, and the hour after), ears ringing, a gut flare (gluten and lactose), filthy (Germaphobe), sunburn, dehydration, caffeine withdrawal, alcohol withdrawal, nicotine craving, a depressive episode, low iron and stiff joints. Three have a good side: beta blockers working, anticonvulsants working, and sun block on, so the icon going out is the reminder to take the next one. Diabetes has none on purpose (blood sugar is hidden; the meter is how you find out), and nor does Hallucinations.
+
+All the moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
 
 ## Layout
 
@@ -81,7 +83,8 @@ DanTraits/common/        empty; Build 42 expects it beside 42/
   media/lua/shared/      one file per trait + DanTraits.lua (core helpers, eat/pill hooks)
   media/lua/client/      context menus, moodles, telemetry for the dashboard
   media/scripts/         trait and item definitions
-DanTraits/tools/         dashboard.py + Dashboard.bat (live readout and command console)
+DanTraits/tools/         dashboard.py + Dashboard.bat (live readout and command console),
+                         make_icons.py (draws the moodle and sun block icons)
 tests/                   offline tests (fengari); python tests/run_tests.py
 workshop/                workshop.txt and preview.png for the Steam Workshop page
 deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back, or --workshop)

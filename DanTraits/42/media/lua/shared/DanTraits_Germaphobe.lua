@@ -1,8 +1,11 @@
 -- Project Zomboid Vitality Project: Germaphobe.
 --
 -- Dirt gets under your skin. How grimy you are (0..1) is the larger of the
--- blood and dirt on your body (the game's own per-part visual, averaged) and
--- the share of your body under dirty clothes (each part's hasDirtyClothing).
+-- blood and dirt on your body (the game's own per-part visual: the mean of
+-- the four worst parts, so bloody hands and a spattered chest count in full
+-- however clean the rest of you is) and the share of your body under dirty
+-- clothes (each part's hasDirtyClothing, half as much again: a filthy shirt
+-- and trousers are most of the way there).
 -- Past a little grime, stress builds and your mood is held down, both scaling
 -- with it; wash up and change, and the relief is real: stress and misery
 -- drop the moment you are clean again. The upside of all that scrubbing: a
@@ -19,27 +22,37 @@ local clamp01 = DanTraits_Clamp01
 
 local GM_FROM          = 0.15    -- grime under this is fine
 local GM_CLEAN         = 0.05    -- under this after being filthy: relief
-local GM_STRESS_MIN    = 0.0006  -- stress a minute at full grime (0..1 scale)
+local GM_WORST         = 4       -- body grime is the mean of this many of the worst parts
+local GM_CLOTHES       = 1.5     -- share of the body under dirty clothes x this
+local GM_STRESS_MIN    = 0.002   -- stress a minute at full grime (0..1 scale)
 local GM_UNHAPPY       = 35      -- unhappiness floor at full grime
 local GM_UNHAPPY_RAMP  = 1
 local GM_RELIEF_STRESS = 0.1
 local GM_RELIEF_SAD    = 10
 local GM_HAZARD        = 0.8     -- wound infection hazard x this
 
--- 0..1 blood and dirt on the body, averaged over the parts the visual keeps
+-- the mean of the largest GM_WORST values in the list (missing ones count as 0)
+local function worstMean(values)
+    table.sort(values, function(a, b) return a > b end)
+    local total = 0
+    for i = 1, GM_WORST do total = total + (values[i] or 0) end
+    return total / GM_WORST
+end
+DanTraits_GermWorstMean = worstMean
+
+-- 0..1 blood and dirt on the body: the worst few of the parts the visual keeps
 local function bodyGrime(player)
-    local total, n = 0, 0
+    local values = {}
     pcall(function()
         local visual = player:getHumanVisual()
         local count = BloodBodyPartType.MAX:index()
         for i = 0, count - 1 do
             local part = BloodBodyPartType.FromIndex(i)
-            total = total + math.min(1, (visual:getBlood(part) or 0) + (visual:getDirt(part) or 0))
-            n = n + 1
+            values[#values + 1] = math.min(1, (visual:getBlood(part) or 0) + (visual:getDirt(part) or 0))
         end
     end)
-    if n == 0 then return 0 end
-    return total / n
+    if #values == 0 then return 0 end
+    return worstMean(values)
 end
 
 -- 0..1 share of the body parts under dirty clothes
@@ -54,7 +67,7 @@ local function clothesGrime(player)
         end
     end)
     if n == 0 then return 0 end
-    return dirty / n
+    return math.min(1, dirty / n * GM_CLOTHES)
 end
 
 local function grimeOf(player, d)

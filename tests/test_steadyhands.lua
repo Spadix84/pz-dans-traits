@@ -38,4 +38,15 @@ near(run(ISRemoveBullet, steady), 1, 1e-9, "instant stays instant")
 near(ISSplint:new(steady).maxTime, 90, 1e-9, "splint")
 near(ISSplint:new(plain).maxTime, 120, 1e-9, "others' splints as is")
 
+-- 4. shaking hands are not steady: the shakes of alcohol withdrawal or a diabetic low
+DanTraits_Data(steady).alcShakes = 3
+near(DanTraits_RunHooks("splintBadSet", 0.5, steady), 0.5, 1e-9, "the shakes: a splint like anyone's")
+near(run(ISStitch, steady), 200, 1e-9, "and no quicker")
+near(DanTraits_RunHooks("stitchTear", 0.04, steady), 0.02, 1e-9, "stitches already in still hold")
+DanTraits_Data(steady).alcShakes = 0
+DanTraits_DiaLow = function(who) return who == steady and 1 / 3 or 0 end
+near(ISSplint:new(steady).maxTime, 120, 1e-9, "low blood sugar: no quicker")
+DanTraits_DiaLow = nil
+near(ISSplint:new(steady).maxTime, 90, 1e-9, "steady again")
+
 H.pass()

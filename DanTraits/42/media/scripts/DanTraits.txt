@@ -49,7 +49,7 @@ module DanTraits {
         Cost = -12,
         UIName = UI_trait_DanBadDay,
         UIDescription = UI_trait_DanBadDaydesc,
-        MutuallyExclusiveTraits = DanTraits:hemophilia,
+        MutuallyExclusiveTraits = DanTraits:hemophilia;DanTraits:straightedge,
     }
 
     character_trait_definition DanTraits:schizophrenia
@@ -389,10 +389,10 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:straightedge,
-        Cost = -2,
+        Cost = -1,
         UIName = UI_trait_DanStraightEdge,
         UIDescription = UI_trait_DanStraightEdgedesc,
-        MutuallyExclusiveTraits = DanTraits:dependent;base:smoker;DanTraits:hollowlegs,
+        MutuallyExclusiveTraits = DanTraits:dependent;base:smoker;DanTraits:hollowlegs;DanTraits:badday,
     }
 
     /* Dexterous folded in (granted with it), plus better splints, stitches
@@ -402,7 +402,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:steadyhands,
-        Cost = 6,
+        Cost = 5,
         UIName = UI_trait_DanSteadyHands,
         UIDescription = UI_trait_DanSteadyHandsdesc,
         MutuallyExclusiveTraits = base:dextrous;base:allthumbs,
@@ -434,13 +434,14 @@ module DanTraits {
     }
 
     /* Fast Healer folded in (granted with it), and blood comes back faster
-       after a bleed. DanTraits_Positives.lua. */
+       after a bleed. Priced over vanilla Fast Healer (6), which it contains.
+       DanTraits_Positives.lua. */
     character_trait_definition DanTraits:fastrecovery
     {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:fastrecovery,
-        Cost = 5,
+        Cost = 8,
         UIName = UI_trait_DanFastRecovery,
         UIDescription = UI_trait_DanFastRecoverydesc,
         MutuallyExclusiveTraits = base:fasthealer;base:slowhealer,
@@ -572,6 +573,24 @@ module DanTraits {
         Medical = true,
         Tooltip = Tooltip_DanTraits_Anticonvulsants,
         UseDelta = 0.0334,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Sun block: 8 applications, each keeps the sun off bare skin for 8 hours
+       (media/lua/shared/DanTraits_Sunburn.lua). Its own action
+       (ISVitalityPillAction). Common: bathrooms, toiletry shelves, lockers,
+       camping gear (media/lua/server/Items/DanTraits_Distributions.lua). */
+    item Sunblock
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Sun Block,
+        Weight = 0.2,
+        Icon = Sunblock,
+        Tooltip = Tooltip_DanTraits_Sunblock,
+        UseDelta = 0.125,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,

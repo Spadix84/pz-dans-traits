@@ -1,7 +1,7 @@
 -- Offline test for DanTraits_Heart.lua: chest pain only while the Endurance
 -- moodle shows, the multipliers, beta blockers (level, protection, decay),
 -- chest pain easing at rest, a heart attack when pushing on, the slower
--- endurance recovery, and the starting bottle.
+-- endurance recovery, the wearing-off notice, and the starting bottles.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -48,10 +48,29 @@ assert(d.hcAnginaMin == 0, "passed")
 assert(H.halo[#H.halo] == "+UI_DanTraits_HeartEased", "eased notice")
 assert(H.pain(p) > 0, "the pain floor held while it lasted")
 
--- 5. pushing on through chest pain: a heart attack
-local q = H.player({ traits = { "heart" }, endurance = 0.4 }); H.current = q
+-- 5. worn out but standing still is not pushing on: however the dice fall, no heart attack,
+--    and the chest pain passes at the resting rate
+local s = H.player({ traits = { "heart" }, endurance = 0.2 }); H.current = s
+local sd = DanTraits_Data(s)
+sd.hcAnginaMin = 20
+H.rollf = 0
+H.minute(); H.minute()
+assert(not sd.hcAttacks and not sd.hcPushing, "resting at a deep moodle: no heart attack")
+near(sd.hcAnginaMin, 16, 1e-9, "and it passes twice as fast")
+-- jogging on (running, endurance held by the test) is neither rest nor pushing
+s._run = true
+H.minute()
+near(sd.hcAnginaMin, 15, 1e-9, "running: a minute a minute")
+assert(not sd.hcAttacks, "still no heart attack")
+s._run = false
+
+-- 5b. pushing on through chest pain (still spending endurance at moodle 2, or sprinting): a heart attack
+local q = H.player({ traits = { "heart" }, endurance = 0.45 }); H.current = q
 local qd = DanTraits_Data(q)
 qd.hcAnginaMin = 20
+H.rollf = 0.99
+H.minute()                      -- the first minute only takes the reading
+q._st.endurance = 0.4           -- and now it has fallen: spending
 H.rollf = 0
 H.minute()
 assert(qd.hcAttacks == 1, "heart attack")
@@ -60,18 +79,37 @@ assert(DanTraits_IsPassedOut(q), "down")
 assert(q._bump == "stagger", "fell")
 near(DanTraits_RunHooks("enduranceRegen", 1, q, qd), 0.6, 1e-9, "a day of weak recovery")
 H.rollf = 0.99
+H.now = H.now + 60000; DanTraits_FaintTick()   -- q comes round: one faint at a time
+H.hours = H.hours + 1; DanTraits_FaintTick()
+local sp = H.player({ traits = { "heart" }, sprint = true }); H.current = sp
+DanTraits_Data(sp).hcAnginaMin = 20
+H.rollf = 0
+H.minute()
+assert(DanTraits_Data(sp).hcAttacks == 1, "sprinting through it: a heart attack")
+H.rollf = 0.99
 
--- 6. the beta blocker level halves in 12 hours, anyone's
+-- 6. the beta blocker level halves in 12 hours, anyone's; the one with the
+--    condition is told when it stops protecting, once
 local r = H.player(); H.current = r
 local rd = DanTraits_Data(r)
 DanTraits_TakeBetaBlocker(r, 1)
 H.mins(720)
 near(rd.hcBeta, 0.5, 1e-3, "halved in 12 hours")
+H.clearHalo()
+H.mins(10)
+assert(#H.halo == 0, "no condition: no wearing-off notice")
+local w = H.player({ traits = { "heart" } }); H.current = w
+DanTraits_TakeBetaBlocker(w, 1)
+H.clearHalo()
+H.mins(730)
+local lapses = 0
+for _, t in ipairs(H.halo) do if t == "UI_DanTraits_HeartBetaLapse" then lapses = lapses + 1 end end
+assert(lapses == 1, "wearing off: one notice")
 
 -- 7. a new character starts with a bottle, once
 local n = H.player({ traits = { "heart" } }); H.current = n
 H.fire("OnCreatePlayer", 0, n)
 H.fire("OnCreatePlayer", 0, n)
-assert(#n._inv == 1 and n._inv[1]._type == "Base.PillsBeta", "one bottle of beta blockers")
+assert(#n._inv == 2 and n._inv[1]._type == "Base.PillsBeta" and n._inv[2]._type == "Base.PillsBeta", "two bottles of beta blockers")
 
 H.pass()

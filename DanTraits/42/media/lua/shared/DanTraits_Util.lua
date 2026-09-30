@@ -57,6 +57,10 @@
 --                                          and thresholds 0.5 * (1 - t) for the 3 or
 --                                          4 tier points given, ascending; or
 --                                          { thresholds = { a, b, c, d } } to hand-set them
+--   DanTraits_LevelMoodle(player, name, level)
+--                                          Moodle Framework updater by level: 1..4
+--                                          on the bad side, -1..-4 on the good
+--                                          side, 0 for none (DanTraits_Moodles.lua)
 
 function DanTraits_Clamp01(x) return math.max(0, math.min(1, x)) end
 
@@ -163,6 +167,25 @@ function DanTraits_BadMoodle(player, name, value01, tiers)
             moodle:setThresholds(nil, 0.5 * (1 - tiers[3]), 0.5 * (1 - tiers[2]), 0.5 * (1 - tiers[1]))
         end
         moodle:setValue(0.5 * (1 - value01))
+    end)
+end
+
+-- a moodle set straight to a level: the thresholds are a tenth apart either
+-- side of 0.5 and the value sits in the middle of the level's band
+function DanTraits_LevelMoodle(player, name, level)
+    if not MF or not MF.getMoodle then return end
+    level = math.max(-4, math.min(4, math.floor(tonumber(level) or 0)))
+    pcall(function()
+        local moodle = MF.getMoodle(name, player:getPlayerNum())
+        if not moodle then return end
+        moodle:setThresholds(0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9)
+        if level > 0 then
+            moodle:setValue(0.45 - 0.1 * level)
+        elseif level < 0 then
+            moodle:setValue(0.55 - 0.1 * level)
+        else
+            moodle:setValue(0.5)
+        end
     end)
 end
 

@@ -17,5 +17,7 @@
     "Tooltip_DanTraits_NicotineGumEmpty": "Empty.",
     "Tooltip_DanTraits_StraightEdgeRefuse": "You don't drink or smoke.",
     "Tooltip_DanTraits_Anticonvulsants": "For epilepsy. One pill every 12 hours keeps seizures down. 30 pills.",
-    "Tooltip_DanTraits_AnticonvulsantsEmpty": "Empty."
+    "Tooltip_DanTraits_AnticonvulsantsEmpty": "Empty.",
+    "Tooltip_DanTraits_Sunblock": "Rub it in and the sun can't burn bare skin for 8 hours. Does nothing for a burn you already have. 8 coats.",
+    "Tooltip_DanTraits_SunblockEmpty": "Empty."
 }

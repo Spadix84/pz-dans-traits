@@ -7,19 +7,26 @@
 -- caffeine working, and for a Run Down body (Vitality; Fit and Thriving lower
 -- it). Chest pain lasts 15 to 30 minutes: a pain floor, and endurance recovers
 -- at a third of the speed (the enduranceRegen hook of the stat delta
--- pipeline). Resting (no Endurance moodle, not running) lets it pass twice as
--- fast. Pushing on through it (Endurance moodle 2 or more, or sprinting) risks
--- a heart attack: you go down (the shared pass-out, DanTraits_Faint.lua, deep:
--- nothing wakes you) for 5 to 15 game minutes with health lost, endurance
--- emptied, and a day after of weak recovery.
+-- pipeline). Resting (spending no endurance, not running) lets it pass twice
+-- as fast. Pushing on through it risks a heart attack. Pushing is what you do,
+-- not how worn out you are: sprinting, or still spending endurance while the
+-- Endurance moodle is at 2 or more (the same reading of exertion as Asthma:
+-- endurance being spent, not endurance being low; chest pain itself slows the
+-- recovery, so a low moodle alone would leave no way to rest it off). A heart
+-- attack: you go down (the shared pass-out, DanTraits_Faint.lua, deep: nothing
+-- wakes you) for 5 to 15 game minutes with health lost, endurance emptied, and
+-- a day after of weak recovery.
 --
 -- Beta blockers, the game's own pills (PillsBeta), are the daily medication:
 -- each pill tops up a level that halves every 12 hours, and while it is at
 -- least half a pill, chest pain and heart attacks are a quarter as likely. A
--- pill every 12 hours keeps it there. A new character starts with a bottle.
+-- pill every 12 hours keeps it there, and you are told when it wears off. A
+-- new character starts with two bottles (ten pills each).
 --
--- Mod data: hcBeta (the level), hcAnginaMin (minutes of chest pain left),
--- hcWeakH (hours of weak recovery left), hcAttacks, hcEpisodes.
+-- Mod data: hcBeta (the level), hcCovered (the level was protecting, for the
+-- wearing-off notice), hcAnginaMin (minutes of chest pain left), hcPushing
+-- (pushing on this minute), hcEndPrev (endurance a minute ago), hcWeakH (hours
+-- of weak recovery left), hcAttacks, hcEpisodes.
 -- Console: heart angina | heart attack | heart beta
 require "DanTraits"
 
@@ -39,6 +46,7 @@ local HC_CAFFEINE      = 1.3     -- while caffeine is working (Sleep's six-hour 
 local HC_VITALITY      = 0.3     -- x (1 - this x Vitality effect, -1..1)
 local HC_ANGINA_MIN    = { 15, 30 }  -- minutes of chest pain
 local HC_REST_FASTER   = 2       -- minutes of chest pain gone per minute at rest
+local HC_PUSH_LEVEL    = 2       -- spending endurance at this Endurance moodle level or worse is pushing on
 local HC_PAIN          = 40      -- pain floor during chest pain
 local HC_PAIN_RAMP     = 5
 local HC_REGEN         = 0.33    -- endurance recovery x this during chest pain...
@@ -53,6 +61,7 @@ local HC_BETA_HALF_H   = 12      -- hours for the beta blocker level to halve
 local HC_BETA_ON       = 0.5     -- level at which it protects
 local HC_BETA_CUT      = 0.25    -- chest pain and heart attacks x this while protected
 local HC_BETA_ITEM     = "pillsbeta"
+local HC_KIT_BOTTLES   = 2       -- bottles a new character starts with
 
 local function randRange(lo, hi) return DanTraits_RandRange(lo, hi) end
 
@@ -116,11 +125,30 @@ local function heartAttack(player, d)
     end
 end
 
-local function pushing(player)
-    if enduranceLevel(player) >= 2 then return true end
-    local sprinting = false
-    pcall(function() sprinting = player:isSprinting() end)
-    return sprinting
+local function flag(player, method)
+    local ok, res = pcall(function() return player[method](player) end)
+    return ok and res == true
+end
+
+-- what the character did this minute: pushing (sprinting, or endurance fell
+-- since the last minute at a deep Endurance moodle) and resting (neither
+-- spending endurance nor running)
+local function exertion(player, d)
+    local endurance = 1
+    pcall(function() endurance = player:getStats():get(CharacterStat.ENDURANCE) or 1 end)
+    local spending = endurance < (d.hcEndPrev or endurance) - 1e-6
+    d.hcEndPrev = endurance
+    local sprinting = flag(player, "isSprinting")
+    local pushing = sprinting or (spending and enduranceLevel(player) >= HC_PUSH_LEVEL)
+    local resting = not spending and not sprinting and not flag(player, "isRunning")
+    return pushing, resting
+end
+
+-- the wearing-off notice, once each time the level drops under protection
+local function betaNotice(player, d)
+    local covered = protected(d)
+    if d.hcCovered and not covered and hasTrait(player, "heart") then notify(player, "UI_DanTraits_HeartBetaLapse") end
+    d.hcCovered = covered or nil
 end
 
 local function updateHeartMinute(player, d)
@@ -129,22 +157,26 @@ local function updateHeartMinute(player, d)
         d.hcBeta = d.hcBeta * 0.5 ^ (1 / (HC_BETA_HALF_H * 60))
         if d.hcBeta < 0.01 then d.hcBeta = 0 end
     end
+    betaNotice(player, d)
     if (d.hcWeakH or 0) > 0 then d.hcWeakH = math.max(0, d.hcWeakH - 1 / 60) end
     if not hasTrait(player, "heart") then
-        d.hcAnginaMin = nil
+        d.hcAnginaMin, d.hcPushing, d.hcEndPrev = nil, nil, nil
         return
     end
+    local pushing, resting = exertion(player, d)
+    d.hcPushing = nil
     if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return end
     if (d.hcAnginaMin or 0) > 0 then
         DanTraits_PainFloor(player, d, "heart", HC_PAIN, HC_PAIN_RAMP)
-        if pushing(player) then
+        if pushing then
+            d.hcPushing = true
             if DanTraits_Roll(HC_ATTACK_MIN * (protected(d) and HC_BETA_CUT or 1)) then
                 heartAttack(player, d)
                 return
             end
             d.hcAnginaMin = d.hcAnginaMin - 1
         else
-            d.hcAnginaMin = d.hcAnginaMin - (enduranceLevel(player) == 0 and HC_REST_FASTER or 1)
+            d.hcAnginaMin = d.hcAnginaMin - (resting and HC_REST_FASTER or 1)
         end
         if d.hcAnginaMin <= 0 then
             d.hcAnginaMin = 0
@@ -169,6 +201,7 @@ end)
 function DanTraits_TakeBetaBlocker(player, amount)
     local d = DanTraits_Data(player)
     d.hcBeta = (d.hcBeta or 0) + (amount or 1)
+    d.hcCovered = protected(d) or nil
     if hasTrait(player, "heart") then DanTraits_NotifyGood(player, "UI_DanTraits_HeartBeta") end
     return d.hcBeta
 end
@@ -187,13 +220,15 @@ DanTraits_ExtraCommands.heart = function(player, args)
     return "heart angina | heart attack | heart beta (chest pain chance now " .. tostring(episodeChance(player, d)) .. ")"
 end
 
--- start with a bottle of beta blockers
+-- start with two bottles of beta blockers
 local function onHeartCreatePlayer(playerNum, player)
     if not player or not hasTrait(player, "heart") then return end
     local d = DanTraits_Data(player)
     if d.hcKitGiven or player:getHoursSurvived() > 0 then return end
     d.hcKitGiven = true
-    pcall(function() player:getInventory():AddItem("Base.PillsBeta") end)
+    for _ = 1, HC_KIT_BOTTLES do
+        pcall(function() player:getInventory():AddItem("Base.PillsBeta") end)
+    end
 end
 
 DanTraits_Every("minute", "Heart", updateHeartMinute, 40)

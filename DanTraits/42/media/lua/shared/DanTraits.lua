@@ -291,6 +291,7 @@ end
 --           80  Positives (Iron Stomach)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
+--           96  Moodles (reads what every system above left in mod data; changes nothing)
 --   ten     10  Dependent
 --           40  MDD, Migraine
 --           90  Hallucinations

@@ -1,7 +1,7 @@
 -- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
--- take metformin), iron pills, nicotine gum and anticonvulsants, and the wrap that hides Wakeful
+-- take metformin), iron pills, nicotine gum, anticonvulsants and sun block, and the wrap that hides Wakeful
 -- (and Deep Sleeper on a no-sleep server) from the character creation list.
 -- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
 require "DanTraits"
@@ -19,6 +19,8 @@ if ok and MF and MF.createMoodle then
     MF.createMoodle("BloodLoss")
     MF.createMoodle("Infection")
     MF.createMoodle("Concussion")
+    -- the rest are fed from one place, shared/DanTraits_Moodles.lua
+    for _, name in ipairs(DanTraits_MoodleNames or {}) do MF.createMoodle(name) end
 end
 
 local function actualItems(items)
@@ -193,7 +195,27 @@ local function anticonvulsantMenu(playerNum, context, items)
     if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_AnticonvulsantsEmpty") end
 end
 
+-- Sun block (Sunburn, anyone) -------------------------------------------------------
+local SUNBLOCK_ANIM = "WashFace"    -- the game's washing animation: rubbing it in
+local SUNBLOCK_TIME = 150
+
+local function onApplySunblock(bottle, playerObj)
+    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, bottle)
+    ISTimedActionQueue.add(ISVitalityPillAction:new(playerObj, bottle, "ContextMenu_DanTraits_ApplySunblock", SUNBLOCK_ANIM, SUNBLOCK_TIME))
+end
+
+local function sunblockMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_IsSunblock then return end
+    local bottle = findFirst(items, DanTraits_IsSunblock)
+    if not bottle then return end
+    pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+    local option = context:addOption(getText("ContextMenu_DanTraits_ApplySunblock"), bottle, onApplySunblock, playerObj)
+    if usesOf(bottle) <= 0 then greyOut(option, "Tooltip_DanTraits_SunblockEmpty") end
+end
+
 Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryObjectContextMenu)
+Events.OnFillInventoryObjectContextMenu.Add(sunblockMenu)
 Events.OnFillInventoryObjectContextMenu.Add(anticonvulsantMenu)
 Events.OnFillInventoryObjectContextMenu.Add(nicotineGumMenu)
 Events.OnFillInventoryObjectContextMenu.Add(ironPillsMenu)

@@ -1,6 +1,7 @@
 -- Offline test for DanTraits_Epilepsy.lua: the seizure rate and its
--- triggers, anticonvulsants (level, protection, decay), the aura then the
--- seizure (fall, dropped weapon, out cold), the aftermath, and the bottle.
+-- triggers, anticonvulsants (level, protection, decay, the wearing-off
+-- notice), the aura then the seizure (fall, dropped weapon, out cold), a
+-- seizure asleep, the aftermath, and the bottle.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -25,6 +26,12 @@ DanTraits_AlcoholWithdrawal = nil
 DanTraits_ConcussionStrength = function() return 0.2 end
 near(DanTraits_SeizureRate(p, d), BASE * 2, 1e-12, "concussion x(1 + 5 x 0.2)")
 DanTraits_ConcussionStrength = nil
+DanTraits_Dehydration = function() return 0.5 end
+near(DanTraits_SeizureRate(p, d), BASE * 2, 1e-12, "dehydration x(1 + 2 x 0.5)")
+DanTraits_Dehydration = nil
+DanTraits_DiaLow = function() return 1 end
+near(DanTraits_SeizureRate(p, d), BASE * 4, 1e-12, "a bad diabetic low x(1 + 3)")
+DanTraits_DiaLow = nil
 
 -- 2. anticonvulsants: a pill is a level of 1, protection cuts seizures to a tenth
 DanTraits_RunHooks("pill", nil, p, "Anticonvulsants")
@@ -32,16 +39,20 @@ near(d.epMeds, 1, 1e-9, "one pill")
 near(DanTraits_SeizureRate(p, d), BASE * 0.1, 1e-12, "protected x0.1")
 H.mins(720)
 near(d.epMeds, 0.5, 1e-3, "halved in 12 hours")
+H.clearHalo()
+H.mins(10)
+assert(#H.halo == 1 and H.halo[1] == "UI_DanTraits_EpilepsyMedsLapse", "wearing off: one notice")
 d.epMeds = 0
 
--- 3. a roll gives the aura, and two minutes later the seizure
+-- 3. a roll gives the aura (five to ten minutes of warning; the harness's
+--    dice give eight), and then the seizure
 local dropped = 0
 DanTraits_FumbleDrop = function() dropped = dropped + 1 end
 H.rollf = 0
 H.minute()
-assert(d.epAuraMin == 2 and H.halo[#H.halo] == "UI_DanTraits_EpilepsyAura", "aura first")
+assert(d.epAuraMin == 8 and H.halo[#H.halo] == "UI_DanTraits_EpilepsyAura", "aura first")
 H.rollf = 0.99
-H.minute()
+H.mins(7)
 assert(d.epAuraMin == 1 and not d.epSeizures, "still coming")
 H.minute()
 assert(d.epSeizures == 1 and H.halo[#H.halo] == "UI_DanTraits_EpilepsySeizure", "seizure")
@@ -52,6 +63,24 @@ near(p._st.fatigue, 0.3, 1e-9, "exhausted")
 H.minute()
 assert(H.pain(p) > 0 and p._st.unhappy > 0, "headache and low mood after")
 assert(d.epAfterMin == 59, "the hour runs down")
+
+-- 4b. asleep: no warning, no fall, nothing dropped; it wakes you and the night scores worse
+H.now = H.now + 60000; DanTraits_FaintTick()
+H.hours = H.hours + 1; DanTraits_FaintTick()
+local s = H.player({ traits = { "epilepsy" }, asleep = true }); H.current = s
+local sd = DanTraits_Data(s)
+H.clearHalo()
+dropped = 0
+H.rollf = 0
+H.minute()
+H.rollf = 0.99
+assert(sd.epAuraMin == 8 and #H.halo == 0, "asleep: no aura notice")
+H.mins(8)
+assert(sd.epSeizures == 1 and H.halo[#H.halo] == "UI_DanTraits_EpilepsyNight", "a seizure in the night")
+assert(dropped == 0 and not s._bump and not DanTraits_IsPassedOut(s), "no fall, nothing dropped")
+assert(s._woke == 1 and not s._asleep, "it wakes you")
+near(DanTraits_RunHooks("nightQuality", 1, s, sd), 0.7, 1e-9, "the night scores worse")
+near(DanTraits_RunHooks("nightQuality", 1, s, sd), 1, 1e-9, "once")
 
 -- 5. without the trait nothing happens, but a pill still counts
 local plain = H.player(); H.current = plain

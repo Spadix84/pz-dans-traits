@@ -11,10 +11,12 @@
 --   wakes you a quarter as easily and bright light costs a quarter of the rest
 --   and the night's score (the sleepWake and sleepBright hooks of
 --   DanTraits_Sleep.lua). Not with Early Riser.
--- Hollow Legs: drink goes to your head a fifth slower (the intoxication a
---   drink adds, through the drink action), and a hangover is milder (x0.6)
---   and shorter (x0.7). Not with Straight Edge.
--- Fast Recovery: vanilla Fast Healer folded in (granted with it), and after
+-- Hollow Legs: every drink goes to your head a fifth less (the intoxication a
+--   drink adds, through the drink action; so it takes more to dull pain too,
+--   since drink relief follows the Drunk moodle), and a hangover is milder
+--   (x0.6) and shorter (x0.7). Not with Straight Edge.
+-- Fast Recovery (8: over vanilla Fast Healer's 6, which it contains): vanilla
+--   Fast Healer folded in (granted with it), and after
 --   blood loss the volume and the red cells come back half as fast again
 --   (the bloodVolRefill and bloodCellRebuild hooks of DanTraits_Blood.lua).
 --   Not with Fast Healer (it is already in here) or Slow Healer.
