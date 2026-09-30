@@ -1,7 +1,7 @@
 -- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
--- take metformin), iron pills and nicotine gum, and the wrap that hides Wakeful
+-- take metformin), iron pills, nicotine gum, anticonvulsants and sun block, and the wrap that hides Wakeful
 -- (and Deep Sleeper on a no-sleep server) from the character creation list.
 -- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
 require "DanTraits"
@@ -20,6 +20,8 @@ if ok and MF and MF.createMoodle then
     MF.createMoodle("Infection")
     MF.createMoodle("Concussion")
     MF.createMoodle("BloodSugar")
+    -- the rest are fed from one place, shared/DanTraits_Moodles.lua
+    for _, name in ipairs(DanTraits_MoodleNames or {}) do MF.createMoodle(name) end
 end
 
 local function actualItems(items)
@@ -67,17 +69,23 @@ local function onFillInventoryObjectContextMenu(playerNum, context, items)
     if usesOf(inhaler) <= 0 then greyOut(option, "Tooltip_DanTraits_InhalerEmpty") end
 end
 
--- Vegetarian: grey out Eat on meat with the reason
+-- Vegetarian and Straight Edge: grey out Eat (or the item's own verb, Smoke)
+-- on what they refuse, with the reason
 local function greyOutMeat(playerNum, context, items)
     local playerObj = getSpecificPlayer(playerNum)
-    if not playerObj or not DanTraits_RefusesFood then return end
-    local meat = findFirst(items, function(item) return DanTraits_RefusesFood(playerObj, item) end)
-    if not meat then return end
+    if not playerObj or not DanTraits_RefuseReason then return end
+    local reason
+    local meat = findFirst(items, function(item)
+        reason = DanTraits_RefuseReason(playerObj, item)
+        return reason ~= nil
+    end)
+    if not meat or not reason then return end
     local names = { getText("ContextMenu_Eat") }
     pcall(function() local custom = meat:getCustomMenuOption(); if custom then table.insert(names, custom) end end)
+    local tooltip = (string.gsub(reason, "^UI_", "Tooltip_"))
     for _, name in ipairs(names) do
         local option = context:getOptionFromName(name)
-        if option then greyOut(option, "Tooltip_DanTraits_VegetarianRefuse") end
+        if option then greyOut(option, tooltip) end
     end
 end
 
@@ -172,7 +180,44 @@ local function nicotineGumMenu(playerNum, context, items)
     if usesOf(gum) <= 0 then greyOut(option, "Tooltip_DanTraits_NicotineGumEmpty") end
 end
 
+-- Anticonvulsants (Epilepsy) ------------------------------------------------------
+local function onTakeAnticonvulsant(pills, playerObj)
+    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, pills)
+    ISTimedActionQueue.add(ISVitalityPillAction:new(playerObj, pills, "ContextMenu_DanTraits_TakeAnticonvulsant"))
+end
+
+local function anticonvulsantMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_IsAnticonvulsants then return end
+    local pills = findFirst(items, DanTraits_IsAnticonvulsants)
+    if not pills then return end
+    pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+    local option = context:addOption(getText("ContextMenu_DanTraits_TakeAnticonvulsant"), pills, onTakeAnticonvulsant, playerObj)
+    if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_AnticonvulsantsEmpty") end
+end
+
+-- Sun block (Sunburn, anyone) -------------------------------------------------------
+local SUNBLOCK_ANIM = "WashFace"    -- the game's washing animation: rubbing it in
+local SUNBLOCK_TIME = 150
+
+local function onApplySunblock(bottle, playerObj)
+    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, bottle)
+    ISTimedActionQueue.add(ISVitalityPillAction:new(playerObj, bottle, "ContextMenu_DanTraits_ApplySunblock", SUNBLOCK_ANIM, SUNBLOCK_TIME))
+end
+
+local function sunblockMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_IsSunblock then return end
+    local bottle = findFirst(items, DanTraits_IsSunblock)
+    if not bottle then return end
+    pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+    local option = context:addOption(getText("ContextMenu_DanTraits_ApplySunblock"), bottle, onApplySunblock, playerObj)
+    if usesOf(bottle) <= 0 then greyOut(option, "Tooltip_DanTraits_SunblockEmpty") end
+end
+
 Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryObjectContextMenu)
+Events.OnFillInventoryObjectContextMenu.Add(sunblockMenu)
+Events.OnFillInventoryObjectContextMenu.Add(anticonvulsantMenu)
 Events.OnFillInventoryObjectContextMenu.Add(nicotineGumMenu)
 Events.OnFillInventoryObjectContextMenu.Add(ironPillsMenu)
 Events.OnFillInventoryObjectContextMenu.Add(greyOutMeat)

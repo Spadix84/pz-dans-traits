@@ -23,9 +23,6 @@ local SCHIZO_COOLDOWN_TICKS  = 0      -- ten-minute ticks to skip after an episo
 local SCHIZO_SOUND_PANIC     = 8      -- panic added by a phantom sound or thump (0..100)
 local SCHIZO_BOUT_PANIC_MIN  = 35     -- panic bout adds this plus up to 20 more
 local SCHIZO_THUMP_RADIUS    = 7      -- tiles to search for a door or window
--- TESTING: set the default below to true and every 10-minute tick fires a phantom charge
--- (the offline tests define DanTraitsTestCharge = false to keep the normal roll).
-local SCHIZO_TEST_CHARGE     = (DanTraitsTestCharge == nil) and false or DanTraitsTestCharge
 local SCHIZO_CHARGE_PANIC    = 15     -- panic added by a phantom zombie charge
 local CHARGE_DIST_MIN, CHARGE_DIST_MAX = 4, 7   -- tiles ahead of the player where the phantom appears
 local CHARGE_MAX_FRAMES      = 240    -- give up after about 4 s
@@ -442,11 +439,6 @@ local function updateSchizophrenia(player, d)
 
     if (d.schizoCooldown or 0) > 0 then
         d.schizoCooldown = d.schizoCooldown - 1
-        return
-    end
-
-    if SCHIZO_TEST_CHARGE then
-        if not episodeCharge(player) then episodePhantomSound(player) end
         return
     end
 

@@ -50,7 +50,6 @@ local function applyGymRegular(player, target)
     end)
     return ok and total > 0 and done == total
 end
-DanTraits_ApplyGymRegular = applyGymRegular
 
 local function onGymRegularCreate(player)
     if not player or not hasTrait(player, "gymregular") then return end

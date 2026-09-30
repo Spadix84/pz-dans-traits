@@ -285,16 +285,18 @@ end
 --           23  Infection
 --           24  Concussion
 --           25  FearOfBlood (reads bloodLossMin)
---           40  Alcohol, Anemia, Arthritis, Asthma, Caffeine, Diabetes, Gluten, Hangover,
---               MDD, Migraine, Smoker (floors and rates; among themselves by label)
+--           40  Alcohol, Anemia, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
+--               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, MDD, Migraine,
+--               Smoker, Sunburn, Tinnitus (floors and rates; among themselves by label)
 --           80  Positives (Iron Stomach)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
+--           96  Moodles (reads what every system above left in mod data; changes nothing)
 --   ten     10  Dependent
 --           40  MDD, Migraine
 --           90  Hallucinations
 --   frame    0  the stat delta pipeline: enduranceRegen (Vitality, Smoker lungs, Blood,
---               Anemia, Concussion, Asthma subscribe; the cuts multiply)
+--               Anemia, Concussion, Asthma, Heart, Dehydration subscribe; the cuts multiply)
 --           20  Blood        22  WoundCare (movement sampling)    24  Concussion
 --           40  Alcohol (panic decay), Arthritis, Smoker (held anger)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
@@ -374,17 +376,20 @@ end
 -- with the progress so far when it is interrupted. Both call Eat on the
 -- character; the dose is read before that, since eating shrinks the item.
 local function wrapEatAction()
+    -- the reason (a text key) this character will not eat it, or nil
     local function refused(action)
-        if not DanTraits_RefusesFood then return false end
-        local ok, res = pcall(function() return DanTraits_RefusesFood(action.character, action.item) end)
-        return ok and res == true
+        if not DanTraits_RefuseReason then return nil end
+        local ok, res = pcall(DanTraits_RefuseReason, action.character, action.item)
+        if ok and type(res) == "string" then return res end
+        return nil
     end
     for _, name in ipairs({ "isValidStart", "isValid" }) do
         DanTraits_Wrap(ISEatFoodAction, name, "core-refuse-food", function(original, self, ...)
-            if refused(self) then
+            local reason = refused(self)
+            if reason then
                 if not self.danTraitsRefusedShown then
                     self.danTraitsRefusedShown = true
-                    notify(self.character, "UI_DanTraits_VegetarianRefuse")
+                    notify(self.character, reason)
                 end
                 return false
             end
@@ -431,9 +436,10 @@ end
 wrapPillAction()
 Events.OnGameStart.Add(wrapPillAction)
 
--- Log the traits the character actually carries once the world is up, so a
--- wiped character shows up in the log immediately.
+-- Debug mode only: log the traits the character actually carries once the
+-- world is up, so a wiped character shows up in the log immediately.
 local function danTraitsLogCharacterTraits()
+    if not (isDebugEnabled and isDebugEnabled()) then return end
     local player = getSpecificPlayer(0)
     if not player then return end
     local names = {}
@@ -450,15 +456,15 @@ Events.OnGameStart.Add(danTraitsLogCharacterTraits)
 -- finishes loading. If that list is empty the save records no mods; the next
 -- in-session load then applies the empty list, unloads every mod, and the
 -- character loses its mod traits (and everything after them in the file).
--- Diagnose, and if "currentGame" is empty while mods are active, fill it
--- from "default" before the world finishes loading.
+-- If "currentGame" is empty while mods are active, fill it from "default"
+-- before the world finishes loading (and in debug mode, log both counts).
 local function danTraitsModListCheck(stage)
     pcall(function()
         local current = ActiveMods.getById("currentGame")
         local default = ActiveMods.getById("default")
         local nCurrent = current and current:getMods():size() or -1
         local nDefault = default and default:getMods():size() or -1
-        print("[DanTraits] active mods at " .. stage .. ": currentGame=" .. nCurrent .. " default=" .. nDefault)
+        if isDebugEnabled and isDebugEnabled() then print("[DanTraits] active mods at " .. stage .. ": currentGame=" .. nCurrent .. " default=" .. nDefault) end
         if current and default and nCurrent == 0 and nDefault > 0 then
             current:copyFrom(default)
             print("[DanTraits] currentGame mod list was empty; copied " .. nDefault .. " mods from default")

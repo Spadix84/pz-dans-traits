@@ -1,6 +1,9 @@
--- One pill (or a piece of gum) from one of this mod's items, then the shared
--- "pill" hook with the item's type, so the trait that cares (iron pills:
--- Anaemic; nicotine gum: Smoker) does the rest. Same shape as taking metformin.
+-- One pill (or a piece of gum, or a coat of sun block) from one of this mod's
+-- items, then the shared "pill" hook with the item's type, so the system that
+-- cares (iron pills: Anaemic; nicotine gum: Smoker; anticonvulsants: Epilepsy;
+-- sun block: Sunburn) does the rest. Same shape as taking metformin.
+-- new(character, item, label, anim, time): anim is the action animation
+-- (default the pill one), time the action's length (default 60).
 require "TimedActions/ISBaseTimedAction"
 
 ISVitalityPillAction = ISBaseTimedAction:derive("ISVitalityPillAction")
@@ -17,7 +20,7 @@ end
 
 function ISVitalityPillAction:update()
     self.item:setJobDelta(self:getJobDelta())
-    self:setActionAnim(CharacterActionAnims.TakePills)
+    self:setActionAnim(self.anim or CharacterActionAnims.TakePills)
 end
 
 function ISVitalityPillAction:start()
@@ -40,11 +43,12 @@ function ISVitalityPillAction:perform()
     ISBaseTimedAction.perform(self)
 end
 
-function ISVitalityPillAction:new(character, item, label)
+function ISVitalityPillAction:new(character, item, label, anim, time)
     local o = ISBaseTimedAction.new(self, character)
     o.item = item
     o.label = label
-    o.maxTime = 60
+    o.anim = anim
+    o.maxTime = time or 60
     if character:isTimedActionInstant() then o.maxTime = 1 end
     return o
 end

@@ -61,7 +61,6 @@ local ARMS_L = { Hand_L = true, ForeArm_L = true, UpperArm_L = true }
 local TORSO = { Torso_Upper = true, Torso_Lower = true }
 
 local function sandboxOn() return DanTraits_SandboxOn("WoundCareEnabled") end
-function DanTraits_WoundCareActive() return sandboxOn() end
 
 local num = DanTraits_PartNum
 local is = DanTraits_PartIs
@@ -95,7 +94,6 @@ local function stitchStrength(part)
     if t <= 0 then return nil end
     return math.min(1, t / WC_SOUND_AT)
 end
-DanTraits_StitchStrength = stitchStrength
 
 local function wetness(player)
     local w = 0
@@ -134,12 +132,11 @@ local function strain(player, part, tearChance, reopenChance)
     local s = stitchStrength(part)
     if is(part, "bandaged") then tearChance, reopenChance = tearChance * WC_BANDAGE_HOLDS, reopenChance * WC_BANDAGE_HOLDS end
     if s then
-        if s < 1 and roll(tearChance * (1 - s)) then tearOpen(player, part) end
+        if s < 1 and roll(DanTraits_RunHooks("stitchTear", tearChance * (1 - s), player, part)) then tearOpen(player, part) end   -- Steady Hands
     elseif num(part, "getDeepWoundTime") > 0 and num(part, "getBleedingTime") <= 0 then
         if roll(reopenChance) then openAgain(player, part) end
     end
 end
-DanTraits_WoundStrain = strain
 
 -- the bone-setting roll, by the setter's First Aid level
 local function badSetChance(level)
@@ -147,11 +144,11 @@ local function badSetChance(level)
 end
 DanTraits_BadSetChance = badSetChance
 
-function DanTraits_OnSplintSet(patient, part, level)
+function DanTraits_OnSplintSet(patient, part, level, setter)
     if not patient or not part or not sandboxOn() then return false end
     local d = wcData(patient)
     local rec = recOf(d, tostring(part:getType()))
-    rec.badSet = roll(badSetChance(level)) or nil
+    rec.badSet = roll(DanTraits_RunHooks("splintBadSet", badSetChance(level), setter or patient)) or nil   -- Steady Hands
     if rec.badSet then
         pcall(function() part:setSplintFactor(part:getSplintFactor() * WC_BADSET_FACTOR) end)
         -- only someone who knows bones can tell
@@ -169,7 +166,6 @@ local function updateWoundFrame(player)
     if ok and sprinting then moved = "sprint" elseif (ok2 and running) and moved ~= "sprint" then moved = "run"
     elseif ok3 and moving and not moved then moved = "walk" end
 end
-DanTraits_updateWoundFrame = updateWoundFrame
 
 local function round2(x) return math.floor(x * 100 + 0.5) / 100 end
 
@@ -260,7 +256,6 @@ local function updateWoundMinute(player, d)
     d.wcMoved = moved or nil
     moved = false
 end
-DanTraits_updateWoundMinute = updateWoundMinute
 
 -- a swing: strain on the arm(s) doing it, and a little on the torso
 local function onSwing(character, weapon)
@@ -283,7 +278,6 @@ local function onSwing(character, weapon)
         end
     end)
 end
-DanTraits_WoundOnSwing = onSwing
 
 -- the splint action: roll the set once it is on
 local function wrapSplint()
@@ -291,7 +285,7 @@ local function wrapSplint()
         local result = original(self, ...)
         pcall(function()
             if self.doIt and self.bodyPart and self.bodyPart:isSplint() then
-                DanTraits_OnSplintSet(self.otherPlayer or self.character, self.bodyPart, self.doctorLevel or 0)
+                DanTraits_OnSplintSet(self.otherPlayer or self.character, self.bodyPart, self.doctorLevel or 0, self.character)
             end
         end)
         return result

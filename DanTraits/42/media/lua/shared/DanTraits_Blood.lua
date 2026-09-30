@@ -96,18 +96,10 @@ local function tierOf(lost)
     for i, threshold in ipairs(BL_TIER) do if lost >= threshold then tier = i end end
     return tier
 end
-DanTraits_BloodTierOf = tierOf
 
 -- 0..1 how short of red cells
 local function weaknessOf(cells)
     return clamp01((BL_CELL_WEAK - cells) / (BL_CELL_WEAK - BL_CELL_FLOOR))
-end
-
--- for other systems: 0..1 volume lost
-function DanTraits_BloodLost(player)
-    local d = player and player:getModData().DanTraits
-    if not d or d.bloodVol == nil then return 0 end
-    return clamp01(1 - d.bloodVol)
 end
 
 -- the exact inverse of BodyDamage.ReduceGeneralHealth(amount)
@@ -185,7 +177,7 @@ local function refill(player, d, stats, asleep)
     if d.bloodVol < 1 then
         local thirst = fraction(stats, CharacterStat.THIRST)
         local rate = clamp01((BL_THIRST_DRY - thirst) / (BL_THIRST_DRY - BL_THIRST_OK))
-        local gain = math.min(1 - d.bloodVol, BL_VOL_DAY / 1440 * rate)
+        local gain = math.min(1 - d.bloodVol, DanTraits_RunHooks("bloodVolRefill", BL_VOL_DAY / 1440 * rate, player, d))
         if gain > 0 then
             d.bloodVol = d.bloodVol + gain
             pcall(function() stats:set(CharacterStat.THIRST, math.min(1, (stats:get(CharacterStat.THIRST) or 0) + gain * BL_VOL_THIRST)) end)
@@ -264,7 +256,6 @@ local function updateBloodMinute(player, d)
         pcall(function() stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + BL_WEAK_FATIGUE * d.bloodWeak)) end)
     end
 end
-DanTraits_updateBloodMinute = updateBloodMinute
 
 -- slower endurance recovery, through the stat delta pipeline (DanTraits_Util.lua)
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)
@@ -297,7 +288,6 @@ local function updateBloodFrame(player)
         pcall(function() player:setMoodleCantSprint(true) end)
     end
 end
-DanTraits_updateBloodFrame = updateBloodFrame
 
 -- Debugging: every part under full health, its change over the minute and
 -- its weight in overall health: "UpperLeg_L 62.3 (-0.91) x0.2, ..."

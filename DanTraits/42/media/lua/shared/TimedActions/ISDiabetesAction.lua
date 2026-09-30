@@ -58,7 +58,10 @@ function ISDiabetesAction:perform()
                 if bad then DanTraits_NotifyFmt(self.character, "UI_DanTraits_DiaReading", value)
                 else DanTraits_NotifyFmtGood(self.character, "UI_DanTraits_DiaReading", value) end
                 pcall(function()
-                    self.item:setName(getText("ItemName_DanTraits.GlucoseMeter") .. " (" .. value .. ")")
+                    -- B42 item names are keyed by full type in ItemName.json, not "ItemName_<type>",
+                    -- so getText() on that key returns the raw key; ask the item system instead
+                    local base = getItemNameFromFullType and getItemNameFromFullType("DanTraits.GlucoseMeter") or "Glucose Meter"
+                    self.item:setName(base .. " (" .. value .. ")")
                     self.item:setCustomName(true)
                 end)
             end

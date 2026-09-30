@@ -20,6 +20,11 @@
 --     normally ends) holds, with movement blocked, in real time. Chosen.
 --   the knocked-down state (setKnockedDown) ended up the same, sitting.
 --
+-- In a vehicle there is no fall and no sitting on the floor (the seat holds
+-- you); the screen goes black and the controls are dead just the same, and
+-- a driver's engine cuts out, so the car rolls to a stop instead of driving
+-- on. Not yet tried in play.
+--
 -- A faint is shallow: a new wound (a bite, a scratch, a cut: a zombie
 -- getting to you) brings you round at once. A knockout (concussion) is not:
 -- you stay down whatever happens.
@@ -101,9 +106,26 @@ function DanTraits_IsPassedOut(player)
     return hold ~= nil and hold.player == player
 end
 
+local function vehicleOf(player)
+    local v = nil
+    pcall(function() v = player:getVehicle() end)
+    return v
+end
+
+-- the driver goes out: cut the engine (the game's own shut-off command,
+-- the direct call if that is not there)
+local function stopCar(player, car)
+    local driving = false
+    pcall(function() driving = car:getDriver() == player end)
+    if not driving then return end
+    local ok = pcall(function() sendClientCommand(player, "vehicle", "shutOff", {}) end)
+    if not ok then pcall(function() car:shutOff() end) end
+end
+
 function DanTraits_PassOut(player, minutes, textKey, deep)
     if not player or player:isDead() or hold then return false end
-    DanTraits_Collapse(player)
+    local car = vehicleOf(player)
+    if car then stopCar(player, car) else DanTraits_Collapse(player) end
     local now = getTimestampMs()
     hold = { player = player, startMs = now, untilMs = now + FT_MIN_REAL_S * 1000,
              untilHours = worldHours() + (minutes or 5) / 60, textKey = textKey or "UI_DanTraits_ComeTo",
@@ -135,6 +157,7 @@ local function onFaintTick()
         hold.wounds = n
     end
     setBlocked(player, true)
+    if vehicleOf(player) then return end   -- the seat holds you
     if now - hold.startMs >= FT_SETTLE_MS then
         local sitting = false
         pcall(function() sitting = player:isSitOnGround() end)

@@ -7,6 +7,19 @@
 --   scores a little better.
 -- Meal Prepper: a new character's diet score starts high, and variety is
 --   counted over five days instead of three.
+-- Night Shift: sleeping by day costs little. Between 6 AM and 8 PM, light
+--   wakes you a quarter as easily and bright light costs a quarter of the rest
+--   and the night's score (the sleepWake and sleepBright hooks of
+--   DanTraits_Sleep.lua). Not with Early Riser.
+-- Hollow Legs: every drink goes to your head a fifth less (the intoxication a
+--   drink adds, through the drink action; so it takes more to dull pain too,
+--   since drink relief follows the Drunk moodle), and a hangover is milder
+--   (x0.6) and shorter (x0.7). Not with Straight Edge.
+-- Fast Recovery (8: over vanilla Fast Healer's 6, which it contains): vanilla
+--   Fast Healer folded in (granted with it), and after
+--   blood loss the volume and the red cells come back half as fast again
+--   (the bloodVolRefill and bloodCellRebuild hooks of DanTraits_Blood.lua).
+--   Not with Fast Healer (it is already in here) or Slow Healer.
 -- The one-shot starts are applied once, to a new character, like Gym
 -- Regular; the hooks run for as long as the trait is there.
 require "DanTraits"
@@ -20,6 +33,14 @@ local ER_SLEEP_START    = 0.8     -- Vitality sleep score for a new character
 local ER_NIGHT_BONUS    = 0.1     -- added to every night's quality
 local MP_DIET_START     = 0.8     -- Vitality diet score for a new character
 local MP_VARIETY_HOURS  = 120     -- variety window (Vitality's default is 72)
+local NS_DAY_FROM       = 6       -- Night Shift: the day, by the clock...
+local NS_DAY_TO         = 20
+local NS_WAKE           = 0.25    -- ...light wakes you x this
+local NS_BRIGHT         = 0.25    -- ...bright light's cost x this
+local HL_INTOX          = 0.8     -- Hollow Legs: intoxication a drink adds x this
+local HL_SEVERITY       = 0.6     -- hangover severity x this
+local HL_HOURS          = 0.7     -- hangover length x this
+local FR_BLOOD          = 1.5     -- Fast Recovery: blood volume and red cells come back x this
 
 -- Iron Stomach ---------------------------------------------------------------
 DanTraits_AddHook("foodGrade", function(grade, player, item, why)
@@ -55,9 +76,69 @@ DanTraits_AddHook("varietyHours", function(hours)
     return MP_VARIETY_HOURS
 end)
 
--- the one-shot starts
+-- Night Shift ----------------------------------------------------------------
+local function daytime()
+    local hour = 12
+    pcall(function() hour = getGameTime():getHour() end)
+    return hour >= NS_DAY_FROM and hour < NS_DAY_TO
+end
+
+DanTraits_AddHook("sleepWake", function(m, player)
+    if not hasTrait(player, "nightshift") or not daytime() then return nil end
+    return m * NS_WAKE
+end)
+DanTraits_AddHook("sleepBright", function(k, player)
+    if not hasTrait(player, "nightshift") or not daytime() then return nil end
+    return k * NS_BRIGHT
+end)
+
+-- Hollow Legs ----------------------------------------------------------------
+DanTraits_AddHook("hangoverSeverity", function(severity, player)
+    if not hasTrait(player, "hollowlegs") then return nil end
+    return severity * HL_SEVERITY
+end)
+DanTraits_AddHook("hangoverHours", function(hours, player)
+    if not hasTrait(player, "hollowlegs") then return nil end
+    return hours * HL_HOURS
+end)
+
+-- the intoxication one sip added, cut
+local function hollowSip(player, before)
+    if not player or not before or not hasTrait(player, "hollowlegs") then return end
+    pcall(function()
+        local stats = player:getStats()
+        local after = stats:get(CharacterStat.INTOXICATION) or before
+        if after > before then stats:set(CharacterStat.INTOXICATION, before + (after - before) * HL_INTOX) end
+    end)
+end
+DanTraits_HollowLegsSip = hollowSip
+
+local function wrapHollowLegs()
+    DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "hollowlegs-drink", function(original, self, ...)
+        local before
+        pcall(function() before = self.character:getStats():get(CharacterStat.INTOXICATION) end)
+        local result = original(self, ...)
+        hollowSip(self.character, before)
+        return result
+    end)
+end
+wrapHollowLegs()
+Events.OnGameStart.Add(wrapHollowLegs)
+
+-- Fast Recovery --------------------------------------------------------------
+DanTraits_AddHook("bloodVolRefill", function(gain, player)
+    if not hasTrait(player, "fastrecovery") then return nil end
+    return gain * FR_BLOOD
+end)
+DanTraits_AddHook("bloodCellRebuild", function(rate, player)
+    if not hasTrait(player, "fastrecovery") then return nil end
+    return rate * FR_BLOOD
+end)
+
+-- the one-shot starts, and the vanilla trait Fast Recovery carries
 local function onPositivesCreate(player)
     if not player then return end
+    DanTraits_GrantFoldIn(player, "fastrecovery", "FAST_HEALER", "frHealerGranted")
     local hours = 0
     pcall(function() hours = player:getHoursSurvived() or 0 end)
     if hours > 0 then return end

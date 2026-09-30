@@ -10,8 +10,9 @@
 -- back, tiredness, and nausea after a really heavy one. A drink while
 -- hungover hides the symptoms and stops the clock, and counts toward the
 -- next one. The night's sleep is scored lower too. Alcohol tolerance
--- (Alcoholic) blunts it a little. Hook offered: hangoverSeverity (the
--- severity from the night's load, before the tolerance cut; Age).
+-- (Alcoholic) blunts it a little. Hooks offered: hangoverSeverity (the
+-- severity from the night's load, before the tolerance cut; Age, Hollow Legs)
+-- and hangoverHours (how long a new one lasts; Hollow Legs).
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -65,7 +66,8 @@ local floorUp = DanTraits_FloorUp
 local function startHangover(player, d)
     d.hoActive = true
     d.hoPending = false
-    d.hoHoursLeft = math.max(d.hoHoursLeft or 0, HO_BASE_HOURS + HO_EXTRA_HOURS * d.hoSeverity)
+    local hours = DanTraits_RunHooks("hangoverHours", HO_BASE_HOURS + HO_EXTRA_HOURS * d.hoSeverity, player)   -- Hollow Legs
+    d.hoHoursLeft = math.max(d.hoHoursLeft or 0, hours)
     local tier = 0
     for i, threshold in ipairs(HO_TIER) do if d.hoSeverity >= threshold then tier = i end end
     notify(player, "UI_DanTraits_Hangover" .. math.max(1, tier))
@@ -149,7 +151,6 @@ local function updateHangoverMinute(player, d)
         end
     end)
 end
-DanTraits_updateHangoverMinute = updateHangoverMinute
 
 -- the night's sleep is worse for it
 DanTraits_AddHook("nightQuality", function(quality, player, d)

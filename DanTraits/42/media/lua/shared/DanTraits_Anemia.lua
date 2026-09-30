@@ -59,7 +59,6 @@ local function addIron(player, amount, what)
     d.anLastIron = what
     return true
 end
-DanTraits_AddIron = addIron
 
 DanTraits_AddHook("eat", function(_, player, item, fraction)
     if not player or not item or not hasTrait(player, "anemia") then return nil end
@@ -114,7 +113,6 @@ local function updateAnemiaMinute(player, d)
         if not asleep then stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + AN_FATIGUE * deficit)) end
     end)
 end
-DanTraits_updateAnemiaMinute = updateAnemiaMinute
 
 -- slower endurance recovery and easier colds go through the stat delta pipeline
 -- (DanTraits_Util.lua): Anemia only says by how much, the pipeline applies it
