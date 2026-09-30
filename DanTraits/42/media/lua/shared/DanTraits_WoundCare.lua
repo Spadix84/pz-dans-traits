@@ -134,7 +134,7 @@ local function strain(player, part, tearChance, reopenChance)
     local s = stitchStrength(part)
     if is(part, "bandaged") then tearChance, reopenChance = tearChance * WC_BANDAGE_HOLDS, reopenChance * WC_BANDAGE_HOLDS end
     if s then
-        if s < 1 and roll(tearChance * (1 - s)) then tearOpen(player, part) end
+        if s < 1 and roll(DanTraits_RunHooks("stitchTear", tearChance * (1 - s), player, part)) then tearOpen(player, part) end   -- Steady Hands
     elseif num(part, "getDeepWoundTime") > 0 and num(part, "getBleedingTime") <= 0 then
         if roll(reopenChance) then openAgain(player, part) end
     end
@@ -147,11 +147,11 @@ local function badSetChance(level)
 end
 DanTraits_BadSetChance = badSetChance
 
-function DanTraits_OnSplintSet(patient, part, level)
+function DanTraits_OnSplintSet(patient, part, level, setter)
     if not patient or not part or not sandboxOn() then return false end
     local d = wcData(patient)
     local rec = recOf(d, tostring(part:getType()))
-    rec.badSet = roll(badSetChance(level)) or nil
+    rec.badSet = roll(DanTraits_RunHooks("splintBadSet", badSetChance(level), setter or patient)) or nil   -- Steady Hands
     if rec.badSet then
         pcall(function() part:setSplintFactor(part:getSplintFactor() * WC_BADSET_FACTOR) end)
         -- only someone who knows bones can tell
@@ -291,7 +291,7 @@ local function wrapSplint()
         local result = original(self, ...)
         pcall(function()
             if self.doIt and self.bodyPart and self.bodyPart:isSplint() then
-                DanTraits_OnSplintSet(self.otherPlayer or self.character, self.bodyPart, self.doctorLevel or 0)
+                DanTraits_OnSplintSet(self.otherPlayer or self.character, self.bodyPart, self.doctorLevel or 0, self.character)
             end
         end)
         return result

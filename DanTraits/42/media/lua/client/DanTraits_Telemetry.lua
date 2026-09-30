@@ -201,6 +201,16 @@ local function snapshot(player)
     out.derived = derived
     if DanTraits_AttribReport then out.attrib = safe(function() return DanTraits_AttribReport(player) end) end
     if DanTraits_ActiveMoodles then out.moodles = safe(function() return DanTraits_ActiveMoodles(player) end) end
+    -- this mod's own moodle levels (DanTraits_Moodles.lua): 1..4 bad, -1 good; only the ones showing
+    if DanTraits_MoodleLevels then
+        out.modMoodles = safe(function()
+            local showing = {}
+            for name, level in pairs(DanTraits_MoodleLevels(player, out.mod or {})) do
+                if level ~= 0 then showing[name] = level end
+            end
+            return showing
+        end)
+    end
     if #log > 0 then out.log = log end   -- an empty Lua table would encode as {} and confuse the page
     if #story > 0 then out.story = story end
     return out

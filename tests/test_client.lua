@@ -3,7 +3,8 @@
 -- records what was offered: the inhaler option greys when empty and the vanilla pill option is
 -- removed; the insulin submenu greys doses above what is left (and the whole option for a
 -- non-diabetic or an empty pen); the glucose meter needs strips; Vegetarian greys Eat (and the
--- item's custom option) on meat; iron pills and nicotine gum; isTraitEnabled hides Wakeful (and
+-- item's custom option) on meat; iron pills, nicotine gum, anticonvulsants and sun block;
+-- the moodles DanTraits_Moodles.lua lists are created; isTraitEnabled hides Wakeful (and
 -- Deep Sleeper on a no-sleep server) from character creation.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
@@ -20,7 +21,8 @@ ISTimedActionQueue = { add = function(action) queued[#queued + 1] = action end }
 ISUseInhalerAction = { new = function(_, player, item) return { kind = "inhaler", item = item } end }
 ISDiabetesAction = { new = function(_, player, item, kind, doses, strips)
   return { kind = kind, item = item, doses = doses, strips = strips } end }
-ISVitalityPillAction = { new = function(_, player, item, label) return { kind = "vitality", item = item, label = label } end }
+ISVitalityPillAction = { new = function(_, player, item, label, anim, time)
+  return { kind = "vitality", item = item, label = label, anim = anim, time = time } end }
 SandboxOptionsScreen = { setSandboxVars = function() end }
 MainScreen = { instance = {} }
 CharacterCreationProfession = { isTraitEnabled = function() return true end, setVisible = function(self, v) self._shown = v end,
@@ -34,12 +36,23 @@ local function isKind(kind) return function(item) return item._kind == kind end 
 DanTraits_IsInhaler, DanTraits_IsInsulin, DanTraits_IsMeter = isKind("inhaler"), isKind("insulin"), isKind("meter")
 DanTraits_IsStrips, DanTraits_IsMetformin = isKind("strips"), isKind("metformin")
 DanTraits_IsIronPills, DanTraits_IsNicotineGum = isKind("iron"), isKind("gum")
+DanTraits_IsAnticonvulsants, DanTraits_IsSunblock = isKind("anticonvulsants"), isKind("sunblock")
+-- Moodle Framework, and the list of moodles the shared file hands the client
+local created = {}
+MF = { createMoodle = function(name) created[#created + 1] = name end }
+DanTraits_MoodleNames = { "ChestPain", "Sunburn" }
 local diabetic = true
 DanTraits_IsDiabetic = function() return diabetic end
-DanTraits_RefusesFood = function(_, item) return item._kind == "meat" end
+DanTraits_RefuseReason = function(_, item)
+  if item._kind == "meat" then return "UI_DanTraits_VegetarianRefuse" end
+  if item._kind == "cigs" then return "UI_DanTraits_StraightEdgeRefuse" end
+end
 
 H.load("client/DanTraits_Client.lua")
 H.expectHooks("OnFillInventoryObjectContextMenu", "OnGameBoot", "OnMainMenuEnter")
+assert(#created == 10 and created[1] == "AirwayIrritation" and created[9] == "ChestPain" and created[10] == "Sunburn",
+  "the eight older moodles, then the listed ones")
+MF = nil
 
 -- an item: kind and uses left
 local function item(kind, uses, extra)
@@ -152,6 +165,9 @@ assert(eat.options[2].notAvailable, "the custom eat option too")
 local bread = menu({ "ContextMenu_Eat" })
 H.fire("OnFillInventoryObjectContextMenu", 0, bread, { item("bread", 1) })
 assert(not bread.options[1].notAvailable, "bread: left alone")
+local smoke = menu({ "ContextMenu_Eat", "Smoke" })
+H.fire("OnFillInventoryObjectContextMenu", 0, smoke, { item("cigs", 1, { getCustomMenuOption = function() return "Smoke" end }) })
+assert(smoke.options[2].notAvailable and tip(smoke.options[2]) == "Tooltip_DanTraits_StraightEdgeRefuse", "Straight Edge: Smoke greyed with its own reason")
 local noEat = menu({})
 H.fire("OnFillInventoryObjectContextMenu", 0, noEat, { meat })   -- no Eat option on the menu: no error
 assert(#noEat.options == 0, "no Eat option: nothing to grey")
@@ -165,6 +181,18 @@ m = open({ item("gum", 2) }, { "ContextMenu_Take_pills" })
 assert(m.options[1].name == "ContextMenu_DanTraits_ChewGum", "gum offered")
 choose(m.options[1]); assert(queued[#queued].label == "ContextMenu_DanTraits_ChewGum", "gum action carries its label")
 m = open({ item("gum", 0) }); assert(tip(m.options[1]) == "Tooltip_DanTraits_NicotineGumEmpty", "empty gum greyed")
+
+-- 6b. anticonvulsants and sun block: their own options; sun block is rubbed in, not swallowed
+m = open({ item("anticonvulsants", 5) }, { "ContextMenu_Take_pills" })
+assert(m.removed[1] == "ContextMenu_Take_pills" and m.options[1].name == "ContextMenu_DanTraits_TakeAnticonvulsant", "anticonvulsants offered")
+m = open({ item("sunblock", 8) }, { "ContextMenu_Take_pills" })
+assert(m.removed[1] == "ContextMenu_Take_pills" and #m.options == 1, "no pill option on sun block")
+o = m.options[1]
+assert(o.name == "ContextMenu_DanTraits_ApplySunblock" and not o.notAvailable, "sun block offered")
+choose(o)
+assert(queued[#queued].kind == "vitality" and queued[#queued].label == "ContextMenu_DanTraits_ApplySunblock", "the action carries its label")
+assert(queued[#queued].anim == "WashFace" and queued[#queued].time == 150, "rubbed in, and it takes a little longer")
+m = open({ item("sunblock", 0) }); assert(tip(m.options[1]) == "Tooltip_DanTraits_SunblockEmpty", "empty sun block greyed")
 
 -- 7. character creation: Wakeful (needs-less-sleep) is hidden, Deep Sleeper follows the server's sleep rule
 local function trait(kind) return { getType = function() return kind end } end

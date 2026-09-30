@@ -117,6 +117,8 @@ local function extraLines(part, level, patient)
             end
         end
     end
+    -- sunburn (not a wound: anyone can see it)
+    if d.sbBurn and (d.sbBurn[name] or 0) > 0 then out[#out + 1] = { t("Sunburnt"), ORANGE } end
     -- the bone
     local fracture = num(part, "getFractureTime")
     if fracture > 0 then

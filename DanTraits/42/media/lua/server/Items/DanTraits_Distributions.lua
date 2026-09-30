@@ -3,7 +3,9 @@
 -- bottles: common wherever medicine is kept, rare in pockets and bags.
 -- Weights are relative to the other entries in the same list (for scale:
 -- beta blockers are 1 in a bathroom cabinet, 20 in a doctor's bag, 0.1 on a
--- zombie). Insulin also turns up in fridges, where people keep it.
+-- zombie). Insulin also turns up in fridges, where people keep it. Sun block
+-- is not medicine: it is as common as toothpaste (10 in a bathroom cabinet,
+-- 20 on a toiletry shelf), and turns up in lockers, camping gear and glove boxes.
 require "Items/ProceduralDistributions"
 require "Items/Distributions"
 
@@ -105,6 +107,49 @@ local ITEMS = {
         },
         bags = { HandbagsAndPurses = 0.02 },
         clutter = { ClosetItems = 0.01 },
+    },
+    {
+        -- Epilepsy: a prescription like metformin, a little rarer
+        name = "DanTraits.Anticonvulsants",
+        procedural = {
+            BathroomCabinet = 0.8, BathroomCounter = 0.4, BathroomShelf = 0.4,
+            MedicalCabinet = 2, MedicalClinicDrugs = 4, MedicalStorageDrugs = 6, HospitalRoomShelves = 4,
+            DoctorTools = 5, NurseTools = 2, AmbulanceDriverTools = 1, StoreShelfMedical = 2,
+            SafehouseMedical = 5, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
+            DerelictHouseDrugs = 0.5, DrugShackDrugs = 0.5, ArmyStorageMedical = 2, TestingLab = 3,
+            KitchenRandom = 0.05,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.8 },
+            { { "all", "inventoryfemale", "items" }, 0.08 },
+            { { "all", "inventorymale", "items" }, 0.08 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 3 },
+        },
+        bags = { HandbagsAndPurses = 0.02 },
+        clutter = { ClosetItems = 0.01 },
+    },
+    {
+        -- common, like the other toiletries (for scale: toothpaste is 10 in a
+        -- bathroom cabinet and 20 on a shop's toiletry shelf, a comb 6)
+        name = "DanTraits.Sunblock",
+        procedural = {
+            BathroomCabinet = 8, BathroomCounter = 8, BathroomCounterNoMeds = 8, BathroomShelf = 6,
+            GigamartToiletries = 15, GasStoreToiletries = 12, PharmacyCosmetics = 10, GigamartCosmetics = 8,
+            StoreShelfMedical = 4,
+            PoolLockers = 15, GolfLockers = 8, BaseballLockers = 6, GymLockers = 4, FishingLockers = 6,
+            SeasonalWorkerLockers = 8, RangerLockers = 6, SchoolLockers = 1, Locker = 1, LockerClassy = 2,
+            CampingStoreGear = 10, CampingLockers = 8, CrateCamping = 6, FishingStoreGear = 6,
+            SportStoreAccessories = 4,
+            BedroomDresser = 1, BedroomSidetable = 1, DresserGeneric = 1,
+        },
+        suburbs = {
+            { { "all", "inventoryfemale", "items" }, 0.2 },
+            { { "all", "inventorymale", "items" }, 0.1 },
+            { { "Bag_FannyPackFront", "items" }, 0.5 },
+            { { "Bag_FannyPackBack", "items" }, 0.5 },
+        },
+        bags = { HandbagsAndPurses = 1 },
+        clutter = { ClosetItems = 0.5, GloveBoxItems = 2 },
     },
     {
         name = "DanTraits.IronPills",

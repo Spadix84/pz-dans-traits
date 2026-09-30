@@ -185,7 +185,7 @@ local function refill(player, d, stats, asleep)
     if d.bloodVol < 1 then
         local thirst = fraction(stats, CharacterStat.THIRST)
         local rate = clamp01((BL_THIRST_DRY - thirst) / (BL_THIRST_DRY - BL_THIRST_OK))
-        local gain = math.min(1 - d.bloodVol, BL_VOL_DAY / 1440 * rate)
+        local gain = math.min(1 - d.bloodVol, DanTraits_RunHooks("bloodVolRefill", BL_VOL_DAY / 1440 * rate, player, d))
         if gain > 0 then
             d.bloodVol = d.bloodVol + gain
             pcall(function() stats:set(CharacterStat.THIRST, math.min(1, (stats:get(CharacterStat.THIRST) or 0) + gain * BL_VOL_THIRST)) end)

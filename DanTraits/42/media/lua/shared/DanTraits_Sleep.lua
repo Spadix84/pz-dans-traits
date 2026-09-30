@@ -20,7 +20,9 @@
 --     six hours, less for a smaller one: x2 while it lasts. A smoker clears
 --     it faster, so theirs wears off sooner.
 --   Other trait files add their own through the "sleepWake" hook
---     (a depressive episode, a migraine).
+--     (a depressive episode, a migraine, Night Shift by day, Tinnitus).
+--   The cost of bright light (slower rest, a worse score) goes through the
+--     "sleepBright" hook (Night Shift by day).
 --   A wound infection's fever, anyone: the night scores x0.7 at full fever
 --     and light wakes you x1.5 as easily.
 --   Deep Sleeper: x0.25.
@@ -90,7 +92,7 @@ DanTraits_SleepLight = lightLevel
 local function scaled(player, dark, good, bad)
     local deep = hasTrait(player, "deepsleeper")
     if dark > 0 then return good * dark * (deep and DS_REST_DARK or 1) end
-    return bad * dark * (deep and DS_REST_BRIGHT or 1)
+    return bad * dark * DanTraits_RunHooks("sleepBright", deep and DS_REST_BRIGHT or 1, player)   -- Night Shift
 end
 
 -- how easily light wakes this character: 1 is everyone

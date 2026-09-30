@@ -19,6 +19,9 @@
 --     iron        0..1, how much of a full meat portion of iron it carries (1
 --                 for meat, fish, game and insects by type or name, else 0)
 --     egg         an egg           greens   vegetables, herbs, beans
+--     dairy       milk, cheese, butter, cream, yogurt, ice cream by name, or a
+--                 dairy ingredient in a dish (Lactose Intolerance); fluids are
+--                 not items here: Lactose reads the fluid's name
 --     caffeine    caffeine in one whole item (0 for none); fluids and pills are
 --                 not items here: Caffeine keeps its per-litre and pill tables
 --     canned      "canned" or "dried" in the name
@@ -54,7 +57,7 @@
 --   chips         not wheat (crisps, corn chips) but junk; chipsbowl is not junk
 -- Food types come from a second small table (FOOD_TYPES, whole lowercase
 -- name). Dish ingredients (an evolved dish lists its parts as "Base.Steak")
--- contribute meat and wheat only: junk, sugar and iron stay the dish's own.
+-- contribute meat, wheat and dairy only: junk, sugar and iron stay the dish's own.
 
 local FOOD_WORDS = {
     -- candy, snacks and soda: junk, and mostly fast sugar
@@ -63,7 +66,7 @@ local FOOD_WORDS = {
     toffee = { junk = true, fastCarb = true }, fudge = { junk = true, fastCarb = true },
     sugar = { junk = true, fastCarb = true }, chocolate = { junk = true, fastCarb = true },
     soda = { junk = true, fastCarb = true }, cola = { junk = true, fastCarb = true },
-    icecream = { junk = true, fastCarb = true },
+    icecream = { junk = true, fastCarb = true, dairy = true },
     chips = { junk = true }, crisps = { junk = true }, pop = { junk = true }, gum = { junk = true },
     doughnut = { junk = true }, tvdinner = { junk = true }, twinkie = { junk = true }, hostess = { junk = true },
     poptart = { junk = true }, candycane = { junk = true }, gummy = { junk = true },
@@ -76,10 +79,11 @@ local FOOD_WORDS = {
     waffle = { wheat = true, fastCarb = true }, cereal = { wheat = true, fastCarb = true },
     -- wheat: bread, pasta, dough
     bread = { wheat = true }, bagel = { wheat = true }, baguette = { wheat = true }, croissant = { wheat = true },
-    pasta = { wheat = true }, macaroni = { wheat = true }, spaghetti = { wheat = true }, lasagn = { wheat = true },
+    pasta = { wheat = true }, macaroni = { wheat = true }, spaghetti = { wheat = true },
     ramen = { wheat = true }, noodle = { wheat = true }, cracker = { wheat = true }, dough = { wheat = true },
-    sandwich = { wheat = true }, pizza = { wheat = true }, beer = { wheat = true }, biscuit = { wheat = true },
+    sandwich = { wheat = true }, beer = { wheat = true }, biscuit = { wheat = true },
     pretzel = { wheat = true }, flour = { wheat = true }, toast = { wheat = true }, buns = { wheat = true },
+    pizza = { wheat = true, dairy = true }, lasagn = { wheat = true, dairy = true }, macandcheese = { wheat = true, dairy = true },
     steambun = { wheat = true }, pastry = { wheat = true }, tortilla = { wheat = true }, burrito = { wheat = true },
     dumpling = { wheat = true },
     burger = { wheat = true, meat = true },
@@ -91,8 +95,8 @@ local FOOD_WORDS = {
     peach = { fastCarb = true }, pear = { fastCarb = true }, melon = { fastCarb = true },
     mango = { fastCarb = true }, pineapple = { fastCarb = true }, lemon = { fastCarb = true },
     lime = { fastCarb = true }, raisin = { fastCarb = true }, fruit = { fastCarb = true },
-    milk = { fastCarb = true }, yogurt = { fastCarb = true }, pudding = { fastCarb = true },
-    custard = { fastCarb = true }, jelly = { fastCarb = true }, granola = { fastCarb = true },
+    milk = { fastCarb = true, dairy = true }, yogurt = { fastCarb = true, dairy = true }, pudding = { fastCarb = true, dairy = true },
+    custard = { fastCarb = true, dairy = true }, jelly = { fastCarb = true }, granola = { fastCarb = true },
     -- meat: the ones that carry iron too, then the rest of the flesh, fish, insects and pet food
     meat = { meat = true, iron = 1 }, beef = { meat = true, iron = 1 }, pork = { meat = true, iron = 1 },
     chicken = { meat = true, iron = 1 }, fish = { meat = true, iron = 1 }, venison = { meat = true, iron = 1 },
@@ -115,6 +119,8 @@ local FOOD_WORDS = {
     egg = { egg = true },
     vegetables = { greens = true }, greens = { greens = true }, herb = { greens = true },
     beans = { greens = true }, leafy = { greens = true },
+    -- dairy only (Lactose Intolerance's words)
+    cheese = { dairy = true }, butter = { dairy = true }, cream = { dairy = true }, dairy = { dairy = true },
 }
 
 -- a word in the name that cancels one tag (never the others)
@@ -124,6 +130,7 @@ local FOOD_SAFE = {
     cornflour = { wheat = true }, rice = { wheat = true },
     graham = { meat = true }, kidneybean = { meat = true }, gooseberr = { meat = true }, crabapple = { meat = true },
     grated = { meat = true }, eggplant = { meat = true, egg = true },
+    peanutbutter = { dairy = true }, butternut = { dairy = true }, coconutmilk = { dairy = true },
 }
 
 -- whole-name rules: a number sets a tag, false cancels it
@@ -184,6 +191,7 @@ local function scanName(name)
         wheat = (hit.wheat and not safe.wheat) == true, fastCarb = hit.fastCarb == true,
         meat = (hit.meat and not safe.meat) == true, egg = (hit.egg and not safe.egg) == true,
         greens = hit.greens == true, iron = hit.iron or 0, caffeine = hit.caffeine or 0,
+        dairy = (hit.dairy and not safe.dairy) == true,
         canned = string.find(name, "canned", 1, true) ~= nil or string.find(name, "dried", 1, true) ~= nil,
     }
 end
@@ -228,6 +236,7 @@ end
 -- the tags read on first use; (item, entry) -> value, never nil
 local LAZY = {
     wheat = function(item, entry) return entry.tags.wheat or ingredientHas(item, "wheat") end,
+    dairy = function(item, entry) return entry.tags.dairy or ingredientHas(item, "dairy") end,
     meat = function(item, entry) return entry.tags.meat or typeTags(item, entry).meat == true or ingredientHas(item, "meat") end,
     iron = function(item, entry)
         if entry.tags.iron > 0 then return entry.tags.iron end

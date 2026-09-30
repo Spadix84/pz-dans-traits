@@ -8,6 +8,7 @@ module DanTraits {
         Cost = -2,
         UIName = UI_trait_DanDependent,
         UIDescription = UI_trait_DanDependentdesc,
+        MutuallyExclusiveTraits = DanTraits:straightedge,
     }
 
     character_trait_definition DanTraits:brittle
@@ -48,7 +49,7 @@ module DanTraits {
         Cost = -12,
         UIName = UI_trait_DanBadDay,
         UIDescription = UI_trait_DanBadDaydesc,
-        MutuallyExclusiveTraits = DanTraits:hemophilia,
+        MutuallyExclusiveTraits = DanTraits:hemophilia;DanTraits:straightedge,
     }
 
     character_trait_definition DanTraits:schizophrenia
@@ -210,6 +211,7 @@ module DanTraits {
         Cost = 1,
         UIName = UI_trait_DanEarlyRiser,
         UIDescription = UI_trait_DanEarlyRiserdesc,
+        MutuallyExclusiveTraits = DanTraits:nightshift,
     }
 
     character_trait_definition DanTraits:mealprepper
@@ -321,6 +323,130 @@ module DanTraits {
         MutuallyExclusiveTraits = base:athletic,
     }
 
+    /* Chest pain, and at worst a heart attack, only ever while the Endurance
+       moodle shows; beta blockers are the medication. DanTraits_Heart.lua. */
+    character_trait_definition DanTraits:heart
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:heart,
+        Cost = -10,
+        UIName = UI_trait_DanHeart,
+        UIDescription = UI_trait_DanHeartdesc,
+    }
+
+    /* Seizures brought on by tiredness, withdrawal, fever, concussion and
+       stress; anticonvulsants (a new item). DanTraits_Epilepsy.lua. */
+    character_trait_definition DanTraits:epilepsy
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:epilepsy,
+        Cost = -6,
+        UIName = UI_trait_DanEpilepsy,
+        UIDescription = UI_trait_DanEpilepsydesc,
+    }
+
+    /* A burst of gunfire puts vanilla Hard of Hearing on for a while.
+       DanTraits_Tinnitus.lua. */
+    character_trait_definition DanTraits:tinnitus
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:tinnitus,
+        Cost = -2,
+        UIName = UI_trait_DanTinnitus,
+        UIDescription = UI_trait_DanTinnitusdesc,
+        MutuallyExclusiveTraits = base:hardofhearing;base:deaf,
+    }
+
+    /* Dairy brings a mild flare, like Gluten Intolerance. DanTraits_Lactose.lua. */
+    character_trait_definition DanTraits:lactose
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:lactose,
+        Cost = -1,
+        UIName = UI_trait_DanLactose,
+        UIDescription = UI_trait_DanLactosedesc,
+    }
+
+    /* Stress and low mood while dirty or bloody; wounds a little less likely
+       to take an infection. DanTraits_Germaphobe.lua. */
+    character_trait_definition DanTraits:germaphobe
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:germaphobe,
+        Cost = -3,
+        UIName = UI_trait_DanGermaphobe,
+        UIDescription = UI_trait_DanGermaphobedesc,
+    }
+
+    /* Refuses alcohol and tobacco. DanTraits_StraightEdge.lua. */
+    character_trait_definition DanTraits:straightedge
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:straightedge,
+        Cost = -1,
+        UIName = UI_trait_DanStraightEdge,
+        UIDescription = UI_trait_DanStraightEdgedesc,
+        MutuallyExclusiveTraits = DanTraits:dependent;base:smoker;DanTraits:hollowlegs;DanTraits:badday,
+    }
+
+    /* Dexterous folded in (granted with it), plus better splints, stitches
+       that hold and quicker surgery. DanTraits_SteadyHands.lua. */
+    character_trait_definition DanTraits:steadyhands
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:steadyhands,
+        Cost = 5,
+        UIName = UI_trait_DanSteadyHands,
+        UIDescription = UI_trait_DanSteadyHandsdesc,
+        MutuallyExclusiveTraits = base:dextrous;base:allthumbs,
+    }
+
+    /* Sleeping by day costs little. DanTraits_Positives.lua. */
+    character_trait_definition DanTraits:nightshift
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:nightshift,
+        Cost = 1,
+        UIName = UI_trait_DanNightShift,
+        UIDescription = UI_trait_DanNightShiftdesc,
+        MutuallyExclusiveTraits = DanTraits:earlyriser,
+    }
+
+    /* Drink goes to your head slower; milder, shorter hangovers.
+       DanTraits_Positives.lua. */
+    character_trait_definition DanTraits:hollowlegs
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:hollowlegs,
+        Cost = 1,
+        UIName = UI_trait_DanHollowLegs,
+        UIDescription = UI_trait_DanHollowLegsdesc,
+        MutuallyExclusiveTraits = DanTraits:straightedge,
+    }
+
+    /* Fast Healer folded in (granted with it), and blood comes back faster
+       after a bleed. Priced over vanilla Fast Healer (6), which it contains.
+       DanTraits_Positives.lua. */
+    character_trait_definition DanTraits:fastrecovery
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:fastrecovery,
+        Cost = 8,
+        UIName = UI_trait_DanFastRecovery,
+        UIDescription = UI_trait_DanFastRecoverydesc,
+        MutuallyExclusiveTraits = base:fasthealer;base:slowhealer,
+    }
+
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler
@@ -429,6 +555,42 @@ module DanTraits {
         Medical = true,
         Tooltip = Tooltip_DanTraits_NicotineGum,
         UseDelta = 0.1,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Anticonvulsants for Epilepsy: 30 pills, one every 12 hours keeps
+       seizures down. Its own action (ISVitalityPillAction), found with the
+       other prescriptions (media/lua/server/Items/DanTraits_Distributions.lua). */
+    item Anticonvulsants
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Anticonvulsants,
+        Weight = 0.2,
+        Icon = Anticonvulsants,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Anticonvulsants,
+        UseDelta = 0.0334,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Sun block: 8 applications, each keeps the sun off bare skin for 8 hours
+       (media/lua/shared/DanTraits_Sunburn.lua). Its own action
+       (ISVitalityPillAction). Common: bathrooms, toiletry shelves, lockers,
+       camping gear (media/lua/server/Items/DanTraits_Distributions.lua). */
+    item Sunblock
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Sun Block,
+        Weight = 0.2,
+        Icon = Sunblock,
+        Tooltip = Tooltip_DanTraits_Sunblock,
+        UseDelta = 0.125,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,

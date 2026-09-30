@@ -292,6 +292,7 @@ local function updateDiabetesMinute(player, d)
     diaHalo(player, d, low, high)
     if (d.diaFaintGap or 0) > 0 then d.diaFaintGap = d.diaFaintGap - 1 end
     d.diaFumble = low > 0 and DIA_LOW_FUMBLE[low] or 0
+    d.diaLow = low > 0 and low or nil
     if low == 0 and high == 0 then return end
 
     pcall(function()
@@ -323,6 +324,13 @@ local function updateDiabetesMinute(player, d)
     end)
 end
 DanTraits_updateDiabetesMinute = updateDiabetesMinute
+
+-- 0..1 how bad a low is now (a third a tier), 0 for anyone else; Epilepsy and
+-- Steady Hands read it
+function DanTraits_DiaLow(player)
+    if not player or not diaHas(player) then return 0 end
+    return (diaData(player).diaLow or 0) / #DIA_LOW
+end
 
 -- shakiness adds to every weapon swing, Fumbler or not
 function DanTraits_ExtraFumble(player)

@@ -39,5 +39,11 @@ option DanTraits.HangoverEnabled
 option DanTraits.DrinkReliefEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsDrinkReliefEnabled,}
 
+option DanTraits.SunburnEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsSunburnEnabled,}
+
+option DanTraits.DehydrationEnabled
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsDehydrationEnabled,}
+
 option DanTraits.DevTools
 {type = boolean, default = false, page = DanTraits, translation = DanTraitsDevTools,}

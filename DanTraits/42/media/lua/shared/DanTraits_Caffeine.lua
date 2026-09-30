@@ -134,6 +134,7 @@ local function fluidName(container)
     end)
     return name
 end
+DanTraits_FluidName = fluidName   -- the drink's fluid, lowercase ("coffee", "milk"); Lactose reads it
 
 local function fluidRatio(container)
     local ratio = 1

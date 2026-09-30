@@ -18,7 +18,10 @@ local function onFillContainer(roomName, containerType, container)
     if not items or items:size() == 0 then return end
 
     local item = items:get(ZombRand(items:size()))
-    if item then pcall(function() container:Remove(item) end) end
+    -- never an item the mod placed on purpose (A Really Bad Day's sewing kit)
+    local keep = false
+    pcall(function() keep = item:getModData().DanTraitsKeep == true end)
+    if item and not keep then pcall(function() container:Remove(item) end) end
 end
 
 Events.OnFillContainer.Add(onFillContainer)
