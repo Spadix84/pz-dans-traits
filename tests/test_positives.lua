@@ -7,7 +7,8 @@ H.events()
 H.stubs()
 H.load("Positives")
 H.expectHooks("OnCreatePlayer", "OnGameStart")
-H.expectEvery("minute", "Delta:foodSicknessRise")   -- Iron Stomach subscribes to the pipeline
+H.expectEvery("minute", "Delta:foodSicknessRise")
+H.expectEvery("minute", "GoodClotter")   -- Iron Stomach subscribes to the pipeline
 
 local near = H.near
 local minute = H.minute
@@ -72,5 +73,46 @@ assert(fr._traits["base:fasthealer"] and fr._adds == 1, "Fast Healer granted onc
 near(DanTraits_RunHooks("bloodVolRefill", 0.01, fr, {}), 0.015, 1e-9, "volume x1.5")
 near(DanTraits_RunHooks("bloodCellRebuild", 0.01, fr, {}), 0.015, 1e-9, "cells x1.5")
 near(DanTraits_RunHooks("bloodCellRebuild", 0.01, plain, {}), 0.01, 1e-9, "no trait: as is")
+
+
+-- 7. Good Clotter: a quarter less blood; whatever vanilla ran a bleed down by is taken off again
+local function bleeder(t, o)
+  o = o or {}
+  local q = { _time = t, _glass = o.glass or false }
+  function q:getBleedingTime() return self._time end
+  function q:setBleedingTime(v) self._time = v end
+  function q:haveGlass() return self._glass end
+  function q:haveBullet() return false end
+  return q
+end
+local b1, b2, shard = bleeder(8), bleeder(0), bleeder(5, { glass = true })
+local gc = H.player({ traits = { "goodclotter" }, parts = { b1, b2, shard } }); H.current = gc
+near(DanTraits_RunHooks("bloodBleed", 0.01, gc, b1, false), 0.0075, 1e-9, "a quarter less blood")
+near(DanTraits_RunHooks("bloodBleed", 0.01, plain, b1, false), 0.01, 1e-9, "no trait: as is")
+minute()
+near(b1._time, 8, 1e-9, "first minute: only remembered")
+b1._time = 7.5; minute()
+near(b1._time, 7, 1e-9, "vanilla took 0.5: another 0.5 off")
+b1._time = 6.8; minute()
+near(b1._time, 6.6, 1e-9, "vanilla took 0.2: another 0.2 off")
+b1._time = 9; minute()
+near(b1._time, 9, 1e-9, "a fresh wound on the part: left alone, remembered")
+b1._time = 0.2; minute()
+near(b1._time, 0.01, 1e-9, "never cut to nothing: the game ends the bleed itself")
+shard._time = 3; minute()
+near(shard._time, 3, 1e-9, "glass still in: left alone")
+b1._time = 0; minute()
+assert(gc._md.DanTraits.gcBleed == nil, "a stopped bleed is forgotten (and nothing else is bleeding but the shard)")
+assert(b2._time == 0, "a part that never bled: untouched")
+local pb = bleeder(8)
+local noclot = H.player({ parts = { pb } }); H.current = noclot
+minute(); pb._time = 7; minute(); near(pb._time, 7, 1e-9, "no trait: as vanilla")
+
+-- 8. Thick Skull: half the chance, a quarter less bad, heals half as fast again
+local ts = H.player({ traits = { "thickskull" } })
+near(DanTraits_RunHooks("concussionChance", 0.6, ts), 0.3, 1e-9, "half the chance")
+near(DanTraits_RunHooks("concussionScore", 0.8, ts), 0.6, 1e-9, "a quarter less bad")
+near(DanTraits_RunHooks("concussionHeal", 0.001, ts, {}), 0.0015, 1e-9, "heals x1.5")
+near(DanTraits_RunHooks("concussionChance", 0.6, plain), 0.6, 1e-9, "no trait: as is")
 
 H.pass()

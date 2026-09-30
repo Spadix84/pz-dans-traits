@@ -38,3 +38,5 @@ DanTraitsRegistry.steadyhands  = CharacterTrait.register("DanTraits:steadyhands"
 DanTraitsRegistry.nightshift   = CharacterTrait.register("DanTraits:nightshift")
 DanTraitsRegistry.hollowlegs   = CharacterTrait.register("DanTraits:hollowlegs")
 DanTraitsRegistry.fastrecovery = CharacterTrait.register("DanTraits:fastrecovery")
+DanTraitsRegistry.goodclotter  = CharacterTrait.register("DanTraits:goodclotter")
+DanTraitsRegistry.thickskull   = CharacterTrait.register("DanTraits:thickskull")

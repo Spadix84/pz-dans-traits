@@ -30,8 +30,10 @@
 -- A helmet (the head's clothing defense, CC_HELMET or more) makes a
 -- concussion less likely and less bad.
 --
--- Hook offered: concussionHeal (the score healed a minute, player, d);
--- Vitality speeds it up or slows it.
+-- Hooks offered: concussionHeal (the score healed a minute, player, d);
+-- Vitality speeds it up or slows it. concussionChance and concussionScore
+-- (a knock's chance and how bad, player), before a helmet's cut; Thick
+-- Skull lowers both.
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -100,6 +102,8 @@ end
 -- a knock: chance 0..1 that it concusses, and how bad (0..1)
 function DanTraits_KnockHead(player, chance, score)
     if not player or player:isDead() or not sandboxOn() then return 0 end
+    chance = DanTraits_RunHooks("concussionChance", chance, player)
+    score = DanTraits_RunHooks("concussionScore", score, player)
     if helmeted(player) then chance, score = chance * CC_HELMET_CHANCE, score * CC_HELMET_SCORE end
     if not roll(chance) then return 0 end
     local d = traitData(player)

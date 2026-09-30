@@ -140,4 +140,12 @@ H.minute()
 assert(not d.sbBurn and not d.sbExp and not d.sbBlockMin, "off: nothing")
 SandboxVars = nil
 
+-- 8. Outdoorsman: twice the sun to burn, on top of a tan
+local od = H.player({ vanilla = { "base:outdoorsman" } })
+local odd = DanTraits_Data(od)
+near(DanTraits_SunBurnMinutes(odd, od), 360, 1e-9, "Outdoorsman: six hours")
+odd.sbTan = 1
+near(DanTraits_SunBurnMinutes(odd, od), 1080, 1e-9, "Outdoorsman with a full tan: eighteen hours")
+near(DanTraits_SunBurnMinutes(odd, H.player()), 540, 1e-9, "no trait: nine")
+
 H.pass()
