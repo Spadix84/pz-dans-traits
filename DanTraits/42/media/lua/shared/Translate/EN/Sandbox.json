@@ -25,5 +25,7 @@
     "Sandbox_DanTraitsHangoverEnabled": "Hangovers",
     "Sandbox_DanTraitsHangoverEnabled_tooltip": "Drinking past a buzz builds a hangover for the morning after: headache, low mood, thirst, tiredness, and a worse night's sleep.<br>Off: no hangovers.",
     "Sandbox_DanTraitsDrinkReliefEnabled": "Drink Relief",
-    "Sandbox_DanTraitsDrinkReliefEnabled_tooltip": "Drink eases pain and panic in proportion to how drunk you are, instead of one sip counting as a full dose of painkiller and beta blocker.<br>Off: vanilla, any drink is a full dose."
+    "Sandbox_DanTraitsDrinkReliefEnabled_tooltip": "Drink eases pain and panic in proportion to how drunk you are, instead of one sip counting as a full dose of painkiller and beta blocker.<br>Off: vanilla, any drink is a full dose.",
+    "Sandbox_DanTraitsDevTools": "Developer Tools",
+    "Sandbox_DanTraitsDevTools_tooltip": "For testing the mod: writes a live readout for the companion dashboard and runs the commands it sends (items, stats, wounds). On by itself in debug mode; never in multiplayer.<br>Leave off for a normal game."
 }
