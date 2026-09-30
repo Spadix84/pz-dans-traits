@@ -104,7 +104,6 @@ local function mainSkills(player)
     end)
     return out
 end
-DanTraits_AgeMainSkills = mainSkills
 
 -- raise a skill by that many levels (not past 10) and put its XP at the new level
 local function addLevels(player, perk, count)

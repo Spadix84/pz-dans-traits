@@ -29,7 +29,6 @@
 -- on the same method, and the two chain, so both always run.
 require "DanTraits"
 
-local traitData = DanTraits_Data
 local fraction = DanTraits_StatFraction
 
 local ALC_PAIN_CUT   = { 20, 40, 60, 80 }    -- pain reduction floor by Drunk level 1..4
@@ -121,7 +120,6 @@ local function updateAlcoholMinute(player, d)
         d.alcPainCut = target
     end)
 end
-DanTraits_updateAlcoholMinute = updateAlcoholMinute
 
 -- Panic: decay each tick at (level / 4) of the beta-blocker rate ------------
 local function updateAlcoholFrame(player)
@@ -136,7 +134,6 @@ local function updateAlcoholFrame(player)
     pcall(function() mult = GameTime.getInstance():getThirtyFPSMultiplier() or 1 end)
     stats:set(CharacterStat.PANIC, math.max(0, panic - ALC_PANIC_RATE * (level / 4) * mult))
 end
-DanTraits_updateAlcoholFrame = updateAlcoholFrame
 
 DanTraits_Every("minute", "Alcohol", updateAlcoholMinute, 40)
 DanTraits_Every("frame", "Alcohol", updateAlcoholFrame, 40)

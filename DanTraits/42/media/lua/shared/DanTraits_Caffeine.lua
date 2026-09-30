@@ -123,7 +123,6 @@ local function updateCaffeineMinute(player, d)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + CAF_STRESS * w))
     end)
 end
-DanTraits_updateCaffeineMinute = updateCaffeineMinute
 
 -- intake -------------------------------------------------------------------
 local function fluidName(container)
@@ -162,7 +161,6 @@ local function onEat(player, item, fraction)
     if amount <= 0 then return false end
     return dose(player, amount * math.max(0, math.min(1, fraction or 1)), name)
 end
-DanTraits_CaffeineOnEat = onEat
 DanTraits_AddHook("eat", function(_, player, item, fraction) onEat(player, item, fraction) return nil end)
 
 DanTraits_AddHook("pill", function(_, player, kind)

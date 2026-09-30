@@ -96,7 +96,6 @@ local function updateGermMinute(player, d)
         DanTraits_NotifyGood(player, "UI_DanTraits_GermClean")
     end
 end
-DanTraits_updateGermMinute = updateGermMinute
 
 DanTraits_AddHook("infectionHazard", function(h, player)
     if not hasTrait(player, "germaphobe") then return nil end

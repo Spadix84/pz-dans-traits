@@ -19,6 +19,7 @@ if ok and MF and MF.createMoodle then
     MF.createMoodle("BloodLoss")
     MF.createMoodle("Infection")
     MF.createMoodle("Concussion")
+    MF.createMoodle("BloodSugar")
     -- the rest are fed from one place, shared/DanTraits_Moodles.lua
     for _, name in ipairs(DanTraits_MoodleNames or {}) do MF.createMoodle(name) end
 end

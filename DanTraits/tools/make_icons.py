@@ -1,5 +1,5 @@
-"""Draw the mod's simple pixel icons: the moodles fed by DanTraits_Moodles.lua
-and the sun block item. Each is a 16 x 16 grid of palette letters, written
+"""Draw the mod's simple pixel icons: the moodles fed by DanTraits_Moodles.lua,
+Diabetes' Blood Sugar moodle and the sun block item. Each is a 16 x 16 grid of palette letters, written
 out at 32 x 32 as a PNG (no libraries needed).
 
     python DanTraits/tools/make_icons.py            write them into the mod
@@ -37,6 +37,25 @@ PALETTE = {
 }
 
 ICONS = {
+    # a drop of blood beside a sugar cube (Diabetes feeds this one itself)
+    "ui/BloodSugar": """
+................
+....k...........
+...krk..........
+...krk..........
+..krrrk.........
+..krrrk.........
+.krrrrrk........
+.krwrrrk........
+krwrrrrrk.......
+krwrrrkkkkkkkk..
+krrrrrkwwwwwwlk.
+.krrrrkwwwlwwlk.
+..kkkkkwlwwwwlk.
+......kwwwwlwlk.
+......klllllllk.
+......kkkkkkkkk.
+""",
     # a heart with a crack through it
     "ui/ChestPain": """
 ................

@@ -18,6 +18,6 @@ description=
 description=[h2]Requirements[/h2]
 description=Build 42. Moodle Framework is optional; without it you just don't get the extra moodles.
 description=
-description=Source, full documentation and bug reports: https://github.com/Spadix84/pz-dans-traits
+description=Source, full documentation and bug reports (GitHub Issues): https://github.com/Spadix84/pz-dans-traits
 tags=Build 42;Traits;Realistic;Hardmode;WIP
 visibility=friendsOnly

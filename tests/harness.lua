@@ -169,8 +169,6 @@ function H.stubs()
   SandboxVars = nil
   MF = nil
   RenderEffectType = nil
-  DanTraitsTestCharge = false
-  DanTraitsTestEpisode = false
   DanTraitsRegistry = setmetatable({}, { __index = function(_, key) return key end })
 
   function getText(k, a) if a ~= nil then return k .. ":" .. tostring(a) end return k end

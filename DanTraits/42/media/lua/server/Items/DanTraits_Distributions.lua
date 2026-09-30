@@ -223,6 +223,7 @@ local function addLoot(spec)
     for name, weight in pairs(spec.clutter) do
         if append(ClutterTables and ClutterTables[name], spec.name, weight) then added = added + 1 else missing[#missing + 1] = "ClutterTables." .. name end
     end
+    if not (isDebugEnabled and isDebugEnabled()) then return end
     print("[DanTraits] " .. spec.name .. " added to " .. added .. " loot lists" .. (#missing > 0 and ("; not found: " .. table.concat(missing, ", ")) or ""))
 end
 

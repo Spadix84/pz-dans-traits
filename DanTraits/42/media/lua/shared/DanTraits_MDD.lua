@@ -71,9 +71,6 @@ local MDD_MED_WITHDRAW_MIN  = 4320    -- discontinuation length in minutes (3 da
 local MDD_MED_WITHDRAW_MOOD = 0.3     -- unhappiness per minute while discontinuing
 local MDD_MED_WITHDRAW_STRESS = 0.001 -- stress per minute while discontinuing
 local MDD_MED_STREAK_DRAIN  = 3       -- streak days lost per day without coverage
--- TESTING: true forces an episode on the next ten-minute tick when none is running (severity 1,
--- 48 h) and makes the medication clock run a day per ten-minute tick. Set false for normal play.
-local MDD_TEST_MODE         = (DanTraitsTestEpisode == nil) and false or DanTraitsTestEpisode
 
 local function mddData(player)
     local d = traitData(player)
@@ -227,16 +224,8 @@ local function updateMddTen(player, d)
     if not hasTrait(player, "spiraling") then return end
     d = mddData(player)
     local stats = player:getStats()
-    updateMddMeds(d, MDD_TEST_MODE and 1 or (1 / 144))
+    updateMddMeds(d, 1 / 144)
     local benefit = mddBenefit(d)
-    if MDD_TEST_MODE and not d.mddEpisode and not d.mddTestFired then
-        d.mddTestFired = true
-        d.mddEpisode = true
-        d.mddSeverity = 1
-        d.mddHoursLeft = 48
-        notify(player, "UI_DanTraits_MddStart")
-        return
-    end
     if d.mddEpisode then
         local _, habits = mddRelief(player, d)
         d.mddHoursLeft = (d.mddHoursLeft or 0) - (1 / 6) * (1 + habits * MDD_RECOVERY_BONUS + benefit * MDD_MED_RECOVERY)

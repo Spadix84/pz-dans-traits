@@ -28,8 +28,9 @@
 --   LowIron            Anaemic
 --   StiffJoints        Arthritis: the weather in the joints
 --
--- Diabetes has none on purpose: blood sugar is hidden, the meter is how you
--- find out. Hallucinations has none either (it would give them away).
+-- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
+-- range, not which way; the meter is how you find out. Hallucinations has
+-- none (it would give them away).
 --
 -- DanTraits_MoodleNames is the list the client creates them from
 -- (client/DanTraits_Client.lua); DanTraits_MoodleLevels(player, d) is every
@@ -151,6 +152,5 @@ local function updateMoodlesMinute(player, d)
         DanTraits_LevelMoodle(player, name, level)
     end
 end
-DanTraits_updateMoodlesMinute = updateMoodlesMinute
 
 DanTraits_Every("minute", "Moodles", updateMoodlesMinute, 96)

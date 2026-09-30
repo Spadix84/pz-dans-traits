@@ -77,7 +77,6 @@ local function addDose(player, units, now)
     notify(player, "UI_DanTraits_LactoseAte")
     return true
 end
-DanTraits_LactoseDose = addDose
 
 function DanTraits_LactoseOnEat(player, item, fraction)
     if not hasTrait(player, "lactose") or not item or not DanTraits_IsDairy(item) then return false end
@@ -121,7 +120,6 @@ local function updateLactoseMinute(player, d)
         floorUp(stats, CharacterStat.UNHAPPINESS, flare * LAC_UNHAPPY_MAX, LAC_UNHAPPY_RAMP)
     end)
 end
-DanTraits_updateLactoseMinute = updateLactoseMinute
 
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.lactose = function(player, args)

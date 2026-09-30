@@ -11,7 +11,6 @@ require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
-local traitData = DanTraits_Data
 local fraction = DanTraits_StatFraction
 
 -- joints
@@ -69,7 +68,6 @@ local function updateArthritisMinute(player, d)
         end
     end)
 end
-DanTraits_updateArthritisMinute = updateArthritisMinute
 
 -- per frame: the game sets combat speed when an attack starts; scale it once each time it changes
 local function updateArthritisFrame(player)

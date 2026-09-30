@@ -12,7 +12,9 @@
 -- wears off. A new character starts with a bottle.
 --
 -- A seizure gives a warning (an aura: a notice, then five to ten game
--- minutes, time to get out of a fight or stop the car). Then you drop
+-- minutes and never under 30 real seconds, time to get out of a fight or
+-- stop the car; at the wheel regardless, the engine cuts out, see
+-- DanTraits_Faint.lua). Then you drop
 -- whatever is in your hands and go down (the shared pass-out,
 -- DanTraits_Faint.lua, deep: nothing wakes you) for 2 to 5 game minutes, can
 -- knock your head (a concussion, DanTraits_Concussion.lua), and come round
@@ -22,7 +24,8 @@
 -- a knockout) is only the aftermath.
 --
 -- Mod data: epMeds (the level), epCovered (the level was protecting, for the
--- wearing-off notice), epAuraMin (minutes to the seizure), epAfterMin (minutes
+-- wearing-off notice), epAuraMin (minutes to the seizure), epAuraMs (the real-time
+-- floor on that warning), epAfterMin (minutes
 -- of the aftermath), epSeizures, epNight (a seizure broke this sleep).
 -- Console: epilepsy seize | epilepsy aura | epilepsy pill
 require "DanTraits"
@@ -46,7 +49,8 @@ local EP_BRIGHT        = 1.5     -- in bright daylight
 local EP_MEDS_HALF_H   = 12      -- hours for the anticonvulsant level to halve
 local EP_MEDS_ON       = 0.5     -- level at which it protects
 local EP_MEDS_CUT      = 0.1     -- seizures x this while protected
-local EP_AURA_MIN      = { 5, 10 }   -- game minutes of warning before the seizure
+local EP_AURA_MIN      = { 5, 10 }   -- game minutes of warning before the seizure...
+local EP_AURA_REAL_S   = 30      -- ...but never under this many real seconds (the default day passes 5 game minutes in about 12)
 local EP_NIGHT_CUT     = 0.3     -- a night broken by a seizure scores x (1 - this)
 local EP_OUT_MIN       = { 2, 5 }    -- game minutes down
 local EP_KNOCK         = 0.25    -- chance the fall knocks the head...
@@ -90,12 +94,14 @@ DanTraits_SeizureRate = seizureRate
 
 local function aura(player, d)
     d.epAuraMin = math.floor(DanTraits_RandRange(EP_AURA_MIN[1], EP_AURA_MIN[2] + 1))
-    -- asleep you feel nothing coming
-    if not DanTraits_Asleep(player) then notify(player, "UI_DanTraits_EpilepsyAura") end
+    -- asleep you feel nothing coming (and there is nothing to get clear of)
+    if DanTraits_Asleep(player) then return end
+    pcall(function() d.epAuraMs = getTimestampMs() + EP_AURA_REAL_S * 1000 end)
+    notify(player, "UI_DanTraits_EpilepsyAura")
 end
 
 local function seize(player, d)
-    d.epAuraMin = nil
+    d.epAuraMin, d.epAuraMs = nil, nil
     d.epSeizures = (d.epSeizures or 0) + 1
     d.epAfterMin = EP_AFTER_MIN
     local stats = player:getStats()
@@ -139,7 +145,7 @@ local function updateEpilepsyMinute(player, d)
     end
     medsNotice(player, d)
     if not hasTrait(player, "epilepsy") then
-        d.epAuraMin, d.epAfterMin, d.epNight = nil, nil, nil
+        d.epAuraMin, d.epAuraMs, d.epAfterMin, d.epNight = nil, nil, nil, nil
         return
     end
     if (d.epAfterMin or 0) > 0 then
@@ -149,14 +155,15 @@ local function updateEpilepsyMinute(player, d)
         pcall(function() DanTraits_FloorUp(player:getStats(), CharacterStat.UNHAPPINESS, EP_AFTER_SAD * left, 2) end)
     end
     if d.epAuraMin then
-        d.epAuraMin = d.epAuraMin - 1
-        if d.epAuraMin <= 0 then seize(player, d) end
+        d.epAuraMin = math.max(0, d.epAuraMin - 1)
+        local waited = true
+        pcall(function() waited = getTimestampMs() >= (d.epAuraMs or 0) end)
+        if d.epAuraMin <= 0 and waited then seize(player, d) end
         return
     end
     if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return end
     if DanTraits_Roll(seizureRate(player, d) / 60) then aura(player, d) end
 end
-DanTraits_updateEpilepsyMinute = updateEpilepsyMinute
 
 function DanTraits_TakeAnticonvulsant(player, amount)
     local d = DanTraits_Data(player)

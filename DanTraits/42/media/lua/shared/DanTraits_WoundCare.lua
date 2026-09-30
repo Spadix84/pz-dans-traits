@@ -61,7 +61,6 @@ local ARMS_L = { Hand_L = true, ForeArm_L = true, UpperArm_L = true }
 local TORSO = { Torso_Upper = true, Torso_Lower = true }
 
 local function sandboxOn() return DanTraits_SandboxOn("WoundCareEnabled") end
-function DanTraits_WoundCareActive() return sandboxOn() end
 
 local num = DanTraits_PartNum
 local is = DanTraits_PartIs
@@ -95,7 +94,6 @@ local function stitchStrength(part)
     if t <= 0 then return nil end
     return math.min(1, t / WC_SOUND_AT)
 end
-DanTraits_StitchStrength = stitchStrength
 
 local function wetness(player)
     local w = 0
@@ -139,7 +137,6 @@ local function strain(player, part, tearChance, reopenChance)
         if roll(reopenChance) then openAgain(player, part) end
     end
 end
-DanTraits_WoundStrain = strain
 
 -- the bone-setting roll, by the setter's First Aid level
 local function badSetChance(level)
@@ -169,7 +166,6 @@ local function updateWoundFrame(player)
     if ok and sprinting then moved = "sprint" elseif (ok2 and running) and moved ~= "sprint" then moved = "run"
     elseif ok3 and moving and not moved then moved = "walk" end
 end
-DanTraits_updateWoundFrame = updateWoundFrame
 
 local function round2(x) return math.floor(x * 100 + 0.5) / 100 end
 
@@ -260,7 +256,6 @@ local function updateWoundMinute(player, d)
     d.wcMoved = moved or nil
     moved = false
 end
-DanTraits_updateWoundMinute = updateWoundMinute
 
 -- a swing: strain on the arm(s) doing it, and a little on the torso
 local function onSwing(character, weapon)
@@ -283,7 +278,6 @@ local function onSwing(character, weapon)
         end
     end)
 end
-DanTraits_WoundOnSwing = onSwing
 
 -- the splint action: roll the set once it is on
 local function wrapSplint()

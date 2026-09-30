@@ -1,8 +1,8 @@
 -- Offline test for DanTraits_BadDay.lua: the opening applies once (drunk, a cold, a shard in the
 -- groin, no clothes, soaked), is idempotent when the character is created again (a reload), does
 -- nothing after the first hour or without the trait; the fire starts once, only indoors; and the
--- console replay (`badday`, DanTraits_BadDayReplay, plan 21) clears the flags and applies again.
--- No balance dial is tested here: they wait for a play test (plans/21-bad-day-balance.md).
+-- console replay (`badday`, DanTraits_BadDayReplay) clears the flags and applies again.
+-- No balance dial is tested here: they wait for a play test (README, Status and known issues).
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -113,5 +113,75 @@ assert(DanTraits_BadDayReplay(nil) == "badday: no player", "no player")
 H.load("client/DanTraits_Telemetry.lua")
 local reply = DanTraits_RunCommand(newPlayer({ hours = 9 }), "badday")
 assert(reply == "badday: opening replayed", "the badday console command: " .. tostring(reply))
+
+-- 8. the sewing kit: a needle and thread in another house 15 to 40 tiles away, once, safe from
+-- Jinxed, put back if the game fills that container afterwards
+local noRoom = function() return nil end
+local own, other, farHouse = { getRandomRoomExcluding = noRoom }, { getRandomRoomExcluding = noRoom }, { getRandomRoomExcluding = noRoom }
+local function container(kind, x, y)
+  local c = { _kind = kind, _items = {} }
+  local sq = { getX = function() return x end, getY = function() return y end, getZ = function() return 0 end }
+  function c:getType() return self._kind end
+  function c:getParent() return { getSquare = function() return sq end } end
+  function c:containsType(t) for _, it in ipairs(self._items) do if it._type == t then return true end end return false end
+  function c:AddItem(full)
+    local md = {}
+    local it = { _type = (string.gsub(full, "^Base%.", "")), getModData = function() return md end }
+    self._items[#self._items + 1] = it
+    return it
+  end
+  return c
+end
+local squares = {}
+local function place(x, y, building, cont)
+  local room = { getBuilding = function() return building end }
+  local objs = {}
+  if cont then objs[1] = { getContainerCount = function() return 1 end, getContainerByIndex = function() return cont end } end
+  squares[x .. "," .. y] = { getRoom = function() return room end,
+    getObjects = function() return { size = function() return #objs end, get = function(_, i) return objs[i + 1] end } end }
+end
+local ownDrawer = container("sidetable", 108, 100)  -- own house, 8 tiles
+local fridge = container("fridge", 120, 100)         -- another house, but a fridge
+local drawer = container("dresser", 125, 100)        -- another house, 25 tiles: the one
+local distant = container("counter", 150, 100)       -- 50 tiles: only if nothing nearer
+local tooClose = container("counter", 105, 100)      -- another house but 5 tiles
+place(100, 100, own); place(108, 100, own, ownDrawer); place(120, 100, other, fridge)
+place(125, 100, other, drawer); place(150, 100, farHouse, distant); place(105, 100, other, tooClose)
+function getCell() return { getGridSquare = function(_, x, y, z) return z == 0 and squares[x .. "," .. y] or nil end } end
+p = newPlayer(); H.current = p
+p.getX = function() return 100 end; p.getY = function() return 100 end
+p.getCurrentSquare = function() return squares["100,100"] end
+H.fire("OnGameStart")
+assert(#drawer._items == 2 and drawer._items[1]._type == "Needle" and drawer._items[2]._type == "Thread", "needle and thread in the dresser next door")
+assert(#fridge._items == 0 and #ownDrawer._items == 0 and #distant._items == 0 and #tooClose._items == 0, "nowhere else")
+assert(drawer._items[1]:getModData().DanTraitsKeep == true, "marked to keep")
+local spot = p._md.DanTraits.badDayKit
+assert(spot and spot.x == 125 and spot.kind == "dresser", "the spot is remembered")
+H.fire("OnGameStart"); assert(#drawer._items == 2, "placed once")
+-- the game fills that container later and the kit is gone: back it goes; other containers are left alone
+drawer._items = {}
+H.fire("OnFillContainer", "bedroom", "dresser", drawer)
+assert(#drawer._items == 2, "refilled container gets the kit back")
+H.fire("OnFillContainer", "bedroom", "counter", distant); assert(#distant._items == 0, "not another container")
+-- nothing in range in other houses: out to 60, then the own house
+squares["125,100"] = nil; squares["120,100"] = nil
+local p2 = newPlayer(); p2.getX = p.getX; p2.getY = p.getY; p2.getCurrentSquare = p.getCurrentSquare
+assert(DanTraits_BadDayPlaceKit(p2).x == 150, "out to 60 tiles when nothing nearer")
+squares["150,100"] = nil
+assert(DanTraits_BadDayPlaceKit(p2).x == 108, "own house far room as the last resort")
+squares["108,100"] = nil
+assert(DanTraits_BadDayPlaceKit(p2) == nil, "no container at all: no kit")
+
+-- 9. Jinxed never takes the kit
+H.load("Jinxed")
+local jp = newPlayer(); jp.getX = p.getX; H.current = jp
+DanTraits_HasTrait = function(_, k) return k == "jinxed" end
+local jc = container("dresser", 1, 1); jc:AddItem("Base.Needle"):getModData().DanTraitsKeep = true
+jc.getItems = function(self) local items = self._items; return { size = function() return #items end, get = function(_, i) return items[i + 1] end } end
+jc.Remove = function(self, it) for i, x in ipairs(self._items) do if x == it then table.remove(self._items, i) end end end
+local realRand = ZombRand; ZombRand = function() return 0 end
+H.fire("OnFillContainer", "bedroom", "dresser", jc)
+ZombRand = realRand
+assert(#jc._items == 1, "Jinxed leaves the kit")
 
 H.pass()

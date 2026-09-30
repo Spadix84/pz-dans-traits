@@ -76,7 +76,6 @@ local function onShot(player, radius)
     end
     return true
 end
-DanTraits_TinnitusShot = onShot
 
 local function onWeaponSwing(character, weapon)
     local player = getSpecificPlayer(0)
@@ -87,7 +86,6 @@ local function onWeaponSwing(character, weapon)
     pcall(function() radius = weapon:getSoundRadius() end)
     onShot(player, tonumber(radius))
 end
-DanTraits_TinnitusOnSwing = onWeaponSwing
 
 local function updateTinnitusMinute(player, d)
     if (d.tnNoise or 0) > 0 then
@@ -101,7 +99,6 @@ local function updateTinnitusMinute(player, d)
         if d.tnDeafMin <= 0 then hearAgain(player, d, true) end
     end
 end
-DanTraits_updateTinnitusMinute = updateTinnitusMinute
 
 DanTraits_AddHook("sleepWake", function(m, player, d)
     if not d or (d.tnDeafMin or 0) <= 0 then return nil end

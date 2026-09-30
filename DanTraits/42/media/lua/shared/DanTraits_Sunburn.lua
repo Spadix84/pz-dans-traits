@@ -160,7 +160,6 @@ local function coveredParts(player)
     end
     return covered
 end
-DanTraits_SunCovered = coveredParts
 
 local function burntCount(d)
     local n = 0
@@ -180,7 +179,6 @@ local function hurtPart(bd, name, target)
         if now < target then part:setAdditionalPain(math.min(100, target, now + SB_PAIN_RAMP)) end
     end)
 end
-DanTraits_SunburnHurtPart = hurtPart
 
 local function updateSunburnMinute(player, d)
     if not sandboxOn() then
@@ -254,7 +252,6 @@ local function updateSunburnMinute(player, d)
         DanTraits_NotifyGood(player, "UI_DanTraits_SunburnHealed")
     end
 end
-DanTraits_updateSunburnMinute = updateSunburnMinute
 
 -- 0..1 share of the body burnt, for the night's score and the dashboard
 function DanTraits_SunburnShare(player)

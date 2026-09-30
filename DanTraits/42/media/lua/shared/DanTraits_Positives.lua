@@ -99,7 +99,6 @@ local function daytime()
     pcall(function() hour = getGameTime():getHour() end)
     return hour >= NS_DAY_FROM and hour < NS_DAY_TO
 end
-DanTraits_NightShiftDay = daytime
 
 DanTraits_AddHook("sleepWake", function(m, player)
     if not hasTrait(player, "nightshift") or not daytime() then return nil end

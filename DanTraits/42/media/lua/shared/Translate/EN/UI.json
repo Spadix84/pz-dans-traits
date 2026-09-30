@@ -10,7 +10,7 @@
     "UI_trait_DanSpiraling": "Major Depressive Disorder",
     "UI_trait_DanSpiralingdesc": "Depressive episodes hold mood down for days.<br>Pain, stress, exhaustion and time indoors bring them on.<br>Exercise, time outdoors, a drink, a smoke or comfort food ease them.<br>Antidepressants help after two weeks of daily use; stopping hurts.",
     "UI_trait_DanBadDay": "A Really Bad Day",
-    "UI_trait_DanBadDaydesc": "Everything went wrong this morning.<br>Starts blind drunk, with a cold, a shard of glass in the groin, no clothes and soaked.<br>If indoors, the house is on fire.<br>Applied once, to a new character.",
+    "UI_trait_DanBadDaydesc": "Everything went wrong this morning.<br>Starts blind drunk, with a cold, a shard of glass in the groin, no clothes and soaked.<br>If indoors, the house is on fire.<br>You remember a sewing kit in a drawer next door, if you can get there.<br>Applied once, to a new character.",
     "UI_DanTraits_DependentCraving": "You need a drink",
     "UI_DanTraits_DependentSated": "The edge comes off",
     "UI_DanTraits_AlcoholicGained": "You've come to need a drink",

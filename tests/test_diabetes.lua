@@ -112,6 +112,26 @@ H.rng = { 0, 0, 6 }   -- rolls: first timer, timer reset, then pick message 7
 for _ = 1, 3 do minute() end
 assert(halo[#halo] == "UI_DanTraits_DiaLow7", "at the worst tier the giveaway message is possible, got " .. tostring(halo[#halo]))
 
+-- 9b. the BloodSugar moodle: one level per tier, high and low alike, cleared in range, hidden while drunk
+do
+  local mv
+  MF = { getMoodle = function(name) assert(name == "BloodSugar", "moodle name " .. tostring(name)); return { setThresholds = function() end, setValue = function(_, v) mv = v end } end }
+  local function level(v) return v <= 0.5 * (1 - 0.9) and 3 or v <= 0.5 * (1 - 0.6) and 2 or v <= 0.5 * (1 - 0.3) and 1 or 0 end
+  local mp = newPlayer(); H.current = mp
+  minute(); assert(mv == nil, "in range from the start: the moodle is never touched")
+  for _, case in ipairs({ { 65, 1 }, { 50, 2 }, { 30, 3 }, { 200, 1 }, { 300, 2 }, { 400, 3 } }) do
+    mp._md.DanTraits.glucose = case[1]; minute()
+    assert(level(mv) == case[2], case[1] .. " mg/dL: moodle level " .. case[2] .. ", got value " .. tostring(mv))
+  end
+  mp._md.DanTraits.glucose = 110; minute()
+  assert(mv == 0.5 and not mp._md.DanTraits.diaMoodle, "back in range: cleared")
+  mv = nil; minute(); assert(mv == nil, "and left alone after that")
+  local md = newPlayer({ intox = 20 }); H.current = md
+  md._md.DanTraits = { glucose = 60 }; minute()
+  assert(mv == nil, "drunk: no moodle")
+  MF = nil
+end
+
 -- 10. alcohol pulls sugar down; panic pushes it up; running pulls it down
 local booze = newPlayer({ intox = 20 }); H.current = booze; minute()
 near(g(booze), 110 + 0.17 - 0.35, 1e-9, "drunk: -0.35 a minute")
