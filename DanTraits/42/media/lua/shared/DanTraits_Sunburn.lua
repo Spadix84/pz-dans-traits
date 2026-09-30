@@ -13,9 +13,16 @@
 -- over four hours. A hat covers the head,
 -- shoes the feet, a shirt the torso and arms: whatever the clothing's own
 -- covered parts say. A burnt part hurts for 24 hours, the last six easing off,
--- and staying out in the sun on it starts the day over. The pain is a floor
--- (DanTraits_PainFloor: a painkiller clears it while it works), bigger the more
--- of you is burnt, and a burnt night scores worse (the nightQuality hook).
+-- and staying out in the sun on it starts the day over. The pain is on the
+-- burnt part itself (its additional pain, topped up each minute against the
+-- game's own decay, never lowered: a wound there still hurts as it did), so
+-- the health panel shows the arm hurting, not the head. The game's PAIN stat
+-- is a weighted sum over the parts (measured 2026-09-29: 30 on the head reads
+-- about 28, on a forearm 18, on the chest 20, and ten parts at 30 pin it at
+-- 100), so one burnt part is a nuisance and a whole body burnt is agony, the
+-- stat at its maximum, for most of a day. A painkiller clears it while it
+-- works, as it does any pain. A burnt night scores worse (the nightQuality
+-- hook).
 -- The health panel shows "Sunburnt" on the part (client/DanTraits_HealthPanel.lua).
 --
 -- Skin toughens: every time you burn, the skin you are left with takes longer
@@ -47,9 +54,8 @@ local SB_RAIN          = 0.1     -- rain over this: no sun
 local SB_CLOUD_CUT     = 0.8     -- sun x (1 - this x cloud)
 local SB_BURN_H        = 24      -- hours a burn lasts
 local SB_EASE_H        = 6       -- the last hours ease off
-local SB_PAIN_BASE     = 4       -- pain floor: this...
-local SB_PAIN_PER      = 3       -- ...plus this a burnt part...
-local SB_PAIN_MAX      = 35      -- ...up to this
+local SB_PART_PAIN     = 20      -- additional pain held on each burnt part (the head alone reads about 18 on the stat)
+local SB_PAIN_RAMP     = 4       -- a part's pain rises toward that by at most this a minute
 local SB_NIGHT_CUT     = 0.2     -- the night's score x (1 - this x share of the body burnt)
 local SB_NOON_FROM     = 11      -- the sun is at full strength from this hour...
 local SB_NOON_TO       = 15      -- ...to this one...
@@ -158,6 +164,17 @@ end
 -- 0..1 how much a burn still hurts: full, then easing over the last hours
 local function burnStrength(hours) return clamp01(hours / SB_EASE_H) end
 
+-- raise the part's additional pain toward target, by at most the ramp; never lower it
+local function hurtPart(bd, name, target)
+    pcall(function()
+        local part = bd:getBodyPart(BodyPartType[name])
+        if not part then return end
+        local now = part:getAdditionalPain() or 0
+        if now < target then part:setAdditionalPain(math.min(100, target, now + SB_PAIN_RAMP)) end
+    end)
+end
+DanTraits_SunburnHurtPart = hurtPart
+
 local function updateSunburnMinute(player, d)
     if not sandboxOn() then
         d.sbExp, d.sbBurn, d.sbWarned, d.sbBlockMin = nil, nil, nil, nil
@@ -210,9 +227,11 @@ local function updateSunburnMinute(player, d)
     end
     d.sbHot = hottest > 0 and hottest or nil
 
-    -- the burns: heal, and hurt while they last
+    -- the burns: heal, and hurt where they are while they last
     if not d.sbBurn then return end
-    local pain, any = 0, false
+    local any = false
+    local bd
+    pcall(function() bd = player:getBodyDamage() end)
     for name, hours in pairs(d.sbBurn) do
         hours = hours - 1 / 60
         if hours <= 0 then
@@ -220,15 +239,13 @@ local function updateSunburnMinute(player, d)
         else
             d.sbBurn[name] = hours
             any = true
-            pain = pain + SB_PAIN_PER * burnStrength(hours)
+            if bd then hurtPart(bd, name, SB_PART_PAIN * burnStrength(hours)) end
         end
     end
     if not any then
         d.sbBurn = nil
         DanTraits_NotifyGood(player, "UI_DanTraits_SunburnHealed")
-        return
     end
-    DanTraits_PainFloor(player, d, "sunburn", math.min(SB_PAIN_MAX, SB_PAIN_BASE + pain), 2)
 end
 DanTraits_updateSunburnMinute = updateSunburnMinute
 

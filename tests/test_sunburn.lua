@@ -1,7 +1,7 @@
 -- Offline test for DanTraits_Sunburn.lua: bare skin in full sun burns in
 -- about three hours, clothing and shade protect, cool weather, cloud and
--- the hour slow it, a burn hurts for a day and heals, skin toughens, sun
--- block keeps the sun off for eight hours, and the sandbox switch.
+-- the hour slow it, a burn hurts on the burnt part for a day and heals, skin
+-- toughens, sun block keeps the sun off for eight hours, and the sandbox switch.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -21,7 +21,18 @@ end
 local shirt = worn("Torso_Upper", "Torso_Lower", "UpperArm_L", "UpperArm_R", "ForeArm_L", "ForeArm_R")
 local trousers = worn("Groin", "UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R")
 local shoes = worn("Foot_L", "Foot_R")
-local p = H.player({ outside = true }); H.current = p
+-- body parts that keep their own additional pain, as the game's do
+local function part(name)
+  local q = { _pain = 0 }
+  function q:getType() return name end
+  function q:getAdditionalPain() return self._pain end
+  function q:setAdditionalPain(v) self._pain = v end
+  return q
+end
+local parts = {}
+for _, n in ipairs(DanTraits_SunburnParts) do parts[#parts + 1] = part(n) end
+local function partNamed(name) for _, q in ipairs(parts) do if q:getType() == name then return q end end end
+local p = H.player({ outside = true, parts = parts }); H.current = p
 local wornList = { shirt, trousers, shoes, { name = "a bag" } }
 p.getWornItems = function()
   return { size = function() return #wornList end, getItemByIndex = function(_, i) return wornList[i + 1] end }
@@ -61,7 +72,16 @@ local burnt = 0
 for _, t in ipairs(H.halo) do if t == "UI_DanTraits_SunburnBurnt" then burnt = burnt + 1 end end
 assert(burnt == 1, "one notice")
 H.minute()
-assert(H.pain(p) > 0, "it hurts")
+assert(not (d.painFloors and d.painFloors.sunburn) and not (d.painHurting and d.painHurting.sunburn), "no head floor: the pain is on the parts")
+near(partNamed("Head")._pain, 20, 1e-9, "the head hurts: a burnt part settles at 20")
+near(partNamed("Hand_L")._pain, 20, 1e-9, "and the hand")
+assert(partNamed("Torso_Upper")._pain == 0, "the covered chest does not")
+partNamed("Head")._pain = 0   -- the game decays it; the top-up ramps back
+H.minute()
+near(partNamed("Head")._pain, 4, 1e-9, "topped up by 4 a minute")
+partNamed("Hand_L")._pain = 60   -- a wound there hurts more: left alone
+H.minute()
+near(partNamed("Hand_L")._pain, 60, 1e-9, "never lowered")
 near(DanTraits_SunburnShare(p), 4 / 17, 1e-9, "four parts of seventeen")
 assert(DanTraits_RunHooks("nightQuality", 1, p, d) < 1, "a worse night")
 near(d.sbTan, 0.25, 1e-3, "the skin toughens a little with the burn")
@@ -69,7 +89,14 @@ near(DanTraits_SunBurnMinutes(d), 180 * 1.5, 0.5, "and takes half as long again 
 
 -- 4. indoors: exposure fades; a day later the burns have healed
 p._outside = false
-H.mins(24 * 60 + 5)
+H.mins(19 * 60)
+partNamed("Head")._pain = 0
+H.minute()
+assert(partNamed("Head")._pain > 3.9 and partNamed("Head")._pain < 4.1, "still topped up: ramping again from 0")
+H.mins(4)
+local easing = partNamed("Head")._pain
+assert(easing > 15 and easing < 20, "the last six hours: easing off (about 16 of 20 with five hours left), got " .. tostring(easing))
+H.mins(5 * 60 + 5)
 assert(not d.sbBurn, "healed in a day")
 assert(H.halo[#H.halo] == "+UI_DanTraits_SunburnHealed", "healed notice")
 assert(not d.sbExp.Head, "exposure faded")
