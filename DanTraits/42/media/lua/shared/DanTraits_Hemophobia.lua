@@ -47,7 +47,6 @@ local HB_GAP          = 10      -- minutes before fainting again
 local function afraid(player)
     return player ~= nil and hasVanillaTrait(player, HB_TRAIT)
 end
-DanTraits_FearOfBlood = afraid
 
 local roll = DanTraits_Roll
 
@@ -61,7 +60,6 @@ local function faint(player, chance)
     end
     return false
 end
-DanTraits_BloodFaint = faint
 
 -- the actions by name (built when wrapping: the classes may load after this file)
 local function actionClasses()
@@ -122,7 +120,6 @@ local function updateFearMinute(player, d)
     if asleep then return end
     if (d.bloodLossMin or 0) >= HB_BLEED_FROM then faint(player, HB_BLEED_FAINT) end
 end
-DanTraits_updateFearMinute = updateFearMinute
 
 -- console: fearofblood on | off
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}

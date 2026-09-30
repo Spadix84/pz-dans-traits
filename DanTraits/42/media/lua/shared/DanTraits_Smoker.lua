@@ -343,7 +343,6 @@ local function onTobacco(player, kind, item, portion)
     end)
     return true
 end
-DanTraits_OnTobacco = onTobacco
 
 -- cigarettes and cigars through the eat action (runs before vanilla's)
 DanTraits_AddHook("eat", function(_, player, item, portion)
@@ -528,7 +527,6 @@ local function updateSmokerMinute(player, d)
     end
     if (d.nicMorningMin or 0) > 0 then d.nicMorningMin = d.nicMorningMin - 1 end
 end
-DanTraits_updateSmokerMinute = updateSmokerMinute
 
 -- per frame: hold the irritability
 local function updateSmokerFrame(player)

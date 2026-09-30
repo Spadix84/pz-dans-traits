@@ -129,8 +129,6 @@ local function extraLines(part, level, patient)
     end
     return out
 end
-DanTraits_HealthPanelExtra = extraLines
-DanTraits_HealthPanelReword = reword
 
 local function wrapDrawItem()
     if not ISHealthBodyPartListBox or not ISHealthBodyPartListBox.doDrawItem then return end

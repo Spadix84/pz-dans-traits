@@ -151,7 +151,6 @@ local function updateHangoverMinute(player, d)
         end
     end)
 end
-DanTraits_updateHangoverMinute = updateHangoverMinute
 
 -- the night's sleep is worse for it
 DanTraits_AddHook("nightQuality", function(quality, player, d)

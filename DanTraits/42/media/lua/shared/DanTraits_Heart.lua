@@ -78,7 +78,6 @@ local function enduranceLevel(player)
     for i, at in ipairs(HC_ENDURANCE_AT) do if endurance < at then level = i end end
     return level
 end
-DanTraits_EnduranceMoodle = enduranceLevel
 
 local function protected(d) return (d.hcBeta or 0) >= HC_BETA_ON end
 
@@ -186,7 +185,6 @@ local function updateHeartMinute(player, d)
     end
     if DanTraits_Roll(episodeChance(player, d)) then startAngina(player, d) end
 end
-DanTraits_updateHeartMinute = updateHeartMinute
 
 -- endurance recovers slower during chest pain, and for a day after an attack
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)

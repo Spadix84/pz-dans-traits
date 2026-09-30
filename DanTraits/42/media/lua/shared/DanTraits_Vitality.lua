@@ -394,7 +394,6 @@ local function updateVitalityMinute(player, d)
         if e > 0 and bd:getOverallBodyHealth() < 100 then bd:AddGeneralHealth(VIT_HEALTH_REGEN * e) end
     end)
 end
-DanTraits_updateVitalityMinute = updateVitalityMinute
 
 -- endurance recovery and cold catching go through the stat delta pipeline
 -- (DanTraits_Util.lua): Vitality only says by how much, the pipeline applies it

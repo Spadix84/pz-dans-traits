@@ -2,10 +2,11 @@
 -- OnPreDistributionMerge the Inhaler is appended (as name, weight) to every
 -- loot list it knows, at each list's own shape (procedural rooms, zombie
 -- pockets, bags, the flat clutter list, a nested path), and a list missing
--- from this build is reported, not fatal.
+-- from this build is reported (debug mode only), not fatal.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
+function isDebugEnabled() return true end   -- the report only prints in debug mode
 local logged = {}
 local realprint = print
 print = function(s) logged[#logged+1] = s end
@@ -33,5 +34,10 @@ ProceduralDistributions.list.TestingLab = nil
 logged = {}
 H.fire("OnPreDistributionMerge")
 assert(logged[1]:find("added to 30 loot lists; not found: TestingLab"), logged[1])
+-- outside debug mode the lists are still filled, silently
+function isDebugEnabled() return false end
+logged = {}
+H.fire("OnPreDistributionMerge")
+assert(#logged == 0, "no report outside debug mode")
 print = realprint
 H.pass()

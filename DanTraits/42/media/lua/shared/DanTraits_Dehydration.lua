@@ -45,7 +45,6 @@ local function thirstLevel(player)
     for i, at in ipairs(DH_THIRST_AT) do if thirst >= at then level = i end end
     return level
 end
-DanTraits_ThirstLevel = thirstLevel
 
 local function tierOf(load)
     local tier = 0
@@ -75,7 +74,6 @@ local function updateDehydrationMinute(player, d)
     DanTraits_PainFloor(player, d, "dehydration", DH_PAIN * load, DH_PAIN_RAMP)
     DanTraits_StatAdd(player:getStats(), CharacterStat.FATIGUE, DH_FATIGUE_MIN * load)
 end
-DanTraits_updateDehydrationMinute = updateDehydrationMinute
 
 function DanTraits_Dehydration(player)
     local d = player and player:getModData().DanTraits

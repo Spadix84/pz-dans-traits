@@ -164,7 +164,6 @@ local function updateEpilepsyMinute(player, d)
     if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return end
     if DanTraits_Roll(seizureRate(player, d) / 60) then aura(player, d) end
 end
-DanTraits_updateEpilepsyMinute = updateEpilepsyMinute
 
 function DanTraits_TakeAnticonvulsant(player, amount)
     local d = DanTraits_Data(player)

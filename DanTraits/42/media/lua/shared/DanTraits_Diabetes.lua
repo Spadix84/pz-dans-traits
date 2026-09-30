@@ -323,7 +323,6 @@ local function updateDiabetesMinute(player, d)
         end
     end)
 end
-DanTraits_updateDiabetesMinute = updateDiabetesMinute
 
 -- 0..1 how bad a low is now (a third a tier), 0 for anyone else; Epilepsy and
 -- Steady Hands read it

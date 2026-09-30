@@ -37,7 +37,6 @@ local function shaking(player)
     end
     return shakes
 end
-DanTraits_HandsShaking = shaking
 
 -- steady now: the trait, and nothing shaking the hands
 local function steady(player) return has(player) and not shaking(player) end
@@ -76,7 +75,6 @@ wrapSteady()
 Events.OnGameStart.Add(wrapSteady)
 
 local function grant(player) DanTraits_GrantFoldIn(player, "steadyhands", "DEXTROUS", "shDexGranted") end
-DanTraits_GrantSteadyHands = grant
 
 Events.OnCreatePlayer.Add(function(playerNum, player) grant(player) end)
 Events.OnGameStart.Add(function() grant(getSpecificPlayer(0)) end)

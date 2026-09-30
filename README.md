@@ -103,6 +103,18 @@ To publish: `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` 
 
 The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file's top level included, so new traits go in their own file (`require "DanTraits"` for the shared helpers). It also lacks `next`, `assert`, `xpcall`, `string.gmatch` and `string.rep`. The offline tests run on standard Lua and would not notice any of that, so `tests/lint_kahlua.py` (run first by `run_tests.py`) checks for it, and checks the translation files too: valid JSON, no duplicate keys, and no bare `%` (the game formats UI strings; write `%%` for a percent sign, `%1` for a placeholder). Calling a Java method an object doesn't have fails quietly inside `pcall` but dumps a stack trace to the log every time, and the tests' stand-ins can't notice, so `tests/check_api.py` (also run by `run_tests.py`) checks the method names called on body parts, body damage, players, stats and weapons against the installed game's jar.
 
+## Status and known issues
+
+Early test build, Build 42, singleplayer only (multiplayer is untested).
+
+- **A Really Bad Day** is not balanced yet. Without stitching supplies the shard wound kills even a character with no other traits, which is why a needle and thread now wait in a nearby house. Other options (a lower bleed on the shard, a starting bandage, no hangover from the opening drink) are waiting on more play.
+- **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
+- Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
+
+## Bug reports
+
+Open an issue on GitHub with your mod list, what happened, and `~/Zomboid/console.txt` from the session. Balance feedback is just as welcome.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

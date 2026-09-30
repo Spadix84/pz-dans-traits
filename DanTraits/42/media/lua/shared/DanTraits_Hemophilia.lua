@@ -11,7 +11,6 @@ require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
-local traitData = DanTraits_Data
 
 local HEMO_BLEED_FLOOR  = 5.0     -- bleeding time is never allowed under this while unbandaged
 local HEMO_DAMAGE       = 0.35    -- health per minute per unbandaged bleeding part, on top of vanilla
@@ -66,6 +65,5 @@ local function updateHemophiliaMinute(player, d)
         if loss > 0 then bd:ReduceGeneralHealth(loss) end
     end)
 end
-DanTraits_updateHemophiliaMinute = updateHemophiliaMinute
 
 DanTraits_Every("minute", "Hemophilia", updateHemophiliaMinute, 21)

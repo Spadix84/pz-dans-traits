@@ -3,7 +3,6 @@
   "private": true,
   "description": "Offline test runner dependencies: fengari (standard Lua in Node). Run the suite with `python tests/run_tests.py`.",
   "dependencies": {
-    "fengari": "0.1.5",
-    "fengari-node-cli": "0.1.0"
+    "fengari": "0.1.5"
   }
 }

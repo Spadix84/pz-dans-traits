@@ -242,7 +242,6 @@ local sb = newPlayer({ unhappy = 0 }); H.current = sb; minute()
 H.clearHalo()
 sb._asleep = true; sb._hours = 300; minute(); sb._hours = 302.5; sb._asleep = false; sb._st.fatigue = 0.7
 for _ = 1, 60 do minute() end
-local q3 = math.min(1, 2.5 / 7) * 0.5 + 0.3 * 0.5      -- 0.3286
 assert(V(sb).vitLastSleepHours == 2.5 and V(sb).vitNightHours == 0, "2.5 h before the gap: a nap, not a night")
 near(V(sb).vitSleepDebt or 0, 0, 1e-9, "a nap with no prior debt leaves none")
 sb._asleep = true; sb._hours = 310; minute(); sb._hours = 313.5; sb._asleep = false; sb._st.fatigue = 0.7
