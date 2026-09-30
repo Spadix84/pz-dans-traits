@@ -114,6 +114,10 @@ Early test build, Build 42, singleplayer only (multiplayer is untested).
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
 
+## Requests
+
+- **Sumatriptan for Migraines** (requested on Reddit by u/Fatt3stAveng3r, 2026-09-30). A new item, a migraine-specific pill (on the market from the early 90s, so it fits 1993). Taken during an attack it clears the nausea and ends the attack within about two hours, but leaves you tired and a little clumsy for the rest of a 24-hour window. Today only generic painkillers help: taken once in an attack they cut the hours left to 0.6 (`MIG_MEDS_CUT` in `DanTraits_Migraine.lua`). Open questions: whether it still works taken after the attack is well under way, a limit on doses a day, where it spawns (pharmacies and medicine cabinets, rarer than painkillers), whether a Migraines character starts with a few, and what "clumsy" means in game (slower actions, or a small chance to drop things, as Arthritis does).
+
 ## Bug reports
 
 Open an issue on GitHub with your mod list, what happened, and `~/Zomboid/console.txt` from the session. Balance feedback is just as welcome.
