@@ -91,6 +91,7 @@ local DIA_HEALTH_FLOOR      = 15                  -- percent: symptoms stop shor
 local DIA_KETO_HOURS        = 24                  -- ...until you have spent this long above the top threshold, then the floor is gone
 local DIA_MDD_UNHAPPY_MULT  = 1.5                 -- high-sugar mood floor during a depressive episode
 local DIA_HALO_MIN          = { 10, 5, 3 }        -- minutes between symptom messages by tier, plus up to as many again
+local DIA_MOODLE_TIER       = { 0.3, 0.6, 0.9 }   -- the BloodSugar moodle: value tier / 3, one moodle level per tier
 local DIA_STAT_RAMP         = 2                   -- per minute towards a mood/sickness floor
 local DIA_INF_HAZARD       = 1.0                 -- wound infection chance x (1 + this x t), t = 0 at DIA_HIGH[1] up to 1 at DIA_HIGH[3]
 local DIA_INF_GROWTH       = 0.5                 -- infection climb x (1 + this x t): high sugar feeds it and slows healing
@@ -223,6 +224,21 @@ local function diaHalo(player, d, low, high)
     notify(player, prefix .. (ZombRand(n) + 1))
 end
 
+-- the BloodSugar moodle: the worse of the two tiers, high and low alike, so
+-- it tells you something is wrong, not which way (that is the meter's job).
+-- Hidden while drunk, like the messages.
+local function diaMoodle(player, d, low, high)
+    local tier = math.max(low, high)
+    if tier > 0 then
+        local drunk = false
+        pcall(function() drunk = intoxOf(player) > DRINK.tipsy end)
+        if drunk then tier = 0 end
+    end
+    if tier == 0 and not d.diaMoodle then return end
+    d.diaMoodle = tier > 0 or nil
+    DanTraits_BadMoodle(player, "BloodSugar", tier / 3, DIA_MOODLE_TIER)
+end
+
 -- a bad low can put you on the floor (DanTraits_Faint.lua); glucose keeps falling while out.
 -- A refused faint (already out) does not spend the gap.
 local function diaBlackout(player, d)
@@ -233,7 +249,10 @@ local function diaBlackout(player, d)
 end
 
 local function updateDiabetesMinute(player, d)
-    if not diaHas(player) then return end
+    if not diaHas(player) then
+        if d and d.diaMoodle then diaMoodle(player, d, 0, 0) end
+        return
+    end
     d = diaData(player)
     local stats = player:getStats()
     local g = d.glucose
@@ -290,6 +309,7 @@ local function updateDiabetesMinute(player, d)
     local low, high = diaTier(g)
     if high >= 3 then d.diaKetoHours = d.diaKetoHours + 1 / 60 else d.diaKetoHours = math.max(0, d.diaKetoHours - 1 / 60) end
     diaHalo(player, d, low, high)
+    diaMoodle(player, d, low, high)
     if (d.diaFaintGap or 0) > 0 then d.diaFaintGap = d.diaFaintGap - 1 end
     d.diaFumble = low > 0 and DIA_LOW_FUMBLE[low] or 0
     d.diaLow = low > 0 and low or nil

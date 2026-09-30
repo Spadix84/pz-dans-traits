@@ -50,8 +50,8 @@ end
 
 H.load("client/DanTraits_Client.lua")
 H.expectHooks("OnFillInventoryObjectContextMenu", "OnGameBoot", "OnMainMenuEnter")
-assert(#created == 10 and created[1] == "AirwayIrritation" and created[9] == "ChestPain" and created[10] == "Sunburn",
-  "the eight older moodles, then the listed ones")
+assert(#created == 11 and created[1] == "AirwayIrritation" and created[9] == "BloodSugar" and created[10] == "ChestPain" and created[11] == "Sunburn",
+  "the eight older moodles and Blood Sugar, then the listed ones")
 MF = nil
 
 -- an item: kind and uses left
