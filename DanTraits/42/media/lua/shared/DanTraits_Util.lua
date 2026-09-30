@@ -44,6 +44,12 @@
 --                                          a system's pain floor for this minute,
 --                                          see "Pain floors" below
 --   DanTraits_PainBurst(player, amount)    a one-off jolt of pain that fades
+--   DanTraits_GrantFoldIn(player, trait, constName, flag)
+--                                          a mod trait that carries a vanilla one
+--                                          (Steady Hands: Dexterous, Fast Recovery:
+--                                          Fast Healer): once the mod trait is seen,
+--                                          CharacterTrait[constName] is added once
+--                                          and d[flag] remembers it
 --   DanTraits_BadMoodle(player, name, value01, tiers)
 --                                          Moodle Framework updater for a
 --                                          bad-side-only moodle (0.5 is none,
@@ -352,4 +358,24 @@ function DanTraits_PainBurst(player, amount)
     pcall(function()
         head:setAdditionalPain(math.min(100, (head:getAdditionalPain() or 0) + amount / PAIN_PART_RATIO))
     end)
+end
+
+-- Fold-ins ------------------------------------------------------------------------
+-- A mod trait that carries a vanilla one grants it once, the first time the
+-- mod trait is seen (a new character, or the trait added later). Returns
+-- whether it is granted now. Deep Sleeper's Wakeful predates this and keeps
+-- its own copy in DanTraits_Sleep.lua.
+function DanTraits_GrantFoldIn(player, trait, constName, flag)
+    if not player or not DanTraits_HasTrait or not DanTraits_HasTrait(player, trait) then return false end
+    local d = DanTraits_Data(player)
+    if d[flag] then return true end
+    local vanilla = CharacterTrait and CharacterTrait[constName]
+    if not vanilla then return false end
+    local ok = pcall(function()
+        local traits = player:getCharacterTraits()
+        if not traits:get(vanilla) then traits:add(vanilla) end
+    end)
+    if DanTraits_TraitsChanged then DanTraits_TraitsChanged(player) end
+    if ok then d[flag] = true end
+    return ok
 end

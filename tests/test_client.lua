@@ -36,7 +36,10 @@ DanTraits_IsStrips, DanTraits_IsMetformin = isKind("strips"), isKind("metformin"
 DanTraits_IsIronPills, DanTraits_IsNicotineGum = isKind("iron"), isKind("gum")
 local diabetic = true
 DanTraits_IsDiabetic = function() return diabetic end
-DanTraits_RefusesFood = function(_, item) return item._kind == "meat" end
+DanTraits_RefuseReason = function(_, item)
+  if item._kind == "meat" then return "UI_DanTraits_VegetarianRefuse" end
+  if item._kind == "cigs" then return "UI_DanTraits_StraightEdgeRefuse" end
+end
 
 H.load("client/DanTraits_Client.lua")
 H.expectHooks("OnFillInventoryObjectContextMenu", "OnGameBoot", "OnMainMenuEnter")
@@ -152,6 +155,9 @@ assert(eat.options[2].notAvailable, "the custom eat option too")
 local bread = menu({ "ContextMenu_Eat" })
 H.fire("OnFillInventoryObjectContextMenu", 0, bread, { item("bread", 1) })
 assert(not bread.options[1].notAvailable, "bread: left alone")
+local smoke = menu({ "ContextMenu_Eat", "Smoke" })
+H.fire("OnFillInventoryObjectContextMenu", 0, smoke, { item("cigs", 1, { getCustomMenuOption = function() return "Smoke" end }) })
+assert(smoke.options[2].notAvailable and tip(smoke.options[2]) == "Tooltip_DanTraits_StraightEdgeRefuse", "Straight Edge: Smoke greyed with its own reason")
 local noEat = menu({})
 H.fire("OnFillInventoryObjectContextMenu", 0, noEat, { meat })   -- no Eat option on the menu: no error
 assert(#noEat.options == 0, "no Eat option: nothing to grey")

@@ -14,5 +14,8 @@
     "Tooltip_DanTraits_IronPills": "Iron supplement. One a day keeps anaemia at bay. 30 pills.",
     "Tooltip_DanTraits_IronPillsEmpty": "Empty.",
     "Tooltip_DanTraits_NicotineGum": "Takes most of the edge off a cigarette craving, without smoking. Quitting still takes three weeks without tobacco. 10 pieces.",
-    "Tooltip_DanTraits_NicotineGumEmpty": "Empty."
+    "Tooltip_DanTraits_NicotineGumEmpty": "Empty.",
+    "Tooltip_DanTraits_StraightEdgeRefuse": "You don't drink or smoke.",
+    "Tooltip_DanTraits_Anticonvulsants": "For epilepsy. One pill every 12 hours keeps seizures down. 30 pills.",
+    "Tooltip_DanTraits_AnticonvulsantsEmpty": "Empty."
 }

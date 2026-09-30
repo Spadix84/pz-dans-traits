@@ -107,6 +107,26 @@ local ITEMS = {
         clutter = { ClosetItems = 0.01 },
     },
     {
+        -- Epilepsy: a prescription like metformin, a little rarer
+        name = "DanTraits.Anticonvulsants",
+        procedural = {
+            BathroomCabinet = 0.8, BathroomCounter = 0.4, BathroomShelf = 0.4,
+            MedicalCabinet = 2, MedicalClinicDrugs = 4, MedicalStorageDrugs = 6, HospitalRoomShelves = 4,
+            DoctorTools = 5, NurseTools = 2, AmbulanceDriverTools = 1, StoreShelfMedical = 2,
+            SafehouseMedical = 5, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
+            DerelictHouseDrugs = 0.5, DrugShackDrugs = 0.5, ArmyStorageMedical = 2, TestingLab = 3,
+            KitchenRandom = 0.05,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.8 },
+            { { "all", "inventoryfemale", "items" }, 0.08 },
+            { { "all", "inventorymale", "items" }, 0.08 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 3 },
+        },
+        bags = { HandbagsAndPurses = 0.02 },
+        clutter = { ClosetItems = 0.01 },
+    },
+    {
         name = "DanTraits.IronPills",
         procedural = {
             BathroomCabinet = 1.5, BathroomCounter = 0.5, BathroomShelf = 0.5,

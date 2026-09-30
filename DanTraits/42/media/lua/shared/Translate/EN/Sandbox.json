@@ -25,5 +25,9 @@
     "Sandbox_DanTraitsHangoverEnabled": "Hangovers",
     "Sandbox_DanTraitsHangoverEnabled_tooltip": "Drinking past a buzz builds a hangover for the morning after: headache, low mood, thirst, tiredness, and a worse night's sleep.<br>Off: no hangovers.",
     "Sandbox_DanTraitsDrinkReliefEnabled": "Drink Relief",
-    "Sandbox_DanTraitsDrinkReliefEnabled_tooltip": "Drink eases pain and panic in proportion to how drunk you are, instead of one sip counting as a full dose of painkiller and beta blocker.<br>Off: vanilla, any drink is a full dose."
+    "Sandbox_DanTraitsDrinkReliefEnabled_tooltip": "Drink eases pain and panic in proportion to how drunk you are, instead of one sip counting as a full dose of painkiller and beta blocker.<br>Off: vanilla, any drink is a full dose.",
+    "Sandbox_DanTraitsSunburnEnabled": "Sunburn",
+    "Sandbox_DanTraitsSunburnEnabled_tooltip": "Hours in the summer sun on bare skin burn it: a day of pain on each burnt part, and a worse night. Clothing, a hat and shade protect.<br>Off: no sunburn.",
+    "Sandbox_DanTraitsDehydrationEnabled": "Dehydration",
+    "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only."
 }
