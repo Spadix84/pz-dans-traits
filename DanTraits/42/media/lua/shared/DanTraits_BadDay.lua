@@ -20,14 +20,14 @@ local traitData = DanTraits_Data
 -- on top. Hemophilia and Bad Day are mutually exclusive (scripts/DanTraits.txt);
 -- with Anaemic the start is probably unwinnable.
 --
--- BALANCE PENDING (plans/21-bad-day-balance.md). Played 2026-09-30, plain
+-- BALANCE PENDING (README, Status and known issues). Played 2026-09-30, plain
 -- character: the shard bled 1.6% a minute (bleeding time about 13.6); pulled
 -- and bandaged at 16 minutes with 27% lost, each bandage soaked in 5 to 6
 -- minutes, 48% lost by 49 minutes. Without stitching supplies the opening
 -- kills even a plain character. Left as it is for now by choice; only the
--- Hemophilia exclusion was taken. The dials are listed in the plan
--- (a fixed low bleeding time on the shard, a starting bandage, a zeroed
--- hangover load, Hemophilia exclusion) and wait for a play test. Replay the
+-- Hemophilia exclusion was taken. The other dials (a fixed low
+-- bleeding time of 3 on the shard, a starting bandage, d.hoLoad = 0 so the
+-- opening drink arms no hangover) wait for a play test. Replay the
 -- opening without a new character with the console command `badday`
 -- (`badday fire` also relights the house): DanTraits_BadDayReplay.
 -- Since 2026-09-30 a needle and thread wait in a nearby house (below).

@@ -1,8 +1,8 @@
 -- Offline test for DanTraits_BadDay.lua: the opening applies once (drunk, a cold, a shard in the
 -- groin, no clothes, soaked), is idempotent when the character is created again (a reload), does
 -- nothing after the first hour or without the trait; the fire starts once, only indoors; and the
--- console replay (`badday`, DanTraits_BadDayReplay, plan 21) clears the flags and applies again.
--- No balance dial is tested here: they wait for a play test (plans/21-bad-day-balance.md).
+-- console replay (`badday`, DanTraits_BadDayReplay) clears the flags and applies again.
+-- No balance dial is tested here: they wait for a play test (README, Status and known issues).
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
