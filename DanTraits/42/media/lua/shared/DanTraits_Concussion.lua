@@ -37,7 +37,6 @@ require "DanTraits"
 local notify = DanTraits_Notify
 local notifyGood = DanTraits_NotifyGood
 local traitData = DanTraits_Data
-local fraction = DanTraits_StatFraction
 
 -- falls and crashes each on their own scale: { no concussion under, certain from, how bad per point over }
 local CC_FALL          = { 3, 15, 0.04 }   -- in play a second-floor drop costs about 5, a third-floor
@@ -74,7 +73,6 @@ local CC_TIER          = { 0.02, CC_MODERATE, CC_SEVERE }
 local clamp01 = DanTraits_Clamp01
 
 local function sandboxOn() return DanTraits_SandboxOn("ConcussionEnabled") end
-function DanTraits_ConcussionActive() return sandboxOn() end
 
 local roll = DanTraits_Roll
 local randRange = DanTraits_RandRange
@@ -92,7 +90,6 @@ local function helmeted(player)
     end)
     return defense >= CC_HELMET
 end
-DanTraits_Helmeted = helmeted
 
 local function headPart(player)
     local part = nil
@@ -128,7 +125,6 @@ local function impactKnock(player, amount, scale)
     local score = clamp01(CC_BASE + scale[3] * (amount - scale[1]))
     return DanTraits_KnockHead(player, chance, score)
 end
-DanTraits_ImpactKnock = impactKnock
 
 -- the car's top speed over about the last second (the crash itself slows it)
 local speedTop, speedTopMs = 0, 0
@@ -181,7 +177,6 @@ local function updateConcussionFrame(player)
     local okR, running = pcall(function() return player:isRunning() end)
     if (okS and sprinting) or (okR and running) then ran = true end
 end
-DanTraits_updateConcussionFrame = updateConcussionFrame
 
 -- slower endurance recovery, through the stat delta pipeline (DanTraits_Util.lua)
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)
@@ -256,7 +251,6 @@ local function updateConcussionMinute(player, d)
         pcall(function() stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + CC_FATIGUE * s)) end)
     end
 end
-DanTraits_updateConcussionMinute = updateConcussionMinute
 
 -- light wakes a concussed sleeper more easily
 DanTraits_AddHook("sleepWake", function(m, player)

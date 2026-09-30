@@ -17,7 +17,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NOISE = ("not registered", "[DanTraits] ate", "[DanTraits] character traits", "telemetry]", "SAMPLE:")
+NOISE = ("not registered", "[DanTraits] character traits", "telemetry]", "SAMPLE:")
 PASS_SUFFIX = ": all checks passed"   # what tests/harness.lua's H.pass prints as the last line
 
 

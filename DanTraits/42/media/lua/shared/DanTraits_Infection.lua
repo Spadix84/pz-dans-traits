@@ -88,7 +88,6 @@ local STAGE_NOTICE = { [2] = "UI_DanTraits_InfectionLocal", [3] = "UI_DanTraits_
 local clamp01 = DanTraits_Clamp01
 
 local function sandboxOn() return DanTraits_SandboxOn("InfectionEnabled") end
-function DanTraits_InfectionActive() return sandboxOn() end
 
 local num = DanTraits_PartNum
 local is = DanTraits_PartIs
@@ -399,7 +398,6 @@ local function updateInfectionMinute(player, d)
         end
     end
 end
-DanTraits_updateInfectionMinute = updateInfectionMinute
 
 -- a dose: from eating the game's Antibiotics, or the console
 function DanTraits_TakeAntibiotic(player, amount)

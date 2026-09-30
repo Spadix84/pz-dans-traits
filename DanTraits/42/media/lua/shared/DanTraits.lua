@@ -436,9 +436,10 @@ end
 wrapPillAction()
 Events.OnGameStart.Add(wrapPillAction)
 
--- Log the traits the character actually carries once the world is up, so a
--- wiped character shows up in the log immediately.
+-- Debug mode only: log the traits the character actually carries once the
+-- world is up, so a wiped character shows up in the log immediately.
 local function danTraitsLogCharacterTraits()
+    if not (isDebugEnabled and isDebugEnabled()) then return end
     local player = getSpecificPlayer(0)
     if not player then return end
     local names = {}
@@ -455,15 +456,15 @@ Events.OnGameStart.Add(danTraitsLogCharacterTraits)
 -- finishes loading. If that list is empty the save records no mods; the next
 -- in-session load then applies the empty list, unloads every mod, and the
 -- character loses its mod traits (and everything after them in the file).
--- Diagnose, and if "currentGame" is empty while mods are active, fill it
--- from "default" before the world finishes loading.
+-- If "currentGame" is empty while mods are active, fill it from "default"
+-- before the world finishes loading (and in debug mode, log both counts).
 local function danTraitsModListCheck(stage)
     pcall(function()
         local current = ActiveMods.getById("currentGame")
         local default = ActiveMods.getById("default")
         local nCurrent = current and current:getMods():size() or -1
         local nDefault = default and default:getMods():size() or -1
-        print("[DanTraits] active mods at " .. stage .. ": currentGame=" .. nCurrent .. " default=" .. nDefault)
+        if isDebugEnabled and isDebugEnabled() then print("[DanTraits] active mods at " .. stage .. ": currentGame=" .. nCurrent .. " default=" .. nDefault) end
         if current and default and nCurrent == 0 and nDefault > 0 then
             current:copyFrom(default)
             print("[DanTraits] currentGame mod list was empty; copied " .. nDefault .. " mods from default")

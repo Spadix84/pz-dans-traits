@@ -96,7 +96,6 @@ assert(files["DanTraits_Commands.txt"] == "", "command file emptied")
 local snap = files["DanTraits_Telemetry.json"]
 assert(snap:find("unknown command: bogus", 1, true) and snap:find("set glucose = 40", 1, true), "results in the log")
 -- nothing to read: file untouched, no new log entries
-local before = #DanTraits_JsonEncode({})
 H.now = 3200; tick()
 assert(files["DanTraits_Commands.txt"] == "", "empty stays empty")
 assert(DanTraits_RunCommand(player, "set mddEpisode false") == "set mddEpisode = false" and md.DanTraits.mddEpisode == false)

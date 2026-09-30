@@ -143,7 +143,6 @@ local function updateMigraineTen(player, d)
     d.migChance = chance
     if ZombRand(10000) < chance * 100 then startAura(player, d) end
 end
-DanTraits_updateMigraineTen = updateMigraineTen
 
 local function updateMigraineMinute(player, d)
     if not hasTrait(player, "migraine") then return end
@@ -180,7 +179,6 @@ local function updateMigraineMinute(player, d)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + MIG_STRESS_RATE * s))
     end)
 end
-DanTraits_updateMigraineMinute = updateMigraineMinute
 
 -- an attack makes the eyes sensitive: light wakes you more easily
 DanTraits_AddHook("sleepWake", function(m, player, d)

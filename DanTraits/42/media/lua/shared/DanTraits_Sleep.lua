@@ -86,7 +86,6 @@ local function lightLevel(player)
     end)
     return light
 end
-DanTraits_SleepLight = lightLevel
 
 -- a multiplier on a good (dark > 0) or bad (dark < 0) effect, for the trait
 local function scaled(player, dark, good, bad)
@@ -190,7 +189,6 @@ local function updateSleepMinute(player, d)
         wakeUp(player, "UI_DanTraits_SleepLightWoke")
     end
 end
-DanTraits_updateSleepMinute = updateSleepMinute
 
 -- the night's score: how dark it was, on average, while asleep
 DanTraits_AddHook("nightQuality", function(quality, player, d)
@@ -241,7 +239,6 @@ local function grantWakeful(player)
     DanTraits_TraitsChanged(player)
     if ok then d.slWakefulGranted = true end
 end
-DanTraits_GrantWakeful = grantWakeful
 
 local function onSleepCreatePlayer(playerNum, player) grantWakeful(player) end
 local function onSleepGameStart() grantWakeful(getSpecificPlayer(0)) end

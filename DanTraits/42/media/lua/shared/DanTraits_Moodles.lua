@@ -151,6 +151,5 @@ local function updateMoodlesMinute(player, d)
         DanTraits_LevelMoodle(player, name, level)
     end
 end
-DanTraits_updateMoodlesMinute = updateMoodlesMinute
 
 DanTraits_Every("minute", "Moodles", updateMoodlesMinute, 96)
