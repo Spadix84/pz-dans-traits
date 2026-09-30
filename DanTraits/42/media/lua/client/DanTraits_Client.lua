@@ -19,6 +19,7 @@ if ok and MF and MF.createMoodle then
     MF.createMoodle("BloodLoss")
     MF.createMoodle("Infection")
     MF.createMoodle("Concussion")
+    MF.createMoodle("BloodSugar")
 end
 
 local function actualItems(items)

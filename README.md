@@ -16,8 +16,8 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 | Brittle Asthma | -8 | Airway irritation from cold, corpses, exertion (spending endurance when it is low, not just being worn down) and panic; four tiers up to an attack (an attack that empties you can black you out; at rest it eases over about four hours, the inhaler ends it at once); smoking, and a smoker's lungs, make it worse; rescue inhaler item. |
 | Gluten Intolerance | -4 | Wheat brings on a flare: cramps, nausea, low mood. |
 | Vegetarian | -4 | Meat, fish, insects and anything cooked with them are refused. |
-| Diabetes Type 1 | -10 | Hidden blood sugar model; insulin pen, glucose meter, test strips; a bad low can put you on the floor. High sugar makes wound infections likelier and faster. |
-| Diabetes Type 2 | -5 | Same model with the body's own insulin, limited by weight; metformin; a bad low can put you on the floor. High sugar makes wound infections likelier and faster. |
+| Diabetes Type 1 | -10 | Hidden blood sugar model; insulin pen, glucose meter, test strips; a Blood Sugar moodle says when it is out of range (not which way: that is the meter's job); a bad low can put you on the floor. High sugar makes wound infections likelier and faster. |
+| Diabetes Type 2 | -5 | Same model and moodle with the body's own insulin, limited by weight; metformin; a bad low can put you on the floor. High sugar makes wound infections likelier and faster. |
 | Renaissance Faire Geek | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
 | Gym Regular | +1 | Every exercise starts at regularity 50 (a Fitness Instructor's head start); Vitality's exercise score starts neutral instead of empty. |
 | Caffeine Dependent | -2 | Half a day without coffee, tea, cola or chocolate brings a headache, tiredness and low mood; a week dry breaks the habit. |
@@ -57,7 +57,7 @@ Light wakes some people more easily: Restless Sleeper, Night Owl and Cat's Eyes 
 
 **Drink relief** (everyone): vanilla treats any sip of alcohol as a full dose of beta blockers and painkillers, however small. That is undone, and the relief follows the Drunk moodle instead: pain reduction of 20, 40, 60 or 80 by level, and panic that settles at a quarter, half, three quarters or the full beta-blocker rate.
 
-The airway, vitality, sleep, blood loss, infection and concussion moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
+The airway, vitality, sleep, blood loss, infection, concussion and blood sugar moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
 
 ## Layout
 
