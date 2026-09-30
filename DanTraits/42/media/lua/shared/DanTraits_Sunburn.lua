@@ -28,7 +28,8 @@
 -- Skin toughens: every time you burn, the skin you are left with takes longer
 -- to burn again (a tan, 0..1: a quarter a burn; at full it takes three times
 -- the sun, nine hours of the midday kind, which a day outdoors never adds up
--- to). It fades over a month out of the sun.
+-- to). It fades over a month out of the sun. Outdoorsman skin is used to
+-- it: twice the sun to burn (the vanilla trait, reworked in place).
 --
 -- Sun block (the Sunblock item, 8 applications, common in bathrooms, on
 -- toiletry shelves and in lockers): one application keeps the sun off all
@@ -66,6 +67,7 @@ local SB_TAN_FADE_DAYS = 30      -- days for a full tan to fade
 local SB_BLOCK_MIN     = 480     -- minutes one application of sun block lasts
 local SB_BLOCK         = 0       -- exposure x this while it is on
 local SB_BLOCK_ITEM    = "DanTraits.Sunblock"
+local SB_OUTDOORSMAN   = 2       -- Outdoorsman: minutes to burn x this
 
 local PARTS = { "Head", "Neck", "Torso_Upper", "Torso_Lower", "Groin", "UpperArm_L", "UpperArm_R",
                 "ForeArm_L", "ForeArm_R", "Hand_L", "Hand_R", "UpperLeg_L", "UpperLeg_R",
@@ -106,8 +108,13 @@ local function sunOn(player)
 end
 DanTraits_SunOn = sunOn
 
--- minutes of full sun on bare skin to burn this character: longer with a tan
-local function burnMinutes(d) return SB_BURN_MIN * (1 + SB_TAN_MORE * clamp01(d.sbTan or 0)) end
+-- minutes of full sun on bare skin to burn this character: longer with a
+-- tan, and for an Outdoorsman
+local function burnMinutes(d, player)
+    local m = SB_BURN_MIN * (1 + SB_TAN_MORE * clamp01(d.sbTan or 0))
+    if player and DanTraits_HasVanillaTrait(player, "base:outdoorsman") then m = m * SB_OUTDOORSMAN end
+    return m
+end
 DanTraits_SunBurnMinutes = burnMinutes
 
 -- sun block: minutes left, for the moodle and the dashboard
@@ -198,7 +205,7 @@ local function updateSunburnMinute(player, d)
     end
     local covered = sun > 0 and coveredParts(player) or {}
     local hottest, newBurn = 0, false
-    local toBurn = burnMinutes(d)
+    local toBurn = burnMinutes(d, player)
     for _, name in ipairs(PARTS) do
         local exp = d.sbExp[name] or 0
         if sun > 0 and not covered[name] then
@@ -272,7 +279,7 @@ DanTraits_ExtraCommands.sunburn = function(player, args)
     end
     if args[1] == "tan" then
         d.sbTan = clamp01(tonumber(args[2]) or 0)
-        return "tan " .. tostring(d.sbTan) .. ": " .. tostring(burnMinutes(d)) .. " minutes of full sun to burn"
+        return "tan " .. tostring(d.sbTan) .. ": " .. tostring(burnMinutes(d, player)) .. " minutes of full sun to burn"
     end
     local want = args[1]
     if not want then return "sunburn <part|all> | sunburn clear | sunburn block [minutes] | sunburn tan <0..1> (sun now " .. tostring(sunOn(player)) .. ")" end

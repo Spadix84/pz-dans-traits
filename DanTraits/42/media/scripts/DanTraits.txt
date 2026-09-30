@@ -447,6 +447,31 @@ module DanTraits {
         MutuallyExclusiveTraits = base:fasthealer;base:slowhealer,
     }
 
+    /* Blood clots quickly: bleeds run down twice as fast and lose a quarter
+       less blood. DanTraits_Positives.lua. */
+    character_trait_definition DanTraits:goodclotter
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:goodclotter,
+        Cost = 3,
+        UIName = UI_trait_DanGoodClotter,
+        UIDescription = UI_trait_DanGoodClotterdesc,
+        MutuallyExclusiveTraits = DanTraits:hemophilia,
+    }
+
+    /* Knocks to the head concuss less often and less badly, and concussions
+       heal faster. DanTraits_Positives.lua. */
+    character_trait_definition DanTraits:thickskull
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:thickskull,
+        Cost = 2,
+        UIName = UI_trait_DanThickSkull,
+        UIDescription = UI_trait_DanThickSkulldesc,
+    }
+
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler

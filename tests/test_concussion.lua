@@ -183,4 +183,14 @@ end
 vitE = 1; p = newPlayer(); H.current = p; DanTraits_KnockHead(p, 1, 0.3); s = D(p).ccScore; p._asleep = true; minute(); p._asleep = false
 near(D(p).ccScore, s - 0.5 / 1440 * 1.25, 1e-9, "asleep: the factor rides on the doubled rate")
 
+-- 12. the knock hooks (Thick Skull, DanTraits_Positives.lua): chance and how bad are cut before a helmet's cut
+local thick = true
+DanTraits_AddHook("concussionChance", function(c) if thick then return c * 0.5 end end)
+DanTraits_AddHook("concussionScore", function(s) if thick then return s * 0.75 end end)
+p = newPlayer(); H.current = p; p._defense = 80
+H.rollf = 0.25; DanTraits_KnockHead(p, 1, 0.4)
+assert(D(p) == nil or D(p).ccScore == nil, "hooks and helmet: 1 x 0.5 x 0.4 = a 20% chance, roll 0.25 misses")
+H.rollf = 0.15; DanTraits_KnockHead(p, 1, 0.4); near(D(p).ccScore, 0.4 * 0.75 * 0.6, 1e-9, "hooks and helmet: 0.4 x 0.75 x 0.6")
+thick = false
+
 H.pass()

@@ -20,6 +20,17 @@
 --   blood loss the volume and the red cells come back half as fast again
 --   (the bloodVolRefill and bloodCellRebuild hooks of DanTraits_Blood.lua).
 --   Not with Fast Healer (it is already in here) or Slow Healer.
+-- Good Clotter: blood clots quickly. A bleed's clock (the game's bleeding
+--   time) runs down twice as fast: each minute the fall vanilla made since
+--   the last minute is taken off again. Not while a shard or bullet is still
+--   in (the game holds that wound open on purpose). With the blood system on,
+--   a bleed loses a quarter less blood (the bloodBleed hook of
+--   DanTraits_Blood.lua); with it off, the shorter bleed costs less health.
+--   Not with Hemophilia.
+-- Thick Skull: a knock to the head concusses half as often and a quarter
+--   less badly (the concussionChance and concussionScore hooks of
+--   DanTraits_Concussion.lua, before a helmet's cut, so the two stack), and a
+--   concussion heals half as fast again (concussionHeal).
 -- The one-shot starts are applied once, to a new character, like Gym
 -- Regular; the hooks run for as long as the trait is there.
 require "DanTraits"
@@ -41,6 +52,12 @@ local HL_INTOX          = 0.8     -- Hollow Legs: intoxication a drink adds x th
 local HL_SEVERITY       = 0.6     -- hangover severity x this
 local HL_HOURS          = 0.7     -- hangover length x this
 local FR_BLOOD          = 1.5     -- Fast Recovery: blood volume and red cells come back x this
+local GC_CLOT           = 2       -- Good Clotter: bleeding time runs down x this
+local GC_BLOOD          = 0.75    -- blood lost from a bleed x this
+local GC_FLOOR          = 0.01    -- never cut a bleed below this: the game ends it and clears its flags
+local TS_CHANCE         = 0.5     -- Thick Skull: chance a knock concusses x this
+local TS_SCORE          = 0.75    -- how bad x this
+local TS_HEAL           = 1.5     -- heals x this
 
 -- Iron Stomach ---------------------------------------------------------------
 DanTraits_AddHook("foodGrade", function(grade, player, item, why)
@@ -136,6 +153,59 @@ DanTraits_AddHook("bloodCellRebuild", function(rate, player)
     return rate * FR_BLOOD
 end)
 
+-- Good Clotter ---------------------------------------------------------------
+DanTraits_AddHook("bloodBleed", function(rate, player)
+    if not hasTrait(player, "goodclotter") then return nil end
+    return rate * GC_BLOOD
+end)
+
+local partIs = DanTraits_PartIs
+
+-- each part's bleeding time as this left it last minute, by "p<index>"; whatever
+-- vanilla took off since then is taken off (GC_CLOT - 1) times again
+local function updateGoodClotterMinute(player, d)
+    if not hasTrait(player, "goodclotter") then
+        d.gcBleed = nil
+        return
+    end
+    local last = d.gcBleed or {}
+    local now, any = {}, false
+    pcall(function()
+        local parts = player:getBodyDamage():getBodyParts()
+        for i = 0, parts:size() - 1 do
+            local part = parts:get(i)
+            local t = 0
+            pcall(function() t = part:getBleedingTime() or 0 end)
+            if t > 0 and not (partIs(part, "haveGlass") or partIs(part, "haveBullet")) then
+                local key = "p" .. i
+                local was = last[key]
+                if was and t < was and t > GC_FLOOR then
+                    local cut = math.max(GC_FLOOR, t - (was - t) * (GC_CLOT - 1))
+                    if pcall(function() part:setBleedingTime(cut) end) then t = cut end
+                end
+                now[key] = t
+                any = true
+            end
+        end
+    end)
+    d.gcBleed = any and now or nil
+end
+DanTraits_updateGoodClotterMinute = updateGoodClotterMinute
+
+-- Thick Skull ----------------------------------------------------------------
+DanTraits_AddHook("concussionChance", function(chance, player)
+    if not hasTrait(player, "thickskull") then return nil end
+    return chance * TS_CHANCE
+end)
+DanTraits_AddHook("concussionScore", function(score, player)
+    if not hasTrait(player, "thickskull") then return nil end
+    return score * TS_SCORE
+end)
+DanTraits_AddHook("concussionHeal", function(heal, player)
+    if not hasTrait(player, "thickskull") then return nil end
+    return heal * TS_HEAL
+end)
+
 -- the one-shot starts, and the vanilla trait Fast Recovery carries
 local function onPositivesCreate(player)
     if not player then return end
@@ -157,5 +227,6 @@ end
 local function onPositivesCreatePlayer(playerNum, player) onPositivesCreate(player) end
 local function onPositivesGameStart() onPositivesCreate(getSpecificPlayer(0)) end
 
+DanTraits_Every("minute", "GoodClotter", updateGoodClotterMinute, 19)
 Events.OnCreatePlayer.Add(onPositivesCreatePlayer)
 Events.OnGameStart.Add(onPositivesGameStart)
