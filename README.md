@@ -100,7 +100,7 @@ Mod data is one table per player (`getModData().DanTraits`) with a prefix per sy
 1. Edit in this repo.
 2. `python tests/run_tests.py`
 3. `python deploy.py` then restart the game (traits, items and Lua are read at boot).
-4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events. The game side of it (telemetry file and command channel) only runs in debug mode (start the game with `-debug`) or with **Developer Tools** on in the Vitality Project sandbox page, and never in multiplayer.
+4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events. The game side of it (telemetry file and command channel) only runs in debug mode (start the game with `-debug`), and never in multiplayer.
 
 To publish: `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` (workshop.txt, preview.png and `Contents/mods/DanTraits` without the dev tools), then upload it from the game's main menu, Workshop. After the first upload the game writes the item's `id=` into that workshop.txt; the build keeps it, so later uploads update the same item.
 

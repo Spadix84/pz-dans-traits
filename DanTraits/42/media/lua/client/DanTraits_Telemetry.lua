@@ -7,9 +7,9 @@
 -- Once a second <user>/Zomboid/Lua/DanTraits_Commands.txt is read, each
 -- line run as a command, and the file emptied. Single player only.
 --
--- Off unless the game runs in debug mode (-debug) or the "Developer Tools"
--- sandbox option is on: the command channel can give items, set health and
--- run Lua, so it never runs for an ordinary player or in multiplayer.
+-- Off unless the game runs in debug mode (-debug): the command channel can
+-- give items, set health and run Lua, so it never runs for an ordinary player
+-- or in multiplayer.
 --
 -- Commands (one per line):
 --   set <key> <value>        mod-data field: set glucose 40 / set asthma 0.9 / set mddEpisode true / set x nil
@@ -458,9 +458,7 @@ local function enabled()
     if mp then return false end
     local debug = false
     pcall(function() debug = isDebugEnabled() == true end)
-    if debug then return true end
-    local sv = SandboxVars and SandboxVars.DanTraits
-    return sv ~= nil and sv.DevTools == true
+    return debug
 end
 DanTraits_TelemetryEnabled = enabled
 
