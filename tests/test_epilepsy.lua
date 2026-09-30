@@ -55,6 +55,9 @@ H.rollf = 0.99
 H.mins(7)
 assert(d.epAuraMin == 1 and not d.epSeizures, "still coming")
 H.minute()
+assert(d.epAuraMin == 0 and not d.epSeizures, "game minutes up, but under 30 real seconds: still the warning")
+H.now = H.now + 30000
+H.minute()
 assert(d.epSeizures == 1 and H.halo[#H.halo] == "UI_DanTraits_EpilepsySeizure", "seizure")
 assert(dropped == 1 and p._bump == "stagger" and DanTraits_IsPassedOut(p), "dropped, fell, out")
 near(p._st.fatigue, 0.3, 1e-9, "exhausted")
@@ -94,5 +97,32 @@ local n = H.player({ traits = { "epilepsy" } }); H.current = n
 H.fire("OnCreatePlayer", 0, n); H.fire("OnCreatePlayer", 0, n)
 assert(#n._inv == 1 and n._inv[1]._type == "DanTraits.Anticonvulsants", "one bottle")
 assert(DanTraits_IsAnticonvulsants(n._inv[1]), "and it is recognised")
+
+-- 7. at the wheel: no fall, no sitting on the floor, and the engine is cut; a passenger's is not
+local sent = {}
+function sendClientCommand(_, module, command) sent[#sent + 1] = module .. " " .. command end
+local function inCar(driving)
+  local c = H.player({ traits = { "epilepsy" } }); H.current = c
+  local car = { getDriver = function() return driving and c or nil end }
+  c.getVehicle = function() return car end
+  c._events = 0
+  c.reportEvent = function() c._events = c._events + 1 end
+  c.isSitOnGround = function() return false end
+  return c, DanTraits_Data(c)
+end
+H.now = H.now + 600000; H.hours = H.hours + 10; DanTraits_FaintTick()   -- anyone still out comes round
+local c, cd = inCar(true)
+H.rollf = 0; H.minute(); H.rollf = 0.99
+H.mins(8); H.now = H.now + 30000; H.minute()
+assert(cd.epSeizures == 1 and DanTraits_IsPassedOut(c), "out cold at the wheel")
+assert(not c._bump, "no fall out of the seat")
+assert(#sent == 1 and sent[1] == "vehicle shutOff", "the engine cut out")
+H.now = H.now + 5000; DanTraits_FaintTick(); DanTraits_FaintTick()
+assert(c._events == 0, "not made to sit on the floor")
+H.now = H.now + 600000; H.hours = H.hours + 10; DanTraits_FaintTick()
+local pas, pd = inCar(false)
+H.rollf = 0; H.minute(); H.rollf = 0.99
+H.mins(8); H.now = H.now + 30000; H.minute()
+assert(pd.epSeizures == 1 and #sent == 1 and not pas._bump, "a passenger: out, no fall, the driver's engine left alone")
 
 H.pass()

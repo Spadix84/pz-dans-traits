@@ -97,7 +97,7 @@ assert(DanTraits_IsInhaler(nw._inv[1]), "item check by full type")
 assert(not DanTraits_IsInhaler({ getFullType = function() return "Base.PillsBeta" end }), "beta blockers are not inhalers")
 assert(not DanTraits_IsInhaler(nil), "nil safe")
 H.fire("OnCreatePlayer", 0, nw); assert(#nw._inv == 1, "only once")
-assert(#(H.handlers.OnFillContainer or {}) == 1, "no inhaler container conversion hook: Jinxed registers the only OnFillContainer handler")
+assert(#(H.handlers.OnFillContainer or {}) == 2, "no inhaler container conversion hook: only Jinxed and Bad Day's sewing kit register OnFillContainer")
 print("new character gets 1 " .. nw._inv[1]._type)
 -- 10. panic: nothing under 20, linear to 0.008/min at 100, and a gas mask does not help
 local pn = newPlayer({}); H.current = pn
