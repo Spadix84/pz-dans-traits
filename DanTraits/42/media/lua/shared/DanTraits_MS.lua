@@ -6,12 +6,18 @@
 -- temperature when exercise or too many clothes push it up. It builds over
 -- about half an hour and fades over about twenty minutes once you cool off,
 -- twice as fast when you are wet; every drink knocks some off.
---   Warm (0.25): tired sooner, endurance comes back slower.
+--   Warm (0.25): tired sooner, endurance comes back slower. Nothing else.
 --   Hot (0.5): the hands go stiff and clumsy (the game's own stiffness on
 --     hands and forearms: slower and sore), a swing can throw the weapon,
 --     and the pain climbs.
 --   Overheated (0.8): severe pain, and every minute a chance the hands give
 --     out and drop whatever they hold.
+-- The game turns the stiffness into pain of its own, so the pain floor here
+-- is set lower than the pain you feel (about 60 in all at a full load).
+-- Cooling off clears it quickly: the stiffness MS put on (heat's or a
+-- flare's) eases 2 a minute once the cause has passed, and MS's pain
+-- leaves the head 3 a minute, where the game alone would take hours and an
+-- hour.
 --
 -- Flares (relapses) come about once a month, more often with a fever or
 -- under stress, and last three to six days: heat hits half as hard again,
@@ -32,6 +38,8 @@
 -- Prednisone has to be found.
 --
 -- Mod data: msHeat (the heat load), msTier (the last heat notice's tier),
+-- msHands, msLegs, msPainHead (what MS last held the hands, legs and head at,
+-- for easing it off),
 -- msFlareH (hours of flare left), msFlares (count), msPred, msBac, msAman
 -- (the medication levels), msKitGiven.
 -- Console: ms heat <0..1> | ms flare | ms end | ms pill <pred|bac|aman>
@@ -58,11 +66,13 @@ local MS_TIER          = { 0.25, 0.5, 0.8 }   -- warm | hot | overheated
 -- what the heat does
 local MS_HEAT_FATIGUE  = 0.0004  -- tiredness a minute at a full load (from warm)
 local MS_HEAT_REGEN    = 0.5     -- endurance recovery x (1 - this x load) from warm
-local MS_HAND_STIFF    = 55      -- stiffness floor on hands and forearms at a full load (from warm)
-local MS_PAIN_HOT      = 20      -- pain floor at hot...
-local MS_PAIN          = 60      -- ...rising to this at a full load
+local MS_HAND_HOT      = 20      -- stiffness floor on hands and forearms at hot...
+local MS_HAND_STIFF    = 55      -- ...rising to this at a full load
+local MS_PAIN_HOT      = 12      -- pain floor at hot...
+local MS_PAIN          = 35      -- ...rising to this at a full load (the stiff hands add their own: about 60 in all)
 local MS_PAIN_RAMP     = 5
-local MS_FUMBLE        = 15      -- percent added to a swing's drop chance at a full load (from warm)
+local MS_FUMBLE_HOT    = 5       -- percent added to a swing's drop chance at hot...
+local MS_FUMBLE        = 15      -- ...rising to this at a full load
 local MS_GIVE_OUT_MIN  = 0.05    -- chance a minute, overheated, that the hands give out
 -- flares
 local MS_FLARE_H       = 1 / 720 -- flares an hour (about one a month)
@@ -77,6 +87,10 @@ local MS_FLARE_FATIGUE = 0.0004  -- ...and this more in a flare
 local MS_LEG_STIFF     = 8       -- stiffness floor on the legs...
 local MS_LEG_FLARE     = 35      -- ...in a flare
 local MS_HAND_FLARE    = 20      -- hands and forearms in a flare
+-- recovery: MS takes back what it put on (the game's own easing is slow:
+-- stiffness about 0.3 a minute, head pain about 1)
+local MS_EASE_STIFF    = 2       -- stiffness off a minute, down to the current floor
+local MS_EASE_PAIN     = 2       -- head pain off a minute on top of the game's 1
 -- medication
 local MS_MED_ON        = 0.5     -- a level that works
 local MS_PRED_BURN     = 3       -- flare hours gone per hour on prednisone
@@ -145,15 +159,50 @@ local function handsGiveOut(player)
     return dropped
 end
 
-local function setFloors(player, hands, legs)
+-- what MS holds a group of parts at now, and how far to take its earlier
+-- stiffness back: the ceiling falls MS_EASE_STIFF a minute toward the floor
+local function easing(d, key, floor)
+    local before = d[key] or 0
+    local ceiling = math.max(floor, before - MS_EASE_STIFF)
+    d[key] = ceiling > 0 and ceiling or nil
+    return before - ceiling
+end
+
+-- raise each part to its floor; while easing, take back as much as the
+-- ceiling fell, never below it (so only what MS put on comes off)
+local function setFloors(player, d, hands, legs)
+    local groups = { { HANDS, hands, easing(d, "msHands", hands) }, { LEGS, legs, easing(d, "msLegs", legs) } }
     pcall(function()
         local bd = player:getBodyDamage()
-        for _, list in ipairs({ { HANDS, hands }, { LEGS, legs } }) do
-            for _, name in ipairs(list[1]) do
+        for _, g in ipairs(groups) do
+            local floor, ease = g[2], g[3]
+            for _, name in ipairs(g[1]) do
                 local part = bd:getBodyPart(BodyPartType[name])
-                if part and (part:getStiffness() or 0) < list[2] then part:setStiffness(list[2]) end
+                if part then
+                    local stiff = part:getStiffness() or 0
+                    if stiff < floor then part:setStiffness(floor)
+                    elseif ease > 0 and stiff > floor then part:setStiffness(math.max(floor, stiff - ease)) end
+                end
             end
         end
+    end)
+end
+
+-- MS's pain floor this minute; once it drops, take MS's share off the head
+-- faster than the game would (other sources' floors are put back at order 95)
+local function easePain(player, d, floor)
+    local target = floor / DanTraits_PAIN_PART_RATIO
+    local before = d.msPainHead or 0
+    if target >= before then
+        d.msPainHead = target > 0 and target or nil
+        return
+    end
+    local ceiling = math.max(target, before - MS_EASE_PAIN - 1)
+    d.msPainHead = ceiling > 0 and ceiling or nil
+    pcall(function()
+        local head = player:getBodyDamage():getBodyPart(BodyPartType.Head)
+        local cur = head:getAdditionalPain() or 0
+        if cur > ceiling then head:setAdditionalPain(math.max(ceiling, cur - MS_EASE_PAIN)) end
     end)
 end
 
@@ -223,6 +272,7 @@ local function updateMSMinute(player, d)
     updateMeds(player, d)
     if not hasTrait(player, "ms") then
         d.msHeat, d.msTier, d.msFlareH = nil, nil, nil
+        d.msHands, d.msLegs, d.msPainHead = nil, nil, nil
         return
     end
     updateFlare(player, d)
@@ -238,16 +288,20 @@ local function updateMSMinute(player, d)
         DanTraits_StatAdd(stats, CharacterStat.FATIGUE, tired)
     end
 
-    -- stiffness: hands from heat or a flare, legs always
-    local hands = MS_HAND_STIFF * over(load, MS_TIER[1], 1)
+    -- stiffness: hands from heat (hot and up) or a flare, legs always
+    local hands = 0
+    if load >= MS_TIER[2] then hands = MS_HAND_HOT + (MS_HAND_STIFF - MS_HAND_HOT) * over(load, MS_TIER[2], 1) end
     if flaring then hands = math.max(hands, MS_HAND_FLARE) end
     local legs = flaring and MS_LEG_FLARE or MS_LEG_STIFF
     if on(d, "msBac") then hands, legs = hands * MS_BAC_STIFF, legs * MS_BAC_STIFF end
-    setFloors(player, hands, legs)
+    setFloors(player, d, hands, legs)
 
+    local pain = 0
     if load >= MS_TIER[2] then
-        DanTraits_PainFloor(player, d, "ms", MS_PAIN_HOT + (MS_PAIN - MS_PAIN_HOT) * over(load, MS_TIER[2], 1), MS_PAIN_RAMP)
+        pain = MS_PAIN_HOT + (MS_PAIN - MS_PAIN_HOT) * over(load, MS_TIER[2], 1)
+        DanTraits_PainFloor(player, d, "ms", pain, MS_PAIN_RAMP)
     end
+    easePain(player, d, pain)
     if load >= MS_TIER[3] and not (DanTraits_IsPassedOut and DanTraits_IsPassedOut(player))
         and DanTraits_Roll(MS_GIVE_OUT_MIN) then
         handsGiveOut(player)
@@ -259,8 +313,8 @@ DanTraits_AddHook("swingDrop", function(chance, player)
     if not hasTrait(player, "ms") then return nil end
     local d = player:getModData().DanTraits
     local load = d and d.msHeat or 0
-    if load < MS_TIER[1] then return nil end
-    return chance + MS_FUMBLE * over(load, MS_TIER[1], 1)
+    if load < MS_TIER[2] then return nil end
+    return chance + MS_FUMBLE_HOT + (MS_FUMBLE - MS_FUMBLE_HOT) * over(load, MS_TIER[2], 1)
 end)
 
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)

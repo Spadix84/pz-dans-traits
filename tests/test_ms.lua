@@ -2,7 +2,7 @@
 -- temperature, wetness and a flare; the lag; the tiers and their notices;
 -- what each tier does (fatigue, hand stiffness, pain, fumbles, hands giving
 -- out); flares and prednisone; baclofen and amantadine; a drink cooling you;
--- the starting bottles.
+-- the starting bottles; cooling off taking back MS's stiffness and pain.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -53,24 +53,26 @@ d.msHeat = 0.625; d.msTier = 2; H.climate.temp = 32   -- target 0.56: drifts dow
 for _, part in pairs(p._parts) do part._stiff = 0 end   -- the game eases stiffness itself; start clean
 H.minute()
 local load = d.msHeat
-near(p._parts.Hand_L._stiff, 55 * (load - 0.25) / 0.75, 1e-9, "hands stiff with the heat")
+near(p._parts.Hand_L._stiff, 20 + 35 * (load - 0.5) / 0.5, 1e-9, "hands stiff with the heat: 20 at hot to 55")
 assert(p._parts.Head._stiff == 0, "the head is left alone")
 near(p._parts.LowerLeg_L._stiff, 8, 1e-9, "legs: the everyday floor")
-near(d.painHurting.ms, 20 + 40 * (load - 0.5) / 0.5, 1e-6, "pain floor between 20 and 60")
-near(DanTraits_SwingDropChance(p), 15 * (load - 0.25) / 0.75, 1e-9, "a swing can throw the weapon")
+near(d.painHurting.ms, 12 + 23 * (load - 0.5) / 0.5, 1e-6, "pain floor between 12 and 35")
+near(DanTraits_SwingDropChance(p), 5 + 10 * (load - 0.5) / 0.5, 1e-9, "a swing can throw the weapon: 5% at hot to 15%")
 assert(#p._dropped == 0, "hot is not yet overheated: nothing given out")
 
 -- 4. overheated: the hands give out (5% a minute); warm is no fumble, no pain
 d.msHeat = 1; H.climate.temp = 60; p._st.temperature = 40; H.clearHalo()
 H.rollf = 0.04; H.minute(); H.rollf = 0.99
 assert(#p._dropped == 1 and H.halo[#H.halo] == "UI_DanTraits_MSHandsGiveOut", "a roll under 5%: hands give out")
-near(d.painHurting.ms, 60, 1e-9, "severe pain at full load")
+near(d.painHurting.ms, 35, 1e-9, "full load: a floor of 35 (the stiff hands add the rest)")
+near(p._parts.Hand_L._stiff, 55, 1e-9, "full load: hands at 55")
 local w = newPlayer(); H.current = w
 local wd = DanTraits_Data(w)
 wd.msHeat = 0.3; H.climate.temp = 30; p._st.temperature = 0
 H.minute(w)
 assert(not (wd.painHurting and wd.painHurting.ms), "warm: no pain floor")
-assert(DanTraits_SwingDropChance(w) > 0 and DanTraits_SwingDropChance(w) < 2, "warm: barely a fumble")
+near(DanTraits_SwingDropChance(w), 0, 1e-9, "warm: no fumble")
+near(w._parts.Hand_L._stiff, 0, 1e-9, "warm: the hands are fine")
 local before = w._st.fatigue
 H.minute(w)
 assert(w._st.fatigue > before, "tiring")
@@ -113,6 +115,10 @@ h = fd.msFlareH; H.minute(f); near(h - fd.msFlareH, 3 / 60, 1e-6, "prednisone: t
 local hunger = f._st.hunger; H.minute(f); assert(f._st.hunger > hunger, "prednisone makes you hungry")
 fd.msFlareH = 0.01; H.clearHalo(); H.minute(f)
 assert(fd.msFlareH == nil and H.halo[#H.halo] == "+UI_DanTraits_MSFlareEnds", "the flare passes")
+near(f._parts.LowerLeg_R._stiff, 33, 1e-9, "after the flare the legs ease 2 a minute")
+H.mins(5); near(f._parts.LowerLeg_R._stiff, 23, 1e-9, "...and keep easing")
+H.mins(20); near(f._parts.LowerLeg_R._stiff, 8, 1e-9, "...down to the everyday floor, no further")
+near(f._parts.Hand_R._stiff, 0, 1e-9, "the flare's weak hands go too")
 
 -- 8. baclofen halves the stiffness, heat's and legs' alike
 local b = newPlayer(); H.current = b
@@ -161,5 +167,38 @@ md.msFlareH = 5; assert(level("MSFlare", m, md) == 2, "a flare")
 md.msPred = 1; assert(level("MSFlare", m, md) == 1, "a flare on prednisone")
 assert(DanTraits_IsMSMed({ getFullType = function() return "DanTraits.Baclofen" end }), "baclofen is an MS pill")
 assert(not DanTraits_IsMSMed({ getFullType = function() return "Base.PillsBeta" end }), "beta blockers are not")
+
+-- 13. cooling off takes back what MS put on: stiffness 2 a minute, head
+--     pain 2 a minute on top of the game's own 1 (not simulated here), and
+--     nothing that MS didn't add
+local e = newPlayer(); H.current = e
+local ed = DanTraits_Data(e)
+e._head.getStiffness = function() return 0 end; e._head.setStiffness = function() end
+e._parts.Head = e._head
+ed.msHeat = 1; H.climate.temp = 60; e._st.temperature = 40
+H.mins(10)
+near(e._parts.Hand_L._stiff, 55, 1e-9, "overheated: hands at 55")
+near(H.pain(e), 35, 1e-6, "overheated: MS's floor reached")
+H.climate.temp = 15; e._st.temperature = 0; ed.msHeat = 0.2
+e._parts.Hand_L._stiff = 70   -- the game's own strain from a fight on top
+H.minute()
+near(e._parts.Hand_R._stiff, 53, 1e-9, "cool: the hands ease 2 a minute")
+near(e._parts.Hand_L._stiff, 68, 1e-9, "strain on top eases at the same pace")
+near(e._head._pain, 35 / DanTraits_PAIN_PART_RATIO - 2, 1e-6, "the head pain eases 2 a minute (plus the game's 1)")
+H.mins(9)
+near(e._parts.Hand_R._stiff, 35, 1e-9, "ten minutes: 35")
+H.mins(20)
+near(e._parts.Hand_R._stiff, 0, 1e-9, "half an hour: the hands are clear")
+near(e._parts.Hand_L._stiff, 15, 1e-9, "and only MS's 55 came off the strained hand")
+assert(ed.msHands == nil and ed.msPainHead == nil, "nothing left to ease")
+near(e._parts.LowerLeg_L._stiff, 8, 1e-9, "the everyday legs are left alone")
+e._parts.Hand_R._stiff = 40; H.minute()
+near(e._parts.Hand_R._stiff, 40, 1e-9, "stiffness MS never put on is the game's to ease")
+-- baclofen taken while stiff halves it, and the hands come down to it
+ed.msHeat = 1; H.climate.temp = 60; e._st.temperature = 40; H.mins(3)
+DanTraits_RunHooks("pill", nil, e, "Baclofen")
+H.minute(); near(e._parts.Hand_R._stiff, 53, 1e-9, "baclofen: easing toward half")
+H.mins(15); near(e._parts.Hand_R._stiff, 27.5, 1e-9, "baclofen: settled at 27.5")
+H.climate.temp = 20
 
 H.pass()
