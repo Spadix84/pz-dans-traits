@@ -48,7 +48,7 @@ local DZ_PANIC_RATE       = 0.6        -- diazepam: panic per 30fps tick, the va
 DanTraits_Drugs = {
     beta = {
         items = { "pillsbeta" }, treats = { "heart" }, kind = "daily",
-        halfH = 12, onAt = 0.5, overAt = 3, buildDays = 3, fadeDays = 3,
+        halfH = 24, onAt = 0.5, overAt = 3, buildDays = 3, fadeDays = 3,   -- once a day, like metformin
         side = { regen = 0.8 }, sideH = 8,
         over = { fatigue = 0.0005, faint = 0.002 },
     },
@@ -159,6 +159,20 @@ function DanTraits_MedCovered(player, id)
     if not drug or not drug.onAt then return false end
     local lvl = DanTraits_MedState(player, id)
     return lvl >= drug.onAt
+end
+
+-- the good side of a drug's moodle, the same rule for every drug that shows
+-- one: 0 not in the system, 1 in the system but still building up (the
+-- paler green), 2 fully built up (the full green). A rescue drug has no
+-- build-up, so it is 2 whenever it is in the system.
+function DanTraits_MedMoodle(player, id)
+    local drug = DanTraits_Drugs[id]
+    if not drug or not DanTraits_MedCovered(player, id) then return 0 end
+    if drug.buildDays then
+        local _, built = DanTraits_MedState(player, id)
+        if built < 1 then return 1 end
+    end
+    return 2
 end
 
 -- 0..1: how well the drug is working right now
@@ -332,7 +346,9 @@ function DanTraits_MedPatchScripts()
             local item = sm:getItem(v[1])
             if not item then return end
             item:DoParam("Tooltip = " .. v[2])
-            if v[3] then item:DoParam("UseDelta = " .. tostring(1 / v[3])) end
+            -- the game counts a bottle's pills as 1 / UseDelta rounded down, so
+            -- 1/30 itself (0.0333...4 as a float) gives 29: cut it to four places
+            if v[3] then item:DoParam("UseDelta = " .. string.format("%.4f", math.floor(10000 / v[3]) / 10000)) end
         end)
     end
 end

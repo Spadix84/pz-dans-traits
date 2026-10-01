@@ -26,7 +26,9 @@ end
 for name, l in pairs(DanTraits_MoodleLevels(p, d)) do assert(l == 0, name .. ": nothing to show on a well character") end
 
 -- 1. Heart: beta blockers working, a weak day, chest pain, pushing on
-d.meds = { beta = { lvl = 1, built = 0 } }; assert(level("ChestPain") == -1, "beta blockers working")
+d.meds = { beta = { lvl = 1, built = 0 } }; assert(level("ChestPain") == -1, "beta blockers building up: the paler green")
+d.meds.beta.built = 0.999; assert(level("ChestPain") == -1, "still building up just short of full")
+d.meds.beta.built = 1; assert(level("ChestPain") == -2, "fully built up: the full green")
 d.meds.beta.lvl = 0.4; assert(level("ChestPain") == 0, "worn off")
 d.hcWeakH = 10; assert(level("ChestPain") == 1, "the day after")
 d.hcAnginaMin = 12; assert(level("ChestPain") == 2, "chest pain")
@@ -35,7 +37,10 @@ d.hcPushing = true; assert(level("ChestPain") == 3, "pushing on")
 d.hcAnginaMin, d.hcPushing, d.hcWeakH, d.meds = nil, nil, nil, nil
 
 -- 2. Epilepsy: medication, the hour after, the aura
-d.meds = { anticonvulsant = { lvl = 0.6, built = 0 } }; assert(level("Seizure") == -1, "anticonvulsants working")
+d.meds = { anticonvulsant = { lvl = 0.6, built = 0 } }; assert(level("Seizure") == -1, "anticonvulsants building up")
+d.meds.anticonvulsant.built = 1; assert(level("Seizure") == -2, "anticonvulsants fully working")
+d.meds.anticonvulsant.lvl = 0.4; assert(level("Seizure") == 0, "out of the system: nothing, however built up")
+d.meds.anticonvulsant.lvl = 0.6; d.meds.anticonvulsant.built = 0
 d.epAfterMin = 30; assert(level("Seizure") == 1, "after a seizure")
 d.epAuraMin = 4; assert(level("Seizure") == 2, "one coming")
 d.meds, d.epAfterMin, d.epAuraMin = nil, nil, nil
@@ -115,7 +120,7 @@ MF = { getMoodle = function(name)
   local m = set[name]
   return { setThresholds = function(_, ...) m.thresholds = { ... } end, setValue = function(_, v) m.value = v end }
 end }
-d.meds = { beta = { lvl = 1, built = 1 } }   -- good 1
+d.meds = { beta = { lvl = 1, built = 0.5 } }   -- good 1 (building up)
 d.epAuraMin = 3              -- bad 2
 d.gluten = 1                 -- bad 3
 H.minute()

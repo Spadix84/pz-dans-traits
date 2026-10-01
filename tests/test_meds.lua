@@ -138,7 +138,7 @@ end
 DanTraits_MedPatchScripts()
 local joined = table.concat(params, "|")
 assert(joined:find("Base.PillsBeta Tooltip = Tooltip_DanTraits_PillsBeta", 1, true), "beta blocker tooltip")
-assert(joined:find("Base.PillsBeta UseDelta = 0.0333", 1, true), "beta blockers: 30 pills")
+assert((joined .. "|"):find("Base.PillsBeta UseDelta = 0.0333|", 1, true), "beta blockers: 30 pills (0.0333 exactly: 1/30 itself counts as 29)")
 assert(joined:find("Base.Pills Tooltip = Tooltip_DanTraits_Painkillers", 1, true), "painkiller tooltip")
 assert(not joined:find("Base.Pills UseDelta", 1, true), "painkiller bottle size unchanged")
 getScriptManager = nil

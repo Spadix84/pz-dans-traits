@@ -93,19 +93,19 @@ H.minute()
 assert(DanTraits_Data(sp).hcAttacks == 1, "sprinting through it: a heart attack")
 H.rollf = 0.99
 
--- 6. the beta blocker level halves in 12 hours, anyone's; the one with the
+-- 6. the beta blocker level halves in a day, anyone's; the one with the
 --    condition is told when it stops protecting, once
 local r = H.player(); H.current = r
 DanTraits_TakeBetaBlocker(r, 1)
-H.mins(720)
-near(DanTraits_MedState(r, "beta"), 0.5, 1e-3, "halved in 12 hours")
+H.mins(1440)
+near(DanTraits_MedState(r, "beta"), 0.5, 1e-3, "halved in a day (one pill a day)")
 H.clearHalo()
 H.mins(10)
 assert(#H.halo == 0, "no condition: no wearing-off notice")
 local w = H.player({ traits = { "heart" } }); H.current = w
 DanTraits_TakeBetaBlocker(w, 1)
 H.clearHalo()
-H.mins(730)
+H.mins(1450)
 local lapses = 0
 for _, t in ipairs(H.halo) do if t == "UI_DanTraits_HeartBetaLapse" then lapses = lapses + 1 end end
 assert(lapses == 1, "wearing off: one notice")

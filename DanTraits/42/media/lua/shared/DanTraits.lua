@@ -71,6 +71,20 @@ function DanTraits_Story(player, kind, text, tone)
     end)
 end
 
+-- How long a notice stays over the head. The game keeps one halo display
+-- time per character (128 by default, about 2 real seconds: the clock counts
+-- down about 60 a second, measured 2026-10-01) and every halo uses it, the
+-- game's own included; the game's HaloTextHelper queues and joins lines and
+-- shows the next batch when the last one is gone. Set once as each character
+-- loads (the time is not saved): the blank note this needs shows nothing.
+local HALO_TICKS = 600   -- about 10 real seconds
+
+local function setHaloTime(playerNum, player)
+    if not player or (isServer and isServer()) then return end
+    pcall(function() player:setHaloNote("", 255, 255, 255, HALO_TICKS) end)
+end
+Events.OnCreatePlayer.Add(setHaloTime)
+
 local function storyKind(textKey)
     return (string.gsub(textKey, "^UI_DanTraits_", ""))
 end
