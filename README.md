@@ -101,7 +101,7 @@ Mod data is one table per player (`getModData().DanTraits`) with a prefix per sy
 1. Edit in this repo.
 2. `python tests/run_tests.py`
 3. `python deploy.py` then restart the game (traits, items and Lua are read at boot).
-4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events. The game side of it (telemetry file and command channel) only runs in debug mode (start the game with `-debug`) or with **Developer Tools** on in the Vitality Project sandbox page, and never in multiplayer.
+4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events. The game side of it (telemetry file and command channel) only runs in debug mode (start the game with `-debug`), and never in multiplayer.
 
 To publish: `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` (workshop.txt, preview.png and `Contents/mods/DanTraits` without the dev tools), then upload it from the game's main menu, Workshop. After the first upload the game writes the item's `id=` into that workshop.txt; the build keeps it, so later uploads update the same item.
 
@@ -114,6 +114,10 @@ Early test build, Build 42, singleplayer only (multiplayer is untested).
 - **A Really Bad Day** is not balanced yet. Without stitching supplies the shard wound kills even a character with no other traits, which is why a needle and thread now wait in a nearby house. Other options (a lower bleed on the shard, a starting bandage, no hangover from the opening drink) are waiting on more play.
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
+
+## Requests
+
+- **Sumatriptan for Migraines** (requested on Reddit by u/Fatt3stAveng3r, 2026-09-30). A new item, a migraine-specific pill (on the market from the early 90s, so it fits 1993). Taken during an attack it clears the nausea and ends the attack within about two hours, but leaves you tired and a little clumsy for the rest of a 24-hour window. Today only generic painkillers help: taken once in an attack they cut the hours left to 0.6 (`MIG_MEDS_CUT` in `DanTraits_Migraine.lua`). Open questions: whether it still works taken after the attack is well under way, a limit on doses a day, where it spawns (pharmacies and medicine cabinets, rarer than painkillers), whether a Migraines character starts with a few, and what "clumsy" means in game (slower actions, or a small chance to drop things, as Arthritis does).
 
 ## Bug reports
 

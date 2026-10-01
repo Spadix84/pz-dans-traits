@@ -65,12 +65,9 @@ tick()
 assert(files["DanTraits_Telemetry.json"] == nil and st.health ~= 10, "off by default: nothing written or run")
 function isDebugEnabled() return true end
 assert(DanTraits_TelemetryEnabled(), "on in debug mode")
-function isDebugEnabled() return false end
-SandboxVars.DanTraits.DevTools = true
 function isClient() return true end
-assert(not DanTraits_TelemetryEnabled(), "never in multiplayer")
+assert(not DanTraits_TelemetryEnabled(), "never in multiplayer, even in debug mode")
 function isClient() return false end
-assert(DanTraits_TelemetryEnabled(), "on with the sandbox option")
 files["DanTraits_Commands.txt"] = nil
 
 tick()                       -- first tick: writes (lastWrite 0 -> now 1000)

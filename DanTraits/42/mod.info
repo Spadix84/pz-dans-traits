@@ -2,6 +2,6 @@ name=Project Zomboid Vitality Project
 id=DanTraits
 poster=poster.png
 url=https://github.com/Spadix84/pz-dans-traits
-modversion=0.1.0
+modversion=1.0.0
 versionMin=42.0.0
 description=Realistic, balanced traits, mostly negative, that add complications to work around: Alcoholic, Brittle, Arthritis, Jinxed, Caffeine Dependent, Migraines, Hemophilia, Anaemic, Major Depressive Disorder, A Really Bad Day, Hallucinations, Brittle Asthma, Gluten Intolerance, Vegetarian, Diabetes Type 1 and Type 2, Heart Condition, Epilepsy, Multiple Sclerosis, Tinnitus, Lactose Intolerance, Germaphobe, Straight Edge, plus the positive Renaissance Faire Geek, Gym Regular, Iron Stomach, Early Riser, Meal Prepper, Deep Sleeper, Steady Hands, Night Shift, Hollow Legs, Fast Recovery, Good Clotter and Thick Skull, reworked Smoker, Fear of Blood, Cat's Eyes and Outdoorsman, and In Their 20s / In Their 40s for the Age system. For everyone: Vitality (fresh food, exercise and sleep slowly earn small stat boosts, junk and neglect the reverse), sleep and light, hangovers and drink relief, sunburn (and sun block to keep it off) and dehydration, and a health overhaul (blood loss and shock, wound infection and antibiotics, wound care, what First Aid tells you, concussion, passing out), most with a sandbox switch. Singleplayer only for now. The moodles need Moodle Framework.
