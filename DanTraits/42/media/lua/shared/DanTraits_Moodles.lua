@@ -47,6 +47,7 @@ local function tierOf(value, tiers)
     return level
 end
 
+local MED_ON           = 0.5     -- a medication level that protects (Heart's and Epilepsy's own)
 local TN_LONG_MIN      = 60      -- ringing for this long or more is the second level
 local GUT_TIER         = { 0.25, 0.5, 0.75 }
 local GUT_LACTOSE      = 0.66    -- a full lactose flare, on Gluten's scale
