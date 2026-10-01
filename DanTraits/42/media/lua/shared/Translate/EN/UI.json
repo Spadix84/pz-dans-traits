@@ -230,5 +230,15 @@
     "UI_DanTraits_MSFlareEnds": "The flare is passing",
     "UI_DanTraits_MSPredLapse": "Your prednisone is wearing off",
     "UI_DanTraits_MSBacLapse": "Your baclofen is wearing off",
-    "UI_DanTraits_MSAmanLapse": "Your amantadine is wearing off"
+    "UI_DanTraits_MSAmanLapse": "Your amantadine is wearing off",
+    "UI_DanTraits_MedSide_beta": "Beta blockers: your stamina is slow to come back today",
+    "UI_DanTraits_MedSide_anticonvulsant": "Anticonvulsants: you feel drowsy today",
+    "UI_DanTraits_MedSide_metformin": "Metformin: your stomach is upset",
+    "UI_DanTraits_MedSide_antidepressant": "Antidepressants: you feel queasy",
+    "UI_DanTraits_MedSide_diazepam": "Diazepam: you feel drowsy",
+    "UI_DanTraits_MedSide_iron": "Iron pills: you feel a little sick",
+    "UI_DanTraits_MedOver_beta": "Too many beta blockers: you feel dizzy",
+    "UI_DanTraits_MedOver_anticonvulsant": "Too many anticonvulsants: you feel heavy and sluggish",
+    "UI_DanTraits_MedOver_metformin": "Too much metformin: you feel sick",
+    "UI_DanTraits_MedOver_diazepam": "Too much diazepam: you can barely keep your eyes open"
 }

@@ -29,5 +29,7 @@
     "Sandbox_DanTraitsSunburnEnabled": "Sunburn",
     "Sandbox_DanTraitsSunburnEnabled_tooltip": "Hours in the summer sun on bare skin burn it: a day of pain on each burnt part, and a worse night. Clothing, a hat, shade and sun block protect, and skin toughens with each burn.<br>Off: no sunburn.",
     "Sandbox_DanTraitsDehydrationEnabled": "Dehydration",
-    "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only."
+    "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only.",
+    "Sandbox_DanTraitsMedSideEffectChance": "Medication Side Effect Chance",
+    "Sandbox_DanTraitsMedSideEffectChance_tooltip": "The chance in percent, on each day a medication is taken, that its mild side effect shows up for a few hours. Taking too many at once is always harmful.<br>0: no side effects."
 }

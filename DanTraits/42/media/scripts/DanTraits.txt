@@ -503,7 +503,7 @@ module DanTraits {
     }
 
     /* Diabetes: insulin pen (40 doses), glucose meter, test strips (25) and
-       metformin (10 pills). None carry the consumable tag on purpose: they
+       metformin (30 pills). None carry the consumable tag on purpose: they
        use their own actions in media/lua/shared/TimedActions/ISDiabetesAction.lua. */
     item InsulinPen
     {
@@ -574,7 +574,7 @@ module DanTraits {
         Icon = Metformin,
         Medical = true,
         Tooltip = Tooltip_DanTraits_Metformin,
-        UseDelta = 0.1,
+        UseDelta = 0.0334,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
@@ -614,6 +614,27 @@ module DanTraits {
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
+    }
+
+    /* Diazepam, an anti-anxiety pill: 20 pills, each one a large, short
+       panic drop (the vanilla beta blocker's old job; the shared medication
+       system, media/lua/shared/DanTraits_Meds.lua). Tagged consumable, so it
+       is swallowed with the game's own Take Pills option and merges like any
+       other pill bottle. Found where beta blockers are. */
+    item Diazepam
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Diazepam,
+        Weight = 0.2,
+        Icon = Diazepam,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Diazepam,
+        UseDelta = 0.05,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+        Tags = base:consumable,
     }
 
     /* Sun block: 8 applications, each keeps the sun off bare skin for 8 hours

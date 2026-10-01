@@ -65,6 +65,12 @@ local IRON_TIER        = { 0.1, 0.5, 0.9 }
 local JOINT_TIER       = { 0.25, 0.5, 0.8 }
 local MS_HEAT_TIER     = { 0.25, 0.5, 0.8 }   -- MS's own heat tiers
 
+-- a drug in the system (the shared medication system, DanTraits_Meds.lua): the
+-- good side of a moodle, so the icon going out is the reminder to take the next one
+local function medOn(player, id)
+    return DanTraits_MedCovered ~= nil and DanTraits_MedCovered(player, id) == true
+end
+
 local function count(t)
     local n = 0
     for _, v in pairs(t or {}) do if (tonumber(v) or 0) > 0 then n = n + 1 end end
@@ -75,14 +81,14 @@ local SPECS = {
     { name = "ChestPain", level = function(player, d)
         if (d.hcAnginaMin or 0) > 0 then return d.hcPushing and 3 or 2 end
         if (d.hcWeakH or 0) > 0 then return 1 end
-        if hasTrait(player, "heart") and (d.hcBeta or 0) >= MED_ON then return -1 end
+        if hasTrait(player, "heart") and medOn(player, "beta") then return -1 end
         return 0
     end },
     { name = "Seizure", level = function(player, d)
         if not hasTrait(player, "epilepsy") then return 0 end
         if d.epAuraMin then return 2 end
         if (d.epAfterMin or 0) > 0 then return 1 end
-        if (d.epMeds or 0) >= MED_ON then return -1 end
+        if medOn(player, "anticonvulsant") then return -1 end
         return 0
     end },
     { name = "Tinnitus", level = function(player, d)

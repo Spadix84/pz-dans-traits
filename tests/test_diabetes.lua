@@ -3,7 +3,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes", "Alcohol")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Meds", "Diabetes", "Alcohol")
 H.expectHooks("OnCreatePlayer")
 H.expectEvery("minute", "Diabetes")
 local drinkWraps = ISDrinkFluidAction.DanTraitsWraps
@@ -151,10 +151,12 @@ local lean = newPlayer({ traits = { "diabetes2" }, weight = 75 }); H.current = l
 near(DanTraits_DiaResistance(lean), 0, 1e-9, "75 kg: none")
 local mid = newPlayer({ traits = { "diabetes2" }, weight = 92.5, regularity = { squats = 100, pushups = 100, situps = 100 } }); H.current = mid
 near(DanTraits_DiaResistance(mid), 0.5 - 0.25, 1e-9, "92.5 kg with full exercise: 0.25")
-assert(DanTraits_DiaOnPill(mid) and mid._md.DanTraits.diaMedMinutes == 1440, "metformin: a day of cover")
-near(DanTraits_DiaResistance(mid), 0, 1e-9, "and the pill takes the rest")
-minute(); assert(mid._md.DanTraits.diaMedMinutes == 1439, "cover burns a minute a minute")
-assert(DanTraits_DiaOnPill(mid) and DanTraits_DiaOnPill(mid) and mid._md.DanTraits.diaMedMinutes == 2880, "at most a day ahead")
+assert(DanTraits_DiaOnPill(mid), "metformin (the shared medication system)")
+near(DanTraits_MedState(mid, "metformin"), 1, 1e-9, "a pill in the system")
+near(DanTraits_DiaResistance(mid), 0.25, 1e-9, "first pill: not built up yet")
+mid._md.DanTraits.meds.metformin.built = 1
+near(DanTraits_DiaResistance(mid), 0, 1e-9, "built up, the pill takes the rest")
+mid._md.DanTraits.meds = nil
 -- heavy: sugar rises to rest around 220 on its own
 H.current = heavy
 for _ = 1, 600 do minute() end
@@ -204,6 +206,7 @@ local kit1 = newPlayer(); H.fire("OnCreatePlayer", 0, kit1)
 assert(#kit1._inv == 5 and kit1._inv[1]._type == "DanTraits.GlucoseMeter" and kit1._inv[2]._type == "DanTraits.TestStrips" and kit1._inv[5]._type == "DanTraits.InsulinPen", "Type 1: meter, strips, three pens")
 local kit2 = newPlayer({ traits = { "diabetes2" } }); H.fire("OnCreatePlayer", 0, kit2)
 assert(#kit2._inv == 3 and kit2._inv[3]._type == "DanTraits.Metformin", "Type 2: meter, strips, metformin")
+assert(select(2, DanTraits_MedState(kit2, "metformin")) == 1, "and already on it, fully built up")
 H.fire("OnCreatePlayer", 0, kit2); assert(#kit2._inv == 3, "given once")
 local kit0 = newPlayer({ traits = {} }); H.fire("OnCreatePlayer", 0, kit0); assert(#kit0._inv == 0, "no trait: no kit")
 
