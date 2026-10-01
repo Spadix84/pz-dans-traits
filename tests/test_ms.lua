@@ -89,6 +89,7 @@ H.minute(f); near(f._st.fatigue, 0.0002, 1e-9, "a fifth faster to tire")
 DanTraits_RunHooks("pill", nil, f, "Amantadine")
 near(fd.msAman, 1, 1e-9, "a pill: level 1")
 f._st.fatigue = 0; H.minute(f); near(f._st.fatigue, 0.00008, 1e-7, "amantadine: x0.4")
+assert(f._st.thirst > 0, "amantadine side effect: dry mouth")
 f._st.fatigue = 0; f._asleep = true; H.minute(f); near(f._st.fatigue, 0, 1e-12, "asleep: nothing"); f._asleep = false
 
 -- 7. flares: about one a month, more with stress or fever; prednisone burns it 3x faster
@@ -121,6 +122,10 @@ bd.msHeat = 1; H.climate.temp = 60; b._st.temperature = 40
 H.minute(b)
 near(b._parts.Hand_L._stiff, 27.5, 1e-9, "full heat on baclofen: 55 x 0.5")
 near(b._parts.UpperLeg_L._stiff, 4, 1e-9, "legs on baclofen: 8 x 0.5")
+local nb = newPlayer({ traits = {} }); H.current = nb
+DanTraits_RunHooks("pill", nil, nb, "Baclofen"); H.climate.temp = 15; nb._st.temperature = 0
+H.minute(); near(nb._st.fatigue, 0.0001, 1e-9, "baclofen side effect: drowsy, even without MS")
+H.current = b
 
 -- 9. the levels decay: baclofen halves in 12 hours, then a wearing-off notice
 H.climate.temp = 15; b._st.temperature = 0; bd.msHeat = nil

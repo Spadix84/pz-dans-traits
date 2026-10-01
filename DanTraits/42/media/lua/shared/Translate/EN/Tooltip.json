@@ -20,8 +20,8 @@
     "Tooltip_DanTraits_AnticonvulsantsEmpty": "Empty.",
     "Tooltip_DanTraits_Sunblock": "Rub it in and the sun can't burn bare skin for 8 hours. Does nothing for a burn you already have. 8 coats.",
     "Tooltip_DanTraits_SunblockEmpty": "Empty.",
-    "Tooltip_DanTraits_Prednisone": "A steroid. For an MS flare: one a day makes it pass three times as fast. Does nothing between flares, and makes you hungry. 20 pills.",
-    "Tooltip_DanTraits_Baclofen": "A muscle relaxant. For MS: one every 12 hours halves the stiffness, the heat's included. 30 pills.",
-    "Tooltip_DanTraits_Amantadine": "For MS fatigue: one every 12 hours and you tire much less from the illness. 30 pills.",
+    "Tooltip_DanTraits_Prednisone": "Treats: multiple sclerosis flares. How to take: one a day during a flare, and it passes three times as fast. Does nothing between flares. Side effects: increased hunger. 20 pills.",
+    "Tooltip_DanTraits_Baclofen": "Treats: muscle stiffness and spasms from multiple sclerosis, including stiffness brought on by heat. How to take: one every 12 hours halves the stiffness. Side effects: mild drowsiness. 30 pills.",
+    "Tooltip_DanTraits_Amantadine": "Treats: multiple sclerosis fatigue. How to take: one every 12 hours and the illness tires you much less. Side effects: dry mouth (a little thirstier). 30 pills.",
     "Tooltip_DanTraits_MSMedEmpty": "Empty."
 }

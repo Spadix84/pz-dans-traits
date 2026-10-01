@@ -24,10 +24,10 @@
 -- while it is at least half a pill:
 --   Prednisone (a steroid): a flare runs out three times as fast. Does
 --     nothing outside one. Makes you hungry. Halves every 24 hours: one a day.
---   Baclofen: all the stiffness above, heat's included, is halved. Halves
---     every 12 hours.
---   Amantadine: MS fatigue (baseline and flare) cut to 40%. Halves every
---     12 hours.
+--   Baclofen: all the stiffness above, heat's included, is halved. Makes you
+--     a little drowsy. Halves every 12 hours.
+--   Amantadine: MS fatigue (baseline and flare) cut to 40%. Dry mouth (a
+--     little thirstier). Halves every 12 hours.
 -- A new character starts with a bottle of baclofen and one of amantadine.
 -- Prednisone has to be found.
 --
@@ -82,7 +82,9 @@ local MS_MED_ON        = 0.5     -- a level that works
 local MS_PRED_BURN     = 3       -- flare hours gone per hour on prednisone
 local MS_PRED_HUNGER   = 0.0002  -- hunger a minute while prednisone works (anyone)
 local MS_BAC_STIFF     = 0.5     -- stiffness x this on baclofen
+local MS_BAC_DROWSY    = 0.0001  -- side effect: tiredness a minute while baclofen works, awake (anyone)
 local MS_AMAN_FATIGUE  = 0.4     -- MS fatigue x this on amantadine
+local MS_AMAN_THIRST   = 0.0001  -- side effect: thirst a minute while amantadine works (dry mouth; anyone)
 local MS_MEDS = {
     { key = "msPred", item = "prednisone", half = 24, lapse = "UI_DanTraits_MSPredLapse" },
     { key = "msBac",  item = "baclofen",   half = 12, lapse = "UI_DanTraits_MSBacLapse" },
@@ -166,7 +168,11 @@ local function updateMeds(player, d)
             if was and level < MS_MED_ON and hasTrait(player, "ms") then notify(player, med.lapse) end
         end
     end
-    if on(d, "msPred") then DanTraits_StatAdd(player:getStats(), CharacterStat.HUNGER, MS_PRED_HUNGER) end
+    -- side effects, for anyone taking them
+    local stats = player:getStats()
+    if on(d, "msPred") then DanTraits_StatAdd(stats, CharacterStat.HUNGER, MS_PRED_HUNGER) end
+    if on(d, "msBac") and not DanTraits_Asleep(player) then DanTraits_StatAdd(stats, CharacterStat.FATIGUE, MS_BAC_DROWSY) end
+    if on(d, "msAman") then DanTraits_StatAdd(stats, CharacterStat.THIRST, MS_AMAN_THIRST) end
 end
 
 local function startFlare(player, d)
