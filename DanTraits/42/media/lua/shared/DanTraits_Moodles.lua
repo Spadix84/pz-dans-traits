@@ -27,6 +27,9 @@
 --   Depression         Major Depressive Disorder: an episode, by severity
 --   LowIron            Anaemic
 --   StiffJoints        Arthritis: the weather in the joints
+--   MSHeat             Multiple Sclerosis: heat sensitive, too hot, overheated
+--   MSFlare            Multiple Sclerosis: a flare (the first level when
+--                      prednisone is working on it)
 --
 -- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
 -- range, not which way; the meter is how you find out. Hallucinations has
@@ -60,6 +63,7 @@ local NICOTINE_TIER    = { 0.15, 0.5, 0.8 }
 local MDD_TIER         = { 0.01, 0.6, 0.85 }
 local IRON_TIER        = { 0.1, 0.5, 0.9 }
 local JOINT_TIER       = { 0.25, 0.5, 0.8 }
+local MS_HEAT_TIER     = { 0.25, 0.5, 0.8 }   -- MS's own heat tiers
 
 local function count(t)
     local n = 0
@@ -129,6 +133,14 @@ local SPECS = {
     { name = "StiffJoints", level = function(player, d)
         if not hasTrait(player, "arthritis") then return 0 end
         return tierOf(d.artJoint, JOINT_TIER)
+    end },
+    { name = "MSHeat", level = function(player, d)
+        if not hasTrait(player, "ms") then return 0 end
+        return tierOf(d.msHeat, MS_HEAT_TIER)
+    end },
+    { name = "MSFlare", level = function(player, d)
+        if not hasTrait(player, "ms") or (d.msFlareH or 0) <= 0 then return 0 end
+        return (d.msPred or 0) >= MED_ON and 1 or 2
     end },
 }
 

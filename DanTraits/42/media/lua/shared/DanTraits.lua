@@ -287,7 +287,7 @@ end
 --           25  FearOfBlood (reads bloodLossMin)
 --           40  Alcohol, Anemia, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
 --               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, MDD, Migraine,
---               Smoker, Sunburn, Tinnitus (floors and rates; among themselves by label)
+--               MS, Smoker, Sunburn, Tinnitus (floors and rates; among themselves by label)
 --           80  Positives (Iron Stomach)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)

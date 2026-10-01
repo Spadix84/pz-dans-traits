@@ -218,5 +218,17 @@
     "UI_DanTraits_EpilepsyMedsLapse": "Your anticonvulsants are wearing off",
     "UI_DanTraits_EpilepsyNight": "A seizure in your sleep. You wake aching and worn out",
     "UI_DanTraits_SunblockOn": "Sun block on",
-    "UI_DanTraits_SunblockOff": "Your sun block has worn off"
+    "UI_DanTraits_SunblockOff": "Your sun block has worn off",
+    "UI_trait_DanMS": "Multiple Sclerosis",
+    "UI_trait_DanMSdesc": "Heat is the enemy, and no medicine helps with it.<br>Warm: you tire sooner. Hot: stiff, clumsy, painful hands and a weapon that slips. Overheated: severe pain and hands that give out.<br>Cool down with shade, water, wet clothes and rest.<br>Flares about once a month, worse with fever or stress: days of stiff legs, weak hands and exhaustion.<br>Prednisone shortens a flare, baclofen eases the stiffness, amantadine the fatigue. Starts with baclofen and amantadine.",
+    "UI_DanTraits_MSHeat1": "The heat is getting to you",
+    "UI_DanTraits_MSHeat2": "Too hot. Your hands are going clumsy and sore",
+    "UI_DanTraits_MSHeat3": "Overheated. Your hands are barely working. Cool down",
+    "UI_DanTraits_MSCooled": "You've cooled down",
+    "UI_DanTraits_MSHandsGiveOut": "Your hands give out",
+    "UI_DanTraits_MSFlare": "An MS flare. Your legs are heavy and your hands weak",
+    "UI_DanTraits_MSFlareEnds": "The flare is passing",
+    "UI_DanTraits_MSPredLapse": "Your prednisone is wearing off",
+    "UI_DanTraits_MSBacLapse": "Your baclofen is wearing off",
+    "UI_DanTraits_MSAmanLapse": "Your amantadine is wearing off"
 }

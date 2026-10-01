@@ -1,7 +1,7 @@
 -- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
--- take metformin), iron pills, nicotine gum, anticonvulsants and sun block, and the wrap that hides Wakeful
+-- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, and the wrap that hides Wakeful
 -- (and Deep Sleeper on a no-sleep server) from the character creation list.
 -- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
 require "DanTraits"
@@ -196,6 +196,23 @@ local function anticonvulsantMenu(playerNum, context, items)
     if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_AnticonvulsantsEmpty") end
 end
 
+-- MS medication: prednisone, baclofen, amantadine ---------------------------------
+local function onTakeMSMed(pills, playerObj)
+    local label = "ContextMenu_DanTraits_Take" .. tostring(pills:getType())
+    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, pills)
+    ISTimedActionQueue.add(ISVitalityPillAction:new(playerObj, pills, label))
+end
+
+local function msMedMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_IsMSMed then return end
+    local pills = findFirst(items, DanTraits_IsMSMed)
+    if not pills then return end
+    pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+    local option = context:addOption(getText("ContextMenu_DanTraits_Take" .. tostring(pills:getType())), pills, onTakeMSMed, playerObj)
+    if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_MSMedEmpty") end
+end
+
 -- Sun block (Sunburn, anyone) -------------------------------------------------------
 local SUNBLOCK_ANIM = "WashFace"    -- the game's washing animation: rubbing it in
 local SUNBLOCK_TIME = 150
@@ -218,6 +235,7 @@ end
 Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryObjectContextMenu)
 Events.OnFillInventoryObjectContextMenu.Add(sunblockMenu)
 Events.OnFillInventoryObjectContextMenu.Add(anticonvulsantMenu)
+Events.OnFillInventoryObjectContextMenu.Add(msMedMenu)
 Events.OnFillInventoryObjectContextMenu.Add(nicotineGumMenu)
 Events.OnFillInventoryObjectContextMenu.Add(ironPillsMenu)
 Events.OnFillInventoryObjectContextMenu.Add(greyOutMeat)

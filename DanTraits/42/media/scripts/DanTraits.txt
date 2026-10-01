@@ -472,6 +472,19 @@ module DanTraits {
         UIDescription = UI_trait_DanThickSkulldesc,
     }
 
+    /* Multiple Sclerosis: heat makes the hands stiff, clumsy and painful
+       and no pill helps with that; flares about once a month; prednisone,
+       baclofen and amantadine (new items). DanTraits_MS.lua. */
+    character_trait_definition DanTraits:ms
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:ms,
+        Cost = -15,
+        UIName = UI_trait_DanMS,
+        UIDescription = UI_trait_DanMSdesc,
+    }
+
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler
@@ -616,6 +629,57 @@ module DanTraits {
         Icon = Sunblock,
         Tooltip = Tooltip_DanTraits_Sunblock,
         UseDelta = 0.125,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Prednisone for MS flares: 20 pills, one a day makes a flare run out
+       three times as fast. ISVitalityPillAction; DanTraits_MS.lua. */
+    item Prednisone
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Prednisone,
+        Weight = 0.2,
+        Icon = Prednisone,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Prednisone,
+        UseDelta = 0.05,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Baclofen for MS stiffness: 30 pills, one every 12 hours halves it.
+       ISVitalityPillAction; DanTraits_MS.lua. */
+    item Baclofen
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Baclofen,
+        Weight = 0.2,
+        Icon = Baclofen,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Baclofen,
+        UseDelta = 0.0334,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* Amantadine for MS fatigue: 30 pills, one every 12 hours cuts it.
+       ISVitalityPillAction; DanTraits_MS.lua. */
+    item Amantadine
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Amantadine,
+        Weight = 0.2,
+        Icon = Amantadine,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Amantadine,
+        UseDelta = 0.0334,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
