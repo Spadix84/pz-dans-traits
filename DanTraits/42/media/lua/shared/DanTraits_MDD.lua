@@ -55,7 +55,9 @@ local MDD_RECOVERY_BONUS    = 1.0     -- exercise and outdoors together shorten 
 -- Antidepressants (Base.PillsAntiDep) are a regimen, not a dose. Each pill
 -- adds a day of coverage; benefit builds over two weeks of unbroken
 -- coverage and drains if it lapses. The vanilla instant mood-clearing effect
--- is switched off for this trait.
+-- is switched off for this trait. The medication system (DanTraits_Meds.lua)
+-- reads this regimen for the drug list and rolls the side effect (queasy, on
+-- a few percent of the days a pill is taken).
 local MDD_MED_PILL_DAYS     = 1       -- coverage a pill adds (halved when drunk)
 local MDD_MED_MAX_DAYS      = 3       -- you can be a few days ahead, no more
 local MDD_MED_FULL_DAYS     = 14      -- unbroken coverage needed for full benefit
@@ -63,9 +65,6 @@ local MDD_MED_ONSET_CUT     = 0.6     -- episode chance x (1 - this x benefit)
 local MDD_MED_FLOOR_CUT     = 0.4     -- episode floor x (1 - this x benefit)
 local MDD_MED_DRAG_CUT      = 0.3     -- pain/stress drag x (1 - this x benefit)
 local MDD_MED_RECOVERY      = 0.5     -- episode shortening at full benefit (on top of habits)
-local MDD_MED_SIDE_DAYS     = 3       -- first days on them: queasy and tired
-local MDD_MED_SIDE_SICK     = 15      -- food sickness floor during side effects
-local MDD_MED_SIDE_FATIGUE  = 0.0005  -- fatigue per minute during side effects
 local MDD_MED_WITHDRAW_AFTER = 7      -- streak (days) after which stopping hurts
 local MDD_MED_WITHDRAW_MIN  = 4320    -- discontinuation length in minutes (3 days)
 local MDD_MED_WITHDRAW_MOOD = 0.3     -- unhappiness per minute while discontinuing
@@ -169,15 +168,9 @@ local function updateMddMinute(player, d)
     if (d.mddSmokeTimer or 0) > 0 then d.mddSmokeTimer = d.mddSmokeTimer - 1 end
     if (d.mddFoodTimer or 0) > 0 then d.mddFoodTimer = d.mddFoodTimer - 1 end
 
-    -- antidepressants: never the vanilla instant lift; side effects early on; discontinuation
+    -- antidepressants: never the vanilla instant lift; discontinuation
     local benefit = mddBenefit(d)
     pcall(function() if (player:getDepressEffect() or 0) > 0 then player:setDepressEffect(0) end end)
-    if (d.mddMedDays or 0) > 0 and (d.mddMedStreak or 0) < MDD_MED_SIDE_DAYS then
-        pcall(function()
-            DanTraits_FloorUp(stats, CharacterStat.FOOD_SICKNESS, MDD_MED_SIDE_SICK, 1)
-            DanTraits_StatAdd(stats, CharacterStat.FATIGUE, MDD_MED_SIDE_FATIGUE)
-        end)
-    end
     if (d.mddWithdraw or 0) > 0 then
         d.mddWithdraw = d.mddWithdraw - 1
         pcall(function()

@@ -31,5 +31,7 @@
     "Sandbox_DanTraitsDehydrationEnabled": "Dehydration",
     "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only.",
     "Sandbox_DanTraitsDevTools": "Developer Tools",
-    "Sandbox_DanTraitsDevTools_tooltip": "For testing the mod: writes a live readout for the companion dashboard and runs the commands it sends (items, stats, wounds). On by itself in debug mode; never in multiplayer.<br>Leave off for a normal game."
+    "Sandbox_DanTraitsDevTools_tooltip": "For testing the mod: writes a live readout for the companion dashboard and runs the commands it sends (items, stats, wounds). On by itself in debug mode; never in multiplayer.<br>Leave off for a normal game.",
+    "Sandbox_DanTraitsMedSideEffectChance": "Medication Side Effect Chance",
+    "Sandbox_DanTraitsMedSideEffectChance_tooltip": "The chance in percent, on each day a medication is taken, that its mild side effect shows up for a few hours. Taking too many at once is always harmful.<br>0: no side effects."
 }

@@ -218,5 +218,15 @@
     "UI_DanTraits_EpilepsyMedsLapse": "Your anticonvulsants are wearing off",
     "UI_DanTraits_EpilepsyNight": "A seizure in your sleep. You wake aching and worn out",
     "UI_DanTraits_SunblockOn": "Sun block on",
-    "UI_DanTraits_SunblockOff": "Your sun block has worn off"
+    "UI_DanTraits_SunblockOff": "Your sun block has worn off",
+    "UI_DanTraits_MedSide_beta": "Beta blockers: your stamina is slow to come back today",
+    "UI_DanTraits_MedSide_anticonvulsant": "Anticonvulsants: you feel drowsy today",
+    "UI_DanTraits_MedSide_metformin": "Metformin: your stomach is upset",
+    "UI_DanTraits_MedSide_antidepressant": "Antidepressants: you feel queasy",
+    "UI_DanTraits_MedSide_diazepam": "Diazepam: you feel drowsy",
+    "UI_DanTraits_MedSide_iron": "Iron pills: you feel a little sick",
+    "UI_DanTraits_MedOver_beta": "Too many beta blockers: you feel dizzy",
+    "UI_DanTraits_MedOver_anticonvulsant": "Too many anticonvulsants: you feel heavy and sluggish",
+    "UI_DanTraits_MedOver_metformin": "Too much metformin: you feel sick",
+    "UI_DanTraits_MedOver_diazepam": "Too much diazepam: you can barely keep your eyes open"
 }

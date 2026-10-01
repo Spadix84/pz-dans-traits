@@ -47,3 +47,6 @@ option DanTraits.DehydrationEnabled
 
 option DanTraits.DevTools
 {type = boolean, default = false, page = DanTraits, translation = DanTraitsDevTools,}
+
+option DanTraits.MedSideEffectChance
+{type = integer, min = 0, max = 100, default = 3, page = DanTraits, translation = DanTraitsMedSideEffectChance,}

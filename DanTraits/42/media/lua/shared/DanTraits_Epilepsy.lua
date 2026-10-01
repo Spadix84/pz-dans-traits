@@ -6,10 +6,11 @@
 -- infection), a concussion, stress, dehydration, a diabetic low, and bright
 -- daylight on a sensitive brain.
 -- Anticonvulsants (a pill bottle of this mod's, found with the other
--- prescriptions) are the answer: each pill tops up a level that halves every
--- 12 hours, and while it is at least half a pill, seizures are a tenth as
--- likely. A pill every 12 hours keeps it there, and you are told when it
--- wears off. A new character starts with a bottle.
+-- prescriptions) are the answer, kept by the shared medication system
+-- (DanTraits_Meds.lua): a pill every 12 hours keeps them in the system, and as
+-- they build up over five days seizures fall to a tenth as likely. A missed
+-- dose lets them fade slowly, and you are told when they wear off. A new
+-- character starts on them, fully built up, with a bottle.
 --
 -- A seizure gives a warning (an aura: a notice, then five to ten game
 -- minutes and never under 30 real seconds, time to get out of a fight or
@@ -23,12 +24,13 @@
 -- night scores worse. One that comes while you are already out cold (a faint,
 -- a knockout) is only the aftermath.
 --
--- Mod data: epMeds (the level), epCovered (the level was protecting, for the
+-- Mod data: epCovered (the anticonvulsants were in the system, for the
 -- wearing-off notice), epAuraMin (minutes to the seizure), epAuraMs (the real-time
 -- floor on that warning), epAfterMin (minutes
 -- of the aftermath), epSeizures, epNight (a seizure broke this sleep).
 -- Console: epilepsy seize | epilepsy aura | epilepsy pill
 require "DanTraits"
+require "DanTraits_Meds"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
@@ -46,9 +48,7 @@ local EP_STRESS        = 1       -- x (1 + this x stress)
 local EP_DEHYDRATION   = 2       -- x (1 + this x dehydration)
 local EP_LOW_SUGAR     = 3       -- x (1 + this x how bad a diabetic low is)
 local EP_BRIGHT        = 1.5     -- in bright daylight
-local EP_MEDS_HALF_H   = 12      -- hours for the anticonvulsant level to halve
-local EP_MEDS_ON       = 0.5     -- level at which it protects
-local EP_MEDS_CUT      = 0.1     -- seizures x this while protected
+local EP_MEDS_CUT      = 0.1     -- seizures x this, fully built up
 local EP_AURA_MIN      = { 5, 10 }   -- game minutes of warning before the seizure...
 local EP_AURA_REAL_S   = 30      -- ...but never under this many real seconds (the default day passes 5 game minutes in about 12)
 local EP_NIGHT_CUT     = 0.3     -- a night broken by a seizure scores x (1 - this)
@@ -68,7 +68,11 @@ local function num(fn)
     return tonumber(v) or 0
 end
 
-local function protected(d) return (d.epMeds or 0) >= EP_MEDS_ON end
+-- seizures x this: down to EP_MEDS_CUT as anticonvulsants build up
+local function medsCut(player)
+    local effect = DanTraits_MedEffect and DanTraits_MedEffect(player, "anticonvulsant") or 0
+    return 1 - (1 - EP_MEDS_CUT) * effect
+end
 
 -- seizures an hour now
 local function seizureRate(player, d)
@@ -87,7 +91,7 @@ local function seizureRate(player, d)
         local ok, bright = pcall(DanTraits_InBrightLight, player)
         if ok and bright then rate = rate * EP_BRIGHT end
     end
-    if protected(d) then rate = rate * EP_MEDS_CUT end
+    rate = rate * medsCut(player)
     return rate
 end
 DanTraits_SeizureRate = seizureRate
@@ -133,16 +137,12 @@ end
 
 -- the wearing-off notice, once each time the level drops under protection
 local function medsNotice(player, d)
-    local covered = protected(d)
+    local covered = DanTraits_MedCovered and DanTraits_MedCovered(player, "anticonvulsant") or false
     if d.epCovered and not covered and hasTrait(player, "epilepsy") then notify(player, "UI_DanTraits_EpilepsyMedsLapse") end
     d.epCovered = covered or nil
 end
 
 local function updateEpilepsyMinute(player, d)
-    if (d.epMeds or 0) > 0 then
-        d.epMeds = d.epMeds * 0.5 ^ (1 / (EP_MEDS_HALF_H * 60))
-        if d.epMeds < 0.01 then d.epMeds = 0 end
-    end
     medsNotice(player, d)
     if not hasTrait(player, "epilepsy") then
         d.epAuraMin, d.epAuraMs, d.epAfterMin, d.epNight = nil, nil, nil, nil
@@ -165,11 +165,11 @@ local function updateEpilepsyMinute(player, d)
     if DanTraits_Roll(seizureRate(player, d) / 60) then aura(player, d) end
 end
 
+-- a dose by hand (the console); a swallowed pill reaches the medication system itself
 function DanTraits_TakeAnticonvulsant(player, amount)
-    local d = DanTraits_Data(player)
-    d.epMeds = (d.epMeds or 0) + (amount or 1)
-    d.epCovered = protected(d) or nil
-    return d.epMeds
+    local level = DanTraits_MedTake(player, "anticonvulsant", amount or 1)
+    DanTraits_Data(player).epCovered = DanTraits_MedCovered(player, "anticonvulsant") or nil
+    return level
 end
 
 -- a seizure in the night: the sleep it broke scores worse (the flag is spent
@@ -185,8 +185,11 @@ function DanTraits_IsAnticonvulsants(item)
     return ok and res == true
 end
 
+-- after the medication system has taken the dose (it loads first)
 DanTraits_AddHook("pill", function(_, player, kind)
-    if string.lower(tostring(kind or "")) == "anticonvulsants" then DanTraits_TakeAnticonvulsant(player, 1) end
+    if DanTraits_DrugOfItem(kind) == "anticonvulsant" then
+        DanTraits_Data(player).epCovered = DanTraits_MedCovered(player, "anticonvulsant") or nil
+    end
     return nil
 end)
 
@@ -199,12 +202,13 @@ DanTraits_ExtraCommands.epilepsy = function(player, args)
     return "epilepsy seize | epilepsy aura | epilepsy pill (seizures an hour now " .. tostring(seizureRate(player, d)) .. ")"
 end
 
--- start with a bottle of anticonvulsants
+-- start on anticonvulsants, fully built up, with a bottle
 local function onEpilepsyCreatePlayer(playerNum, player)
     if not player or not hasTrait(player, "epilepsy") then return end
     local d = DanTraits_Data(player)
     if d.epKitGiven or player:getHoursSurvived() > 0 then return end
     d.epKitGiven = true
+    DanTraits_MedStart(player, "anticonvulsant")
     pcall(function() player:getInventory():AddItem(EP_MEDS_ITEM) end)
 end
 
