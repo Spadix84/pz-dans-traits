@@ -69,9 +69,15 @@ local ok = pcall(function() H.roll = 0; ten() end); H.roll = 9999; assert(ok, "n
 run(dt, 50, 1 / 6); assert(not md(dt).alcWithdrawing and md(dt).alcStage == 0 and md(dt).alcShakes == 0, "a drink ends it all")
 assert(DanTraits_RunHooks("swingDrop", 1, dt) == 1, "steady hands again")
 
--- 5. a full meter needs a real drink
-H.current = w; md(w).alcMeter = 1
-run(w, 20, 1 / 6); assert(md(w).alcDryHours > 0, "20% is not a drink at a full meter (needs > 45%)")
+-- 5. at the starting meter a little tipsy is enough; a full meter needs a real drink
+H.current = w
+run(w, 0, 20); assert(md(w).alcWithdrawing, "craving again")
+run(w, 8, 1 / 6); assert(md(w).alcWithdrawing, "8% (not yet Tipsy) is not a drink")
+run(w, 12, 1 / 6); assert(md(w).alcDryHours == 0 and not md(w).alcWithdrawing, "12% (a little tipsy) is at meter " .. md(w).alcMeter)
+assert(halo[#halo] == "UI_DanTraits_DependentSated", "tipsy: sated notice")
+md(w).alcMeter = 1
+run(w, 0, 20); assert(md(w).alcWithdrawing, "craving at a full meter")
+run(w, 20, 1 / 6); assert(md(w).alcDryHours > 0, "20% is not a drink at a full meter (needs > 30%)")
 run(w, 50, 1 / 6); assert(md(w).alcDryHours == 0 and not md(w).alcWithdrawing, "50% is")
 assert(halo[#halo] == "UI_DanTraits_DependentSated", "sated notice")
 

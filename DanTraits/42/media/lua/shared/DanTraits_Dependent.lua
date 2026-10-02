@@ -19,7 +19,9 @@ local fraction = DanTraits_StatFraction
 -- The acute phase holds for five days, then fades over the next five to a
 -- lingering craving. A seizure in delirium is a real fall (DanTraits_Collapse)
 -- and can concuss (DanTraits_KnockHead). A drink ends withdrawal, but the meter decides how much
--- of a drink: at a high meter a sip is not enough. A month without any
+-- of a drink: up to a meter of 0.5 (where a character who takes the trait
+-- starts) feeling tipsy is enough; past that it climbs to properly drunk (Drunk
+-- moodle level 2) at a full meter. A month without any
 -- alcohol cures the trait. After that the character is never quite free: the
 -- first drink of any drinking session is a coin flip to relapse.
 local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- DRINK.any: had any alcohol
@@ -38,8 +40,9 @@ local ALC_DT_METER      = 0.6   -- delirium needs at least this meter
 local ALC_PEAK_H        = 120   -- dry hours the acute phase holds full strength
 local ALC_FADE_H        = 120   -- then fades over this many hours...
 local ALC_LINGER        = 0.2   -- ...to this share of it
-local DEP_SATED_MIN     = 0.05  -- intoxication that counts as a drink at an empty meter...
-local DEP_SATED_TOL     = 0.40  -- ...plus this much at a full one
+local DEP_SATED_MIN     = 0.10  -- intoxication that counts as a drink: Tipsy (Drunk level 1)...
+local DEP_SATED_FROM    = 0.5   -- ...up to this meter...
+local DEP_SATED_MAX     = 0.30  -- ...rising to Drunk level 2 at a full meter
 local DEP_TOL_ONSET_CUT = 0.5   -- withdrawal starts this much sooner at a full meter
 -- strength w = meter x fade (0..1); the rates below are per ten minutes at w = 1
 local DEP_STRESS_RATE   = 0.02  -- stress (0..1)
@@ -114,9 +117,15 @@ end
 
 local STAGE_NOTICE = { "UI_DanTraits_DependentCraving", "UI_DanTraits_AlcoholicShakes", "UI_DanTraits_AlcoholicDelirium" }
 
+-- intoxication (0..1) a drink has to reach to count, at this meter
+local function satedAt(meter)
+    local over = math.max(0, math.min(1, (meter - DEP_SATED_FROM) / (1 - DEP_SATED_FROM)))
+    return DEP_SATED_MIN + (DEP_SATED_MAX - DEP_SATED_MIN) * over
+end
+
 -- withdrawal and its relief, for a character who has the trait
 local function withdrawal(player, d, stats, intox, meter)
-    if intox > DEP_SATED_MIN + DEP_SATED_TOL * meter then
+    if intox > satedAt(meter) then
         d.alcDryHours = 0
         if d.alcWithdrawing then notify(player, "UI_DanTraits_DependentSated") end
         clearWithdrawal(d)
