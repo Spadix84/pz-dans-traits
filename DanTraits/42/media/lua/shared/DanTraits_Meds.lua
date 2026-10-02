@@ -35,7 +35,10 @@
 --   fatigue  tiredness added a minute      stress   stress added a minute
 --   hunger   hunger added a minute         thirst   thirst added a minute
 --   sick     food sickness floor (0..100; 30 shows the game's nausea moodle)
---   regen    endurance recovery x this     faint    chance a minute of fainting
+--   regen    endurance recovery x this     faint    chance a minute of fainting (awake)
+-- overH: hours an overdose keeps running after the level falls back under
+-- overAt (the quick-clearing drugs; the slow ones stay over long enough).
+--   heart    (overdose) strain on the heart: Heart Condition's chest pain twice as likely
 --
 -- Vanilla beta blockers: their own effect (a large, short panic drop) is put
 -- back the way it was after the pill, so they only do what this list says.
@@ -54,7 +57,7 @@ local SIDE_CHANCE_DEFAULT = 3          -- percent, on each day a drug is taken
 local DZ_PANIC_RATE       = 0.6        -- diazepam: panic per 30fps tick, the vanilla beta blocker rate
 
 -- The drug list. items: lower-case item types (getType) that are a dose.
--- treats: trait ids, for the tooltip and the UI. kind: daily | rescue | course | regimen | supplement.
+-- treats: trait ids (or what it is for), for the tooltip and the UI. kind: daily | rescue | course | regimen | supplement.
 DanTraits_Drugs = {
     beta = {
         items = { "pillsbeta" }, treats = { "heart" }, kind = "daily",
@@ -87,6 +90,7 @@ DanTraits_Drugs = {
         items = { "diazepam" }, treats = { "panic" }, kind = "rescue",
         halfH = 1.5, onAt = 0.5, overAt = 2.5,
         side = { fatigue = 0.0004 }, sideH = 6,
+        overH = 3,   -- the overdose lasts at least this long after the level falls back
         over = { fatigue = 0.0015, regen = 0.7 },
     },
     iron = {
@@ -98,7 +102,7 @@ DanTraits_Drugs = {
         items = { "prednisone" }, treats = { "ms" }, kind = "course",
         halfH = 24, onAt = 0.5, overAt = 3,
         taking = { hunger = 0.0002 },
-        side = { stress = 0.0003 }, sideH = 8,
+        side = { stress = 0.001 }, sideH = 8,   -- the game eases stress itself: this nets about 0.05 an hour
         over = { stress = 0.001, hunger = 0.0004 },
         lapse = "UI_DanTraits_MSPredLapse", lapseTrait = "ms",
     },
@@ -117,6 +121,54 @@ DanTraits_Drugs = {
         side = { sick = 30 }, sideH = 6,
         over = { stress = 0.0015 },
         lapse = "UI_DanTraits_MSAmanLapse", lapseTrait = "ms",
+    },
+    -- Everything else that is taken. The trait files still do what each one is
+    -- for (the inhaler's relief, the gum's craving, the game's own painkiller,
+    -- sleeping and caffeine effects); the list adds the level, side effects and
+    -- too many at once. The inhaler action doses anyone who uses it.
+    inhaler = {
+        items = { "inhaler" }, treats = { "asthma" }, kind = "rescue",
+        halfH = 0.5, onAt = 0.5, overAt = 4,   -- five puffs close together
+        overH = 1,   -- the overdose lasts at least this long after the level falls back
+        over = { stress = 0.002, heart = true },
+    },
+    nicotinegum = {
+        items = { "nicotinegum" }, treats = { "smoker" }, kind = "rescue",
+        halfH = 1, onAt = 0.5, overAt = 3,
+        side = { sick = 30 }, sideH = 2,
+        overH = 2,   -- the overdose lasts at least this long after the level falls back
+        over = { sick = 50 },
+    },
+    painkillers = {
+        items = { "pills" }, treats = { "pain" }, kind = "rescue",
+        halfH = 2, onAt = 0.5, overAt = 3.5,   -- four or more at once
+        side = { sick = 30 }, sideH = 4,
+        overH = 4,   -- the overdose lasts at least this long after the level falls back
+        over = { sick = 60 },
+    },
+    sleepingtablets = {
+        items = { "pillssleepingtablets" }, treats = { "sleep" }, kind = "rescue",
+        halfH = 8, onAt = 0.5, overAt = 2.5,
+        side = { fatigue = 0.0003 }, sideH = 8,   -- taken at bedtime: groggy into the next day
+        overH = 6,   -- the overdose lasts at least this long after the level falls back
+        over = { fatigue = 0.0015, faint = 0.003 },
+    },
+    caffeinepills = {
+        items = { "pillsvitamins" }, treats = { "tired" }, kind = "rescue",
+        halfH = 5, onAt = 0.5, overAt = 3,
+        overH = 3,   -- the overdose lasts at least this long after the level falls back
+        over = { stress = 0.002, heart = true },
+    },
+    -- insulin: Diabetes keeps the doses (a low blood sugar is its overdose);
+    -- listed so the tracking UI can show the doses on board
+    insulin = {
+        items = { "insulinpen" }, treats = { "diabetes1", "diabetes2" }, kind = "regimen",
+        state = function(player)
+            local d = DanTraits_Data(player)
+            local doses = 0
+            for _, shot in ipairs(d.diaInsulin or {}) do doses = doses + (shot.dose or 0) end
+            return doses, 0
+        end,
     },
 }
 
@@ -218,6 +270,17 @@ function DanTraits_MedMoodle(player, id)
     return 2
 end
 
+-- a stimulant overdose running (the inhaler, caffeine pills): Heart Condition reads it
+function DanTraits_MedHeartStrain(player)
+    local d = player and DanTraits_Data(player)
+    if not d or not d.meds then return false end
+    for id, s in pairs(d.meds) do
+        local drug = DanTraits_Drugs[id]
+        if s.over and drug and drug.over and drug.over.heart then return true end
+    end
+    return false
+end
+
 -- 0..1: how well the drug is working right now
 function DanTraits_MedEffect(player, id)
     local drug = DanTraits_Drugs[id]
@@ -277,7 +340,7 @@ local function applyEffect(player, d, fx, awakeOnly)
     if fx.hunger then DanTraits_StatAdd(stats, CharacterStat.HUNGER, fx.hunger) end
     if fx.thirst then DanTraits_StatAdd(stats, CharacterStat.THIRST, fx.thirst) end
     if fx.sick then pcall(function() DanTraits_FloorUp(stats, CharacterStat.FOOD_SICKNESS, fx.sick, 1) end) end
-    if fx.faint and DanTraits_PassOut and not (DanTraits_IsPassedOut and DanTraits_IsPassedOut(player))
+    if fx.faint and DanTraits_PassOut and not DanTraits_Asleep(player) and not (DanTraits_IsPassedOut and DanTraits_IsPassedOut(player))
         and DanTraits_Roll(fx.faint) then
         DanTraits_PassOut(player, DanTraits_RandRange(2, 5), "UI_DanTraits_ComeTo", false)
     end
@@ -307,7 +370,16 @@ local function updateDrug(player, d, id, drug, s)
         if sideChance() > 0 then applyEffect(player, d, drug.side) end
         if s.sideMin <= 0 then s.sideMin = nil end
     end
-    local over = drug.over and drug.overAt and (s.lvl or 0) > drug.overAt
+    -- too many: runs while the level is over, and for overH hours after it falls
+    -- back (a quick-clearing drug would otherwise be over in minutes)
+    local above = drug.over and drug.overAt and (s.lvl or 0) > drug.overAt
+    if above then
+        if drug.overH then s.overMin = drug.overH * 60 end
+    elseif (s.overMin or 0) > 0 then
+        s.overMin = s.overMin - 1
+        if s.overMin <= 0 then s.overMin = nil end
+    end
+    local over = above or (s.overMin or 0) > 0
     if over and not s.over then notify(player, "UI_DanTraits_MedOver_" .. id) end
     s.over = over or nil
     if over then applyEffect(player, d, drug.over) end
@@ -456,7 +528,9 @@ DanTraits_ExtraCommands.meds = function(player, args)
     for id in pairs(DanTraits_Drugs) do
         local lvl, built = DanTraits_MedState(player, id)
         if lvl > 0 or built > 0 then
-            out[#out + 1] = string.format("%s %.2f (%d%%)", id, lvl, math.floor(built * 100 + 0.5))
+            local drug, s = DanTraits_Drugs[id], (DanTraits_Data(player).meds or {})[id] or {}
+            local how = drug.buildDays and string.format("%d%%", math.floor(built * 100 + 0.5)) or (drug.state and "regimen" or "at once")
+            out[#out + 1] = string.format("%s %.2f (%s%s)", id, lvl, how, s.over and ", TOO MANY" or "")
         end
     end
     table.sort(out)

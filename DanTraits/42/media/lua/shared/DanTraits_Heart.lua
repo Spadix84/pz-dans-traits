@@ -5,7 +5,7 @@
 -- is a chance of chest pain (angina), higher the deeper the moodle, and higher
 -- again when panicking, in the 40s, for a smoker (by the nicotine meter), with
 -- caffeine working, and for a Run Down body (Vitality; Fit and Thriving lower
--- it). Chest pain lasts 15 to 30 minutes: a pain floor, and endurance recovers
+-- it); twice as likely with too many inhaler puffs or caffeine pills in you. Chest pain lasts 15 to 30 minutes: a pain floor, and endurance recovers
 -- at a third of the speed (the enduranceRegen hook of the stat delta
 -- pipeline). Resting (spending no endurance, not running) lets it pass twice
 -- as fast. Pushing on through it risks a heart attack. Pushing is what you do,
@@ -45,6 +45,7 @@ local HC_AGE40         = 1.25    -- in their 40s
 local HC_AGE20         = 0.8     -- in their 20s
 local HC_SMOKER        = 0.5     -- x (1 + this x nicotine meter)
 local HC_CAFFEINE      = 1.3     -- while caffeine is working (Sleep's six-hour clock)
+local HC_STIM_OVER     = 2       -- while too many inhaler puffs or caffeine pills are in the system (DanTraits_Meds.lua)
 local HC_VITALITY      = 0.3     -- x (1 - this x Vitality effect, -1..1)
 local HC_ANGINA_MIN    = { 15, 30 }  -- minutes of chest pain
 local HC_REST_FASTER   = 2       -- minutes of chest pain gone per minute at rest
@@ -93,6 +94,7 @@ local function episodeChance(player, d)
     if hasTrait(player, "age40s") then chance = chance * HC_AGE40 elseif hasTrait(player, "age20s") then chance = chance * HC_AGE20 end
     if DanTraits_IsSmoker and DanTraits_IsSmoker(player) then chance = chance * (1 + HC_SMOKER * clamp01(d.nicMeter or 0)) end
     if (d.slCaffeineHours or 0) > 0 then chance = chance * HC_CAFFEINE end
+    if DanTraits_MedHeartStrain and DanTraits_MedHeartStrain(player) then chance = chance * HC_STIM_OVER end
     if DanTraits_VitalityEffect then
         local vit = 0
         pcall(function() vit = DanTraits_VitalityEffect(player) or 0 end)

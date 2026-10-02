@@ -18,7 +18,7 @@ H.hours = 100
 -- 1. a dose: the item finds its drug, the level halves on the drug's half-life
 local p = H.player(); H.current = p
 assert(DanTraits_DrugOfItem("PillsBeta") == "beta" and DanTraits_DrugOfItem("Diazepam") == "diazepam", "items map to drugs")
-assert(DanTraits_DrugOfItem("Pills") == nil, "painkillers are not on the list")
+assert(DanTraits_DrugOfItem("Pills") == "painkillers" and DanTraits_DrugOfItem("Bandage") == nil, "painkillers are on the list, a bandage is not")
 DanTraits_RunHooks("pill", nil, p, "Anticonvulsants")
 local lvl, built = DanTraits_MedState(p, "anticonvulsant")
 assert(lvl == 1 and built == 0, "one pill, nothing built yet")
@@ -142,5 +142,51 @@ assert((joined .. "|"):find("Base.PillsBeta UseDelta = 0.0333|", 1, true), "beta
 assert(joined:find("Base.Pills Tooltip = Tooltip_DanTraits_Painkillers", 1, true), "painkiller tooltip")
 assert(not joined:find("Base.Pills UseDelta", 1, true), "painkiller bottle size unchanged")
 getScriptManager = nil
+
+-- 11. everything else that is taken is on the list
+for item, id in pairs({ inhaler = "inhaler", NicotineGum = "nicotinegum", Pills = "painkillers",
+                        PillsSleepingTablets = "sleepingtablets", PillsVitamins = "caffeinepills",
+                        InsulinPen = "insulin", Prednisone = "prednisone", Baclofen = "baclofen", Amantadine = "amantadine" }) do
+  assert(DanTraits_DrugOfItem(item) == id, item .. " is " .. id)
+end
+-- five puffs close together overdo it and strain the heart; four do not
+local ih = H.player(); H.current = ih
+for _ = 1, 4 do DanTraits_MedTake(ih, "inhaler", 1) end
+H.clearHalo(); H.minute()
+assert(not DanTraits_MedHeartStrain(ih) and #H.halo == 0, "four puffs: fine")
+DanTraits_MedTake(ih, "inhaler", 1); H.minute()
+assert(DanTraits_MedHeartStrain(ih) and H.halo[#H.halo] == "UI_DanTraits_MedOver_inhaler", "five: too many, the heart strained")
+local st = ih._st.stress; H.minute(); assert(ih._st.stress > st, "jittery: stress climbs")
+H.mins(90); assert(not DanTraits_MedHeartStrain(ih), "and it passes as the puffs wear off")
+-- caffeine pills: four strain the heart too
+local cp = H.player(); H.current = cp
+for _ = 1, 4 do DanTraits_MedTake(cp, "caffeinepills", 1) end
+H.minute(); assert(DanTraits_MedHeartStrain(cp), "four caffeine pills: heart strain")
+-- painkillers: three are not too many, four are
+local pk = H.player(); H.current = pk
+for _ = 1, 3 do DanTraits_MedTake(pk, "painkillers", 1) end
+H.minute()
+assert(not DanTraits_Data(pk).meds.painkillers.over, "three painkillers: not an overdose")
+DanTraits_MedTake(pk, "painkillers", 1); H.minute()
+assert(DanTraits_Data(pk).meds.painkillers.over, "four: strong nausea")
+near(pk._st.foodsick, 1, 1e-9, "food sickness climbing toward 60")
+H.mins(30); assert(DanTraits_Data(pk).meds.painkillers.over, "still over once the level has fallen back (four hours)")
+H.mins(4 * 60 + 30); assert(not DanTraits_Data(pk).meds.painkillers.over, "and over after that")
+near(pk._st.foodsick, 60, 1e-9, "the nausea got to 60")
+-- an overdose of sleeping tablets can black you out, but never in your sleep
+local sl = H.player(); H.current = sl
+for _ = 1, 3 do DanTraits_MedTake(sl, "sleepingtablets", 1) end
+local fainted = 0
+local passOut = DanTraits_PassOut
+DanTraits_PassOut = function() fainted = fainted + 1 end
+sl._asleep = true; H.rollf = 0; H.minute(); assert(fainted == 0, "asleep: no blackout")
+sl._asleep = false; H.minute(); assert(fainted == 1, "awake: the blackout roll")
+H.rollf = 0.99; DanTraits_PassOut = passOut
+-- insulin: the doses on board, from Diabetes' own list
+local ins = H.player(); H.current = ins
+DanTraits_Data(ins).diaInsulin = { { dose = 2, t = 10 }, { dose = 1, t = 0 } }
+near(DanTraits_MedState(ins, "insulin"), 3, 1e-9, "three doses on board")
+-- prednisone's side effect is strong enough to beat the game easing stress
+near(DanTraits_Drugs.prednisone.side.stress, 0.001, 1e-12, "prednisone side: 0.001 stress a minute")
 
 H.pass()

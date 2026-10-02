@@ -73,17 +73,26 @@ end
 
 -- How long a notice stays over the head. The game keeps one halo display
 -- time per character (128 by default, about 2 real seconds: the clock counts
--- down about 60 a second, measured 2026-10-01) and every halo uses it, the
--- game's own included; the game's HaloTextHelper queues and joins lines and
--- shows the next batch when the last one is gone. Set once as each character
--- loads (the time is not saved): the blank note this needs shows nothing.
+-- down about 60 a second, measured 2026-10-01). Only character creation and
+-- a locked or barricaded door set it, so setting it once does not hold.
+-- Instead a notice that finds nothing over the head shows itself with our
+-- time (which the game's own next halos then share); one that finds the
+-- halo busy joins the game's HaloTextHelper queue and shows after it.
 local HALO_TICKS = 600   -- about 10 real seconds
 
-local function setHaloTime(playerNum, player)
-    if not player or (isServer and isServer()) then return end
-    pcall(function() player:setHaloNote("", 255, 255, 255, HALO_TICKS) end)
+local function showHalo(player, text, good)
+    local shown = false
+    pcall(function()
+        if player:getHaloTimerCount() > 0.2 then return end
+        local c = good and getCore():getGoodHighlitedColor() or getCore():getBadHighlitedColor()
+        player:setHaloNote(text, math.floor(c:getR() * 255), math.floor(c:getG() * 255), math.floor(c:getB() * 255), HALO_TICKS)
+        shown = true
+    end)
+    if shown then return end
+    pcall(function()
+        if good then HaloTextHelper.addGoodText(player, text) else HaloTextHelper.addBadText(player, text) end
+    end)
 end
-Events.OnCreatePlayer.Add(setHaloTime)
 
 local function storyKind(textKey)
     return (string.gsub(textKey, "^UI_DanTraits_", ""))
@@ -91,13 +100,13 @@ end
 
 local function notify(player, textKey)
     local text = getText(textKey)
-    pcall(function() HaloTextHelper.addBadText(player, text) end)
+    showHalo(player, text, false)
     DanTraits_Story(player, storyKind(textKey), text, "bad")
 end
 
 local function notifyGood(player, textKey)
     local text = getText(textKey)
-    pcall(function() HaloTextHelper.addGoodText(player, text) end)
+    showHalo(player, text, true)
     DanTraits_Story(player, storyKind(textKey), text, "good")
 end
 
@@ -105,13 +114,13 @@ end
 -- story event gets the formatted text. Bad by default, Good for the other tone.
 function DanTraits_NotifyFmt(player, textKey, ...)
     local text = getText(textKey, ...)
-    pcall(function() HaloTextHelper.addBadText(player, text) end)
+    showHalo(player, text, false)
     DanTraits_Story(player, storyKind(textKey), text, "bad")
 end
 
 function DanTraits_NotifyFmtGood(player, textKey, ...)
     local text = getText(textKey, ...)
-    pcall(function() HaloTextHelper.addGoodText(player, text) end)
+    showHalo(player, text, true)
     DanTraits_Story(player, storyKind(textKey), text, "good")
 end
 
