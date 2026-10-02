@@ -100,6 +100,11 @@ local n = H.player({ traits = { "epilepsy" } }); H.current = n
 H.fire("OnCreatePlayer", 0, n); H.fire("OnCreatePlayer", 0, n)
 assert(#n._inv == 1 and n._inv[1]._type == "DanTraits.Anticonvulsants", "one bottle")
 assert(DanTraits_IsAnticonvulsants(n._inv[1]), "and it is recognised")
+SandboxVars = { DanTraits = { StartingMedication = false } }
+local nm = H.player({ traits = { "epilepsy" } }); H.current = nm
+H.fire("OnCreatePlayer", 0, nm)
+assert(#nm._inv == 0, "Starting Medication off: no bottle")
+SandboxVars = nil
 
 -- 7. at the wheel: no fall, no sitting on the floor, and the engine is cut; a passenger's is not
 local sent = {}

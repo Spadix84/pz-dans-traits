@@ -117,6 +117,12 @@ H.fire("OnCreatePlayer", 0, n)
 assert(#n._inv == 2 and n._inv[1]._type == "Base.PillsBeta" and n._inv[2]._type == "Base.PillsBeta", "two bottles of beta blockers")
 local lvl, built = DanTraits_MedState(n, "beta")
 assert(lvl == 1 and built == 1, "dosed this morning and fully built up")
+-- the Starting Medication sandbox option off: no bottles, still dosed this morning
+SandboxVars = { DanTraits = { StartingMedication = false } }
+local nm = H.player({ traits = { "heart" } }); H.current = nm
+H.fire("OnCreatePlayer", 0, nm)
+assert(#nm._inv == 0 and select(2, DanTraits_MedState(nm, "beta")) == 1, "off: no bottles, still on them")
+SandboxVars = nil
 
 -- 8. an old save's level carries across, a protecting one as fully built up
 local o = H.player({ traits = { "heart" } }); H.current = o

@@ -224,13 +224,15 @@ DanTraits_ExtraCommands.heart = function(player, args)
     return "heart angina | heart attack | heart beta (chest pain chance now " .. tostring(episodeChance(player, d)) .. ")"
 end
 
--- start on beta blockers, fully built up, with two bottles
+-- start on beta blockers, fully built up, with two bottles (none if the
+-- Starting Medication sandbox option is off)
 local function onHeartCreatePlayer(playerNum, player)
     if not player or not hasTrait(player, "heart") then return end
     local d = DanTraits_Data(player)
     if d.hcKitGiven or player:getHoursSurvived() > 0 then return end
     d.hcKitGiven = true
     DanTraits_MedStart(player, "beta")
+    if not DanTraits_SandboxOn("StartingMedication") then return end
     for _ = 1, HC_KIT_BOTTLES do
         pcall(function() player:getInventory():AddItem("Base.PillsBeta") end)
     end

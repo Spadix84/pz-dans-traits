@@ -309,12 +309,13 @@ function DanTraits_IsInhaler(item)
     return ok and fullType == INHALER_ITEM
 end
 
--- Start with one inhaler.
+-- Start with one inhaler (none if the Starting Medication sandbox option is off).
 local function onAsthmaCreatePlayer(playerNum, player)
     if not player or not hasTrait(player, "asthma") then return end
     local d = asthmaData(player)
     if d.asthmaKitGiven or player:getHoursSurvived() > 0 then return end
     d.asthmaKitGiven = true
+    if not DanTraits_SandboxOn("StartingMedication") then return end
     pcall(function() player:getInventory():AddItem(INHALER_ITEM) end)
 end
 

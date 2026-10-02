@@ -31,5 +31,7 @@
     "Sandbox_DanTraitsDehydrationEnabled": "Dehydration",
     "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only.",
     "Sandbox_DanTraitsMedSideEffectChance": "Medication Side Effect Chance",
-    "Sandbox_DanTraitsMedSideEffectChance_tooltip": "The chance in percent, on each day a medication is taken, that its mild side effect shows up for a few hours. Taking too many at once is always harmful.<br>0: no side effects."
+    "Sandbox_DanTraitsMedSideEffectChance_tooltip": "The chance in percent, on each day a medication is taken, that its mild side effect shows up for a few hours. Taking too many at once is always harmful.<br>0: no side effects.",
+    "Sandbox_DanTraitsStartingMedication": "Starting Medication",
+    "Sandbox_DanTraitsStartingMedication_tooltip": "Characters with a medical trait start with its medication: beta blockers (Heart Condition), anticonvulsants (Epilepsy), insulin pens or metformin (Diabetes) and an inhaler (Asthma).<br>Off: they start with none and have to find it. Daily pills taken that morning still wear off over a few days."
 }

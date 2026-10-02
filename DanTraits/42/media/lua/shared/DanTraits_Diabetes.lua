@@ -373,6 +373,7 @@ function DanTraits_IsMetformin(item)
 end
 
 -- Type 1 starts with a meter, strips and three pens; Type 2 with a meter, strips and metformin.
+-- With the Starting Medication sandbox option off, only the meter and strips.
 local function onDiabetesCreatePlayer(playerNum, player)
     if not player or not diaHas(player) then return end
     local d = diaData(player)
@@ -382,10 +383,12 @@ local function onDiabetesCreatePlayer(playerNum, player)
         local inv = player:getInventory()
         inv:AddItem(METER_ITEM)
         inv:AddItem(STRIPS_ITEM)
-        if hasTrait(player, "diabetes1") then
-            for _ = 1, 3 do inv:AddItem(INSULIN_ITEM) end
-        else
-            inv:AddItem(METFORMIN_ITEM)
+        if DanTraits_SandboxOn("StartingMedication") then
+            if hasTrait(player, "diabetes1") then
+                for _ = 1, 3 do inv:AddItem(INSULIN_ITEM) end
+            else
+                inv:AddItem(METFORMIN_ITEM)
+            end
         end
     end)
     if hasTrait(player, "diabetes2") and DanTraits_MedStart then DanTraits_MedStart(player, "metformin") end
