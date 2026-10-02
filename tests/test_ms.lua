@@ -148,6 +148,14 @@ H.climate.temp = 20
 local k = newPlayer(); H.current = k
 H.fire("OnCreatePlayer", 0, k); H.fire("OnCreatePlayer", 0, k)
 assert(#k._inv == 2, "two bottles, once")
+local kd = DanTraits_Data(k)
+near(kd.msBac, 1, 1e-9, "starts dosed with baclofen"); near(kd.msAman, 1, 1e-9, "and amantadine")
+SandboxVars = { DanTraits = { StartingMedication = false } }
+local k2 = newPlayer(); H.current = k2
+H.fire("OnCreatePlayer", 0, k2)
+local k2d = DanTraits_Data(k2)
+assert(#k2._inv == 0 and k2d.msKitGiven and k2d.msBac == 1, "Starting Medication off: no bottles, still dosed")
+SandboxVars = nil
 
 -- 12. the moodles
 H.load("Moodles")

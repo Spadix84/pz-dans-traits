@@ -28,7 +28,8 @@
 --     a little drowsy. Halves every 12 hours.
 --   Amantadine: MS fatigue (baseline and flare) cut to 40%. Dry mouth (a
 --     little thirstier). Halves every 12 hours.
--- A new character starts with a bottle of baclofen and one of amantadine.
+-- A new character starts dosed with baclofen and amantadine, and with a
+-- bottle of each unless the Starting Medication sandbox option is off.
 -- Prednisone has to be found.
 --
 -- Mod data: msHeat (the heat load), msTier (the last heat notice's tier),
@@ -317,12 +318,16 @@ DanTraits_ExtraCommands.ms = function(player, args)
         .. ", target " .. tostring((heatTarget(player, d))) .. ", flare hours " .. tostring(d.msFlareH or 0) .. ")"
 end
 
--- start with a bottle of baclofen and one of amantadine
+-- start dosed with baclofen and amantadine (a dose that wears off), and with a
+-- bottle of each unless the Starting Medication sandbox option is off
 local function onMSCreatePlayer(playerNum, player)
     if not player or not hasTrait(player, "ms") then return end
     local d = DanTraits_Data(player)
     if d.msKitGiven or player:getHoursSurvived() > 0 then return end
     d.msKitGiven = true
+    DanTraits_TakeMSMed(player, "baclofen", 1)
+    DanTraits_TakeMSMed(player, "amantadine", 1)
+    if not DanTraits_SandboxOn("StartingMedication") then return end
     for _, item in ipairs(MS_KIT) do
         pcall(function() player:getInventory():AddItem(item) end)
     end
