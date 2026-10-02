@@ -706,4 +706,28 @@ module DanTraits {
         WorldStaticModel = PillBottleGround,
     }
 
+    /* Pill Caddy: a weekly pill organiser that holds medication only
+       (AcceptItemFunction.DanPillCaddy). Hangs on a small belt slot like a
+       canteen (AttachmentType Walkie) and has its own inventory tab while it
+       is on you. Capacity 1, 2 when Organized. DanTraits_PillCaddy.lua.
+       The pill bottle models stand in until it has its own. */
+    item PillCaddy
+    {
+        DisplayCategory = Container,
+        ItemType = base:container,
+        DisplayName = Pill Caddy,
+        Weight = 0.1,
+        Icon = PillCaddy,
+        Tooltip = Tooltip_DanTraits_PillCaddy,
+        Capacity = 1,
+        WeightReduction = 85,
+        AcceptItemFunction = AcceptItemFunction.DanPillCaddy,
+        AttachmentType = Walkie,
+        CloseSound = CloseSmallMetalBox,
+        OpenSound = OpenSmallMetalBox,
+        PutInSound = StoreItemSmallMetalBox,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
 }

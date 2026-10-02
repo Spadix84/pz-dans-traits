@@ -269,6 +269,21 @@ local ITEMS = {
         bags = { HandbagsAndPurses = 0.03 },
         clutter = { DeskItems = 0.1 },
     },
+    {
+        -- a rare find: a weekly pill organiser in a medicine cabinet, a bedside
+        -- drawer, a handbag, or for sale on a pharmacy shelf
+        name = "DanTraits.PillCaddy",
+        procedural = {
+            BathroomCabinet = 0.05, BathroomCounter = 0.03, BedroomSidetable = 0.02,
+            MedicalCabinet = 0.1, MedicalClinicDrugs = 0.2, MedicalStorageDrugs = 0.1,
+            StoreShelfMedical = 0.3, HospitalRoomShelves = 0.1, SafehouseMedical = 0.3,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.05 },
+        },
+        bags = { HandbagsAndPurses = 0.01 },
+        clutter = {},
+    },
 }
 
 local function append(list, name, weight)

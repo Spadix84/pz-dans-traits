@@ -29,6 +29,12 @@ assert(bc[3] == "DanTraits.Inhaler" and bc[4] == 1, "appended as name, weight")
 assert(SuburbsDistributions.all.inventorymale.items[4] == 0.1, "zombie pockets weight")
 assert(ClutterTables.ClosetItems[3] == "DanTraits.Inhaler" and ClutterTables.ClosetItems[4] == 0.01, "flat clutter list")
 assert(SuburbsDistributions.MedicalCache1.MedicalBox.items[4] == 5, "nested path")
+-- the pill caddy: rare, likeliest on a pharmacy shelf
+local function weightOf(list, name)
+  for i = 1, #list, 2 do if list[i] == name then return list[i + 1] end end
+end
+assert(weightOf(ProceduralDistributions.list.StoreShelfMedical.items, "DanTraits.PillCaddy") == 0.3, "caddy on pharmacy shelves")
+assert(weightOf(ProceduralDistributions.list.BathroomCabinet.items, "DanTraits.PillCaddy") == 0.05, "caddy in bathroom cabinets")
 -- a missing list is reported, not fatal
 ProceduralDistributions.list.TestingLab = nil
 logged = {}
