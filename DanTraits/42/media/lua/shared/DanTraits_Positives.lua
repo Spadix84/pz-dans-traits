@@ -189,7 +189,6 @@ local function updateGoodClotterMinute(player, d)
     end)
     d.gcBleed = any and now or nil
 end
-DanTraits_updateGoodClotterMinute = updateGoodClotterMinute
 
 -- Thick Skull ----------------------------------------------------------------
 DanTraits_AddHook("concussionChance", function(chance, player)
