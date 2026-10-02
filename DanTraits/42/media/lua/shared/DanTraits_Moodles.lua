@@ -53,7 +53,6 @@ local function tierOf(value, tiers)
     return level
 end
 
-local MED_ON           = 0.5     -- a medication level that protects (Heart's and Epilepsy's own)
 local TN_LONG_MIN      = 60      -- ringing for this long or more is the second level
 local GUT_TIER         = { 0.25, 0.5, 0.75 }
 local GUT_LACTOSE      = 0.66    -- a full lactose flare, on Gluten's scale
@@ -150,7 +149,7 @@ local SPECS = {
     end },
     { name = "MSFlare", level = function(player, d)
         if not hasTrait(player, "ms") or (d.msFlareH or 0) <= 0 then return 0 end
-        return (d.msPred or 0) >= MED_ON and 1 or 2
+        return (DanTraits_MedCovered and DanTraits_MedCovered(player, "prednisone")) and 1 or 2
     end },
 }
 

@@ -237,8 +237,14 @@
     "UI_DanTraits_MedSide_antidepressant": "Antidepressants: you feel queasy",
     "UI_DanTraits_MedSide_diazepam": "Diazepam: you feel drowsy",
     "UI_DanTraits_MedSide_iron": "Iron pills: you feel a little sick",
+    "UI_DanTraits_MedSide_prednisone": "Prednisone: you feel restless and on edge today",
+    "UI_DanTraits_MedSide_baclofen": "Baclofen: your muscles feel weak today",
+    "UI_DanTraits_MedSide_amantadine": "Amantadine: you feel a little sick",
     "UI_DanTraits_MedOver_beta": "Too many beta blockers: you feel dizzy",
     "UI_DanTraits_MedOver_anticonvulsant": "Too many anticonvulsants: you feel heavy and sluggish",
     "UI_DanTraits_MedOver_metformin": "Too much metformin: you feel sick",
-    "UI_DanTraits_MedOver_diazepam": "Too much diazepam: you can barely keep your eyes open"
+    "UI_DanTraits_MedOver_diazepam": "Too much diazepam: you can barely keep your eyes open",
+    "UI_DanTraits_MedOver_prednisone": "Too much prednisone: you feel wired and ravenous",
+    "UI_DanTraits_MedOver_baclofen": "Too much baclofen: your muscles feel like water",
+    "UI_DanTraits_MedOver_amantadine": "Too much amantadine: you feel jittery and confused"
 }

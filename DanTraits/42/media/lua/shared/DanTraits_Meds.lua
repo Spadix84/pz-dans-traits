@@ -4,7 +4,8 @@
 -- character is covered instead of keeping its own pill bookkeeping, and the
 -- tracking UI to come reads everything from here.
 --
--- Daily drugs (beta blockers, anticonvulsants, metformin) track two numbers:
+-- Daily drugs (beta blockers, anticonvulsants, metformin, baclofen,
+-- amantadine) track two numbers:
 --   level  what is in your system: every pill adds one, it halves every
 --          halfH hours. Covered while it is at least onAt.
 --   built  0..1, how well the drug works: it climbs for each minute you are
@@ -14,7 +15,8 @@
 -- effect, and a missed dose dents it instead of dropping you off a cliff.
 -- A character who starts with the trait starts built up (DanTraits_MedStart).
 --
--- Rescue drugs (diazepam) work at once: the effect is 1 while covered.
+-- Rescue drugs (diazepam) and course drugs (prednisone, taken through an MS
+-- flare) work at once: the effect is 1 while covered.
 -- Regimen drugs keep their model in their trait file and lend it to this one
 -- through state() (antidepressants: Depression's two-week streak). Supplements
 -- (iron) only get the side effect roll here.
@@ -24,10 +26,16 @@
 -- runs that drug's mild side effect for sideH hours. Too much (level above
 -- overAt) runs its overdose effect for as long as the level stays up.
 --
+-- A drug can also do something every minute it is in the system, for anyone
+-- who takes it (taking: prednisone's hunger, baclofen's drowsiness while
+-- awake, amantadine's dry mouth), and say when it wears off (lapse, for those
+-- with the trait in lapseTrait; Heart Condition and Epilepsy say their own).
+--
 -- Effects are a small vocabulary, applied every minute while they run:
 --   fatigue  tiredness added a minute      stress   stress added a minute
---   sick     food sickness floor (0..100)  regen    endurance recovery x this
---   faint    chance a minute of fainting
+--   hunger   hunger added a minute         thirst   thirst added a minute
+--   sick     food sickness floor (0..100; 30 shows the game's nausea moodle)
+--   regen    endurance recovery x this     faint    chance a minute of fainting
 --
 -- Vanilla beta blockers: their own effect (a large, short panic drop) is put
 -- back the way it was after the pill, so they only do what this list says.
@@ -35,6 +43,8 @@
 --
 -- Mod data: meds[id] = { lvl, built, day (last game day dosed), sideMin
 -- (minutes of side effect left), over (overdose running) }.
+-- Old saves: the traits' own levels (hcBeta, epMeds, diaMedMinutes, msPred,
+-- msBac, msAman) are carried across as each turns up.
 -- Console: meds | meds take <id> | meds side <id>
 require "DanTraits"
 
@@ -44,7 +54,7 @@ local SIDE_CHANCE_DEFAULT = 3          -- percent, on each day a drug is taken
 local DZ_PANIC_RATE       = 0.6        -- diazepam: panic per 30fps tick, the vanilla beta blocker rate
 
 -- The drug list. items: lower-case item types (getType) that are a dose.
--- treats: trait ids, for the tooltip and the UI. kind: daily | rescue | regimen | supplement.
+-- treats: trait ids, for the tooltip and the UI. kind: daily | rescue | course | regimen | supplement.
 DanTraits_Drugs = {
     beta = {
         items = { "pillsbeta" }, treats = { "heart" }, kind = "daily",
@@ -61,12 +71,12 @@ DanTraits_Drugs = {
     metformin = {
         items = { "metformin" }, treats = { "diabetes2" }, kind = "daily",
         halfH = 24, onAt = 0.5, overAt = 3, buildDays = 2, fadeDays = 2,
-        side = { sick = 15 }, sideH = 8,
-        over = { sick = 35 },
+        side = { sick = 30 }, sideH = 8,
+        over = { sick = 50 },
     },
     antidepressant = {
         items = { "pillsantidep" }, treats = { "spiraling" }, kind = "regimen",
-        side = { sick = 15 }, sideH = 8,
+        side = { sick = 30 }, sideH = 8,
         state = function(player)
             if not DanTraits_MddBenefit or not DanTraits_HasTrait(player, "spiraling") then return nil end
             local d = DanTraits_Data(player)
@@ -81,7 +91,32 @@ DanTraits_Drugs = {
     },
     iron = {
         items = { "ironpills" }, treats = { "anemic" }, kind = "supplement",
-        side = { sick = 10 }, sideH = 4,
+        side = { sick = 30 }, sideH = 4,
+    },
+    -- Multiple Sclerosis (DanTraits_MS.lua reads the effect)
+    prednisone = {
+        items = { "prednisone" }, treats = { "ms" }, kind = "course",
+        halfH = 24, onAt = 0.5, overAt = 3,
+        taking = { hunger = 0.0002 },
+        side = { stress = 0.0003 }, sideH = 8,
+        over = { stress = 0.001, hunger = 0.0004 },
+        lapse = "UI_DanTraits_MSPredLapse", lapseTrait = "ms",
+    },
+    baclofen = {
+        items = { "baclofen" }, treats = { "ms" }, kind = "daily",
+        halfH = 12, onAt = 0.5, overAt = 3, buildDays = 2, fadeDays = 2,
+        taking = { fatigue = 0.0001 },
+        side = { regen = 0.85 }, sideH = 8,
+        over = { fatigue = 0.0015, regen = 0.6 },
+        lapse = "UI_DanTraits_MSBacLapse", lapseTrait = "ms",
+    },
+    amantadine = {
+        items = { "amantadine" }, treats = { "ms" }, kind = "daily",
+        halfH = 12, onAt = 0.5, overAt = 3, buildDays = 3, fadeDays = 3,
+        taking = { thirst = 0.0001 },
+        side = { sick = 30 }, sideH = 6,
+        over = { stress = 0.0015 },
+        lapse = "UI_DanTraits_MSAmanLapse", lapseTrait = "ms",
     },
 }
 
@@ -119,10 +154,12 @@ local function sideChance()
     return math.max(0, v)
 end
 
--- Old saves kept their own levels; carry them across once, so nobody loses
--- cover on update (a protecting level counts as fully built up).
+-- Old saves kept their own levels; carry each across the first time it turns
+-- up, so nobody loses cover on update (a protecting level counts as fully
+-- built up). Checked every time: the MS levels came later than the rest.
+local OLD_KEYS = { hcBeta = "beta", epMeds = "anticonvulsant", msPred = "prednisone", msBac = "baclofen", msAman = "amantadine" }
+
 local function migrate(d)
-    if d.medsMigrated then return end
     d.medsMigrated = true
     local function carry(id, lvl)
         if not lvl or lvl <= 0 then return end
@@ -130,10 +167,16 @@ local function migrate(d)
         s.lvl = math.max(s.lvl, lvl)
         if lvl >= DanTraits_Drugs[id].onAt then s.built = 1 end
     end
-    carry("beta", d.hcBeta)
-    carry("anticonvulsant", d.epMeds)
-    if (d.diaMedMinutes or 0) > 0 then carry("metformin", d.diaMedMinutes / 1440) end
-    d.hcBeta, d.epMeds, d.diaMedMinutes = nil, nil, nil
+    for key, id in pairs(OLD_KEYS) do
+        if d[key] ~= nil then
+            carry(id, tonumber(d[key]))
+            d[key] = nil
+        end
+    end
+    if d.diaMedMinutes ~= nil then
+        if d.diaMedMinutes > 0 then carry("metformin", d.diaMedMinutes / 1440) end
+        d.diaMedMinutes = nil
+    end
 end
 
 -- Reading ---------------------------------------------------------------------
@@ -179,7 +222,8 @@ end
 function DanTraits_MedEffect(player, id)
     local drug = DanTraits_Drugs[id]
     if not drug then return 0 end
-    if drug.kind == "rescue" then return DanTraits_MedCovered(player, id) and 1 or 0 end
+    -- no build-up (rescue and course drugs): it works fully while it is in the system
+    if not drug.buildDays and not drug.state then return DanTraits_MedCovered(player, id) and 1 or 0 end
     local _, built = DanTraits_MedState(player, id)
     return built
 end
@@ -226,10 +270,12 @@ end
 
 -- Every minute -------------------------------------------------------------------
 
-local function applyEffect(player, d, fx)
+local function applyEffect(player, d, fx, awakeOnly)
     local stats = player:getStats()
-    if fx.fatigue then DanTraits_StatAdd(stats, CharacterStat.FATIGUE, fx.fatigue) end
+    if fx.fatigue and not (awakeOnly and DanTraits_Asleep(player)) then DanTraits_StatAdd(stats, CharacterStat.FATIGUE, fx.fatigue) end
     if fx.stress then DanTraits_StatAdd(stats, CharacterStat.STRESS, fx.stress) end
+    if fx.hunger then DanTraits_StatAdd(stats, CharacterStat.HUNGER, fx.hunger) end
+    if fx.thirst then DanTraits_StatAdd(stats, CharacterStat.THIRST, fx.thirst) end
     if fx.sick then pcall(function() DanTraits_FloorUp(stats, CharacterStat.FOOD_SICKNESS, fx.sick, 1) end) end
     if fx.faint and DanTraits_PassOut and not (DanTraits_IsPassedOut and DanTraits_IsPassedOut(player))
         and DanTraits_Roll(fx.faint) then
@@ -238,10 +284,17 @@ local function applyEffect(player, d, fx)
 end
 
 local function updateDrug(player, d, id, drug, s)
+    local was = drug.onAt and (s.lvl or 0) >= drug.onAt
     if drug.halfH and (s.lvl or 0) > 0 then
         s.lvl = s.lvl * 0.5 ^ (1 / (drug.halfH * 60))
         if s.lvl < 0.01 then s.lvl = 0 end
     end
+    local covered = drug.onAt and (s.lvl or 0) >= drug.onAt
+    if was and not covered and drug.lapse
+        and (not drug.lapseTrait or DanTraits_HasTrait(player, drug.lapseTrait)) then
+        notify(player, drug.lapse)
+    end
+    if covered and drug.taking then applyEffect(player, d, drug.taking, true) end
     if drug.buildDays then
         if (s.lvl or 0) >= drug.onAt then
             s.built = math.min(1, (s.built or 0) + 1 / (drug.buildDays * 1440))

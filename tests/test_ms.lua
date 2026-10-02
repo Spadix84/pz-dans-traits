@@ -2,11 +2,12 @@
 -- temperature, wetness and a flare; the lag; the tiers and their notices;
 -- what each tier does (fatigue, hand stiffness, pain, fumbles, hands giving
 -- out); flares and prednisone; baclofen and amantadine; a drink cooling you;
--- the starting bottles; cooling off taking back MS's stiffness and pain.
+-- the starting bottles; cooling off taking back MS's stiffness and pain; the
+-- pills on the shared medication system (build-up, old saves).
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
-H.load("Arthritis", "MS")
+H.load("Arthritis", "Meds", "MS")
 H.expectEvery("minute", "MS")
 
 local near = H.near
@@ -89,8 +90,10 @@ local fd = DanTraits_Data(f)
 H.climate.temp = 15
 H.minute(f); near(f._st.fatigue, 0.0002, 1e-9, "a fifth faster to tire")
 DanTraits_RunHooks("pill", nil, f, "Amantadine")
-near(fd.msAman, 1, 1e-9, "a pill: level 1")
-f._st.fatigue = 0; H.minute(f); near(f._st.fatigue, 0.00008, 1e-7, "amantadine: x0.4")
+near(DanTraits_MedState(f, "amantadine"), 1, 1e-9, "a pill: level 1")
+f._st.fatigue = 0; H.minute(f); near(f._st.fatigue, 0.0002, 1e-7, "the first pill: not built up yet")
+fd.meds.amantadine.built = 1   -- days of doses
+f._st.fatigue = 0; H.minute(f); near(f._st.fatigue, 0.00008, 1e-7, "amantadine built up: x0.4")
 assert(f._st.thirst > 0, "amantadine side effect: dry mouth")
 f._st.fatigue = 0; f._asleep = true; H.minute(f); near(f._st.fatigue, 0, 1e-12, "asleep: nothing"); f._asleep = false
 
@@ -124,6 +127,7 @@ near(f._parts.Hand_R._stiff, 0, 1e-9, "the flare's weak hands go too")
 local b = newPlayer(); H.current = b
 local bd = DanTraits_Data(b)
 DanTraits_RunHooks("pill", nil, b, "Baclofen")
+bd.meds.baclofen.built = 1   -- days of doses
 bd.msHeat = 1; H.climate.temp = 60; b._st.temperature = 40
 H.minute(b)
 near(b._parts.Hand_L._stiff, 27.5, 1e-9, "full heat on baclofen: 55 x 0.5")
@@ -135,7 +139,7 @@ H.current = b
 
 -- 9. the levels decay: baclofen halves in 12 hours, then a wearing-off notice
 H.climate.temp = 15; b._st.temperature = 0; bd.msHeat = nil
-bd.msBac = 1; H.mins(720); near(bd.msBac, 0.5, 1e-3, "halved in 12 hours")
+bd.meds.baclofen.lvl = 1; H.mins(720); near(DanTraits_MedState(b, "baclofen"), 0.5, 1e-3, "halved in 12 hours")
 H.clearHalo(); H.mins(10)
 local lapsed = false
 for _, t in ipairs(H.halo) do if t == "UI_DanTraits_MSBacLapse" then lapsed = true end end
@@ -154,6 +158,11 @@ H.climate.temp = 20
 local k = newPlayer(); H.current = k
 H.fire("OnCreatePlayer", 0, k); H.fire("OnCreatePlayer", 0, k)
 assert(#k._inv == 2, "two bottles, once")
+local lvl, built = DanTraits_MedState(k, "baclofen")
+assert(lvl >= 1 and built == 1, "starts on baclofen, fully built up")
+lvl, built = DanTraits_MedState(k, "amantadine")
+assert(lvl >= 1 and built == 1, "and amantadine")
+assert(DanTraits_MedState(k, "prednisone") == 0, "prednisone has to be found")
 
 -- 12. the moodles
 H.load("Moodles")
@@ -164,7 +173,7 @@ md.msHeat = 0.3; assert(level("MSHeat", m, md) == 1, "heat sensitive")
 md.msHeat = 0.6; assert(level("MSHeat", m, md) == 2, "too hot")
 md.msHeat = 0.9; assert(level("MSHeat", m, md) == 3, "overheated")
 md.msFlareH = 5; assert(level("MSFlare", m, md) == 2, "a flare")
-md.msPred = 1; assert(level("MSFlare", m, md) == 1, "a flare on prednisone")
+md.meds = { prednisone = { lvl = 1, built = 0 } }; assert(level("MSFlare", m, md) == 1, "a flare on prednisone (works at once)")
 assert(DanTraits_IsMSMed({ getFullType = function() return "DanTraits.Baclofen" end }), "baclofen is an MS pill")
 assert(not DanTraits_IsMSMed({ getFullType = function() return "Base.PillsBeta" end }), "beta blockers are not")
 
@@ -196,9 +205,31 @@ e._parts.Hand_R._stiff = 40; H.minute()
 near(e._parts.Hand_R._stiff, 40, 1e-9, "stiffness MS never put on is the game's to ease")
 -- baclofen taken while stiff halves it, and the hands come down to it
 ed.msHeat = 1; H.climate.temp = 60; e._st.temperature = 40; H.mins(3)
-DanTraits_RunHooks("pill", nil, e, "Baclofen")
+DanTraits_RunHooks("pill", nil, e, "Baclofen"); ed.meds.baclofen.built = 1
 H.minute(); near(e._parts.Hand_R._stiff, 53, 1e-9, "baclofen: easing toward half")
 H.mins(15); near(e._parts.Hand_R._stiff, 27.5, 1e-9, "baclofen: settled at 27.5")
 H.climate.temp = 20
+
+-- 14. half built up, half the effect: baclofen at 50% takes a quarter off
+local q = newPlayer(); H.current = q
+local qd = DanTraits_Data(q)
+DanTraits_TakeMSMed(q, "baclofen", 1); qd.meds.baclofen.built = 0.5
+H.climate.temp = 15; q._st.temperature = 0
+H.minute(); near(q._parts.LowerLeg_L._stiff, 8 * 0.75, 1e-2, "legs: 8 x (1 - 0.5 x 0.5) (the build-up climbs a little that minute)")
+-- prednisone works at once, no build-up
+qd.msFlareH = 10; DanTraits_TakeMSMed(q, "prednisone", 1)
+local before = qd.msFlareH; H.minute(); near(before - qd.msFlareH, 3 / 60, 1e-6, "prednisone: three hours an hour from the first pill")
+qd.msFlareH = nil
+
+-- 15. an old save's MS levels are carried across, fully built up
+local o = newPlayer(); H.current = o
+local od = DanTraits_Data(o)
+od.medsMigrated = true; od.msPred, od.msBac, od.msAman = 0.9, 1.2, 0.3
+lvl, built = DanTraits_MedState(o, "baclofen")
+near(lvl, 1.2, 1e-9, "baclofen carried"); assert(built == 1, "a working level counts as built up")
+lvl, built = DanTraits_MedState(o, "amantadine")
+near(lvl, 0.3, 1e-9, "amantadine carried"); assert(built == 0, "a lapsed level is not")
+near(DanTraits_MedState(o, "prednisone"), 0.9, 1e-9, "prednisone carried")
+assert(od.msPred == nil and od.msBac == nil and od.msAman == nil, "the old keys go")
 
 H.pass()

@@ -25,25 +25,27 @@
 -- flare there is still MS fatigue (you tire a fifth faster) and a little
 -- stiffness in the legs.
 --
--- The 1993 medicine cabinet, three pill bottles of this mod's. Each pill
--- tops up a level that decays like Epilepsy's anticonvulsants and works
--- while it is at least half a pill:
---   Prednisone (a steroid): a flare runs out three times as fast. Does
---     nothing outside one. Makes you hungry. Halves every 24 hours: one a day.
---   Baclofen: all the stiffness above, heat's included, is halved. Makes you
---     a little drowsy. Halves every 12 hours.
---   Amantadine: MS fatigue (baseline and flare) cut to 40%. Dry mouth (a
---     little thirstier). Halves every 12 hours.
--- A new character starts with a bottle of baclofen and one of amantadine.
--- Prednisone has to be found.
+-- The 1993 medicine cabinet, three pill bottles of this mod's, kept by the
+-- shared medication system (DanTraits_Meds.lua: levels, half-lives, build-up,
+-- side effects, overdose, wearing-off notices). This file reads how well
+-- each is working (0..1):
+--   Prednisone (a steroid): works at once. A flare runs out three times as
+--     fast. Does nothing outside one. Makes you hungry. One a day.
+--   Baclofen: builds up over 2 days, then all the stiffness above, heat's
+--     included, is halved. Makes you a little drowsy. One every 12 hours.
+--   Amantadine: builds up over 3 days, then MS fatigue (baseline and flare)
+--     is cut to 40%. Dry mouth (a little thirstier). One every 12 hours.
+-- A new character starts on baclofen and amantadine, fully built up, with a
+-- bottle of each. Prednisone has to be found.
 --
 -- Mod data: msHeat (the heat load), msTier (the last heat notice's tier),
 -- msHands, msLegs, msPainHead (what MS last held the hands, legs and head at,
 -- for easing it off),
--- msFlareH (hours of flare left), msFlares (count), msPred, msBac, msAman
--- (the medication levels), msKitGiven.
+-- msFlareH (hours of flare left), msFlares (count), msKitGiven. The pills
+-- live in the medication system's meds table.
 -- Console: ms heat <0..1> | ms flare | ms end | ms pill <pred|bac|aman>
 require "DanTraits"
+require "DanTraits_Meds"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
@@ -92,24 +94,21 @@ local MS_HAND_FLARE    = 20      -- hands and forearms in a flare
 local MS_EASE_STIFF    = 2       -- stiffness off a minute, down to the current floor
 local MS_EASE_PAIN     = 2       -- head pain off a minute on top of the game's 1
 -- medication
-local MS_MED_ON        = 0.5     -- a level that works
+-- medication (DanTraits_Meds.lua keeps the levels; these are what a pill
+-- working fully does, scaled by how well it is working)
 local MS_PRED_BURN     = 3       -- flare hours gone per hour on prednisone
-local MS_PRED_HUNGER   = 0.0002  -- hunger a minute while prednisone works (anyone)
 local MS_BAC_STIFF     = 0.5     -- stiffness x this on baclofen
-local MS_BAC_DROWSY    = 0.0001  -- side effect: tiredness a minute while baclofen works, awake (anyone)
 local MS_AMAN_FATIGUE  = 0.4     -- MS fatigue x this on amantadine
-local MS_AMAN_THIRST   = 0.0001  -- side effect: thirst a minute while amantadine works (dry mouth; anyone)
-local MS_MEDS = {
-    { key = "msPred", item = "prednisone", half = 24, lapse = "UI_DanTraits_MSPredLapse" },
-    { key = "msBac",  item = "baclofen",   half = 12, lapse = "UI_DanTraits_MSBacLapse" },
-    { key = "msAman", item = "amantadine", half = 12, lapse = "UI_DanTraits_MSAmanLapse" },
-}
 local MS_KIT = { "DanTraits.Baclofen", "DanTraits.Amantadine" }
+local MS_START = { "baclofen", "amantadine" }   -- a new character is on these
 
 local HANDS = { "Hand_L", "Hand_R", "ForeArm_L", "ForeArm_R" }
 local LEGS = { "UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R" }
 
-local function on(d, key) return (d[key] or 0) >= MS_MED_ON end
+-- 0..1: how well an MS pill is working (the medication system)
+local function effect(player, id)
+    return DanTraits_MedEffect and DanTraits_MedEffect(player, id) or 0
+end
 
 local function tierOf(load)
     local tier = 0
@@ -206,24 +205,6 @@ local function easePain(player, d, floor)
     end)
 end
 
-local function updateMeds(player, d)
-    for _, med in ipairs(MS_MEDS) do
-        local level = d[med.key] or 0
-        if level > 0 then
-            local was = level >= MS_MED_ON
-            level = level * 0.5 ^ (1 / (med.half * 60))
-            if level < 0.01 then level = 0 end
-            d[med.key] = level > 0 and level or nil
-            if was and level < MS_MED_ON and hasTrait(player, "ms") then notify(player, med.lapse) end
-        end
-    end
-    -- side effects, for anyone taking them
-    local stats = player:getStats()
-    if on(d, "msPred") then DanTraits_StatAdd(stats, CharacterStat.HUNGER, MS_PRED_HUNGER) end
-    if on(d, "msBac") and not DanTraits_Asleep(player) then DanTraits_StatAdd(stats, CharacterStat.FATIGUE, MS_BAC_DROWSY) end
-    if on(d, "msAman") then DanTraits_StatAdd(stats, CharacterStat.THIRST, MS_AMAN_THIRST) end
-end
-
 local function startFlare(player, d)
     d.msFlareH = DanTraits_RandRange(MS_FLARE_HOURS[1], MS_FLARE_HOURS[2])
     d.msFlares = (d.msFlares or 0) + 1
@@ -242,7 +223,7 @@ DanTraits_MSFlareRate = flareRate
 
 local function updateFlare(player, d)
     if (d.msFlareH or 0) > 0 then
-        d.msFlareH = d.msFlareH - (on(d, "msPred") and MS_PRED_BURN or 1) / 60
+        d.msFlareH = d.msFlareH - (1 + (MS_PRED_BURN - 1) * effect(player, "prednisone")) / 60
         if d.msFlareH <= 0 then
             d.msFlareH = nil
             DanTraits_NotifyGood(player, "UI_DanTraits_MSFlareEnds")
@@ -269,7 +250,6 @@ local function updateHeat(player, d)
 end
 
 local function updateMSMinute(player, d)
-    updateMeds(player, d)
     if not hasTrait(player, "ms") then
         d.msHeat, d.msTier, d.msFlareH = nil, nil, nil
         d.msHands, d.msLegs, d.msPainHead = nil, nil, nil
@@ -283,7 +263,7 @@ local function updateMSMinute(player, d)
     -- fatigue: MS's own, a flare's, and the heat's
     if not DanTraits_Asleep(player) then
         local tired = MS_FATIGUE + (flaring and MS_FLARE_FATIGUE or 0)
-        if on(d, "msAman") then tired = tired * MS_AMAN_FATIGUE end
+        tired = tired * (1 - (1 - MS_AMAN_FATIGUE) * effect(player, "amantadine"))
         if load >= MS_TIER[1] then tired = tired + MS_HEAT_FATIGUE * load end
         DanTraits_StatAdd(stats, CharacterStat.FATIGUE, tired)
     end
@@ -293,7 +273,8 @@ local function updateMSMinute(player, d)
     if load >= MS_TIER[2] then hands = MS_HAND_HOT + (MS_HAND_STIFF - MS_HAND_HOT) * over(load, MS_TIER[2], 1) end
     if flaring then hands = math.max(hands, MS_HAND_FLARE) end
     local legs = flaring and MS_LEG_FLARE or MS_LEG_STIFF
-    if on(d, "msBac") then hands, legs = hands * MS_BAC_STIFF, legs * MS_BAC_STIFF end
+    local relax = 1 - (1 - MS_BAC_STIFF) * effect(player, "baclofen")
+    hands, legs = hands * relax, legs * relax
     setFloors(player, d, hands, legs)
 
     local pain = 0
@@ -334,21 +315,11 @@ DanTraits_AddHook("drink", function(_, player, container, litres)
     return nil
 end)
 
+-- a dose by hand (the console); a swallowed pill reaches the medication system itself
 function DanTraits_TakeMSMed(player, which, amount)
-    local d = DanTraits_Data(player)
-    for _, med in ipairs(MS_MEDS) do
-        if med.item == which then
-            d[med.key] = (d[med.key] or 0) + (amount or 1)
-            return d[med.key]
-        end
-    end
-    return nil
+    if not DanTraits_Drugs or not DanTraits_Drugs[which] then return nil end
+    return DanTraits_MedTake(player, which, amount or 1)
 end
-
-DanTraits_AddHook("pill", function(_, player, kind)
-    DanTraits_TakeMSMed(player, string.lower(tostring(kind or "")), 1)
-    return nil
-end)
 
 local MS_ITEMS = { ["DanTraits.Prednisone"] = true, ["DanTraits.Baclofen"] = true, ["DanTraits.Amantadine"] = true }
 function DanTraits_IsMSMed(item)
@@ -371,12 +342,13 @@ DanTraits_ExtraCommands.ms = function(player, args)
         .. ", target " .. tostring((heatTarget(player, d))) .. ", flare hours " .. tostring(d.msFlareH or 0) .. ")"
 end
 
--- start with a bottle of baclofen and one of amantadine
+-- start on baclofen and amantadine, fully built up, with a bottle of each
 local function onMSCreatePlayer(playerNum, player)
     if not player or not hasTrait(player, "ms") then return end
     local d = DanTraits_Data(player)
     if d.msKitGiven or player:getHoursSurvived() > 0 then return end
     d.msKitGiven = true
+    for _, id in ipairs(MS_START) do DanTraits_MedStart(player, id) end
     for _, item in ipairs(MS_KIT) do
         pcall(function() player:getInventory():AddItem(item) end)
     end
