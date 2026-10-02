@@ -6,6 +6,8 @@
     python deploy.py --workshop repo  -> ~/Zomboid/Workshop/DanTraits  (the folder the
                                 in-game Workshop uploader reads: workshop.txt, preview.png,
                                 Contents/mods/DanTraits; the dev tools are left out)
+    python deploy.py --patch    repo  -> ~/Zomboid/mods/ItemRarityModdedItems  (the separate
+                                Item Rarity UI patch; mirror, like the default)
 
 The game only reads the mod folder, so edit here, deploy, then restart the
 game (registries and item scripts are read at boot; Lua is reloaded too).
@@ -18,6 +20,8 @@ import shutil
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_MOD = os.path.join(HERE, "DanTraits")
 GAME_MOD = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "DanTraits")
+REPO_PATCH = os.path.join(HERE, "ItemRarityModdedItems")
+GAME_PATCH = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "ItemRarityModdedItems")
 REPO_WORKSHOP = os.path.join(HERE, "workshop")
 GAME_WORKSHOP = os.path.join(os.path.expanduser("~"), "Zomboid", "Workshop", "DanTraits")
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}
@@ -108,7 +112,10 @@ def main():
     ap.add_argument("--pull", action="store_true", help="copy from the game folder into the repo")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--workshop", action="store_true", help="build the Workshop upload folder")
+    ap.add_argument("--patch", action="store_true", help="deploy the Item Rarity UI patch mod instead")
     a = ap.parse_args()
+    if a.workshop and (a.patch or a.pull):
+        ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --patch or --pull")
     if a.workshop:
         copied, removed, same = build_workshop(a.dry_run)
         print("%s -> %s" % (HERE, GAME_WORKSHOP))
@@ -118,7 +125,8 @@ def main():
             print("  %s %s" % ("would remove" if a.dry_run else "removed", rel))
         print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
         return
-    src, dst = (GAME_MOD, REPO_MOD) if a.pull else (REPO_MOD, GAME_MOD)
+    repo, game = (REPO_PATCH, GAME_PATCH) if a.patch else (REPO_MOD, GAME_MOD)
+    src, dst = (game, repo) if a.pull else (repo, game)
     if not os.path.isdir(src):
         raise SystemExit("missing: " + src)
     copied, removed, same = sync(src, dst, a.dry_run)
