@@ -5,7 +5,7 @@
 -- is a chance of chest pain (angina), higher the deeper the moodle, and higher
 -- again when panicking, in the 40s, for a smoker (by the nicotine meter), with
 -- caffeine working, and for a Run Down body (Vitality; Fit and Thriving lower
--- it). Chest pain lasts 15 to 30 minutes: a pain floor, and endurance recovers
+-- it); twice as likely with too many inhaler puffs or caffeine pills in you. Chest pain lasts 15 to 30 minutes: a pain floor, and endurance recovers
 -- at a third of the speed (the enduranceRegen hook of the stat delta
 -- pipeline). Resting (spending no endurance, not running) lets it pass twice
 -- as fast. Pushing on through it risks a heart attack. Pushing is what you do,
@@ -17,18 +17,20 @@
 -- wakes you) for 5 to 15 game minutes with health lost, endurance emptied, and
 -- a day after of weak recovery.
 --
--- Beta blockers, the game's own pills (PillsBeta), are the daily medication:
--- each pill tops up a level that halves every 12 hours, and while it is at
--- least half a pill, chest pain and heart attacks are a quarter as likely. A
--- pill every 12 hours keeps it there, and you are told when it wears off. A
--- new character starts with two bottles (ten pills each).
+-- Beta blockers, the game's own pills (PillsBeta), are the daily medication,
+-- kept by the shared medication system (DanTraits_Meds.lua): a pill a day
+-- keeps them in the system, and as they build up over three days, chest pain
+-- and heart attacks fall to a quarter as likely. A missed dose lets them fade
+-- slowly, and you are told when they wear off. A new character starts on
+-- them, fully built up, with two bottles.
 --
--- Mod data: hcBeta (the level), hcCovered (the level was protecting, for the
+-- Mod data: hcCovered (the beta blockers were in the system, for the
 -- wearing-off notice), hcAnginaMin (minutes of chest pain left), hcPushing
 -- (pushing on this minute), hcEndPrev (endurance a minute ago), hcWeakH (hours
 -- of weak recovery left), hcAttacks, hcEpisodes.
 -- Console: heart angina | heart attack | heart beta
 require "DanTraits"
+require "DanTraits_Meds"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
@@ -43,6 +45,7 @@ local HC_AGE40         = 1.25    -- in their 40s
 local HC_AGE20         = 0.8     -- in their 20s
 local HC_SMOKER        = 0.5     -- x (1 + this x nicotine meter)
 local HC_CAFFEINE      = 1.3     -- while caffeine is working (Sleep's six-hour clock)
+local HC_STIM_OVER     = 2       -- while too many inhaler puffs or caffeine pills are in the system (DanTraits_Meds.lua)
 local HC_VITALITY      = 0.3     -- x (1 - this x Vitality effect, -1..1)
 local HC_ANGINA_MIN    = { 15, 30 }  -- minutes of chest pain
 local HC_REST_FASTER   = 2       -- minutes of chest pain gone per minute at rest
@@ -57,10 +60,7 @@ local HC_ATTACK_OUT    = { 5, 15 }   -- game minutes down
 local HC_ATTACK_HP     = 15      -- health lost...
 local HC_HEALTH_FLOOR  = 10      -- ...never below this
 local HC_ATTACK_SAD    = 30      -- unhappiness added
-local HC_BETA_HALF_H   = 12      -- hours for the beta blocker level to halve
-local HC_BETA_ON       = 0.5     -- level at which it protects
-local HC_BETA_CUT      = 0.25    -- chest pain and heart attacks x this while protected
-local HC_BETA_ITEM     = "pillsbeta"
+local HC_BETA_CUT      = 0.25    -- chest pain and heart attacks x this, fully built up
 local HC_KIT_BOTTLES   = 2       -- bottles a new character starts with
 
 local function randRange(lo, hi) return DanTraits_RandRange(lo, hi) end
@@ -79,7 +79,11 @@ local function enduranceLevel(player)
     return level
 end
 
-local function protected(d) return (d.hcBeta or 0) >= HC_BETA_ON end
+-- chest pain and heart attacks x this: down to HC_BETA_CUT as beta blockers build up
+local function betaCut(player)
+    local effect = DanTraits_MedEffect and DanTraits_MedEffect(player, "beta") or 0
+    return 1 - (1 - HC_BETA_CUT) * effect
+end
 
 -- chance a minute of chest pain now, 0 when the moodle is off
 local function episodeChance(player, d)
@@ -90,12 +94,13 @@ local function episodeChance(player, d)
     if hasTrait(player, "age40s") then chance = chance * HC_AGE40 elseif hasTrait(player, "age20s") then chance = chance * HC_AGE20 end
     if DanTraits_IsSmoker and DanTraits_IsSmoker(player) then chance = chance * (1 + HC_SMOKER * clamp01(d.nicMeter or 0)) end
     if (d.slCaffeineHours or 0) > 0 then chance = chance * HC_CAFFEINE end
+    if DanTraits_MedHeartStrain and DanTraits_MedHeartStrain(player) then chance = chance * HC_STIM_OVER end
     if DanTraits_VitalityEffect then
         local vit = 0
         pcall(function() vit = DanTraits_VitalityEffect(player) or 0 end)
         chance = chance * (1 - HC_VITALITY * vit)
     end
-    if protected(d) then chance = chance * HC_BETA_CUT end
+    chance = chance * betaCut(player)
     return math.max(0, chance)
 end
 DanTraits_HeartEpisodeChance = episodeChance
@@ -145,17 +150,12 @@ end
 
 -- the wearing-off notice, once each time the level drops under protection
 local function betaNotice(player, d)
-    local covered = protected(d)
+    local covered = DanTraits_MedCovered and DanTraits_MedCovered(player, "beta") or false
     if d.hcCovered and not covered and hasTrait(player, "heart") then notify(player, "UI_DanTraits_HeartBetaLapse") end
     d.hcCovered = covered or nil
 end
 
 local function updateHeartMinute(player, d)
-    -- the beta blocker level decays for anyone who took one
-    if (d.hcBeta or 0) > 0 then
-        d.hcBeta = d.hcBeta * 0.5 ^ (1 / (HC_BETA_HALF_H * 60))
-        if d.hcBeta < 0.01 then d.hcBeta = 0 end
-    end
     betaNotice(player, d)
     if (d.hcWeakH or 0) > 0 then d.hcWeakH = math.max(0, d.hcWeakH - 1 / 60) end
     if not hasTrait(player, "heart") then
@@ -169,7 +169,7 @@ local function updateHeartMinute(player, d)
         DanTraits_PainFloor(player, d, "heart", HC_PAIN, HC_PAIN_RAMP)
         if pushing then
             d.hcPushing = true
-            if DanTraits_Roll(HC_ATTACK_MIN * (protected(d) and HC_BETA_CUT or 1)) then
+            if DanTraits_Roll(HC_ATTACK_MIN * betaCut(player)) then
                 heartAttack(player, d)
                 return
             end
@@ -196,16 +196,22 @@ DanTraits_AddHook("enduranceRegen", function(delta, player, d)
     return delta * k
 end)
 
-function DanTraits_TakeBetaBlocker(player, amount)
+local function betaTaken(player)
     local d = DanTraits_Data(player)
-    d.hcBeta = (d.hcBeta or 0) + (amount or 1)
-    d.hcCovered = protected(d) or nil
+    d.hcCovered = DanTraits_MedCovered(player, "beta") or nil
     if hasTrait(player, "heart") then DanTraits_NotifyGood(player, "UI_DanTraits_HeartBeta") end
-    return d.hcBeta
 end
 
+-- a dose by hand (the console); a swallowed pill reaches the medication system itself
+function DanTraits_TakeBetaBlocker(player, amount)
+    local level = DanTraits_MedTake(player, "beta", amount or 1)
+    betaTaken(player)
+    return level
+end
+
+-- after the medication system has taken the dose (it loads first)
 DanTraits_AddHook("pill", function(_, player, kind)
-    if string.lower(tostring(kind or "")) == HC_BETA_ITEM then DanTraits_TakeBetaBlocker(player, 1) end
+    if DanTraits_DrugOfItem(kind) == "beta" then betaTaken(player) end
     return nil
 end)
 
@@ -218,12 +224,13 @@ DanTraits_ExtraCommands.heart = function(player, args)
     return "heart angina | heart attack | heart beta (chest pain chance now " .. tostring(episodeChance(player, d)) .. ")"
 end
 
--- start with two bottles of beta blockers
+-- start on beta blockers, fully built up, with two bottles
 local function onHeartCreatePlayer(playerNum, player)
     if not player or not hasTrait(player, "heart") then return end
     local d = DanTraits_Data(player)
     if d.hcKitGiven or player:getHoursSurvived() > 0 then return end
     d.hcKitGiven = true
+    DanTraits_MedStart(player, "beta")
     for _ = 1, HC_KIT_BOTTLES do
         pcall(function() player:getInventory():AddItem("Base.PillsBeta") end)
     end

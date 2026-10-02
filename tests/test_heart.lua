@@ -6,7 +6,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 UIManager = { FadeOut = function() end, FadeIn = function() end }
-H.load("Faint", "Heart")
+H.load("Faint", "Meds", "Heart")
 H.expectEvery("minute", "Heart")
 H.expectHooks("OnCreatePlayer")
 
@@ -25,11 +25,16 @@ p._st.panic = 0
 local old = H.player({ traits = { "heart", "age40s" }, endurance = 0.4 })
 near(DanTraits_HeartEpisodeChance(old, DanTraits_Data(old)), 0.00625, 1e-12, "40s x1.25")
 
--- 2. beta blockers: a pill is a level of 1, protection cuts the chance to a quarter
+-- 2. beta blockers (the shared medication system): a pill is a level of 1, but
+--    protection comes with the build-up; fully built up the chance is a quarter
 DanTraits_RunHooks("pill", nil, p, "PillsBeta")
-near(d.hcBeta, 1, 1e-9, "one pill")
+near(DanTraits_MedState(p, "beta"), 1, 1e-9, "one pill")
 assert(H.halo[#H.halo] == "+UI_DanTraits_HeartBeta", "the heart settles")
-near(DanTraits_HeartEpisodeChance(p, d), 0.00125, 1e-12, "protected x0.25")
+near(DanTraits_HeartEpisodeChance(p, d), 0.005, 1e-12, "first pill: not built up yet")
+d.meds.beta.built = 0.5
+near(DanTraits_HeartEpisodeChance(p, d), 0.005 * 0.625, 1e-12, "half built up: x0.625")
+d.meds.beta.built = 1
+near(DanTraits_HeartEpisodeChance(p, d), 0.00125, 1e-12, "built up x0.25")
 
 -- 3. chest pain starts on a roll, holds pain and slows endurance recovery
 H.rollf = 0
@@ -88,28 +93,35 @@ H.minute()
 assert(DanTraits_Data(sp).hcAttacks == 1, "sprinting through it: a heart attack")
 H.rollf = 0.99
 
--- 6. the beta blocker level halves in 12 hours, anyone's; the one with the
+-- 6. the beta blocker level halves in a day, anyone's; the one with the
 --    condition is told when it stops protecting, once
 local r = H.player(); H.current = r
-local rd = DanTraits_Data(r)
 DanTraits_TakeBetaBlocker(r, 1)
-H.mins(720)
-near(rd.hcBeta, 0.5, 1e-3, "halved in 12 hours")
+H.mins(1440)
+near(DanTraits_MedState(r, "beta"), 0.5, 1e-3, "halved in a day (one pill a day)")
 H.clearHalo()
 H.mins(10)
 assert(#H.halo == 0, "no condition: no wearing-off notice")
 local w = H.player({ traits = { "heart" } }); H.current = w
 DanTraits_TakeBetaBlocker(w, 1)
 H.clearHalo()
-H.mins(730)
+H.mins(1450)
 local lapses = 0
 for _, t in ipairs(H.halo) do if t == "UI_DanTraits_HeartBetaLapse" then lapses = lapses + 1 end end
 assert(lapses == 1, "wearing off: one notice")
 
--- 7. a new character starts with a bottle, once
+-- 7. a new character starts on them, fully built up, with two bottles, once
 local n = H.player({ traits = { "heart" } }); H.current = n
 H.fire("OnCreatePlayer", 0, n)
 H.fire("OnCreatePlayer", 0, n)
 assert(#n._inv == 2 and n._inv[1]._type == "Base.PillsBeta" and n._inv[2]._type == "Base.PillsBeta", "two bottles of beta blockers")
+local lvl, built = DanTraits_MedState(n, "beta")
+assert(lvl == 1 and built == 1, "dosed this morning and fully built up")
+
+-- 8. an old save's level carries across, a protecting one as fully built up
+local o = H.player({ traits = { "heart" } }); H.current = o
+DanTraits_Data(o).hcBeta = 0.8
+lvl, built = DanTraits_MedState(o, "beta")
+assert(lvl == 0.8 and built == 1 and DanTraits_Data(o).hcBeta == nil, "old level moved over")
 
 H.pass()

@@ -8,13 +8,16 @@
 -- data: this file changes nothing, it only reads and shows. Needs Moodle
 -- Framework, like the others; without it nothing here does anything.
 --
--- Each moodle is a level: 1 to 4 on the bad side, -1 on the good side (a
--- medication or sun block at work), 0 for nothing to show.
+-- Each moodle is a level: 1 to 4 on the bad side, -1 or -2 on the good side
+-- (a medication or sun block at work), 0 for nothing to show. A daily drug's
+-- moodle is the paler -1 while it builds up and the full -2 once it has
+-- (DanTraits_MedMoodle, the same rule for every drug).
 --
 --   ChestPain          Heart Condition: a day of weak recovery, chest pain,
---                      pushing on through it; good: beta blockers working
+--                      pushing on through it; good: beta blockers building
+--                      up, then working
 --   Seizure            Epilepsy: the hour after, the aura before; good:
---                      anticonvulsants working
+--                      anticonvulsants building up, then working
 --   Tinnitus           ears ringing (Hard of Hearing for now)
 --   GutFlare           Gluten Intolerance and Lactose Intolerance (a lactose
 --                      flare is the milder: it tops out at the second level)
@@ -50,7 +53,6 @@ local function tierOf(value, tiers)
     return level
 end
 
-local MED_ON           = 0.5     -- a medication level that protects (Heart's and Epilepsy's own)
 local TN_LONG_MIN      = 60      -- ringing for this long or more is the second level
 local GUT_TIER         = { 0.25, 0.5, 0.75 }
 local GUT_LACTOSE      = 0.66    -- a full lactose flare, on Gluten's scale
@@ -65,6 +67,14 @@ local IRON_TIER        = { 0.1, 0.5, 0.9 }
 local JOINT_TIER       = { 0.25, 0.5, 0.8 }
 local MS_HEAT_TIER     = { 0.25, 0.5, 0.8 }   -- MS's own heat tiers
 
+-- a drug in the system (the shared medication system, DanTraits_Meds.lua): the
+-- good side of a moodle, paler while it builds up, so the icon going out is
+-- the reminder to take the next one
+local function medGood(player, id)
+    if not DanTraits_MedMoodle then return 0 end
+    return -(tonumber(DanTraits_MedMoodle(player, id)) or 0)
+end
+
 local function count(t)
     local n = 0
     for _, v in pairs(t or {}) do if (tonumber(v) or 0) > 0 then n = n + 1 end end
@@ -75,15 +85,14 @@ local SPECS = {
     { name = "ChestPain", level = function(player, d)
         if (d.hcAnginaMin or 0) > 0 then return d.hcPushing and 3 or 2 end
         if (d.hcWeakH or 0) > 0 then return 1 end
-        if hasTrait(player, "heart") and (d.hcBeta or 0) >= MED_ON then return -1 end
+        if hasTrait(player, "heart") then return medGood(player, "beta") end
         return 0
     end },
     { name = "Seizure", level = function(player, d)
         if not hasTrait(player, "epilepsy") then return 0 end
         if d.epAuraMin then return 2 end
         if (d.epAfterMin or 0) > 0 then return 1 end
-        if (d.epMeds or 0) >= MED_ON then return -1 end
-        return 0
+        return medGood(player, "anticonvulsant")
     end },
     { name = "Tinnitus", level = function(player, d)
         if not d.tnRinging then return 0 end
@@ -140,7 +149,7 @@ local SPECS = {
     end },
     { name = "MSFlare", level = function(player, d)
         if not hasTrait(player, "ms") or (d.msFlareH or 0) <= 0 then return 0 end
-        return (d.msPred or 0) >= MED_ON and 1 or 2
+        return (DanTraits_MedCovered and DanTraits_MedCovered(player, "prednisone")) and 1 or 2
     end },
 }
 

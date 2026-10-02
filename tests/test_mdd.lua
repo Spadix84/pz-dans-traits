@@ -9,7 +9,7 @@ H.stubs()
 local pillsSwallowed = 0
 ISTakePillAction = { complete = function(self) pillsSwallowed = pillsSwallowed + 1; self.character._depress = 6600; return true end }
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Meds", "Diabetes")
 
 -- the trait under test is Spiraling unless a test asks for another
 local newPlayer = H.factory({ traits = { "spiraling" } })
@@ -117,12 +117,19 @@ m._md.DanTraits.mddEpisode = false
 H.rng = { 55 }; ten(); assert(m._md.DanTraits.mddEpisode, "55 < 56 starts one")
 m._md.DanTraits.mddEpisode = false
 
--- 10. side effects in the first three days; lapsing after a week costs three rough days
+-- 10. side effects come from the medication system's daily roll (3%), not every early day;
+--     lapsing after a week costs three rough days
 local n = newPlayer({}); H.current = n; n._md.DanTraits = { mddSinceEnd = 0 }   -- inside the refractory window: no episode rolls
 local npill = setmetatable({ character = n, item = { getType = function() return "PillsAntiDep" end } }, { __index = ISTakePillAction })
 npill:complete(); for _ = 1, 15 do minute() end
-assert(n._st.foodsick == 15 and n._st.fatigue > 0, "early days: queasy to 15 and tired")
-n._md.DanTraits.mddMedStreak = 5; n._st.foodsick = 0; minute(); assert(n._st.foodsick == 0, "after three days the side effects are gone")
+assert(n._st.foodsick == 0, "a missed roll: no side effect")
+local lvl, built = DanTraits_MedState(n, "antidepressant")
+assert(lvl == 1 and built == 0, "the drug list reads the regimen: a day of cover, not built up yet")
+n._md.DanTraits.meds.antidepressant.day = nil
+H.rollf = 0.01; npill:complete(); H.rollf = 0.99
+for _ = 1, 15 do minute() end
+assert(n._st.foodsick == 15 and H.halo[#H.halo] == "UI_DanTraits_MedSide_antidepressant", "a hit on a new day: queasy to 15, with a notice")
+n._st.foodsick = 0
 n._md.DanTraits.mddMedDays = 0; n._md.DanTraits.mddMedStreak = 10
 ten(); assert(n._md.DanTraits.mddWithdraw == 4320 and n._md.DanTraits.mddMedLapsed, "lapsed after 10 days: 3 days of discontinuation")
 n._st.unhappy = 0; n._st.stress = 0; minute(); assert(n._st.unhappy >= 0.3 and n._st.unhappy < 0.31 and math.abs(n._st.stress - 0.001) < 1e-9, "discontinuation drags mood and stress (plus the new stress drag), got " .. n._st.unhappy)

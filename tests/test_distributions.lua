@@ -41,6 +41,9 @@ for name, k in pairs({ Anticonvulsants = 1, Prednisone = 1.25, Baclofen = 1, Ama
   H.near(weightOf(BagsAndContainers.HandbagsAndPurses.items, full), 0.02 * k, 1e-9, name .. ": handbags")
   H.near(weightOf(ClutterTables.ClosetItems, full), 0.01 * k, 1e-9, name .. ": closet clutter")
 end
+-- the pill caddy: rare, likeliest on a pharmacy shelf
+assert(weightOf(ProceduralDistributions.list.StoreShelfMedical.items, "DanTraits.PillCaddy") == 0.3, "caddy on pharmacy shelves")
+assert(weightOf(ProceduralDistributions.list.BathroomCabinet.items, "DanTraits.PillCaddy") == 0.05, "caddy in bathroom cabinets")
 -- a missing list is reported, not fatal
 ProceduralDistributions.list.TestingLab = nil
 logged = {}

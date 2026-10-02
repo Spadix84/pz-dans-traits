@@ -2,6 +2,7 @@
 -- Kept in its own file because DanTraits.lua is at Lua's 200-local limit.
 -- Depends on the helpers DanTraits.lua exports.
 require "DanTraits"
+require "DanTraits_Meds"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
@@ -52,9 +53,7 @@ local DIA_T2_RATE_RES_CUT   = 0.6     -- that rate x (1 - this x resistance)
 local DIA_T2_WEIGHT_LOW     = 75      -- kg: no resistance at or below
 local DIA_T2_WEIGHT_HIGH    = 110     -- kg: full resistance at or above (before exercise and pills)
 local DIA_T2_EXERCISE_CUT   = 0.25    -- resistance removed at full exercise regularity
-local DIA_T2_PILL_CUT       = 0.35    -- resistance removed while covered by metformin
-local DIA_MED_PILL_MIN      = 1440    -- minutes of cover per metformin pill
-local DIA_MED_MAX_MIN       = 2880    -- you can be a day ahead, no more
+local DIA_T2_PILL_CUT       = 0.35    -- resistance removed by metformin, fully built up (DanTraits_Meds.lua: a pill a day, two days to build)
 local DIA_RENAL_ABOVE       = 180
 local DIA_RENAL_RATE        = 0.002   -- per minute x (glucose - 180)
 local DIA_EXERCISE_DROP     = 0.5     -- per minute while running, sprinting or exerted
@@ -130,7 +129,7 @@ local function diaResistance(player, d)
     pcall(function() weight = player:getNutrition():getWeight() or weight end)
     local res = (weight - DIA_T2_WEIGHT_LOW) / (DIA_T2_WEIGHT_HIGH - DIA_T2_WEIGHT_LOW)
     res = res - DIA_T2_EXERCISE_CUT * (DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0)
-    if (d.diaMedMinutes or 0) > 0 then res = res - DIA_T2_PILL_CUT end
+    if DanTraits_MedEffect then res = res - DIA_T2_PILL_CUT * DanTraits_MedEffect(player, "metformin") end
     if DanTraits_VitalityDiaResistance then res = res + DanTraits_VitalityDiaResistance(player) end   -- fit: lower, run down: higher
     res = DanTraits_RunHooks("diaResistance", res, player, d)   -- Age: higher in the 40s, lower in the 20s
     return math.max(0, math.min(1, res))
@@ -184,11 +183,11 @@ function DanTraits_DiaInject(player, doses)
 end
 
 -- called by the metformin action
+-- (the medication system keeps the level; true when it does something for this character)
 function DanTraits_DiaOnPill(player)
-    if not player or not diaHas(player) then return false end
-    local d = diaData(player)
-    d.diaMedMinutes = math.min(DIA_MED_MAX_MIN, (d.diaMedMinutes or 0) + DIA_MED_PILL_MIN)
-    return true
+    if not player then return false end
+    if DanTraits_MedTake then DanTraits_MedTake(player, "metformin", 1) end
+    return diaHas(player)
 end
 
 -- called by the meter action: the number, and whether it is out of range
@@ -300,7 +299,6 @@ local function updateDiabetesMinute(player, d)
     if drunk then g = g - DIA_ALCOHOL_DROP end
     if panic > DIA_PANIC_MIN then g = g + (panic - DIA_PANIC_MIN) / (100 - DIA_PANIC_MIN) * DIA_PANIC_RISE end
     if DanTraits_InfectionFever then pcall(function() g = g + DIA_FEVER_RISE * DanTraits_InfectionFever(player) end) end
-    if (d.diaMedMinutes or 0) > 0 then d.diaMedMinutes = d.diaMedMinutes - 1 end
 
     g = diaClamp(g)
     d.glucose = g
@@ -390,6 +388,7 @@ local function onDiabetesCreatePlayer(playerNum, player)
             inv:AddItem(METFORMIN_ITEM)
         end
     end)
+    if hasTrait(player, "diabetes2") and DanTraits_MedStart then DanTraits_MedStart(player, "metformin") end
 end
 
 DanTraits_Every("minute", "Diabetes", updateDiabetesMinute, 40)

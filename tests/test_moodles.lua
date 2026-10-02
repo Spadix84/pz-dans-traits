@@ -6,7 +6,7 @@
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
-H.load("Moodles")
+H.load("Meds", "Moodles")
 H.expectEvery("minute", "Moodles")
 
 local near = H.near
@@ -26,19 +26,24 @@ end
 for name, l in pairs(DanTraits_MoodleLevels(p, d)) do assert(l == 0, name .. ": nothing to show on a well character") end
 
 -- 1. Heart: beta blockers working, a weak day, chest pain, pushing on
-d.hcBeta = 1; assert(level("ChestPain") == -1, "beta blockers working")
-d.hcBeta = 0.4; assert(level("ChestPain") == 0, "worn off")
+d.meds = { beta = { lvl = 1, built = 0 } }; assert(level("ChestPain") == -1, "beta blockers building up: the paler green")
+d.meds.beta.built = 0.999; assert(level("ChestPain") == -1, "still building up just short of full")
+d.meds.beta.built = 1; assert(level("ChestPain") == -2, "fully built up: the full green")
+d.meds.beta.lvl = 0.4; assert(level("ChestPain") == 0, "worn off")
 d.hcWeakH = 10; assert(level("ChestPain") == 1, "the day after")
 d.hcAnginaMin = 12; assert(level("ChestPain") == 2, "chest pain")
-d.hcBeta = 1; assert(level("ChestPain") == 2, "chest pain shows over the medication")
+d.meds.beta.lvl = 1; assert(level("ChestPain") == 2, "chest pain shows over the medication")
 d.hcPushing = true; assert(level("ChestPain") == 3, "pushing on")
-d.hcAnginaMin, d.hcPushing, d.hcWeakH, d.hcBeta = nil, nil, nil, nil
+d.hcAnginaMin, d.hcPushing, d.hcWeakH, d.meds = nil, nil, nil, nil
 
 -- 2. Epilepsy: medication, the hour after, the aura
-d.epMeds = 0.6; assert(level("Seizure") == -1, "anticonvulsants working")
+d.meds = { anticonvulsant = { lvl = 0.6, built = 0 } }; assert(level("Seizure") == -1, "anticonvulsants building up")
+d.meds.anticonvulsant.built = 1; assert(level("Seizure") == -2, "anticonvulsants fully working")
+d.meds.anticonvulsant.lvl = 0.4; assert(level("Seizure") == 0, "out of the system: nothing, however built up")
+d.meds.anticonvulsant.lvl = 0.6; d.meds.anticonvulsant.built = 0
 d.epAfterMin = 30; assert(level("Seizure") == 1, "after a seizure")
 d.epAuraMin = 4; assert(level("Seizure") == 2, "one coming")
-d.epMeds, d.epAfterMin, d.epAuraMin = nil, nil, nil
+d.meds, d.epAfterMin, d.epAuraMin = nil, nil, nil
 
 -- 3. ears, gut, grime
 d.tnRinging, d.tnDeafMin = true, 30; assert(level("Tinnitus") == 1, "ringing")
@@ -100,7 +105,7 @@ d.artJoint = 0.9; assert(level("StiffJoints") == 3, "a bad flare")
 -- 7. the same mod data on a character without the traits: nothing (only the
 --    sun and thirst are everyone's)
 pd.gluten, pd.lacFlare, pd.gmGrime, pd.cafWithdraw, pd.anDeficit, pd.artJoint = 1, 1, 1, 1, 1, 1
-pd.mddEpisode, pd.mddSeverity, pd.alcWithdrawing, pd.alcStage, pd.epAuraMin, pd.hcBeta = true, 1, true, 3, 3, 1
+pd.mddEpisode, pd.mddSeverity, pd.alcWithdrawing, pd.alcStage, pd.epAuraMin, pd.meds = true, 1, true, 3, 3, { beta = { lvl = 1, built = 1 } }
 for name, l in pairs(DanTraits_MoodleLevels(plain, pd)) do assert(l == 0, name .. ": not without the trait") end
 
 -- 8. without Moodle Framework the minute does nothing, and does not fail
@@ -115,7 +120,7 @@ MF = { getMoodle = function(name)
   local m = set[name]
   return { setThresholds = function(_, ...) m.thresholds = { ... } end, setValue = function(_, v) m.value = v end }
 end }
-d.hcBeta = 1                 -- good 1
+d.meds = { beta = { lvl = 1, built = 0.5 } }   -- good 1 (building up)
 d.epAuraMin = 3              -- bad 2
 d.gluten = 1                 -- bad 3
 H.minute()

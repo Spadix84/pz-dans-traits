@@ -44,3 +44,6 @@ option DanTraits.SunburnEnabled
 
 option DanTraits.DehydrationEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsDehydrationEnabled,}
+
+option DanTraits.MedSideEffectChance
+{type = integer, min = 0, max = 100, default = 3, page = DanTraits, translation = DanTraitsMedSideEffectChance,}

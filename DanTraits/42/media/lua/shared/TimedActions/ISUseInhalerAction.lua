@@ -26,6 +26,7 @@ function ISUseInhalerAction:perform()
     self.item:setJobDelta(0.0)
     self.item:Use()
     if DanTraits_UseInhaler then DanTraits_UseInhaler(self.character) end
+    if DanTraits_MedTake then DanTraits_MedTake(self.character, "inhaler", 1) end   -- anyone's puff counts toward too many
     ISBaseTimedAction.perform(self)
 end
 

@@ -6,7 +6,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 UIManager = { FadeOut = function() end, FadeIn = function() end }
-H.load("Faint", "Epilepsy")
+H.load("Faint", "Meds", "Epilepsy")
 H.expectEvery("minute", "Epilepsy")
 
 local near = H.near
@@ -33,16 +33,19 @@ DanTraits_DiaLow = function() return 1 end
 near(DanTraits_SeizureRate(p, d), BASE * 4, 1e-12, "a bad diabetic low x(1 + 3)")
 DanTraits_DiaLow = nil
 
--- 2. anticonvulsants: a pill is a level of 1, protection cuts seizures to a tenth
+-- 2. anticonvulsants (the shared medication system): a pill is a level of 1;
+--    built up over five days, seizures fall to a tenth
 DanTraits_RunHooks("pill", nil, p, "Anticonvulsants")
-near(d.epMeds, 1, 1e-9, "one pill")
-near(DanTraits_SeizureRate(p, d), BASE * 0.1, 1e-12, "protected x0.1")
+near(DanTraits_MedState(p, "anticonvulsant"), 1, 1e-9, "one pill")
+near(DanTraits_SeizureRate(p, d), BASE, 1e-12, "first pill: not built up yet")
+d.meds.anticonvulsant.built = 1
+near(DanTraits_SeizureRate(p, d), BASE * 0.1, 1e-12, "built up x0.1")
 H.mins(720)
-near(d.epMeds, 0.5, 1e-3, "halved in 12 hours")
+near(DanTraits_MedState(p, "anticonvulsant"), 0.5, 1e-3, "halved in 12 hours")
 H.clearHalo()
 H.mins(10)
 assert(#H.halo == 1 and H.halo[1] == "UI_DanTraits_EpilepsyMedsLapse", "wearing off: one notice")
-d.epMeds = 0
+d.meds.anticonvulsant = nil
 
 -- 3. a roll gives the aura (five to ten minutes of warning; the harness's
 --    dice give eight), and then the seizure

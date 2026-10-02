@@ -143,6 +143,27 @@ local ITEMS = {
     prescription("DanTraits.Baclofen", 1),          -- MS
     prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
     {
+        -- anti-anxiety pills: the vanilla beta blocker's old job, found where
+        -- prescriptions are, a little more often in a drug shack
+        name = "DanTraits.Diazepam",
+        procedural = {
+            BathroomCabinet = 1, BathroomCounter = 0.5, BathroomShelf = 0.5,
+            MedicalCabinet = 2, MedicalClinicDrugs = 4, MedicalStorageDrugs = 8, HospitalRoomShelves = 4,
+            DoctorTools = 6, NurseTools = 2, AmbulanceDriverTools = 2, StoreShelfMedical = 3,
+            SafehouseMedical = 5, SafehouseMedical_Mid = 3, SafehouseMedical_Late = 1,
+            DerelictHouseDrugs = 2, DrugShackDrugs = 3, ArmyStorageMedical = 2, TestingLab = 2,
+            KitchenRandom = 0.05, BedroomSidetable = 0.05,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 1 },
+            { { "all", "inventoryfemale", "items" }, 0.1 },
+            { { "all", "inventorymale", "items" }, 0.1 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 3 },
+        },
+        bags = { HandbagsAndPurses = 0.03 },
+        clutter = { ClosetItems = 0.01 },
+    },
+    {
         -- common, like the other toiletries (for scale: toothpaste is 10 in a
         -- bathroom cabinet and 20 on a shop's toiletry shelf, a comb 6)
         name = "DanTraits.Sunblock",
@@ -201,6 +222,21 @@ local ITEMS = {
         },
         bags = { HandbagsAndPurses = 0.03 },
         clutter = { DeskItems = 0.1 },
+    },
+    {
+        -- a rare find: a weekly pill organiser in a medicine cabinet, a bedside
+        -- drawer, a handbag, or for sale on a pharmacy shelf
+        name = "DanTraits.PillCaddy",
+        procedural = {
+            BathroomCabinet = 0.05, BathroomCounter = 0.03, BedroomSidetable = 0.02,
+            MedicalCabinet = 0.1, MedicalClinicDrugs = 0.2, MedicalStorageDrugs = 0.1,
+            StoreShelfMedical = 0.3, HospitalRoomShelves = 0.1, SafehouseMedical = 0.3,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.05 },
+        },
+        bags = { HandbagsAndPurses = 0.01 },
+        clutter = {},
     },
 }
 
