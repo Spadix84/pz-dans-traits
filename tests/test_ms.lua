@@ -181,6 +181,12 @@ assert(lvl >= 1 and built == 1, "starts on baclofen, fully built up")
 lvl, built = DanTraits_MedState(k, "amantadine")
 assert(lvl >= 1 and built == 1, "and amantadine")
 assert(DanTraits_MedState(k, "prednisone") == 0, "prednisone has to be found")
+SandboxVars = { DanTraits = { StartingMedication = false } }
+local k2 = newPlayer(); H.current = k2
+H.fire("OnCreatePlayer", 0, k2)
+lvl, built = DanTraits_MedState(k2, "baclofen")
+assert(#k2._inv == 0 and lvl >= 1 and built == 1, "Starting Medication off: no bottles, still on the drugs")
+SandboxVars = nil
 
 -- 12. the moodles
 H.load("Moodles")
