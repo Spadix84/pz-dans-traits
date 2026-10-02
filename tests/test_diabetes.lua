@@ -209,6 +209,12 @@ assert(#kit2._inv == 3 and kit2._inv[3]._type == "DanTraits.Metformin", "Type 2:
 assert(select(2, DanTraits_MedState(kit2, "metformin")) == 1, "and already on it, fully built up")
 H.fire("OnCreatePlayer", 0, kit2); assert(#kit2._inv == 3, "given once")
 local kit0 = newPlayer({ traits = {} }); H.fire("OnCreatePlayer", 0, kit0); assert(#kit0._inv == 0, "no trait: no kit")
+SandboxVars = { DanTraits = { StartingMedication = false } }
+local off1 = newPlayer(); H.fire("OnCreatePlayer", 0, off1)
+assert(#off1._inv == 2 and off1._inv[2]._type == "DanTraits.TestStrips", "Starting Medication off, Type 1: meter and strips, no pens")
+local off2 = newPlayer({ traits = { "diabetes2" } }); H.fire("OnCreatePlayer", 0, off2)
+assert(#off2._inv == 2, "Type 2: no metformin")
+SandboxVars = nil
 
 -- 15. a puff of the inhaler nudges sugar up
 local wheezy = newPlayer({ traits = { "diabetes1", "asthma" } }); H.current = wheezy
