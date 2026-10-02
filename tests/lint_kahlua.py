@@ -2,7 +2,7 @@
 offline tests' standard Lua accepts. No Lua is run: the files are tokenised
 and scanned.
 
-    python tests/lint_kahlua.py            every file under DanTraits/42/media/lua and ItemRarityModdedItems/42/media/lua
+    python tests/lint_kahlua.py            every file under DanTraits/42/media/lua and DansVanillaFixes/42/media/lua
     python tests/lint_kahlua.py vitality   files whose name contains "vitality"
     python tests/lint_kahlua.py --selftest check the checker against known-bad snippets
 
@@ -42,8 +42,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(os.path.dirname(HERE), "DanTraits", "42", "media", "lua")
-# the separate Item Rarity UI patch mod (ItemRarityModdedItems/) is linted too
-PATCH_ROOT = os.path.join(os.path.dirname(HERE), "ItemRarityModdedItems", "42", "media", "lua")
+# the separate Dan's Vanilla Fixes mod (DansVanillaFixes/) is linted too
+PATCH_ROOT = os.path.join(os.path.dirname(HERE), "DansVanillaFixes", "42", "media", "lua")
 
 MISSING_GLOBALS = {"next", "assert", "xpcall", "dofile", "loadfile"}
 MISSING_STRING = {"gmatch", "rep"}

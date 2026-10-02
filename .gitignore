@@ -7,6 +7,3 @@ DanTraits_Telemetry.json
 Thumbs.db
 __pycache__/
 tests/node_modules/
-# the separate Item Rarity UI patch mod is kept local
-ItemRarityModdedItems/
-tests/test_raritypatch.lua

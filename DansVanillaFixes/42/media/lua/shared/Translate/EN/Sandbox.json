@@ -1,0 +1,5 @@
+{
+    "Sandbox_DansVanillaFixes": "Dan's Vanilla Fixes",
+    "Sandbox_DansVanillaFixesColdPackHours": "Cold Pack Hours",
+    "Sandbox_DansVanillaFixesColdPackHours_tooltip": "How long one fully frozen cold pack keeps a cooler cold, in game hours. Packs in the same cooler add up: three frozen packs last three times as long.<br>A fridge chills a pack half way, a freezer fully."
+}
