@@ -1,11 +1,13 @@
 -- Offline test for DanTraits_MS.lua: the heat target from air, body
 -- temperature, wetness and a flare; the lag; the tiers and their notices;
 -- what each tier does (fatigue, hand stiffness, pain, fumbles, hands giving
--- out); flares and prednisone; baclofen and amantadine; a drink cooling you;
+-- out); flares and prednisone; baclofen and amantadine; a drink from a tap cooling you;
 -- the starting bottles; cooling off taking back MS's stiffness and pain.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
+-- the game's drink-from-a-tap action, as far as MS's wrap needs it
+ISTakeWaterAction = { transferFluid = function() end }
 H.load("Arthritis", "MS")
 H.expectEvery("minute", "MS")
 
@@ -66,9 +68,17 @@ H.rollf = 0.04; H.minute(); H.rollf = 0.99
 assert(#p._dropped == 1 and H.halo[#H.halo] == "UI_DanTraits_MSHandsGiveOut", "a roll under 5%: hands give out")
 near(d.painHurting.ms, 35, 1e-9, "full load: a floor of 35 (the stiff hands add the rest)")
 near(p._parts.Hand_L._stiff, 55, 1e-9, "full load: hands at 55")
+-- asleep or in a vehicle the hands hold on, whatever the roll
+H.rollf = 0.04
+p._asleep = true; H.minute(); p._asleep = false
+assert(#p._dropped == 1, "asleep: nothing dropped")
+p.getVehicle = function() return {} end; H.minute(); p.getVehicle = nil
+assert(#p._dropped == 1, "in a vehicle: nothing dropped on the road")
+H.minute(); H.rollf = 0.99
+assert(#p._dropped == 2, "awake and on foot again: they can give out")
 local w = newPlayer(); H.current = w
 local wd = DanTraits_Data(w)
-wd.msHeat = 0.3; H.climate.temp = 30; p._st.temperature = 0
+wd.msHeat = 0.3; H.climate.temp = 30; w._st.temperature = 0
 H.minute(w)
 assert(not (wd.painHurting and wd.painHurting.ms), "warm: no pain floor")
 near(DanTraits_SwingDropChance(w), 0, 1e-9, "warm: no fumble")
@@ -78,10 +88,18 @@ H.minute(w)
 assert(w._st.fatigue > before, "tiring")
 near(DanTraits_RunHooks("enduranceRegen", 1, w, wd), 1 - 0.5 * wd.msHeat, 1e-9, "endurance comes back slower")
 
--- 5. a drink cools: 0.4 a litre
+-- 5. a drink straight from a tap or a river cools: 0.4 a litre; filling a
+--    bottle there, or drinking from one, does not
 wd.msHeat = 0.6
+local tap = { getFluidAmount = function() return 10 end }
+ISTakeWaterAction.transferFluid({ character = w, waterObject = tap }, 0.5)
+near(wd.msHeat, 0.4, 1e-9, "half a litre from the tap: 0.2 off")
+ISTakeWaterAction.transferFluid({ character = w, waterObject = tap, item = {} }, 0.5)
+near(wd.msHeat, 0.4, 1e-9, "filling a bottle at the tap: nothing")
 DanTraits_RunHooks("drink", nil, w, nil, 0.5)
-near(wd.msHeat, 0.4, 1e-9, "half a litre: 0.2 off")
+near(wd.msHeat, 0.4, 1e-9, "drinking from a bottle: nothing")
+ISTakeWaterAction.transferFluid({ character = w, waterObject = { getFluidAmount = function() return 0.1 end } }, 0.5)
+near(wd.msHeat, 0.36, 1e-9, "a nearly dry source: only what it held")
 
 -- 6. everyday fatigue awake, cut by amantadine; none asleep
 local f = newPlayer(); H.current = f

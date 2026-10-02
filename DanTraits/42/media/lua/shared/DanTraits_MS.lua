@@ -5,13 +5,14 @@
 -- heat load (0..1) follows the warmth around you, and your own body
 -- temperature when exercise or too many clothes push it up. It builds over
 -- about half an hour and fades over about twenty minutes once you cool off,
--- twice as fast when you are wet; every drink knocks some off.
+-- twice as fast when you are wet; a drink straight from a tap, a well or a
+-- river knocks some off.
 --   Warm (0.25): tired sooner, endurance comes back slower. Nothing else.
 --   Hot (0.5): the hands go stiff and clumsy (the game's own stiffness on
 --     hands and forearms: slower and sore), a swing can throw the weapon,
 --     and the pain climbs.
 --   Overheated (0.8): severe pain, and every minute a chance the hands give
---     out and drop whatever they hold.
+--     out and drop whatever they hold (not asleep, nor in a vehicle).
 -- The game turns the stiffness into pain of its own, so the pain floor here
 -- is set lower than the pain you feel (about 60 in all at a full load).
 -- Cooling off clears it quickly: the stiffness MS put on (heat's or a
@@ -159,6 +160,16 @@ local function handsGiveOut(player)
     return dropped
 end
 
+-- not while out cold or asleep, nor in a vehicle (what the hands drop would
+-- be left on the road behind)
+local function handsCanGiveOut(player)
+    if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return false end
+    if DanTraits_Asleep(player) then return false end
+    local inVehicle = false
+    pcall(function() inVehicle = player:getVehicle() ~= nil end)
+    return not inVehicle
+end
+
 -- what MS holds a group of parts at now, and how far to take its earlier
 -- stiffness back: the ceiling falls MS_EASE_STIFF a minute toward the floor
 local function easing(d, key, floor)
@@ -302,8 +313,7 @@ local function updateMSMinute(player, d)
         DanTraits_PainFloor(player, d, "ms", pain, MS_PAIN_RAMP)
     end
     easePain(player, d, pain)
-    if load >= MS_TIER[3] and not (DanTraits_IsPassedOut and DanTraits_IsPassedOut(player))
-        and DanTraits_Roll(MS_GIVE_OUT_MIN) then
+    if load >= MS_TIER[3] and handsCanGiveOut(player) and DanTraits_Roll(MS_GIVE_OUT_MIN) then
         handsGiveOut(player)
     end
 end
@@ -326,13 +336,30 @@ DanTraits_AddHook("enduranceRegen", function(delta, player, d)
     return delta * k
 end)
 
--- a drink cools you down a little
-DanTraits_AddHook("drink", function(_, player, container, litres)
+-- a drink straight from a tap, a well or a river cools you down a little
+-- (not one from a bottle or a mug: that may be hot, or not water)
+function DanTraits_MSDrinkCool(player, litres)
     local d = player and player:getModData().DanTraits
-    if not d or not d.msHeat then return nil end
+    if not d or not d.msHeat then return end
     d.msHeat = math.max(0, d.msHeat - MS_DRINK_COOL * (tonumber(litres) or 0))
-    return nil
-end)
+end
+
+-- The game drinks from a world source in ISTakeWaterAction:transferFluid:
+-- with no item to fill, the water goes straight into the character, as much
+-- as was asked for or as much as the source still held.
+local function wrapWorldDrink()
+    DanTraits_Wrap(ISTakeWaterAction, "transferFluid", "ms-drink", function(original, self, amount, ...)
+        local litres = 0
+        pcall(function()
+            if not self.item then litres = math.min(tonumber(amount) or 0, self.waterObject:getFluidAmount() or 0) end
+        end)
+        local result = original(self, amount, ...)
+        if litres > 0 then pcall(DanTraits_MSDrinkCool, self.character, litres) end
+        return result
+    end)
+end
+wrapWorldDrink()
+Events.OnGameStart.Add(wrapWorldDrink)
 
 function DanTraits_TakeMSMed(player, which, amount)
     local d = DanTraits_Data(player)

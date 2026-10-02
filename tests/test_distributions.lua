@@ -29,6 +29,18 @@ assert(bc[3] == "DanTraits.Inhaler" and bc[4] == 1, "appended as name, weight")
 assert(SuburbsDistributions.all.inventorymale.items[4] == 0.1, "zombie pockets weight")
 assert(ClutterTables.ClosetItems[3] == "DanTraits.Inhaler" and ClutterTables.ClosetItems[4] == 0.01, "flat clutter list")
 assert(SuburbsDistributions.MedicalCache1.MedicalBox.items[4] == 5, "nested path")
+-- the prescription bottles share one spread of places, each times its own commonness
+local function weightOf(list, name)
+  for i = 1, #list, 2 do if list[i] == name then return list[i + 1] end end
+end
+for name, k in pairs({ Anticonvulsants = 1, Prednisone = 1.25, Baclofen = 1, Amantadine = 0.75 }) do
+  local full = "DanTraits." .. name
+  H.near(weightOf(bc, full), 0.8 * k, 1e-9, name .. ": bathroom cabinet")
+  H.near(weightOf(ProceduralDistributions.list.DoctorTools.items, full), 5 * k, 1e-9, name .. ": doctor's bag")
+  H.near(weightOf(SuburbsDistributions.MedicalCache1.MedicalBox.items, full), 3 * k, 1e-9, name .. ": medical cache")
+  H.near(weightOf(BagsAndContainers.HandbagsAndPurses.items, full), 0.02 * k, 1e-9, name .. ": handbags")
+  H.near(weightOf(ClutterTables.ClosetItems, full), 0.01 * k, 1e-9, name .. ": closet clutter")
+end
 -- a missing list is reported, not fatal
 ProceduralDistributions.list.TestingLab = nil
 logged = {}

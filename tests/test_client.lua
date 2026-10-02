@@ -37,6 +37,7 @@ DanTraits_IsInhaler, DanTraits_IsInsulin, DanTraits_IsMeter = isKind("inhaler"),
 DanTraits_IsStrips, DanTraits_IsMetformin = isKind("strips"), isKind("metformin")
 DanTraits_IsIronPills, DanTraits_IsNicotineGum = isKind("iron"), isKind("gum")
 DanTraits_IsAnticonvulsants, DanTraits_IsSunblock = isKind("anticonvulsants"), isKind("sunblock")
+DanTraits_IsMSMed = isKind("msmed")
 -- Moodle Framework, and the list of moodles the shared file hands the client
 local created = {}
 MF = { createMoodle = function(name) created[#created + 1] = name end }
@@ -193,6 +194,19 @@ choose(o)
 assert(queued[#queued].kind == "vitality" and queued[#queued].label == "ContextMenu_DanTraits_ApplySunblock", "the action carries its label")
 assert(queued[#queued].anim == "WashFace" and queued[#queued].time == 150, "rubbed in, and it takes a little longer")
 m = open({ item("sunblock", 0) }); assert(tip(m.options[1]) == "Tooltip_DanTraits_SunblockEmpty", "empty sun block greyed")
+
+-- 6c. the MS pills: one option each, its label named after the item
+--     (ContextMenu_DanTraits_Take<Type> in Translate/EN/ContextMenu.json)
+for _, name in ipairs({ "Prednisone", "Baclofen", "Amantadine" }) do
+  local function pill(uses) return item("msmed", uses, { getType = function() return name end }) end
+  m = open({ pill(4) }, { "ContextMenu_Take_pills" })
+  o = m.options[1]
+  assert(m.removed[1] == "ContextMenu_Take_pills" and #m.options == 1, name .. ": no vanilla pill option")
+  assert(o.name == "ContextMenu_DanTraits_Take" .. name, name .. " offered")
+  choose(o)
+  assert(queued[#queued].kind == "vitality" and queued[#queued].label == o.name, name .. ": the action carries its label")
+  m = open({ pill(0) }); assert(tip(m.options[1]) == "Tooltip_DanTraits_MSMedEmpty", name .. ": empty bottle greyed")
+end
 
 -- 7. character creation: Wakeful (needs-less-sleep) is hidden, Deep Sleeper follows the server's sleep rule
 local function trait(kind) return { getType = function() return kind end } end

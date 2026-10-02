@@ -9,6 +9,36 @@
 require "Items/ProceduralDistributions"
 require "Items/Distributions"
 
+-- The prescription bottles (anticonvulsants and the MS pills) are found in
+-- the same places: this spread, times each bottle's own commonness.
+local PRESCRIPTION = {
+    procedural = {
+        BathroomCabinet = 0.8, BathroomCounter = 0.4, BathroomShelf = 0.4,
+        MedicalCabinet = 2, MedicalClinicDrugs = 4, MedicalStorageDrugs = 6, HospitalRoomShelves = 4,
+        DoctorTools = 5, NurseTools = 2, AmbulanceDriverTools = 1, StoreShelfMedical = 2,
+        SafehouseMedical = 5, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
+        DerelictHouseDrugs = 0.5, DrugShackDrugs = 0.5, ArmyStorageMedical = 2, TestingLab = 3,
+        KitchenRandom = 0.05,
+    },
+    suburbs = {
+        { { "all", "medicine", "items" }, 0.8 },
+        { { "all", "inventoryfemale", "items" }, 0.08 },
+        { { "all", "inventorymale", "items" }, 0.08 },
+        { { "MedicalCache1", "MedicalBox", "items" }, 3 },
+    },
+    bags = { HandbagsAndPurses = 0.02 },
+    clutter = { ClosetItems = 0.01 },
+}
+
+local function prescription(name, commonness)
+    local spec = { name = name, procedural = {}, suburbs = {}, bags = {}, clutter = {} }
+    for list, weight in pairs(PRESCRIPTION.procedural) do spec.procedural[list] = weight * commonness end
+    for _, s in ipairs(PRESCRIPTION.suburbs) do spec.suburbs[#spec.suburbs + 1] = { s[1], s[2] * commonness } end
+    for list, weight in pairs(PRESCRIPTION.bags) do spec.bags[list] = weight * commonness end
+    for list, weight in pairs(PRESCRIPTION.clutter) do spec.clutter[list] = weight * commonness end
+    return spec
+end
+
 local ITEMS = {
     {
         name = "DanTraits.Inhaler",
@@ -108,86 +138,10 @@ local ITEMS = {
         bags = { HandbagsAndPurses = 0.02 },
         clutter = { ClosetItems = 0.01 },
     },
-    {
-        -- Epilepsy: a prescription like metformin, a little rarer
-        name = "DanTraits.Anticonvulsants",
-        procedural = {
-            BathroomCabinet = 0.8, BathroomCounter = 0.4, BathroomShelf = 0.4,
-            MedicalCabinet = 2, MedicalClinicDrugs = 4, MedicalStorageDrugs = 6, HospitalRoomShelves = 4,
-            DoctorTools = 5, NurseTools = 2, AmbulanceDriverTools = 1, StoreShelfMedical = 2,
-            SafehouseMedical = 5, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
-            DerelictHouseDrugs = 0.5, DrugShackDrugs = 0.5, ArmyStorageMedical = 2, TestingLab = 3,
-            KitchenRandom = 0.05,
-        },
-        suburbs = {
-            { { "all", "medicine", "items" }, 0.8 },
-            { { "all", "inventoryfemale", "items" }, 0.08 },
-            { { "all", "inventorymale", "items" }, 0.08 },
-            { { "MedicalCache1", "MedicalBox", "items" }, 3 },
-        },
-        bags = { HandbagsAndPurses = 0.02 },
-        clutter = { ClosetItems = 0.01 },
-    },
-    {
-        -- MS: prednisone is an everyday steroid, more common than most prescriptions
-        name = "DanTraits.Prednisone",
-        procedural = {
-            BathroomCabinet = 1, BathroomCounter = 0.5, BathroomShelf = 0.5,
-            MedicalCabinet = 2.5, MedicalClinicDrugs = 5, MedicalStorageDrugs = 7.5, HospitalRoomShelves = 5,
-            DoctorTools = 6.25, NurseTools = 2.5, AmbulanceDriverTools = 1.25, StoreShelfMedical = 2.5,
-            SafehouseMedical = 6.25, SafehouseMedical_Mid = 2.5, SafehouseMedical_Late = 1.25,
-            DerelictHouseDrugs = 0.625, DrugShackDrugs = 0.625, ArmyStorageMedical = 2.5, TestingLab = 3.75,
-            KitchenRandom = 0.062,
-        },
-        suburbs = {
-            { { "all", "medicine", "items" }, 1 },
-            { { "all", "inventoryfemale", "items" }, 0.1 },
-            { { "all", "inventorymale", "items" }, 0.1 },
-            { { "MedicalCache1", "MedicalBox", "items" }, 3.75 },
-        },
-        bags = { HandbagsAndPurses = 0.025 },
-        clutter = { ClosetItems = 0.013 },
-    },
-    {
-        -- MS: baclofen, a prescription like anticonvulsants
-        name = "DanTraits.Baclofen",
-        procedural = {
-            BathroomCabinet = 0.8, BathroomCounter = 0.4, BathroomShelf = 0.4,
-            MedicalCabinet = 2, MedicalClinicDrugs = 4, MedicalStorageDrugs = 6, HospitalRoomShelves = 4,
-            DoctorTools = 5, NurseTools = 2, AmbulanceDriverTools = 1, StoreShelfMedical = 2,
-            SafehouseMedical = 5, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
-            DerelictHouseDrugs = 0.5, DrugShackDrugs = 0.5, ArmyStorageMedical = 2, TestingLab = 3,
-            KitchenRandom = 0.05,
-        },
-        suburbs = {
-            { { "all", "medicine", "items" }, 0.8 },
-            { { "all", "inventoryfemale", "items" }, 0.08 },
-            { { "all", "inventorymale", "items" }, 0.08 },
-            { { "MedicalCache1", "MedicalBox", "items" }, 3 },
-        },
-        bags = { HandbagsAndPurses = 0.02 },
-        clutter = { ClosetItems = 0.01 },
-    },
-    {
-        -- MS: amantadine, a little rarer
-        name = "DanTraits.Amantadine",
-        procedural = {
-            BathroomCabinet = 0.6, BathroomCounter = 0.3, BathroomShelf = 0.3,
-            MedicalCabinet = 1.5, MedicalClinicDrugs = 3, MedicalStorageDrugs = 4.5, HospitalRoomShelves = 3,
-            DoctorTools = 3.75, NurseTools = 1.5, AmbulanceDriverTools = 0.75, StoreShelfMedical = 1.5,
-            SafehouseMedical = 3.75, SafehouseMedical_Mid = 1.5, SafehouseMedical_Late = 0.75,
-            DerelictHouseDrugs = 0.375, DrugShackDrugs = 0.375, ArmyStorageMedical = 1.5, TestingLab = 2.25,
-            KitchenRandom = 0.038,
-        },
-        suburbs = {
-            { { "all", "medicine", "items" }, 0.6 },
-            { { "all", "inventoryfemale", "items" }, 0.06 },
-            { { "all", "inventorymale", "items" }, 0.06 },
-            { { "MedicalCache1", "MedicalBox", "items" }, 2.25 },
-        },
-        bags = { HandbagsAndPurses = 0.015 },
-        clutter = { ClosetItems = 0.007 },
-    },
+    prescription("DanTraits.Anticonvulsants", 1),   -- Epilepsy: like metformin, a little rarer
+    prescription("DanTraits.Prednisone", 1.25),     -- MS: an everyday steroid, more common than most prescriptions
+    prescription("DanTraits.Baclofen", 1),          -- MS
+    prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
     {
         -- common, like the other toiletries (for scale: toothpaste is 10 in a
         -- bathroom cabinet and 20 on a shop's toiletry shelf, a comb 6)
