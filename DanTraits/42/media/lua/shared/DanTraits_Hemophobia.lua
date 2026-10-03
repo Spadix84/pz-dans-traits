@@ -85,29 +85,14 @@ local function wrapComplete(class, name)
     end)
 end
 
--- the hands shaking: longer to do
-local function wrapDuration(class)
-    DanTraits_Wrap(class, "getDuration", "fear-slow", function(original, self, ...)
-        local t = original(self, ...)
-        if type(t) == "number" and t > 1 and afraid(self.character) then t = t * HB_SLOW end
-        return t
-    end)
-end
-
--- the splint sets its time in new(), not getDuration()
-local function wrapSplint()
-    DanTraits_Wrap(ISSplint, "new", "fear-splint-slow", function(original, self, character, ...)
-        local o = original(self, character, ...)
-        pcall(function() if o.maxTime and o.maxTime > 1 and afraid(character) then o.maxTime = o.maxTime * HB_SLOW end end)
-        return o
-    end)
-end
 
 local function wrapAll()
     local classes = actionClasses()
     for name in pairs(HB_FAINT) do wrapComplete(classes[name], name) end
-    for _, name in ipairs(HB_SLOW_ACTIONS) do wrapDuration(classes[name]) end
-    wrapSplint()
+    -- the hands shaking: longer to do (getDuration on each, and the splint's own time)
+    local slow = {}
+    for _, name in ipairs(HB_SLOW_ACTIONS) do slow[#slow + 1] = classes[name] end
+    DanTraits_ScaleActionTime(slow, "fear-slow", afraid, HB_SLOW)
 end
 wrapAll()
 Events.OnGameStart.Add(wrapAll)

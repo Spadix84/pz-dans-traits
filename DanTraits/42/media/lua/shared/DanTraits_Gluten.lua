@@ -39,13 +39,7 @@ local function glutenData(player)
     return d
 end
 
-local function glutenTier(flare)
-    local tier = 0
-    for i, threshold in ipairs(GLUTEN_TIER) do
-        if flare >= threshold then tier = i end
-    end
-    return tier
-end
+local function glutenTier(flare) return DanTraits_TierOf(flare, GLUTEN_TIER) end
 
 function DanTraits_IsWheat(item)
     return foodTags(item).wheat == true
@@ -63,24 +57,27 @@ local function glutenDose(item, fraction)
     return carbs * math.max(0, math.min(1, fraction or 1))
 end
 
--- called from the core eat hook with the portion actually eaten
--- a dose straight in carbs (the dashboard's gluten command); now = skip the onset wait
-function DanTraits_GlutenDose(player, carbs, now)
+-- a dose in carbs joins what is brewing; the onset clock starts if nothing
+-- is (now = skip the wait)
+local function addDose(player, carbs, now)
     local d = glutenData(player)
-    d.glutenPending = d.glutenPending + (carbs or GLUTEN_DOSE_FULL) / GLUTEN_DOSE_FULL
+    d.glutenPending = d.glutenPending + carbs / GLUTEN_DOSE_FULL
     if now then d.glutenOnset = 0 elseif (d.glutenOnset or 0) <= 0 and d.gluten <= 0 then d.glutenOnset = GLUTEN_ONSET_MIN end
     notify(player, "UI_DanTraits_GlutenAte")
 end
 
+-- a dose straight in carbs (the dashboard's gluten command)
+function DanTraits_GlutenDose(player, carbs, now)
+    addDose(player, carbs or GLUTEN_DOSE_FULL, now)
+end
+
+-- called from the core eat hook with the portion actually eaten
 function DanTraits_GlutenOnEat(player, item, fraction)
     if not hasTrait(player, "gluten") then return false end
     if not DanTraits_IsWheat(item) then return false end
     local dose = glutenDose(item, fraction)
     if dose <= 0 then return false end
-    local d = glutenData(player)
-    d.glutenPending = d.glutenPending + dose / GLUTEN_DOSE_FULL
-    if (d.glutenOnset or 0) <= 0 and d.gluten <= 0 then d.glutenOnset = GLUTEN_ONSET_MIN end
-    notify(player, "UI_DanTraits_GlutenAte")
+    addDose(player, dose)
     return true
 end
 

@@ -143,11 +143,11 @@ local function medsNotice(player, d)
 end
 
 local function updateEpilepsyMinute(player, d)
-    medsNotice(player, d)
     if not hasTrait(player, "epilepsy") then
-        d.epAuraMin, d.epAuraMs, d.epAfterMin, d.epNight = nil, nil, nil, nil
+        d.epAuraMin, d.epAuraMs, d.epAfterMin, d.epNight, d.epCovered = nil, nil, nil, nil, nil
         return
     end
+    medsNotice(player, d)
     if (d.epAfterMin or 0) > 0 then
         d.epAfterMin = d.epAfterMin - 1
         local left = clamp01(d.epAfterMin / EP_AFTER_MIN)
@@ -180,10 +180,7 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
     return quality * (1 - EP_NIGHT_CUT)
 end)
 
-function DanTraits_IsAnticonvulsants(item)
-    local ok, res = pcall(function() return item:getFullType() == EP_MEDS_ITEM end)
-    return ok and res == true
-end
+function DanTraits_IsAnticonvulsants(item) return DanTraits_IsItem(item, EP_MEDS_ITEM) end
 
 -- after the medication system has taken the dose (it loads first)
 DanTraits_AddHook("pill", function(_, player, kind)

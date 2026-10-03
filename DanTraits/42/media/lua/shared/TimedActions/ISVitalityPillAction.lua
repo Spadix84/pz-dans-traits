@@ -8,14 +8,8 @@ require "TimedActions/ISBaseTimedAction"
 
 ISVitalityPillAction = ISBaseTimedAction:derive("ISVitalityPillAction")
 
-local function uses(item)
-    local n = 0
-    pcall(function() n = item:getCurrentUsesFloat() or 0 end)
-    return n
-end
-
 function ISVitalityPillAction:isValid()
-    return self.character:getInventory():contains(self.item) and uses(self.item) > 0
+    return self.character:getInventory():contains(self.item) and DanTraits_ItemUses(self.item) > 0
 end
 
 function ISVitalityPillAction:update()
@@ -36,9 +30,11 @@ end
 
 function ISVitalityPillAction:perform()
     self.item:setJobDelta(0.0)
-    self.item:Use()
     local kind = ""
     pcall(function() kind = tostring(self.item:getType()) end)
+    -- the same two hooks as the vanilla pill action gets (DanTraits.lua): before the dose, then after
+    if DanTraits_RunHooks then pcall(function() DanTraits_RunHooks("prePill", nil, self.character, kind, self.item) end) end
+    self.item:Use()
     if DanTraits_RunHooks then pcall(function() DanTraits_RunHooks("pill", nil, self.character, kind) end) end
     ISBaseTimedAction.perform(self)
 end

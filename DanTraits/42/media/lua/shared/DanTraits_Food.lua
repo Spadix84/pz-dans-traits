@@ -74,11 +74,12 @@ local FOOD_WORDS = {
     doughnut = { junk = true }, tvdinner = { junk = true }, twinkie = { junk = true }, hostess = { junk = true },
     poptart = { junk = true }, candycane = { junk = true }, gummy = { junk = true },
     jerky = { junk = true, meat = true },
-    -- baked goods: wheat, and the sweet ones fast sugar (cookies, cake and donuts junk too)
+    -- baked goods: wheat, and the sweet ones fast sugar (cookies, cake and donuts junk too;
+    -- every word that contains "cake", cupcakes and pancakes included, picks up junk from it)
     cookie = { junk = true, wheat = true, fastCarb = true }, cake = { junk = true, wheat = true, fastCarb = true },
     donut = { junk = true, wheat = true, fastCarb = true }, cupcake = { junk = true, wheat = true, fastCarb = true },
     muffin = { wheat = true, fastCarb = true }, pie = { wheat = true, fastCarb = true },
-    gingerbread = { wheat = true, fastCarb = true }, pancake = { wheat = true, fastCarb = true },
+    gingerbread = { wheat = true, fastCarb = true }, pancake = { junk = true, wheat = true, fastCarb = true },
     waffle = { wheat = true, fastCarb = true }, cereal = { wheat = true, fastCarb = true },
     -- wheat: bread, pasta, dough
     bread = { wheat = true }, bagel = { wheat = true }, baguette = { wheat = true }, croissant = { wheat = true },
@@ -219,35 +220,30 @@ local function flag(item, method)
     return ok and res == true
 end
 
--- does any ingredient of an evolved dish have this name tag ("Base.Steak" -> "steak")
-local function ingredientHas(item, tag)
+-- fn(shortName) for every ingredient of an evolved dish ("Base.Steak" -> "steak")
+local function forEachIngredient(item, fn)
     local extras
     pcall(function() if item:haveExtraItems() then extras = item:getExtraItems() end end)
-    if not extras then return false end
-    local found = false
+    if not extras then return end
     pcall(function()
         for i = 0, extras:size() - 1 do
             local full = string.lower(tostring(extras:get(i)))
-            local short = full:match("%.(.*)$") or full
-            if tagsForName(short)[tag] then found = true end
+            fn(full:match("%.(.*)$") or full)
         end
     end)
+end
+
+-- does any ingredient of an evolved dish have this name tag
+local function ingredientHas(item, tag)
+    local found = false
+    forEachIngredient(item, function(short) if tagsForName(short)[tag] then found = true end end)
     return found
 end
 
 -- the caffeine of what went into a hot drink (0 for a plain dish)
 local function ingredientCaffeine(item)
-    local extras
-    pcall(function() if item:haveExtraItems() then extras = item:getExtraItems() end end)
-    if not extras then return 0 end
     local total = 0
-    pcall(function()
-        for i = 0, extras:size() - 1 do
-            local full = string.lower(tostring(extras:get(i)))
-            local short = full:match("%.(.*)$") or full
-            total = total + (DISH_CAFFEINE[short] or 0)
-        end
-    end)
+    forEachIngredient(item, function(short) total = total + (DISH_CAFFEINE[short] or 0) end)
     return total
 end
 

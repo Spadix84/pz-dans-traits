@@ -33,8 +33,14 @@
 --   tear <part> | dressing <part> <life> | badset <part> | breakbone <part> [time] | firstaid <level>   (DanTraits_WoundCare.lua)
 --   concussion <0..1> | concussion fall <amount> | concussion clear | faint fall | faint out [min]   (DanTraits_Concussion.lua, DanTraits_Faint.lua)
 --   wound <part> <kind>      a wound for testing: scratch | cut | deep | glass (deep, shard lodged)
+--   trait <add|remove> <id>  a trait on the character, by its registry key
+--   lua <code>               run a line of Lua (debug mode)
+--   badday [fire]            A Really Bad Day: replay the opening (DanTraits_BadDay.lua)
 --   halo <text>
 --   echo <text>
+-- plus whatever the trait files register in DanTraits_ExtraCommands (grep for it:
+-- dehydration, epilepsy, germ, heart, fearofblood, lactose, meds, migraine, ms,
+-- sunburn, tinnitus, roughstitch, ...), each taking (player, words) and returning a line.
 local TELEMETRY_FILE = "DanTraits_Telemetry.json"
 local COMMAND_FILE   = "DanTraits_Commands.txt"
 local WRITE_EVERY_MS = 500

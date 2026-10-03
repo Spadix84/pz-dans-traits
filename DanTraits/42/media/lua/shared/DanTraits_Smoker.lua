@@ -113,9 +113,10 @@ local COUGH_EXERT_ENDURANCE = 0.5
 local COUGH_MORNING     = 5       -- x this in the first COUGH_MORNING_MIN after waking
 local COUGH_MORNING_MIN = 60
 local COUGH_RADIUS      = 35      -- only if the game's own cough is unavailable (it is 35)
--- caffeine
+-- wounds
 local NIC_INF_GROWTH   = 0.2     -- wound infection climb x (1 + this x meter), Smokers only
 local NIC_WOUND_HEAL   = 0.2     -- an unstitched deep wound heals x (1 - this x meter), Smokers only
+-- caffeine
 local CAF_INDUCE_PER_CIG = 0.1    -- caffeine clearance x (1 + induction), induction up to 1
 local CAF_INDUCE_HALF_H  = 39
 
@@ -382,10 +383,7 @@ function DanTraits_ChewNicotineGum(player)
     return true
 end
 
-function DanTraits_IsNicotineGum(item)
-    local ok, res = pcall(function() return item:getFullType() == NIC_GUM_ITEM end)
-    return ok and res == true
-end
+function DanTraits_IsNicotineGum(item) return DanTraits_IsItem(item, NIC_GUM_ITEM) end
 
 DanTraits_AddHook("pill", function(_, player, kind)
     if string.lower(tostring(kind or "")) == "nicotinegum" then DanTraits_ChewNicotineGum(player) end

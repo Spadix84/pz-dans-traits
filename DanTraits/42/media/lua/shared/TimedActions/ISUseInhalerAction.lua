@@ -3,7 +3,8 @@ require "TimedActions/ISBaseTimedAction"
 ISUseInhalerAction = ISBaseTimedAction:derive("ISUseInhalerAction")
 
 function ISUseInhalerAction:isValid()
-    return self.character:getInventory():contains(self.item) and self.item:getCurrentUsesFloat() > 0 and DanTraits_IsInhaler and DanTraits_IsInhaler(self.item)
+    if not (DanTraits_IsInhaler and DanTraits_IsInhaler(self.item)) then return false end
+    return self.character:getInventory():contains(self.item) and DanTraits_ItemUses(self.item) > 0
 end
 
 function ISUseInhalerAction:update()

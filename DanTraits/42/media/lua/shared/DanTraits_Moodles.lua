@@ -33,6 +33,8 @@
 --   MSHeat             Multiple Sclerosis: heat sensitive, too hot, overheated
 --   MSFlare            Multiple Sclerosis: a flare (the first level when
 --                      prednisone is working on it)
+--   Spoons             Multiple Sclerosis: the energy budget as felt (half gone,
+--                      three left, the wall), after a coffee's mask
 --
 -- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
 -- range, not which way; the meter is how you find out. Hallucinations has
@@ -46,12 +48,7 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 
 -- the level for a 0..1 value against ascending tier points
-local function tierOf(value, tiers)
-    local level = 0
-    value = tonumber(value) or 0
-    for i, at in ipairs(tiers) do if value >= at then level = i end end
-    return level
-end
+local tierOf = DanTraits_TierOf
 
 local TN_LONG_MIN      = 60      -- ringing for this long or more is the second level
 local GUT_TIER         = { 0.25, 0.5, 0.75 }

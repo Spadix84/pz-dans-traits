@@ -63,20 +63,11 @@ local function actionClass(name)
     return classes[name]
 end
 
+-- quicker to do (getDuration on each, and the splint's own time)
 local function wrapSteady()
-    for _, name in ipairs(SH_FAST_ACTIONS) do
-        DanTraits_Wrap(actionClass(name), "getDuration", "steady-fast", function(original, self, ...)
-            local t = original(self, ...)
-            if type(t) == "number" and t > 1 and steady(self.character) then t = t * SH_FAST end
-            return t
-        end)
-    end
-    -- the splint sets its time in new(), not getDuration()
-    DanTraits_Wrap(ISSplint, "new", "steady-splint-fast", function(original, self, character, ...)
-        local o = original(self, character, ...)
-        pcall(function() if o.maxTime and o.maxTime > 1 and steady(character) then o.maxTime = o.maxTime * SH_FAST end end)
-        return o
-    end)
+    local fast = {}
+    for _, name in ipairs(SH_FAST_ACTIONS) do fast[#fast + 1] = actionClass(name) end
+    DanTraits_ScaleActionTime(fast, "steady-fast", steady, SH_FAST)
 end
 wrapSteady()
 Events.OnGameStart.Add(wrapSteady)

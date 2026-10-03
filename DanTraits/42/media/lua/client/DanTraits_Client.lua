@@ -39,11 +39,7 @@ local function findFirst(items, test)
     return nil
 end
 
-local function usesOf(item)
-    local n = 0
-    pcall(function() n = item:getCurrentUsesFloat() or 0 end)
-    return n
-end
+local usesOf = DanTraits_ItemUses
 
 local function greyOut(option, textKey)
     option.notAvailable = true

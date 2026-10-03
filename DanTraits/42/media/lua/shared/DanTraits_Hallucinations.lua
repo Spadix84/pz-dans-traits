@@ -6,10 +6,11 @@ local hasTrait = DanTraits_HasTrait
 -- Schizophrenia -------------------------------------------------------------
 -- Episodes roll every ten minutes. The base chance never goes away; stress,
 -- unhappiness, tiredness, night and the mod's own signals (sleep debt, a
--- concussion, alcohol withdrawal, a wound infection's fever) all push it up. Three kinds of episode:
--- a phantom zombie sound nearby, a door or window shaking as if thumped, or a
--- sudden bout of panic with the startle sting. Sounds are audio only: they do
--- not attract real zombies.
+-- concussion, alcohol withdrawal, a wound infection's fever) all push it up. The episodes
+-- (DanTraits_Episodes, below): a phantom zombie sound nearby, a whisper, a door or
+-- window shaking as if thumped, breaking glass, footsteps, a sudden bout of panic
+-- with the startle sting, and the phantom charge (a harmless sprinter that fades).
+-- Sounds are audio only: they do not attract real zombies.
 local SCHIZO_BASE_CHANCE     = 0.12   -- per 10 minutes, floor
 local SCHIZO_STRESS_WEIGHT   = 0.30   -- times stress (0..1)
 local SCHIZO_UNHAPPY_WEIGHT  = 0.20   -- times unhappiness/100
@@ -93,10 +94,7 @@ local function offsetFromPlayer(player, minDist, spread)
 end
 
 local function addPanic(player, amount)
-    local stats = player:getStats()
-    pcall(function()
-        stats:set(CharacterStat.PANIC, math.min(100, stats:get(CharacterStat.PANIC) + amount))
-    end)
+    pcall(function() DanTraits_StatAdd(player:getStats(), CharacterStat.PANIC, amount) end)
 end
 
 local function isNight()

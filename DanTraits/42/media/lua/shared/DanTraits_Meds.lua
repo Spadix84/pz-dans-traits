@@ -45,7 +45,8 @@
 -- That panic drop belongs to diazepam now.
 --
 -- Mod data: meds[id] = { lvl, built, day (last game day dosed), sideMin
--- (minutes of side effect left), over (overdose running) }.
+-- (minutes of side effect left), over (overdose running), overMin (minutes
+-- of it left) }.
 -- Old saves: the traits' own levels (hcBeta, epMeds, diaMedMinutes, msPred,
 -- msBac, msAman) are carried across as each turns up.
 -- Console: meds | meds take <id> | meds side <id>
@@ -219,7 +220,6 @@ end
 local OLD_KEYS = { hcBeta = "beta", epMeds = "anticonvulsant", msPred = "prednisone", msBac = "baclofen", msAman = "amantadine" }
 
 local function migrate(d)
-    d.medsMigrated = true
     local function carry(id, lvl)
         if not lvl or lvl <= 0 then return end
         local s = stateOf(d, id)
@@ -420,12 +420,7 @@ end)
 local function updateMedsFrame(player, d)
     if not d or not d.meds or not d.meds.diazepam then return end
     if not DanTraits_MedCovered(player, "diazepam") or DanTraits_Asleep(player) then return end
-    local stats = player:getStats()
-    local panic = stats:get(CharacterStat.PANIC) or 0
-    if panic <= 0 then return end
-    local mult = 1
-    pcall(function() mult = GameTime.getInstance():getThirtyFPSMultiplier() or 1 end)
-    stats:set(CharacterStat.PANIC, math.max(0, panic - DZ_PANIC_RATE * mult))
+    DanTraits_PanicDecay(player:getStats(), DZ_PANIC_RATE)
 end
 
 -- Pills ----------------------------------------------------------------------------

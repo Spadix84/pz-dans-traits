@@ -110,7 +110,7 @@ local function updateAnemiaMinute(player, d)
     pcall(function()
         local stats = player:getStats()
         local asleep = DanTraits_Asleep(player)
-        if not asleep then stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + AN_FATIGUE * deficit)) end
+        if not asleep then DanTraits_StatAdd(stats, CharacterStat.FATIGUE, AN_FATIGUE * deficit) end
     end)
 end
 
@@ -133,9 +133,6 @@ DanTraits_AddHook("infectionGrowth", function(k, player)
 end)
 
 -- the pill bottle: 30 pills, its own action (see client)
-function DanTraits_IsIronPills(item)
-    local ok, res = pcall(function() return item:getFullType() == "DanTraits.IronPills" end)
-    return ok and res == true
-end
+function DanTraits_IsIronPills(item) return DanTraits_IsItem(item, "DanTraits.IronPills") end
 
 DanTraits_Every("minute", "Anemia", updateAnemiaMinute, 40)

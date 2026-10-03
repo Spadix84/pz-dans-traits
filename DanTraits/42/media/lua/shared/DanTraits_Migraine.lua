@@ -152,12 +152,12 @@ local function inBrightLight(player)
 end
 DanTraits_InBrightLight = inBrightLight
 
-local function over(value, from, full) return clamp01((value - from) / (full - from)) end
+local over = DanTraits_Over
 
 -- 0..1 how hot: the hotter of the air around the character and their body
 local function heatOf(player)
     local heat = 0
-    pcall(function() heat = over(getClimateManager():getAirTemperatureForCharacter(player) or 0, MIG_HEAT_AIR[1], MIG_HEAT_AIR[2]) end)
+    heat = over(DanTraits_AirTemp(player) or 0, MIG_HEAT_AIR[1], MIG_HEAT_AIR[2])
     pcall(function()
         local t = player:getStats():get(CharacterStat.TEMPERATURE)
         if type(t) == "number" and t > 30 then heat = math.max(heat, over(t, MIG_HEAT_BODY[1], MIG_HEAT_BODY[2])) end
@@ -185,7 +185,6 @@ local function stormComing()
     end)
     return coming
 end
-DanTraits_StormComing = stormComing
 
 -- 0..1 how lit the room is, while asleep (the sleep system's reading)
 local function sleepLit(player)
@@ -220,7 +219,6 @@ local function migraineParts(player)
     if stormComing() then parts.storm = MIG_STORM end
     return parts
 end
-DanTraits_MigraineParts = migraineParts
 
 -- percent chance per ten minutes, with the character's own weights; and the
 -- personal trigger doing the most right now (nil when none is)

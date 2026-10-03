@@ -98,31 +98,19 @@ local function storyKind(textKey)
     return (string.gsub(textKey, "^UI_DanTraits_", ""))
 end
 
-local function notify(player, textKey)
-    local text = getText(textKey)
-    showHalo(player, text, false)
-    DanTraits_Story(player, storyKind(textKey), text, "bad")
-end
-
-local function notifyGood(player, textKey)
-    local text = getText(textKey)
-    showHalo(player, text, true)
-    DanTraits_Story(player, storyKind(textKey), text, "good")
-end
-
--- notices whose text takes arguments: getText(key, ...) formats it, and the
--- story event gets the formatted text. Bad by default, Good for the other tone.
-function DanTraits_NotifyFmt(player, textKey, ...)
+-- the one notice: the halo over the head and the story event. A text that
+-- takes arguments is formatted by getText(key, ...) and the story event
+-- gets the formatted text.
+local function announce(player, good, textKey, ...)
     local text = getText(textKey, ...)
-    showHalo(player, text, false)
-    DanTraits_Story(player, storyKind(textKey), text, "bad")
+    showHalo(player, text, good)
+    DanTraits_Story(player, storyKind(textKey), text, good and "good" or "bad")
 end
 
-function DanTraits_NotifyFmtGood(player, textKey, ...)
-    local text = getText(textKey, ...)
-    showHalo(player, text, true)
-    DanTraits_Story(player, storyKind(textKey), text, "good")
-end
+local function notify(player, textKey) announce(player, false, textKey) end
+local function notifyGood(player, textKey) announce(player, true, textKey) end
+function DanTraits_NotifyFmt(player, textKey, ...) announce(player, false, textKey, ...) end
+function DanTraits_NotifyFmtGood(player, textKey, ...) announce(player, true, textKey, ...) end
 
 local function traitData(player)
     local md = player:getModData()
@@ -202,8 +190,8 @@ end
 function DanTraits_TraitsChanged(player)
     vanillaCache.set = nil
 end
-Events.OnCreatePlayer.Add(function() vanillaCache.set = nil end)
-Events.OnGameStart.Add(function() vanillaCache.set = nil end)
+Events.OnCreatePlayer.Add(DanTraits_TraitsChanged)
+Events.OnGameStart.Add(DanTraits_TraitsChanged)
 
 -- shared with the trait files
 DanTraits_HasTrait = hasTrait
@@ -302,16 +290,19 @@ end
 --               foodSicknessRise, so subscribers see the game's rise, not floors written
 --               later in the same minute
 --           10  Sleep (light reading, wakes)
+--           19  GoodClotter (Positives: cuts bleeding time before Blood reads it)
 --           20  Blood (loss this minute, sets bloodLossMin)
 --           21  Hemophilia (holds bleed times)
 --           22  WoundCare (reads BloodPartRate)
 --           23  Infection
 --           24  Concussion
 --           25  FearOfBlood (reads bloodLossMin)
+--           30  Meds (the levels every medicated system reads this minute)
+--           39  Spoons (the energy budget MS spends; reads the night Vitality scored)
 --           40  Alcohol, Anemia, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
 --               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, MDD, Migraine,
---               MS, Smoker, Sunburn, Tinnitus (floors and rates; among themselves by label)
---           80  Positives (Iron Stomach)
+--               MS, Smoker, Sunburn, Tinnitus, Triptan (floors and rates; among themselves by label)
+--               (Iron Stomach in Positives is a foodSicknessRise pipeline hook, not a clock system)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --           96  Moodles (reads what every system above left in mod data; changes nothing)
@@ -321,7 +312,7 @@ end
 --   frame    0  the stat delta pipeline: enduranceRegen (Vitality, Smoker lungs, Blood,
 --               Anemia, Concussion, Asthma, Heart, Dehydration subscribe; the cuts multiply)
 --           20  Blood        22  WoundCare (movement sampling)    24  Concussion
---           40  Alcohol (panic decay), Arthritis, Smoker (held anger)
+--           40  Alcohol (panic decay), Arthritis, ArthritisGrip, Meds (diazepam), Smoker (held anger)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
 --   are still registered by their own files.)
 local drivers = { minute = {}, ten = {}, frame = {} }

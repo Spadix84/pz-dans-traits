@@ -114,7 +114,6 @@ local MS_HAND_FLARE    = 20      -- hands and forearms in a flare
 -- stiffness about 0.3 a minute, head pain about 1)
 local MS_EASE_STIFF    = 2       -- stiffness off a minute, down to the current floor
 local MS_EASE_PAIN     = 2       -- head pain off a minute on top of the game's 1
--- medication
 -- medication (DanTraits_Meds.lua keeps the levels; these are what a pill
 -- working fully does, scaled by how well it is working)
 local MS_PRED_BURN     = 3       -- flare hours gone per hour on prednisone
@@ -139,11 +138,7 @@ local function effect(player, id)
     return DanTraits_MedEffect and DanTraits_MedEffect(player, id) or 0
 end
 
-local function tierOf(load)
-    local tier = 0
-    for i, at in ipairs(MS_TIER) do if load >= at then tier = i end end
-    return tier
-end
+local function tierOf(load) return DanTraits_TierOf(load, MS_TIER) end
 
 -- the spoon budget: the sandbox count a day, 0 for none
 local function spoonCount()
@@ -156,12 +151,12 @@ local function spoonsOn() return spoonCount() > 0 end
 local function spoonTier(player) return DanTraits_SpoonTier and DanTraits_SpoonTier(player) or 0 end
 
 -- 0..1 from a start point to a full point
-local function over(value, from, full) return clamp01((value - from) / (full - from)) end
+local over = DanTraits_Over
 
 -- 0..1 how hot it is for this character right now, before the lag
 local function heatTarget(player, d)
     local air, body, wet = 0, 0, 0
-    pcall(function() air = over(getClimateManager():getAirTemperatureForCharacter(player) or 0, MS_AIR_FROM, MS_AIR_FULL) end)
+    air = over(DanTraits_AirTemp(player) or 0, MS_AIR_FROM, MS_AIR_FULL)
     pcall(function() wet = fraction(player:getStats(), CharacterStat.WETNESS) end)
     pcall(function()
         local t = player:getStats():get(CharacterStat.TEMPERATURE)

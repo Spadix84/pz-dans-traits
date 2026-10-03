@@ -36,8 +36,7 @@ local known = nil
 local function knownText()
     if known then return known end
     known = {}
-    for _, key in ipairs({ "Scratched", "Cut", "DeepWound", "Bitten", "Fracture", "Infected", "Severe", "Moderate",
-                           "Stitched", "Good", "NeedTime", "Splinted" }) do
+    for _, key in ipairs({ "Scratched", "Cut", "DeepWound", "Fracture", "Infected" }) do
         local ok, text = pcall(getText, "IGUI_health_" .. key)
         if ok and text then known[key] = text end
     end
@@ -56,19 +55,20 @@ end
 local function t(key) return getText("UI_DanTraits_health_" .. key) end
 
 -- a line of the game's, as the examiner sees it: new text, or false to drop it
-local function reword(body, level, part, rec)
+local function reword(body, level)
     local k = knownText()
-    if level >= HP_VAGUE_BELOW then
-        -- the game shows infection its own way; this mod's infection has its own
-        -- lines below, so the game's is only kept where it agrees
-        if k.Infected and startsWith(body, k.Infected) then return false end
+    -- the game shows infection its own way; this mod's infection has its own
+    -- lines below, so the game's goes, unless the mod's infection is switched
+    -- off (then the game's is all there is)
+    if k.Infected and startsWith(body, k.Infected) then
+        if DanTraits_SandboxOn("InfectionEnabled") then return false end
         return nil
     end
+    if level >= HP_VAGUE_BELOW then return nil end
     if k.Scratched and startsWith(body, k.Scratched) then return t("Scratch") end
     if k.DeepWound and startsWith(body, k.DeepWound) then return t("BadCut") end
     if k.Cut and startsWith(body, k.Cut) then return t("Cut") end
     if k.Fracture and startsWith(body, k.Fracture) then return t("MaybeBroken") end
-    if k.Infected and startsWith(body, k.Infected) then return false end
     return nil
 end
 
@@ -174,7 +174,7 @@ local function wrapDrawItem()
             if i > 1 then
                 local bullet, body = splitBullet(str)
                 if bullet then
-                    local new = reword(body, level, part)
+                    local new = reword(body, level)
                     if new == false then str = nil
                     elseif new then str = bullet .. new end
                     x = l.x

@@ -63,7 +63,7 @@ local HC_ATTACK_SAD    = 30      -- unhappiness added
 local HC_BETA_CUT      = 0.25    -- chest pain and heart attacks x this, fully built up
 local HC_KIT_BOTTLES   = 2       -- bottles a new character starts with
 
-local function randRange(lo, hi) return DanTraits_RandRange(lo, hi) end
+local randRange = DanTraits_RandRange
 
 -- 0..4: the vanilla Endurance moodle, or its level from the stat
 local function enduranceLevel(player)
@@ -156,12 +156,12 @@ local function betaNotice(player, d)
 end
 
 local function updateHeartMinute(player, d)
-    betaNotice(player, d)
     if (d.hcWeakH or 0) > 0 then d.hcWeakH = math.max(0, d.hcWeakH - 1 / 60) end
     if not hasTrait(player, "heart") then
-        d.hcAnginaMin, d.hcPushing, d.hcEndPrev = nil, nil, nil
+        d.hcAnginaMin, d.hcPushing, d.hcEndPrev, d.hcCovered = nil, nil, nil, nil
         return
     end
+    betaNotice(player, d)
     local pushing, resting = exertion(player, d)
     d.hcPushing = nil
     if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return end

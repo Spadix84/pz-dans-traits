@@ -87,8 +87,8 @@ DanTraits_AddHook("nightQuality", function(quality, player)
 end)
 
 -- Meal Prepper ---------------------------------------------------------------
-DanTraits_AddHook("varietyHours", function(hours)
-    local player = getSpecificPlayer(0)
+DanTraits_AddHook("varietyHours", function(hours, player)
+    player = player or getSpecificPlayer(0)
     if not player or not hasTrait(player, "mealprepper") then return nil end
     return MP_VARIETY_HOURS
 end)

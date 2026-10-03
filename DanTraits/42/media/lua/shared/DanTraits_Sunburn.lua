@@ -37,7 +37,8 @@
 -- told when it wears off.
 --
 -- Mod data: sbExp[part] (0..1 exposure), sbBurn[part] (hours left),
--- sbWarned (the "skin is hot" notice this spell), sbTan (0..1), sbBlockMin
+-- sbWarned (the "skin is hot" notice this spell), sbHot (the hottest part's
+-- exposure while any is warning, for the moodle), sbTan (0..1), sbBlockMin
 -- (minutes of sun block left).
 -- Console: sunburn <part|all> | sunburn clear | sunburn block [minutes] | sunburn tan <0..1>
 require "DanTraits"
@@ -57,7 +58,7 @@ local SB_BURN_H        = 24      -- hours a burn lasts
 local SB_EASE_H        = 6       -- the last hours ease off
 local SB_PART_PAIN     = 20      -- additional pain held on each burnt part (the head alone reads about 18 on the stat)
 local SB_PAIN_RAMP     = 4       -- a part's pain rises toward that by at most this a minute
-local SB_NIGHT_CUT     = 0.2     -- the night's score x (1 - this x share of the body burnt)
+local SB_NIGHT_CUT     = 0.2     -- the night's score x (1 - this x twice the share of the body burnt: half of it burnt is the full cut)
 local SB_NOON_FROM     = 11      -- the sun is at full strength from this hour...
 local SB_NOON_TO       = 15      -- ...to this one...
 local SB_NOON_SLOPE    = 4       -- ...and falls to nothing this many hours either side
@@ -101,7 +102,7 @@ local function sunOn(player)
         local c = getClimateManager()
         if (c:getNightStrength() or 0) > SB_NIGHT then return end
         if (c:getRainIntensity() or 0) > SB_RAIN then return end
-        local warm = clamp01(((c:getAirTemperatureForCharacter(player) or 0) - SB_TEMP_NONE) / (SB_TEMP_FULL - SB_TEMP_NONE))
+        local warm = DanTraits_Over(DanTraits_AirTemp(player) or 0, SB_TEMP_NONE, SB_TEMP_FULL)
         sun = warm * (1 - SB_CLOUD_CUT * clamp01(c:getCloudIntensity() or 0)) * sunHeight(hourNow())
     end)
     return sun
@@ -130,10 +131,7 @@ function DanTraits_ApplySunblock(player, minutes)
     return d.sbBlockMin
 end
 
-function DanTraits_IsSunblock(item)
-    local ok, res = pcall(function() return item:getFullType() == SB_BLOCK_ITEM end)
-    return ok and res == true
-end
+function DanTraits_IsSunblock(item) return DanTraits_IsItem(item, SB_BLOCK_ITEM) end
 
 DanTraits_AddHook("pill", function(_, player, kind)
     if string.lower(tostring(kind or "")) == "sunblock" then DanTraits_ApplySunblock(player) end
@@ -182,7 +180,7 @@ end
 
 local function updateSunburnMinute(player, d)
     if not sandboxOn() then
-        d.sbExp, d.sbBurn, d.sbWarned, d.sbBlockMin = nil, nil, nil, nil
+        d.sbExp, d.sbBurn, d.sbWarned, d.sbHot, d.sbBlockMin = nil, nil, nil, nil, nil
         return
     end
     d.sbExp = d.sbExp or {}
@@ -253,7 +251,7 @@ local function updateSunburnMinute(player, d)
     end
 end
 
--- 0..1 share of the body burnt, for the night's score and the dashboard
+-- 0..1 share of the body burnt (the offline tests read it; the night's score below counts the parts itself)
 function DanTraits_SunburnShare(player)
     local d = player and player:getModData().DanTraits
     if not d then return 0 end

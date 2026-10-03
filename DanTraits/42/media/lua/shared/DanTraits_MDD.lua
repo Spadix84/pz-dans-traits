@@ -133,7 +133,6 @@ function DanTraits_MddOnPill(player)
         if intoxOf(player) > DRINK.tipsy then dose = dose * 0.5 end
     end)
     d.mddMedDays = math.min(MDD_MED_MAX_DAYS, (d.mddMedDays or 0) + dose)
-    d.mddMedEverStarted = true
     -- no instant lift: the vanilla effect is cancelled for this trait
     pcall(function() player:setDepressEffect(0) end)
     return true

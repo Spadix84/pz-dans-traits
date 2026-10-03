@@ -91,11 +91,7 @@ local function blData(player)
     return d
 end
 
-local function tierOf(lost)
-    local tier = 0
-    for i, threshold in ipairs(BL_TIER) do if lost >= threshold then tier = i end end
-    return tier
-end
+local function tierOf(lost) return DanTraits_TierOf(lost, BL_TIER) end
 
 -- 0..1 how short of red cells
 local function weaknessOf(cells)
@@ -103,7 +99,7 @@ local function weaknessOf(cells)
 end
 
 -- the exact inverse of BodyDamage.ReduceGeneralHealth(amount)
-function DanTraits_UndoGeneralHealthLoss(player, amount)
+local function undoGeneralHealthLoss(player, amount)
     return pcall(function()
         local parts = player:getBodyDamage():getBodyParts()
         local n = parts:size()
@@ -121,7 +117,7 @@ local function onBloodGetDamage(character, damageType, amount)
     amount = tonumber(amount) or 0
     if amount <= 0 then return end
     local d = traitData(player)
-    if DanTraits_UndoGeneralHealthLoss(player, amount) then
+    if undoGeneralHealthLoss(player, amount) then
         d.bloodRefunded = (d.bloodRefunded or 0) + amount
     end
 end
@@ -151,7 +147,7 @@ local function partRate(part)
 end
 DanTraits_BloodPartRate = partRate
 
-local function round3(x) return math.floor(x * 1000 + 0.5) / 1000 end
+local function round3(x) return DanTraits_Round(x, 3) end
 
 -- how much blood is going, and from where
 local function bleedMinute(player, d)
@@ -180,7 +176,7 @@ local function refill(player, d, stats, asleep)
         local gain = math.min(1 - d.bloodVol, DanTraits_RunHooks("bloodVolRefill", BL_VOL_DAY / 1440 * rate, player, d))
         if gain > 0 then
             d.bloodVol = d.bloodVol + gain
-            pcall(function() stats:set(CharacterStat.THIRST, math.min(1, (stats:get(CharacterStat.THIRST) or 0) + gain * BL_VOL_THIRST)) end)
+            DanTraits_StatAdd(stats, CharacterStat.THIRST, gain * BL_VOL_THIRST)
         end
     end
     -- red cells: slow, fed by food and rest
@@ -205,8 +201,18 @@ local function updateMoodle(player, lost)
     DanTraits_BadMoodle(player, "BloodLoss", math.min(1, lost / BL_DEATH), BL_MOODLE_TIER)
 end
 
+-- switched off mid-game (sandbox, a server admin): stand down once, so the
+-- tier, the weakness and the moodle do not stay on (Fear of Blood reads
+-- bloodLossMin every minute). The volume and the red cells are kept and it
+-- all resumes if it is switched back on.
+local function standDown(player, d)
+    if not d or ((d.bloodTier or 0) <= 0 and (d.bloodWeak or 0) <= 0 and (d.bloodLossMin or 0) <= 0) then return end
+    d.bloodLossMin, d.bloodTier, d.bloodWeak = 0, 0, 0
+    updateMoodle(player, 0)
+end
+
 local function updateBloodMinute(player, d)
-    if not sandboxOn() then return end
+    if not sandboxOn() then standDown(player, d) return end
     d = blData(player)
     local stats = player:getStats()
     local asleep = DanTraits_Asleep(player)
@@ -226,22 +232,18 @@ local function updateBloodMinute(player, d)
     updateMoodle(player, lost)
 
     if tier >= 2 and not asleep then
+        -- straight to the floor (a ramp as wide as the stat)
         pcall(function()
             local panic = CharacterStat.PANIC
-            local max = 100
-            pcall(function() max = panic:getMaximumValue() or 100 end)
-            local floor = BL_PANIC[tier] * max
-            if (stats:get(panic) or 0) < floor then stats:set(panic, floor) end
+            DanTraits_FloorUp(stats, panic, BL_PANIC[tier] * DanTraits_StatMax(panic), math.huge)
         end)
     end
     -- fainting spells in shock (DanTraits_Faint.lua)
     if (d.bloodFaintGap or 0) > 0 then d.bloodFaintGap = d.bloodFaintGap - 1 end
     if not asleep and (BL_FAINT[tier] or 0) > 0 and (d.bloodFaintGap or 0) <= 0 and DanTraits_PassOut then
-        local chance = BL_FAINT[tier]
-        local hit = ZombRandFloat and ZombRandFloat(0, 1) < chance or (not ZombRandFloat and math.random() < chance)
-        if hit then
-            local lo, hi = BL_FAINT_MIN[1], BL_FAINT_MIN[2]
-            if DanTraits_PassOut(player, ZombRandFloat and ZombRandFloat(lo, hi) or (lo + hi) / 2, "UI_DanTraits_BloodComeTo") then
+        if DanTraits_Roll(BL_FAINT[tier]) then
+            local minutes = DanTraits_RandRange(BL_FAINT_MIN[1], BL_FAINT_MIN[2])
+            if DanTraits_PassOut(player, minutes, "UI_DanTraits_BloodComeTo") then
                 d.bloodFaintGap = BL_FAINT_GAP
             end
         end
@@ -253,7 +255,7 @@ local function updateBloodMinute(player, d)
         pcall(function() player:getBodyDamage():ReduceGeneralHealth(health) end)
     end
     if d.bloodWeak > 0 and not asleep then
-        pcall(function() stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + BL_WEAK_FATIGUE * d.bloodWeak)) end)
+        DanTraits_StatAdd(stats, CharacterStat.FATIGUE, BL_WEAK_FATIGUE * d.bloodWeak)
     end
 end
 
@@ -292,7 +294,7 @@ end
 -- Debugging: every part under full health, its change over the minute and
 -- its weight in overall health: "UpperLeg_L 62.3 (-0.91) x0.2, ..."
 local lastPartHealth = {}
-local function round2(x) return math.floor(x * 100 + 0.5) / 100 end
+local round2 = DanTraits_Round
 local function partsLine(player)
     local out = {}
     pcall(function()

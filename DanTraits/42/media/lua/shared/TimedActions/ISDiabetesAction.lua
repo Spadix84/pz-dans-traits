@@ -5,11 +5,7 @@ require "TimedActions/ISBaseTimedAction"
 
 ISDiabetesAction = ISBaseTimedAction:derive("ISDiabetesAction")
 
-local function uses(item)
-    local n = 0
-    pcall(function() n = item:getCurrentUsesFloat() or 0 end)
-    return n
-end
+local uses = DanTraits_ItemUses
 
 function ISDiabetesAction:isValid()
     local inv = self.character:getInventory()

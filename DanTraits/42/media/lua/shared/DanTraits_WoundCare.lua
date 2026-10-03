@@ -39,7 +39,8 @@
 -- ISStitch.complete likewise, tag "woundcare-stitch".
 --
 -- Mod data: wcParts[part] = { deep, badSet, poorStitch, st (the stitch time
--- last minute, for a rough job's slower knitting) }, wcLife, wcSummary.
+-- last minute, for a rough job's slower knitting) }, wcLife, wcSummary,
+-- wcMoved (how much the character moved this minute, for the dashboard).
 require "DanTraits"
 
 local traitData = DanTraits_Data
@@ -221,7 +222,7 @@ local function updateWoundFrame(player)
     elseif ok3 and moving and not moved then moved = "walk" end
 end
 
-local function round2(x) return math.floor(x * 100 + 0.5) / 100 end
+local round2 = DanTraits_Round
 
 local function updatePart(player, d, part, name, wet, summary)
     local rec = d.wcParts[name]

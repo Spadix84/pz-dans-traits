@@ -62,7 +62,8 @@ function C.onRefresh(page, state)
         if inv then
             local holder = inv:getContainingItem()
             if C.isCooler(holder) then
-                watched(holder, C.settle(holder, now))
+                -- a carried cooler is settled with the character's bags, not watched like one left out
+                if page.onCharacter then C.settle(holder, now) else watched(holder, C.settle(holder, now)) end
             else
                 C.settleAll(inv, now, not page.onCharacter)
             end

@@ -1,6 +1,7 @@
-"""Draw the mod's simple pixel icons: the moodles fed by DanTraits_Moodles.lua,
-Diabetes' Blood Sugar moodle, the sun block item, the MS pill bottles and the pill caddy. Each is a 16 x 16 grid of palette letters, written
-out at 32 x 32 as a PNG (no libraries needed).
+"""Draw the mod's simple pixel icons: the moodles fed by DanTraits_Moodles.lua
+(all but Spoons, whose art was drawn by hand), Diabetes' Blood Sugar moodle, the
+sun block item, the MS pill bottles and the pill caddy. Each is a 16 x 16 grid of
+palette letters, written out at 32 x 32 as a PNG (no libraries needed).
 
     python DanTraits/tools/make_icons.py            write them into the mod
     python DanTraits/tools/make_icons.py --sheet F  also write one sheet of all of them to F
@@ -486,6 +487,8 @@ def main(argv):
             written.append(path)
     print("wrote %d files" % len(written))
     if "--sheet" in argv:
+        if argv.index("--sheet") + 1 >= len(argv):
+            raise SystemExit("usage: make_icons.py [--sheet <out.png>]")
         path = argv[argv.index("--sheet") + 1]
         names = list(ICONS)
         cols, k, pad = 7, 6, 8

@@ -14,8 +14,8 @@ local BRITTLE_PARTS = {
 
 -- fracture a random intact limb; returns true if one snapped
 local function fracture(player)
-    local bd = player:getBodyDamage()
-    local part = bd:getBodyPart(BRITTLE_PARTS[ZombRand(#BRITTLE_PARTS) + 1])
+    local part = nil
+    pcall(function() part = player:getBodyDamage():getBodyPart(BRITTLE_PARTS[ZombRand(#BRITTLE_PARTS) + 1]) end)
     if not part then return false end
 
     local intact = true
@@ -29,6 +29,7 @@ end
 DanTraits_BrittleFracture = fracture
 
 local function onPlayerGetDamage(player, damageType, damage)
+    if not player or player ~= getSpecificPlayer(0) then return end   -- the local player only (zombies come through here too)
     if not hasTrait(player, "brittle") then return end
     if not damage or damage < 2 then return end
     if ZombRand(100) >= DanTraits_RunHooks("brittleChance", FRACTURE_CHANCE, player) then return end   -- Age: likelier in the 40s

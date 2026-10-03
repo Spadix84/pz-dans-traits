@@ -12,7 +12,8 @@
 -- wound is a fifth less likely to take an infection (the infectionHazard hook
 -- of DanTraits_Infection.lua).
 --
--- Mod data: gmGrime (0..1, last minute's), gmFilthy (the notice was given).
+-- Mod data: gmGrime (0..1, last minute's), gmFilthy (the notice was given),
+-- gmHold and gmHoldMin (the console's held reading and how long it has left).
 -- Console: germ <grime 0..1>  (holds the reading for a game hour)
 require "DanTraits"
 

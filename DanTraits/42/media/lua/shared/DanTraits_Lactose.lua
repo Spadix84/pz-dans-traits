@@ -45,11 +45,7 @@ local function lacData(player)
     return d
 end
 
-local function tierOf(flare)
-    local tier = 0
-    for i, threshold in ipairs(LAC_TIER) do if flare >= threshold then tier = i end end
-    return tier
-end
+local function tierOf(flare) return DanTraits_TierOf(flare, LAC_TIER) end
 
 function DanTraits_IsDairy(item)
     return foodTags(item).dairy == true
@@ -90,9 +86,10 @@ DanTraits_AddHook("eat", function(_, player, item, fraction)
     return nil
 end)
 
-DanTraits_AddHook("drink", function(_, player, container, litres)
+-- the drink action names the fluid before the sip (see DanTraits_Diabetes.lua)
+DanTraits_AddHook("drink", function(_, player, container, litres, name)
     if not hasTrait(player, "lactose") or not litres or litres <= 0 then return nil end
-    local name = DanTraits_FluidName and DanTraits_FluidName(container)
+    name = name or DanTraits_FluidName(container)
     if dairyFluid(name) then addDose(player, litres / LAC_LITRES_FULL) end
     return nil
 end)

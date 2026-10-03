@@ -50,7 +50,7 @@ local function jointFactor(player)
     local cold, damp = 0, 0
     pcall(function()
         local climate = getClimateManager()
-        local temp = climate:getAirTemperatureForCharacter(player)
+        local temp = DanTraits_AirTemp(player) or ART_COLD_FROM
         cold = clamp01((ART_COLD_FROM - temp) / (ART_COLD_FROM - ART_COLD_FULL))
         local outside = false
         pcall(function() outside = player:isOutside() end)
@@ -169,7 +169,6 @@ local function restoreWeapon(weapon)
         if pending[i].weapon == weapon then table.remove(pending, i) end
     end
 end
-DanTraits_GripRestore = restoreWeapon
 
 local function weakenSwing(player, weapon)
     pcall(function()
@@ -213,7 +212,7 @@ local function onAttackFinished(player, weapon)
     if weapon then restoreWeapon(weapon) end
 end
 
--- every frame, for anyone: put back weakened weapons whose time is up
+-- every frame (the frame driver: the local, living player): put back weakened weapons whose time is up
 local function restoreDue()
     if #pending == 0 then return end
     local t = now()

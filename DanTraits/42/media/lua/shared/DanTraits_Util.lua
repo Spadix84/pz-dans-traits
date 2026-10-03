@@ -26,6 +26,29 @@
 --                                          millionths so 0.05 works; goes
 --                                          through ZombRand (the queue tests use)
 --   DanTraits_RandRange(lo, hi)            a random number in lo..hi
+--   DanTraits_Round(x, places)             x rounded to that many decimals (default 2)
+--   DanTraits_Over(value, from, full)      0..1 how far value is from `from` to `full`
+--   DanTraits_TierOf(value, tiers)         the highest 1-based index in the ascending
+--                                          list `tiers` whose point value reaches; 0 under
+--                                          the first
+--   DanTraits_IsItem(item, fullType)       item:getFullType() == fullType, false on failure
+--   DanTraits_ItemUses(item)               item:getCurrentUsesFloat(), 0 on failure
+--   DanTraits_FluidName(container)         the container's main fluid, lowercase
+--                                          ("coffee", "milk"), nil when empty or unknown
+--   DanTraits_FluidRatio(container)        that fluid's share of the mix, 1 on failure
+--   DanTraits_AirTemp(player)              the air temperature around the character
+--                                          (the game's two-argument form, else one), or nil
+--   DanTraits_PanicDecay(stats, perTick)   take perTick (scaled by the frame multiplier)
+--                                          off PANIC, not below 0: the frame systems
+--                                          that calm you (drink, diazepam)
+--   DanTraits_ScaleActionTime(classes, tag, applies, factor)
+--                                          wrap getDuration on each class in the list
+--                                          (and ISSplint.new, which sets its own time)
+--                                          to multiply the time by factor when
+--                                          applies(character) is true
+--   DanTraits_HeadPainAtLeast(player, value)
+--                                          raise the head's additional pain to value
+--                                          (never lower it)
 --   DanTraits_PartNames                    short console names -> BodyPartType names
 --   DanTraits_PartOf(player, shortName)    the BodyPart for a short name, or nil
 --   DanTraits_PartNum(part, method)        a numeric BodyPart getter, 0 on failure
@@ -115,6 +138,85 @@ end
 function DanTraits_RandRange(lo, hi)
     if ZombRandFloat then return ZombRandFloat(lo, hi) end
     return lo + math.random() * (hi - lo)
+end
+
+function DanTraits_Round(x, places)
+    local k = 10 ^ (places or 2)
+    return math.floor(x * k + 0.5) / k
+end
+
+function DanTraits_Over(value, from, full)
+    return DanTraits_Clamp01((value - from) / (full - from))
+end
+
+function DanTraits_TierOf(value, tiers)
+    local tier = 0
+    value = tonumber(value) or 0
+    for i, at in ipairs(tiers) do if value >= at then tier = i end end
+    return tier
+end
+
+function DanTraits_IsItem(item, fullType)
+    if not item then return false end
+    local ok, res = pcall(function() return item:getFullType() == fullType end)
+    return ok and res == true
+end
+
+function DanTraits_ItemUses(item)
+    local n = 0
+    pcall(function() n = item:getCurrentUsesFloat() or 0 end)
+    return tonumber(n) or 0
+end
+
+function DanTraits_FluidName(container)
+    local name = nil
+    pcall(function()
+        local fluid = container:getPrimaryFluid()
+        if fluid then name = string.lower(tostring(fluid:getFluidTypeString())) end
+    end)
+    return name
+end
+
+function DanTraits_FluidRatio(container)
+    local ratio = 1
+    pcall(function()
+        local fluid = container:getPrimaryFluid()
+        if fluid then ratio = container:getRatioForFluid(fluid) or 1 end
+    end)
+    return ratio
+end
+
+-- the installed game has getAirTemperatureForCharacter(character, boolean);
+-- older builds took the character alone, so both are tried
+function DanTraits_AirTemp(player)
+    local temp = nil
+    local ok = pcall(function() temp = getClimateManager():getAirTemperatureForCharacter(player, false) end)
+    if not ok or temp == nil then pcall(function() temp = getClimateManager():getAirTemperatureForCharacter(player) end) end
+    return tonumber(temp)
+end
+
+function DanTraits_PanicDecay(stats, perTick)
+    local panic = stats:get(CharacterStat.PANIC) or 0
+    if panic <= 0 or perTick <= 0 then return end
+    local mult = 1
+    pcall(function() mult = GameTime.getInstance():getThirtyFPSMultiplier() or 1 end)
+    stats:set(CharacterStat.PANIC, math.max(0, panic - perTick * mult))
+end
+
+function DanTraits_ScaleActionTime(classes, tag, applies, factor)
+    for _, class in ipairs(classes) do
+        DanTraits_Wrap(class, "getDuration", tag, function(original, self, ...)
+            local t = original(self, ...)
+            if type(t) == "number" and t > 1 and applies(self.character) then t = t * factor end
+            return t
+        end)
+    end
+    -- the splint sets its time in new(), not getDuration()
+    DanTraits_Wrap(ISSplint, "new", tag .. "-splint", function(original, self, character, ...)
+        local o = original(self, character, ...)
+        pcall(function() if o.maxTime and o.maxTime > 1 and applies(character) then o.maxTime = o.maxTime * factor end end)
+        return o
+    end)
 end
 
 DanTraits_PartNames = {
@@ -358,6 +460,12 @@ local function raiseHead(head, value)
     pcall(function()
         if (head:getAdditionalPain() or 0) < value then head:setAdditionalPain(math.min(100, value)) end
     end)
+end
+
+-- a system that writes the head's pain itself (Concussion): never lowers it
+function DanTraits_HeadPainAtLeast(player, value)
+    local head = player and headPart(player)
+    if head and value and value > 0 then raiseHead(head, value) end
 end
 
 function DanTraits_PainFloor(player, d, source, floor, ramp, hold)

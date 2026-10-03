@@ -1,5 +1,4 @@
 -- Project Zomboid Vitality Project: Diabetes.
--- Kept in its own file because DanTraits.lua is at Lua's 200-local limit.
 -- Depends on the helpers DanTraits.lua exports.
 require "DanTraits"
 require "DanTraits_Meds"
@@ -322,7 +321,7 @@ local function updateDiabetesMinute(player, d)
             end
         end
         if low > 0 then
-            if DIA_LOW_END_DRAIN[low] > 0 then stats:set(CharacterStat.ENDURANCE, math.max(0, (stats:get(CharacterStat.ENDURANCE) or 0) - DIA_LOW_END_DRAIN[low])) end
+            if DIA_LOW_END_DRAIN[low] > 0 then statAdd(stats, CharacterStat.ENDURANCE, -DIA_LOW_END_DRAIN[low]) end
             statAdd(stats, CharacterStat.FATIGUE, DIA_LOW_FATIGUE[low])
             statAdd(stats, CharacterStat.PANIC, DIA_LOW_PANIC[low])
             floorUp(stats, CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
@@ -355,22 +354,10 @@ function DanTraits_ExtraFumble(player)
     return diaData(player).diaFumble or 0
 end
 
-function DanTraits_IsInsulin(item)
-    local ok, fullType = pcall(function() return item:getFullType() end)
-    return ok and fullType == INSULIN_ITEM
-end
-function DanTraits_IsMeter(item)
-    local ok, fullType = pcall(function() return item:getFullType() end)
-    return ok and fullType == METER_ITEM
-end
-function DanTraits_IsStrips(item)
-    local ok, fullType = pcall(function() return item:getFullType() end)
-    return ok and fullType == STRIPS_ITEM
-end
-function DanTraits_IsMetformin(item)
-    local ok, fullType = pcall(function() return item:getFullType() end)
-    return ok and fullType == METFORMIN_ITEM
-end
+function DanTraits_IsInsulin(item) return DanTraits_IsItem(item, INSULIN_ITEM) end
+function DanTraits_IsMeter(item) return DanTraits_IsItem(item, METER_ITEM) end
+function DanTraits_IsStrips(item) return DanTraits_IsItem(item, STRIPS_ITEM) end
+function DanTraits_IsMetformin(item) return DanTraits_IsItem(item, METFORMIN_ITEM) end
 
 -- Type 1 starts with a meter, strips and three pens; Type 2 with a meter, strips and metformin.
 -- With the Starting Medication sandbox option off, only the meter and strips.
@@ -412,13 +399,17 @@ local function wrapDrinkAction()
         pcall(function()
             if before > 0 then kcalPerLitre = (self.fluidContainer:getProperties():getCalories() or 0) / before end
         end)
+        -- the fluid is read before the sip: the last one empties the container,
+        -- and an empty container has no fluid to name (the "drink" hook's
+        -- subscribers, Caffeine and Lactose, are handed the name and its share)
+        local name, ratio = DanTraits_FluidName(self.fluidContainer), DanTraits_FluidRatio(self.fluidContainer)
         local result = original(self, ...)
         pcall(function()
             local after = self.fluidContainer:getAmount() or before
             local litres = before - after
             if litres > 0 and perLitre > 0 then DanTraits_DiaOnDrink(self.character, litres * perLitre) end
             if litres > 0 and DanTraits_VitalityOnDrink then DanTraits_VitalityOnDrink(self.character, litres, perLitre, kcalPerLitre) end
-            if litres > 0 then DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, litres) end
+            if litres > 0 then DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, litres, name, ratio) end
         end)
         return result
     end)

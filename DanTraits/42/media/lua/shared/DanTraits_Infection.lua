@@ -24,8 +24,8 @@
 -- raises the body's set point 2 C per unit (Thermoregulator) and feeds the
 -- Sick moodle (Moodle.Update: apparent infection / 100 + SICKNESS).
 --
--- Antibiotics: the game's own pills, one a dose (a box of 12 is a course,
--- a dose every eight hours for four days). Each dose tops up a level in the
+-- Antibiotics: the game's own pills, one a dose (a box holds 12; INF_COURSE
+-- doses, one every eight hours, is a finished course). Each dose tops up a level in the
 -- blood that halves every INF_ABX_HALF hours; at INF_ABX_MIN or more the
 -- infection falls back, under it the infection picks up again. Cleared
 -- before INF_COURSE doses and left there, it has a coin flip to come back,

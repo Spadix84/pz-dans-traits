@@ -125,14 +125,8 @@ end
 local function updateAlcoholFrame(player)
     local level = drunkLevel(player)
     if level <= 0 or not DanTraits_SandboxOn("DrinkReliefEnabled") then return end
-    local stats = player:getStats()
-    local panic = stats:get(CharacterStat.PANIC) or 0
-    if panic <= 0 then return end
-    local asleep = DanTraits_Asleep(player)
-    if asleep then return end
-    local mult = 1
-    pcall(function() mult = GameTime.getInstance():getThirtyFPSMultiplier() or 1 end)
-    stats:set(CharacterStat.PANIC, math.max(0, panic - ALC_PANIC_RATE * (level / 4) * mult))
+    if DanTraits_Asleep(player) then return end
+    DanTraits_PanicDecay(player:getStats(), ALC_PANIC_RATE * (level / 4))
 end
 
 DanTraits_Every("minute", "Alcohol", updateAlcoholMinute, 40)

@@ -162,10 +162,11 @@ local function sleepNeed(player)
 end
 DanTraits_VitalitySleepNeed = sleepNeed
 
-local function pruneTypes(d, hour)
+local function pruneTypes(player, d, hour)
     local count = 0
+    local window = DanTraits_RunHooks("varietyHours", VIT_VARIETY_HOURS, player)   -- Meal Prepper stretches it
     for foodType, at in pairs(d.vitFoodTypes) do
-        if hour - at > DanTraits_RunHooks("varietyHours", VIT_VARIETY_HOURS) then d.vitFoodTypes[foodType] = nil else count = count + 1 end
+        if hour - at > window then d.vitFoodTypes[foodType] = nil else count = count + 1 end
     end
     d.vitVariety = count
     return count
@@ -234,11 +235,8 @@ function DanTraits_VitalityEffect(player)
     return effectOf(d.vitality)
 end
 
-local function tierOf(v)
-    local tier = 0
-    for i, threshold in ipairs(VIT_TIER) do if v >= threshold then tier = i end end
-    return tier   -- 0 Run Down, 1 Sluggish, 2 neutral, 3 Fit, 4 Thriving
-end
+-- 0 Run Down, 1 Sluggish, 2 neutral, 3 Fit, 4 Thriving
+local function tierOf(v) return DanTraits_TierOf(v, VIT_TIER) end
 DanTraits_VitalityTier = tierOf
 
 local function updateMoodle(player, v)
@@ -262,7 +260,6 @@ end
 
 local function updateVitalityMinute(player, d)
     if not vitOn() then
-        d = player:getModData().DanTraits
         if d and d.vitCarryKg and d.vitCarryKg ~= 0 then   -- switched off: give back the kilo
             pcall(function() player:setMaxWeightBase(d.vitCarryBase or (player:getMaxWeightBase() - d.vitCarryKg)) end)
             d.vitCarryKg = 0
@@ -281,7 +278,7 @@ local function updateVitalityMinute(player, d)
 
     -- diet: starving drags it down; variety is read for the combined score
     if hunger > VIT_STARVE_HUNGER then d.vitDiet = clamp01(d.vitDiet - VIT_STARVE_RATE) end
-    local variety = pruneTypes(d, hour)
+    local variety = pruneTypes(player, d, hour)
     local dietEffective = clamp01(d.vitDiet + VIT_VARIETY[math.min(6, variety)])
 
     -- exercise: the fitness system's regularity, or the day's activity up to neutral

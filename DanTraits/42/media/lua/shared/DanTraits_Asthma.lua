@@ -9,10 +9,10 @@ local traitData = DanTraits_Data
 -- Airway irritation (0..1) lives in mod data. It rises with cold air, nearby
 -- corpses, exertion and a wound infection's fever (no mask helps), falls when resting in clean warm air, and drives
 -- four tiers: warning, halved endurance recovery (the enduranceRegen hook of
--- the stat delta pipeline), no recovery plus coughing, and
--- a full attack that drains endurance and health (to a 20% floor) while the
--- player coughs loudly enough to pull zombies. The inhaler item knocks it
--- down by half. Coughs are real world sounds: zombies hear them. They go
+-- the stat delta pipeline) with the odd quiet cough, no recovery and coughing
+-- more, and a full attack that drains endurance and health (to a 20% floor)
+-- while the player coughs loudly enough to pull zombies. The inhaler item
+-- takes ASTHMA_INHALER_RELIEF off it. Coughs are real world sounds: zombies hear them. They go
 -- through the one shared cough (DanTraits_Cough in DanTraits_Util.lua, one gap
 -- of a few minutes across Asthma and Smoker); only an attack's burst forces it.
 -- Smoking makes it worse two ways (Smoker lives in DanTraits_Smoker.lua): each
@@ -71,9 +71,9 @@ local function asthmaMaskLevel(player)
         for _, loc in ipairs({ ItemBodyLocation.MASK_FULL, ItemBodyLocation.MASK_EYES, ItemBodyLocation.MASK }) do
             local item = loc and player:getWornItem(loc)
             if item then
-                local name = tostring(item:getType() or "")
-                local where = tostring(item:getBodyLocation() or "")
-                if name:lower():find("gasmask") or name:lower():find("respirator") or where:find("maskeyes") or where:find("maskfull") then
+                local name = string.lower(tostring(item:getType() or ""))
+                local where = string.lower(tostring(item:getBodyLocation() or ""))
+                if name:find("gasmask") or name:find("respirator") or where:find("maskeyes") or where:find("maskfull") then
                     level = 2
                 elseif level < 1 then
                     level = 1
@@ -154,8 +154,7 @@ local function updateAsthmaMinute(player, d)
     -- (about four hours), running or cold air still keep it going
     local attack = d.asthmaAttack == true
     if not asleep then   -- (a faint ends the exertion and the panic, not the cold or the corpses)
-        local temp = nil
-        pcall(function() temp = getClimateManager():getAirTemperatureForCharacter(player, false) end)
+        local temp = DanTraits_AirTemp(player)
         if temp and temp < ASTHMA_COLD_TEMP_C then
             build = build + ASTHMA_COLD_RATE * envMult
         end
@@ -201,6 +200,9 @@ local function updateAsthmaMinute(player, d)
         notify(player, "UI_DanTraits_AsthmaWake")
         asthmaCough(player, ASTHMA_COUGH_RADIUS_T3)
     end
+    -- a new tier starts its own gap (a tier-2 countdown of 6-10 minutes must not carry into tier 3's 2-4)
+    if d.asthmaCoughTier and tier ~= d.asthmaCoughTier then d.asthmaCoughIn = nil end
+    d.asthmaCoughTier = tier
     if tier == 2 and not asleep then
         d.asthmaCoughIn = (d.asthmaCoughIn or (ASTHMA_COUGH_MIN_T2 + ZombRand(5))) - 1
         if d.asthmaCoughIn <= 0 then
@@ -224,13 +226,9 @@ local function updateAsthmaMinute(player, d)
                 if player and not player:isDead() and d.asthmaAttack then asthmaCough(player, ASTHMA_COUGH_RADIUS_T4, true) end
             end)
         end
-        pcall(function()
-            stats:set(CharacterStat.ENDURANCE, math.max(0, stats:get(CharacterStat.ENDURANCE) - ASTHMA_ATTACK_END_DRAIN))
-        end)
+        DanTraits_StatAdd(stats, CharacterStat.ENDURANCE, -ASTHMA_ATTACK_END_DRAIN)
         -- not being able to breathe is terrifying, and the panic feeds the attack
-        pcall(function()
-            stats:set(CharacterStat.PANIC, math.min(100, (stats:get(CharacterStat.PANIC) or 0) + ASTHMA_ATTACK_PANIC))
-        end)
+        DanTraits_StatAdd(stats, CharacterStat.PANIC, ASTHMA_ATTACK_PANIC)
         pcall(function()
             local bd = player:getBodyDamage()
             if bd:getOverallBodyHealth() > ASTHMA_HEALTH_FLOOR then
@@ -274,10 +272,7 @@ function DanTraits_UseInhaler(player)
     if not hasTrait(player, "asthma") then return false end
     local d = asthmaData(player)
     asthmaSetIrritation(player, d, d.asthma - ASTHMA_INHALER_RELIEF, true)
-    pcall(function()
-        local stats = player:getStats()
-        stats:set(CharacterStat.PANIC, math.min(100, (stats:get(CharacterStat.PANIC) or 0) + ASTHMA_INHALER_PANIC))
-    end)
+    pcall(function() DanTraits_StatAdd(player:getStats(), CharacterStat.PANIC, ASTHMA_INHALER_PANIC) end)
     if d.asthma < ASTHMA_TIER[3] then
         DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief")
     end

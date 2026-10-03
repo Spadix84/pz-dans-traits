@@ -80,7 +80,7 @@ local CC_LIGHT_PAIN    = 10      -- more in bright daylight (moderate and worse)
 local CC_SICK          = 0.3     -- food sickness floor x score (moderate and worse)
 local CC_FATIGUE       = 0.0003  -- tiredness a minute awake x score
 local CC_ENDURANCE     = 0.3     -- endurance recovery x (1 - this x score)
-local CC_DIZZY         = 0.18    -- chance a minute of running of a dizzy fall x score (moderate and worse)
+local CC_DIZZY         = 0.18    -- chance a minute of running or fighting of a dizzy fall x score (moderate and worse)
 local CC_WAKE          = 1       -- light wakes you (1 + this x score) times as easily
 local CC_TIER          = { 0.02, CC_MODERATE, CC_SEVERE }
 -- the headache that comes back
@@ -113,11 +113,7 @@ local function helmeted(player)
     return defense >= CC_HELMET
 end
 
-local function headPart(player)
-    local part = nil
-    pcall(function() part = player:getBodyDamage():getBodyPart(BodyPartType.Head) end)
-    return part
-end
+local function headPart(player) return DanTraits_PartOf(player, "head") end
 
 -- a knock: chance 0..1 that it concusses, and how bad (0..1)
 function DanTraits_KnockHead(player, chance, score)
@@ -177,7 +173,7 @@ local function onConcussionDamage(character, damageType, amount)
     if not player or character ~= player then return end
     amount = tonumber(amount) or 0
     if damageType == "FALLDOWN" or damageType == "CARCRASHDAMAGE" or damageType == "CARHITDAMAGE" then
-        local note = damageType .. " " .. tostring(math.floor(amount * 100 + 0.5) / 100)
+        local note = damageType .. " " .. tostring(DanTraits_Round(amount))
         local kmh = damageType == "CARCRASHDAMAGE" and recentTopSpeed() or nil
         if kmh then
             traitData(player).ccLastImpact = note .. " at " .. tostring(math.floor(kmh + 0.5)) .. " km/h"
@@ -266,10 +262,7 @@ local function updateLate(player, d, asleep)
     local shape = lateShape(late)
     local pain = shape * (CC_LATE_PAIN[1] + CC_LATE_PAIN[2] * (late.s or 0))
     if inBright(player) then pain = pain + CC_LIGHT_PAIN * shape end
-    local head = headPart(player)
-    if head then
-        pcall(function() if head:getAdditionalPain() < pain then head:setAdditionalPain(pain) end end)
-    end
+    DanTraits_HeadPainAtLeast(player, pain)
     return shape * (late.s or 0)
 end
 
@@ -301,12 +294,9 @@ local function updateConcussionMinute(player, d)
     if s <= 0 then return end
 
     -- the headache
-    local head = headPart(player)
     local pain = CC_PAIN[1] + CC_PAIN[2] * s
     if s >= CC_MODERATE and inBright(player) then pain = pain + CC_LIGHT_PAIN end
-    if head then
-        pcall(function() if head:getAdditionalPain() < pain then head:setAdditionalPain(pain) end end)
-    end
+    DanTraits_HeadPainAtLeast(player, pain)
     local stats = player:getStats()
     if s >= CC_MODERATE then
         pcall(function()
@@ -320,9 +310,7 @@ local function updateConcussionMinute(player, d)
             notify(player, "UI_DanTraits_ConcussionDizzy")
         end
     end
-    if not asleep then
-        pcall(function() stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + CC_FATIGUE * s)) end)
-    end
+    if not asleep then DanTraits_StatAdd(stats, CharacterStat.FATIGUE, CC_FATIGUE * s) end
 end
 
 -- light wakes a concussed sleeper more easily

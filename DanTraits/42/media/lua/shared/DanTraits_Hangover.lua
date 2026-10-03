@@ -143,9 +143,9 @@ local function updateHangoverMinute(player, d)
     pcall(function()
         DanTraits_PainFloor(player, d, "hangover", HO_PAIN * s, HO_MOOD_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, HO_MOOD * s, HO_MOOD_RAMP)
-        stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + HO_FATIGUE * s))
-        stats:set(CharacterStat.THIRST, math.min(1, (stats:get(CharacterStat.THIRST) or 0) + HO_THIRST * s))
-        stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + HO_STRESS * s))
+        DanTraits_StatAdd(stats, CharacterStat.FATIGUE, HO_FATIGUE * s)
+        DanTraits_StatAdd(stats, CharacterStat.THIRST, HO_THIRST * s)
+        DanTraits_StatAdd(stats, CharacterStat.STRESS, HO_STRESS * s)
         if d.hoSeverity >= HO_SICK_FROM then
             floorUp(stats, CharacterStat.FOOD_SICKNESS, HO_SICK * s, HO_MOOD_RAMP)
         end

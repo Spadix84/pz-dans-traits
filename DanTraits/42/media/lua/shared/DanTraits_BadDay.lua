@@ -243,7 +243,8 @@ function DanTraits_BadDayPlaceKit(player)
     return containerSpot(cont)
 end
 
--- the game filled the chosen container after the kit went in: put it back
+-- the game filled the chosen container after the kit went in: put it back,
+-- once (then forget the spot, or loot respawn there would restock it forever)
 local function onBadDayFillContainer(roomName, containerType, container)
     if not container then return end
     local player = getSpecificPlayer(0)
@@ -253,6 +254,7 @@ local function onBadDayFillContainer(roomName, containerType, container)
     local here = containerSpot(container)
     if here and here.x == spot.x and here.y == spot.y and here.z == spot.z and here.kind == spot.kind then
         stockKit(container)
+        d.badDayKit = nil
     end
 end
 

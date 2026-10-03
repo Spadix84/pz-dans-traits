@@ -23,6 +23,13 @@ Thanks to everyone who left ideas on r/projectzomboid. This update is built from
 
 [h2]Fixed[/h2]
 [list]
+[*][b]The last sip counts.[/b] Caffeine Dependent and Lactose Intolerant read the drink after each sip, and the sip that empties the mug left nothing to read, so the last of a coffee or a glass of milk never counted. It does now.
+[*][b]Multiple Sclerosis:[/b] a night slept in two halves (Restless Sleeper, or waking and going straight back to bed) refilled the spoons twice and forgot the hours borrowed the day before. One night is one refill now, whatever it was broken into.
+[*][b]Blood loss:[/b] turning the blood system off mid-save left the last tier, the weakness and Fear of Blood's fainting running on stale numbers. Switching it off now stands everything down; switching it back on resumes where it was.
+[*][b]Sunburn:[/b] turning it off mid-save could leave the "skin feels hot" moodle on for good.
+[*][b]A Really Bad Day:[/b] the container the needle and thread were placed in was restocked every time the game refilled it, which with loot respawn on was forever. It is restocked once.
+[*][b]Health panel:[/b] with the mod's wound infection switched off, an infected wound never showed in the panel at any First Aid level (the game's own line was dropped and nothing replaced it). The game's line now stays when the mod's infection is off.
+[*][b]Asthma:[/b] the cough countdown carried over from one tier to the next, so a bad attack could wait the mild tier's six to ten minutes for its first cough instead of two to four.
 [*][b]Caffeine Dependent:[/b] a mug of coffee, tea or cocoa now counts. The game makes these as food items with the coffee, tea bag or cocoa as an ingredient, and the mod was only looking at the Coffee fluid, so a brewed mug never ended the withdrawal. A spoon of coffee in a mug is a full dose; a tea bag is a small one; a can of cola is a third of a coffee, so it takes about three to catch up.
 [/list]
 

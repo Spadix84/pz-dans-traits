@@ -12,7 +12,6 @@ Files: DanTraits_Telemetry.json (game -> here), DanTraits_Commands.txt (here -> 
 import argparse
 import json
 import os
-import sys
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer

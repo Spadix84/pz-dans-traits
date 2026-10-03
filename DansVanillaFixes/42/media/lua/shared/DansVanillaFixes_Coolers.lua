@@ -99,9 +99,9 @@ function C.squareOf(item)
     if not c then return nil end
     local who = c:getCharacter()
     if who then return who:getCurrentSquare(), who:getVehicle() end
-    local part = c:getVehiclePart()
-    if part and part:getVehicle() then
-        local car = part:getVehicle()
+    local vehiclePart = c:getVehiclePart()
+    if vehiclePart and vehiclePart:getVehicle() then
+        local car = vehiclePart:getVehicle()
         return car:getSquare(), car
     end
     local parent = c:getParent()

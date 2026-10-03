@@ -135,37 +135,20 @@ local function updateCaffeineMinute(player, d)
         local stats = player:getStats()
         DanTraits_PainFloor(player, d, "caffeine", CAF_PAIN * w, CAF_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, CAF_MOOD * w, CAF_RAMP)
-        stats:set(CharacterStat.FATIGUE, math.min(1, (stats:get(CharacterStat.FATIGUE) or 0) + CAF_FATIGUE * w))
-        stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + CAF_STRESS * w))
+        DanTraits_StatAdd(stats, CharacterStat.FATIGUE, CAF_FATIGUE * w)
+        DanTraits_StatAdd(stats, CharacterStat.STRESS, CAF_STRESS * w)
     end)
 end
 
 -- intake -------------------------------------------------------------------
-local function fluidName(container)
-    local name = nil
-    pcall(function()
-        local fluid = container:getPrimaryFluid()
-        if fluid then name = string.lower(tostring(fluid:getFluidTypeString())) end
-    end)
-    return name
-end
-DanTraits_FluidName = fluidName   -- the drink's fluid, lowercase ("coffee", "milk"); Lactose reads it
-
-local function fluidRatio(container)
-    local ratio = 1
-    pcall(function()
-        local fluid = container:getPrimaryFluid()
-        if fluid then ratio = container:getRatioForFluid(fluid) or 1 end
-    end)
-    return ratio
-end
-
-DanTraits_AddHook("drink", function(_, player, container, litres)
+-- the drink action (DanTraits_Diabetes.lua) names the fluid before the sip;
+-- a caller that does not is asked the container (empty after the last sip)
+DanTraits_AddHook("drink", function(_, player, container, litres, name, ratio)
     if not container or not litres or litres <= 0 then return nil end
-    local name = fluidName(container)
+    name = name or DanTraits_FluidName(container)
     local perLitre = name and CAF_FLUID[name]
     if not perLitre then return nil end
-    dose(player, perLitre * litres * fluidRatio(container), name)
+    dose(player, perLitre * litres * (ratio or DanTraits_FluidRatio(container)), name)
     return nil
 end)
 

@@ -161,7 +161,7 @@ local function install()
 end
 
 -- Report --------------------------------------------------------------------------
-local function sumWindow(minutes, now, cur)
+local function sumWindow(minutes, now)
     local src, start, startMinute = {}, nil, nil
     for m, b in pairs(A.buckets) do
         if m > now - minutes then
@@ -197,7 +197,7 @@ function DanTraits_AttribReport(player)
     local now = gameMinute()
     local windows = {}
     for _, minutes in ipairs(WINDOWS) do
-        local src, start, startMinute = sumWindow(minutes, now, current)
+        local src, start, startMinute = sumWindow(minutes, now)
         local w = toNamed(src, start, current)
         w.name = minutes .. " game min"
         w.span = startMinute and (now - startMinute + 1) or 0
