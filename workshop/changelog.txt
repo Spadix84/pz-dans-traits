@@ -1,41 +1,39 @@
-[h1]Update: suggestions from the Reddit thread[/h1]
-Thanks to everyone who left ideas on r/projectzomboid. This update is built from them.
+[h1]1.1.0: Multiple Sclerosis, medication, and the Reddit round[/h1]
+Thanks to everyone who left ideas on r/projectzomboid. Safe to update mid-save. Full detail in CHANGELOG.md on GitHub: https://github.com/Spadix84/pz-dans-traits
 
 [h2]New[/h2]
 [list]
-[*][b]Sumatriptan[/b] (new item, rare). The migraine pill. Taken during the aura, the attack that follows is half as bad. Taken during an attack, it's over within two hours, with the pain and nausea halved. Works once per attack. The day after, you're heavy-limbed and a little clumsy. Found where other prescriptions are, but rarer.
-[*][b]Personal migraine triggers.[/b] Each character has three triggers that hit twice as hard; the rest count for half. You aren't told which: once a trigger has brought on a couple of attacks, your character works it out and tells you.
-[*][b]New migraine triggers:[/b] heat (hot weather or overheating), the smell of corpses close by, and a storm on the way.
-[*][b]Stitching is a First Aid roll.[/b] At low First Aid, stitches can come out rough: they heal slower, tear more easily, ache, and let infection in until they're sound. A suture needle or needle holder helps, and so does Steady Hands. At First Aid 3 or higher you can tell a rough job, and the health panel shows it. Take the stitches out and try again.
-[*][b]Spoon theory for Multiple Sclerosis.[/b] Your energy is now a budget. You wake with a day's spoons, set by how well you slept (the night the mod already scores: hours, waking, light, fever), and everything you do spends them by effort, faster in the heat or a flare. Half gone is a warning; three left and your legs stiffen and stamina slows; none left is the wall: heavy tiredness, legs like lead, a weapon that slips, and every hour you push on is borrowed from tomorrow. Sitting still gives a little back, a nap more, a coffee hides the wall for an hour. You are told the count each morning. Amantadine now adds two spoons to every morning instead of thinning the old fatigue drip. A sandbox option sets the count (12) or turns the budget off. MS also now warms up a tenth faster than anyone else, and discomfort (the Uncomfortable moodle) wears it down: extra stress, and spoons spent faster.
-[*][b]The headache after a concussion.[/b] A concussion can leave a headache that comes back a day or two later, often after the concussion itself has cleared, and it's worse than the knock was. Sleep gets you through it faster; daylight makes it worse.
+[*][b]Multiple Sclerosis (-15).[/b] Heat is the enemy: warm tires you, hot stiffens and hurts the hands and slips the weapon, overheated can make the hands give out. Flares about once a month. Three 1993 pills: prednisone shortens a flare, baclofen eases the stiffness, amantadine adds energy. Starts at -1 Fitness and -1 Strength; not with Athletic or Strong.
+[*][b]Spoons.[/b] An MS character's energy is a budget: a day's spoons after a good night, fewer after a bad one. Everything spends them by effort, faster in the heat or a flare. Run out and you hit the wall; push on and you borrow from tomorrow. Rest gives a little back, a book costs next to nothing, a coffee hides the wall for an hour. Sandbox option [i]MS Spoons a Day[/i] (12; 0 turns it off).
+[*][b]Shared medication system.[/b] Every pill in the mod and vanilla's now builds up, wears off (you're told when), has side effects now and then (sandbox [i]Medication Side Effect Chance[/i]), and can be overdone. [b]Diazepam[/b] (new) takes the panic drop that beta blockers used to give. 30-pill bottles. Sandbox [i]Starting Medication[/i]: start with your trait's pills or find your own.
+[*][b]Pill Caddy[/b] (new, rare): a belt-worn organiser that holds medication only.
+[*][b]Sumatriptan[/b] (new, rare): the migraine pill. In the aura, the attack is half as bad; in the attack, it's over within two hours. Once per attack; the day after you're heavy and a little clumsy.
+[*][b]Personal migraine triggers[/b] (three hit twice as hard, the rest half; your character works out which) and new triggers: heat, corpses nearby, a storm coming.
+[*][b]Stitching is a First Aid roll.[/b] Rough stitches heal slower, tear easier, ache and let infection in. A suture needle or Steady Hands helps; from First Aid 3 you can tell, and the health panel shows it.
+[*][b]The headache after a concussion[/b], a day or two later and worse than the knock. Sleep helps, daylight hurts.
 [/list]
 
 [h2]Changed[/h2]
 [list]
-[*][b]Arthritis:[/b] a slipping grip now makes a weak swing instead of throwing your weapon. Only in a bad flare (cold and damp) can a slip still send the weapon to the ground, and a new sandbox option, [i]Arthritis Drops Weapons[/i], turns that off.
-[*][b]Migraines[/b] now cost -8 (was -6), since attacks come more often. Ordinary painkillers barely touch an attack now; sumatriptan is what works. New Migraines characters start with a nearly empty pack (two tablets), unless Starting Medication is off.
-[*][b]Smoker:[/b] a new sandbox option, [i]Nicotine Craving Moodle[/i], hides the craving moodle and its notice, so you read the craving from irritability and stress instead.
-[*][b]Vitality:[/b] Thriving now gives 1.5x Fitness and Strength experience (was 2x).
-[*][b]Multiple Sclerosis:[/b] now starts you at -1 Fitness and -1 Strength, and can't be taken with Athletic or Strong.
-[*][b]Multiple Sclerosis:[/b] reading (and writing) now costs a fifth of what the minute would otherwise, after the heat, a flare and hunger have had their say, and counts as rest however heavy the bag beside you. An afternoon with a skill book was eating half the day's spoons.
-[*][b]Caffeine Dependent:[/b] a small dose now does something. A bar of chocolate or a can of cola was never enough to end a craving (it still isn't), but it used to be ignored outright. Now it puts the craving off: three hours for a bar, six for a can, and if that takes you back under the half-day mark the craving lifts until the clock catches up again. Coffee, tea and caffeine pills still end it outright. The trait and moodle text now say which is which.
+[*][b]Arthritis:[/b] a slipping grip makes a weak swing instead of throwing the weapon; only a bad flare can still drop it, and sandbox [i]Arthritis Drops Weapons[/i] turns that off.
+[*][b]Migraines[/b] cost -8 (was -6); painkillers barely touch an attack now, sumatriptan is what works.
+[*][b]Smoker:[/b] sandbox [i]Nicotine Craving Moodle[/i] can hide the craving moodle.
+[*][b]Caffeine Dependent:[/b] a brewed mug of coffee, tea or cocoa now counts (it never did); chocolate and cola put the craving off instead of being ignored.
+[*][b]Alcoholic:[/b] tipsy ends the craving at a normal habit.
+[*][b]Vitality:[/b] Thriving gives 1.5x Fitness and Strength XP (was 2x).
 [/list]
 
 [h2]Fixed[/h2]
 [list]
-[*][b]The last sip counts.[/b] Caffeine Dependent and Lactose Intolerant read the drink after each sip, and the sip that empties the mug left nothing to read, so the last of a coffee or a glass of milk never counted. It does now.
-[*][b]Multiple Sclerosis:[/b] a night slept in two halves (Restless Sleeper, or waking and going straight back to bed) refilled the spoons twice and forgot the hours borrowed the day before. One night is one refill now, whatever it was broken into.
-[*][b]Blood loss:[/b] turning the blood system off mid-save left the last tier, the weakness and Fear of Blood's fainting running on stale numbers. Switching it off now stands everything down; switching it back on resumes where it was.
-[*][b]Sunburn:[/b] turning it off mid-save could leave the "skin feels hot" moodle on for good.
-[*][b]A Really Bad Day:[/b] the container the needle and thread were placed in was restocked every time the game refilled it, which with loot respawn on was forever. It is restocked once.
-[*][b]Health panel:[/b] with the mod's wound infection switched off, an infected wound never showed in the panel at any First Aid level (the game's own line was dropped and nothing replaced it). The game's line now stays when the mod's infection is off.
-[*][b]Asthma:[/b] the cough countdown carried over from one tier to the next, so a bad attack could wait the mild tier's six to ten minutes for its first cough instead of two to four.
-[*][b]Caffeine Dependent:[/b] a mug of coffee, tea or cocoa now counts. The game makes these as food items with the coffee, tea bag or cocoa as an ingredient, and the mod was only looking at the Coffee fluid, so a brewed mug never ended the withdrawal. A spoon of coffee in a mug is a full dose; a tea bag is a small one; a can of cola is a third of a coffee, so it takes about three to catch up.
+[*]The sip that empties a mug or glass now counts for Caffeine Dependent and Lactose Intolerant.
+[*]A night slept in two halves no longer refills the spoons twice.
+[*]Turning Blood Loss or Sunburn off mid-save now stands them down instead of leaving stale effects on.
+[*]A Really Bad Day's needle and thread were restocked forever with loot respawn on.
+[*]With the mod's infection off, infected wounds never showed in the health panel.
+[*]Asthma's cough gap carried from one tier to the next.
 [/list]
 
-[h2]Notes[/h2]
+[h2]Also out[/h2]
 [list]
-[*]Safe to update mid-save. Existing Migraines characters get their personal triggers the first time the mod runs.
-[*]Full details for every system are in the README on GitHub: https://github.com/Spadix84/pz-dans-traits
+[*][b]Dan's Vanilla Fixes[/b] (separate mod): cold packs that charge in a fridge or freezer and keep a cooler's food cold, plus the Item Rarity UI patch for modded items.
 [/list]
