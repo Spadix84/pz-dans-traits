@@ -9,7 +9,10 @@
 -- wall for the day: heavy tiredness and slow stamina (the trait adds its own,
 -- MS stiffens the legs). Each hour awake at the wall is borrowed from
 -- tomorrow. True rest (sitting, reading, lying down: idle, no heavy load, not
--- hungry, not driving) gives a little back, up to two a day.
+-- hungry, not driving) gives a little back, up to two a day. Reading or
+-- writing costs a fifth of what the minute would otherwise (SP_READ_COST,
+-- applied after the heat, a flare and hunger have had their say) and is rest
+-- however heavy the bag beside you.
 --
 -- Sleep is the refill, and the night system already scores it. When the
 -- character gets up, a provisional refill is set from what is known then:
@@ -55,6 +58,8 @@ local SP_BASE_MIN     = 1 / 160  -- a minute awake costs this (an idle 16-hour d
 local SP_MET_REST     = 1.5      -- the metabolic rate at rest...
 local SP_MET_MIN      = 0.0075   -- ...and the cost per MET-minute above it (sprinting: about 3 an hour)
 local SP_REST_MET     = 1.8      -- under this you are resting
+local SP_READ_COST    = 0.2      -- reading or writing (the game's reading flag) costs this share of the minute,
+                                 -- whatever the heat, a flare or hunger made of it: pages are not a day's work
 local SP_CARRY_HEAVY  = 0.8      -- carrying more than this share of capacity is not rest
 local SP_HUNGRY       = 0.25     -- hunger above this (the Hungry moodle) is not rest...
 local SP_HUNGRY_COST  = 1.2      -- ...and costs x this
@@ -166,8 +171,17 @@ DanTraits_AddHook("nightScored", function(_, player, d, quality, hours, wakes, i
     return nil
 end)
 
-local function resting(player, met, hungry)
+-- the game's flag while a book is read or something is written (ISReadABook, ISWriteSomething)
+local function reading(player)
+    local r = false
+    pcall(function() r = player:isReading() == true end)
+    return r
+end
+
+-- sitting with a book counts as rest whatever is in the bag beside you
+local function resting(player, met, hungry, read)
     if hungry or met >= SP_REST_MET then return false end
+    if read then return true end
     local heavy, inVehicle = false, false
     pcall(function() inVehicle = player:getVehicle() ~= nil end)
     pcall(function() heavy = (player:getInventory():getCapacityWeight() or 0) > SP_CARRY_HEAVY * (player:getMaxWeight() or 1) end)
@@ -229,8 +243,10 @@ local function updateSpoonsMinute(player, d)
     local hungry = fraction(stats, CharacterStat.HUNGER) > SP_HUNGRY
     if hungry then cost = cost * SP_HUNGRY_COST end
     cost = math.max(0, tonumber(DanTraits_RunHooks("spoonSpend", cost, player, d)) or cost)
+    local read = reading(player)
+    if read then cost = cost * SP_READ_COST end
     local back = 0
-    if resting(player, met, hungry) and (d.spRest or 0) < SP_REST_MAX then
+    if resting(player, met, hungry, read) and (d.spRest or 0) < SP_REST_MAX then
         back = math.min(SP_REST_MIN, SP_REST_MAX - (d.spRest or 0))
         d.spPool = math.min(cap, d.spPool + back)
         d.spRest = (d.spRest or 0) + back

@@ -18,6 +18,7 @@ Thanks to everyone who left ideas on r/projectzomboid. This update is built from
 [*][b]Smoker:[/b] a new sandbox option, [i]Nicotine Craving Moodle[/i], hides the craving moodle and its notice, so you read the craving from irritability and stress instead.
 [*][b]Vitality:[/b] Thriving now gives 1.5x Fitness and Strength experience (was 2x).
 [*][b]Multiple Sclerosis:[/b] now starts you at -1 Fitness and -1 Strength, and can't be taken with Athletic or Strong.
+[*][b]Multiple Sclerosis:[/b] reading (and writing) now costs a fifth of what the minute would otherwise, after the heat, a flare and hunger have had their say, and counts as rest however heavy the bag beside you. An afternoon with a skill book was eating half the day's spoons.
 [*][b]Caffeine Dependent:[/b] a small dose now does something. A bar of chocolate or a can of cola was never enough to end a craving (it still isn't), but it used to be ignored outright. Now it puts the craving off: three hours for a bar, six for a can, and if that takes you back under the half-day mark the craving lifts until the clock catches up again. Coffee, tea and caffeine pills still end it outright. The trait and moodle text now say which is which.
 [/list]
 
