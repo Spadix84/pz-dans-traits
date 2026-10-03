@@ -31,6 +31,7 @@ Thanks to everyone who left ideas on r/projectzomboid. Safe to update mid-save. 
 [*]A Really Bad Day's needle and thread were restocked forever with loot respawn on.
 [*]With the mod's infection off, infected wounds never showed in the health panel.
 [*]Asthma's cough gap carried from one tier to the next.
+[*]Hemophilia: a soaked bandage bled faster than no bandage at all. A bandage is never worse than bare skin now.
 [/list]
 
 [h2]Also out[/h2]

@@ -155,6 +155,9 @@ the first time the mod runs.
 - Health panel: with the mod's wound infection switched off, an infected wound never showed
   at any First Aid level.
 - Asthma: the cough countdown carried from one tier to the next.
+- Hemophilia: a bandage's four-fold leak applied to soaked bandages and ones over a shard
+  too, so a soaked bandage bled twice the normal rate, worse than no bandage at all (x1.5).
+  A bandage is now never worse than bare skin; a clean one is unchanged at two fifths.
 - Epilepsy and Heart Condition ran their medication notices for every character.
 - Sandbox options: the Developer Tools option is gone; the dashboard's telemetry and
   command channel run in debug mode only.
@@ -167,6 +170,7 @@ the first time the mod runs.
   `DanTraits_HeadPainAtLeast`; the trait files use them instead of their own copies.
 - The `drink` hook now receives the fluid's name and share as extra arguments, read before
   the sip.
+- The `bloodBleed` hook now receives the part's unbandaged rate as a fifth argument.
 - New hooks: `nightScored` (Vitality has scored the night), `spoonCap`, `spoonSpend`,
   `spoonRefill` (the spoon budget), `gripSlip` (Arthritis), `stitchPoor` (wound care),
   `prePill` from the mod's own pill action as well as vanilla's.

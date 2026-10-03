@@ -4,7 +4,8 @@
 -- held up every minute), and any open wound that is not bandaged or stitched
 -- starts bleeding again. With the blood system on (DanTraits_Blood.lua) the
 -- blood goes faster: half as fast again open, and a bandage only slows it to
--- two fifths instead of a tenth, so only stitches really stop it. With the
+-- two fifths instead of a tenth (a soaked one, or one over a shard, no worse
+-- than bare skin), so only stitches really stop it. With the
 -- blood system off, every unbandaged bleed costs extra health instead. A
 -- scratch is a bandage or a slow death; a bite is what it always was.
 require "DanTraits"
@@ -20,9 +21,15 @@ local HEMO_BLOOD_BANDAGED = 4     -- blood system: x blood lost under a bandage 
 
 local function bloodOn() return DanTraits_BloodActive and DanTraits_BloodActive() end
 
-DanTraits_AddHook("bloodBleed", function(rate, player, _, bandaged)
+-- A bandage leaks four times as much, but never more than no bandage at all:
+-- a soaked one (x0.5 normally) or one over a shard (x0.35) would otherwise
+-- come out at x2 and x1.4, so change a soaked bandage or take it off.
+DanTraits_AddHook("bloodBleed", function(rate, player, _, bandaged, open)
     if not hasTrait(player, "hemophilia") then return nil end
-    return rate * (bandaged and HEMO_BLOOD_BANDAGED or HEMO_BLOOD_OPEN)
+    if not bandaged then return rate * HEMO_BLOOD_OPEN end
+    local leaked = rate * HEMO_BLOOD_BANDAGED
+    if open then leaked = math.min(leaked, open * HEMO_BLOOD_OPEN) end
+    return leaked
 end)
 
 local partIs = DanTraits_PartIs

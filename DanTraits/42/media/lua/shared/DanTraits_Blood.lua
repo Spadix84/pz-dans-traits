@@ -125,6 +125,8 @@ end
 local partIs = DanTraits_PartIs
 
 -- volume lost per minute from one part, before hooks; nil when not bleeding.
+-- Also returns the part's name, whether it is bandaged, and the rate it
+-- would bleed at with no bandage.
 -- Read from the bleeding time, not the flag: a bandage clears the part's
 -- bleeding, cut, deep wound and stitched flags and keeps the times
 -- (BodyPart.setBandaged; taking it off sets the flags again from the
@@ -135,7 +137,8 @@ local function partRate(part)
     if t <= 0 then return nil end
     local name = ""
     pcall(function() name = tostring(part:getType()) end)
-    local rate = BL_RATE * t / 10 * (BL_PART[name] or 1)
+    local open = BL_RATE * t / 10 * (BL_PART[name] or 1)
+    local rate = open
     local bandaged = partIs(part, "bandaged")
     if bandaged then
         local lodged = partIs(part, "haveGlass") or partIs(part, "haveBullet")
@@ -143,7 +146,7 @@ local function partRate(part)
         pcall(function() soaked = part:getBandageLife() <= 0 end)
         rate = rate * ((soaked and BL_SOAKED) or (lodged and BL_LODGED) or BL_BANDAGED)
     end
-    return rate, name, bandaged
+    return rate, name, bandaged, open
 end
 DanTraits_BloodPartRate = partRate
 
@@ -156,9 +159,9 @@ local function bleedMinute(player, d)
         local parts = player:getBodyDamage():getBodyParts()
         for i = 0, parts:size() - 1 do
             local part = parts:get(i)
-            local rate, name, bandaged = partRate(part)
+            local rate, name, bandaged, open = partRate(part)
             if rate then
-                rate = DanTraits_RunHooks("bloodBleed", rate, player, part, bandaged)
+                rate = DanTraits_RunHooks("bloodBleed", rate, player, part, bandaged, open)
                 total = total + rate
                 sources[#sources + 1] = name .. " " .. tostring(round3(rate * 100)) .. "%" .. (bandaged and " (bandaged)" or "")
             end

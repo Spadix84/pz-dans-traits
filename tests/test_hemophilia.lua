@@ -63,4 +63,15 @@ local x = part({ bleeding = true, time = 1.0 })
 local none = newPlayer({ traits = {}, parts = { x } }); H.current = none
 minute(); assert(x._time == 1.0 and none._health == 100, "no trait: untouched")
 
+-- 6. the blood hook: open x1.5, a clean bandage x4 (a tenth becomes two fifths),
+--    and a soaked bandage or one over a shard never worse than no bandage
+local function bleed(pl, rate, bandaged, open) return DanTraits_RunHooks("bloodBleed", rate, pl, a, bandaged, open) end
+local function near(v, want, msg) assert(math.abs(v - want) < 1e-12, msg .. ": got " .. v .. ", want " .. want) end
+near(bleed(p, 0.01, false, 0.01), 0.015, "open: x1.5")
+near(bleed(p, 0.001, true, 0.01), 0.004, "clean bandage: two fifths")
+near(bleed(p, 0.005, true, 0.01), 0.015, "soaked bandage: capped at the open rate, not x2")
+near(bleed(p, 0.0035, true, 0.01), 0.014, "bandage over a shard: x1.4, under the cap")
+near(bleed(p, 0.005, true, nil), 0.02, "no open rate given: x4 as before")
+near(bleed(none, 0.005, true, 0.01), 0.005, "no trait: as is")
+
 H.pass()
