@@ -22,8 +22,11 @@
 --     dairy       milk, cheese, butter, cream, yogurt, ice cream by name, or a
 --                 dairy ingredient in a dish (Lactose Intolerance); fluids are
 --                 not items here: Lactose reads the fluid's name
---     caffeine    caffeine in one whole item (0 for none); fluids and pills are
---                 not items here: Caffeine keeps its per-litre and pill tables
+--     caffeine    caffeine in one whole item (0 for none): by name, or for a
+--                 hot drink (the game's mug of coffee, tea or cocoa is a food
+--                 item with the jar, bag or tin as an ingredient, not a fluid)
+--                 the sum of what went in; fluids and pills are not items
+--                 here: Caffeine keeps its per-litre and pill tables
 --     canned      "canned" or "dried" in the name
 --     rotten burnt packaged fresh cooked   the item's own state, read when asked
 --     ingredients how many things went into an evolved dish
@@ -145,6 +148,15 @@ local FOOD_PREFIX = {
     chocolate = { caffeine = 15 },
 }
 
+-- caffeine per addition of an ingredient to a hot drink (the HotDrink evolved
+-- recipe: a mug of water plus coffee, a tea bag or cocoa). Each addition takes
+-- 5 hunger of the ingredient, so it is that share of the whole item's caffeine
+-- above: a sixth of a jar of coffee (600), one whole tea bag (40), a sixth of
+-- a tin of cocoa (30). The game lists the ingredients as "Base.Coffee2".
+local DISH_CAFFEINE = {
+    coffee2 = 100, teabag2 = 40, cocoapowder = 5,
+}
+
 -- the game's food type, whole lowercase name
 local FOOD_TYPES = {
     meat = { meat = true, iron = 1 }, beef = { meat = true, iron = 1 }, poultry = { meat = true, iron = 1 },
@@ -223,6 +235,22 @@ local function ingredientHas(item, tag)
     return found
 end
 
+-- the caffeine of what went into a hot drink (0 for a plain dish)
+local function ingredientCaffeine(item)
+    local extras
+    pcall(function() if item:haveExtraItems() then extras = item:getExtraItems() end end)
+    if not extras then return 0 end
+    local total = 0
+    pcall(function()
+        for i = 0, extras:size() - 1 do
+            local full = string.lower(tostring(extras:get(i)))
+            local short = full:match("%.(.*)$") or full
+            total = total + (DISH_CAFFEINE[short] or 0)
+        end
+    end)
+    return total
+end
+
 -- the food-type tags of the item, asked of the game once per remembered type
 local function typeTags(item, entry)
     if not entry.ft then
@@ -241,6 +269,10 @@ local LAZY = {
     iron = function(item, entry)
         if entry.tags.iron > 0 then return entry.tags.iron end
         return typeTags(item, entry).iron or 0
+    end,
+    caffeine = function(item, entry)
+        if entry.tags.caffeine > 0 then return entry.tags.caffeine end
+        return ingredientCaffeine(item)
     end,
     egg = function(item, entry) return entry.tags.egg or typeTags(item, entry).egg == true end,
     greens = function(item, entry) return entry.tags.greens or typeTags(item, entry).greens == true end,
@@ -269,7 +301,7 @@ function DanTraits_FoodTags(item)
     end
     local st = entry.tags
     return setmetatable({
-        junk = st.junk, junkSafe = st.junkSafe, fastCarb = st.fastCarb, caffeine = st.caffeine, canned = st.canned,
+        junk = st.junk, junkSafe = st.junkSafe, fastCarb = st.fastCarb, canned = st.canned,
     }, { __index = function(t, k)
         local get = LAZY[k]
         if not get then return nil end

@@ -15,7 +15,7 @@
 -- effect, and a missed dose dents it instead of dropping you off a cliff.
 -- A character who starts with the trait starts built up (DanTraits_MedStart).
 --
--- Rescue drugs (diazepam) and course drugs (prednisone, taken through an MS
+-- Rescue drugs (diazepam, sumatriptan) and course drugs (prednisone, taken through an MS
 -- flare) work at once: the effect is 1 while covered.
 -- Regimen drugs keep their model in their trait file and lend it to this one
 -- through state() (antidepressants: Depression's two-week streak). Supplements
@@ -138,6 +138,13 @@ DanTraits_Drugs = {
         side = { sick = 30 }, sideH = 2,
         overH = 2,   -- the overdose lasts at least this long after the level falls back
         over = { sick = 50 },
+    },
+    -- Migraines (DanTraits_Migraine.lua reads the cover and runs the day after)
+    sumatriptan = {
+        items = { "sumatriptan" }, treats = { "migraine" }, kind = "rescue",
+        halfH = 2, onAt = 0.5, overAt = 2.5,   -- three close together
+        overH = 4,   -- the overdose lasts at least this long after the level falls back
+        over = { stress = 0.002, heart = true },   -- chest tightness
     },
     painkillers = {
         items = { "pills" }, treats = { "pain" }, kind = "rescue",
@@ -485,6 +492,7 @@ end
 local SPAWN_TYPES = {
     ["DanTraits.Anticonvulsants"] = true, ["DanTraits.Metformin"] = true, ["DanTraits.IronPills"] = true,
     ["DanTraits.Diazepam"] = true, ["DanTraits.NicotineGum"] = true, ["DanTraits.Inhaler"] = true,
+    ["DanTraits.Sumatriptan"] = true,
 }
 
 function DanTraits_MedRandomFill(item)

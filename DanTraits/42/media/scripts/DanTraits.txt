@@ -166,7 +166,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:migraine,
-        Cost = -6,
+        Cost = -8,
         UIName = UI_trait_DanMigraine,
         UIDescription = UI_trait_DanMigrainedesc,
     }
@@ -474,7 +474,8 @@ module DanTraits {
 
     /* Multiple Sclerosis: heat makes the hands stiff, clumsy and painful
        and no pill helps with that; flares about once a month; prednisone,
-       baclofen and amantadine (new items). DanTraits_MS.lua. */
+       baclofen and amantadine (new items). -1 Fitness and -1 Strength,
+       and not with Athletic or Strong. DanTraits_MS.lua. */
     character_trait_definition DanTraits:ms
     {
         IsProfessionTrait = false,
@@ -483,6 +484,8 @@ module DanTraits {
         Cost = -15,
         UIName = UI_trait_DanMS,
         UIDescription = UI_trait_DanMSdesc,
+        XPBoosts = Fitness=-1;Strength=-1,
+        MutuallyExclusiveTraits = base:athletic;base:strong,
     }
 
     /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
@@ -631,6 +634,28 @@ module DanTraits {
         Medical = true,
         Tooltip = Tooltip_DanTraits_Diazepam,
         UseDelta = 0.05,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+        Tags = base:consumable,
+    }
+
+    /* Sumatriptan, the migraine pill (1990s: new and hard to come by): 6
+       tablets. In the system during an aura it halves the attack to come;
+       during an attack it ends it within two hours. A day of heaviness and
+       clumsiness after, for anyone (media/lua/shared/DanTraits_Migraine.lua,
+       on the shared medication list). Swallowed with the game's own Take
+       Pills option, like diazepam. Rarer than the other prescriptions. */
+    item Sumatriptan
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Sumatriptan,
+        Weight = 0.1,
+        Icon = Sumatriptan,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Sumatriptan,
+        UseDelta = 0.1666,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,

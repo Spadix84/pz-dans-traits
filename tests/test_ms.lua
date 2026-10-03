@@ -9,8 +9,8 @@ H.events()
 H.stubs()
 -- the game's drink-from-a-tap action, as far as MS's wrap needs it
 ISTakeWaterAction = { transferFluid = function() end }
-H.load("Arthritis", "Meds", "MS")
-H.expectEvery("minute", "MS")
+H.load("Arthritis", "Meds", "Spoons", "MS")
+H.expectEvery("minute", "MS"); H.expectEvery("minute", "Spoons")
 
 local near = H.near
 
@@ -33,16 +33,16 @@ near(DanTraits_MSHeatTarget(p, d), 0, 1e-9, "cool: nothing")
 H.climate.temp = 29; near(DanTraits_MSHeatTarget(p, d), 0.35, 1e-9, "29 C: 0.35")
 H.climate.temp = 34; near(DanTraits_MSHeatTarget(p, d), 0.7, 1e-9, "34 C: 0.7")
 p._st.wetness = 100; near(DanTraits_MSHeatTarget(p, d), 0.28, 1e-9, "soaked: 0.7 x 0.4"); p._st.wetness = 0
-H.climate.temp = 20; p._st.temperature = 37.8; near(DanTraits_MSHeatTarget(p, d), 0.5, 1e-9, "body 37.8: 0.5")
+H.climate.temp = 20; p._st.temperature = 37.8; near(DanTraits_MSHeatTarget(p, d), (37.88 - 37.2) / 1.2, 1e-9, "body 37.8 counts as 37.88 (the rise over 37 x1.1): 0.57")
 p._st.temperature = 39; near(DanTraits_MSHeatTarget(p, d), 1, 1e-9, "body 39: full")
 p._st.temperature = 0.5; near(DanTraits_MSHeatTarget(p, d), 0, 1e-9, "a nonsense body reading is ignored")
 H.climate.temp = 29; d.msFlareH = 10; near(DanTraits_MSHeatTarget(p, d), 0.525, 1e-9, "flare x1.5"); d.msFlareH = nil
 
--- 2. the lag: a thirtieth a minute up, a twentieth down, twice as fast wet; notices per tier
+-- 2. the lag: a thirtieth a minute up x1.1 (MS warms up faster), a twentieth down, twice as fast wet; notices per tier
 H.climate.temp = 40; H.clearHalo()
-H.mins(9); near(d.msHeat, 0.3, 1e-9, "nine minutes up: 0.3")
+H.mins(9); near(d.msHeat, 0.33, 1e-9, "nine minutes up: 0.33")
 assert(H.halo[#H.halo] == "UI_DanTraits_MSHeat1", "warm notice")
-H.mins(7); near(d.msHeat, 16 / 30, 1e-9, "sixteen minutes: past 0.5")
+H.mins(7); near(d.msHeat, 16 * 1.1 / 30, 1e-9, "sixteen minutes: past 0.5")
 assert(H.halo[#H.halo] == "UI_DanTraits_MSHeat2", "hot notice")
 H.mins(10); near(d.msHeat, 0.7, 1e-9, "air alone tops out at 0.7")
 H.mins(10); near(d.msHeat, 0.7, 1e-9, "and stays there")
@@ -84,10 +84,18 @@ H.minute(w)
 assert(not (wd.painHurting and wd.painHurting.ms), "warm: no pain floor")
 near(DanTraits_SwingDropChance(w), 0, 1e-9, "warm: no fumble")
 near(w._parts.Hand_L._stiff, 0, 1e-9, "warm: the hands are fine")
-local before = w._st.fatigue
+DanTraits_SpoonsSet(w, 6); local load = wd.msHeat   -- under the cap, so the idle rest shows; the load Spoons reads this minute
 H.minute(w)
-assert(w._st.fatigue > before, "tiring")
+near(6 - wd.spPool, (1 / 160) * (1 + load) - 0.01, 1e-9, "tiring: the warmth spends spoons x (1 + load) (less the idle rest)")
 near(DanTraits_RunHooks("enduranceRegen", 1, w, wd), 1 - 0.5 * wd.msHeat, 1e-9, "endurance comes back slower")
+
+-- 4b. discomfort (the game's Uncomfortable stat) wears MS down: stress on top of the game's, and spoons x (1 + 0.5 x it)
+w._st.stress = 0; w._st.discomfort = 0.5; H.minute(w)
+near(w._st.stress, 0.0002, 1e-9, "half uncomfortable: 0.0002 stress a minute")
+DanTraits_SpoonsSet(w, 6); load = wd.msHeat; H.minute(w)
+near(6 - wd.spPool, (1 / 160) * (1 + load) * 1.25 - 0.01, 1e-9, "...and the spoons go x1.25")
+w._st.discomfort = 0; w._st.stress = 0; H.minute(w); assert(w._st.stress == 0, "comfortable: nothing")
+w._asleep = true; w._st.discomfort = 1; H.minute(w); assert(w._st.stress == 0, "asleep: nothing"); w._asleep = false; w._st.discomfort = 0
 
 -- 5. a drink straight from a tap or a river cools: 0.4 a litre; filling a
 --    bottle there, or drinking from one, does not
@@ -102,11 +110,16 @@ near(wd.msHeat, 0.4, 1e-9, "drinking from a bottle: nothing")
 ISTakeWaterAction.transferFluid({ character = w, waterObject = { getFluidAmount = function() return 0.1 end } }, 0.5)
 near(wd.msHeat, 0.36, 1e-9, "a nearly dry source: only what it held")
 
--- 6. everyday fatigue awake, cut by amantadine; none asleep
+-- 6. everyday fatigue is the spoon budget (test_spoons.lua): no drip while spoons are on;
+--    with the sandbox count at 0 the old drip is back, cut by amantadine; none asleep
 local f = newPlayer(); H.current = f
 local fd = DanTraits_Data(f)
 H.climate.temp = 15
-H.minute(f); near(f._st.fatigue, 0.0002, 1e-9, "a fifth faster to tire")
+H.minute(f); near(f._st.fatigue, 0, 1e-12, "spoons on: no drip (the budget tires you instead)")
+assert(fd.spPool and fd.spCap == 12, "MS draws on a 12-spoon pool")
+SandboxVars = { DanTraits = { MSSpoons = 0 } }
+H.minute(f); assert(fd.spPool == nil, "spoons off: the pool goes")
+f._st.fatigue = 0; H.minute(f); near(f._st.fatigue, 0.0002, 1e-9, "spoons off: a fifth faster to tire")
 DanTraits_RunHooks("pill", nil, f, "Amantadine")
 near(DanTraits_MedState(f, "amantadine"), 1, 1e-9, "a pill: level 1")
 f._st.fatigue = 0; H.minute(f); near(f._st.fatigue, 0.0002, 1e-7, "the first pill: not built up yet")
@@ -140,6 +153,8 @@ near(f._parts.LowerLeg_R._stiff, 33, 1e-9, "after the flare the legs ease 2 a mi
 H.mins(5); near(f._parts.LowerLeg_R._stiff, 23, 1e-9, "...and keep easing")
 H.mins(20); near(f._parts.LowerLeg_R._stiff, 8, 1e-9, "...down to the everyday floor, no further")
 near(f._parts.Hand_R._stiff, 0, 1e-9, "the flare's weak hands go too")
+
+SandboxVars = nil   -- the budget back on
 
 -- 8. baclofen halves the stiffness, heat's and legs' alike
 local b = newPlayer(); H.current = b
@@ -198,6 +213,7 @@ md.msHeat = 0.6; assert(level("MSHeat", m, md) == 2, "too hot")
 md.msHeat = 0.9; assert(level("MSHeat", m, md) == 3, "overheated")
 md.msFlareH = 5; assert(level("MSFlare", m, md) == 2, "a flare")
 md.meds = { prednisone = { lvl = 1, built = 0 } }; assert(level("MSFlare", m, md) == 1, "a flare on prednisone (works at once)")
+md.spFelt = 3; assert(level("Spoons", m, md) == 3, "the wall (the spoon budget's felt tier)")
 assert(DanTraits_IsMSMed({ getFullType = function() return "DanTraits.Baclofen" end }), "baclofen is an MS pill")
 assert(not DanTraits_IsMSMed({ getFullType = function() return "Base.PillsBeta" end }), "beta blockers are not")
 

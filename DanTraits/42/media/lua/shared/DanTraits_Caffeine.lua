@@ -1,14 +1,19 @@
 -- Project Zomboid Vitality Project: Caffeine Dependent.
 -- Caffeine in the body is tracked as a level that halves every five hours.
 -- Coffee, tea, cola, coffee liqueur and hot chocolate add to it through the
--- drink hook by fluid and litres; instant coffee, chocolate-covered coffee
--- beans, chocolate, cocoa and tea bags through the eat hook; the game's
+-- drink hook by fluid and litres; a mug of coffee, tea or cocoa (a food item
+-- in this game, with the jar, bag or tin as an ingredient), instant coffee
+-- from the jar, chocolate-covered coffee beans, chocolate, cocoa and tea bags
+-- through the eat hook; the game's
 -- vitamin pills (pictured as caffeine pills) through the pill hook (the food
 -- amounts are the caffeine tag of DanTraits_Food.lua; fluids and pills stay here). Once
 -- the level has sat under CAF_SATED for twelve hours withdrawal starts: a
 -- headache (a DanTraits_PainFloor floor), tiredness, low mood and creeping stress, at full strength from
 -- thirty hours dry, and then fading out over the rest of the week as the
--- habit breaks. Any real dose resets the clock. Smoking speeds up the
+-- habit breaks. Any real dose resets the clock; a small one (a bar of
+-- chocolate, a can of cola) takes hours off it instead, CAF_SMALL_H an hour
+-- a point, so a bar buys three hours and a can six, and if that pushes the
+-- clock back under the onset the craving lifts for now. Smoking speeds up the
 -- half-life (the "caffeineClearance" hook, DanTraits_Smoker.lua). Every dose, trait or not,
 -- is also passed to the sleep system: caffeine makes light wake you.
 -- Migraines read the withdrawal (DanTraits_CaffeineWithdrawalOf).
@@ -21,7 +26,8 @@ local foodTags = DanTraits_FoodTags
 
 local CAF_HALF_LIFE_H   = 5       -- hours for the level to halve
 local CAF_SATED         = 60      -- level above which the dry clock does not run
-local CAF_DOSE_MIN      = 40      -- a dose smaller than this does not reset the clock
+local CAF_DOSE_MIN      = 40      -- a dose smaller than this does not reset the clock...
+local CAF_SMALL_H       = 0.2     -- ...it takes this many dry hours off per point instead (chocolate 15 = 3 h, a can of cola 30 = 6 h)
 local CAF_ONSET_H       = 12      -- dry hours before withdrawal
 local CAF_FULL_H        = 30      -- dry hours at full strength
 local CAF_FADE_FROM_H   = 72      -- from here the habit breaks...
@@ -51,6 +57,7 @@ local function dose(player, amount, what)
     if not player or not amount or amount <= 0 then return false end
     -- anyone's sleep feels it (DanTraits_Sleep.lua); the habit is the trait's
     if DanTraits_SleepOnCaffeine then pcall(DanTraits_SleepOnCaffeine, player, amount) end
+    if DanTraits_SpoonMask then pcall(DanTraits_SpoonMask, player, amount) end   -- the spoon budget: a coffee hides the wall for an hour
     if not hasTrait(player, "caffeine") then return false end
     local d = cafData(player)
     d.cafLevel = d.cafLevel + amount
@@ -60,6 +67,15 @@ local function dose(player, amount, what)
         if d.cafWithdrawing then
             d.cafWithdrawing = false
             DanTraits_NotifyGood(player, "UI_DanTraits_CaffeineSated")
+        end
+    elseif d.cafDryHours > 0 then
+        d.cafDryHours = math.max(0, d.cafDryHours - amount * CAF_SMALL_H)
+        if d.cafWithdrawing and d.cafDryHours < CAF_ONSET_H then
+            -- pushed back under the onset: the craving lifts, and comes back
+            -- (with its notice) once the clock passes the onset again
+            d.cafWithdrawing = false
+            d.cafWithdraw = 0
+            DanTraits_NotifyGood(player, "UI_DanTraits_CaffeineEased")
         end
     end
     return true
@@ -157,7 +173,7 @@ local function onEat(player, item, fraction)
     if not player or not item then return false end
     local name = ""
     pcall(function() name = string.lower(tostring(item:getType() or "")) end)
-    local amount = foodTags(item).caffeine   -- per whole item: instant coffee, beans, cocoa, tea bags, chocolate
+    local amount = foodTags(item).caffeine   -- per whole item: a mug by its ingredients, instant coffee, beans, cocoa, tea bags, chocolate
     if amount <= 0 then return false end
     return dose(player, amount * math.max(0, math.min(1, fraction or 1)), name)
 end

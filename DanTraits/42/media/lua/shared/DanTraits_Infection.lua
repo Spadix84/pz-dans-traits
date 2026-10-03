@@ -118,7 +118,11 @@ local function hazardOf(player, part, rec)
     if num(part, "getScratchTime") > 0 then h = h + INF_HAZARD.scratch end
     if num(part, "getCutTime") > 0 then h = h + INF_HAZARD.cut end
     if num(part, "getDeepWoundTime") > 0 then h = h + INF_HAZARD.deep
-    elseif num(part, "getStitchTime") > 0 then h = h + INF_HAZARD.deep * INF_STITCHED end
+    elseif num(part, "getStitchTime") > 0 then
+        -- rough stitches (DanTraits_WoundCare.lua) close it no better than an open wound
+        local rough = DanTraits_PoorStitches and DanTraits_PoorStitches(player, part)
+        h = h + INF_HAZARD.deep * (rough and 1 or INF_STITCHED)
+    end
     if num(part, "getBiteTime") > 0 then h = h + INF_HAZARD.bite end
     if num(part, "getBurnTime") > 0 then h = h + INF_HAZARD.burn end
     if is(part, "haveGlass") or is(part, "haveBullet") then h = h + INF_HAZARD.lodged end

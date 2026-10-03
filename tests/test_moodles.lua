@@ -16,11 +16,11 @@ local d = DanTraits_Data(p)
 local function level(name, who, data) return DanTraits_MoodleLevels(who or p, data or d)[name] end
 
 -- 0. the list the client creates them from
-assert(#DanTraits_MoodleNames == 15, "fifteen moodles")
+assert(#DanTraits_MoodleNames == 16, "sixteen moodles")
 local listed = {}
 for _, name in ipairs(DanTraits_MoodleNames) do listed[name] = true end
 for _, name in ipairs({ "ChestPain", "Seizure", "Tinnitus", "GutFlare", "Filthy", "Sunburn", "Dehydration",
-                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare" }) do
+                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons" }) do
   assert(listed[name], name .. " is listed")
 end
 for name, l in pairs(DanTraits_MoodleLevels(p, d)) do assert(l == 0, name .. ": nothing to show on a well character") end
@@ -85,6 +85,9 @@ d.alcWithdrawing = false; assert(level("AlcoholWithdrawal") == 0, "a drink ends 
 d.alcStage = nil
 DanTraits_NicotineWithdrawal = function() return 0.6 end
 assert(level("NicotineCraving") == 2, "craving")
+SandboxVars = { DanTraits = { SmokerCravingMoodle = false } }
+assert(level("NicotineCraving") == 0, "option off: the craving moodle is hidden")
+SandboxVars = nil
 DanTraits_NicotineWithdrawal = function() return 0 end
 assert(level("NicotineCraving") == 0, "sated")
 DanTraits_NicotineWithdrawal = nil
@@ -126,7 +129,7 @@ d.gluten = 1                 -- bad 3
 H.minute()
 local n = 0
 for _ in pairs(set) do n = n + 1 end
-assert(n == 15, "all fifteen set")
+assert(n == 16, "all sixteen set")
 near(set.ChestPain.value, 0.65, 1e-9, "good 1 sits between 0.6 and 0.7")
 near(set.Seizure.value, 0.25, 1e-9, "bad 2 sits between 0.2 and 0.3")
 near(set.GutFlare.value, 0.15, 1e-9, "bad 3")

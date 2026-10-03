@@ -14,8 +14,8 @@
 --        is "might be broken"; an infection only shows once it is red and
 --        swollen (level 3); no severities.
 --   3-5  the game's own detail (wound severities, fracture, infection as
---        the game shows it), plus a dressing wearing thin and a badly set
---        bone.
+--        the game shows it), plus a dressing wearing thin, a badly set
+--        bone and rough stitches.
 --   6-8  how far an infection has got (local, spreading) and how stitches
 --        are holding (fresh, holding, sound).
 --   9-10 an infection that hasn't shown yet, and how far a break has healed.
@@ -106,9 +106,12 @@ local function extraLines(part, level, patient)
         local key = stitch >= 40 and "StitchesSound" or (stitch >= 15 and "StitchesHolding" or "StitchesFresh")
         out[#out + 1] = { t(key), key == "StitchesFresh" and ORANGE or GREEN }
     end
+    -- a rough stitching job: anyone who knows the work can see it
+    if stitch > 0 and wc and wc.poorStitch and level >= HP_VAGUE_BELOW then out[#out + 1] = { t("StitchesRough"), RED } end
     -- a knock to the head
     if name == "Head" then
         local s = d.ccScore or 0
+        if d.ccLate and d.ccLate.left and s <= 0 then out[#out + 1] = { t("ConcussionLate"), ORANGE } end
         if s > 0 then
             if level < HP_VAGUE_BELOW then
                 out[#out + 1] = { t("KnockToHead"), ORANGE }

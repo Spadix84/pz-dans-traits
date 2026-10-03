@@ -229,13 +229,13 @@ near(DanTraits_VitalityMddOnset(t2), 1.3, 1e-9, "episodes x1.3 at -1")
 V(t2).vitality = 1; near(DanTraits_VitalityAsthmaBuild(t2), 0.7, 1e-9, "x0.7 at +1")
 assert(DanTraits_VitalityEffect(newPlayer()) == 0, "no data yet: no effect")
 
--- 12. Thriving doubles Fitness and Strength experience, nothing else, and not below Thriving
+-- 12. Thriving gives x1.5 Fitness and Strength experience, nothing else, and not below Thriving
 local xp = newPlayer(); H.current = xp; minute()
 V(xp).vitality = 0.85
-xp:getXp():AddXP(Perks.Fitness, 10); assert(xp._xp.fitness == 20, "fitness x2, got " .. xp._xp.fitness)
-xp:getXp():AddXP(Perks.Strength, 4); assert(xp._xp.strength == 8, "strength x2")
+xp:getXp():AddXP(Perks.Fitness, 10); assert(xp._xp.fitness == 15, "fitness x1.5, got " .. xp._xp.fitness)
+xp:getXp():AddXP(Perks.Strength, 4); assert(xp._xp.strength == 6, "strength x1.5")
 xp:getXp():AddXP(Perks.Woodwork, 5); assert(xp._xp.woodwork == 5, "other skills untouched")
-V(xp).vitality = 0.7; xp:getXp():AddXP(Perks.Fitness, 10); assert(xp._xp.fitness == 30, "Fit tier: no bonus")
+V(xp).vitality = 0.7; xp:getXp():AddXP(Perks.Fitness, 10); assert(xp._xp.fitness == 25, "Fit tier: no bonus")
 
 -- 13. slept badly: a bad night sets a debt that holds mood down and wears off over the day; a nap halves it
 local sb = newPlayer({ unhappy = 0 }); H.current = sb; minute()

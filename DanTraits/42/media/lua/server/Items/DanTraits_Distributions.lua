@@ -142,6 +142,7 @@ local ITEMS = {
     prescription("DanTraits.Prednisone", 1.25),     -- MS: an everyday steroid, more common than most prescriptions
     prescription("DanTraits.Baclofen", 1),          -- MS
     prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
+    prescription("DanTraits.Sumatriptan", 0.4),     -- Migraines: new in the early 90s, rare
     {
         -- anti-anxiety pills: the vanilla beta blocker's old job, found where
         -- prescriptions are, a little more often in a drug shack

@@ -15,11 +15,11 @@
     "Sandbox_DanTraitsInfectionEnabled": "Wound Infection",
     "Sandbox_DanTraitsInfectionEnabled_tooltip": "Wounds can take an infection that grows: local, then fever, then sepsis. Clean and dress wounds early; once it spreads, only a course of antibiotics (a dose every eight hours) stops it.<br>Off: vanilla wound infection.",
     "Sandbox_DanTraitsWoundCareEnabled": "Wound Care",
-    "Sandbox_DanTraitsWoundCareEnabled_tooltip": "Dressings wear out and need changing, deep wounds heal slowly unstitched and can open again, fresh stitches can tear under strain, splints are set with a First Aid roll, and walking on a broken leg makes it worse.<br>Off: vanilla wound care.",
+    "Sandbox_DanTraitsWoundCareEnabled_tooltip": "Dressings wear out and need changing, deep wounds heal slowly unstitched and can open again, fresh stitches can tear under strain, stitches and splints are put in with a First Aid roll, and walking on a broken leg makes it worse.<br>Off: vanilla wound care.",
     "Sandbox_DanTraitsConcussionEnabled": "Concussion",
-    "Sandbox_DanTraitsConcussionEnabled_tooltip": "Hard falls, car crashes and blows to the head can concuss: headache, nausea, dizzy spells, light hurts; a bad one knocks you out. Rest heals it; a helmet helps.<br>Off: no concussion.",
+    "Sandbox_DanTraitsConcussionEnabled_tooltip": "Hard falls, car crashes and blows to the head can concuss: headache, nausea, dizzy spells, light hurts; a bad one knocks you out. Rest heals it; a helmet helps. The headache can come back worse a day or two later.<br>Off: no concussion.",
     "Sandbox_DanTraitsVitalityEnabled": "Vitality",
-    "Sandbox_DanTraitsVitalityEnabled_tooltip": "Diet, exercise and sleep roll into a slow Vitality score: run down or thriving changes recovery, mood, health and how the traits behave, and Thriving doubles Fitness and Strength experience.<br>Off: no score and no effects.",
+    "Sandbox_DanTraitsVitalityEnabled_tooltip": "Diet, exercise and sleep roll into a slow Vitality score: run down or thriving changes recovery, mood, health and how the traits behave, and Thriving gives half as much Fitness and Strength experience again.<br>Off: no score and no effects.",
     "Sandbox_DanTraitsSleepLightEnabled": "Sleep and Light",
     "Sandbox_DanTraitsSleepLightEnabled_tooltip": "Dark sleep is deeper and scores better; a bright room makes sleep shallow and light can wake you. Curtains and switches matter.<br>Off: light does not affect sleep.",
     "Sandbox_DanTraitsHangoverEnabled": "Hangovers",
@@ -33,5 +33,11 @@
     "Sandbox_DanTraitsMedSideEffectChance": "Medication Side Effect Chance",
     "Sandbox_DanTraitsMedSideEffectChance_tooltip": "The chance in percent, on each day a medication is taken, that its mild side effect shows up for a few hours. Taking too many at once is always harmful.<br>0: no side effects.",
     "Sandbox_DanTraitsStartingMedication": "Starting Medication",
-    "Sandbox_DanTraitsStartingMedication_tooltip": "Characters with a medical trait start with its medication: beta blockers (Heart Condition), anticonvulsants (Epilepsy), insulin pens or metformin (Diabetes) and an inhaler (Asthma).<br>Off: they start with none and have to find it. Daily pills taken that morning still wear off over a few days."
+    "Sandbox_DanTraitsStartingMedication_tooltip": "Characters with a medical trait start with its medication: beta blockers (Heart Condition), anticonvulsants (Epilepsy), insulin pens or metformin (Diabetes) and an inhaler (Asthma), and the last two tablets of a pack of sumatriptan (Migraines).<br>Off: they start with none and have to find it. Daily pills taken that morning still wear off over a few days.",
+    "Sandbox_DanTraitsArthritisWeaponDrop": "Arthritis Drops Weapons",
+    "Sandbox_DanTraitsArthritisWeaponDrop_tooltip": "An arthritic grip that slips makes the swing land weak. In a bad flare (cold and damp), one slip in three throws the weapon to the ground.<br>Off: a slip only ever weakens the swing.",
+    "Sandbox_DanTraitsMSSpoons": "MS Spoons a Day",
+    "Sandbox_DanTraitsMSSpoons_tooltip": "Multiple Sclerosis: the spoons (units of energy) a full night gives. The day spends them by effort, faster in the heat or a flare; a bad night gives fewer, never under a third; a flare caps them at two thirds. At none you hit the wall, and every hour you push on is borrowed from tomorrow.<br>0: no budget. MS tires you a fifth faster instead, as it used to.",
+    "Sandbox_DanTraitsSmokerCravingMoodle": "Nicotine Craving Moodle",
+    "Sandbox_DanTraitsSmokerCravingMoodle_tooltip": "Smokers see a Nicotine Craving moodle and a notice when a craving starts.<br>Off: no moodle and no notice. The craving still builds, and you have to read it from irritability (the Angry moodle) and stress."
 }

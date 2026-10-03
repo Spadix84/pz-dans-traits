@@ -33,6 +33,9 @@
 --   DanTraits_Asleep(player)               whether the player is asleep, false on failure
 --   DanTraits_SandboxOn(optionName)        SandboxVars.DanTraits[option] ~= false
 --                                          (true when the table is absent)
+--   DanTraits_CorpsesNearby(player, radius)
+--                                          dead bodies on the squares within
+--                                          radius tiles, same floor (0 on failure)
 --   DanTraits_Cough(player, radius, why, force)
 --                                          the one cough, see "The cough" below
 --   DanTraits_DeltaHook(stat, name, cadence [, access])
@@ -149,6 +152,22 @@ end
 function DanTraits_SandboxOn(optionName)
     local sv = SandboxVars and SandboxVars.DanTraits
     return not sv or sv[optionName] ~= false
+end
+
+function DanTraits_CorpsesNearby(player, radius)
+    local count = 0
+    pcall(function()
+        local px, py, pz = math.floor(player:getX()), math.floor(player:getY()), math.floor(player:getZ())
+        local cell = getCell()
+        for dx = -radius, radius do
+            for dy = -radius, radius do
+                local sq = cell:getGridSquare(px + dx, py + dy, pz)
+                local bodies = sq and sq:getDeadBodys()
+                if bodies then count = count + bodies:size() end
+            end
+        end
+    end)
+    return count
 end
 
 -- Moodle Framework is client side and optional; without it the trait still

@@ -5,8 +5,14 @@
 -- floor rises in the cold and the damp: a flare. Stiffness is not the pain
 -- stat, so painkillers ease the ache but not the slowness. Every attack is
 -- slower on top of that, more so in a flare. And the grip is unreliable: a
--- swing can throw the weapon to the ground, worse when panicked, hurt or
--- tired, and worse again when the joints are flaring.
+-- swing can slip, worse when panicked, hurt or tired, and worse again when
+-- the joints are flaring. A slipped swing lands weak (the weapon's damage cut
+-- for that one swing, put back when the attack finishes); only in a bad
+-- flare can a slip throw the weapon to the ground, and the
+-- ArthritisWeaponDrop sandbox option turns that off.
+--
+-- Mod data: artJoint, artStiffTarget, artCombatSet; on the weapon,
+-- DanTraitsSlip = { min, max } while a slipped swing is weakened.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -30,6 +36,10 @@ local FUMBLE_PANIC      = 6       -- added at full panic
 local FUMBLE_PAIN       = 6       -- added at full pain
 local FUMBLE_FATIGUE    = 5       -- added at full fatigue
 local FUMBLE_FLARE      = 4       -- added at a full flare
+local SLIP_DAMAGE       = 0.35    -- a slipped swing hits for this share of the weapon's damage
+local SLIP_DROP_FLARE   = 0.5     -- a slip can only throw the weapon at this flare or worse...
+local SLIP_DROP_SHARE   = 0.33    -- ...and then one slip in three does
+local SLIP_RESTORE_MS   = 3000    -- the weakened damage is put back after this long whatever happens
 
 local JOINTS = { "Hand_L", "Hand_R", "ForeArm_L", "ForeArm_R", "UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R" }
 
@@ -97,9 +107,19 @@ local function fumbleChance(player)
 end
 DanTraits_FumbleChance = fumbleChance
 
--- Other traits (low blood sugar) add shakiness on top, Arthritis or not.
-function DanTraits_SwingDropChance(player)
+-- percent per swing that the grip slips: Arthritis's, plus anything else
+-- that makes the hands clumsy (the gripSlip hook: sumatriptan's day after).
+-- Only Arthritis in a bad flare can turn a slip into a drop.
+function DanTraits_GripSlipChance(player)
     local chance = hasTrait(player, "arthritis") and fumbleChance(player) or 0
+    return DanTraits_RunHooks("gripSlip", chance, player)
+end
+
+-- percent per swing that the weapon is thrown outright: other traits' shakes
+-- (a diabetic low, alcohol withdrawal, MS heat), Arthritis or not. An
+-- arthritic slip is separate (DanTraits_GripSlipChance).
+function DanTraits_SwingDropChance(player)
+    local chance = 0
     if DanTraits_ExtraFumble then
         local ok, extra = pcall(DanTraits_ExtraFumble, player)
         if ok and extra then chance = chance + extra end
@@ -122,14 +142,89 @@ local function dropWeapon(player)
 end
 DanTraits_FumbleDrop = dropWeapon
 
+-- a slipped swing: the weapon's damage is cut until the attack finishes. The
+-- game reads it at the hit point, after OnWeaponSwing. The originals ride on
+-- the weapon's mod data, so a save caught mid-swing is put right on the next
+-- swing; pending lists the weapons to put back by time, in case the attack
+-- never reports finishing.
+local pending = {}
+
+local function now()
+    local t = 0
+    pcall(function() t = getTimestampMs() end)
+    return t
+end
+
+local function restoreWeapon(weapon)
+    if not weapon then return end
+    pcall(function()
+        local md = weapon:getModData()
+        local orig = md and md.DanTraitsSlip
+        if not orig then return end
+        weapon:setMinDamage(orig.min)
+        weapon:setMaxDamage(orig.max)
+        md.DanTraitsSlip = nil
+    end)
+    for i = #pending, 1, -1 do
+        if pending[i].weapon == weapon then table.remove(pending, i) end
+    end
+end
+DanTraits_GripRestore = restoreWeapon
+
+local function weakenSwing(player, weapon)
+    pcall(function()
+        local md = weapon:getModData()
+        if not md.DanTraitsSlip then
+            local min, max = weapon:getMinDamage(), weapon:getMaxDamage()
+            md.DanTraitsSlip = { min = min, max = max }
+            weapon:setMinDamage(min * SLIP_DAMAGE)
+            weapon:setMaxDamage(max * SLIP_DAMAGE)
+        end
+    end)
+    for i = #pending, 1, -1 do
+        if pending[i].weapon == weapon then table.remove(pending, i) end
+    end
+    pending[#pending + 1] = { weapon = weapon, at = now() + SLIP_RESTORE_MS }
+    notify(player, "UI_DanTraits_GripSlip")
+end
+
 local function onWeaponSwing(player, weapon)
     if not weapon then return end
-    local chance = DanTraits_SwingDropChance(player)
-    if chance <= 0 then return end
-    if ZombRand(1000) >= chance * 10 then return end
-    dropWeapon(player)
+    restoreWeapon(weapon)   -- anything left over from a save mid-swing
+    -- other traits' shakes throw the weapon outright
+    local drop = DanTraits_SwingDropChance(player)
+    if drop > 0 and ZombRand(1000) < drop * 10 then
+        dropWeapon(player)
+        return
+    end
+    -- an arthritic grip slips: a weak swing, or in a bad flare sometimes the weapon goes
+    local slip = DanTraits_GripSlipChance(player)
+    if slip <= 0 or ZombRand(1000) >= slip * 10 then return end
+    local d = player:getModData().DanTraits
+    if hasTrait(player, "arthritis") and (d and d.artJoint or 0) >= SLIP_DROP_FLARE and DanTraits_SandboxOn("ArthritisWeaponDrop")
+        and ZombRand(100) < SLIP_DROP_SHARE * 100 then
+        dropWeapon(player)
+        return
+    end
+    weakenSwing(player, weapon)
+end
+
+local function onAttackFinished(player, weapon)
+    if weapon then restoreWeapon(weapon) end
+end
+
+-- every frame, for anyone: put back weakened weapons whose time is up
+local function restoreDue()
+    if #pending == 0 then return end
+    local t = now()
+    for i = #pending, 1, -1 do
+        local entry = pending[i]
+        if t >= entry.at then restoreWeapon(entry.weapon) end
+    end
 end
 
 Events.OnWeaponSwing.Add(onWeaponSwing)
+Events.OnPlayerAttackFinished.Add(onAttackFinished)
+DanTraits_Every("frame", "ArthritisGrip", restoreDue, 40)
 DanTraits_Every("minute", "Arthritis", updateArthritisMinute, 40)
 DanTraits_Every("frame", "Arthritis", updateArthritisFrame, 40)

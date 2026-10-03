@@ -11,6 +11,8 @@ local stories = {}
 function triggerEvent(name, pl, ev) if name == "OnStoryEvent" then stories[#stories + 1] = ev end end
 local splintCompleted = 0
 ISSplint = { complete = function(self) splintCompleted = splintCompleted + 1; self.bodyPart._splint = true; self.bodyPart._factor = (self.doctorLevel + 1) / 2 end }
+-- vanilla's stitch action: in, a stitch time of 3; out, none
+ISStitch = { complete = function(self) self.bodyPart._stitch = self.doIt and 3 or 0; self.bodyPart._stitched = self.doIt; return true end }
 
 H.load("WoundCare")
 H.expectHooks("OnWeaponSwing")
@@ -127,6 +129,51 @@ H.rollf = 0; H.clearHalo(); ISSplint.complete({ doIt = true, bodyPart = felt, do
 assert(halo[1] == "UI_DanTraits_BadSet:the UpperLeg_R", "level 3+ can tell it's wrong")
 H.rollf = 0.99
 
+-- 6b. the stitching roll: 45% at level 0, 5% less a level, never under 3%; a suture needle x0.6
+near(DanTraits_PoorStitchChance(0), 0.45, 1e-12, "level 0")
+near(DanTraits_PoorStitchChance(5), 0.2, 1e-12, "level 5")
+near(DanTraits_PoorStitchChance(10), 0.03, 1e-12, "level 10: the floor")
+near(DanTraits_PoorStitchChance(0, true), 0.27, 1e-12, "a suture needle helps")
+p = newPlayer(); H.current = p
+-- the stitcher: no needle holder in their bag (the test player's inventory holds everything)
+local hands = { getInventory = function() return { contains = function() return false end } end }
+local rf2 = part(p, "ForeArm_R"); rf2._deep = 8
+H.clearHalo(); H.rollf = 0.3
+assert(ISStitch.complete({ doIt = true, bodyPart = rf2, doctorLevel = 0, character = hands, otherPlayer = p }) == true, "vanilla's result passed on")
+assert(rf2._stitch == 3 and D(p).wcParts.ForeArm_R.poorStitch, "level 0, roll 0.3: stitched roughly")
+assert(#halo == 0, "level 0 can't tell")
+assert(DanTraits_PoorStitches(p, rf2), "read by others (Infection)")
+rf2._stitch = 5; minute(); near(rf2._stitch, 4, 1e-9, "rough stitches knit at half the speed")
+assert(rf2._pain == 10, "and ache")
+assert(string.find(D(p).wcSummary, "(rough)", 1, true), "summary shows it")
+-- tearing: twice as likely (fresh at 4 of 40: 2% x 0.9 x 2 = 3.6% a swing)
+H.rollf = 0.03; swing(p, {}); assert(rf2._stitch == 0, "3% < 3.6%: torn")
+assert(not DanTraits_PoorStitches(p, rf2), "torn: no stitches to be rough")
+minute(); assert(D(p).wcParts.ForeArm_R == nil or not D(p).wcParts.ForeArm_R.poorStitch, "the record lets go once they are out")
+-- a careful hand: level 5 and the same roll is fine; level 3+ can tell a rough job
+local lf = part(p, "ForeArm_L"); lf._deep = 8
+H.rollf = 0.3; ISStitch.complete({ doIt = true, bodyPart = lf, doctorLevel = 5, character = hands, otherPlayer = p })
+assert(not DanTraits_PoorStitches(p, lf), "level 5, roll 0.3 over 0.2: neat")
+H.rollf = 0; H.clearHalo(); ISStitch.complete({ doIt = true, bodyPart = lf, doctorLevel = 3, character = hands, otherPlayer = p })
+assert(DanTraits_PoorStitches(p, lf) and halo[1] == "UI_DanTraits_PoorStitches:the ForeArm_L", "level 3 can tell")
+-- taking them out clears it; sound stitches are no longer rough
+ISStitch.complete({ doIt = false, bodyPart = lf, doctorLevel = 3, character = hands, otherPlayer = p })
+assert(not D(p).wcParts.ForeArm_L.poorStitch, "out: cleared")
+H.rollf = 0; ISStitch.complete({ doIt = true, bodyPart = lf, doctorLevel = 0, character = hands, otherPlayer = p })
+lf._stitch = 40; minute(); assert(not DanTraits_PoorStitches(p, lf), "sound at 40: rough no longer")
+-- Steady Hands (the stitchPoor hook) halves it, for whoever stitches
+DanTraits_AddHook("stitchPoor", function(chance) return chance * 0.5 end)
+local th = part(p, "Torso_Upper"); th._deep = 8
+H.rollf = 0.3; ISStitch.complete({ doIt = true, bodyPart = th, doctorLevel = 0, character = hands, otherPlayer = p })
+assert(not DanTraits_PoorStitches(p, th), "45% halved to 22.5%: roll 0.3 is neat")
+DanTraits_Hooks.stitchPoor = nil
+-- a needle holder in the bag: x0.6 (27%), so roll 0.3 is neat too
+local ul = part(p, "UpperLeg_L"); ul._deep = 8
+H.rollf = 0.3; ISStitch.complete({ doIt = true, bodyPart = ul, doctorLevel = 0, character = p, otherPlayer = p })
+assert(not DanTraits_PoorStitches(p, ul), "with a needle holder: roll 0.3 over 27% is neat")
+DanTraits_Hooks.stitchPoor = nil
+H.rollf = 0.99
+
 -- 7. walking on a broken leg, no splint
 p = newPlayer(); H.current = p; shin = part(p, "LowerLeg_L"); shin._fracture = 30
 p._moving = true; frame(p); minute(); near(shin._fracture, 30 + 1 / 60, 1e-9, "walking: worse")
@@ -146,6 +193,8 @@ part(p, "ForeArm_L")._stitch = 5; part(p, "ForeArm_L")._stitched = true
 assert(DanTraits_ExtraCommands.tear(p, { "forearm_l" }) == "tore ForeArm_L" and part(p, "ForeArm_L")._stitch == 0, "tear")
 assert(DanTraits_ExtraCommands.dressing(p, { "forearm_l", "0.5" }) == "bandage life 0.5", "dressing")
 assert(DanTraits_ExtraCommands.badset(p, { "shin_l" }) == "badly set LowerLeg_L" and D(p).wcParts.LowerLeg_L.badSet, "badset")
+part(p, "ForeArm_R")._stitch = 5
+assert(string.find(DanTraits_ExtraCommands.roughstitch(p, { "forearm_r" }), "^rough stitches on ForeArm_R") and DanTraits_PoorStitches(p, part(p, "ForeArm_R")), "roughstitch")
 assert(DanTraits_ExtraCommands.tear(p, { "tail" }) == "tear <part>", "usage")
 assert(string.find(DanTraits_ExtraCommands.breakbone(p, { "shin_l" }), "^broke LowerLeg_L") and part(p, "LowerLeg_L")._fracture == 50, "breakbone")
 

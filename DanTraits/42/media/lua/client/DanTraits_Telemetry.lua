@@ -196,6 +196,7 @@ local function snapshot(player)
         derived.insulinDoses = doses
     end
     if DanTraits_SwingDropChance then derived.swingDrop = safe(function() return DanTraits_SwingDropChance(player) end) end
+    if DanTraits_GripSlipChance then derived.gripSlip = safe(function() return DanTraits_GripSlipChance(player) end) end
     if has("spiraling") and DanTraits_MddBenefit then derived.mddBenefit = safe(function() return DanTraits_MddBenefit(player) end) end
     if DanTraits_MddRegularity then derived.exerciseRegularity = safe(function() return DanTraits_MddRegularity(player) end) end
     out.derived = derived

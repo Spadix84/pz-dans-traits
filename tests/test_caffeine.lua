@@ -11,6 +11,11 @@ local function container(fluid, ratio)
   return { getPrimaryFluid = function() return { getFluidTypeString = function() return fluid end } end, getRatioForFluid = function() return ratio or 1 end }
 end
 local function food(name) return { getType = function() return name end } end
+-- the game's mug of coffee or tea: a food item with the ingredients listed as "Base.Coffee2"
+local function mug(name, extras)
+  return { getType = function() return name end, haveExtraItems = function() return #extras > 0 end,
+    getExtraItems = function() return { size = function() return #extras end, get = function(_, i) return extras[i + 1] end } end }
+end
 local halo, near = H.halo, H.near
 local minute = H.minute
 local function C(p) return p._md.DanTraits end
@@ -31,6 +36,9 @@ DanTraits_RunHooks("eat", nil, f, food("Coffee2"), 0.1); near(C(f).cafLevel, 375
 DanTraits_RunHooks("eat", nil, f, food("Bread"), 1); near(C(f).cafLevel, 375, 1e-9, "bread: nothing")
 DanTraits_RunHooks("pill", nil, f, "PillsVitamins"); near(C(f).cafLevel, 575, 1e-9, "vitamins are caffeine pills")
 DanTraits_RunHooks("pill", nil, f, "Pills"); near(C(f).cafLevel, 575, 1e-9, "painkillers are not")
+DanTraits_RunHooks("eat", nil, f, mug("HotDrinkWhite", { "Base.Coffee2", "Base.Sugar" }), 1); near(C(f).cafLevel, 675, 1e-9, "a mug of coffee (a food item) is 100")
+DanTraits_RunHooks("eat", nil, f, mug("HotDrinkTea", { "Base.Teabag2" }), 0.5); near(C(f).cafLevel, 695, 1e-9, "half a cup of tea")
+DanTraits_RunHooks("eat", nil, f, mug("HotDrinkWhite", {}), 1); near(C(f).cafLevel, 695, 1e-9, "a mug of hot water: nothing")
 local none = newPlayer({ traits = {} }); H.current = none
 DanTraits_RunHooks("drink", nil, none, container("Coffee"), 0.25); assert(none._md.DanTraits == nil or not none._md.DanTraits.cafLevel, "no trait: nothing tracked")
 
@@ -74,6 +82,45 @@ for _ = 1, 8 do DanTraits_RunHooks("drink", nil, sip, container("Coffee"), 0.025
 assert(C(sip).cafWithdrawing, "no single sip counts as a real dose")
 minute()
 assert(not C(sip).cafWithdrawing and C(sip).cafWithdraw == 0 and halo[#halo] == "+UI_DanTraits_CaffeineSated", "sated level clears the flag and says so")
+H.current = d
+
+-- 5c. the game's mug of coffee, eaten as a food item, ends the craving (the bug of 2026-10-02: only the Coffee fluid counted)
+local m = newPlayer(); H.current = m
+for _ = 1, 30 * 60 do minute() end
+assert(C(m).cafWithdrawing and C(m).cafWithdraw > 0.99, "withdrawing before the mug")
+DanTraits_RunHooks("eat", nil, m, mug("HotDrinkWhite", { "Base.Coffee2" }), 1)
+assert(not C(m).cafWithdrawing and C(m).cafDryHours == 0 and halo[#halo] == "+UI_DanTraits_CaffeineSated", "a mug of coffee resets it at once")
+minute(); assert(C(m).cafWithdraw == 0, "and the moodle goes")
+-- a can of cola (30) is not a dose and does not sate; two a minute apart decay to just under 60; the third sates
+local c = newPlayer(); H.current = c
+for _ = 1, 30 * 60 do minute() end
+DanTraits_RunHooks("drink", nil, c, container("Cola"), 0.3); minute()
+assert(C(c).cafWithdrawing, "one can of cola is not enough")
+DanTraits_RunHooks("drink", nil, c, container("Cola"), 0.3); minute()
+assert(C(c).cafWithdrawing and C(c).cafLevel > 59 and C(c).cafLevel < 60, "two cans a minute apart: just under sated")
+DanTraits_RunHooks("drink", nil, c, container("Cola"), 0.3); minute()
+assert(not C(c).cafWithdrawing and C(c).cafWithdraw == 0, "the third can sates")
+H.current = d
+
+-- 5d. a small dose takes hours off the dry clock (0.2 h a point): chocolate 3 h, a can of cola 6 h;
+-- under the onset the craving lifts with its own notice, and comes back with the craving notice later
+local s = newPlayer(); H.current = s
+for _ = 1, 20 * 60 do minute() end
+assert(C(s).cafWithdrawing, "withdrawing at 20 h")
+DanTraits_RunHooks("eat", nil, s, food("Chocolate"), 1)
+near(C(s).cafDryHours, 17, 1e-6, "a bar takes 3 hours off"); assert(C(s).cafWithdrawing, "still craving at 17 h")
+DanTraits_RunHooks("drink", nil, s, container("Cola"), 0.3)
+near(C(s).cafDryHours, 11, 1e-6, "a can takes 6 hours off")
+assert(not C(s).cafWithdrawing and C(s).cafWithdraw == 0 and halo[#halo] == "+UI_DanTraits_CaffeineEased", "under the onset: the craving lifts for now")
+minute(); assert(C(s).cafWithdraw == 0 and not C(s).cafWithdrawing, "no withdrawal under the onset")
+for _ = 1, 61 do minute() end
+assert(C(s).cafWithdrawing and halo[#halo] == "UI_DanTraits_CaffeineCraving", "and it comes back past 12 h with the notice")
+DanTraits_RunHooks("eat", nil, s, food("Chocolate"), 0.5)
+near(C(s).cafDryHours, 12 + 2 / 60 - 1.5, 1e-6, "half a bar: an hour and a half")
+local z = newPlayer(); H.current = z
+for _ = 1, 60 do minute() end
+DanTraits_RunHooks("drink", nil, z, container("Cola"), 0.3)
+assert(C(z).cafDryHours == 0, "never below zero")
 H.current = d
 
 -- 6. a week dry breaks the habit: withdrawal fades to nothing and says so

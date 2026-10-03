@@ -97,6 +97,13 @@ assert(tags(item("Soup", nil, { "Base.Smallanimalmeat" })).meat == true, "small 
 assert(tags(item("Salad", nil, { "Base.Lettuce", "Base.TunaTinOpen" })).meat == true, "tuna in a salad")
 assert(tags(item("Stew", nil, { "Base.KidneyBeans", "Base.Crabapple" })).meat == false, "safe ingredient names stay safe")
 assert(tags(item("Bowl")).ingredients == 0, "no extras: no ingredients")
+-- a hot drink is a food item whose caffeine is what went in: coffee 100 a spoon, a tea bag 40, cocoa 5
+assert(tags(item("HotDrinkWhite", nil, { "Base.Coffee2" })).caffeine == 100, "a mug of coffee")
+assert(tags(item("HotDrinkWhite", nil, { "Base.Coffee2", "Base.Coffee2", "Base.Sugar" })).caffeine == 200, "a double coffee with sugar")
+assert(tags(item("HotDrinkTea", nil, { "Base.Teabag2", "Base.Milk" })).caffeine == 40, "a cup of tea")
+assert(tags(item("HotDrinkClay", nil, { "Base.CocoaPowder" })).caffeine == 5, "cocoa")
+assert(tags(item("HotDrinkWhite", nil, { "Base.Sugar", "Base.Honey" })).caffeine == 0, "hot sugar water: nothing")
+assert(tags(item("HotDrinkWhite")).caffeine == 0, "a mug of hot water: nothing")
 
 -- 4. state is the instance's own, read fresh (not remembered with the type)
 local function typed(name, state)

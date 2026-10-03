@@ -12,6 +12,18 @@
 -- concussed lands on top of the first. It brings on migraine attacks
 -- (Migraines) and makes light wake you more easily (sleep and light).
 --
+-- The headache that comes back: a concussion may (CC_LATE_CHANCE, likelier
+-- the worse it was) leave a post-concussion headache one to two and a half
+-- days later, often after the concussion itself has cleared. It builds over
+-- six hours to a pain worse than the knock's own (CC_LATE_PAIN), holds,
+-- fades over its last twelve hours, and lasts one to two days by how bad
+-- the concussion was; sleep gets through it half as fast again, bright
+-- daylight makes it worse, painkillers dull it as they do any pain. The
+-- Concussion moodle shows Dazed while it lasts.
+--
+-- Mod data: ccScore, ccTier, ccLastImpact; ccLate = { wait = hours to go,
+-- s } before the headache, { left, total, s } while it lasts.
+--
 -- What counts as a knock (the game's own damage reports, OnPlayerGetDamage):
 --   FALLDOWN       a fall: the amount is the health it cost (vanilla
 --                  IsoGameCharacter.handleLandingImpact; 1000 for a lethal
@@ -71,6 +83,14 @@ local CC_ENDURANCE     = 0.3     -- endurance recovery x (1 - this x score)
 local CC_DIZZY         = 0.18    -- chance a minute of running of a dizzy fall x score (moderate and worse)
 local CC_WAKE          = 1       -- light wakes you (1 + this x score) times as easily
 local CC_TIER          = { 0.02, CC_MODERATE, CC_SEVERE }
+-- the headache that comes back
+local CC_LATE_CHANCE   = { 0.5, 0.5 }   -- chance: this, plus this x how bad the concussion was
+local CC_LATE_WAIT     = { 24, 60 }     -- hours before it comes
+local CC_LATE_HOURS    = { 24, 24 }     -- how long: this, plus this x how bad
+local CC_LATE_PAIN     = { 20, 45 }     -- head pain floor at its worst: this, plus this x how bad
+local CC_LATE_RISE_H   = 6              -- hours to build to its worst...
+local CC_LATE_FADE_H   = 12             -- ...and to fade at the end
+local CC_LATE_ASLEEP   = 1.5            -- x as fast asleep
 
 local clamp01 = DanTraits_Clamp01
 
@@ -110,6 +130,11 @@ function DanTraits_KnockHead(player, chance, score)
     local old = d.ccScore or 0
     local new = clamp01(math.max(old, score) + CC_STACK * math.min(old, score))
     d.ccScore = new
+    -- the headache that may come back days later (one at a time; a worse knock before it comes makes it worse)
+    local late = d.ccLate
+    if (not late or (late.wait and new > (late.s or 0))) and roll(CC_LATE_CHANCE[1] + CC_LATE_CHANCE[2] * new) then
+        d.ccLate = { wait = (late and late.wait) or randRange(CC_LATE_WAIT[1], CC_LATE_WAIT[2]), s = new }
+    end
     if score >= CC_SEVERE or new >= CC_SEVERE and old > 0 then
         local t = clamp01((new - CC_SEVERE) / (1 - CC_SEVERE))
         if DanTraits_PassOut then DanTraits_PassOut(player, CC_KO_MIN[1] + (CC_KO_MIN[2] - CC_KO_MIN[1]) * t, "UI_DanTraits_ConcussionComeTo", true) end
@@ -205,14 +230,58 @@ local function inBright(player)
     return ok and res == true
 end
 
+-- 0..1 where the headache that came back is in its course: building, at its worst, fading
+local function lateShape(late)
+    if not late or not late.left or not late.total then return 0 end
+    local done = late.total - late.left
+    return math.max(0, math.min(1, done / CC_LATE_RISE_H, late.left / CC_LATE_FADE_H))
+end
+-- 0..1 how bad it is right now (0 before it comes and after)
+local function lateStrength(late)
+    return lateShape(late) * (late and late.s or 0)
+end
+DanTraits_ConcussionLateStrength = function(player)
+    local d = player and player:getModData().DanTraits
+    return lateStrength(d and d.ccLate)
+end
+
+-- the headache that comes back: count down to it, then run it; returns how bad it is now
+local function updateLate(player, d, asleep)
+    local late = d.ccLate
+    if not late then return 0 end
+    if late.wait then
+        late.wait = late.wait - 1 / 60
+        if late.wait > 0 then return 0 end
+        local total = CC_LATE_HOURS[1] + CC_LATE_HOURS[2] * (late.s or 0)
+        d.ccLate = { left = total, total = total, s = late.s }
+        late = d.ccLate
+        notify(player, "UI_DanTraits_ConcussionLate")
+    end
+    late.left = late.left - (asleep and CC_LATE_ASLEEP or 1) / 60
+    if late.left <= 0 then
+        d.ccLate = nil
+        notifyGood(player, "UI_DanTraits_ConcussionLateEnd")
+        return 0
+    end
+    local shape = lateShape(late)
+    local pain = shape * (CC_LATE_PAIN[1] + CC_LATE_PAIN[2] * (late.s or 0))
+    if inBright(player) then pain = pain + CC_LIGHT_PAIN * shape end
+    local head = headPart(player)
+    if head then
+        pcall(function() if head:getAdditionalPain() < pain then head:setAdditionalPain(pain) end end)
+    end
+    return shape * (late.s or 0)
+end
+
 local function updateConcussionMinute(player, d)
     if not sandboxOn() then return end
     local strained = ran or fought
     ran, fought = false, false
+    local lateNow = updateLate(player, d, DanTraits_Asleep(player))
     local s = d.ccScore or 0
     if s <= 0 then
         if d.ccTier and d.ccTier > 0 then d.ccTier = 0 end
-        updateMoodle(player, 0)
+        updateMoodle(player, lateNow > 0 and CC_TIER[1] or 0)
         return
     end
     local asleep = DanTraits_Asleep(player)
@@ -267,7 +336,12 @@ end)
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.concussion = function(player, args)
     local d = traitData(player)
-    if args[1] == "clear" then d.ccScore = nil; return "concussion cleared" end
+    if args[1] == "clear" then d.ccScore, d.ccLate = nil, nil; return "concussion cleared" end
+    if args[1] == "late" then
+        local s = clamp01(tonumber(args[2]) or 0.5)
+        d.ccLate = { wait = 1 / 60, s = s }
+        return "the headache that comes back, strength " .. tostring(s) .. ", starts next minute"
+    end
     if args[1] == "fall" then
         local amount = tonumber(args[2]) or 30
         return "a fall costing " .. tostring(amount) .. ": concussion " .. tostring(impactKnock(player, amount))
@@ -277,7 +351,7 @@ DanTraits_ExtraCommands.concussion = function(player, args)
         return "a crash of " .. tostring(amount) .. ": concussion " .. tostring(impactKnock(player, amount, CC_CRASH))
     end
     local s = tonumber(args[1])
-    if not s then return "concussion <0..1> | concussion fall <amount> | concussion crash <amount> | concussion clear" end
+    if not s then return "concussion <0..1> | concussion fall <amount> | concussion crash <amount> | concussion late [0..1] | concussion clear" end
     return "concussion " .. tostring(DanTraits_KnockHead(player, 1, clamp01(s)))
 end
 

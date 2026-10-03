@@ -64,7 +64,8 @@ assert(DanTraits_ExtraFumble(low) == 4 and DanTraits_SwingDropChance(low) == 4, 
 assert(low._st.panic == 1 and low._st.endurance == 1, "tier 1: panic only")
 local low2 = newPlayer({ traits = { "diabetes1", "arthritis" } }); H.current = low2
 low2._md.DanTraits = { glucose = 50 }; minute()
-assert(DanTraits_ExtraFumble(low2) == 8 and math.abs(DanTraits_SwingDropChance(low2) - (1 + 8 + 2 / 100 * 6 + 0.003 * 5)) < 1e-9, "under 55 with Fumbler: 1 + 8 + panic and fatigue terms, got " .. DanTraits_SwingDropChance(low2))
+assert(DanTraits_ExtraFumble(low2) == 8 and DanTraits_SwingDropChance(low2) == 8, "under 55: +8% thrown outright, Arthritis or not, got " .. DanTraits_SwingDropChance(low2))
+assert(math.abs(DanTraits_GripSlipChance(low2) - (1 + 2 / 100 * 6 + 0.003 * 5)) < 1e-9, "the arthritic slip is its own roll: 1 + panic and fatigue terms, got " .. DanTraits_GripSlipChance(low2))
 assert(math.abs(low2._st.endurance - 0.97) < 1e-9 and low2._st.unhappy == 2, "tier 2: endurance drains, mood ramps toward 25")
 local low3 = newPlayer({ health = 30 }); H.current = low3
 low3._md.DanTraits = { glucose = 30 }

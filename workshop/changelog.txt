@@ -1,0 +1,33 @@
+[h1]Update: suggestions from the Reddit thread[/h1]
+Thanks to everyone who left ideas on r/projectzomboid. This update is built from them.
+
+[h2]New[/h2]
+[list]
+[*][b]Sumatriptan[/b] (new item, rare). The migraine pill. Taken during the aura, the attack that follows is half as bad. Taken during an attack, it's over within two hours, with the pain and nausea halved. Works once per attack. The day after, you're heavy-limbed and a little clumsy. Found where other prescriptions are, but rarer.
+[*][b]Personal migraine triggers.[/b] Each character has three triggers that hit twice as hard; the rest count for half. You aren't told which: once a trigger has brought on a couple of attacks, your character works it out and tells you.
+[*][b]New migraine triggers:[/b] heat (hot weather or overheating), the smell of corpses close by, and a storm on the way.
+[*][b]Stitching is a First Aid roll.[/b] At low First Aid, stitches can come out rough: they heal slower, tear more easily, ache, and let infection in until they're sound. A suture needle or needle holder helps, and so does Steady Hands. At First Aid 3 or higher you can tell a rough job, and the health panel shows it. Take the stitches out and try again.
+[*][b]Spoon theory for Multiple Sclerosis.[/b] Your energy is now a budget. You wake with a day's spoons, set by how well you slept (the night the mod already scores: hours, waking, light, fever), and everything you do spends them by effort, faster in the heat or a flare. Half gone is a warning; three left and your legs stiffen and stamina slows; none left is the wall: heavy tiredness, legs like lead, a weapon that slips, and every hour you push on is borrowed from tomorrow. Sitting still gives a little back, a nap more, a coffee hides the wall for an hour. You are told the count each morning. Amantadine now adds two spoons to every morning instead of thinning the old fatigue drip. A sandbox option sets the count (12) or turns the budget off. MS also now warms up a tenth faster than anyone else, and discomfort (the Uncomfortable moodle) wears it down: extra stress, and spoons spent faster.
+[*][b]The headache after a concussion.[/b] A concussion can leave a headache that comes back a day or two later, often after the concussion itself has cleared, and it's worse than the knock was. Sleep gets you through it faster; daylight makes it worse.
+[/list]
+
+[h2]Changed[/h2]
+[list]
+[*][b]Arthritis:[/b] a slipping grip now makes a weak swing instead of throwing your weapon. Only in a bad flare (cold and damp) can a slip still send the weapon to the ground, and a new sandbox option, [i]Arthritis Drops Weapons[/i], turns that off.
+[*][b]Migraines[/b] now cost -8 (was -6), since attacks come more often. Ordinary painkillers barely touch an attack now; sumatriptan is what works. New Migraines characters start with a nearly empty pack (two tablets), unless Starting Medication is off.
+[*][b]Smoker:[/b] a new sandbox option, [i]Nicotine Craving Moodle[/i], hides the craving moodle and its notice, so you read the craving from irritability and stress instead.
+[*][b]Vitality:[/b] Thriving now gives 1.5x Fitness and Strength experience (was 2x).
+[*][b]Multiple Sclerosis:[/b] now starts you at -1 Fitness and -1 Strength, and can't be taken with Athletic or Strong.
+[*][b]Caffeine Dependent:[/b] a small dose now does something. A bar of chocolate or a can of cola was never enough to end a craving (it still isn't), but it used to be ignored outright. Now it puts the craving off: three hours for a bar, six for a can, and if that takes you back under the half-day mark the craving lifts until the clock catches up again. Coffee, tea and caffeine pills still end it outright. The trait and moodle text now say which is which.
+[/list]
+
+[h2]Fixed[/h2]
+[list]
+[*][b]Caffeine Dependent:[/b] a mug of coffee, tea or cocoa now counts. The game makes these as food items with the coffee, tea bag or cocoa as an ingredient, and the mod was only looking at the Coffee fluid, so a brewed mug never ended the withdrawal. A spoon of coffee in a mug is a full dose; a tea bag is a small one; a can of cola is a third of a coffee, so it takes about three to catch up.
+[/list]
+
+[h2]Notes[/h2]
+[list]
+[*]Safe to update mid-save. Existing Migraines characters get their personal triggers the first time the mod runs.
+[*]Full details for every system are in the README on GitHub: https://github.com/Spadix84/pz-dans-traits
+[/list]

@@ -193,4 +193,36 @@ assert(D(p) == nil or D(p).ccScore == nil, "hooks and helmet: 1 x 0.5 x 0.4 = a 
 H.rollf = 0.15; DanTraits_KnockHead(p, 1, 0.4); near(D(p).ccScore, 0.4 * 0.75 * 0.6, 1e-9, "hooks and helmet: 0.4 x 0.75 x 0.6")
 thick = false
 
+-- 13. the headache that comes back: chance 0.5 + 0.5 x score; a day to two and a half later (24-60 h, the
+-- harness's ZombRandFloat gives the middle: 42 h); builds over 6 h, holds, fades over the last 12; lasts 24 + 24 x score h
+p = newPlayer(); H.current = p
+H.rollf = 0.8; DanTraits_KnockHead(p, 1, 0.5)
+assert(D(p).ccLate == nil, "score 0.5: a 75% chance, roll 0.8 misses")
+p = newPlayer(); H.current = p
+H.rollf = 0.7; DanTraits_KnockHead(p, 1, 0.5)
+assert(D(p).ccLate and D(p).ccLate.wait == 42 and D(p).ccLate.s == 0.5, "roll 0.7 hits: due in 42 hours")
+H.rollf = 0.7; DanTraits_KnockHead(p, 1, 0.2)
+near(D(p).ccLate.s, 0.6, 1e-9, "a second knock before it comes: as bad as the concussion now, same wait")
+assert(D(p).ccLate.wait == 42, "the wait is kept")
+D(p).ccScore = nil   -- the concussion itself has cleared by then
+local late = D(p).ccLate
+late.wait = 1 / 60; H.clearHalo(); minute()
+assert(late ~= D(p).ccLate and D(p).ccLate.left and halo[1] == "UI_DanTraits_ConcussionLate", "it comes: notice")
+near(D(p).ccLate.total, 24 + 24 * 0.6, 1e-9, "38.4 hours for a 0.6")
+for _ = 1, 3 * 60 - 1 do minute() end
+near(p._head._pain, 0.5 * (20 + 45 * 0.6), 1e-6, "three hours in: half built up")
+for _ = 1, 3 * 60 do minute() end
+near(p._head._pain, 20 + 45 * 0.6, 1e-6, "six hours: at its worst, 47, worse than the knock's own")
+near(DanTraits_ConcussionLateStrength(p), 0.6, 1e-9, "read by others")
+local left = D(p).ccLate.left; p._asleep = true; minute(); p._asleep = false
+near(D(p).ccLate.left, left - 1.5 / 60, 1e-9, "asleep: half as fast again")
+D(p).ccLate.left = 6; p._head._pain = 0; minute()
+near(p._head._pain, (6 - 1 / 60) / 12 * (20 + 45 * 0.6), 1e-6, "fading over its last twelve hours")
+D(p).ccLate.left = 1 / 60; H.clearHalo(); minute()
+assert(D(p).ccLate == nil and halo[1] == "+UI_DanTraits_ConcussionLateEnd", "over: notice")
+-- the console starts one next minute; clear stops it
+assert(string.find(DanTraits_ExtraCommands.concussion(p, { "late", "0.4" }), "strength 0.4"), "concussion late")
+minute(); assert(D(p).ccLate and D(p).ccLate.left, "started")
+DanTraits_ExtraCommands.concussion(p, { "clear" }); assert(D(p).ccLate == nil, "cleared")
+
 H.pass()

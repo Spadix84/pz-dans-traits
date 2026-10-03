@@ -2,14 +2,43 @@
 -- Every ten minutes there is a small chance of an attack, pushed up by a
 -- bad night (Vitality's sleep debt), thirst, stress, a hangover, nicotine
 -- withdrawal, caffeine withdrawal, a wound infection's fever, bright
--- daylight outdoors and sleeping with the light on, and never within a day
--- of the last one. An aura gives
+-- daylight outdoors, sleeping with the light on, heat (hot air or an
+-- overheated body), the smell of corpses close by and a storm on the way (in
+-- the forecast for today or tomorrow, before the rain starts), and never
+-- within a day of the last one. An aura gives
 -- twenty minutes' warning. The attack lasts three to six hours by severity:
--- pain (a DanTraits_PainFloor floor: painkillers lower it by their strength and, taken once, shorten the attack), nausea,
--- low mood and stress. Daylight outdoors slows the recovery to half and
--- adds to the pain; sleeping it off is twice as fast, in the dark (a lit
--- room loses the benefit), and during an attack light wakes you twice as
--- easily.
+-- pain (a DanTraits_PainFloor floor), nausea, low mood and stress. Daylight
+-- outdoors slows the recovery to half and adds to the pain; sleeping it off
+-- is twice as fast, in the dark (a lit room loses the benefit), and during
+-- an attack light wakes you twice as easily.
+--
+-- Everyone's triggers are their own. Eight of them are personal (bad sleep,
+-- thirst, stress, light, hangovers, heat, corpses, storms): each character
+-- draws three that hit twice as hard, and the other five count for half
+-- (MIG_STRONG_N, MIG_STRONG_X, MIG_WEAK_X). Withdrawal, fever and a
+-- concussion count the same for everyone. Nobody is told which: the trigger
+-- that did the most to bring on an attack is noted, and once one of the
+-- strong ones has done it twice (MIG_LEARN) the character works it out and
+-- says so as the attack ends.
+--
+-- Treatment. Ordinary painkillers barely touch it: during an attack their
+-- relief lasts about a third as long as on other pain, and the first dose
+-- takes only a tenth off the time left. Sumatriptan (DanTraits.Sumatriptan,
+-- on the shared medication list) is what works: in the system during the
+-- aura it halves the attack to come; during an attack it ends it within two
+-- hours and halves the pain and nausea meanwhile. Once per attack. Anyone
+-- who takes it is heavy and a little clumsy for a day after (tiredness, and
+-- a swing can slip: the gripSlip hook, see DanTraits_Arthritis.lua). A new
+-- character with Migraines starts with a pack down to its last two tablets
+-- (none with the Starting Medication sandbox option off).
+--
+-- Mod data: migSinceEnd, migAuraLeft, migSeverity, migActive, migHoursLeft,
+-- migMedsUsed, migTripUsed, migChance, migStrong (the character's three
+-- strong triggers), migCause (the trigger behind this attack), migSeen
+-- (attacks each trigger has brought on), migKnown (strong triggers worked
+-- out), tripAfterMin (minutes of the sumatriptan after-effect left),
+-- migKitGiven.
+-- Console: migraine | migraine start | migraine triggers
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -27,6 +56,22 @@ local MIG_NICOTINE      = 1.5     -- added at full nicotine withdrawal (Smoker)
 local MIG_CONCUSSION    = 3.0     -- added at the worst concussion
 local MIG_FEVER         = 2.0     -- added at full fever (wound infection)
 local MIG_CAFFEINE      = 2.0     -- added at full caffeine withdrawal (Caffeine Dependent)
+local MIG_HEAT          = 2.0     -- added at full heat: the hotter of the air...
+local MIG_HEAT_AIR      = { 27, 35 }      -- ...degrees C from the first to full...
+local MIG_HEAT_BODY     = { 37.5, 38.5 }  -- ...and the body's temperature, from the first to full
+local MIG_CORPSE        = 0.5     -- added per corpse within MIG_CORPSE_TILES...
+local MIG_CORPSE_TILES  = 3
+local MIG_CORPSE_MAX    = 3       -- ...counting up to this many
+local MIG_STORM         = 1.5     -- added while a storm is forecast and the rain has not started
+local MIG_STORM_RAIN    = 0.1     -- rain intensity at which it has started
+local MIG_SLEEP_LIGHT   = 1.0     -- added asleep in a fully lit room (counts as light)
+-- personal triggers
+local MIG_PERSONAL      = { "sleep", "thirst", "stress", "light", "hangover", "heat", "corpses", "storm" }
+local MIG_STRONG_N      = 3       -- strong triggers each character draws...
+local MIG_STRONG_X      = 2       -- ...counting this much...
+local MIG_WEAK_X        = 0.5     -- ...and the rest of the personal ones this much
+local MIG_LEARN         = 2       -- attacks a strong trigger brings on before the character knows it
+-- the attack
 local MIG_REFRACTORY_H  = 24      -- no roll for this long after an attack ends
 local MIG_AURA_H        = 20 / 60 -- warning before the pain
 local MIG_SEV_MIN       = 0.5     -- severity is this plus up to 0.5
@@ -38,14 +83,25 @@ local MIG_SICK          = 30      -- food sickness floor at severity 1
 local MIG_MOOD          = 15
 local MIG_RAMP          = 1
 local MIG_STRESS_RATE   = 0.0005  -- per minute
-local MIG_MEDS_CUT      = 0.6     -- painkillers, first time in an attack: hours left x this
 local MIG_LIGHT_RATE    = 0.5     -- recovery rate in daylight outdoors...
 local MIG_SLEEP_RATE    = 2.0     -- ...and asleep in the dark (fully lit room: 1)
-local MIG_SLEEP_LIGHT   = 1.0     -- percent per ten minutes added asleep in a fully lit room
 local MIG_SLEEP_WAKE    = 2       -- during an attack, light wakes you this much more easily
 local MIG_NIGHT         = 0.3     -- night strength under this is day
 local MIG_CLOUD         = 0.5     -- cloud cover under this is bright
 local MIG_TIER          = { 0.01, 0.5, 0.8 }   -- Aura | Migraine | Splitting
+-- treatment
+local MIG_MEDS_CUT      = 0.9     -- painkillers, first time in an attack: hours left x this
+local MIG_PILL_KEEP     = 0.35    -- painkillers in an attack: this share of their usual relief
+local MIG_TRIP_AURA     = 0.5     -- sumatriptan in the aura: severity x this
+local MIG_TRIP_HOURS    = 2       -- sumatriptan in an attack: over within this many hours...
+local MIG_TRIP_EASE     = 0.5     -- ...pain and nausea x this meanwhile
+local MIG_TRIP_AFTER_H  = 24      -- the after-effect, for anyone who takes it
+local MIG_TRIP_FATIGUE  = 0.0002  -- tiredness a minute awake
+local MIG_TRIP_SLIP     = 3       -- percent added to a swing's grip slip
+local MIG_TRIP_ITEM     = "DanTraits.Sumatriptan"
+local MIG_TRIP_START    = 2 / 6   -- a new character's pack: two of its six tablets left
+
+local clamp01 = DanTraits_Clamp01
 
 local function migData(player)
     local d = traitData(player)
@@ -53,7 +109,33 @@ local function migData(player)
     return d
 end
 
-local clamp01 = DanTraits_Clamp01
+local function isPersonal(key)
+    for _, k in ipairs(MIG_PERSONAL) do if k == key then return true end end
+    return false
+end
+
+local function isStrong(d, key)
+    for _, k in ipairs(d and d.migStrong or {}) do if k == key then return true end end
+    return false
+end
+
+-- draw the character's strong triggers, once
+local function rollTriggers(d)
+    if d.migStrong then return end
+    local pool = {}
+    for i, k in ipairs(MIG_PERSONAL) do pool[i] = k end
+    local strong = {}
+    for _ = 1, MIG_STRONG_N do
+        strong[#strong + 1] = table.remove(pool, ZombRand(#pool) + 1)
+    end
+    d.migStrong = strong
+end
+
+-- how much a trigger counts for this character (1 until the strong ones are drawn)
+local function weightOf(d, key)
+    if not d or not d.migStrong or not isPersonal(key) then return 1 end
+    return isStrong(d, key) and MIG_STRONG_X or MIG_WEAK_X
+end
 
 -- bright daylight, outdoors: the trigger and the thing that makes an attack worse
 local function inBrightLight(player)
@@ -70,7 +152,41 @@ local function inBrightLight(player)
 end
 DanTraits_InBrightLight = inBrightLight
 
--- percent chance per ten minutes
+local function over(value, from, full) return clamp01((value - from) / (full - from)) end
+
+-- 0..1 how hot: the hotter of the air around the character and their body
+local function heatOf(player)
+    local heat = 0
+    pcall(function() heat = over(getClimateManager():getAirTemperatureForCharacter(player) or 0, MIG_HEAT_AIR[1], MIG_HEAT_AIR[2]) end)
+    pcall(function()
+        local t = player:getStats():get(CharacterStat.TEMPERATURE)
+        if type(t) == "number" and t > 30 then heat = math.max(heat, over(t, MIG_HEAT_BODY[1], MIG_HEAT_BODY[2])) end
+    end)
+    return heat
+end
+
+-- a storm, heavy rain or a blizzard in today's or tomorrow's forecast, and
+-- not raining yet: the pressure dropping ahead of the front
+local function stormComing()
+    local coming = false
+    pcall(function()
+        local climate = getClimateManager()
+        if (climate:getRainIntensity() or 0) >= MIG_STORM_RAIN then return end
+        local forecaster = climate:getClimateForecaster()
+        local days = { forecaster:getForecast(), forecaster:getForecast(1) }
+        for i = 1, 2 do
+            local day = days[i]
+            if day then
+                pcall(function()
+                    if day:hasStorm() or day:hasTropicalStorm() or day:hasHeavyRain() or day:hasBlizzard() then coming = true end
+                end)
+            end
+        end
+    end)
+    return coming
+end
+DanTraits_StormComing = stormComing
+
 -- 0..1 how lit the room is, while asleep (the sleep system's reading)
 local function sleepLit(player)
     local lit = 0
@@ -82,23 +198,41 @@ local function sleepLit(player)
     return lit
 end
 
-local function migraineChance(player)
-    local chance = MIG_BASE + MIG_SLEEP_LIGHT * sleepLit(player)
+-- each trigger's share of the chance right now, before the character's weights (percent per ten minutes)
+local function migraineParts(player)
+    local parts = {}
     pcall(function()
         local stats = player:getStats()
         local debt = DanTraits_SleepDebt and DanTraits_SleepDebt(player) or 0
-        chance = chance + MIG_SLEEP_DEBT * clamp01(debt)
+        parts.sleep = MIG_SLEEP_DEBT * clamp01(debt)
         local thirst = stats:get(CharacterStat.THIRST) or 0
-        if thirst > MIG_THIRST_FROM then chance = chance + MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
-        chance = chance + MIG_STRESS * clamp01(stats:get(CharacterStat.STRESS) or 0)
-        if DanTraits_HangoverStrength then chance = chance + MIG_HANGOVER * clamp01(DanTraits_HangoverStrength(player)) end
-        if DanTraits_NicotineWithdrawal then chance = chance + MIG_NICOTINE * clamp01(DanTraits_NicotineWithdrawal(player)) end
-        if DanTraits_ConcussionStrength then chance = chance + MIG_CONCUSSION * clamp01(DanTraits_ConcussionStrength(player)) end
-        if DanTraits_CaffeineWithdrawalOf then chance = chance + MIG_CAFFEINE * clamp01(DanTraits_CaffeineWithdrawalOf(player)) end
-        if DanTraits_InfectionFever then chance = chance + MIG_FEVER * clamp01(DanTraits_InfectionFever(player)) end
+        if thirst > MIG_THIRST_FROM then parts.thirst = MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
+        parts.stress = MIG_STRESS * clamp01(stats:get(CharacterStat.STRESS) or 0)
+        if DanTraits_HangoverStrength then parts.hangover = MIG_HANGOVER * clamp01(DanTraits_HangoverStrength(player)) end
+        if DanTraits_NicotineWithdrawal then parts.nicotine = MIG_NICOTINE * clamp01(DanTraits_NicotineWithdrawal(player)) end
+        if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * clamp01(DanTraits_ConcussionStrength(player)) end
+        if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * clamp01(DanTraits_CaffeineWithdrawalOf(player)) end
+        if DanTraits_InfectionFever then parts.fever = MIG_FEVER * clamp01(DanTraits_InfectionFever(player)) end
     end)
-    if inBrightLight(player) then chance = chance + MIG_LIGHT end
-    return chance
+    parts.light = MIG_SLEEP_LIGHT * sleepLit(player) + (inBrightLight(player) and MIG_LIGHT or 0)
+    parts.heat = MIG_HEAT * heatOf(player)
+    if DanTraits_CorpsesNearby then parts.corpses = MIG_CORPSE * math.min(MIG_CORPSE_MAX, DanTraits_CorpsesNearby(player, MIG_CORPSE_TILES)) end
+    if stormComing() then parts.storm = MIG_STORM end
+    return parts
+end
+DanTraits_MigraineParts = migraineParts
+
+-- percent chance per ten minutes, with the character's own weights; and the
+-- personal trigger doing the most right now (nil when none is)
+local function migraineChance(player)
+    local d = player:getModData().DanTraits
+    local chance, cause, most = MIG_BASE, nil, 0
+    for key, share in pairs(migraineParts(player)) do
+        local weighted = share * weightOf(d, key)
+        chance = chance + weighted
+        if isPersonal(key) and weighted > most then cause, most = key, weighted end
+    end
+    return chance, cause
 end
 DanTraits_MigraineChance = migraineChance
 
@@ -108,9 +242,11 @@ end
 
 local floorUp = DanTraits_FloorUp
 
-local function startAura(player, d)
+local function startAura(player, d, cause)
     d.migAuraLeft = MIG_AURA_H
     d.migSeverity = MIG_SEV_MIN + ZombRand(0, 51) / 100
+    d.migCause = cause
+    d.migTripUsed = nil
     notify(player, "UI_DanTraits_MigraineAura")
 end
 
@@ -122,32 +258,58 @@ local function startAttack(player, d)
     notify(player, "UI_DanTraits_MigraineStart")
 end
 
+-- the attack is over: note what brought it on, and say so once a strong trigger has been caught twice
+local function learnCause(player, d)
+    local cause = d.migCause
+    d.migCause = nil
+    if not cause then return end
+    d.migSeen = d.migSeen or {}
+    d.migSeen[cause] = (d.migSeen[cause] or 0) + 1
+    d.migKnown = d.migKnown or {}
+    if d.migSeen[cause] >= MIG_LEARN and isStrong(d, cause) and not d.migKnown[cause] then
+        d.migKnown[cause] = true
+        notify(player, "UI_DanTraits_MigraineTrigger_" .. cause)
+    end
+end
+
 local function endAttack(player, d)
     d.migActive = false
     d.migHoursLeft = 0
     d.migSinceEnd = 0
     updateMoodle(player, 0)
     DanTraits_NotifyGood(player, "UI_DanTraits_MigraineEnd")
+    learnCause(player, d)
+end
+
+local function triptanIn(player)
+    return DanTraits_MedCovered and DanTraits_MedCovered(player, "sumatriptan") or false
 end
 
 -- the ten-minute roll
 local function updateMigraineTen(player, d)
     if not hasTrait(player, "migraine") then return end
     d = migData(player)
+    rollTriggers(d)
     if d.migActive or d.migAuraLeft then return end
     if d.migSinceEnd < MIG_REFRACTORY_H then
         d.migSinceEnd = d.migSinceEnd + 10 / 60
         return
     end
-    local chance = migraineChance(player)
+    local chance, cause = migraineChance(player)
     d.migChance = chance
-    if ZombRand(10000) < chance * 100 then startAura(player, d) end
+    if ZombRand(10000) < chance * 100 then startAura(player, d, cause) end
 end
 
 local function updateMigraineMinute(player, d)
     if not hasTrait(player, "migraine") then return end
     d = migData(player)
     if d.migAuraLeft then
+        -- sumatriptan taken in the aura: the attack to come is half as bad
+        if not d.migTripUsed and triptanIn(player) then
+            d.migTripUsed = true
+            d.migSeverity = (d.migSeverity or MIG_SEV_MIN) * MIG_TRIP_AURA
+            DanTraits_NotifyGood(player, "UI_DanTraits_MigraineTriptan")
+        end
         d.migAuraLeft = d.migAuraLeft - 1 / 60
         updateMoodle(player, MIG_TIER[1])
         if d.migAuraLeft <= 1e-6 then startAttack(player, d) end
@@ -165,20 +327,70 @@ local function updateMigraineMinute(player, d)
         d.migMedsUsed = true
         d.migHoursLeft = d.migHoursLeft * MIG_MEDS_CUT
     end
+    -- sumatriptan in an attack: over within two hours
+    if not d.migTripUsed and triptanIn(player) then
+        d.migTripUsed = true
+        d.migHoursLeft = math.min(d.migHoursLeft, MIG_TRIP_HOURS)
+        DanTraits_NotifyGood(player, "UI_DanTraits_MigraineTriptan")
+    end
     d.migHoursLeft = d.migHoursLeft - rate / 60
     if d.migHoursLeft <= 0 then endAttack(player, d) return end
 
     local s = d.migSeverity or MIG_SEV_MIN
     updateMoodle(player, s)
     if asleep then return end
+    local ease = d.migTripUsed and MIG_TRIP_EASE or 1
     pcall(function()
         local stats = player:getStats()
-        DanTraits_PainFloor(player, d, "migraine", MIG_PAIN * s + (bright and MIG_PAIN_LIGHT or 0), MIG_RAMP)
-        floorUp(stats, CharacterStat.FOOD_SICKNESS, MIG_SICK * s, MIG_RAMP)
+        DanTraits_PainFloor(player, d, "migraine", (MIG_PAIN * s + (bright and MIG_PAIN_LIGHT or 0)) * ease, MIG_RAMP)
+        floorUp(stats, CharacterStat.FOOD_SICKNESS, MIG_SICK * s * ease, MIG_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, MIG_MOOD, MIG_RAMP)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + MIG_STRESS_RATE * s))
     end)
 end
+
+-- sumatriptan's day after, for anyone who takes it: heavy and a little clumsy
+local function updateTriptanMinute(player, d)
+    if not d or (d.tripAfterMin or 0) <= 0 then return end
+    d.tripAfterMin = d.tripAfterMin - 1
+    if d.tripAfterMin <= 0 then d.tripAfterMin = nil end
+    if not DanTraits_Asleep(player) then DanTraits_StatAdd(player:getStats(), CharacterStat.FATIGUE, MIG_TRIP_FATIGUE) end
+end
+
+DanTraits_AddHook("gripSlip", function(chance, player)
+    local d = player:getModData().DanTraits
+    if not d or (d.tripAfterMin or 0) <= 0 then return nil end
+    return chance + MIG_TRIP_SLIP
+end)
+
+-- painkillers during an attack: snapshot their timer before the pill, keep a share of what it added after
+local painBefore = {}
+DanTraits_AddHook("prePill", function(_, player, kind)
+    if tostring(kind) ~= "Pills" then return nil end
+    local d = player:getModData().DanTraits
+    if not d or not d.migActive or not hasTrait(player, "migraine") then return nil end
+    pcall(function() painBefore[player] = player:getPainEffect() or 0 end)
+    return nil
+end)
+
+DanTraits_AddHook("pill", function(_, player, kind)
+    kind = tostring(kind)
+    if kind == "Sumatriptan" then
+        local d = traitData(player)
+        d.tripAfterMin = MIG_TRIP_AFTER_H * 60
+        notify(player, "UI_DanTraits_TriptanAfter")
+        return nil
+    end
+    if kind ~= "Pills" then return nil end
+    local before = painBefore[player]
+    painBefore[player] = nil
+    if not before then return nil end
+    pcall(function()
+        local after = player:getPainEffect() or 0
+        if after > before then player:setPainEffect(before + (after - before) * MIG_PILL_KEEP) end
+    end)
+    return nil
+end)
 
 -- an attack makes the eyes sensitive: light wakes you more easily
 DanTraits_AddHook("sleepWake", function(m, player, d)
@@ -186,5 +398,48 @@ DanTraits_AddHook("sleepWake", function(m, player, d)
     return m * MIG_SLEEP_WAKE
 end)
 
+-- a new character: their triggers drawn, and the end of a pack of sumatriptan
+local function onMigraineCreatePlayer(playerNum, player)
+    if not player or not hasTrait(player, "migraine") then return end
+    local d = migData(player)
+    if d.migKitGiven or player:getHoursSurvived() > 0 then return end
+    d.migKitGiven = true
+    rollTriggers(d)
+    if not DanTraits_SandboxOn("StartingMedication") then return end
+    pcall(function()
+        local pack = player:getInventory():AddItem(MIG_TRIP_ITEM)
+        if not pack then return end
+        pack:getModData().DanTraitsFilled = true   -- not the random spawn fill
+        pack:setUsedDelta(MIG_TRIP_START)
+    end)
+end
+
+-- console: migraine | migraine start | migraine triggers
+DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
+DanTraits_ExtraCommands.migraine = function(player, args)
+    local d = migData(player)
+    rollTriggers(d)
+    if args[1] == "start" then
+        local _, cause = migraineChance(player)
+        startAura(player, d, cause)
+        return "aura started (cause " .. tostring(cause) .. ")"
+    end
+    if args[1] == "triggers" then
+        local seen = {}
+        for k, n in pairs(d.migSeen or {}) do seen[#seen + 1] = k .. " " .. tostring(n) end
+        table.sort(seen)
+        local known = {}
+        for k in pairs(d.migKnown or {}) do known[#known + 1] = k end
+        table.sort(known)
+        return "strong: " .. table.concat(d.migStrong, ", ") .. " | seen: " .. table.concat(seen, ", ")
+            .. " | known: " .. table.concat(known, ", ")
+    end
+    local chance, cause = migraineChance(player)
+    return string.format("chance %.2f%% per ten minutes (most: %s)%s", chance, tostring(cause),
+        d.migActive and string.format(", attack %.1f h left", d.migHoursLeft or 0) or "")
+end
+
 DanTraits_Every("minute", "Migraine", updateMigraineMinute, 40)
+DanTraits_Every("minute", "Triptan", updateTriptanMinute, 40)
 DanTraits_Every("ten", "Migraine", updateMigraineTen, 40)
+Events.OnCreatePlayer.Add(onMigraineCreatePlayer)

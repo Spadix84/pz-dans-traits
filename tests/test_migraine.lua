@@ -46,6 +46,27 @@ withdrawal = 0.5; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half +1")
 DanTraits_CaffeineWithdrawalOf = nil
 near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Caffeine loaded: nothing")
 
+-- 1d. heat: the hotter of the air (27 C to full at 35) and the body (37.5 to full at 38.5), +2 at full
+H.climate.temp = 31; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "31 C: half heat +1")
+H.climate.temp = 40; near(DanTraits_MigraineChance(p), 0.3 + 2.0, 1e-9, "40 C: full heat +2")
+H.climate.temp = 20; p._st.temperature = 38.0; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "body at 38: half heat +1")
+H.climate.temp = 33; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "the hotter of the two counts, not both")
+H.climate.temp = 20; p._st.temperature = 37
+near(DanTraits_MigraineChance(p), 0.3, 1e-9, "37 C body, 20 C air: nothing")
+
+-- 1e. corpses within three tiles: +0.5 each, counting three at most
+H.corpses = 2; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "two corpses +1")
+H.corpses = 9; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "a pile counts as three: +1.5")
+H.corpses = 0
+
+-- 1f. a storm on the way: in today's or tomorrow's forecast and not raining yet, +1.5
+H.climate.forecast = { "storm" }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "storm today +1.5")
+H.climate.forecast = { nil, "blizzard" }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "blizzard tomorrow +1.5")
+H.climate.forecast = { "rain", "tropical" }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "two in a row count once")
+H.climate.rain = 0.5; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "once the rain has started: nothing")
+H.climate.rain = 0; H.climate.forecast = nil
+near(DanTraits_MigraineChance(p), 0.3, 1e-9, "clear forecast: nothing")
+
 -- 2. no roll inside the 24 h refractory window from creation; then a roll that misses, then one that hits: aura first
 local q = newPlayer(); H.current = q
 q._md.DanTraits = { migSinceEnd = 0 }
@@ -77,7 +98,7 @@ assert(H.pain(q) == 10, "pain climbing toward 75 (60 + 15 glare)")
 q._outside = false; H.climate.night = 1
 before = M(q).migHoursLeft
 q._painFx = 1; H.setPain(q, 0); minute()
-near(M(q).migHoursLeft, before * 0.6 - 1 / 60, 1e-9, "painkillers: remaining time x 0.6")
+near(M(q).migHoursLeft, before * 0.9 - 1 / 60, 1e-9, "painkillers barely touch it: remaining time x 0.9")
 assert(H.pain(q) == 1, "the painkiller timer alone does not stop the floor (it ramps 1 a minute)")
 -- the head climbs to the full 60 at 1 a minute and the game takes the 30 off
 q._pr = 30; H.setPain(q, 0); for _ = 1, 60 do minute() end
@@ -98,5 +119,97 @@ H.rng = { 0, 0 }; ten(); assert(not M(q).migAuraLeft, "refractory again")
 local n = newPlayer({ traits = {} }); H.current = n
 H.rng = { 0, 0 }; n._md.DanTraits = { migSinceEnd = 99 }; ten(); minute()
 assert(not M(n).migAuraLeft and not M(n).migActive, "no trait: untouched")
+assert(not M(n).migStrong, "no trait: no triggers drawn")
+
+-- 7. personal triggers: three drawn once (here the 2nd, then the 6th of what is left, then the 1st), x2; the other five x0.5
+local t = newPlayer(); H.current = t
+t._md.DanTraits = { migSinceEnd = 0 }
+H.rng = { 1, 5, 0 }; ten()
+local strong = M(t).migStrong
+assert(#strong == 3 and strong[1] == "thirst" and strong[2] == "corpses" and strong[3] == "sleep", "drawn: " .. table.concat(strong, ","))
+H.rng = { 0, 0, 0 }; ten(); assert(M(t).migStrong == strong, "drawn once")
+near(DanTraits_MigraineChance(t), 0.3, 1e-9, "the base is nobody's trigger")
+t._st.stress = 1; near(DanTraits_MigraineChance(t), 0.3 + 1.0, 1e-9, "stress is not one of theirs: x0.5")
+t._st.stress = 0; H.corpses = 2; near(DanTraits_MigraineChance(t), 0.3 + 2.0, 1e-9, "corpses are: x2")
+local _, cause = DanTraits_MigraineChance(t); assert(cause == "corpses", "the cause: the biggest personal share")
+H.corpses = 0
+DanTraits_InfectionFever = function() return 1 end
+near(DanTraits_MigraineChance(t), 0.3 + 2.0, 1e-9, "fever counts the same for everyone")
+_, cause = DanTraits_MigraineChance(t); assert(cause == nil, "fever is not a personal trigger")
+DanTraits_InfectionFever = nil
+
+-- 8. working them out: the cause is kept from the aura to the end; a strong one caught twice is named, once
+local function attackBy(p, why)
+  M(p).migSinceEnd = 99; H.corpses = (why == "corpses") and 3 or 0; p._st.stress = (why == "stress") and 1 or 0
+  H.rng = { 0, 0 }; ten()
+  assert(M(p).migCause == why, "cause noted at the aura: " .. tostring(M(p).migCause))
+  for _ = 1, 20 do minute() end
+  M(p).migHoursLeft = 1 / 60; minute()
+  H.corpses = 0; p._st.stress = 0
+end
+H.clearHalo()
+attackBy(t, "corpses"); assert(M(t).migSeen.corpses == 1 and not M(t).migKnown.corpses, "once: not yet")
+attackBy(t, "corpses"); assert(M(t).migKnown.corpses and halo[#halo] == "UI_DanTraits_MigraineTrigger_corpses", "twice: worked out")
+local nHalo = #halo
+attackBy(t, "corpses"); assert(halo[#halo] ~= "UI_DanTraits_MigraineTrigger_corpses" and #halo > nHalo, "said once")
+attackBy(t, "stress"); attackBy(t, "stress")
+assert(M(t).migSeen.stress == 2 and not M(t).migKnown.stress, "a weak trigger is never named")
+
+-- 9. sumatriptan: in the aura, the attack is half as bad; in an attack, over within two hours, pain and nausea halved
+local covered = false
+DanTraits_MedCovered = function(_, id) return id == "sumatriptan" and covered end
+local s1 = newPlayer(); H.current = s1
+s1._md.DanTraits = { migSinceEnd = 99, migStrong = { "sleep", "thirst", "stress" } }
+H.rng = { 0, 50 }; ten(); near(M(s1).migSeverity, 1.0, 1e-9, "severity 1")
+covered = true; H.clearHalo(); minute()
+near(M(s1).migSeverity, 0.5, 1e-9, "taken in the aura: halved"); assert(halo[#halo] == "+UI_DanTraits_MigraineTriptan", "relief notice")
+for _ = 1, 20 do minute() end
+assert(M(s1).migActive, "the attack still comes")
+near(M(s1).migHoursLeft, 3 + 3 * 0.5 - 1 / 60, 1e-6, "no second use in the attack")
+covered = false
+local s2 = newPlayer(); H.current = s2
+s2._md.DanTraits = { migSinceEnd = 99, migStrong = { "sleep", "thirst", "stress" } }
+H.rng = { 0, 50 }; ten(); for _ = 1, 20 do minute() end
+assert(M(s2).migActive, "attack on"); near(M(s2).migHoursLeft, 6, 1e-6, "six hours")
+covered = true; minute()
+near(M(s2).migHoursLeft, 2 - 1 / 60, 1e-9, "in the attack: two hours left")
+H.setPain(s2, 0); for _ = 1, 60 do minute() end
+assert(H.pain(s2) == 30, "pain floor halved to 30: " .. H.pain(s2))
+near(s2._st.foodsick, 15, 1.0, "nausea halved to 15")
+covered = false
+DanTraits_MedCovered = nil
+
+-- 10. the day after sumatriptan, for anyone: tired and a little clumsy (the grip slip hook), for 24 hours
+local a = newPlayer({ traits = {} }); H.current = a
+H.clearHalo()
+DanTraits_RunHooks("pill", nil, a, "Sumatriptan")
+assert(M(a).tripAfterMin == 1440 and halo[#halo] == "UI_DanTraits_TriptanAfter", "after-effect starts")
+near(DanTraits_RunHooks("gripSlip", 0, a), 3, 1e-9, "a swing can slip: +3%")
+local f0 = a._st.fatigue or 0; minute(); near(a._st.fatigue, f0 + 0.0002, 1e-9, "a little more tired a minute")
+M(a).tripAfterMin = 1; minute(); assert(M(a).tripAfterMin == nil, "over after a day")
+near(DanTraits_RunHooks("gripSlip", 0, a), 0, 1e-9, "steady again")
+
+-- 11. painkillers in an attack keep a third of their usual relief; out of one, all of it
+local pk = newPlayer(); H.current = pk
+pk.setPainEffect = function(self, v) self._painFx = v end
+pk._md.DanTraits = { migActive = true, migHoursLeft = 3, migSeverity = 1 }
+pk._painFx = 0
+DanTraits_RunHooks("prePill", nil, pk, "Pills"); pk._painFx = 5400; DanTraits_RunHooks("pill", nil, pk, "Pills")
+near(pk._painFx, 5400 * 0.35, 1e-6, "a third of the timer")
+M(pk).migActive = false; pk._painFx = 0
+DanTraits_RunHooks("prePill", nil, pk, "Pills"); pk._painFx = 5400; DanTraits_RunHooks("pill", nil, pk, "Pills")
+assert(pk._painFx == 5400, "no attack: the full dose")
+
+-- 12. a new character: triggers drawn, and a pack of sumatriptan down to two of six, once; none with the option off
+local nc = newPlayer(); H.current = nc
+H.fire("OnCreatePlayer", 0, nc); H.fire("OnCreatePlayer", 0, nc)
+assert(#nc._inv == 1 and nc._inv[1]._type == "DanTraits.Sumatriptan", "one pack")
+near(nc._inv[1]._used, 2 / 6, 1e-9, "two tablets left")
+assert(M(nc).migStrong and #M(nc).migStrong == 3, "triggers drawn at creation")
+SandboxVars = { DanTraits = { StartingMedication = false } }
+local nm = newPlayer(); H.current = nm
+H.fire("OnCreatePlayer", 0, nm)
+assert(#nm._inv == 0, "Starting Medication off: no pack")
+SandboxVars = nil
 
 H.pass()

@@ -5,6 +5,8 @@
 -- overhaul (DanTraits_WoundCare.lua):
 --   splints you set go wrong half as often (the splintBadSet hook, read for
 --     whoever sets it, patient or not)
+--   stitches you put in come out rough half as often (the stitchPoor hook,
+--     likewise for whoever stitches)
 --   your fresh stitches tear half as often under strain (the stitchTear hook)
 --   stitching, pulling out glass or a bullet, and splinting take a quarter
 --     less time
@@ -17,7 +19,7 @@ require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
 
-local SH_BADSET        = 0.5     -- bad-set chance x this
+local SH_BADSET        = 0.5     -- bad-set and rough-stitch chance x this
 local SH_TEAR          = 0.5     -- stitch tear chance x this
 local SH_FAST          = 0.75    -- first aid time x this
 local SH_FAST_ACTIONS  = { "ISStitch", "ISRemoveGlass", "ISRemoveBullet" }
@@ -42,6 +44,11 @@ end
 local function steady(player) return has(player) and not shaking(player) end
 
 DanTraits_AddHook("splintBadSet", function(chance, setter)
+    if not steady(setter) then return nil end
+    return chance * SH_BADSET
+end)
+
+DanTraits_AddHook("stitchPoor", function(chance, setter)
     if not steady(setter) then return nil end
     return chance * SH_BADSET
 end)

@@ -155,7 +155,7 @@ local STATS = {
   { "ENDURANCE", "endurance", 1 }, { "FOOD_SICKNESS", "foodsick", 100 }, { "THIRST", "thirst", 1 },
   { "HUNGER", "hunger", 1 }, { "BOREDOM", "boredom", 100 }, { "ANGER", "anger", 1 },
   { "NICOTINE_WITHDRAWAL", "nw", 0.51 }, { "WETNESS", "wetness", 100 },
-  { "SICKNESS", "sickness", 1 }, { "TEMPERATURE", "temperature", 1 },
+  { "SICKNESS", "sickness", 1 }, { "TEMPERATURE", "temperature", 1 }, { "DISCOMFORT", "discomfort", 1 },
 }
 
 function H.clearHalo()
@@ -229,6 +229,16 @@ function H.stubs()
       getAirTemperatureForCharacter = function() return c.temp end, getRainIntensity = function() return c.rain end,
       getHumidity = function() return c.humidity end, getNightStrength = function() return c.night end,
       getCloudIntensity = function() return c.cloud end,
+      -- the forecast: c.forecast = { today, tomorrow }, each nil, "storm", "tropical", "rain" or "blizzard"
+      getClimateForecaster = function()
+        return { getForecast = function(_, offset)
+          local kind = (c.forecast or {})[(offset or 0) + 1]
+          return {
+            hasStorm = function() return kind == "storm" end, hasTropicalStorm = function() return kind == "tropical" end,
+            hasHeavyRain = function() return kind == "rain" end, hasBlizzard = function() return kind == "blizzard" end,
+          }
+        end }
+      end,
     }
   end
 end
@@ -287,6 +297,7 @@ local function newItem(fullType)
   function item:setName(n) self._name = n end
   function item:setCustomName() end
   function item:setTexture(x) self._tex = x end
+  function item:setUsedDelta(v) self._used = v end
   return item
 end
 

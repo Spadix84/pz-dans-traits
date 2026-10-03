@@ -112,7 +112,7 @@ local VIT_CC_HEAL           = 0.25    -- concussion healing x (1 + this x e)
 local VIT_WOUND_HEAL        = 0.25    -- unstitched deep wound healing x (1 + this x e)
 local VIT_LUNG_HEAL         = 0.25    -- a smoker's lungs recovering x (1 + this x e)
 local VIT_XP_TIER           = 4       -- Thriving: Fitness and Strength experience is multiplied...
-local VIT_XP_MULT           = 2       -- ...by this
+local VIT_XP_MULT           = 1.5     -- ...by this
 
 local function vitData(player)
     local d = traitData(player)
@@ -325,6 +325,8 @@ local function updateVitalityMinute(player, d)
                 for i, threshold in ipairs(VIT_DEBT_TIER) do if d.vitSleepDebt >= threshold then tier = i end end
                 if tier > 0 then notify(player, "UI_DanTraits_SleptBadly" .. tier) end
             end
+            -- the scored night, for anything that refills on it (the spoon budget, DanTraits_Spoons.lua)
+            DanTraits_RunHooks("nightScored", nil, player, d, quality, d.vitNightHours, wakes, d.vitNightHours < VIT_DEBT_NAP_MAX)
             d.vitNightHours, d.vitNightWakes, d.vitNightFatigue = 0, 0, nil
         end
         if d.vitAwakeMin > VIT_AWAKE_TIRED_HOURS * 60 then d.vitSleep = clamp01(d.vitSleep - VIT_AWAKE_RATE) end
@@ -438,8 +440,8 @@ DanTraits_AddHook("concussionHeal", healsBy(VIT_CC_HEAL))
 DanTraits_AddHook("woundHeal", healsBy(VIT_WOUND_HEAL))
 DanTraits_AddHook("lungHeal", healsBy(VIT_LUNG_HEAL))
 
--- Thriving: Fitness and Strength experience is doubled. The event fires after
--- the game adds the experience; the same amount is added again, guarded
+-- Thriving: Fitness and Strength experience is x1.5. The event fires after
+-- the game adds the experience; half of it is added again, guarded
 -- against re-entry since that addition fires the event too.
 local xpReentry = false
 local function onAddXP(player, perk, amount)

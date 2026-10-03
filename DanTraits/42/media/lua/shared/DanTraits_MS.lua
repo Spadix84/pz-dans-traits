@@ -4,7 +4,10 @@
 -- small rise in body temperature stops damaged nerves carrying signals). A
 -- heat load (0..1) follows the warmth around you, and your own body
 -- temperature when exercise or too many clothes push it up. It builds over
--- about half an hour and fades over about twenty minutes once you cool off,
+-- about half an hour (a tenth faster than the file's base rate: MS warms up
+-- quicker, and every tenth of a degree the body is over 37 counts a tenth
+-- more; the game's thermoregulator itself has no hook to speed up) and
+-- fades over about twenty minutes once you cool off,
 -- twice as fast when you are wet; a drink straight from a tap, a well or a
 -- river knocks some off.
 --   Warm (0.25): tired sooner, endurance comes back slower. Nothing else.
@@ -23,8 +26,18 @@
 -- Flares (relapses) come about once a month, more often with a fever or
 -- under stress, and last three to six days: heat hits half as hard again,
 -- the legs stiffen, the hands are weaker and you tire much faster. Outside a
--- flare there is still MS fatigue (you tire a fifth faster) and a little
--- stiffness in the legs.
+-- flare there is still a little stiffness in the legs.
+--
+-- MS fatigue is a budget: the spoons (DanTraits_Spoons.lua, which keeps the
+-- pool, the refill from the night's score, the spending and the tiers). MS
+-- registers as a user, sets the cap (the sandbox count, two thirds of it in a
+-- flare), multiplies the spending by the heat (x (1 + load)) and a flare
+-- (x1.5), adds amantadine's spoons to the refill, and reads the tier back:
+-- running on empty stiffens the legs (20), the wall stiffens them like a flare
+-- (35) and lets a swing throw the weapon (5%), and hours borrowed raise the
+-- flare rate (x (1 + 0.1 x hours)). With the sandbox count at 0 there is no
+-- budget and the old drip is back: you tire a fifth faster, twice that in a
+-- flare, more in the heat, cut to 40% by amantadine.
 --
 -- The 1993 medicine cabinet, three pill bottles of this mod's, kept by the
 -- shared medication system (DanTraits_Meds.lua: levels, half-lives, build-up,
@@ -48,6 +61,7 @@
 -- Console: ms heat <0..1> | ms flare | ms end | ms pill <pred|bac|aman>
 require "DanTraits"
 require "DanTraits_Meds"
+require "DanTraits_Spoons"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
@@ -61,7 +75,9 @@ local MS_AIR_WEIGHT    = 0.7     -- warm air alone tops out at this load (overhe
 local MS_BODY_FROM     = 37.2    -- body temperature from which it counts...
 local MS_BODY_FULL     = 38.4    -- ...to a full load here
 local MS_WET_COOL      = 0.6     -- soaked through, the air counts this much less
-local MS_RISE_MIN      = 1 / 30  -- load gained a minute toward a higher target
+local MS_WARM_FASTER   = 1.1     -- MS warms up this much faster: the load rises x this, and body heat over 37 counts x this
+local MS_RISE_MIN      = 1 / 30 * MS_WARM_FASTER  -- load gained a minute toward a higher target
+local MS_BODY_BASE     = 37      -- body heat is measured as the rise over this
 local MS_FALL_MIN      = 1 / 20  -- load lost a minute toward a lower one...
 local MS_FALL_WET      = 2       -- ...x this when wet
 local MS_WET_AT        = 0.25    -- wetness (0..1) that counts as wet
@@ -86,6 +102,9 @@ local MS_FLARE_HOURS   = { 72, 144 }
 local MS_FLARE_HEAT    = 1.5     -- the heat target x this in a flare
 local MS_FLARE_REGEN   = 0.7     -- endurance recovery x this in a flare
 -- everyday symptoms
+-- discomfort (the game's Uncomfortable moodle: clothes, a cramped car, wet) wears MS down
+local MS_DISCOMFORT_COST   = 0.5     -- spoons spent x (1 + this x discomfort)
+local MS_DISCOMFORT_STRESS = 0.0004  -- stress a minute at full discomfort, on top of the game's own
 local MS_FATIGUE       = 0.0002  -- tiredness a minute awake (about a fifth faster)...
 local MS_FLARE_FATIGUE = 0.0004  -- ...and this more in a flare
 local MS_LEG_STIFF     = 8       -- stiffness floor on the legs...
@@ -100,7 +119,15 @@ local MS_EASE_PAIN     = 2       -- head pain off a minute on top of the game's 
 -- working fully does, scaled by how well it is working)
 local MS_PRED_BURN     = 3       -- flare hours gone per hour on prednisone
 local MS_BAC_STIFF     = 0.5     -- stiffness x this on baclofen
-local MS_AMAN_FATIGUE  = 0.4     -- MS fatigue x this on amantadine
+local MS_AMAN_FATIGUE  = 0.4     -- MS fatigue x this on amantadine (the no-budget drip only)
+-- the spoon budget (DanTraits_Spoons.lua)
+local MS_SPOONS_DEFAULT   = 12   -- spoons a day (sandbox MSSpoons; 0 is no budget)
+local MS_SPOON_FLARE      = 2 / 3 -- the cap x this in a flare
+local MS_SPOON_FLARE_COST = 1.5  -- spending x this in a flare (the heat adds x (1 + load))
+local MS_SPOON_AMAN       = 2    -- spoons amantadine adds to the morning refill, fully built up
+local MS_LEG_LOW          = 20   -- legs stiffness floor running on empty (the wall: the flare's)
+local MS_SPOON_FUMBLE     = 5    -- percent added to a swing's drop chance at the wall
+local MS_SPOON_DEBT_FLARE = 0.1  -- flare rate x (1 + this x hours borrowed)
 local MS_KIT = { "DanTraits.Baclofen", "DanTraits.Amantadine" }
 local MS_START = { "baclofen", "amantadine" }   -- a new character is on these
 
@@ -118,6 +145,16 @@ local function tierOf(load)
     return tier
 end
 
+-- the spoon budget: the sandbox count a day, 0 for none
+local function spoonCount()
+    local sv = SandboxVars and SandboxVars.DanTraits
+    local v = sv and tonumber(sv.MSSpoons)
+    if v == nil then return MS_SPOONS_DEFAULT end
+    return math.max(0, math.floor(v))
+end
+local function spoonsOn() return spoonCount() > 0 end
+local function spoonTier(player) return DanTraits_SpoonTier and DanTraits_SpoonTier(player) or 0 end
+
 -- 0..1 from a start point to a full point
 local function over(value, from, full) return clamp01((value - from) / (full - from)) end
 
@@ -128,7 +165,8 @@ local function heatTarget(player, d)
     pcall(function() wet = fraction(player:getStats(), CharacterStat.WETNESS) end)
     pcall(function()
         local t = player:getStats():get(CharacterStat.TEMPERATURE)
-        if type(t) == "number" and t > 30 then body = over(t, MS_BODY_FROM, MS_BODY_FULL) end
+        -- the rise over 37 counts a tenth more: MS warms up faster
+        if type(t) == "number" and t > 30 then body = over(MS_BODY_BASE + (t - MS_BODY_BASE) * MS_WARM_FASTER, MS_BODY_FROM, MS_BODY_FULL) end
     end)
     local target = math.max(MS_AIR_WEIGHT * air * (1 - MS_WET_COOL * wet), body)
     if (d.msFlareH or 0) > 0 then target = target * MS_FLARE_HEAT end
@@ -229,7 +267,9 @@ local function flareRate(player, d)
         local ok, fever = pcall(DanTraits_InfectionFever, player)
         if ok then rate = rate * (1 + MS_FLARE_FEVER * clamp01(tonumber(fever) or 0)) end
     end
-    return rate * (1 + MS_FLARE_STRESS * fraction(player:getStats(), CharacterStat.STRESS))
+    rate = rate * (1 + MS_FLARE_STRESS * fraction(player:getStats(), CharacterStat.STRESS))
+    if spoonsOn() and DanTraits_SpoonDebt then rate = rate * (1 + MS_SPOON_DEBT_FLARE * DanTraits_SpoonDebt(player)) end
+    return rate
 end
 DanTraits_MSFlareRate = flareRate
 
@@ -272,8 +312,9 @@ local function updateMSMinute(player, d)
     local flaring = (d.msFlareH or 0) > 0
     local stats = player:getStats()
 
-    -- fatigue: MS's own, a flare's, and the heat's
-    if not DanTraits_Asleep(player) then
+    -- fatigue: the spoon budget's (DanTraits_Spoons.lua), or with no budget the
+    -- old drip: MS's own, a flare's, and the heat's
+    if not spoonsOn() and not DanTraits_Asleep(player) then
         local tired = MS_FATIGUE + (flaring and MS_FLARE_FATIGUE or 0)
         tired = tired * (1 - (1 - MS_AMAN_FATIGUE) * effect(player, "amantadine"))
         if load >= MS_TIER[1] then tired = tired + MS_HEAT_FATIGUE * load end
@@ -285,9 +326,19 @@ local function updateMSMinute(player, d)
     if load >= MS_TIER[2] then hands = MS_HAND_HOT + (MS_HAND_STIFF - MS_HAND_HOT) * over(load, MS_TIER[2], 1) end
     if flaring then hands = math.max(hands, MS_HAND_FLARE) end
     local legs = flaring and MS_LEG_FLARE or MS_LEG_STIFF
+    if spoonsOn() then
+        local sp = spoonTier(player)
+        if sp >= 3 then legs = math.max(legs, MS_LEG_FLARE) elseif sp == 2 then legs = math.max(legs, MS_LEG_LOW) end
+    end
     local relax = 1 - (1 - MS_BAC_STIFF) * effect(player, "baclofen")
     hands, legs = hands * relax, legs * relax
     setFloors(player, d, hands, legs)
+
+    -- discomfort gets to you: stress on top of the game's own (and spoons, in the spend hook)
+    if not DanTraits_Asleep(player) then
+        local discomfort = fraction(stats, CharacterStat.DISCOMFORT)
+        if discomfort > 0 then DanTraits_StatAdd(stats, CharacterStat.STRESS, MS_DISCOMFORT_STRESS * discomfort) end
+    end
 
     local pain = 0
     if load >= MS_TIER[2] then
@@ -300,13 +351,36 @@ local function updateMSMinute(player, d)
     end
 end
 
--- a swing can throw the weapon when the heat is in the hands
+-- a swing can throw the weapon when the heat is in the hands, or at the wall
 DanTraits_AddHook("swingDrop", function(chance, player)
     if not hasTrait(player, "ms") then return nil end
     local d = player:getModData().DanTraits
     local load = d and d.msHeat or 0
-    if load < MS_TIER[2] then return nil end
-    return chance + MS_FUMBLE_HOT + (MS_FUMBLE - MS_FUMBLE_HOT) * over(load, MS_TIER[2], 1)
+    local add = 0
+    if load >= MS_TIER[2] then add = add + MS_FUMBLE_HOT + (MS_FUMBLE - MS_FUMBLE_HOT) * over(load, MS_TIER[2], 1) end
+    if spoonsOn() and spoonTier(player) >= 3 then add = add + MS_SPOON_FUMBLE end
+    if add <= 0 then return nil end
+    return chance + add
+end)
+
+-- the spoon budget: MS draws on it unless the sandbox count is 0
+DanTraits_SpoonsUse(function(player) return spoonsOn() and hasTrait(player, "ms") end)
+DanTraits_AddHook("spoonCap", function(cap, player, d)
+    if not hasTrait(player, "ms") then return nil end
+    cap = spoonCount()
+    if d and (d.msFlareH or 0) > 0 then cap = cap * MS_SPOON_FLARE end
+    return cap
+end)
+DanTraits_AddHook("spoonRefill", function(extra, player, d)
+    if not hasTrait(player, "ms") then return nil end
+    return extra + MS_SPOON_AMAN * effect(player, "amantadine")
+end)
+DanTraits_AddHook("spoonSpend", function(cost, player, d)
+    if not d or not hasTrait(player, "ms") then return nil end
+    cost = cost * (1 + (d.msHeat or 0))
+    if (d.msFlareH or 0) > 0 then cost = cost * MS_SPOON_FLARE_COST end
+    cost = cost * (1 + MS_DISCOMFORT_COST * fraction(player:getStats(), CharacterStat.DISCOMFORT))
+    return cost
 end)
 
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)
@@ -366,8 +440,15 @@ DanTraits_ExtraCommands.ms = function(player, args)
         local level = DanTraits_TakeMSMed(player, names[args[2] or ""] or args[2] or "", 1)
         if level then return args[2] .. " level " .. tostring(level) end
     end
-    return "ms heat <0..1> | ms flare | ms end | ms pill <pred|bac|aman> (heat " .. tostring(d.msHeat or 0)
-        .. ", target " .. tostring((heatTarget(player, d))) .. ", flare hours " .. tostring(d.msFlareH or 0) .. ")"
+    if args[1] == "spoons" then
+        if args[2] == "debt" and tonumber(args[3]) then d.spDebt = math.max(0, tonumber(args[3])) return "spoon debt " .. tostring(d.spDebt) .. " h" end
+        if tonumber(args[2]) and DanTraits_SpoonsSet then DanTraits_SpoonsSet(player, tonumber(args[2])) end
+        return "spoons " .. tostring(d.spPool or "off") .. " of " .. tostring(d.spCap or spoonCount()) .. ", tier " .. tostring(d.spFelt or 0)
+            .. ", debt " .. tostring(d.spDebt or 0) .. " h, rest " .. tostring(d.spRest or 0) .. ", nap " .. tostring(d.spNap or 0) .. ", mask " .. tostring(d.spMask or 0) .. " min"
+    end
+    return "ms heat <0..1> | ms flare | ms end | ms pill <pred|bac|aman> | ms spoons [n | debt <h>] (heat " .. tostring(d.msHeat or 0)
+        .. ", target " .. tostring((heatTarget(player, d))) .. ", flare hours " .. tostring(d.msFlareH or 0)
+        .. ", spoons " .. tostring(d.spPool or "off") .. ", debt " .. tostring(d.spDebt or 0) .. ")"
 end
 
 -- start on baclofen and amantadine, fully built up, and with a bottle of each

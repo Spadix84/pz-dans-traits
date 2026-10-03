@@ -506,11 +506,12 @@ local function updateSmokerMinute(player, d)
         end
     end
     setAngerFloor(stats, d, angerFloor)
-    -- say why, once, when the craving first shows as the Angry moodle
+    -- say why, once, when the craving first shows as the Angry moodle (not
+    -- with the craving moodle hidden: then the player reads it from the mood)
     if smoker and (d.nicAnger or 0) > 0 then
         if not d.nicCraveShown and angryLevel(player, stats) > 0 then
             d.nicCraveShown = true
-            notify(player, "UI_DanTraits_SmokerCraving")
+            if DanTraits_SandboxOn("SmokerCravingMoodle") then notify(player, "UI_DanTraits_SmokerCraving") end
         end
     elseif (d.nicAnger or 0) <= 0 then
         d.nicCraveShown = nil

@@ -83,15 +83,15 @@ local fine = newPlayer({}); H.current = fine; fine._md.DanTraits = { mddSinceEnd
 H.rng = { 141 }; ten(); assert(not fine._md.DanTraits.mddEpisode, "141 >= 140: calm life, roll misses")
 H.rng = { 139 }; ten(); assert(fine._md.DanTraits.mddEpisode, "139 < 140 still can")
 
--- 8. Fumbler: 1% base, up to +6 panic, +6 pain, +5 fatigue; ZombRand(1000) < chance x 10 drops the weapon
+-- 8. Fumbler (Arthritis's grip): 1% base, up to +6 panic, +6 pain, +5 fatigue; ZombRand(1000) < chance x 10 slips (a weak swing, not a drop)
 local f = newPlayer({ traits = { "arthritis" } }); H.current = f
 assert(math.abs(DanTraits_FumbleChance(f) - 1) < 1e-9, "calm: 1%")
-H.rng = { 9 }; H.fire("OnWeaponSwing", f, {}); assert(#f._dropped == 1, "9 < 10: dropped")
-H.rng = { 10 }; H.fire("OnWeaponSwing", f, {}); assert(#f._dropped == 1, "10 >= 10: kept")
+H.clearHalo()
+H.rng = { 9 }; H.fire("OnWeaponSwing", f, {}); assert(#f._dropped == 0 and halo[#halo] == "UI_DanTraits_GripSlip", "9 < 10: slipped, kept")
+H.clearHalo()
+H.rng = { 10 }; H.fire("OnWeaponSwing", f, {}); assert(#halo == 0, "10 >= 10: a clean swing")
 f._st.panic = 100; f._st.pain = 100; f._st.fatigue = 1
 assert(math.abs(DanTraits_FumbleChance(f) - 18) < 1e-9, "worst case 18%")
-H.rng = { 179 }; H.fire("OnWeaponSwing", f, {}); assert(#f._dropped == 2, "179 < 180: dropped")
-H.rng = { 180 }; H.fire("OnWeaponSwing", f, {}); assert(#f._dropped == 2, "180: kept")
 -- 9. antidepressants: a pill is a day of coverage, the vanilla lift is cancelled, benefit builds over 14 days
 local m = newPlayer({}); H.current = m
 local pill = setmetatable({ character = m, item = { getType = function() return "PillsAntiDep" end } }, { __index = ISTakePillAction })

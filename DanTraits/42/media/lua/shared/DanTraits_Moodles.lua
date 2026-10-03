@@ -26,7 +26,7 @@
 --   Dehydration        anyone: thirst headache, dehydrated
 --   CaffeineWithdrawal Caffeine Dependent
 --   AlcoholWithdrawal  Alcoholic: craving, the shakes, delirium
---   NicotineCraving    Smoker
+--   NicotineCraving    Smoker (the SmokerCravingMoodle sandbox option hides it)
 --   Depression         Major Depressive Disorder: an episode, by severity
 --   LowIron            Anaemic
 --   StiffJoints        Arthritis: the weather in the joints
@@ -128,7 +128,7 @@ local SPECS = {
         return math.max(0, math.min(3, d.alcStage or 0))
     end },
     { name = "NicotineCraving", level = function(player, d)
-        if not DanTraits_NicotineWithdrawal then return 0 end
+        if not DanTraits_NicotineWithdrawal or not DanTraits_SandboxOn("SmokerCravingMoodle") then return 0 end
         return tierOf(DanTraits_NicotineWithdrawal(player), NICOTINE_TIER)
     end },
     { name = "Depression", level = function(player, d)
@@ -151,6 +151,8 @@ local SPECS = {
         if not hasTrait(player, "ms") or (d.msFlareH or 0) <= 0 then return 0 end
         return (DanTraits_MedCovered and DanTraits_MedCovered(player, "prednisone")) and 1 or 2
     end },
+    -- the spoon budget (DanTraits_Spoons.lua): the tier as felt, after a coffee's mask
+    { name = "Spoons", level = function(player, d) return d.spFelt or 0 end },
 }
 
 DanTraits_MoodleNames = {}

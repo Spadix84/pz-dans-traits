@@ -14,6 +14,12 @@
 --              torso. They hold better as they heal (the game's stitch
 --              time climbs to 50; past 40 they are sound). Torn, the wound
 --              is open and bleeding again, and needs stitching again.
+--              Stitching is a First Aid roll (WC_POOR by the stitcher's
+--              level, less with a suture needle or holder): stitched
+--              roughly, they knit at half the speed, tear twice as easily,
+--              hurt, and let an infection in as easily as an open wound
+--              (DanTraits_Infection.lua reads DanTraits_PoorStitches) until
+--              they are sound. Take them out and stitch it again.
 --   splints    setting one is a First Aid roll (WC_BADSET by level): set
 --              badly, the bone heals at half the speed and hurts more; take
 --              it off and set it again. Walking on a broken leg with no
@@ -29,7 +35,11 @@
 -- A splint heals a fracture at 5e-5 x splintFactor a tick, (level + 1) / 2
 -- from ISSplint; unsplinted 5e-6.
 -- ISSplint.complete is wrapped through DanTraits_Wrap (DanTraits.lua), tag
--- "woundcare-splint-set", so Fear of Blood can layer on the splint action too.
+-- "woundcare-splint-set", so Fear of Blood can layer on the splint action too;
+-- ISStitch.complete likewise, tag "woundcare-stitch".
+--
+-- Mod data: wcParts[part] = { deep, badSet, poorStitch, st (the stitch time
+-- last minute, for a rough job's slower knitting) }, wcLife, wcSummary.
 require "DanTraits"
 
 local traitData = DanTraits_Data
@@ -51,6 +61,12 @@ local WC_REOPEN_BLEED  = { 3, 6 }   -- bleeding time when torn or opened
 local WC_BADSET        = { 0.5, 0.06, 0.02 }  -- bad-set chance: at level 0, less per level, never under
 local WC_BADSET_FACTOR = 0.5     -- x splint factor when set badly
 local WC_BADSET_PAIN   = 15      -- pain held on a badly set bone
+local WC_POOR          = { 0.45, 0.05, 0.03 }  -- rough-stitch chance: at level 0, less per level, never under
+local WC_POOR_NEEDLE   = 0.6     -- x with a suture needle or a needle holder
+local WC_POOR_KNIT     = 0.5     -- rough stitches: stitch time climbs at this speed...
+local WC_POOR_TEAR     = 2       -- ...tear chance x this...
+local WC_POOR_PAIN     = 10      -- ...and this much pain held on the part, until they are sound
+local WC_TELL_LEVEL    = 3       -- First Aid from which the stitcher or setter knows a bad job
 local WC_LIMP          = 1       -- fracture time added an hour moving on an unsplinted broken leg
                                  -- (one rate: the game won't let a broken leg run, though it
                                  -- still reports running while the run key is held)
@@ -126,10 +142,25 @@ local function openAgain(player, part)
     say(player, "UI_DanTraits_WoundOpened", part)
 end
 
+-- the part's record, if any (nil when nothing is tracked on it)
+local function recFor(player, part)
+    local d = player:getModData().DanTraits
+    local parts = d and d.wcParts
+    return parts and parts[tostring(part:getType())] or nil
+end
+
+-- stitched roughly, and not yet sound (Infection reads this)
+function DanTraits_PoorStitches(player, part)
+    if not player or not part then return false end
+    local ok, rec = pcall(recFor, player, part)
+    return ok and rec ~= nil and rec.poorStitch == true and num(part, "getStitchTime") > 0
+end
+
 -- one bout of strain on a part: a swing (chances per swing) or a minute on
 -- the legs (chances per minute)
 local function strain(player, part, tearChance, reopenChance)
     local s = stitchStrength(part)
+    if DanTraits_PoorStitches(player, part) then tearChance = tearChance * WC_POOR_TEAR end
     if is(part, "bandaged") then tearChance, reopenChance = tearChance * WC_BANDAGE_HOLDS, reopenChance * WC_BANDAGE_HOLDS end
     if s then
         if s < 1 and roll(DanTraits_RunHooks("stitchTear", tearChance * (1 - s), player, part)) then tearOpen(player, part) end   -- Steady Hands
@@ -152,9 +183,32 @@ function DanTraits_OnSplintSet(patient, part, level, setter)
     if rec.badSet then
         pcall(function() part:setSplintFactor(part:getSplintFactor() * WC_BADSET_FACTOR) end)
         -- only someone who knows bones can tell
-        if (level or 0) >= 3 then say(patient, "UI_DanTraits_BadSet", part) end
+        if (level or 0) >= WC_TELL_LEVEL then say(patient, "UI_DanTraits_BadSet", part) end
     end
     return rec.badSet == true
+end
+
+-- the stitching roll, by the stitcher's First Aid level and their tools
+local function poorStitchChance(level, needle)
+    local chance = math.max(WC_POOR[3], WC_POOR[1] - WC_POOR[2] * (level or 0))
+    if needle then chance = chance * WC_POOR_NEEDLE end
+    return chance
+end
+DanTraits_PoorStitchChance = poorStitchChance
+
+-- stitches just put in (or taken out: stitched false)
+function DanTraits_OnStitched(patient, part, stitched, level, setter, needle)
+    if not patient or not part or not sandboxOn() then return false end
+    local d = wcData(patient)
+    local rec = recOf(d, tostring(part:getType()))
+    if not stitched then
+        rec.poorStitch, rec.st = nil, nil
+        return false
+    end
+    rec.poorStitch = roll(DanTraits_RunHooks("stitchPoor", poorStitchChance(level, needle), setter or patient)) or nil   -- Steady Hands
+    rec.st = num(part, "getStitchTime")
+    if rec.poorStitch and (level or 0) >= WC_TELL_LEVEL then say(patient, "UI_DanTraits_PoorStitches", part) end
+    return rec.poorStitch == true
 end
 
 -- per frame: what the legs did this minute (false, "walk", "run", "sprint")
@@ -197,8 +251,24 @@ local function updatePart(player, d, part, name, wet, summary)
     else
         d.wcLife[name] = nil
     end
+    -- rough stitches knit slower and ache until they are sound
+    local stitchTime = num(part, "getStitchTime")
+    if rec and rec.poorStitch then
+        if stitchTime <= 0 or stitchTime >= WC_SOUND_AT then
+            rec.poorStitch, rec.st = nil, nil
+        else
+            if rec.st and stitchTime > rec.st then
+                stitchTime = rec.st + (stitchTime - rec.st) * WC_POOR_KNIT
+                pcall(function() part:setStitchTime(stitchTime) end)
+            end
+            rec.st = stitchTime
+            pcall(function()
+                if part:getAdditionalPain() < WC_POOR_PAIN then part:setAdditionalPain(WC_POOR_PAIN) end
+            end)
+        end
+    end
     local s = stitchStrength(part)
-    if s then summary[#summary + 1] = name .. " stitches " .. tostring(math.floor(s * 100)) .. "%" end
+    if s then summary[#summary + 1] = name .. " stitches " .. tostring(math.floor(s * 100)) .. "%" .. ((rec and rec.poorStitch) and " (rough)" or "") end
     -- unstitched deep wounds heal slowly
     local deep = num(part, "getDeepWoundTime")
     if deep > 0 and num(part, "getStitchTime") <= 0 then
@@ -236,7 +306,7 @@ local function updatePart(player, d, part, name, wet, summary)
         if LEGS[name] then strain(player, part, WC_TEAR_SPRINT * k, WC_REOPEN_SPRINT * k)
         elseif TORSO[name] then strain(player, part, WC_TEAR_SPRINT * k * WC_TORSO, WC_REOPEN_SPRINT * k * WC_TORSO) end
     end
-    if rec and not rec.deep and not rec.badSet then d.wcParts[name] = nil end
+    if rec and not rec.deep and not rec.badSet and not rec.poorStitch then d.wcParts[name] = nil end
 end
 
 local function updateWoundMinute(player, d)
@@ -294,6 +364,26 @@ end
 wrapSplint()
 Events.OnGameStart.Add(wrapSplint)
 
+-- the stitch action: roll the job once the stitches are in, clear it when they come out
+local function wrapStitch()
+    DanTraits_Wrap(ISStitch, "complete", "woundcare-stitch", function(original, self, ...)
+        local result = original(self, ...)
+        pcall(function()
+            if not self.bodyPart then return end
+            local needle = false
+            pcall(function()
+                needle = (self.item and self.item:getType() == "SutureNeedle")
+                    or self.character:getInventory():contains("SutureNeedleHolder")
+            end)
+            DanTraits_OnStitched(self.otherPlayer or self.character, self.bodyPart, self.doIt == true,
+                self.doctorLevel or 0, self.character, needle == true)
+        end)
+        return result
+    end)
+end
+wrapStitch()
+Events.OnGameStart.Add(wrapStitch)
+
 -- console: tear <part> | dressing <part> <life> | badset <part> | breakbone <part> [time]
 local partOf = DanTraits_PartOf
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
@@ -325,6 +415,14 @@ DanTraits_ExtraCommands.firstaid = function(player, args)
     local now = -1
     pcall(function() now = player:getPerkLevel(Perks.Doctor) end)
     return "first aid " .. tostring(now)
+end
+DanTraits_ExtraCommands.roughstitch = function(player, args)
+    local part = partOf(player, args[1])
+    if not part then return "roughstitch <part>" end
+    local d = wcData(player)
+    local rec = recOf(d, tostring(part:getType()))
+    rec.poorStitch, rec.st = true, num(part, "getStitchTime")
+    return "rough stitches on " .. tostring(part:getType()) .. ", stitch time " .. tostring(rec.st)
 end
 DanTraits_ExtraCommands.badset = function(player, args)
     local part = partOf(player, args[1])

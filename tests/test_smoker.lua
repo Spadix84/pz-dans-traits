@@ -91,6 +91,15 @@ near(DanTraits_RunHooks("nightQuality", 1, s, md(s)), 0.8, 1e-9, "poor night")
 local craving = 0
 for _, t in ipairs(halo) do if t == "UI_DanTraits_SmokerCraving" then craving = craving + 1 end end
 assert(craving == 1, "says why it is angry, once: got " .. craving)
+-- the craving moodle hidden (sandbox): the same irritability, but no notice saying why
+SandboxVars = { DanTraits = { SmokerCravingMoodle = false } }
+local hid = H.player({ traits = { "base:smoker" } }); H.current = hid
+minute(); hid._st.nw = 0.51; md(hid).nicLastW = 0.51
+H.clearHalo(); mins(60)
+assert(hid._st.anger > 0.5, "still irritable")
+for _, t in ipairs(halo) do assert(t ~= "UI_DanTraits_SmokerCraving", "no craving notice with the moodle hidden") end
+SandboxVars = nil
+H.current = s
 s._asleep = true; minute(); DanTraits_updateSmokerFrame(s); s._asleep = false
 assert(s._st.anger < 0.01 and md(s).nicAnger == 0, "asleep: the irritability goes with the hold, not left to vanilla's drain")
 mins(60); near(s._st.anger, 0.6, 0.003, "awake: back to irritable")

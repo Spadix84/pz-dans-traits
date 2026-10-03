@@ -84,21 +84,7 @@ local function asthmaMaskLevel(player)
     return level
 end
 
-local function asthmaCorpsesNearby(player)
-    local count = 0
-    pcall(function()
-        local px, py, pz = math.floor(player:getX()), math.floor(player:getY()), math.floor(player:getZ())
-        local cell = getCell()
-        for dx = -3, 3 do
-            for dy = -3, 3 do
-                local sq = cell:getGridSquare(px + dx, py + dy, pz)
-                local bodies = sq and sq:getDeadBodys()
-                if bodies then count = count + bodies:size() end
-            end
-        end
-    end)
-    return count
-end
+local function asthmaCorpsesNearby(player) return DanTraits_CorpsesNearby(player, 3) end
 
 local function asthmaTierOf(irritation)
     local tier = 0

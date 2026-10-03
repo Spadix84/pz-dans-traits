@@ -50,3 +50,12 @@ option DanTraits.MedSideEffectChance
 
 option DanTraits.StartingMedication
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsStartingMedication,}
+
+option DanTraits.ArthritisWeaponDrop
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsArthritisWeaponDrop,}
+
+option DanTraits.SmokerCravingMoodle
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsSmokerCravingMoodle,}
+
+option DanTraits.MSSpoons
+{type = integer, min = 0, max = 24, default = 12, page = DanTraits, translation = DanTraitsMSSpoons,}
