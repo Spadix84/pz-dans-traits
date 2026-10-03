@@ -1,0 +1,108 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Vitality Project: how the systems fit together</title>
+<style>
+  html, body { margin: 0; background: #1b2838; color: #e6edf3; font-family: "Segoe UI", Arial, sans-serif; }
+  body { width: 1600px; height: 1360px; position: relative; overflow: hidden; }
+  h1 { position: absolute; left: 40px; top: 22px; margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0.2px; }
+  .sub { position: absolute; left: 40px; top: 62px; font-size: 16px; color: #8fa3b7; }
+  .col-title { position: absolute; top: 108px; font-size: 14px; text-transform: uppercase; letter-spacing: 1.5px; color: #66c0f4; }
+  .box { position: absolute; box-sizing: border-box; border-radius: 8px; padding: 10px 14px; }
+  .in { width: 300px; background: #2a475e; border: 1px solid #3d6a8a; }
+  .sys { width: 600px; background: #223a50; border: 1px solid #35587a; }
+  .out { width: 300px; background: #2a475e; border: 1px solid #3d6a8a; }
+  .box b { display: block; font-size: 16px; font-weight: 600; color: #ffffff; margin-bottom: 3px; }
+  .box span { display: block; font-size: 13px; line-height: 1.3; color: #c6d4df; }
+  .box em { display: block; font-size: 12px; line-height: 1.3; color: #8fc9f0; font-style: normal; margin-top: 4px; }
+  svg { position: absolute; left: 0; top: 0; width: 1600px; height: 1360px; pointer-events: none; }
+  .foot { position: absolute; left: 40px; bottom: 16px; font-size: 13px; color: #8fa3b7; }
+</style></head>
+<body>
+<h1>Vitality Project: how the systems fit together</h1>
+<div class="sub">Everything on the left happens to every character. The systems in the middle turn it into effects. Traits plug into the systems (see the trait chart).</div>
+
+<div class="col-title" style="left:40px">What happens to you</div>
+<div class="col-title" style="left:500px">Systems, for everyone</div>
+<div class="col-title" style="left:1260px">What you see</div>
+
+<div id="i1" class="box in" style="left:40px"><b>Food and drink</b><span>What you eat, drink and smoke: fresh or junk, wheat, dairy, meat, carbs, iron, caffeine, alcohol.</span></div>
+<div id="i2" class="box in" style="left:40px"><b>Effort</b><span>The body's metabolic rate: idle, walking, fighting, chopping, sprinting. Training in the exercise menu.</span></div>
+<div id="i3" class="box in" style="left:40px"><b>Sleep and the light in the room</b><span>Hours slept, how dark it was, how often you woke, how rested you got up.</span></div>
+<div id="i4" class="box in" style="left:40px"><b>Wounds, hits and falls</b><span>Scratches, cuts, bites, shards and bullets; knocks to the head, falls, car crashes.</span></div>
+<div id="i5" class="box in" style="left:40px"><b>Weather, sun and heat</b><span>Air temperature, body temperature, rain, humidity, cloud, the time of day, storms coming.</span></div>
+<div id="i6" class="box in" style="left:40px"><b>Pills</b><span>The mod's medications and vanilla's: beta blockers, painkillers, sleeping tablets, antibiotics, caffeine pills.</span></div>
+
+<div id="s1" class="box sys" style="left:500px"><b>Vitality</b><span>Diet, exercise and sleep in one slow score. Fit and Thriving lift endurance recovery, mood, healing and infection resistance; Run Down and Sluggish drag them.</span><em>Also feeds: Spoons (the night's score), Heart Condition, how fast infections, concussions and wounds clear.</em></div>
+<div id="s2" class="box sys" style="left:500px"><b>Sleep and the night's score</b><span>The light on your square sets how deep you sleep and whether it wakes you. Each night is scored: hours, waking, light, fever.</span><em>Also feeds: Vitality, Spoons, Migraines, Depression, Epilepsy, Hallucinations.</em></div>
+<div id="s3" class="box sys" style="left:500px"><b>Blood</b><span>Bleeding drains blood, not health, by wound, place and dressing. Pale, light-headed, shock and passing out, bleeding out. Volume returns in a day, red cells in a week.</span><em>Also feeds: Fear of Blood, Anaemic, Hemophilia, Good Clotter, Fast Recovery, endurance recovery.</em></div>
+<div id="s4" class="box sys" style="left:500px"><b>Wound infection and antibiotics</b><span>An hourly roll per wound by depth, dressing and dirt. Incubates unseen, climbs, stops healing, brings fever, then sepsis. Antibiotics are a course with a level in the blood.</span><em>Also feeds: the night's score, Migraines, Hallucinations, MS flares, Asthma, blood sugar, Epilepsy.</em></div>
+<div id="s5" class="box sys" style="left:500px"><b>Wound care and what First Aid tells you</b><span>Bandages wear out, unstitched wounds heal slowly and reopen, stitches tear; stitching and splinting are First Aid rolls. The health panel is written for the examiner's level.</span><em>Also feeds: Infection (open or spent dressings), Blood (bandages, stitches), pain.</em></div>
+<div id="s6" class="box sys" style="left:500px"><b>Concussion and passing out</b><span>Falls, crashes and head hits: headache, nausea, dizzy falls, knockouts, a headache that comes back days later. Shock and faints put you on the floor in real time.</span><em>Also feeds: Migraines, Hallucinations, Epilepsy, light waking you.</em></div>
+<div id="s7" class="box sys" style="left:500px"><b>Pain</b><span>Every lasting ache (hangover, migraine, withdrawal, gut flares, MS heat, concussion) is held on one pain stat. Drink dulls it by how drunk you are; painkillers blank it for a while.</span><em>Also feeds: Depression (mood), Spoons (spent faster), Arthritis slips.</em></div>
+<div id="s8" class="box sys" style="left:500px"><b>Medication</b><span>One list of drugs: a level in the blood, a build-up over days for the daily ones, wearing-off notices, side effects now and then, overdoses. A Pill Caddy for the belt.</span><em>Also feeds: Heart, Epilepsy, Diabetes, MS, Migraines, Asthma, Depression, Smoker, Anaemic.</em></div>
+<div id="s9" class="box sys" style="left:500px"><b>Alcohol, hangovers and caffeine</b><span>Relief follows the Drunk moodle, not the sip. A hangover waits for you to sober up or wake. Caffeine counts by what went into the mug.</span><em>Also feeds: Alcoholic, Hollow Legs, Straight Edge, Caffeine Dependent, Migraines, Epilepsy, Heart, Spoons (a coffee hides the wall).</em></div>
+<div id="s10" class="box sys" style="left:500px"><b>Sunburn and dehydration</b><span>Bare skin in the midday sun burns in about three hours and hurts for a day; sun block keeps it off. Hours of thirst build a headache and tiredness.</span><em>Also feeds: Migraines, Epilepsy, the night's score, Outdoorsman.</em></div>
+<div id="s11" class="box sys" style="left:500px"><b>Spoons (Multiple Sclerosis)</b><span>An energy budget refilled by the night and spent by effort, heat, pain, hunger and flares. Run out and you hit the wall; push on and you borrow from tomorrow.</span><em>Also feeds: MS legs, grip and stamina; a flare.</em></div>
+<div id="s12" class="box sys" style="left:500px"><b>Age</b><span>20s, 30s or 40s. Shades red cells, concussion recovery, hangovers, Type 2 resistance, Brittle, Arthritis and Gym Regular.</span><em>Set by the two age traits; sandbox options.</em></div>
+
+<div id="o1" class="box out" style="left:1260px"><b>Moodles</b><span>Every lasting effect has one (Moodle Framework). Three have a good side: beta blockers, anticonvulsants and sun block working.</span></div>
+<div id="o2" class="box out" style="left:1260px"><b>The health panel</b><span>Wounds, dressings, stitches, infections, breaks, sunburn and concussion, in the words your First Aid level allows.</span></div>
+<div id="o3" class="box out" style="left:1260px"><b>Notices over the head</b><span>Every turn for the worse or better is said once, ten seconds over the head, and published as a story event for other mods.</span></div>
+<div id="o4" class="box out" style="left:1260px"><b>The stats you already watch</b><span>Endurance recovery, pain, mood, stress, panic, tiredness, thirst, sickness, and carry weight.</span></div>
+
+<svg id="arrows" viewBox="0 0 1600 1360"></svg>
+<div class="foot">Vitality Project 1.1.0 for Project Zomboid Build 42. Singleplayer. Most systems have a switch on the Vitality Project sandbox page.</div>
+
+<script>
+// stack each column with even gaps between the top and the bottom line
+function stack(ids, top, bottom) {
+  const els = ids.map(id => document.getElementById(id));
+  const total = els.reduce((s, e) => s + e.offsetHeight, 0);
+  const gap = (bottom - top - total) / (els.length - 1);
+  let y = top;
+  for (const e of els) { e.style.top = y + "px"; y += e.offsetHeight + gap; }
+}
+stack(["i1","i2","i3","i4","i5","i6"], 170, 1290);
+stack(["s1","s2","s3","s4","s5","s6","s7","s8","s9","s10","s11","s12"], 145, 1310);
+stack(["o1","o2","o3","o4"], 260, 1200);
+
+const svg = document.getElementById("arrows");
+function side(id, which) {
+  const r = document.getElementById(id).getBoundingClientRect();
+  return { x: which === "right" ? r.right : r.left, y: r.top + r.height / 2 };
+}
+function arrow(from, to, color, width) {
+  const a = side(from, "right"), b = side(to, "left");
+  const dx = (b.x - a.x) * 0.45;
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  p.setAttribute("d", `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x - 6},${b.y}`);
+  p.setAttribute("fill", "none"); p.setAttribute("stroke", color); p.setAttribute("stroke-width", width || 2);
+  p.setAttribute("stroke-opacity", "0.75"); p.setAttribute("marker-end", "url(#head)");
+  svg.appendChild(p);
+}
+svg.innerHTML = `<defs><marker id="head" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+  <path d="M0,0 L8,4 L0,8 z" fill="#8fc9f0"/></marker></defs>`;
+const blue = "#66c0f4";
+// inputs -> systems
+arrow("i1","s1",blue); arrow("i1","s9",blue); arrow("i1","s3",blue,1.2);
+arrow("i2","s1",blue); arrow("i2","s11",blue); arrow("i2","s3",blue,1.2);
+arrow("i3","s2",blue); arrow("i3","s11",blue,1.2);
+arrow("i4","s3",blue); arrow("i4","s4",blue); arrow("i4","s5",blue); arrow("i4","s6",blue);
+arrow("i5","s10",blue); arrow("i5","s11",blue,1.2); arrow("i5","s2",blue,1.2);
+arrow("i6","s8",blue); arrow("i6","s7",blue,1.2); arrow("i6","s4",blue,1.2);
+// systems -> what you see: one bracket, drawn as lines from the column edge
+const sysRight = side("s1","right").x + 8;
+const yTop = side("s1","right").y, yBot = side("s12","right").y;
+const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+g.innerHTML = `<line x1="${sysRight}" y1="${yTop}" x2="${sysRight}" y2="${yBot}" stroke="#8fc9f0" stroke-width="2" stroke-opacity="0.6"/>`;
+svg.appendChild(g);
+for (const o of ["o1","o2","o3","o4"]) {
+  const b = side(o, "left");
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  const mid = (yTop + yBot) / 2;
+  p.setAttribute("d", `M${sysRight},${mid} C${sysRight + 90},${mid} ${b.x - 90},${b.y} ${b.x - 6},${b.y}`);
+  p.setAttribute("fill", "none"); p.setAttribute("stroke", "#8fc9f0"); p.setAttribute("stroke-width", "2");
+  p.setAttribute("stroke-opacity", "0.6"); p.setAttribute("marker-end", "url(#head)");
+  svg.appendChild(p);
+}
+</script>
+</body></html>
