@@ -4,82 +4,478 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 
 ## Traits
 
-| Trait | Cost | What it does |
+Costs are trait points: negative traits give you points, positive ones cost them. Every trait is listed in one line here and explained in bullets below.
+
+| Trait | Cost | In one line |
 |---|---|---|
-| Alcoholic | -2 | Withdrawal after a day without a drink: craving, low mood and poor sleep, then pain, nausea and the shakes, and for heavy drinkers hallucinations and seizures (a seizure can concuss); sooner and harder the deeper the habit. Anyone who drinks too often gains it; a month without alcohol loses it, and any drink after that is a coin flip to relapse. |
-| Brittle | -8 | Solid hits can fracture a limb. |
-| Arthritis | -10 | Stiff joints: slower to move and swing, flares in the cold and damp, and an unreliable grip: a swing can slip (1% calm, more when panicked, hurt, tired or flaring) and land at a third of the weapon's damage. In a bad flare one slip in three throws the weapon to the ground instead (sandbox option Arthritis Drops Weapons turns that off). |
-| Jinxed | -4 | Freshly generated containers near you sometimes lose an item. |
-| Major Depressive Disorder | -8 | Episodes that hold mood down for days; drink, cigarettes, comfort food, a piece of nicotine gum a little, exercise, time outdoors and a real antidepressant regimen all matter. |
-| A Really Bad Day | -12 | CDDA-style start: drunk, sick, a shard wound, no clothes, house on fire. Very hard under the health overhaul: stitch the shard wound. A needle and thread wait in a container in another house 15 to 40 tiles away (no marker; the description only says next door). Not with Hemophilia or Straight Edge. |
-| Hallucinations | -2 | Phantom zombies, sounds, thumps, whispers and panic bouts. More likely on stress, tiredness and night, and with a sleep debt, a concussion, alcohol withdrawal or a fever; a concussed or feverish character gets a whisper, not a panic bout. |
-| Brittle Asthma | -8 | Airway irritation from cold, corpses, exertion (spending endurance when it is low, not just being worn down) and panic; four tiers up to an attack (an attack that empties you can black you out; at rest it eases over about four hours, the inhaler ends it at once); smoking, and a smoker's lungs, make it worse; rescue inhaler item. |
-| Gluten Intolerance | -4 | Wheat brings on a flare: cramps, nausea, low mood. |
-| Vegetarian | -4 | Meat, fish, insects and anything cooked with them are refused. |
-| Diabetes Type 1 | -10 | Hidden blood sugar model; insulin pen, glucose meter, test strips; a Blood Sugar moodle says when it is out of range (not which way: that is the meter's job); a bad low can put you on the floor. High sugar makes wound infections likelier and faster. |
-| Diabetes Type 2 | -5 | Same model and moodle with the body's own insulin, limited by weight; metformin; a bad low can put you on the floor. High sugar makes wound infections likelier and faster. |
-| Renaissance Faire Geek | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
-| Gym Regular | +1 | Every exercise starts at regularity 50 (a Fitness Instructor's head start); Vitality's exercise score starts neutral instead of empty. |
-| Caffeine Dependent | -2 | Half a day without coffee, tea, cola or chocolate brings a headache, tiredness and low mood; a week dry breaks the habit. Coffee, tea and caffeine pills end a craving (a mug counts by what went into it); a can of cola or a bar of chocolate is too little to end it but puts it off, six hours for a can, three for a bar. |
-| Migraines | -8 | Attacks brought on by bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat (hot air or an overheated body), corpses close by, a storm on the way (forecast for today or tomorrow, before the rain starts) and bright daylight: hours of pain and nausea. Triggers are personal: of the eight lifestyle ones (bad sleep, thirst, stress, light, hangovers, heat, corpses, storms) each character draws three that count double, and the other five count half; nobody is told which, but once a strong trigger has brought on two attacks the character works it out and says so. Ordinary painkillers barely touch an attack (a third of their usual relief, a tenth off the time); **sumatriptan** (new item, rare) does: taken in the aura the attack is half as bad, taken during one it is over within two hours with the pain and nausea halved, and the day after you are heavy and a little clumsy. Starts with a pack down to its last two tablets (Starting Medication sandbox option). |
-| Hemophilia | -8 | Bleeding never stops on its own and open wounds bleed again until bandaged. With **Blood**: bleeds lose half as much again, and a bandage only slows one to two fifths (a soaked one is no better than none, so change it), so stitches are what stop it (without Blood, open bleeds cost extra health). |
-| Anaemic | -4 | Needs fresh meat, fish, greens, eggs or iron pills; short of iron, endurance, energy and cold resistance suffer. After blood loss, red cells rebuild at half speed, slower still short of iron, and rebuilding them spends iron. Wound infections climb faster. |
-| Iron Stomach | +1 | Rotten and burnt food does half the harm; food sickness climbs half as fast. |
-| Early Riser | +1 | Starts well rested; every night scores a little better. |
-| Meal Prepper | +1 | Starts on a good diet; variety counts over five days. |
-| Smoker (vanilla, reworked) | -4 | Cravings build faster the heavier the habit; withdrawal brings irritability (the vanilla Angry moodle), hunger and restless sleep, and a cigarette only relieves the craving it answers. To anyone else a cigarette is a buzz that fades as tolerance builds. Damaged lungs recover endurance slower and cough, worse on exertion and in the morning. Anyone who smokes regularly gains it; three weeks without tobacco loses it; after that drink and stress bring cravings back, and a smoke is a coin flip to relapse. Smoking speeds up caffeine clearance and lets a wound infection climb faster. Rare nicotine gum eases quitting. The Nicotine Craving Moodle sandbox option hides the craving moodle and its notice, so the craving has to be read from irritability and stress. |
-| Fear of Blood (vanilla, reworked) | -6 | Vanilla's panic at your own bleeding and stress when bloody stay. Treating a wound takes a quarter longer, and stitching (25%), pulling out a bullet (35%) or glass (20%), or dressing a bleeding wound (10%) can make you faint (about eight seconds, woken by anything that wounds you); so can losing blood fast. Still can't perform first aid on others. |
-| Cat's Eyes (vanilla, re-costed) | 1 | Better vision at night, as vanilla (re-costed from 3 to 1); light wakes you more easily, see **Sleep and light**. |
-| Deep Sleeper | +6 | Wakeful folded in (needs less sleep); light rarely wakes you and costs half the rest; the dark does more good. Wakeful is hidden at character creation. |
-| Heart Condition | -10 | Only while the Endurance moodle (the lungs) shows: a chance of chest pain, higher the deeper the moodle, and with panic, the 40s, a smoking habit, caffeine or a Run Down body. Chest pain holds pain and slows endurance recovery for 15 to 30 minutes, twice as fast to pass at rest; pushing on through it (sprinting, or still spending endurance at Endurance moodle 2 or worse; standing still worn out is rest) can bring a heart attack: down for 5 to 15 minutes, health lost, a day of weak recovery. Beta blockers (vanilla's pills, see Medication below), one a day, build up over three days to cut both to a quarter; you are told when they wear off. Starts on them, built up, with two bottles. |
-| Epilepsy | -6 | Seizures, about one in eight days when rested and well; tiredness, alcohol withdrawal, a hangover, fever, concussion, stress, dehydration, a diabetic low and bright sun make them likelier. An aura five to ten minutes ahead (never under 30 real seconds), then you drop what you hold and are out for 2 to 5 minutes (can concuss), then an hour of headache and low mood. Asleep, a seizure wakes you and spoils the night instead. Anticonvulsants (new item, see Medication below), one every 12 hours, build up over five days to cut seizures to a tenth; you are told when they wear off. Starts on them, built up, with a bottle. |
-| Multiple Sclerosis | -15 | -1 Fitness and -1 Strength; not with Athletic or Strong. Heat, and no medicine helps with it. You warm up a tenth faster than anyone else (the load builds a tenth quicker and every tenth of a degree over 37 counts a tenth more), and discomfort (the game's Uncomfortable moodle: clothes, a cramped car, wet) wears you down: extra stress, and spoons spent half as fast again at full discomfort. A heat load follows the warm air (24 to 34 C; on its own it tops out at Too Hot) and your body temperature (exercise, too many clothes), building over about half an hour and fading over twenty minutes once cool (twice as fast wet; a drink straight from a tap, well or river takes some off). Warm: tire sooner, endurance back slower, nothing else. Hot: stiff, sore, clumsy hands (the game's stiffness on hands and forearms), swings can throw the weapon (5% rising to 15%), pain rising to about 60 in all. Overheated: severe pain and a 5% chance a minute the hands give out and drop what they hold. Cooling off clears it within about half an hour: MS takes back its own stiffness and pain. Flares about once a month (likelier with fever or stress) for three to six days: the heat hits half as hard again, stiff legs, weak hands, exhaustion. Every day the legs are a little stiff, and your energy is a budget of **spoons** (12 a day; sandbox option, 0 turns it off and brings back the old fatigue drip): a full dark night refills it, a short, broken or lit one gives fewer (the night the mod already scores for everyone: hours, how rested you woke, waking, light, fever), never under a third; a flare caps it at eight. Everything you do spends them by effort (the game's metabolic rate: idle a spoon every two and a half hours, sprinting about three an hour), faster in the heat (x1 + load), in a flare (x1.5), in pain, panicking or hungry. At half, a warning; at three or fewer, stiff legs and slow stamina; at none, the wall: heavy tiredness, legs like a flare's, stamina at a crawl, a swing that can throw the weapon, and every hour you push on borrowed from tomorrow's refill (and a likelier flare, a tenth per hour). Sitting still, not hungry, not laden, gives back half a spoon an hour, up to two a day; a nap up to four. Reading or writing costs a fifth of what the minute would otherwise (heat, flare and hunger included) and counts as sitting still however full the bag. A mug of coffee hides the wall for an hour, then it lands. Each morning you are told the count. Prednisone (new item) makes a flare pass three times as fast from the first pill (hunger while you take it), baclofen builds up over two days to halve the stiffness (mild drowsiness), amantadine builds up over three days to add two spoons to every morning (dry mouth); all three are on the shared medication system (side effects now and then, too many at once, you are told when each wears off). Starts on baclofen and amantadine, built up, with a bottle of each. |
-| Tinnitus | -2 | A burst of your own gunfire (by the gun's loudness: half a dozen pistol shots, three from a shotgun) puts vanilla Hard of Hearing on for half an hour or more, Keen Hearing off while it lasts; the ringing makes light sleep lighter. Not with Hard of Hearing or Deaf. |
-| Lactose Intolerance | -1 | Dairy (and milk from a carton) brings a mild flare: cramps, queasiness, low mood, gone in about six hours. |
-| Germaphobe | -3 | Dirty or bloody skin (the four worst parts count, not the average) and dirty clothes build stress and hold mood down; getting clean is a real relief. Wounds a fifth less likely to take an infection. |
-| Straight Edge | -1 | Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief. Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day (which starts you drunk). |
-| Steady Hands | +5 | Dexterous folded in (granted; not with Dexterous or All Thumbs). Splints you set go wrong and stitches you put in come out rough half as often, your fresh stitches tear half as often, and stitching, glass, bullets and splints take a quarter less time. Not while your hands shake (alcohol withdrawal, a diabetic low). |
-| Night Shift | +1 | Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest. Not with Early Riser. |
-| Hollow Legs | +1 | Every drink goes to your head a fifth less (so it takes more to dull pain too); hangovers milder (x0.6) and shorter (x0.7). Not with Straight Edge. |
-| Fast Recovery | +8 | Fast Healer (6 in vanilla) folded in (granted; not with Fast Healer or Slow Healer). After a bleed, blood volume and red cells come back half as fast again. |
-| Good Clotter | +3 | Bleeds run down on their own twice as fast (not while glass or a bullet is still in). With **Blood**, a bleed loses a quarter less blood; without it, the shorter bleed costs less health. Not with Hemophilia. |
-| Thick Skull | +2 | A knock to the head concusses half as often and a quarter less badly (on top of a helmet); concussions heal half as fast again. See **Concussion**. |
-| Outdoorsman (vanilla, reworked) | 2 | Less affected by harsh weather, as vanilla; also takes twice as long to get sunburnt. See **Sunburn**. |
-| In Their 20s | -2 | No extra profession level; can't take Handy or Arthritis; Gym Regular starts at 65. See **Age**. |
-| In Their 40s | +1 | One extra profession level; Handy gives +1 Carpentry more; Arthritis flares sooner. See **Age**. |
+| [Multiple Sclerosis](#multiple-sclerosis--15) | -15 | Heat is the enemy, and your energy is a daily budget of spoons. |
+| [A Really Bad Day](#a-really-bad-day--12) | -12 | Drunk, sick, a shard wound, no clothes, house on fire. |
+| [Arthritis](#arthritis--10) | -10 | Stiff joints, flares in the cold and damp, a grip that slips. |
+| [Diabetes Type 1](#diabetes-type-1--10-and-type-2--5) | -10 | A hidden blood sugar model with an insulin pen and a meter. |
+| [Heart Condition](#heart-condition--10) | -10 | Chest pain when winded; push on and it is a heart attack. |
+| [Brittle](#brittle--8) | -8 | Solid hits can fracture a limb. |
+| [Brittle Asthma](#brittle-asthma--8) | -8 | Irritated airways that build to an attack zombies can hear. |
+| [Hemophilia](#hemophilia--8) | -8 | Bleeds never stop on their own; stitches are what stop them. |
+| [Major Depressive Disorder](#major-depressive-disorder--8) | -8 | Episodes that hold mood down for days. |
+| [Migraines](#migraines--8) | -8 | Hours of pain and nausea from personal triggers. |
+| [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
+| [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
+| [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
+| [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
+| [Gluten Intolerance](#gluten-intolerance--4) | -4 | Wheat brings a gut flare. |
+| [Jinxed](#jinxed--4) | -4 | Containers near you sometimes lose an item. |
+| [Smoker](#smoker--4-vanilla-reworked) | -4 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
+| [Vegetarian](#vegetarian--4) | -4 | Refuses meat, fish and anything cooked with them. |
+| [Germaphobe](#germaphobe--3) | -3 | Dirty skin and clothes build stress; clean is a relief. |
+| [Alcoholic](#alcoholic--2) | -2 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
+| [Caffeine Dependent](#caffeine-dependent--2) | -2 | Half a day without coffee or tea brings a headache. |
+| [Hallucinations](#hallucinations--2) | -2 | Phantom zombies, sounds, whispers and panic. |
+| [Tinnitus](#tinnitus--2) | -2 | Your own gunfire deafens you for a while. |
+| [In Their 20s](#age-in-their-20s--2-and-in-their-40s-1) | -2 | No bonus profession level; heals fast, mild hangovers. |
+| [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
+| [Straight Edge](#straight-edge--1) | -1 | Refuses alcohol and tobacco. |
+| [Cat's Eyes](#cats-eyes-1-vanilla-re-costed) | 1 | Vanilla night vision, re-costed; light wakes you more easily. |
+| [In Their 40s](#age-in-their-20s--2-and-in-their-40s-1) | +1 | An extra profession level; slower healing, worse hangovers. |
+| [Early Riser](#early-riser-1) | +1 | Starts rested; every night scores a little better. |
+| [Gym Regular](#gym-regular-1) | +1 | Every exercise starts with a Fitness Instructor's head start. |
+| [Hollow Legs](#hollow-legs-1) | +1 | Drink hits less; hangovers milder and shorter. |
+| [Iron Stomach](#iron-stomach-1) | +1 | Rotten and burnt food does half the harm. |
+| [Meal Prepper](#meal-prepper-1) | +1 | Starts on a good diet; variety counts over five days. |
+| [Night Shift](#night-shift-1) | +1 | Daylight hardly wakes you. |
+| [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
+| [Thick Skull](#thick-skull-2) | +2 | Concussed half as often, less badly, heals faster. |
+| [Good Clotter](#good-clotter-3) | +3 | Bleeds run down twice as fast and lose less blood. |
+| [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often. |
+| [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
+| [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
+| [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
 
-**Age** (everyone, prototype): every character is in their 20s, 30s or 40s. The 30s are the default and have no trait; the two age traits pick the others. A new character gets extra levels in their profession's main skill (the one it boosts most): none in the 20s, one in the 30s and 40s. Trait costs are fixed, so age changes what traits do instead: Handy and Arthritis are locked out in the 20s, Gym Regular starts higher; in the 40s Handy gives another Carpentry level and Arthritis flares sooner. Age also shades the universal systems: in the 20s red cells rebuild a seventh faster, concussions heal a fifth faster, hangovers are milder (x0.85) and Type 2 resistance is a little lower; in the 40s red cells rebuild a fifth slower, concussions heal a quarter slower, hangovers are worse (x1.25), Type 2 resistance is higher and Brittle bones snap a quarter more often. Sandbox options (Vitality Project page) turn age off, set the default age and the levels per decade.
+### Negative traits
 
-**Vitality** (everyone): diet, exercise and sleep roll into one slow score. Exercise is training (the fitness regularity the exercise menu builds) or a day of hard activity (running, fighting, chopping, heavy work, read from the body's metabolic rate): activity alone keeps you at neutral; training takes you higher. Fit and Thriving give faster endurance recovery, mood and stress relief, slow healing, cold resistance and resistance to wound infection, and Thriving adds a kilo of base carry weight and half as much Fitness and Strength experience again; Run Down and Sluggish the reverse. The conditions above read it too, and so does how fast the body clears an infection, a concussion, an unstitched wound and a smoker's lungs. A bad night's sleep sets a same-day "Slept Badly" moodle. A new character starts neutral: for the first day Vitality never falls below it.
+#### Multiple Sclerosis (-15)
 
-**Sleep and light** (everyone): the light on your square while asleep sets how deep the sleep is. In the dark, tiredness drains faster and the night scores better; in a lit room it drains slower, the night scores worse, and anything brighter than reading light can wake you (up to about half the hours fully lit). Exhaustion, drink and sleeping pills sleep through it. Close the curtains, turn off the lights.
-Light wakes some people more easily: Restless Sleeper, Night Owl and Cat's Eyes (re-costed from 3 to 1 for it), anyone within six hours of a mug of coffee, and during a depressive episode or a migraine. Restless Sleeper's two halves of a night, up to three hours apart, score as one night. Desensitized characters have nightmares. A bad night makes a depressive episode more likely; sleeping with the light on makes a migraine more likely and stops sleep from shortening an attack as much.
+Heat is the enemy, and no medicine helps with it. Your energy is a budget.
 
-**Blood** (everyone; health overhaul, phase 1): bleeding drains blood instead of health. How fast depends on how bad the bleed is (the game's own bleeding clock), where (neck three times, head, thigh and groin half as much again, chest and belly a little more, hands and feet less) and the dressing: a bandage slows it to a tenth, a shard or bullet left in bleeds through the bandage, stitches stop it. Lose 15% and you are Pale (endurance recovers slower); 30%, Light-headed (no sprinting, anxious); 40%, Shock (endurance capped, health draining, and you can pass out for 5 to 15 game minutes); 45%, Bleeding Out (passing out more often); half your blood is death. Blood volume comes back in about a day if you drink, and makes you thirsty; red cells take about a week, faster fed and asleep and with good Vitality, and while short you tire sooner. The wound itself still hurts until it is dressed and stitched, as in vanilla. A sandbox option turns it off (vanilla bleeding).
+- **Heat load.** Follows the warm air (24 to 34 C) and your body temperature (exercise, too many clothes). Builds over about half an hour; fades over twenty minutes once cool, twice as fast wet. A drink straight from a tap, well or river takes some off; bottles do not.
+- **Warm:** tire sooner, endurance comes back slower.
+- **Hot:** stiff, sore, clumsy hands (the game's stiffness on hands and forearms). Swings can throw the weapon, 5% rising to 15%. Pain rises to about 60.
+- **Overheated:** severe pain, and a 5% chance a minute the hands give out and drop what they hold. Not while asleep or in a vehicle.
+- **Cooling off** clears it within about half an hour. MS takes back its own stiffness and pain.
+- **Flares** about once a month, likelier with fever, stress or hours spent at the wall. Three to six days of the heat hitting half as hard again, stiff legs, weak hands and exhaustion.
+- **Spoons.** You wake with a day's energy (12 spoons; sandbox option, 0 turns it off). The night sets the refill: hours, how rested you woke, waking, light, fever. A bad night gives fewer, never under a third. A flare caps it at eight.
+- **Spending.** Every minute costs by effort (idle a spoon every two and a half hours, sprinting about three an hour), more in the heat, in a flare, in pain, panicking, hungry or uncomfortable. Reading or writing costs a fifth and counts as rest.
+- **Running low.** At half, a warning. At three or fewer, stiff legs and slow stamina. At none, the wall: heavy tiredness, legs like a flare's, stamina at a crawl, a swing that can throw the weapon, and every hour you push on borrowed from tomorrow (up to six) with a likelier flare.
+- **Getting some back.** Sitting still, not hungry, not laden, gives half a spoon an hour, up to two a day. A nap gives up to four. A coffee hides the wall for an hour, then it lands. You are told the count each morning.
+- **Pills** (new items, on the [medication system](#medication)): prednisone makes a flare pass three times as fast from the first pill (hunger while you take it); baclofen builds up over two days to halve the stiffness (mild drowsiness); amantadine builds up over three days to add two spoons to every morning (dry mouth). Starts on baclofen and amantadine, built up, with a bottle of each.
+- **Also:** -1 Fitness and -1 Strength; not with Athletic or Strong. Warms up a tenth faster than anyone else. Discomfort (the Uncomfortable moodle) adds stress and spends spoons half as fast again at full discomfort.
+- **Moodles:** MS Heat, MS Flare, Spoons.
 
-**Wound infection** (everyone; health overhaul, phase 2): replaces vanilla's. Each hour a wound may take an infection: more likely for a deep wound or bite than a scratch, much more with a shard or bullet left in, open or under a spent bandage, or under dirty or bloody clothes; far less once the wound has been disinfected, and not at all while disinfectant or garlic is still on it (or under a fresh alcohol bandage). Prone to Illness and Resilient count, and so do Diabetes (high sugar), Vitality, iron and smoking. It incubates unseen for 8 to 16 hours, and cleaning the wound then ends it. Then it shows as the wound's infection level (the health panel, the pain) and climbs about 2 a day, and the wound stops healing; disinfectant and garlic still push it back. At level 5 it spreads: fever (the body's temperature rises, the Sick moodle, tiredness, thirst) and only antibiotics work. Past that, sepsis drains health, faster the worse it gets; untreated it kills in a couple of days. Antibiotics are the game's own pills, one a dose: each tops up a level in the blood that halves every six hours, and while it is high enough the infection falls back. A dose every eight hours keeps it there; a box of 12 is a course. Stop before ten doses once it is gone and it has a coin flip to come back. Vanilla's one-pill cure is gone. A fever makes for a bad night, brings on migraines, raises blood sugar and irritates asthma; sepsis brings delirium. Zombie infection is untouched. Infection moodle; a sandbox option turns it off.
+#### A Really Bad Day (-12)
 
-**Wound care** (everyone; health overhaul, phase 3): a bandage wears out over about a day, faster wet and faster still as blood soaks through it (vanilla's own drain, which spends a bandage in minutes over a bleeding deep wound, is replaced); spent, it only halves a bleed and invites infection, and you are told to change it. An unstitched deep wound heals at about a third of the speed, and hard use of the limb can open it again. Fresh stitches can tear: swinging a weapon with a stitched arm (both arms two-handed), sprinting or running on a stitched leg, less on the torso, less under a bandage; they hold better as they heal and are sound once the game's stitch time passes 40. Torn, the wound is open and bleeding again. Stitching is a First Aid roll too (45% at level 0, 5% less a level, never under 3%; a suture needle or needle holder takes it to 0.6 of that): stitched roughly, the stitches knit at half the speed, tear twice as easily, ache, and let an infection in as easily as an open deep wound, until they are sound; a stitcher at level 3 or more can tell, and so can the health panel from 3. Take them out and stitch it again. Setting a splint is a First Aid roll (half the time at level 0, 6% less a level, never under 2%): set badly, the bone heals at half the speed and hurts, and only a setter at level 3 or more can tell; take it off and set it again. Moving on a broken leg with no splint makes the break worse. A sandbox option turns it off.
+A CDDA-style start.
 
-**What First Aid tells you** (everyone; health overhaul, phase 4): the health panel's wound list is written for the examiner's First Aid level (your own, or the doctor's for a patient, read live; vanilla kept the level from game start). At 0 to 2 it is what anyone can see: scratched, cut, a bad cut, bitten, bleeding, something stuck in it, a dressing, "might be broken", and an infection only once it is red and swollen; no severities. From 3 the game's own detail, plus infected, a dressing wearing thin, a badly set bone and rough stitches. From 6, how far an infection has got and how stitches are holding. At 9 and 10, an infection that hasn't shown yet and how far a break has healed. It wraps whichever list drawing is installed, so it works over mods that replace it (NestedHealthInfo), and leaves the debug view alone.
+- You begin drunk, sick, with a shard lodged in a groin wound, no clothes, and the house on fire.
+- Under the health overhaul the shard wound is deadly: pull the shard, stop the bleeding, stitch it.
+- A needle and thread wait in a container in another house 15 to 40 tiles away. No marker; the trait text only says next door.
+- Not with Hemophilia or Straight Edge.
+- Not balanced yet; see Status and known issues.
 
-**Concussion** (everyone; health overhaul, phase 5): a hard landing (a fall from about the second floor up has a chance, one a little higher more), a car crash (by speed: nothing under about 25 km/h, a good chance at 50, certain and severe from 70), being hit by a car, or a weapon hit that takes health off the head can concuss. A helmet (army helmet, hard hat) makes it less likely and less bad. Dazed: a headache, drowsy. Concussed: sick to the stomach too, bright daylight makes the headache worse, slower to get your breath back, and running can bring on a dizzy fall; a quarter of the time it knocks you out briefly. Badly concussed: knocked out on the spot for 5 to 15 game minutes. Rest heals it, sleep twice as fast; running and fighting stop it healing. A second knock lands on top of the first. It brings on migraine attacks and makes light wake you more easily. The headache can come back: a concussion has a chance (half, plus half its severity) of a post-concussion headache one to two and a half days later, often after the concussion has cleared. It builds over six hours to a pain worse than the knock's own (20 plus 45 times the severity at its worst), holds, fades over its last twelve hours, and lasts a day to two by severity; sleep gets through it half as fast again, bright daylight makes it worse, and painkillers dull it like any pain. The Concussion moodle shows Dazed while it lasts. Shown on the head in the health panel. A sandbox option turns it off.
+#### Arthritis (-10)
 
-**Passing out** (shock, concussion, Fear of Blood): you fall, end up sitting on the floor, the screen goes black and you can't do anything until you come round, in real time (no time skip), for game minutes but never under eight real seconds. Zombies can still get to you. In a vehicle there is no fall: you slump in the seat, and a driver's engine cuts out so the car rolls to a stop. A faint is shallow: anything wounding you jolts you awake. A concussion knockout is not.
+Stiff joints and an unreliable grip.
 
-**Sunburn** (everyone): not a wound, nothing to bandage. Outdoors in sunshine (day, no rain, less under cloud, nothing at 5 C and full from 20 C, full from 11 to 3 and falling to nothing by 7 in the morning and evening), every body part no worn clothing covers builds exposure; about three hours of midday summer sun on bare skin burns it ("your skin feels hot" first). A burnt part hurts, on that part, for a day, easing over the last six hours; the game adds the parts up, so one burnt hand is a nuisance and a whole body burnt is agony (the pain stat at its maximum) for most of the day. It makes for a worse night, and the health panel shows "Sunburnt" on the part. Shade or indoors lets exposure fade. Skin toughens: each burn makes the next take longer (half as long again after one, three times as long after four), and the tan fades over a month. Outdoorsman skin takes twice as long to burn, tan or no tan. **Sun block** (new item, as common as toothpaste: bathrooms, toiletry shelves, lockers, camping gear, handbags, glove boxes; 8 coats) keeps the sun off all bare skin for 8 hours a coat, and you are told when it wears off. A sandbox option turns sunburn off.
+- Slower to move and swing. A Stiff Joints moodle shows how much the weather is in the joints.
+- Flares in the cold and damp (humidity, rain outdoors).
+- A swing can slip: 1% calm, more when panicked, hurt, tired or flaring. A slipped swing lands at a third of the weapon's damage.
+- In a bad flare one slip in three throws the weapon to the ground instead. The sandbox option Arthritis Drops Weapons turns that off.
+- Cannot be taken in the 20s; flares sooner in the 40s.
 
-**Dehydration** (everyone): vanilla thirst only costs health at the top end. Hours at Thirsty or worse (twice as fast Parched, three times Dying of Thirst) now build a load that brings a headache, tiredness and slower endurance recovery; it drains in about two hours once you have drunk. A sandbox option turns it off.
+#### Diabetes Type 1 (-10) and Type 2 (-5)
 
-**Hangovers** (everyone): drink past a light buzz and a hangover waits for you to sober up, or to wake: at least six hours of headache, low mood, thirst and tiredness, longer and with nausea after a heavy night. A drink hides it and stops the clock, and counts toward the next one. Alcoholics carry the habit as tolerance: more drink to feel it, withdrawal sooner and harder, hangovers a little milder.
+A hidden blood sugar model. You read it with a meter, not a number on screen.
 
-**Medication** (everyone, `DanTraits_Meds.lua`): one list of drugs that the traits read. Daily drugs (beta blockers, anticonvulsants, metformin, and MS's baclofen and amantadine) have a level in your system that every pill tops up and a half-life drains, and a build-up: they work a little after the first pill and fully after a few days of regular doses, and a missed dose lets them fade slowly instead of all at once. A character who starts with a condition starts on its drug, fully built up, and with its medication (beta blockers, anticonvulsants, insulin pens or metformin, an inhaler, MS's baclofen and amantadine); a **Starting Medication** sandbox option turns the medication off, leaving them to find it. A drug's moodle (beta blockers, anticonvulsants) is a paler green while it builds up and the full green once it has, and goes out when the drug leaves your system. Antidepressants keep Depression's own two-week regimen. Diazepam, sumatriptan and prednisone work at once while they are in your system. Some work on anyone who takes them the whole time (prednisone's hunger, baclofen's drowsiness, amantadine's dry mouth). On each day a drug is taken there is a small chance (3%, sandbox option) of its mild side effect for a few hours (the stomach ones bring on the game's nausea moodle), and taking too many at once has its own effect (dizzy spells on beta blockers, for one). Vanilla beta blockers no longer calm panic; that is the job of Diazepam (new item, anti-anxiety pills, works at once for about an hour and a half). Daily drug bottles hold 30 pills, the mod's bottles spawn partly used, and part bottles of the same kind merge like any vanilla pill bottle. Everything else that is taken is on the list too (inhaler, nicotine gum, painkillers, sleeping tablets, caffeine pills, and the insulin pen's doses for the tracking screen): each keeps what it does, and gains a level, the side-effect roll and its too-many effect (strong nausea from four painkillers, a blackout risk from too many sleeping tablets, and shakes from five inhaler puffs close together or four caffeine pills, which also make Heart Condition's chest pain twice as likely). Every medication's tooltip says what it treats, how to take it and its side effects.
+- **Sugar** rises with the carbohydrates you eat and drink, and falls with insulin, exercise and time. Alcohol lowers it.
+- **The moodle** (Blood Sugar) says the sugar is out of range, not which way. The glucose meter and a test strip say which.
+- **Low:** shaky, tired, anxious, and a bad low puts you on the floor. Steady Hands stops working; Epilepsy seizures are likelier.
+- **High:** thirst, and wound infections are likelier and climb faster.
+- **Type 1:** no insulin of your own. An insulin pen (any number of doses) is the only way down. Starts with a pen, a meter and strips.
+- **Type 2:** the body's own insulin, limited by weight (and by age: more resistance in the 40s, a little less in the 20s). Metformin builds up over two days. Starts on it with a bottle.
 
-**Drink relief** (everyone): vanilla treats any sip of alcohol as a full dose of beta blockers and painkillers, however small. That is undone, and the relief follows the Drunk moodle instead: pain reduction of 20, 40, 60 or 80 by level, and panic that settles at a quarter, half, three quarters or the full beta-blocker rate.
+#### Heart Condition (-10)
 
-**Moodles**: every effect that lasts has one. The older systems feed their own (airway irritation, vitality, a bad night, hangover, migraine, blood loss, infection, concussion, blood sugar); the rest are fed from one place (`DanTraits_Moodles.lua`): chest pain, seizure (the aura, and the hour after), ears ringing, a gut flare (gluten and lactose), filthy (Germaphobe), sunburn, dehydration, caffeine withdrawal, alcohol withdrawal, nicotine craving, a depressive episode, low iron, stiff joints, MS heat (heat sensitive, too hot, overheated), an MS flare and the spoons (half gone, running on empty, the wall). Three have a good side: beta blockers working, anticonvulsants working, and sun block on, so the icon going out is the reminder to take the next one. Diabetes' Blood Sugar moodle says the sugar is out of range but not which way (the meter is how you find out). Hallucinations has none (it would give them away).
+Chest pain when you are winded, and a heart attack if you push through it.
 
-All the moodles need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
+- Only while the Endurance moodle shows. The chance rises with the moodle's depth, panic, the 40s, a smoking habit, caffeine and a Run Down body.
+- Chest pain holds pain and slows endurance recovery for 15 to 30 minutes, twice as fast to pass at rest.
+- Pushing on through it (sprinting, or still spending endurance at Endurance moodle 2 or worse) can bring a heart attack: down for 5 to 15 minutes, health lost, a day of weak recovery. Standing still worn out counts as rest.
+- Beta blockers (vanilla's pills, on the [medication system](#medication)), one a day, build up over three days to cut both to a quarter. You are told when they wear off. Starts on them, built up, with two bottles.
+- Moodle: Chest Pain, with a good side while beta blockers work.
+
+#### Brittle (-8)
+
+- A solid hit (2 damage or more) has a 20% chance to fracture one of six limbs.
+- Likelier in the 40s.
+
+#### Brittle Asthma (-8)
+
+Airway irritation that builds through four tiers to an attack.
+
+- **What irritates:** cold air, corpses nearby, exertion (spending endurance when it is already low), panic, smoke, and a wound infection's fever. A mask halves the environmental share.
+- **Tier 1:** a warning. **Tier 2:** endurance recovers at half speed, the odd quiet cough. **Tier 3:** no recovery and coughing. **Tier 4, the attack:** endurance and health drain to a 20% floor, you cough loud enough to pull zombies, and an attack that empties you can black you out.
+- At rest an attack eases over about four hours. The rescue inhaler (new item) ends it at once.
+- Smoking, and a smoker's lungs, make it worse.
+- Moodle: Airway Irritation.
+
+#### Hemophilia (-8)
+
+- Bleeds never run down on their own while unbandaged, and open wounds bleed again until bandaged.
+- With [Blood](#blood) on: bleeds lose half as much again, and a bandage only slows one to two fifths. A soaked bandage, or one over a shard, is no better than none, so change it. Stitches are what stop it.
+- With Blood off: every unbandaged bleed costs extra health instead.
+- Not with Good Clotter or A Really Bad Day.
+
+#### Major Depressive Disorder (-8)
+
+Episodes that hold mood down for days.
+
+- Pain and stress drag mood; a bad night makes an episode likelier.
+- An episode holds a mood floor by its severity, with a refractory window after.
+- What lifts it: drink (briefly), cigarettes, comfort food, a piece of nicotine gum (a little), exercise, time outdoors, and a real antidepressant regimen.
+- Antidepressants: a pill a day, a 14-day build-up, side effects, and discontinuation if you stop. Vanilla's instant lift is gone for this trait.
+- Moodle: Depression.
+
+#### Migraines (-8)
+
+Attacks that cost you hours.
+
+- **Triggers:** bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat (hot air or an overheated body), corpses close by, a storm on the way (forecast for today or tomorrow, before the rain), and bright daylight.
+- **Personal triggers:** of the eight lifestyle ones, each character draws three that count double; the other five count half. You are not told which. Once a strong trigger has brought on two attacks, your character works it out and says so.
+- **The attack:** an aura first, then hours of pain and nausea, worse in bright light. Sleep shortens it, less in a lit room. A refractory day follows.
+- **Painkillers** barely touch an attack: a third of their usual relief, a tenth off the time.
+- **Sumatriptan** (new item, rare) is what works. Taken in the aura the attack is half as bad; taken during one it is over within two hours with the pain and nausea halved. Once per attack. The day after you are heavy and a little clumsy. Starts with a pack down to its last two tablets.
+- Moodle: Migraine.
+
+#### Epilepsy (-6)
+
+- Seizures about one in eight days when rested and well. Tiredness, alcohol withdrawal, a hangover, fever, concussion, stress, dehydration, a diabetic low and bright sun make them likelier.
+- An aura five to ten minutes ahead (never under 30 real seconds). Then you drop what you hold and are out for 2 to 5 minutes, which can concuss. Then an hour of headache and low mood.
+- Asleep, a seizure wakes you and spoils the night instead.
+- Anticonvulsants (new item, on the [medication system](#medication)), one every 12 hours, build up over five days to cut seizures to a tenth. You are told when they wear off. Starts on them, built up, with a bottle.
+- Moodle: Seizure (the aura before, the hour after), with a good side while the pills work.
+
+#### Fear of Blood (-6, vanilla reworked)
+
+- Vanilla's panic at your own bleeding and stress when bloody stay.
+- Treating a wound takes a quarter longer.
+- Stitching (25%), pulling out a bullet (35%) or glass (20%), or dressing a bleeding wound (10%) can make you faint: about eight seconds, woken by anything that wounds you. So can losing blood fast.
+- Still cannot perform first aid on others.
+
+#### Anaemic (-4)
+
+- Iron drains over about five days. Fresh meat, fish, greens, eggs and iron pills (new item) top it up.
+- Short of iron: endurance recovers slower, you tire sooner and catch cold more easily.
+- After blood loss, red cells rebuild at half speed, slower still short of iron, and rebuilding them spends iron.
+- Wound infections climb faster.
+- Moodle: Low Iron.
+
+#### Gluten Intolerance (-4)
+
+- Wheat (bread, pasta, baked goods, beer and dishes made with them) brings on a flare after a short onset.
+- The flare ramps up: cramps, nausea, low mood. It takes about ten hours to clear; a second meal during one adds to it.
+- Moodle: Gut Flare.
+
+#### Jinxed (-4)
+
+- Freshly generated containers near you have a 35% chance to lose one item.
+
+#### Smoker (-4, vanilla reworked)
+
+- Cravings build faster the heavier the habit. Withdrawal brings irritability (the vanilla Angry moodle), hunger and restless sleep.
+- A cigarette relieves only the craving it answers. To anyone else it is a buzz that fades as tolerance builds.
+- Damaged lungs recover endurance slower and cough, worse on exertion and in the morning.
+- Anyone who smokes regularly gains the trait; three weeks without tobacco loses it. After that, drink and stress bring cravings back, and a smoke is a coin flip to relapse.
+- Smoking speeds up caffeine clearance, lets a wound infection climb faster and slows a deep wound's healing.
+- Rare nicotine gum (new item) eases quitting.
+- Moodle: Nicotine Craving. The sandbox option Nicotine Craving Moodle hides it, so the craving has to be read from irritability and stress.
+
+#### Vegetarian (-4)
+
+- Meat, fish, insects and anything cooked with them are refused: the eat action will not start.
+- Judged by food type, by name and by a dish's ingredients.
+
+#### Germaphobe (-3)
+
+- Dirty or bloody skin (the four worst parts count, not the average) and dirty clothes build stress and hold mood down.
+- Getting clean is a real relief.
+- Wounds are a fifth less likely to take an infection.
+- Moodle: Filthy.
+
+#### Alcoholic (-2)
+
+- Withdrawal after a day without a drink: craving, low mood and poor sleep, then pain, nausea and the shakes. Heavy drinkers get hallucinations and seizures, and a seizure can concuss.
+- The deeper the habit, the sooner and harder it comes. Feeling tipsy ends the craving at a normal habit.
+- Anyone who drinks too often gains the trait. A month without alcohol loses it, and any drink after that is a coin flip to relapse.
+- The habit is tolerance too: more drink to feel it, hangovers a little milder.
+- Moodle: Alcohol Withdrawal (craving, the shakes, delirium).
+
+#### Caffeine Dependent (-2)
+
+- Half a day without caffeine brings a headache, tiredness and low mood. A week dry breaks the habit.
+- Coffee, tea and caffeine pills end a craving. A brewed mug counts by what went into it.
+- A can of cola or a bar of chocolate is too little to end one but puts it off: six hours for a can, three for a bar.
+- Moodle: Caffeine Withdrawal.
+
+#### Hallucinations (-2)
+
+- Episodes roll every ten minutes: a phantom zombie (a harmless sprinter that fades), sounds, thumps, whispers, breaking glass, footsteps, or a bout of panic with the startle sting.
+- Likelier with stress, tiredness and night, and with a sleep debt, a concussion, alcohol withdrawal or a fever.
+- A concussed or feverish character gets a whisper, not a panic bout.
+- Sounds are audio only: they do not attract real zombies.
+- No moodle, on purpose. It would give the episodes away.
+
+#### Tinnitus (-2)
+
+- A burst of your own gunfire (by the gun's loudness: half a dozen pistol shots, three from a shotgun) puts vanilla Hard of Hearing on for half an hour or more and Keen Hearing off while it lasts. More shooting adds time.
+- The ringing makes light sleep lighter.
+- Not with Hard of Hearing or Deaf.
+- Moodle: Tinnitus.
+
+#### Lactose Intolerance (-1)
+
+- Dairy, and milk from a carton, brings a mild flare: cramps, queasiness, low mood, gone in about six hours.
+- Moodle: Gut Flare, topping out at the second level.
+
+#### Straight Edge (-1)
+
+- Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief.
+- Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day.
+
+### Positive traits
+
+#### Renaissance Faire Geek (+10)
+
+- +1 Spear, Long Blade, Axe and Blacksmithing.
+
+#### Fast Recovery (+8)
+
+- Fast Healer folded in (granted; not with Fast Healer or Slow Healer).
+- After a bleed, blood volume and red cells come back half as fast again.
+
+#### Deep Sleeper (+6)
+
+- Wakeful folded in (granted; hidden at character creation).
+- Light rarely wakes you and costs half the rest; the dark does more good.
+
+#### Steady Hands (+5)
+
+- Dexterous folded in (granted; not with Dexterous or All Thumbs).
+- Splints you set go wrong and stitches you put in come out rough half as often. Your fresh stitches tear half as often.
+- Stitching, pulling glass or bullets, and splinting take a quarter less time.
+- Not while your hands shake (alcohol withdrawal, a diabetic low).
+
+#### Good Clotter (+3)
+
+- Bleeds run down on their own twice as fast (not while glass or a bullet is still in).
+- With [Blood](#blood) on, a bleed loses a quarter less blood; without it, the shorter bleed costs less health.
+- Not with Hemophilia.
+
+#### Thick Skull (+2)
+
+- A knock to the head concusses half as often and a quarter less badly, on top of a helmet.
+- Concussions heal half as fast again.
+
+#### Outdoorsman (2, vanilla reworked)
+
+- Less affected by harsh weather, as vanilla.
+- Takes twice as long to get sunburnt.
+
+#### Cat's Eyes (1, vanilla re-costed)
+
+- Better vision at night, as vanilla. Re-costed from 3 to 1.
+- Light wakes you more easily; see [Sleep and light](#sleep-and-light).
+
+#### Early Riser (+1)
+
+- Starts well rested; every night scores a little better.
+- Not with Night Shift.
+
+#### Gym Regular (+1)
+
+- Every exercise starts at regularity 50, a Fitness Instructor's head start (65 in the 20s).
+- Vitality's exercise score starts neutral instead of empty.
+
+#### Hollow Legs (+1)
+
+- Every drink goes to your head a fifth less, so it takes more to dull pain too.
+- Hangovers are milder (x0.6) and shorter (x0.7).
+- Not with Straight Edge.
+
+#### Iron Stomach (+1)
+
+- Rotten and burnt food does half the harm.
+- Food sickness climbs half as fast.
+
+#### Meal Prepper (+1)
+
+- Starts on a good diet.
+- Vitality counts food variety over five days instead of three.
+
+#### Night Shift (+1)
+
+- Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest.
+- Not with Early Riser.
+
+### Age: In Their 20s (-2) and In Their 40s (+1)
+
+Every character is in their 20s, 30s or 40s. The 30s are the default and have no trait; the two age traits pick the others. Sandbox options turn age off, set the default decade and the profession levels per decade.
+
+- **Profession:** a new character gets extra levels in the profession's main skill: none in the 20s, one in the 30s and 40s.
+- **In Their 20s:** cannot take Handy or Arthritis; Gym Regular starts at 65. Red cells rebuild a seventh faster, concussions heal a fifth faster, hangovers are milder (x0.85), Type 2 resistance is a little lower.
+- **In Their 40s:** Handy gives +1 Carpentry more; Arthritis flares sooner. Red cells rebuild a fifth slower, concussions heal a quarter slower, hangovers are worse (x1.25), Type 2 resistance is higher, Brittle bones snap a quarter more often.
+
+## For everyone
+
+These run for every character, trait or not. Most have a switch on the Vitality Project sandbox page.
+
+### Vitality
+
+Diet, exercise and sleep roll into one slow score.
+
+- **Diet:** fresh, varied food lifts it; junk and neglect drag it. Variety counts over three days.
+- **Exercise:** training (the fitness regularity the exercise menu builds) or a day of hard activity (running, fighting, chopping, heavy work, read from the body's metabolic rate). Activity alone keeps you at neutral; training takes you higher.
+- **Sleep:** the night's score, below.
+- **Fit and Thriving:** faster endurance recovery, mood and stress relief, slower healing of nothing (healing is faster), cold resistance, resistance to wound infection. Thriving adds a kilo of base carry weight and 1.5x Fitness and Strength experience.
+- **Run Down and Sluggish:** the reverse.
+- The conditions above read it too, and so does how fast the body clears an infection, a concussion, an unstitched wound and a smoker's lungs.
+- A bad night sets a same-day Slept Badly moodle. A new character starts neutral and cannot fall below it for the first day.
+- Moodle: Vitality.
+
+### Sleep and light
+
+The light on your square while asleep sets how deep the sleep is.
+
+- **Dark:** tiredness drains faster, the night scores better.
+- **Lit:** tiredness drains slower, the night scores worse, and anything brighter than reading light can wake you (up to about half the hours fully lit). Close the curtains, turn off the lights.
+- Exhaustion, drink and sleeping pills sleep through it.
+- Light wakes some people more easily: Restless Sleeper, Night Owl, Cat's Eyes, anyone within six hours of a coffee, and during a depressive episode or a migraine. Restless Sleeper's two halves of a night, up to three hours apart, score as one.
+- Desensitized characters have nightmares.
+- A bad night makes a depressive episode likelier; sleeping with the light on makes a migraine likelier and stops sleep shortening an attack as much.
+
+### Blood
+
+Bleeding drains blood instead of health.
+
+- **How fast:** by how bad the bleed is (the game's own bleeding clock), where it is (neck three times, head, thigh and groin half as much again, chest and belly a little more, hands and feet less), and the dressing: a bandage slows it to a tenth, a shard or bullet left in bleeds through the bandage, stitches stop it.
+- **15% lost, Pale:** endurance recovers slower.
+- **30%, Light-headed:** no sprinting, anxious.
+- **40%, Shock:** endurance capped, health draining, and you can pass out for 5 to 15 game minutes.
+- **45%, Bleeding Out:** passing out more often. **Half your blood is death.**
+- **Recovery:** volume comes back in about a day if you drink, and makes you thirsty. Red cells take about a week, faster fed, asleep and with good Vitality; while short you tire sooner.
+- The wound itself still hurts until it is dressed and stitched, as in vanilla.
+- Moodle: Blood Loss. The sandbox option Blood Loss turns it off (vanilla bleeding).
+
+### Wound infection
+
+Replaces vanilla's one-roll infection.
+
+- **Each hour** a wound may take an infection: likelier for a deep wound or bite than a scratch, much more with a shard or bullet left in, open or under a spent bandage, or under dirty or bloody clothes. Far less once disinfected, and not at all while disinfectant or garlic is on it (or under a fresh alcohol bandage).
+- Prone to Illness and Resilient count, and so do Diabetes (high sugar), Vitality, iron and smoking.
+- **Incubation:** 8 to 16 hours unseen. Cleaning the wound then ends it.
+- **Growth:** the wound's infection level (the health panel, the pain) climbs about 2 a day, and the wound stops healing. Disinfectant and garlic still push it back.
+- **Level 5, spread:** fever (temperature, the Sick moodle, tiredness, thirst) and only antibiotics work. Past that, sepsis drains health, faster the worse it gets. Untreated it kills in a couple of days.
+- **Antibiotics** are the game's own pills, one a dose. Each tops up a level in the blood that halves every six hours; while it is high enough the infection falls back. A dose every eight hours keeps it there; ten doses finish a course (a box holds 12). Stop early once it is gone and it has a coin flip to come back. Vanilla's one-pill cure is gone.
+- A fever makes for a bad night, brings on migraines, raises blood sugar and irritates asthma. Sepsis brings delirium.
+- Zombie infection is untouched.
+- Moodle: Infection. A sandbox option turns it off.
+
+### Wound care
+
+- **Bandages** wear out over about a day, faster wet and faster still as blood soaks through. Spent, a bandage only halves a bleed and invites infection, and you are told to change it.
+- **Unstitched deep wounds** heal at about a third of the speed, and hard use of the limb can open them again.
+- **Fresh stitches** can tear: swinging a weapon with a stitched arm, sprinting or running on a stitched leg, less on the torso, less under a bandage. They hold better as they heal and are sound once the game's stitch time passes 40. Torn, the wound is open and bleeding again.
+- **Stitching is a First Aid roll:** 45% rough at level 0, 5% less a level, never under 3%; a suture needle or needle holder takes it to 0.6 of that, Steady Hands halves it. Rough stitches knit at half speed, tear twice as easily, ache, and let infection in like an open wound until they are sound. A stitcher at level 3 or more can tell. Take them out and stitch again.
+- **Splinting is a First Aid roll:** half the time badly set at level 0, 6% less a level, never under 2%. Set badly, the bone heals at half speed and hurts; only a setter at level 3 or more can tell. Take it off and set it again.
+- Moving on a broken leg with no splint makes the break worse.
+- A sandbox option turns it off.
+
+### What First Aid tells you
+
+The health panel's wound list is written for the examiner's First Aid level: your own, or the doctor's for a patient, read live.
+
+- **0 to 2:** what anyone can see. Scratched, cut, a bad cut, bitten, bleeding, something stuck in it, a dressing, "might be broken", and an infection only once it is red and swollen. No severities.
+- **3 to 5:** the game's own detail, plus infected, a dressing wearing thin, a badly set bone and rough stitches.
+- **6 to 8:** how far an infection has got and how stitches are holding.
+- **9 and 10:** an infection that has not shown yet, and how far a break has healed.
+- Wraps whichever list drawing is installed, so it works over mods that replace it (NestedHealthInfo), and leaves the debug view alone.
+
+### Concussion
+
+- **Causes:** a hard landing (from about the second floor up), a car crash (by speed: nothing under about 25 km/h, a good chance at 50, certain and severe from 70), being hit by a car, or a weapon hit that takes health off the head. A helmet makes it less likely and less bad.
+- **Dazed:** a headache, drowsy.
+- **Concussed:** sick to the stomach too, bright daylight makes the headache worse, slower to get your breath back, and running or fighting can bring on a dizzy fall; a quarter of the time it knocks you out briefly.
+- **Badly concussed:** knocked out on the spot for 5 to 15 game minutes.
+- **Healing:** rest heals it, sleep twice as fast; running and fighting stop it healing. A second knock lands on top of the first.
+- **The headache after:** a chance (half, plus half the severity) of a post-concussion headache one to two and a half days later, often after the concussion has cleared. It builds over six hours to a pain worse than the knock's own, holds, and fades over its last twelve hours, lasting a day to two by severity. Sleep gets through it half as fast again; daylight makes it worse; painkillers dull it.
+- It brings on migraine attacks and makes light wake you more easily. Shown on the head in the health panel.
+- Moodle: Concussion. A sandbox option turns it off.
+
+### Passing out
+
+Shock, a concussion and Fear of Blood can all put you on the floor.
+
+- You fall, end up sitting, the screen goes black, and you can do nothing until you come round. In real time, no time skip, for game minutes but never under eight real seconds. Zombies can still get to you.
+- In a vehicle there is no fall: you slump in the seat, and a driver's engine cuts out so the car rolls to a stop.
+- A faint is shallow: anything wounding you jolts you awake. A concussion knockout is not.
+
+### Sunburn
+
+- Outdoors in sunshine (day, no rain, less under cloud, nothing at 5 C and full from 20 C, full from 11 to 3 and gone by 7 morning and evening), every body part no clothing covers builds exposure. About three hours of midday summer sun burns bare skin; "your skin feels hot" comes first.
+- A burnt part hurts, on that part, for a day, easing over the last six hours. The game adds the parts up: one burnt hand is a nuisance, a whole body burnt is agony for most of the day.
+- It makes for a worse night, and the health panel shows Sunburnt on the part. Shade or indoors lets exposure fade.
+- Skin toughens: each burn makes the next take longer, and the tan fades over a month. Outdoorsman skin takes twice as long to burn.
+- **Sun block** (new item, as common as toothpaste; 8 coats) keeps the sun off all bare skin for 8 hours a coat. You are told when it wears off.
+- Moodle: Sunburn, with a good side while sun block is on. A sandbox option turns it off.
+
+### Dehydration
+
+- Vanilla thirst only costs health at the top end. Hours at Thirsty or worse (twice as fast Parched, three times Dying of Thirst) now build a load: a headache, tiredness and slower endurance recovery.
+- It drains in about two hours once you have drunk.
+- Moodle: Dehydration. A sandbox option turns it off.
+
+### Hangovers
+
+- Drink past a light buzz and a hangover waits for you to sober up, or to wake: at least six hours of headache, low mood, thirst and tiredness, longer and with nausea after a heavy night.
+- A drink hides it and stops the clock, and counts toward the next one.
+- Alcoholics carry the habit as tolerance: more drink to feel it, withdrawal sooner and harder, hangovers a little milder.
+- Moodle: Hangover. A sandbox option turns it off.
+
+### Drink relief
+
+- Vanilla treats any sip of alcohol as a full dose of beta blockers and painkillers, however small. That is undone.
+- Relief follows the Drunk moodle instead: pain reduction of 20, 40, 60 or 80 by level, and panic that settles at a quarter, half, three quarters or the full beta-blocker rate.
+- A sandbox option turns it off.
+
+### Medication
+
+One list of drugs that every trait reads (`DanTraits_Meds.lua`).
+
+- **Daily drugs** (beta blockers, anticonvulsants, metformin, baclofen, amantadine) have a level in your system that every pill tops up and a half-life drains, and a build-up: a little after the first pill, fully after a few days of regular doses. A missed dose lets them fade slowly, not all at once.
+- **Rescue drugs** (diazepam, sumatriptan, prednisone) work at once while they are in your system.
+- **Everything else** that is taken is on the list too (inhaler, nicotine gum, painkillers, sleeping tablets, caffeine pills, the insulin pen's doses): each keeps what it does and gains a level, a side-effect roll and a too-many effect. Four painkillers at once bring strong nausea, too many sleeping tablets a blackout risk, five inhaler puffs or four caffeine pills the shakes (and chest pain twice as likely for Heart Condition).
+- **Side effects:** on each day a drug is taken, a small chance (3%, sandbox option Medication Side Effect Chance) of its mild side effect for a few hours. Stomach ones bring on the game's nausea moodle. Some act on anyone the whole time: prednisone's hunger, baclofen's drowsiness, amantadine's dry mouth.
+- **Wearing off:** a drug's moodle (beta blockers, anticonvulsants) is paler green while it builds up and full green once it has, and goes out when the drug leaves your system. You are told when a protecting drug lapses.
+- **Starting Medication** (sandbox option, on): a character who starts with a condition starts on its drug, built up, with the medication. Off, they find their own.
+- **Diazepam** (new item): the panic drop vanilla beta blockers used to give, for about an hour and a half. Beta blockers now only do what Heart Condition needs.
+- **Pill Caddy** (new item, rare): a belt-worn weekly organiser that holds medication only. Capacity 1 (Organized makes it 2). A new character with a medical trait has a 1% chance to start with one.
+- Daily drug bottles hold 30 pills, the mod's bottles spawn partly used, and part bottles merge like vanilla's. Every tooltip says what the drug treats, how to take it and its side effects. Antidepressants keep Depression's own two-week regimen.
+
+### Moodles
+
+Every effect that lasts has one. All of them need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
+
+- The older systems feed their own: Airway Irritation, Vitality, Slept Badly, Hangover, Migraine, Blood Loss, Infection, Concussion, Blood Sugar.
+- The rest are fed from one place (`DanTraits_Moodles.lua`): Chest Pain, Seizure, Tinnitus, Gut Flare, Filthy, Sunburn, Dehydration, Caffeine Withdrawal, Alcohol Withdrawal, Nicotine Craving, Depression, Low Iron, Stiff Joints, MS Heat, MS Flare, Spoons.
+- Three have a good side: beta blockers working, anticonvulsants working, and sun block on. The icon going out is the reminder to take the next one.
+- Blood Sugar says the sugar is out of range but not which way; the meter is how you find out. Hallucinations has none; it would give the episodes away.
 
 ## Layout
 
