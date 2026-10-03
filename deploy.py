@@ -1,6 +1,9 @@
 """Copy the mod between this repo and the game's mod folder.
 
     python deploy.py            repo  -> ~/Zomboid/mods/DanTraits   (mirror: extra files in the game folder are removed)
+                                and, while ~/Zomboid/Workshop/DanTraits exists, into its Contents too:
+                                the game loads the Workshop copy in preference to the mods one, so
+                                the two are kept identical and it does not matter which it picks
     python deploy.py --pull     ~/Zomboid/mods/DanTraits -> repo    (for edits made in place while testing)
     python deploy.py --dry-run  show what would change, touch nothing
     python deploy.py --workshop repo  -> ~/Zomboid/Workshop/DanTraits  (the folder the
@@ -137,6 +140,17 @@ def main():
     for rel in removed:
         print("  %s %s" % ("would remove" if a.dry_run else "removed", rel))
     print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
+    # The game loads ~/Zomboid/Workshop/DanTraits/Contents/mods/DanTraits in preference to
+    # ~/Zomboid/mods/DanTraits while the upload folder exists, so a deploy that left it
+    # stale looked like it did nothing. Keep the two identical.
+    if not a.pull and not a.patch and os.path.isdir(GAME_WORKSHOP):
+        copied, removed, same = build_workshop(a.dry_run)
+        print("%s -> %s (the game loads this copy while it exists)" % (HERE, GAME_WORKSHOP))
+        for rel in copied:
+            print("  %s %s" % (verb, rel))
+        for rel in removed:
+            print("  %s %s" % ("would remove" if a.dry_run else "removed", rel))
+        print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
 
 
 if __name__ == "__main__":
