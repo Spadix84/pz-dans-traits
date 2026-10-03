@@ -209,6 +209,21 @@ local ITEMS = {
         bags = { HandbagsAndPurses = 0.03 },
         clutter = { DeskItems = 0.1 },
     },
+    {
+        -- rare: a pill organiser, only where medicine is kept (for scale,
+        -- beta blockers are 1 in a bathroom cabinet). Pharmacies use the
+        -- MedicalClinicDrugs list.
+        name = "DanTraits.PillCaddy",
+        procedural = {
+            BathroomCabinet = 0.1, BathroomCounter = 0.05, MedicalCabinet = 0.2,
+            MedicalClinicDrugs = 0.4, MedicalStorageDrugs = 0.3,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.1 },
+        },
+        bags = {},
+        clutter = {},
+    },
 }
 
 local function append(list, name, weight)

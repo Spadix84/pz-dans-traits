@@ -25,5 +25,6 @@
     "Tooltip_DanTraits_PillsAntiDep": "Daily antidepressant.<br>Treats: depression.<br>Dose: 1 pill a day.<br>Full effect after 2 weeks.<br>Stopping suddenly after a<br>week brings a few rough days.<br>Side effects (rare):<br>queasiness.<br>30 pills.",
     "Tooltip_DanTraits_Painkillers": "Painkillers.<br>Treats: pain, headaches,<br>migraines, hangovers,<br>gut flares, arthritis.<br>Dose: 1 or 2 pills.<br>Work for a few hours.<br>Side effects: none.",
     "Tooltip_DanTraits_SleepingTablets": "Sleeping tablets.<br>Treats: trouble sleeping.<br>Dose: 1 at bedtime.<br>Light won't wake you.<br>Side effects: drowsiness.",
-    "Tooltip_DanTraits_Vitamins": "Caffeine pills.<br>Treats: tiredness.<br>Dose: 1 for a burst of<br>energy. Eases caffeine<br>withdrawal.<br>Side effects: a little stress;<br>light wakes you more easily."
+    "Tooltip_DanTraits_Vitamins": "Caffeine pills.<br>Treats: tiredness.<br>Dose: 1 for a burst of<br>energy. Eases caffeine<br>withdrawal.<br>Side effects: a little stress;<br>light wakes you more easily.",
+    "Tooltip_DanTraits_PillCaddy": "Weekly pill organiser.<br>Holds medication only:<br>pills, inhalers, insulin.<br>Clips onto your belt.<br>Holds about 5 bottles."
 }
