@@ -1,0 +1,14 @@
+{
+    "ContextMenu_DanTraits_UseInhaler": "Использовать ингалятор",
+    "ContextMenu_DanTraits_Inject": "Ввести инсулин",
+    "ContextMenu_DanTraits_InjectDoses": "%1 доз(ы)",
+    "ContextMenu_DanTraits_CheckSugar": "Проверить уровень сахара",
+    "ContextMenu_DanTraits_TakeMetformin": "Принять метформин",
+    "ContextMenu_DanTraits_TakeIronPill": "Принять препарат железа",
+    "ContextMenu_DanTraits_ChewGum": "Разжевать никотиновую жвачку",
+    "ContextMenu_DanTraits_TakeAnticonvulsant": "Принять антиконвульсант",
+    "ContextMenu_DanTraits_ApplySunblock": "Нанести солнцезащитный крем",
+    "ContextMenu_DanTraits_TakePrednisone": "Принять преднизон",
+    "ContextMenu_DanTraits_TakeBaclofen": "Принять баклофен",
+    "ContextMenu_DanTraits_TakeAmantadine": "Принять амантадин"
+}
