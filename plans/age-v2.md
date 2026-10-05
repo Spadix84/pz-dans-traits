@@ -223,6 +223,13 @@ In game (checklist, ids `age2-*`):
    or the random button. Considered and not built: fewer levels with age,
    lock-outs, an upkeep system.
 
+10. **Age-only traits** (the user picked all eight I drafted, 2026-10-05, and
+    wants one more for the 20s, not yet named): Green, Quick Study (20s);
+    Reading Glasses, Bad Back, Bad Knees, Old Hand (40s, 50s); Old Injury, Set
+    in Their Ways (50s). No existing trait was made age-limited. The age check
+    is Lua on the creation screen (`DanTraits_AgeOnly`), because the 30s have
+    no trait there.
+
 ## What the build did differently
 
 - **Fitness and Strength are never the main skill.** Otherwise a 50s Fitness

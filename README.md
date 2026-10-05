@@ -340,6 +340,10 @@ Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Youn
 - **In Their 20s:** cannot take Handy or Arthritis; Gym Regular starts at 65; Type 2 resistance a little lower; a Heart Condition acts up less (x0.8).
 - **In Their 40s and 50s:** Handy gives +1 Carpentry more; Arthritis flares sooner (x1.3 / x1.6); Brittle bones snap more often (x1.25 / x1.5); a Heart Condition acts up more (x1.25 / x1.5); Type 2 resistance is higher.
 - **Staying in shape costs more with age:** Strong and Athletic cost 2 points more in the 40s and 4 more in the 50s; Stout and Fit 1 and 2. The creation screen shows the extra beside the trait's cost.
+- **Traits only one age can take:**
+  - 20s: **Green (-4)**, every occupation skill starts a level lower; **Quick Study (+4)**, skills under level 3 gain experience x1.25.
+  - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-4)**, a heavy load builds back pain; **Bad Knees (-3)**, running, sprinting and climbing build knee pain; **Old Hand (+4)**, the occupation's main skill gains experience x1.25.
+  - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-2)**, skills outside the occupation gain experience x0.85.
 - **Sandbox:** turn age off, set the default decade, set the profession levels per decade.
 
 ## For everyone

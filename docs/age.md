@@ -125,6 +125,36 @@ that shape. Staying in shape costs extra points:
 - Weak, Feeble, Unfit and Out of Shape are unchanged.
 - With the Age option off there is no surcharge.
 
+## Traits only one age can take
+
+Eight traits are offered only to the right age. Pick the age first; change it
+and a trait the new age cannot have comes back off, with its points. The
+*Default Age* counts as the age when none is picked. With the Age option off
+none of them is offered.
+
+| Trait | Age | Points | What it does |
+|---|---|---|---|
+| Green | 20s | gives 4 | Every skill the occupation boosts starts one level lower (not under 0). The skills still train at the occupation's faster rate. Shown greyed on the creation screen |
+| Quick Study | 20s | costs 4 | Any skill below level 3 gains experience x1.25 |
+| Reading Glasses | 40s, 50s | gives 2 | Starts with a pair of reading glasses. Without reading or prescription glasses on, reading takes x1.5 as long and needs a properly lit room (sunglasses do not count) |
+| Bad Back | 40s, 50s | gives 4 | The Heavy Load moodle builds lower-back pain, faster the heavier the load (about two hours at the second level to the worst of it). It eases over about four hours with the load off, twice as fast asleep. Not with Strong |
+| Bad Knees | 40s, 50s | gives 3 | Running, sprinting (four times as fast) and each fence, wall or window climbed build pain in both lower legs. It eases over about three hours of walking or rest |
+| Old Hand | 40s, 50s | costs 4 | The occupation's main skill gains experience x1.25 (Maintenance for the Unemployed) |
+| Old Injury | 50s | gives 3 | One arm or leg, picked at the start and announced once, always carries a little stiffness; in the cold and damp it stiffens further and hurts. Not with Arthritis |
+| Set in Their Ways | 50s | gives 2 | Skills the occupation does not boost gain experience x0.85. Fitness and Strength are left to age |
+
+Notes:
+
+- The experience traits stack with each other and with age's own Fitness and
+  Strength factor. A slower learner never drops below a level already held.
+- Bad Back, Bad Knees and Old Injury put their pain on the body part, so it
+  shows on the health panel and painkillers work on it.
+- Old Injury reads the weather the way Arthritis does. Its stiffness is a
+  floor; age's slower fading applies to anything above it.
+- The age check happens on the creation screen only. A character who has one
+  of these traits keeps it.
+- These traits have no icons yet, like the Age traits themselves.
+
 ## What age does to other traits
 
 | Trait | 20s | 40s | 50s |
@@ -141,7 +171,10 @@ that shape. Staying in shape costs extra points:
 
 Notes on the less obvious rows:
 
-- **Handy and Arthritis** are the only lock-outs, and only for the 20s. The
+- **Handy and Arthritis** are the only lock-outs among the older traits, and
+  only for the 20s. (Until 2026-10-05 this only worked if Arthritis or Handy
+  was picked first: the game checks an exclusion from one side. The creation
+  screen now checks both sides, for every trait.) The
   50s are locked out of nothing: Athletic or Gym Regular at 55 is allowed,
   just harder to keep up.
 - **Blood, concussion and hangover** rows are not trait effects as such. They
@@ -183,6 +216,7 @@ There is no separate switch for the everyday effects.
 - Everyone carries an Age trait.
 - The creation screen shows age's levels.
 - Strong, Athletic, Stout and Fit cost more in the 40s and 50s.
+- Eight traits that only one age can take.
 
 ## For modders
 
@@ -198,4 +232,10 @@ There is no separate switch for the everyday effects.
   `AddXP` event, and one per-minute step (`DanTraits_Every`, order 23.5).
 - Mod data: `ageApplied`, `ageBand` (set at creation), `ageParts` (the last
   scratch, cut and stiffness values per body part).
-- Tests: `tests/test_age.lua`, and the creation screen in `tests/test_client.lua`.
+- `DanTraits_AgeOnly` (in `DanTraits_AgeTraits.lua`) maps a trait's registry
+  key to the bands that may take it; add a row to make any trait age-only.
+- `DanTraits_AgeProfessionSkills(player)` returns the profession's main skills
+  and its other boosted skills; `DanTraits_AgeXpAdjust(player, perk, extra)`
+  adds or takes experience quietly.
+- Tests: `tests/test_age.lua`, `tests/test_agetraits.lua`, and the creation
+  screen in `tests/test_client.lua`.

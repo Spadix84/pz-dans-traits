@@ -2,6 +2,12 @@
 [h2]Changed[/h2]
 [list]
 [*][b]Age, reworked.[/b] Four decades now, and you feel them every day. [b]In Their 20s (+6)[/b]: endurance comes back a quarter faster, Fitness and Strength train half as fast again, wounds heal and stiffness fades half as fast again; no bonus profession level. [b]In Their 40s (-2)[/b]: two levels in the profession's main skill and one in each of its other skills, a body a little slower at all of that. [b]In Their 50s (-4, new)[/b]: three in the main skill and two in the others, slower still, and everything age already made harsher is harsher again. The 30s are the game as it is. The 20s now cost points and the 40s give them (it was the other way round). Strong and Athletic cost 2 points more in the 40s and 4 more in the 50s, Stout and Fit 1 and 2. Everyone carries an Age trait (pick none and you are In Their 30s), the Unemployed get their levels in Maintenance, and the creation screen shows age's levels in blue. Old saves keep their skills.
+[*][b]Traits only one age can take.[/b] 20s: [b]Green (-4)[/b], new to the job, every occupation skill a level lower; [b]Quick Study (+4)[/b], skills under level 3 train a quarter faster. 40s and 50s: [b]Reading Glasses (-2)[/b], slow reading and no reading in dim light without them on; [b]Bad Back (-4)[/b], heavy loads hurt; [b]Bad Knees (-3)[/b], running and climbing hurt; [b]Old Hand (+4)[/b], your occupation's main skill trains a quarter faster. 50s: [b]Old Injury (-3)[/b], one limb that aches in the cold and damp; [b]Set in Their Ways (-2)[/b], skills outside your occupation train slower.
+[/list]
+
+[h2]Fixed[/h2]
+[list]
+[*]In Their 20s did not hide Arthritis or Handy if the age was picked first. Exclusions now work in either order, for every trait.
 [/list]
 
 [h1]1.1.0: Multiple Sclerosis, medication, and the Reddit round[/h1]

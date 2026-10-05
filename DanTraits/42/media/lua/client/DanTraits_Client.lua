@@ -4,7 +4,7 @@
 -- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, the wrap that hides Wakeful
 -- (and Deep Sleeper on a no-sleep server) from the character creation list, and Age at
 -- character creation (In Their 30s hidden, age's levels shown in the Major Skills list,
--- and the body traits' extra cost in the 40s and 50s).
+-- the body traits' extra cost in the 40s and 50s, and the traits only one age can take).
 -- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
 require "DanTraits"
 require "TimedActions/ISUseInhalerAction"
@@ -288,25 +288,30 @@ end
 local function creationAgeLevels(screen)
     local band = creationAgeBand(screen)
     if not band then return nil end
-    local handy = false
+    local handy, green = false, false
     for _, row in pairs(screen.listboxTraitSelected.items) do
-        if string.lower(tostring(row.item:getType())) == "base:handy" then handy = true end
+        local kind = row.item:getType()
+        if string.lower(tostring(kind)) == "base:handy" then handy = true end
+        if DanTraitsRegistry and kind == DanTraitsRegistry.green then green = true end
     end
     local boosts = nil
     if screen.profession and screen.profession:getXpBoosts() then
         boosts = transformIntoKahluaTable(screen.profession:getXpBoosts())
     end
-    return DanTraits_AgeLevels(boosts, band, handy, ageOption("AgeBonus" .. band .. "s"))
+    return DanTraits_AgeLevels(boosts, band, handy, ageOption("AgeBonus" .. band .. "s"), green)
 end
 
 -- A row with age levels: vanilla draws the row for the levels the game gives
 -- (its bars and XP rate; age gives levels, not a faster rate, so a skill only
 -- age gives is drawn like Fitness, which has no rate), then age's bars go on
 -- the end in a second colour, with vanilla's geometry.
+-- Levels taken away (Green) are drawn the same way round: vanilla's row for
+-- the game's levels, then the lost bars greyed out.
 local AGE_BAR = { r = 0.45, g = 0.7, b = 1.0 }
+local AGE_BAR_LOST = { r = 0.3, g = 0.3, b = 0.3 }
 local function drawAgeXpBoost(self, y, item, alt)
     local age = item.item.ageLevels or 0
-    if age <= 0 then return CharacterCreationProfession.drawXpBoostMap(self, y, item, alt) end
+    if age == 0 then return CharacterCreationProfession.drawXpBoostMap(self, y, item, alt) end
     local base = item.item.level - age
     local row = { text = item.text, item = { perk = base > 0 and item.item.perk or Perks.Fitness, level = base } }
     local yy = CharacterCreationProfession.drawXpBoostMap(self, y, row, alt)
@@ -315,9 +320,11 @@ local function drawAgeXpBoost(self, y, item, alt)
     local blitW = math.floor(fontHgt / (10 / 3))
     local blitGap = math.floor(blitW / 4)
     local x0 = self.width - (getTextManager():MeasureStringX(UIFont.Small, "+ 100%") + 13 + 12 * (blitW + blitGap))
-    for i = base + 1, item.item.level do
+    local from, to, colour = base + 1, item.item.level, AGE_BAR
+    if age < 0 then from, to, colour = item.item.level + 1, base, AGE_BAR_LOST end
+    for i = from, to do
         self:drawTextureScaled(CharacterCreationProfession.instance.whiteBar, x0 + i * (blitW + blitGap), y + dy,
-            blitW, fontHgt, 1, AGE_BAR.r, AGE_BAR.g, AGE_BAR.b)
+            blitW, fontHgt, 1, colour.r, colour.g, colour.b)
     end
     return yy
 end
@@ -331,12 +338,13 @@ local function addAgeLevels(screen)
         for _, row in pairs(list.items) do
             if row.item.perk == perk then entry = row end
         end
-        if not entry then entry = list:addItem(PerkFactory.getPerkName(perk), { perk = perk, level = 0 }) end
-        local add = math.min(count, 10 - entry.item.level)
-        if add > 0 then
+        if not entry and count > 0 then entry = list:addItem(PerkFactory.getPerkName(perk), { perk = perk, level = 0 }) end
+        local add = entry and math.max(-entry.item.level, math.min(count, 10 - entry.item.level)) or 0
+        if add ~= 0 then
             entry.item.ageLevels = add
             entry.item.level = entry.item.level + add
-            entry.text = entry.text .. " " .. getText("UI_DanTraits_AgeLevels", add)
+            if add > 0 then entry.text = entry.text .. " " .. getText("UI_DanTraits_AgeLevels", add)
+            else entry.text = entry.text .. " " .. getText("UI_DanTraits_AgeLevelsLost", -add) end
         end
     end
     list:sort()
@@ -374,10 +382,39 @@ local function drawAgeTrait(self, y, item, alt)
 end
 
 -- set every time the lists change: the screen may have been built before this file loaded
+-- (the preset box holds the load function it was built with, so it is pointed at the wrapped one)
 local function setAgeDraws(screen)
     if screen.listboxXpBoost then screen.listboxXpBoost.doDrawItem = drawAgeXpBoost end
     if screen.listboxTrait then screen.listboxTrait.doDrawItem = drawAgeTrait end
     if screen.listboxTraitSelected then screen.listboxTraitSelected.doDrawItem = drawAgeTrait end
+    if screen.savedBuilds and screen.savedBuilds.onChange then screen.savedBuilds.onChange = CharacterCreationProfession.loadBuild end
+end
+
+-- The traits only one age can take (DanTraits_AgeOnly, DanTraits_AgeTraits.lua).
+-- The bands that may take a trait type, or nil for every other trait.
+local function ageOnlyOf(kind)
+    if kind == nil or not DanTraitsRegistry or not DanTraits_AgeOnly then return nil end
+    for key, bands in pairs(DanTraits_AgeOnly) do
+        if kind == DanTraitsRegistry[key] then return bands end
+    end
+    return nil
+end
+
+local function ageAllows(screen, kind)
+    local bands = ageOnlyOf(kind)
+    if not bands then return true end
+    local band = creationAgeBand(screen)
+    return band ~= nil and bands[band] == true
+end
+
+-- the age changed under a chosen trait: take it back off (its points come back)
+local function dropAgeOnly(screen)
+    if screen.danTraitsLoadingBuild then return end
+    local items = screen.listboxTraitSelected and screen.listboxTraitSelected.items
+    if not items then return end
+    for i = #items, 1, -1 do
+        if items[i] and not ageAllows(screen, items[i].item:getType()) then screen:removeTrait(i) end
+    end
 end
 
 local function wrapTraitList()
@@ -387,6 +424,21 @@ local function wrapTraitList()
         if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
         local ageKey = ageKeyOf(kind)
         if ageKey and (ageKey == "age30s" or ageOffAtCreation()) then return false end
+        -- a saved build lists its traits in no useful order: while one loads, every
+        -- age-only trait is offered, and the ones the build's age cannot have are dropped after
+        if not self.danTraitsLoadingBuild then
+            local ok, allowed = pcall(ageAllows, self, kind)
+            if ok and allowed == false then return false end
+        end
+        -- the game only asks whether the trait in the list excludes a chosen one (so
+        -- In Their 20s, chosen first, did not hide Arthritis or Handy): ask the other way too
+        local chosen = self.listboxTraitSelected and self.listboxTraitSelected.items
+        if chosen then
+            for _, row in pairs(chosen) do
+                local ok, excluded = pcall(function() return row.item ~= trait and row.item:isMutuallyExclusive(trait) end)
+                if ok and excluded == true then return false end
+            end
+        end
         if kind ~= nil and DanTraitsRegistry and kind == DanTraitsRegistry.deepsleeper and isMultiplayer() then
             local ok, allowed = pcall(function()
                 return getServerOptions():getBoolean("SleepAllowed") and getServerOptions():getBoolean("SleepNeeded")
@@ -396,9 +448,21 @@ local function wrapTraitList()
         return original(self, trait, ...)
     end)
     DanTraits_Wrap(CharacterCreationProfession, "checkXPBoost", "creation-age-levels", function(original, self, ...)
+        pcall(dropAgeOnly, self)
         local result = original(self, ...)
         pcall(addAgeLevels, self)
         pcall(setAgeDraws, self)
+        return result
+    end)
+    DanTraits_Wrap(CharacterCreationProfession, "loadBuild", "creation-age-only", function(original, self, ...)
+        self.danTraitsLoadingBuild = true
+        local ok, result = pcall(original, self, ...)
+        self.danTraitsLoadingBuild = nil
+        pcall(function()
+            self:repopulateTraitLists()
+            self:checkXPBoost()
+        end)
+        if not ok then error(result, 0) end
         return result
     end)
     DanTraits_Wrap(CharacterCreationProfession, "PointToSpend", "creation-age-surcharge", function(original, self, ...)

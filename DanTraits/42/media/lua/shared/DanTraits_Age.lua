@@ -33,6 +33,7 @@
 --   gym         Gym Regular: starting regularity, at least this (gymRegularity)
 --   handy       Handy: extra Carpentry levels at spawn
 -- In Their 20s cannot be taken with Handy or Arthritis (the script).
+-- The traits only one age can take are in DanTraits_AgeTraits.lua.
 --
 -- Trait costs are fixed by the script, so age is priced through the Age
 -- traits' own cost and changes what other traits do: In Their 20s costs 6
@@ -69,6 +70,7 @@ local AGE_BODY = { ["base:strong"] = 1, ["base:athletic"] = 1, ["base:stout"] = 
 local AGE_TRAIT = { [20] = "age20s", [30] = "age30s", [40] = "age40s", [50] = "age50s" }
 local AGE_BANDS = { 20, 30, 40, 50 }
 local AGE_MAX_LEVEL = 10
+local AGE_GREEN = 1            -- Green: levels off every skill the profession boosts
 local AGE_CLOCK_MIN = 0.01     -- a hurried scratch or cut stops here; the game closes it
 
 local function sandbox()
@@ -143,16 +145,27 @@ end
 --   handy   whether the character has vanilla Handy
 --   bonus   the band's profession levels; nil reads the sandbox (the creation
 --           screen passes the new game's value, SandboxVars is stale there)
-function DanTraits_AgeLevels(boosts, band, handy, bonus)
+--   green   whether the character has Green (DanTraits_AgeTraits.lua): every
+--           skill the profession boosts a level lower, so a count can be negative
+function DanTraits_AgeLevels(boosts, band, handy, bonus, green)
     local out = {}
     local info = AGE[band] or AGE[30]
     bonus = tonumber(bonus) or bonusLevels(band)
+    local main, rest = professionSkills(boosts)
     if bonus > 0 then
-        local main, rest = professionSkills(boosts)
-        if #main == 0 then main = { Perks.Maintenance } end
-        for _, perk in ipairs(main) do out[perk] = bonus end
+        local to = main
+        if #to == 0 then to = { Perks.Maintenance } end
+        for _, perk in ipairs(to) do out[perk] = bonus end
         if info.side then
             for _, perk in ipairs(rest) do out[perk] = info.side end
+        end
+    end
+    if green then
+        for _, list in ipairs({ main, rest }) do
+            for _, perk in ipairs(list) do
+                local n = (out[perk] or 0) - AGE_GREEN
+                out[perk] = n ~= 0 and n or nil
+            end
         end
     end
     if handy and info.handy then
@@ -195,6 +208,34 @@ local function addLevels(player, perk, count)
     return added
 end
 
+-- lower a skill by that many levels (not under 0) and put its XP at the new level
+local function loseLevels(player, perk, count)
+    local lost = 0
+    pcall(function()
+        for _ = 1, count do
+            if player:getPerkLevel(perk) <= 0 then break end
+            player:LoseLevel(perk)
+            lost = lost + 1
+        end
+        if lost > 0 then player:getXp():setXPToLevel(perk, player:getPerkLevel(perk)) end
+    end)
+    return lost
+end
+
+-- The skills of the player's profession: the main ones (Maintenance for the
+-- Unemployed) and the others it boosts. Read from the profession once per
+-- player object; the experience traits ask on every gain.
+local skillsCache = { player = nil, main = nil, rest = nil }
+function DanTraits_AgeProfessionSkills(player)
+    local c = skillsCache
+    if c.player ~= player or not c.main then
+        local main, rest = professionSkills(professionBoosts(player))
+        if #main == 0 then main = { Perks.Maintenance } end
+        c.player, c.main, c.rest = player, main, rest
+    end
+    return c.main, c.rest
+end
+
 -- everyone carries their age: a character with no Age trait gets the band's
 -- (a new one who picked none, or an old save from before the 30s had a trait)
 local function grantAgeTrait(player, band)
@@ -219,8 +260,11 @@ local function onAgeCreate(player)
     if d.ageApplied then return end
     d.ageApplied = true
     d.ageBand = band
-    local levels = DanTraits_AgeLevels(professionBoosts(player), band, hasVanillaTrait(player, "base:handy"))
-    for perk, count in pairs(levels) do addLevels(player, perk, count) end
+    local levels = DanTraits_AgeLevels(professionBoosts(player), band, hasVanillaTrait(player, "base:handy"), nil,
+        hasTrait(player, "green"))
+    for perk, count in pairs(levels) do
+        if count > 0 then addLevels(player, perk, count) else loseLevels(player, perk, -count) end
+    end
 end
 
 local function onAgeCreatePlayer(playerNum, player) onAgeCreate(player) end
@@ -268,24 +312,28 @@ function DanTraits_AgeHeart(player)
     return ageValue(player, "heart") or 1
 end
 
--- Fitness and Strength experience. The event fires after the game adds the
--- experience; the difference is added (or taken back) without firing it
--- again and without the game's multipliers. A slower learner never drops
--- under the level they hold.
-local function onAgeAddXP(player, perk, amount)
-    if not player or not perk or not amount or amount <= 0 then return end
-    if not (Perks and (perk == Perks.Fitness or perk == Perks.Strength)) then return end
-    local k = ageValue(player, "xp")
-    if not k or k == 1 then return end
+-- Add experience to a skill (or take it back, extra < 0) without firing the
+-- AddXP event again and without the game's multipliers. A slower learner
+-- never drops under the level they hold. For the handlers of Events.AddXP,
+-- which fires after the game has added the experience.
+function DanTraits_AgeXpAdjust(player, perk, extra)
     pcall(function()
         local xp = player:getXp()
-        local extra = amount * (k - 1)
         if extra < 0 then
             local held = perk:getTotalXpForLevel(player:getPerkLevel(perk))
             extra = -math.min(-extra, math.max(0, xp:getXP(perk) - held))
         end
         if extra ~= 0 then xp:AddXP(perk, extra, false, false, false, false) end
     end)
+end
+
+-- Fitness and Strength experience, by band
+local function onAgeAddXP(player, perk, amount)
+    if not player or not perk or not amount or amount <= 0 then return end
+    if not (Perks and (perk == Perks.Fitness or perk == Perks.Strength)) then return end
+    local k = ageValue(player, "xp")
+    if not k or k == 1 then return end
+    DanTraits_AgeXpAdjust(player, perk, amount * (k - 1))
 end
 
 -- Each minute: whatever a scratch's or cut's clock, or a part's stiffness,

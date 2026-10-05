@@ -28,6 +28,14 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
   40s and 4 more in the 50s; Stout and Fit 1 and 2. The traits are unchanged; the extra
   shows beside their cost on the creation screen and comes off Points to Spend. Existing
   characters are not affected.
+- **Eight traits only one age can take.** 20s: Green (-4), Quick Study (+4). 40s and 50s:
+  Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4). 50s: Old Injury (-3),
+  Set in Their Ways (-2). The creation screen offers each only to its age and takes it back
+  off if the age changes. `docs/age.md` says what each does.
+- **Fixed: In Their 20s did not hide Arthritis or Handy** when the age was picked first
+  (the game only checks an exclusion from the side of the trait in the list). The creation
+  screen now checks from both sides, for every trait, so one-sided exclusions such as
+  Multiple Sclerosis with Athletic and Strong work in either order too.
 - **Everyone carries an Age trait.** Pick none and In Their 30s (cost 0, not in the
   creation lists) is given at the start. The four exclude each other.
 - **The creation screen shows age's levels:** in the Major Skills list, "(+N age)" after

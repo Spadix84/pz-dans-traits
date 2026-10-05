@@ -149,6 +149,7 @@ module DanTraits {
         Cost = -10,
         UIName = UI_trait_DanArthritis,
         UIDescription = UI_trait_DanArthritisdesc,
+        MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:oldinjury,
     }
 
     character_trait_definition DanTraits:caffeine
@@ -304,6 +305,94 @@ module DanTraits {
         UIName = UI_trait_DanAge50s,
         UIDescription = UI_trait_DanAge50sdesc,
         MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:age30s;DanTraits:age40s,
+    }
+
+    /* The traits only one age can take (media/lua/shared/DanTraits_AgeTraits.lua):
+       Green and Quick Study in the 20s; Reading Glasses, Bad Back, Bad Knees
+       and Old Hand in the 40s and 50s; Old Injury and Set in Their Ways in
+       the 50s. The creation screen does the age check in Lua
+       (DanTraits_Client.lua), because a character who picks no age has no
+       Age trait there for the script's exclusions to see. */
+    character_trait_definition DanTraits:green
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:green,
+        Cost = -4,
+        UIName = UI_trait_DanGreen,
+        UIDescription = UI_trait_DanGreendesc,
+    }
+
+    character_trait_definition DanTraits:quickstudy
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:quickstudy,
+        Cost = 4,
+        UIName = UI_trait_DanQuickStudy,
+        UIDescription = UI_trait_DanQuickStudydesc,
+    }
+
+    character_trait_definition DanTraits:readingglasses
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:readingglasses,
+        Cost = -2,
+        UIName = UI_trait_DanReadingGlasses,
+        UIDescription = UI_trait_DanReadingGlassesdesc,
+    }
+
+    character_trait_definition DanTraits:badback
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:badback,
+        Cost = -4,
+        UIName = UI_trait_DanBadBack,
+        UIDescription = UI_trait_DanBadBackdesc,
+        MutuallyExclusiveTraits = base:strong,
+    }
+
+    character_trait_definition DanTraits:badknees
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:badknees,
+        Cost = -3,
+        UIName = UI_trait_DanBadKnees,
+        UIDescription = UI_trait_DanBadKneesdesc,
+    }
+
+    character_trait_definition DanTraits:oldhand
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:oldhand,
+        Cost = 4,
+        UIName = UI_trait_DanOldHand,
+        UIDescription = UI_trait_DanOldHanddesc,
+    }
+
+    character_trait_definition DanTraits:oldinjury
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:oldinjury,
+        Cost = -3,
+        UIName = UI_trait_DanOldInjury,
+        UIDescription = UI_trait_DanOldInjurydesc,
+        MutuallyExclusiveTraits = DanTraits:arthritis,
+    }
+
+    character_trait_definition DanTraits:setinways
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:setinways,
+        Cost = -2,
+        UIName = UI_trait_DanSetInWays,
+        UIDescription = UI_trait_DanSetInWaysdesc,
     }
 
     /* Vanilla Fear of Blood, re-costed from -5 to -6 for the rework
