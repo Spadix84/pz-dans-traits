@@ -246,7 +246,7 @@ end
 -- the game filled the chosen container after the kit went in: put it back,
 -- once (then forget the spot, or loot respawn there would restock it forever)
 local function onBadDayFillContainer(roomName, containerType, container)
-    if not container then return end
+    if not container or not instanceof(container, "ItemContainer") then return end   -- the game sometimes passes a loot-table entry
     local player = getSpecificPlayer(0)
     local d = player and hasTrait(player, "badday") and traitData(player)
     local spot = d and d.badDayKit

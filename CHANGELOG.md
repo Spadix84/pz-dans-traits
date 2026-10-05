@@ -84,15 +84,29 @@ the first time the mod runs.
 - **Sumatriptan** (new item, rare): the migraine pill. Taken during the aura, the attack
   that follows is half as bad. Taken during an attack, it is over within two hours with the
   pain and nausea halved. Once per attack. The day after, you are heavy-limbed and a little
-  clumsy (3% grip slip). Found where other prescriptions are, but rarer. New Migraines
+  clumsy (3% grip slip), shown by a Heavy-Limbed moodle for the day. Found where other
+  prescriptions are, but rarer. New Migraines
   characters start with two tablets.
 - Personal triggers: each character has three triggers that hit twice as hard; the rest
   count for half. You are not told which: once a trigger has brought on two attacks, your
   character works it out and tells you.
 - New triggers: heat (hot weather or overheating), the smell of corpses close by, and a
-  storm on the way.
-- Cost -8 (was -6). Ordinary painkillers barely touch an attack now (their timer keeps 35%
+  storm on the way (in the twelve hours before the forecast says it starts, so once per
+  storm at most).
+- Cost -10 (was -6). Ordinary painkillers barely touch an attack now (their timer keeps 35%
   during one); sumatriptan is what works.
+- Stronger nausea: food sickness up to 50 at full severity (was 30), so an untreated attack
+  shows the Queasy moodle. Sumatriptan halves it.
+- Room light counts, not only the sun: awake in a lit room an attack hurts more (+10 pain)
+  and lasts longer (0.75 speed); in a dark room it passes a quarter faster.
+- Sunglasses halve the pain the light adds (sun or a lit room). Every tinted pair in the
+  game counts (19 items), and any other mod's worn item named sunglasses or shades.
+- Blurred vision for the attack: the game's own Short Sighted blur, with its shorter sight
+  and worse aim. The game only blurs when Short Sighted and wearing glasses disagree, so the
+  attack flips the trait while they agree and puts it back when it ends.
+- New moodle, Light Too Bright, during an attack: how much pain the light is adding (Too
+  Bright in a dimly lit room or a lit room in sunglasses, Light Hurts in a lit room or the
+  sun through sunglasses, Blinding in the sun). Gone in the dark.
 
 ### Wound care
 
@@ -108,6 +122,53 @@ the first time the mod runs.
   later, often after the knock itself has cleared, and worse than it. Sleep gets you through
   it half again as fast; daylight makes it worse.
 
+### New system: anger has effects
+
+- The vanilla Angry moodle (Irritated, Annoyed, Angry, Furious) does nothing in the base
+  game. It now costs everyone, from Annoyed up; Irritated is only the warning. Nicotine
+  withdrawal is what raises it in this mod (to Angry at full withdrawal); anger from another
+  mod counts the same.
+- Rough: each melee hit has an extra chance to wear the weapon (x1.5, x2, x2.5 the game's own
+  wear at Annoyed, Angry, Furious), never its last point. Furious swings cost extra endurance.
+- Loud: from Angry up the character curses out loud (1.5% a minute, 4% at Furious), heard at
+  8 or 14 tiles. Not asleep, and it shares the cough's three-minute gap.
+- Can't concentrate: reading takes x1.15, x1.3, x1.5 as long.
+- Sloppy fine work: bad splints and rough stitches x1.25, x1.5, x2; a vehicle part's success
+  chance down 5, 10, 20 points and its failure chance up by the same (the mechanics window
+  shows it).
+- The Angry moodle's descriptions say what it costs. Sandbox option Anger Has Effects
+  (default on) turns it all off. Console: `anger <0..1>`, `anger curse`.
+
+### Drink relief
+
+- Being drunk lifts the mood, by Drunk level, each minute awake: unhappiness -0.05, -0.12,
+  -0.3, -0.5 (of 100), stress -0.0005 to -0.004 (of 1), boredom -0.1 to -0.6 (of 100). Three
+  hours at the top level clears a severe mood. Vanilla only ties mood to the volume drunk
+  and gives no stress relief. Under the Drink Relief sandbox option. A depressive episode's
+  floor is applied after it and holds.
+
+### Hangovers
+
+- Easier to earn a bad one: full severity at 2 drunk-hours (was 3), and the mildest hangover
+  is 0.4 strength (was 0.25).
+- Endurance recovers up to 40% slower while it is felt, by its strength.
+- Bright daylight outdoors adds 10 to the headache (45 at full strength in the sun).
+- Painkillers only dull it: a pill taken while hungover keeps half its usual time. During a
+  migraine attack the migraine's own, harsher rule applies and the two do not compound.
+
+### Depression
+
+- New moodle, Antidepressants (good side only): paler green while a pill's coverage is
+  running, full green once two unbroken weeks have brought the regimen to full benefit, and
+  gone when coverage runs out, so the icon going out is the reminder. It shows through an
+  episode. For a character without Major Depressive Disorder it shows while the game's own
+  antidepressant effect runs.
+
+### Hemophilia
+
+- Costs -10 (was -8): it plays as designed and is very punishing. Existing characters are
+  unaffected.
+
 ### Arthritis
 
 - A slipping grip now makes a weak swing (0.35x damage for that swing) instead of throwing
@@ -116,6 +177,9 @@ the first time the mod runs.
 
 ### Smoker
 
+- Cravings build half as fast: a Smoker taken at creation now reaches withdrawal at half
+  vanilla's pace (it was vanilla's pace), and every habit level is halved with it, so a
+  heavy smoker builds at 0.875x vanilla instead of 1.75x. Drink still speeds it up 1.5x.
 - New sandbox option **Nicotine Craving Moodle** (on): off hides the craving moodle and its
   notice, so you read the craving from irritability and stress instead.
 
@@ -139,6 +203,14 @@ the first time the mod runs.
 
 - Thriving gives 1.5x Fitness and Strength experience (was 2x).
 
+### Other mods
+
+- **Project A-Life** (`ProjectALifeNPCs`): the Hallucinations phantom is a real zombie for a
+  few seconds, and A-Life steers every zombie in the cell and has its NPCs shoot them. Its
+  horde steering, attack policy and sight check now leave a phantom out
+  (`DanTraits_ALife.lua`; does nothing without A-Life), and a phantom that another mod
+  un-parks is parked again on the next tick.
+
 ### Fixed
 
 - The last sip counts: Caffeine Dependent and Lactose Intolerant read the drink after each
@@ -155,6 +227,8 @@ the first time the mod runs.
 - Health panel: with the mod's wound infection switched off, an infected wound never showed
   at any First Aid level.
 - Asthma: the cough countdown carried from one tier to the next.
+- Blood loss: light-headed set the game's can't-sprint flag every frame, so the Restricted
+  Movement moodle blinked on its own timer. The flag is now set only on an attempt to sprint.
 - Hemophilia: a bandage's four-fold leak applied to soaked bandages and ones over a shard
   too, so a soaked bandage bled twice the normal rate, worse than no bandage at all (x1.5).
   A bandage is now never worse than bare skin; a clean one is unchanged at two fifths.
@@ -174,6 +248,8 @@ the first time the mod runs.
 - New hooks: `nightScored` (Vitality has scored the night), `spoonCap`, `spoonSpend`,
   `spoonRefill` (the spoon budget), `gripSlip` (Arthritis), `stitchPoor` (wound care),
   `prePill` from the mod's own pill action as well as vanilla's.
+- New export: `DanTraits_IsPhantom(zombie)`, true for a live Hallucinations phantom, for
+  mods that steer or target zombies.
 - Four exports nothing used are gone: `DanTraits_GripRestore`, `DanTraits_MigraineParts`,
   `DanTraits_StormComing`, `DanTraits_SpoonsUsing`.
 

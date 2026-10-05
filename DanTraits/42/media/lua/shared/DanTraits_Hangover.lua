@@ -6,13 +6,19 @@
 -- waits for them to wake, and either way it lasts at least HO_BASE_HOURS
 -- after they are up, more for a heavier night. Symptoms scale with
 -- severity and fade over the last two hours: a headache (pain, a floor registered
--- through DanTraits_PainFloor: a painkiller clears it while it works), a low mood, thirst that keeps coming
--- back, tiredness, and nausea after a really heavy one. A drink while
+-- through DanTraits_PainFloor), worse in bright daylight outdoors, a low mood,
+-- thirst that keeps coming back, tiredness, endurance that comes back slower
+-- (the enduranceRegen hook of the stat delta pipeline), and nausea after a
+-- really heavy one. Painkillers only dull it: one taken while hungover works
+-- for half as long (the prePill and pill hooks; a migraine attack has its own,
+-- harsher rule and takes over when both are on). A drink while
 -- hungover hides the symptoms and stops the clock, and counts toward the
 -- next one. The night's sleep is scored lower too. Alcohol tolerance
 -- (Alcoholic) blunts it a little. Hooks offered: hangoverSeverity (the
 -- severity from the night's load, before the tolerance cut; Age, Hollow Legs)
 -- and hangoverHours (how long a new one lasts; Hollow Legs).
+-- Mod data: hoLoad, hoDrinking, hoPending, hoActive, hoSeverity, hoHoursLeft,
+-- hoAsleep, hoFelt (the strength felt this minute: 0 while drinking or asleep).
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -21,14 +27,17 @@ local fraction = DanTraits_StatFraction
 
 local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- buzz: load builds above it; sober: below it a session ends
 local HO_LOAD_MIN       = 0.5     -- drunk-hours needed for any hangover at all
-local HO_LOAD_FULL      = 3.0     -- drunk-hours for a full-severity one
-local HO_SEV_MIN        = 0.25
+local HO_LOAD_FULL      = 2.0     -- drunk-hours for a full-severity one
+local HO_SEV_MIN        = 0.4
 local HO_BASE_HOURS     = 6       -- at least this long after waking (or sobering, if awake)
 local HO_EXTRA_HOURS    = 6       -- added at full severity
 local HO_FADE_HOURS     = 2       -- symptoms taper over the last two hours
 local HO_TOLERANCE_CUT  = 0.3     -- severity x (1 - this x tolerance)
 local HO_SLEEP_CUT      = 0.3     -- night quality x (1 - this x severity)
 local HO_PAIN           = 35      -- pain floor at full strength (see DanTraits_PainFloor)
+local HO_LIGHT_PAIN     = 10      -- more in bright daylight outdoors
+local HO_ENDURANCE      = 0.4     -- endurance recovery x (1 - this x strength)
+local HO_PILL_KEEP      = 0.5     -- painkillers while hungover: this share of their usual relief
 local HO_MOOD           = 25      -- unhappiness floor
 local HO_MOOD_RAMP      = 1
 local HO_FATIGUE        = 0.0008  -- per minute
@@ -91,6 +100,7 @@ local function updateHangoverMinute(player, d)
     if not DanTraits_SandboxOn("HangoverEnabled") then   -- off: nothing builds, and any hangover in progress ends
         if d.hoActive or d.hoPending or d.hoDrinking or d.hoLoad > 0 then
             d.hoActive, d.hoPending, d.hoDrinking, d.hoLoad, d.hoHoursLeft, d.hoSeverity = false, false, false, 0, 0, 0
+            d.hoFelt = 0
             updateMoodle(player, 0)
         end
         return
@@ -121,6 +131,7 @@ local function updateHangoverMinute(player, d)
     end
 
     if not d.hoActive then
+        d.hoFelt = 0
         updateMoodle(player, 0)
         return
     end
@@ -129,7 +140,7 @@ local function updateHangoverMinute(player, d)
     if not asleep and not drinking then
         d.hoHoursLeft = (d.hoHoursLeft or 0) - 1 / 60
         if d.hoHoursLeft <= 0 then
-            d.hoActive, d.hoHoursLeft, d.hoSeverity = false, 0, 0
+            d.hoActive, d.hoHoursLeft, d.hoSeverity, d.hoFelt = false, 0, 0, 0
             updateMoodle(player, 0)
             DanTraits_NotifyGood(player, "UI_DanTraits_HangoverOver")
             return
@@ -138,10 +149,13 @@ local function updateHangoverMinute(player, d)
 
     local s = hangoverStrength(d)
     if drinking or asleep then s = 0 end   -- hair of the dog hides it; sleep is a break from it
+    d.hoFelt = s
     updateMoodle(player, s)
     if s <= 0 then return end
     pcall(function()
-        DanTraits_PainFloor(player, d, "hangover", HO_PAIN * s, HO_MOOD_RAMP)
+        local pain = HO_PAIN
+        if DanTraits_InBrightLight and DanTraits_InBrightLight(player) then pain = pain + HO_LIGHT_PAIN end
+        DanTraits_PainFloor(player, d, "hangover", pain * s, HO_MOOD_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, HO_MOOD * s, HO_MOOD_RAMP)
         DanTraits_StatAdd(stats, CharacterStat.FATIGUE, HO_FATIGUE * s)
         DanTraits_StatAdd(stats, CharacterStat.THIRST, HO_THIRST * s)
@@ -158,6 +172,37 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
     local severity = d.hoSeverity or 0
     if d.hoDrinking then severity = math.max(severity, clamp01((d.hoLoad or 0) / HO_LOAD_FULL)) end
     return quality * (1 - HO_SLEEP_CUT * severity)
+end)
+
+-- slower endurance recovery while it is felt (not drinking, not asleep)
+DanTraits_AddHook("enduranceRegen", function(delta, player, d)
+    local s = d and d.hoFelt or 0
+    if s <= 0 then return nil end
+    return delta * (1 - HO_ENDURANCE * s)
+end)
+
+-- painkillers while hungover: snapshot their timer before the pill, keep a share
+-- of what it added after. A migraine attack does the same with its own share
+-- (DanTraits_Migraine.lua); it takes over then, so the two never compound.
+local painBefore = {}
+DanTraits_AddHook("prePill", function(_, player, kind)
+    if tostring(kind) ~= "Pills" then return nil end
+    local d = player:getModData().DanTraits
+    if not d or (d.hoFelt or 0) <= 0 or d.migActive then return nil end
+    pcall(function() painBefore[player] = player:getPainEffect() or 0 end)
+    return nil
+end)
+
+DanTraits_AddHook("pill", function(_, player, kind)
+    if tostring(kind) ~= "Pills" then return nil end
+    local before = painBefore[player]
+    painBefore[player] = nil
+    if not before then return nil end
+    pcall(function()
+        local after = player:getPainEffect() or 0
+        if after > before then player:setPainEffect(before + (after - before) * HO_PILL_KEEP) end
+    end)
+    return nil
 end)
 
 DanTraits_Every("minute", "Hangover", updateHangoverMinute, 40)

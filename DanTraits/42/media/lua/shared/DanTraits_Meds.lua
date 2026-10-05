@@ -505,7 +505,7 @@ function DanTraits_MedRandomFill(item)
 end
 
 local function onMedsFillContainer(roomName, containerType, container)
-    if not container then return end
+    if not container or not instanceof(container, "ItemContainer") then return end   -- the game sometimes passes a loot-table entry
     pcall(function()
         local items = container:getItems()
         for i = 0, items:size() - 1 do

@@ -2,3 +2,9 @@ VERSION = 1,
 
 option DansVanillaFixes.ColdPackHours
 {type = integer, min = 1, max = 48, default = 6, page = DansVanillaFixes, translation = DansVanillaFixesColdPackHours,}
+
+option DansVanillaFixes.WashFloorNoSoap
+{type = integer, min = 0, max = 100, default = 40, page = DansVanillaFixes, translation = DansVanillaFixesWashFloorNoSoap,}
+
+option DansVanillaFixes.WashFloorSoap
+{type = integer, min = 0, max = 100, default = 20, page = DansVanillaFixes, translation = DansVanillaFixesWashFloorSoap,}

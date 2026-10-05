@@ -276,6 +276,14 @@ end
 -- the render tick as well. Single player only.
 local schizoPhantoms = {}
 
+-- for other mods' zombie handling (DanTraits_ALife.lua): is this one of ours?
+function DanTraits_IsPhantom(zombie)
+    for _, ph in ipairs(schizoPhantoms) do
+        if ph.zombie == zombie then return true end
+    end
+    return false
+end
+
 local function chargeSpawnSquare(player)
     local found
     pcall(function()
@@ -342,6 +350,8 @@ phantomsOnTick = function()
         -- player (it just does nothing else with it), so drop it every frame
         -- and only bail if an attack actually begins
         pcall(function() if ph.zombie:getTarget() ~= nil then ph.zombie:setTarget(nil) end end)
+        -- and if another mod's zombie steering woke it, park it again
+        pcall(function() if not ph.zombie:isUseless() then ph.zombie:setUseless(true) end end)
         -- (player:isAttacking() is "attack type is set", which stays true
         -- long after a swing; the animation flag is only up during one)
         local abort = false

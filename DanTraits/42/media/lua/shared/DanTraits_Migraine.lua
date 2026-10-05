@@ -4,13 +4,21 @@
 -- withdrawal, caffeine withdrawal, a wound infection's fever, bright
 -- daylight outdoors, sleeping with the light on, heat (hot air or an
 -- overheated body), the smell of corpses close by and a storm on the way (in
--- the forecast for today or tomorrow, before the rain starts), and never
+-- the twelve hours before the forecast says it starts), and never
 -- within a day of the last one. An aura gives
 -- twenty minutes' warning. The attack lasts three to six hours by severity:
 -- pain (a DanTraits_PainFloor floor), nausea, low mood and stress. Daylight
--- outdoors slows the recovery to half and adds to the pain; sleeping it off
--- is twice as fast, in the dark (a lit room loses the benefit), and during
--- an attack light wakes you twice as easily.
+-- outdoors slows the recovery to half and adds to the pain; awake indoors (or
+-- out of the sun), a lit room adds pain and slows it, a dark one speeds it;
+-- sleeping it off is twice as fast, in the dark (a lit room loses the
+-- benefit), and during an attack light wakes you twice as easily.
+-- Sunglasses (MIG_SHADES, or any worn item named sunglasses or shades) halve
+-- the pain the light adds. The attack blurs the screen with the game's own
+-- Short Sighted blur: the game blurs when Short Sighted and wearing glasses
+-- disagree, and only works that out when clothing changes, so for the attack
+-- the trait is flipped whenever they agree (updateVisionEffects re-reads it),
+-- and the character's own state (migBlur) is put back when it ends. That
+-- brings Short Sighted's shorter sight and worse aim for the attack, too.
 --
 -- Everyone's triggers are their own. Eight of them are personal (bad sleep,
 -- thirst, stress, light, hangovers, heat, corpses, storms): each character
@@ -33,11 +41,15 @@
 -- (none with the Starting Medication sandbox option off).
 --
 -- Mod data: migSinceEnd, migAuraLeft, migSeverity, migActive, migHoursLeft,
--- migMedsUsed, migTripUsed, migChance, migStrong (the character's three
+-- migMedsUsed, migTripUsed ("aura" or "attack": when sumatriptan was
+-- taken), migChance, migStrong (the character's three
 -- strong triggers), migCause (the trigger behind this attack), migSeen
 -- (attacks each trigger has brought on), migKnown (strong triggers worked
 -- out), tripAfterMin (minutes of the sumatriptan after-effect left),
--- migKitGiven.
+-- migKitGiven, migBlur (the character's own Short Sighted, true or false,
+-- while the attack has flipped it), migGlare (0..1, the pain the light adds
+-- right now against full sun, after sunglasses; the Light Too Bright moodle
+-- in DanTraits_Moodles.lua; nil when the light adds none).
 -- Console: migraine | migraine start | migraine triggers
 require "DanTraits"
 
@@ -62,8 +74,9 @@ local MIG_HEAT_BODY     = { 37.5, 38.5 }  -- ...and the body's temperature, from
 local MIG_CORPSE        = 0.5     -- added per corpse within MIG_CORPSE_TILES...
 local MIG_CORPSE_TILES  = 3
 local MIG_CORPSE_MAX    = 3       -- ...counting up to this many
-local MIG_STORM         = 1.5     -- added while a storm is forecast and the rain has not started
-local MIG_STORM_RAIN    = 0.1     -- rain intensity at which it has started
+local MIG_STORM         = 1.5     -- added while a storm is forecast to start within...
+local MIG_STORM_AHEAD_H = 12      -- ...this many hours (the pressure dropping ahead of the front)
+local MIG_STORM_RAIN    = 0.1     -- rain intensity at which it has started anyway
 local MIG_SLEEP_LIGHT   = 1.0     -- added asleep in a fully lit room (counts as light)
 -- personal triggers
 local MIG_PERSONAL      = { "sleep", "thirst", "stress", "light", "hangover", "heat", "corpses", "storm" }
@@ -79,16 +92,44 @@ local MIG_HOURS_BASE    = 3       -- attack length: this plus MIG_HOURS_SEV x se
 local MIG_HOURS_SEV     = 3
 local MIG_PAIN          = 60      -- pain floor at severity 1 (see DanTraits_PainFloor)
 local MIG_PAIN_LIGHT    = 15      -- extra floor in daylight outdoors
-local MIG_SICK          = 30      -- food sickness floor at severity 1
+local MIG_PAIN_ROOM     = 10      -- extra floor in a fully lit room (awake, out of the sun)
+local MIG_ROOM_DARK     = 0.25    -- light level at or below this: a dark room...
+local MIG_ROOM_LIT      = 0.60    -- ...at or above this: a lit one (the sleep system's readings)
+local MIG_SICK          = 50      -- food sickness floor at severity 1 (an untreated attack is 25..50: Queasy)
 local MIG_MOOD          = 15
 local MIG_RAMP          = 1
 local MIG_STRESS_RATE   = 0.0005  -- per minute
 local MIG_LIGHT_RATE    = 0.5     -- recovery rate in daylight outdoors...
 local MIG_SLEEP_RATE    = 2.0     -- ...and asleep in the dark (fully lit room: 1)
+local MIG_LIT_RATE      = 0.75    -- awake, out of the sun: in a fully lit room...
+local MIG_DARK_RATE     = 1.25    -- ...and a fully dark one
 local MIG_SLEEP_WAKE    = 2       -- during an attack, light wakes you this much more easily
 local MIG_NIGHT         = 0.3     -- night strength under this is day
 local MIG_CLOUD         = 0.5     -- cloud cover under this is bright
 local MIG_TIER          = { 0.01, 0.5, 0.8 }   -- Aura | Migraine | Splitting
+local MIG_SHADES_GLARE  = 0.5     -- sunglasses: the light's extra pain x this
+-- tinted eyewear; anything else worn whose name says sunglasses or shades counts too (other mods' items)
+local MIG_SHADES = {
+    ["Base.Glasses"] = true,                            -- Reflective Sunglasses
+    ["Base.Glasses_Prescription"] = true,               -- Prescription Reflective Sunglasses
+    ["Base.Glasses_Sun"] = true,                        -- Sunglasses
+    ["Base.Glasses_Prescription_Sun"] = true,           -- Prescription Sunglasses
+    ["Base.Glasses_SunCheap"] = true,                   -- Cheap Sunglasses
+    ["Base.Glasses_Aviators"] = true,                   -- Aviator Glasses
+    ["Base.Glasses_Prescription_Aviators"] = true,      -- Prescription Aviator Glasses
+    ["Base.Glasses_CatsEye_Sun"] = true,                -- Cat-Eye Sunglasses
+    ["Base.Glasses_Prescription_CatsEye_Sun"] = true,   -- Cat-Eye Prescription Sunglasses
+    ["Base.Glasses_JackieO"] = true,                    -- Big Retro Sunglasses
+    ["Base.Glasses_Prescription_JackieO"] = true,       -- Big Retro Prescription Sunglasses
+    ["Base.Glasses_Macho"] = true,                      -- Fancy Reflective Sunglasses
+    ["Base.Glasses_NewWave"] = true,                    -- New Wave Sunglasses
+    ["Base.Glasses_Round_Shades"] = true,               -- Round Sunglasses
+    ["Base.Glasses_Prescription_Round_Shades"] = true,  -- Round Prescription Sunglasses
+    ["Base.Glasses_Round_HoloSkulls"] = true,           -- Hologram Skull Sunglasses
+    ["Base.Glasses_Venetian"] = true,                   -- Venetian Sunglasses
+    ["Base.Glasses_SkiGoggles"] = true,                 -- Ski Goggles (tinted)
+    ["Base.Glasses_OldWeldingGoggles"] = true,          -- Old Welding Goggles (dark lenses)
+}
 -- treatment
 local MIG_MEDS_CUT      = 0.9     -- painkillers, first time in an attack: hours left x this
 local MIG_PILL_KEEP     = 0.35    -- painkillers in an attack: this share of their usual relief
@@ -165,25 +206,90 @@ local function heatOf(player)
     return heat
 end
 
--- a storm, heavy rain or a blizzard in today's or tomorrow's forecast, and
--- not raining yet: the pressure dropping ahead of the front
+-- a storm, heavy rain or a blizzard forecast to start within the next twelve
+-- hours (today's or tomorrow's weather period), and not raining yet: the
+-- pressure dropping ahead of the front. Once per storm, as the 24-hour
+-- refractory outlasts the window.
 local function stormComing()
     local coming = false
     pcall(function()
         local climate = getClimateManager()
         if (climate:getRainIntensity() or 0) >= MIG_STORM_RAIN then return end
+        local now = getGameTime():getTimeOfDay()
         local forecaster = climate:getClimateForecaster()
         local days = { forecaster:getForecast(), forecaster:getForecast(1) }
         for i = 1, 2 do
             local day = days[i]
             if day then
                 pcall(function()
-                    if day:hasStorm() or day:hasTropicalStorm() or day:hasHeavyRain() or day:hasBlizzard() then coming = true end
+                    if not day:isWeatherStarts() then return end   -- a period carried over from the day before has arrived already
+                    if not (day:isHasStorm() or day:isHasTropicalStorm() or day:isHasHeavyRain() or day:isHasBlizzard()) then return end
+                    local ahead = (i - 1) * 24 + day:getWeatherStartTime() - now
+                    if ahead > 0 and ahead <= MIG_STORM_AHEAD_H then coming = true end
                 end)
             end
         end
     end)
     return coming
+end
+
+-- awake, out of the sun: how lit (0..1) and how dark (0..1) the square is;
+-- a dim room between the two readings is neither
+local function roomLight(player)
+    local level
+    pcall(function()
+        local square = player:getCurrentSquare() or player:getSquare()
+        if square then level = square:getLightLevel(player:getPlayerNum()) end
+    end)
+    if not level then return 0, 0 end
+    local side = 2 * clamp01((level - MIG_ROOM_DARK) / (MIG_ROOM_LIT - MIG_ROOM_DARK)) - 1
+    return clamp01(side), clamp01(-side)
+end
+
+-- wearing sunglasses: a listed item, or anything worn named sunglasses or shades
+local function wearingShades(player)
+    local found = false
+    pcall(function()
+        local worn = player:getWornItems()
+        for i = 0, worn:size() - 1 do
+            local item = worn:getItemByIndex(i)
+            if item then
+                local name = string.lower(item:getDisplayName() or "")
+                if MIG_SHADES[item:getFullType()] or name:find("sunglass", 1, true) or name:find("shades", 1, true) then
+                    found = true
+                    return
+                end
+            end
+        end
+    end)
+    return found
+end
+DanTraits_WearingShades = wearingShades
+
+-- the attack's blur: flip Short Sighted while it and wearing glasses agree
+-- (the game blurs when they differ); put the character's own state back after
+local function updateBlur(player, d, want)
+    local trait = CharacterTrait and CharacterTrait.SHORT_SIGHTED
+    if not trait then return end
+    pcall(function()
+        local traits = player:getCharacterTraits()
+        local have = traits:get(trait) == true
+        local target = have
+        if want then
+            local glasses = player:isWearingGlasses() == true
+            if have == glasses then
+                if d.migBlur == nil then d.migBlur = have end
+                target = not have
+            end
+        elseif d.migBlur ~= nil then
+            target = d.migBlur
+            d.migBlur = nil
+        end
+        if target == have then return end
+        if target then traits:add(trait) else traits:remove(trait) end
+        DanTraits_TraitsChanged(player)
+        player:updateVisionEffects()
+    end)
 end
 
 -- 0..1 how lit the room is, while asleep (the sleep system's reading)
@@ -271,6 +377,7 @@ local function learnCause(player, d)
 end
 
 local function endAttack(player, d)
+    updateBlur(player, d, false)
     d.migActive = false
     d.migHoursLeft = 0
     d.migSinceEnd = 0
@@ -299,12 +406,16 @@ local function updateMigraineTen(player, d)
 end
 
 local function updateMigraineMinute(player, d)
-    if not hasTrait(player, "migraine") then return end
+    if d then d.migGlare = nil end
+    if not hasTrait(player, "migraine") then
+        if d and d.migBlur ~= nil then updateBlur(player, d, false) end   -- the trait went mid-attack
+        return
+    end
     d = migData(player)
     if d.migAuraLeft then
         -- sumatriptan taken in the aura: the attack to come is half as bad
         if not d.migTripUsed and triptanIn(player) then
-            d.migTripUsed = true
+            d.migTripUsed = "aura"
             d.migSeverity = (d.migSeverity or MIG_SEV_MIN) * MIG_TRIP_AURA
             DanTraits_NotifyGood(player, "UI_DanTraits_MigraineTriptan")
         end
@@ -313,12 +424,19 @@ local function updateMigraineMinute(player, d)
         if d.migAuraLeft <= 1e-6 then startAttack(player, d) end
         return
     end
-    if not d.migActive then return end
+    if not d.migActive then
+        if d.migBlur ~= nil then updateBlur(player, d, false) end
+        return
+    end
 
     local asleep, bright = false, inBrightLight(player)
     asleep = DanTraits_Asleep(player)
+    local lit, dark = 0, 0
+    if not asleep and not bright then lit, dark = roomLight(player) end
     local rate = 1
-    if asleep then rate = MIG_SLEEP_RATE - (MIG_SLEEP_RATE - 1) * sleepLit(player) elseif bright then rate = MIG_LIGHT_RATE end
+    if asleep then rate = MIG_SLEEP_RATE - (MIG_SLEEP_RATE - 1) * sleepLit(player)
+    elseif bright then rate = MIG_LIGHT_RATE
+    else rate = 1 - (1 - MIG_LIT_RATE) * lit + (MIG_DARK_RATE - 1) * dark end
     local meds = 0
     pcall(function() meds = player:getPainEffect() or 0 end)
     if meds > 0 and not d.migMedsUsed then
@@ -327,20 +445,25 @@ local function updateMigraineMinute(player, d)
     end
     -- sumatriptan in an attack: over within two hours
     if not d.migTripUsed and triptanIn(player) then
-        d.migTripUsed = true
+        d.migTripUsed = "attack"
         d.migHoursLeft = math.min(d.migHoursLeft, MIG_TRIP_HOURS)
         DanTraits_NotifyGood(player, "UI_DanTraits_MigraineTriptan")
     end
     d.migHoursLeft = d.migHoursLeft - rate / 60
     if d.migHoursLeft <= 0 then endAttack(player, d) return end
 
+    updateBlur(player, d, true)
     local s = d.migSeverity or MIG_SEV_MIN
-    updateMoodle(player, s)
+    -- an attack shows as Migraine at least, even halved by sumatriptan in the aura (level 1 is the Aura)
+    updateMoodle(player, math.max(s, MIG_TIER[2]))
     if asleep then return end
-    local ease = d.migTripUsed and MIG_TRIP_EASE or 1
+    -- only a pill taken in the attack eases it; one taken in the aura already halved the severity
+    local ease = d.migTripUsed == "attack" and MIG_TRIP_EASE or 1
+    local glare = (bright and MIG_PAIN_LIGHT or MIG_PAIN_ROOM * lit) * (wearingShades(player) and MIG_SHADES_GLARE or 1)
+    if glare > 0 then d.migGlare = clamp01(glare / MIG_PAIN_LIGHT) end
     pcall(function()
         local stats = player:getStats()
-        DanTraits_PainFloor(player, d, "migraine", (MIG_PAIN * s + (bright and MIG_PAIN_LIGHT or 0)) * ease, MIG_RAMP)
+        DanTraits_PainFloor(player, d, "migraine", (MIG_PAIN * s + glare) * ease, MIG_RAMP)
         floorUp(stats, CharacterStat.FOOD_SICKNESS, MIG_SICK * s * ease, MIG_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, MIG_MOOD, MIG_RAMP)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + MIG_STRESS_RATE * s))

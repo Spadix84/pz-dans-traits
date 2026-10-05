@@ -15,9 +15,9 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Heart Condition](#heart-condition--10) | -10 | Chest pain when winded; push on and it is a heart attack. |
 | [Brittle](#brittle--8) | -8 | Solid hits can fracture a limb. |
 | [Brittle Asthma](#brittle-asthma--8) | -8 | Irritated airways that build to an attack zombies can hear. |
-| [Hemophilia](#hemophilia--8) | -8 | Bleeds never stop on their own; stitches are what stop them. |
+| [Hemophilia](#hemophilia--10) | -10 | Bleeds never stop on their own; stitches are what stop them. |
 | [Major Depressive Disorder](#major-depressive-disorder--8) | -8 | Episodes that hold mood down for days. |
-| [Migraines](#migraines--8) | -8 | Hours of pain and nausea from personal triggers. |
+| [Migraines](#migraines--10) | -10 | Hours of pain and nausea from personal triggers. |
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
 | [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
@@ -126,7 +126,7 @@ Airway irritation that builds through four tiers to an attack.
 - Smoking, and a smoker's lungs, make it worse.
 - Moodle: Airway Irritation.
 
-#### Hemophilia (-8)
+#### Hemophilia (-10)
 
 - Bleeds never run down on their own while unbandaged, and open wounds bleed again until bandaged.
 - With [Blood](#blood) on: bleeds lose half as much again, and a bandage only slows one to two fifths. A soaked bandage, or one over a shard, is no better than none, so change it. Stitches are what stop it.
@@ -141,18 +141,18 @@ Episodes that hold mood down for days.
 - An episode holds a mood floor by its severity, with a refractory window after.
 - What lifts it: drink (briefly), cigarettes, comfort food, a piece of nicotine gum (a little), exercise, time outdoors, and a real antidepressant regimen.
 - Antidepressants: a pill a day, a 14-day build-up, side effects, and discontinuation if you stop. Vanilla's instant lift is gone for this trait.
-- Moodle: Depression.
+- Moodles: Depression, and Antidepressants (green while a pill is covering you, paler until the two weeks are up).
 
-#### Migraines (-8)
+#### Migraines (-10)
 
 Attacks that cost you hours.
 
-- **Triggers:** bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat (hot air or an overheated body), corpses close by, a storm on the way (forecast for today or tomorrow, before the rain), and bright daylight.
+- **Triggers:** bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat (hot air or an overheated body), corpses close by, a storm on the way (in the twelve hours before it is forecast to start), and bright daylight.
 - **Personal triggers:** of the eight lifestyle ones, each character draws three that count double; the other five count half. You are not told which. Once a strong trigger has brought on two attacks, your character works it out and says so.
-- **The attack:** an aura first, then hours of pain and nausea, worse in bright light. Sleep shortens it, less in a lit room. A refractory day follows.
+- **The attack:** an aura first, then hours of pain and nausea (Queasy untreated). Daylight outdoors adds the most pain and halves the recovery; a lit room adds some and slows it; a dark room speeds it. Sunglasses halve the pain the light adds. Your vision blurs for the attack (Short Sighted's blur, its shorter sight and worse aim with it). Sleep shortens it, less in a lit room. A refractory day follows.
 - **Painkillers** barely touch an attack: a third of their usual relief, a tenth off the time.
-- **Sumatriptan** (new item, rare) is what works. Taken in the aura the attack is half as bad; taken during one it is over within two hours with the pain and nausea halved. Once per attack. The day after you are heavy and a little clumsy. Starts with a pack down to its last two tablets.
-- Moodle: Migraine.
+- **Sumatriptan** (new item, rare) is what works. Taken in the aura the attack is half as bad; taken during one it is over within two hours with the pain and nausea halved. Once per attack. The day after you are heavy and a little clumsy (a 3% grip slip a swing; moodle: Heavy-Limbed). Starts with a pack down to its last two tablets.
+- Moodles: Migraine, Heavy-Limbed the day after sumatriptan (for anyone who takes it), and Light Too Bright during an attack (too bright, the light hurts, blinding: how much the light is adding; sunglasses take it down).
 
 #### Epilepsy (-6)
 
@@ -189,7 +189,7 @@ Attacks that cost you hours.
 
 #### Smoker (-4, vanilla reworked)
 
-- Cravings build faster the heavier the habit. Withdrawal brings irritability (the vanilla Angry moodle), hunger and restless sleep.
+- Cravings build at half vanilla's pace for a typical smoker, faster the heavier the habit. Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), hunger and restless sleep.
 - A cigarette relieves only the craving it answers. To anyone else it is a buzz that fades as tolerance builds.
 - Damaged lungs recover endurance slower and cough, worse on exertion and in the morning.
 - Anyone who smokes regularly gains the trait; three weeks without tobacco loses it. After that, drink and stress bring cravings back, and a smoke is a coin flip to relapse.
@@ -441,9 +441,22 @@ Shock, a concussion and Fear of Blood can all put you on the floor.
 - It drains in about two hours once you have drunk.
 - Moodle: Dehydration. A sandbox option turns it off.
 
+### Anger
+
+The vanilla Angry moodle does nothing in the base game. Here it costs you, from Annoyed up; Irritated is only the warning. A smoker's withdrawal is what raises it (up to Angry at full withdrawal), and anger from another mod counts the same.
+
+- **Rough:** every melee hit has an extra chance to wear the weapon: half as much again at Annoyed, double at Angry, two and a half times at Furious. Anger never takes a weapon's last point. Furious swings cost extra endurance.
+- **Loud:** from Angry up the character curses out loud now and then (about once an hour, more often and louder at Furious), and zombies nearby hear it. Never asleep, and never within three minutes of a cough.
+- **Can't concentrate:** reading takes longer: x1.15 Annoyed, x1.3 Angry, x1.5 Furious.
+- **Sloppy fine work:** splints set badly and stitches come out rough more often (x1.25, x1.5, x2), and installing or removing a vehicle part is 5, 10 or 20 points less likely to succeed and as much more likely to damage the part. The mechanics window shows the angry chance.
+- The moodle's descriptions say so. The sandbox option Anger Has Effects turns it off.
+
 ### Hangovers
 
 - Drink past a light buzz and a hangover waits for you to sober up, or to wake: at least six hours of headache, low mood, thirst and tiredness, longer and with nausea after a heavy night.
+- Two hours properly drunk is a full-strength one, and even a small one is felt (never under two fifths strength).
+- Endurance comes back slower while it lasts (up to 40% slower), and bright daylight outdoors makes the headache worse.
+- Painkillers only dull it: one taken while hungover works for half as long.
 - A drink hides it and stops the clock, and counts toward the next one.
 - Alcoholics carry the habit as tolerance: more drink to feel it, withdrawal sooner and harder, hangovers a little milder.
 - Moodle: Hangover. A sandbox option turns it off.
@@ -452,6 +465,7 @@ Shock, a concussion and Fear of Blood can all put you on the floor.
 
 - Vanilla treats any sip of alcohol as a full dose of beta blockers and painkillers, however small. That is undone.
 - Relief follows the Drunk moodle instead: pain reduction of 20, 40, 60 or 80 by level, and panic that settles at a quarter, half, three quarters or the full beta-blocker rate.
+- Being drunk lifts the mood too: unhappiness, stress and boredom drain while you are awake, faster the drunker you are. Tipsy takes the edge off (3 unhappiness an hour); blind drunk takes 30 an hour, so an evening of it clears even a severe mood. The hangover is the price. A depressive episode keeps its own floor.
 - A sandbox option turns it off.
 
 ### Medication
@@ -466,7 +480,7 @@ One list of drugs that every trait reads (`DanTraits_Meds.lua`).
 - **Starting Medication** (sandbox option, on): a character who starts with a condition starts on its drug, built up, with the medication. Off, they find their own.
 - **Diazepam** (new item): the panic drop vanilla beta blockers used to give, for about an hour and a half. Beta blockers now only do what Heart Condition needs.
 - **Pill Caddy** (new item, rare): a belt-worn weekly organiser that holds medication only. Capacity 1 (Organized makes it 2). A new character with a medical trait has a 1% chance to start with one.
-- Daily drug bottles hold 30 pills, the mod's bottles spawn partly used, and part bottles merge like vanilla's. Every tooltip says what the drug treats, how to take it and its side effects. Antidepressants keep Depression's own two-week regimen.
+- Daily drug bottles hold 30 pills, the mod's bottles spawn partly used, and part bottles merge like vanilla's. Every tooltip says what the drug treats, how to take it and its side effects. Antidepressants keep Depression's own two-week regimen, with a moodle of their own: paler green while a pill's coverage runs, full green once the two weeks are up, gone when a day is missed.
 
 ### Moodles
 
@@ -512,6 +526,7 @@ Version 1.1.0, Build 42, singleplayer only (multiplayer is untested and not supp
 - **A Really Bad Day** is not balanced yet. Without stitching supplies the shard wound kills even a character with no other traits, which is why a needle and thread now wait in a nearby house. Other options (a lower bleed on the shard, a starting bandage, no hangover from the opening drink) are waiting on more play.
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
+- **Project A-Life** (NPCs on zombie bodies) is supported: its NPCs and its zombie steering leave a Hallucinations phantom alone (`DanTraits_ALife.lua`, which does nothing when A-Life is not loaded). NPC wounds are ordinary wounds, so blood, infection and wound care apply to them.
 
 ## Requests
 

@@ -49,9 +49,9 @@ Most systems have a switch on the Vitality Project sandbox page. Every lasting e
 [*]Cold air, corpses, exertion, panic and smoke irritate the airways through four tiers.
 [*]An attack drains you and coughs loud enough for zombies. The inhaler ends it.
 [/list]
-[*][b]Hemophilia (-8):[/b] bleeds never stop on their own and reopen until bandaged. A bandage only slows one to two fifths; stitches stop it.
+[*][b]Hemophilia (-10):[/b] bleeds never stop on their own and reopen until bandaged. A bandage only slows one to two fifths; stitches stop it.
 [*][b]Major Depressive Disorder (-8):[/b] episodes hold mood down for days. Drink, comfort food, exercise, the outdoors and a real antidepressant regimen all matter.
-[*][b]Migraines (-8)[/b]
+[*][b]Migraines (-10)[/b]
 [list]
 [*]Attacks from bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat, corpses, storms and daylight: hours of pain and nausea.
 [*]Three personal triggers hit twice as hard.

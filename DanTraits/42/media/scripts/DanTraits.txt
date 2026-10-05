@@ -166,7 +166,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:migraine,
-        Cost = -8,
+        Cost = -10,
         UIName = UI_trait_DanMigraine,
         UIDescription = UI_trait_DanMigrainedesc,
     }
@@ -176,7 +176,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:hemophilia,
-        Cost = -8,
+        Cost = -10,
         UIName = UI_trait_DanHemophilia,
         UIDescription = UI_trait_DanHemophiliadesc,
         MutuallyExclusiveTraits = DanTraits:badday,

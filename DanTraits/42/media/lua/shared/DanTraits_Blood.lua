@@ -289,8 +289,13 @@ local function updateBloodFrame(player)
         end
     end
     if tier >= 2 then
+        -- the Restricted Movement moodle only on an attempt to sprint, as the game
+        -- does it: the moodle runs on a short timer and clears the flag when it
+        -- ends, so a flag set every frame made the icon blink
+        local tried = false
+        pcall(function() tried = player:isSprinting() == true end)
         pcall(function() player:setSprinting(false) end)
-        pcall(function() player:setMoodleCantSprint(true) end)
+        if tried then pcall(function() player:setMoodleCantSprint(true) end) end
     end
 end
 

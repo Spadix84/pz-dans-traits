@@ -105,7 +105,7 @@ are a first pass to tune in play.
 | Construction Crew | Stout (+6), +2 Carpentry, Thick Skull (+2) | Tinnitus (-2) | Arthritis 40%, 40s only (-10) | Disciplined +1, Reckless +1 |
 | Gym Rat | Fit (+6), Gym Regular (+1), Meal Prepper (+1) | Hearty Appetite (-4) | Brittle 15% (-8) | Disciplined +1, Social +1 |
 | Party Years | Hollow Legs (+1), Night Owl (+2), +1 Short Blunt | Alcoholic (-2), Smoker (-4) | Hallucinations 15% (-2) | Social +2, Impulsive +1 |
-| Shift Worker | Night Shift (+1), Night Owl (+2), +1 in the profession's main skill | Caffeine Dependent (-2) | Migraines 25% (-8) | Loner +1, Calm +1 |
+| Shift Worker | Night Shift (+1), Night Owl (+2), +1 in the profession's main skill | Caffeine Dependent (-2) | Migraines 25% (-10) | Loner +1, Calm +1 |
 | Enlisted | Brave (+4), +1 Aiming, +1 Reloading, +1 Fitness | Tinnitus (-2), Short Tempered (-2) | Hallucinations 20% (-2) | Disciplined +1, Calm +1 |
 | Diagnosed | Organised (+6), +2 First Aid, Meal Prepper (+1); starts on medication | one of: Diabetes T1 (-10), Epilepsy (-6), Heart Condition (-10), MS (-15, also grants Fast Learner) | | Disciplined +1, Anxious +1 |
 

@@ -1,5 +1,9 @@
 {
     "Sandbox_DansVanillaFixes": "Dan's Vanilla Fixes",
     "Sandbox_DansVanillaFixesColdPackHours": "Cold Pack Hours",
-    "Sandbox_DansVanillaFixesColdPackHours_tooltip": "How long one fully frozen cold pack keeps a cooler cold, in game hours. Packs in the same cooler add up: three frozen packs last three times as long.<br>A fridge chills a pack half way, a freezer fully."
+    "Sandbox_DansVanillaFixesColdPackHours_tooltip": "How long one fully frozen cold pack keeps a cooler cold, in game hours. Packs in the same cooler add up: three frozen packs last three times as long.<br>A fridge chills a pack half way, a freezer fully.",
+    "Sandbox_DansVanillaFixesWashFloorNoSoap": "Hand Wash Without Soap: Cleanest (%%)",
+    "Sandbox_DansVanillaFixesWashFloorNoSoap_tooltip": "How dirty or bloody clothes stay after washing them by hand without soap, per patch. Washing never makes anything dirtier.<br>A washing machine (or a combo washer/dryer) still gets them fully clean. 0 = vanilla.",
+    "Sandbox_DansVanillaFixesWashFloorSoap": "Hand Wash With Soap: Cleanest (%%)",
+    "Sandbox_DansVanillaFixesWashFloorSoap_tooltip": "How dirty or bloody clothes stay after washing them by hand with soap, per patch.<br>A washing machine (or a combo washer/dryer) still gets them fully clean. 0 = vanilla."
 }

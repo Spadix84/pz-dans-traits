@@ -299,7 +299,7 @@ end
 --           25  FearOfBlood (reads bloodLossMin)
 --           30  Meds (the levels every medicated system reads this minute)
 --           39  Spoons (the energy budget MS spends; reads the night Vitality scored)
---           40  Alcohol, Anemia, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
+--           40  Alcohol, Anemia, Anger, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
 --               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, MDD, Migraine,
 --               MS, Smoker, Sunburn, Tinnitus, Triptan (floors and rates; among themselves by label)
 --               (Iron Stomach in Positives is a foodSicknessRise pipeline hook, not a clock system)

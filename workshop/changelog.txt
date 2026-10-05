@@ -7,17 +7,23 @@ Thanks to everyone who left ideas on r/projectzomboid. Safe to update mid-save. 
 [*][b]Spoons.[/b] An MS character's energy is a budget: a day's spoons after a good night, fewer after a bad one. Everything spends them by effort, faster in the heat or a flare. Run out and you hit the wall; push on and you borrow from tomorrow. Rest gives a little back, a book costs next to nothing, a coffee hides the wall for an hour. Sandbox option [i]MS Spoons a Day[/i] (12; 0 turns it off).
 [*][b]Shared medication system.[/b] Every pill in the mod and vanilla's now builds up, wears off (you're told when), has side effects now and then (sandbox [i]Medication Side Effect Chance[/i]), and can be overdone. [b]Diazepam[/b] (new) takes the panic drop that beta blockers used to give. 30-pill bottles. Sandbox [i]Starting Medication[/i]: start with your trait's pills or find your own.
 [*][b]Pill Caddy[/b] (new, rare): a belt-worn organiser that holds medication only.
-[*][b]Sumatriptan[/b] (new, rare): the migraine pill. In the aura, the attack is half as bad; in the attack, it's over within two hours. Once per attack; the day after you're heavy and a little clumsy.
+[*][b]Sumatriptan[/b] (new, rare): the migraine pill. In the aura, the attack is half as bad; in the attack, it's over within two hours. Once per attack; the day after you're heavy and a little clumsy (a Heavy-Limbed moodle shows it).
 [*][b]Personal migraine triggers[/b] (three hit twice as hard, the rest half; your character works out which) and new triggers: heat, corpses nearby, a storm coming.
 [*][b]Stitching is a First Aid roll.[/b] Rough stitches heal slower, tear easier, ache and let infection in. A suture needle or Steady Hands helps; from First Aid 3 you can tell, and the health panel shows it.
+[*][b]Anger does something.[/b] The vanilla Angry moodle (a smoker's withdrawal raises it) now costs you from Annoyed up: melee weapons wear faster, reading is slower, splints, stitches and vehicle parts go wrong more often, and from Angry up you curse out loud where zombies can hear. Sandbox [i]Anger Has Effects[/i] turns it off.
+[*][b]Antidepressants moodle:[/b] green while a pill is covering you (paler until the two-week regimen is at full effect), gone when you miss a day.
+[*][b]Project A-Life compatibility:[/b] its NPCs and its zombie steering leave a Hallucinations phantom alone (no squad opening fire at something only you can see).
 [*][b]The headache after a concussion[/b], a day or two later and worse than the knock. Sleep helps, daylight hurts.
 [/list]
 
 [h2]Changed[/h2]
 [list]
 [*][b]Arthritis:[/b] a slipping grip makes a weak swing instead of throwing the weapon; only a bad flare can still drop it, and sandbox [i]Arthritis Drops Weapons[/i] turns that off.
-[*][b]Migraines[/b] cost -8 (was -6); painkillers barely touch an attack now, sumatriptan is what works.
-[*][b]Smoker:[/b] sandbox [i]Nicotine Craving Moodle[/i] can hide the craving moodle.
+[*][b]Migraines[/b] cost -10 (was -6); painkillers barely touch an attack now, sumatriptan is what works. The nausea is strong enough to show now, a lit room makes an attack worse and a dark one shortens it, a storm counts only in the twelve hours before it hits, an attack blurs your vision, sunglasses take the edge off the light, and a Light Too Bright moodle shows when the light is making it worse.
+[*][b]A reason to get drunk:[/b] being drunk drains unhappiness, stress and boredom, faster the drunker you are. An evening blind drunk clears even a severe mood.
+[*][b]Hangovers[/b] hit harder: two hours properly drunk is a full one and a small one is still felt, endurance comes back slower, daylight makes the headache worse, and painkillers only dull it (half as long).
+[*][b]Hemophilia[/b] costs -10 (was -8).
+[*][b]Smoker:[/b] cravings come half as often; sandbox [i]Nicotine Craving Moodle[/i] can hide the craving moodle.
 [*][b]Caffeine Dependent:[/b] a brewed mug of coffee, tea or cocoa now counts (it never did); chocolate and cola put the craving off instead of being ignored.
 [*][b]Alcoholic:[/b] tipsy ends the craving at a normal habit.
 [*][b]Vitality:[/b] Thriving gives 1.5x Fitness and Strength XP (was 2x).
@@ -31,6 +37,7 @@ Thanks to everyone who left ideas on r/projectzomboid. Safe to update mid-save. 
 [*]A Really Bad Day's needle and thread were restocked forever with loot respawn on.
 [*]With the mod's infection off, infected wounds never showed in the health panel.
 [*]Asthma's cough gap carried from one tier to the next.
+[*]Blood loss: the Restricted Movement moodle blinked while light-headed. It now shows when you try to sprint.
 [*]Hemophilia: a soaked bandage bled faster than no bandage at all. A bandage is never worse than bare skin now.
 [/list]
 

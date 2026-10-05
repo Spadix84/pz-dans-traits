@@ -2,5 +2,7 @@
     "IGUI_DVF_PackFrozen": "Frozen",
     "IGUI_DVF_PackCold": "Cold",
     "IGUI_DVF_PackCool": "Cool",
-    "IGUI_DVF_CoolerCold": "Cold, %1 h"
+    "IGUI_DVF_CoolerCold": "Cold, %1 h",
+    "IGUI_DVF_WashNeedsSoap": "Won't get cleaner without soap",
+    "IGUI_DVF_WashNeedsMachine": "Needs a washing machine to get cleaner"
 }

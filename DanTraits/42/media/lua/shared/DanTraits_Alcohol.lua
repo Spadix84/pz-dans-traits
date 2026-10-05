@@ -17,6 +17,14 @@
 -- rate (a quarter per level). The floor is bookkept so it steps down as the
 -- character sobers up and never eats a painkilling fluid's own reduction.
 --
+-- Being drunk also lifts the mood, which vanilla ties only to the volume
+-- drunk (a fluid's UnhappyChange, the same for beer as for whiskey, and no
+-- stress relief at all): each minute awake, unhappiness, stress and boredom
+-- drain by Drunk level (ALC_MOOD, ALC_STRESS, ALC_BOREDOM). Tipsy takes the
+-- edge off; three hours plastered or worse clears a severe mood. It is the
+-- reason to get properly drunk, and the hangover is the price. A floor another
+-- system holds (a depressive episode) runs after this and takes back its own.
+--
 -- This file is also the one definition of "drunk" for the rest of the mod:
 -- DanTraits_DRINK holds the named intoxication thresholds (0..1) that
 -- Dependent (any), Hangover (buzz, sober), MDD and Diabetes (tipsy) read, and
@@ -33,6 +41,9 @@ local fraction = DanTraits_StatFraction
 
 local ALC_PAIN_CUT   = { 20, 40, 60, 80 }    -- pain reduction floor by Drunk level 1..4
 local ALC_PANIC_RATE = 0.6                   -- vanilla beta blocker: panic per 30fps tick, level 4 gets all of it
+local ALC_MOOD       = { 0.05, 0.12, 0.3, 0.5 }           -- unhappiness (0..100) off per minute awake, by Drunk level
+local ALC_STRESS     = { 0.0005, 0.001, 0.0025, 0.004 }   -- stress (0..1) off per minute awake
+local ALC_BOREDOM    = { 0.1, 0.2, 0.4, 0.6 }             -- boredom (0..100) off per minute awake
 local ALC_LEVELS     = { 10, 30, 50, 70 }    -- intoxication (0..100) above which each Drunk level starts (fallback)
 
 -- Drunk moodle level 0..4; from intoxication if the moodle cannot be read
@@ -110,6 +121,12 @@ Events.OnGameStart.Add(wrapDrinkAction)
 -- somewhere else (a medicinal fluid) and is left to decay as vanilla intends.
 local function updateAlcoholMinute(player, d)
     local level = drunkLevel(player)
+    if level > 0 and DanTraits_SandboxOn("DrinkReliefEnabled") and not DanTraits_Asleep(player) then
+        local stats = player:getStats()
+        DanTraits_StatAdd(stats, CharacterStat.UNHAPPINESS, -(ALC_MOOD[level] or 0))
+        DanTraits_StatAdd(stats, CharacterStat.STRESS, -(ALC_STRESS[level] or 0))
+        DanTraits_StatAdd(stats, CharacterStat.BOREDOM, -(ALC_BOREDOM[level] or 0))
+    end
     local target = DanTraits_SandboxOn("DrinkReliefEnabled") and ALC_PAIN_CUT[level] or 0   -- off: the floor steps down and stays 0
     local applied = d.alcPainCut or 0
     if target == 0 and applied == 0 then return end

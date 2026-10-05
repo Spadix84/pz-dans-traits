@@ -9,7 +9,7 @@ local hasTrait = DanTraits_HasTrait
 local JINX_CHANCE = 35    -- percent, per container filled
 
 local function onFillContainer(roomName, containerType, container)
-    if not container then return end
+    if not container or not instanceof(container, "ItemContainer") then return end   -- the game sometimes passes a loot-table entry
     local player = getSpecificPlayer(0)
     if not player or not hasTrait(player, "jinxed") then return end
     if ZombRand(100) >= JINX_CHANCE then return end

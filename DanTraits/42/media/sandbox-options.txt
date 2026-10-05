@@ -54,6 +54,9 @@ option DanTraits.StartingMedication
 option DanTraits.ArthritisWeaponDrop
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsArthritisWeaponDrop,}
 
+option DanTraits.AngerEffects
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsAngerEffects,}
+
 option DanTraits.SmokerCravingMoodle
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsSmokerCravingMoodle,}
 

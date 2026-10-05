@@ -35,6 +35,16 @@
 --                      prednisone is working on it)
 --   Spoons             Multiple Sclerosis: the energy budget as felt (half gone,
 --                      three left, the wall), after a coffee's mask
+--   LightTooBright     Migraines, during an attack: how much pain the light is
+--                      adding (a dim-lit room, a lit room, the sun; sunglasses
+--                      take it down a level or so)
+--   TriptanAfter       anyone, the day after sumatriptan: heavy-limbed and a
+--                      little clumsy (tired sooner, a swing's grip can slip)
+--   Antidepressants    good side only. Major Depressive Disorder: a pill's
+--                      coverage is running, the paler green until the two-week
+--                      regimen is at full benefit (its own moodle, so it shows
+--                      through an episode). Anyone else: the game's own
+--                      antidepressant effect is running
 --
 -- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
 -- range, not which way; the meter is how you find out. Hallucinations has
@@ -63,6 +73,7 @@ local MDD_TIER         = { 0.01, 0.6, 0.85 }
 local IRON_TIER        = { 0.1, 0.5, 0.9 }
 local JOINT_TIER       = { 0.25, 0.5, 0.8 }
 local MS_HEAT_TIER     = { 0.25, 0.5, 0.8 }   -- MS's own heat tiers
+local GLARE_TIER       = { 0.01, 0.5, 0.9 }   -- the light's pain against full sun: a lit room is 0.67, the sun 1
 
 -- a drug in the system (the shared medication system, DanTraits_Meds.lua): the
 -- good side of a moodle, paler while it builds up, so the icon going out is
@@ -150,6 +161,22 @@ local SPECS = {
     end },
     -- the spoon budget (DanTraits_Spoons.lua): the tier as felt, after a coffee's mask
     { name = "Spoons", level = function(player, d) return d.spFelt or 0 end },
+    -- Migraines: the light making an attack worse (DanTraits_Migraine.lua keeps migGlare)
+    { name = "LightTooBright", level = function(player, d)
+        if not hasTrait(player, "migraine") then return 0 end
+        return tierOf(d.migGlare, GLARE_TIER)
+    end },
+    -- anyone, the day after sumatriptan (DanTraits_Migraine.lua counts tripAfterMin down)
+    { name = "TriptanAfter", level = function(player, d) return (d.tripAfterMin or 0) > 0 and 1 or 0 end },
+    -- antidepressants taken: Depression's regimen (DanTraits_MDD.lua keeps mddMedDays, the
+    -- coverage left), or for anyone else the game's own effect while it runs
+    { name = "Antidepressants", level = function(player, d)
+        if hasTrait(player, "spiraling") then
+            if (d.mddMedDays or 0) <= 0 then return 0 end
+            return (DanTraits_MddBenefit and DanTraits_MddBenefit(player) >= 1) and -2 or -1
+        end
+        return (player:getDepressEffect() or 0) > 0 and -2 or 0
+    end },
 }
 
 DanTraits_MoodleNames = {}

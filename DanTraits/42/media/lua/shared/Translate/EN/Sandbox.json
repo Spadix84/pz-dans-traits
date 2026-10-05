@@ -23,9 +23,9 @@
     "Sandbox_DanTraitsSleepLightEnabled": "Sleep and Light",
     "Sandbox_DanTraitsSleepLightEnabled_tooltip": "Dark sleep is deeper and scores better; a bright room makes sleep shallow and light can wake you. Curtains and switches matter.<br>Off: light does not affect sleep.",
     "Sandbox_DanTraitsHangoverEnabled": "Hangovers",
-    "Sandbox_DanTraitsHangoverEnabled_tooltip": "Drinking past a buzz builds a hangover for the morning after: headache, low mood, thirst, tiredness, and a worse night's sleep.<br>Off: no hangovers.",
+    "Sandbox_DanTraitsHangoverEnabled_tooltip": "Drinking past a buzz builds a hangover for the morning after: headache, low mood, thirst, tiredness, slower endurance recovery, and a worse night's sleep.<br>Off: no hangovers.",
     "Sandbox_DanTraitsDrinkReliefEnabled": "Drink Relief",
-    "Sandbox_DanTraitsDrinkReliefEnabled_tooltip": "Drink eases pain and panic in proportion to how drunk you are, instead of one sip counting as a full dose of painkiller and beta blocker.<br>Off: vanilla, any drink is a full dose.",
+    "Sandbox_DanTraitsDrinkReliefEnabled_tooltip": "Drink eases pain and panic in proportion to how drunk you are, instead of one sip counting as a full dose of painkiller and beta blocker. Being drunk also drains unhappiness, stress and boredom, faster the drunker you are.<br>Off: vanilla, any drink is a full dose, and no mood lift from being drunk.",
     "Sandbox_DanTraitsSunburnEnabled": "Sunburn",
     "Sandbox_DanTraitsSunburnEnabled_tooltip": "Hours in the summer sun on bare skin burn it: a day of pain on each burnt part, and a worse night. Clothing, a hat, shade and sun block protect, and skin toughens with each burn.<br>Off: no sunburn.",
     "Sandbox_DanTraitsDehydrationEnabled": "Dehydration",
@@ -38,6 +38,8 @@
     "Sandbox_DanTraitsArthritisWeaponDrop_tooltip": "An arthritic grip that slips makes the swing land weak. In a bad flare (cold and damp), one slip in three throws the weapon to the ground.<br>Off: a slip only ever weakens the swing.",
     "Sandbox_DanTraitsMSSpoons": "MS Spoons a Day",
     "Sandbox_DanTraitsMSSpoons_tooltip": "Multiple Sclerosis: the spoons (units of energy) a full night gives. The day spends them by effort, faster in the heat or a flare; a bad night gives fewer, never under a third; a flare caps them at two thirds. At none you hit the wall, and every hour you push on is borrowed from tomorrow.<br>0: no budget. MS tires you a fifth faster instead, as it used to.",
+    "Sandbox_DanTraitsAngerEffects": "Anger Has Effects",
+    "Sandbox_DanTraitsAngerEffects_tooltip": "The Angry moodle (a smoker's withdrawal raises it) does something, for everyone, from Annoyed up: melee weapons wear faster, reading is slower, splints, stitches and vehicle parts go wrong more often, and from Angry up the character curses out loud where zombies can hear. Furious also costs extra endurance per swing.<br>Off: the moodle is only for show, as in the base game.",
     "Sandbox_DanTraitsSmokerCravingMoodle": "Nicotine Craving Moodle",
     "Sandbox_DanTraitsSmokerCravingMoodle_tooltip": "Smokers see a Nicotine Craving moodle and a notice when a craving starts.<br>Off: no moodle and no notice. The craving still builds, and you have to read it from irritability (the Angry moodle) and stress."
 }

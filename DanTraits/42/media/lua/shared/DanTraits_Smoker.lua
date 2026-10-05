@@ -10,8 +10,8 @@
 -- fills it, but only so much a day, so it is the habit that counts; it
 -- drains over a month. Past NIC_GAIN the character becomes a Smoker, in
 -- about a week of four or more a day. The meter sets how fast cravings
--- build: vanilla's pace for a Smoker taken at creation, slower for a light
--- smoker, nearly twice as fast for a heavy one, and faster again while
+-- build: half vanilla's pace for a Smoker taken at creation, slower for a
+-- light smoker, nearly twice as fast for a heavy one, and faster again while
 -- drunk. Three weeks without tobacco breaks the trait; the withdrawal
 -- peaks in the first three days and eases over the rest. An ex-smoker
 -- still gets cravings when drunk or badly stressed for three months, and
@@ -24,8 +24,8 @@
 -- stress and misery off, a chain-smoked one barely anything.
 --
 -- Withdrawal: irritability (the vanilla Angry moodle, which nothing else in
--- the game raises), more hunger, and light, broken sleep. A cigarette just
--- before bed keeps you on edge for an hour too. Nicotine gum (a rare item,
+-- the game raises; DanTraits_Anger.lua gives it its effects), more hunger,
+-- and light, broken sleep. A cigarette just before bed keeps you on edge for an hour too. Nicotine gum (a rare item,
 -- found with the cigarettes) takes most of the edge off a craving without
 -- smoking and without resetting the three-week clock.
 --
@@ -68,8 +68,8 @@ local NIC_CURE_H        = 504     -- hours without tobacco to lose the trait (21
 local NIC_SESSION_H     = 12      -- tobacco after this long without starts a new session
 local NIC_RELAPSE_ODDS  = 50      -- percent chance per session for an ex-smoker to relapse
 -- craving
-local NIC_RATE_BASE     = 0.25    -- vanilla withdrawal build-up x (this + NIC_RATE_METER x meter)
-local NIC_RATE_METER    = 1.5
+local NIC_RATE_BASE     = 0.125   -- vanilla withdrawal build-up x (this + NIC_RATE_METER x meter)
+local NIC_RATE_METER    = 0.75
 local NIC_RATE_DRUNK    = 1.5     -- and x this at Drunk level 2 or more
 local NIC_DRUNK_LEVEL   = 2
 local NIC_FADE_FROM_H   = 72      -- withdrawal peaks for three days...
