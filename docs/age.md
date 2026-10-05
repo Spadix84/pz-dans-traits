@@ -17,8 +17,9 @@ train faster; older characters start with more skill and recover slower. The
 | Main skill | +0 | +1 | +2 | +3 |
 | Each other profession skill | +0 | +0 | +1 | +2 |
 
-Points are fixed by the trait script (`Cost = 6 / 0 / -2 / -4`). Age never
-changes what another trait costs; it changes what the trait does.
+Points are fixed by the trait script (`Cost = 6 / 0 / -2 / -4`). With one
+exception (the body traits, below), age never changes what another trait
+costs; it changes what the trait does.
 
 ## Picking an age
 
@@ -103,6 +104,27 @@ How each one works:
 - **Night wakes.** Vitality scores each night, and every wake after the first
   costs a little. Age scales the count before it is scored.
 
+## Strong, Athletic, Stout and Fit cost more with age
+
+Older characters train Fitness and Strength slower, so buying them at creation
+would otherwise be the best deal for exactly the people least likely to be in
+that shape. Staying in shape costs extra points:
+
+| Trait | 20s and 30s | 40s | 50s |
+|---|---|---|---|
+| Strong, Athletic | 10 | 12 | 14 |
+| Stout, Fit | 6 | 7 | 8 |
+
+- The trait still shows its own cost. The extra shows beside it in red
+  ("+4 at this age"), in the list to pick from and in the chosen list, and
+  comes off Points to Spend.
+- It follows the age picked, or the *Default Age* when none is. Change age
+  and the total changes at once.
+- The traits do exactly what they do in vanilla. Nothing changes after
+  creation, and existing characters are not affected.
+- Weak, Feeble, Unfit and Out of Shape are unchanged.
+- With the Age option off there is no surcharge.
+
 ## What age does to other traits
 
 | Trait | 20s | 40s | 50s |
@@ -160,11 +182,15 @@ There is no separate switch for the everyday effects.
   Unemployed get Maintenance.
 - Everyone carries an Age trait.
 - The creation screen shows age's levels.
+- Strong, Athletic, Stout and Fit cost more in the 40s and 50s.
 
 ## For modders
 
 - `DanTraits_AgeBand(player)` returns 20, 30, 40 or 50 (30 with age off).
 - `DanTraits_AgeLevels(boosts, band, handy, bonus)` returns `{ perk = levels }`.
+- `DanTraits_AgeSurcharge(band, traitType)` returns the extra points a trait
+  costs in that band. The creation screen applies it by wrapping vanilla's
+  `CharacterCreationProfession:PointToSpend`, which is worked out on demand.
 - Every number is in the `AGE` table at the top of `DanTraits_Age.lua`.
 - The effects go through the mod's value hooks (`enduranceRegen`, `woundHeal`,
   `nightWakes`, `bloodCellRebuild`, `concussionHeal`, `hangoverSeverity`,

@@ -214,6 +214,15 @@ In game (checklist, ids `age2-*`):
    sides one step behind the main skill; every skill the full levels; a flat
    +1 from the 30s.)
 
+9. **Body traits cost more with age** (the user's idea, 2026-10-05): Strong
+   and Athletic +2 in the 40s and +4 in the 50s, Stout and Fit +1 and +2.
+   Reason: the 50s train Fitness and Strength at x0.8, so buying them at
+   creation was the best deal for the oldest. Built as a wrap of vanilla's
+   `PointToSpend` (computed on demand, like its negative-trait penalty), not
+   as an auto-added surcharge trait: nothing to fall out of step with presets
+   or the random button. Considered and not built: fewer levels with age,
+   lock-outs, an upkeep system.
+
 ## What the build did differently
 
 - **Fitness and Strength are never the main skill.** Otherwise a 50s Fitness

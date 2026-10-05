@@ -24,6 +24,10 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
 - **The 50s on the existing effects:** red cells x0.65, concussion x0.6, hangover x1.5,
   Type 2 resistance +0.2, Brittle x1.5, Arthritis joint factor x1.6, Heart Condition x1.5,
   Handy +1 Carpentry.
+- **Staying in shape costs more with age.** Strong and Athletic cost 2 points more in the
+  40s and 4 more in the 50s; Stout and Fit 1 and 2. The traits are unchanged; the extra
+  shows beside their cost on the creation screen and comes off Points to Spend. Existing
+  characters are not affected.
 - **Everyone carries an Age trait.** Pick none and In Their 30s (cost 0, not in the
   creation lists) is given at the start. The four exclude each other.
 - **The creation screen shows age's levels:** in the Major Skills list, "(+N age)" after

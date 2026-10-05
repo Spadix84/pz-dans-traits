@@ -339,6 +339,7 @@ Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Youn
   - Red cells rebuild x1.15 / x0.8 / x0.65; a concussion heals x1.2 / x0.75 / x0.6; hangovers x0.85 / x1.25 / x1.5.
 - **In Their 20s:** cannot take Handy or Arthritis; Gym Regular starts at 65; Type 2 resistance a little lower; a Heart Condition acts up less (x0.8).
 - **In Their 40s and 50s:** Handy gives +1 Carpentry more; Arthritis flares sooner (x1.3 / x1.6); Brittle bones snap more often (x1.25 / x1.5); a Heart Condition acts up more (x1.25 / x1.5); Type 2 resistance is higher.
+- **Staying in shape costs more with age:** Strong and Athletic cost 2 points more in the 40s and 4 more in the 50s; Stout and Fit 1 and 2. The creation screen shows the extra beside the trait's cost.
 - **Sandbox:** turn age off, set the default decade, set the profession levels per decade.
 
 ## For everyone

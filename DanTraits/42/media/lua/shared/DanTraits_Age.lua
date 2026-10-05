@@ -35,8 +35,12 @@
 -- In Their 20s cannot be taken with Handy or Arthritis (the script).
 --
 -- Trait costs are fixed by the script, so age is priced through the Age
--- traits' own cost and changes what other traits do, never how much they
--- cost: In Their 20s costs 6 points, the 40s give 2 back and the 50s 4.
+-- traits' own cost and changes what other traits do: In Their 20s costs 6
+-- points, the 40s give 2 back and the 50s 4. The one exception is the body
+-- traits: staying Strong or Athletic costs 2 points more in the 40s and 4 in
+-- the 50s, Stout or Fit 1 and 2 (AGE_BODY and `body` below). The creation
+-- screen takes it off the points to spend (DanTraits_AgeSurcharge, read by
+-- DanTraits_Client.lua); nothing changes after creation.
 --
 -- Sandbox (page DanTraits): AgeEnabled turns all of this off (the Age traits
 -- are then hidden at character creation, DanTraits_Client.lua),
@@ -55,11 +59,13 @@ local AGE = {
     [30] = { levels = 1 },
     [40] = { levels = 2, side = 1, endurance = 0.92, xp = 0.9, heal = 0.9, stiff = 0.85, wakes = 1.15,
              cells = 0.8, concussion = 0.75, hangover = 1.25, dia = 0.1, heart = 1.25,
-             brittle = 1.25, arthritis = 1.3, handy = 1 },
+             brittle = 1.25, arthritis = 1.3, handy = 1, body = { 2, 1 } },
     [50] = { levels = 3, side = 2, endurance = 0.85, xp = 0.8, heal = 0.8, stiff = 0.7, wakes = 1.3,
              cells = 0.65, concussion = 0.6, hangover = 1.5, dia = 0.2, heart = 1.5,
-             brittle = 1.5, arthritis = 1.6, handy = 1 },
+             brittle = 1.5, arthritis = 1.6, handy = 1, body = { 4, 2 } },
 }
+-- the vanilla body traits and which of the band's two `body` surcharges they pay
+local AGE_BODY = { ["base:strong"] = 1, ["base:athletic"] = 1, ["base:stout"] = 2, ["base:fit"] = 2 }
 local AGE_TRAIT = { [20] = "age20s", [30] = "age30s", [40] = "age40s", [50] = "age50s" }
 local AGE_BANDS = { 20, 30, 40, 50 }
 local AGE_MAX_LEVEL = 10
@@ -153,6 +159,15 @@ function DanTraits_AgeLevels(boosts, band, handy, bonus)
         out[Perks.Woodwork] = (out[Perks.Woodwork] or 0) + info.handy
     end
     return out
+end
+
+-- the extra points a trait costs in that band (0 for most traits and bands);
+-- `kind` is the trait's type, as the creation screen holds it
+function DanTraits_AgeSurcharge(band, kind)
+    local body = (AGE[band] or AGE[30]).body
+    local which = AGE_BODY[string.lower(tostring(kind))]
+    if not body or not which then return 0 end
+    return body[which]
 end
 
 local function professionBoosts(player)

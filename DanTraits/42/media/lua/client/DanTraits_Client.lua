@@ -3,7 +3,8 @@
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
 -- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, the wrap that hides Wakeful
 -- (and Deep Sleeper on a no-sleep server) from the character creation list, and Age at
--- character creation (In Their 30s hidden, age's levels shown in the Major Skills list).
+-- character creation (In Their 30s hidden, age's levels shown in the Major Skills list,
+-- and the body traits' extra cost in the 40s and 50s).
 -- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
 require "DanTraits"
 require "TimedActions/ISUseInhalerAction"
@@ -273,16 +274,24 @@ end
 -- the profession and the chosen traits; age adds its levels in Lua at spawn,
 -- so they are added to the list here, from the same function the spawn code
 -- uses (DanTraits_AgeLevels). Returns { perk = levels }, or nil with age off.
-local function creationAgeLevels(screen)
-    if ageOffAtCreation() or not DanTraits_AgeLevels then return nil end
-    local band, handy = nil, false
+-- the band of the character being made (the picked Age trait, else the new
+-- game's default), or nil with age off
+local function creationAgeBand(screen)
+    if ageOffAtCreation() or not DanTraits_AgeRoundBand then return nil end
     for _, row in pairs(screen.listboxTraitSelected.items) do
-        local kind = row.item:getType()
-        local key = ageKeyOf(kind)
-        if key then band = AGE_BAND_OF[key] end
-        if string.lower(tostring(kind)) == "base:handy" then handy = true end
+        local key = ageKeyOf(row.item:getType())
+        if key then return AGE_BAND_OF[key] end
     end
-    band = band or DanTraits_AgeRoundBand(ageOption("AgeDefault"))
+    return DanTraits_AgeRoundBand(ageOption("AgeDefault"))
+end
+
+local function creationAgeLevels(screen)
+    local band = creationAgeBand(screen)
+    if not band then return nil end
+    local handy = false
+    for _, row in pairs(screen.listboxTraitSelected.items) do
+        if string.lower(tostring(row.item:getType())) == "base:handy" then handy = true end
+    end
     local boosts = nil
     if screen.profession and screen.profession:getXpBoosts() then
         boosts = transformIntoKahluaTable(screen.profession:getXpBoosts())
@@ -331,8 +340,44 @@ local function addAgeLevels(screen)
         end
     end
     list:sort()
-    -- set every time: the screen may have been built before this file loaded
-    list.doDrawItem = drawAgeXpBoost
+end
+
+-- The body traits cost more with age (Strong, Athletic, Stout, Fit:
+-- DanTraits_AgeSurcharge). Vanilla works the points to spend out on demand
+-- from the chosen traits (PointToSpend, the way its own negative-trait
+-- penalty does), so the surcharge is taken off there: presets, the random
+-- button and the Play button's check all go through it.
+local function ageSurchargeTotal(screen)
+    local band = creationAgeBand(screen)
+    if not band then return 0 end
+    local total = 0
+    for _, row in pairs(screen.listboxTraitSelected.items) do
+        total = total + DanTraits_AgeSurcharge(band, row.item:getType())
+    end
+    return total
+end
+
+-- a trait row, in the lists to pick from and the chosen list: vanilla's row,
+-- then the surcharge beside the trait's own cost
+local function drawAgeTrait(self, y, item, alt)
+    local yy = CharacterCreationProfession.drawTraitMap(self, y, item, alt)
+    pcall(function()
+        local band = creationAgeBand(CharacterCreationProfession.instance)
+        local extra = band and DanTraits_AgeSurcharge(band, item.item:getType()) or 0
+        if extra <= 0 then return end
+        local hc = getCore():getBadHighlitedColor()
+        local costWid = getTextManager():MeasureStringX(UIFont.Small, item.item:getRightLabel())
+        self:drawTextRight(getText("UI_DanTraits_AgeSurcharge", extra), self:getWidth() - 30 - costWid,
+            y + (self.itemheight - self.fontHgt) / 2, hc:getR(), hc:getG(), hc:getB(), 0.9, UIFont.Small)
+    end)
+    return yy
+end
+
+-- set every time the lists change: the screen may have been built before this file loaded
+local function setAgeDraws(screen)
+    if screen.listboxXpBoost then screen.listboxXpBoost.doDrawItem = drawAgeXpBoost end
+    if screen.listboxTrait then screen.listboxTrait.doDrawItem = drawAgeTrait end
+    if screen.listboxTraitSelected then screen.listboxTraitSelected.doDrawItem = drawAgeTrait end
 end
 
 local function wrapTraitList()
@@ -353,7 +398,14 @@ local function wrapTraitList()
     DanTraits_Wrap(CharacterCreationProfession, "checkXPBoost", "creation-age-levels", function(original, self, ...)
         local result = original(self, ...)
         pcall(addAgeLevels, self)
+        pcall(setAgeDraws, self)
         return result
+    end)
+    DanTraits_Wrap(CharacterCreationProfession, "PointToSpend", "creation-age-surcharge", function(original, self, ...)
+        local points = original(self, ...)
+        local ok, extra = pcall(ageSurchargeTotal, self)
+        if ok and type(extra) == "number" then points = points - extra end
+        return points
     end)
     -- vanilla fills the lists once, when the screen is built at boot, before a
     -- new game's sandbox options exist: fill them again each time it is shown
