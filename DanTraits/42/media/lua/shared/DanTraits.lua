@@ -295,6 +295,8 @@ end
 --           21  Hemophilia (holds bleed times)
 --           22  WoundCare (reads BloodPartRate)
 --           23  Infection
+--           23.5 Age (paces the fall of scratch and cut clocks and of stiffness; after
+--               Infection's hold, before the stiffness floors of Arthritis and MS)
 --           24  Concussion
 --           25  FearOfBlood (reads bloodLossMin)
 --           30  Meds (the levels every medicated system reads this minute)
@@ -310,7 +312,7 @@ end
 --           40  MDD, Migraine
 --           90  Hallucinations
 --   frame    0  the stat delta pipeline: enduranceRegen (Vitality, Smoker lungs, Blood,
---               Anemia, Concussion, Asthma, Heart, Dehydration subscribe; the cuts multiply)
+--               Anemia, Concussion, Asthma, Heart, Dehydration, Age subscribe; the cuts multiply)
 --           20  Blood        22  WoundCare (movement sampling)    24  Concussion
 --           40  Alcohol (panic decay), Arthritis, ArthritisGrip, Meds (diazepam), Smoker (held anger)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers

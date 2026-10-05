@@ -1,8 +1,9 @@
 -- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
--- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, and the wrap that hides Wakeful
--- (and Deep Sleeper on a no-sleep server) from the character creation list.
+-- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, the wrap that hides Wakeful
+-- (and Deep Sleeper on a no-sleep server) from the character creation list, and Age at
+-- character creation (In Their 30s hidden, age's levels shown in the Major Skills list).
 -- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
 require "DanTraits"
 require "TimedActions/ISUseInhalerAction"
@@ -240,7 +241,8 @@ Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)
 -- Character creation: Wakeful is folded into Deep Sleeper, so it is hidden
 -- from the list (Deep Sleeper grants it). Deep Sleeper follows vanilla's rule
 -- for the sleep traits: hidden on a server where sleep is off. The Age traits
--- are hidden when the sandbox switches Age off (they would do nothing).
+-- are hidden when the sandbox switches Age off (they would do nothing), and
+-- In Their 30s always: it is what a character who picks no age is given.
 -- at character creation SandboxVars is still the previous copy: read the live
 -- sandbox options the way vanilla's creation screen does (NegativeTraitsPenalty)
 local function ageOffAtCreation()
@@ -249,15 +251,97 @@ local function ageOffAtCreation()
     return DanTraits_SandboxOn ~= nil and not DanTraits_SandboxOn("AgeEnabled")
 end
 
+-- a number option of the new game, the same way; SandboxVars when that fails
+local function ageOption(name)
+    local ok, value = pcall(function() return getSandboxOptions():getOptionByName("DanTraits." .. name):getValue() end)
+    if ok and value ~= nil then return value end
+    return SandboxVars and SandboxVars.DanTraits and SandboxVars.DanTraits[name]
+end
+
+local AGE_BAND_OF = { age20s = 20, age30s = 30, age40s = 40, age50s = 50 }
+
+-- the Age trait's key ("age40s") for a trait type, or nil
+local function ageKeyOf(kind)
+    if kind == nil or not DanTraitsRegistry then return nil end
+    for key in pairs(AGE_BAND_OF) do
+        if kind == DanTraitsRegistry[key] then return key end
+    end
+    return nil
+end
+
+-- Age in the Major Skills list. Vanilla builds the list from the XP boosts of
+-- the profession and the chosen traits; age adds its levels in Lua at spawn,
+-- so they are added to the list here, from the same function the spawn code
+-- uses (DanTraits_AgeLevels). Returns { perk = levels }, or nil with age off.
+local function creationAgeLevels(screen)
+    if ageOffAtCreation() or not DanTraits_AgeLevels then return nil end
+    local band, handy = nil, false
+    for _, row in pairs(screen.listboxTraitSelected.items) do
+        local kind = row.item:getType()
+        local key = ageKeyOf(kind)
+        if key then band = AGE_BAND_OF[key] end
+        if string.lower(tostring(kind)) == "base:handy" then handy = true end
+    end
+    band = band or DanTraits_AgeRoundBand(ageOption("AgeDefault"))
+    local boosts = nil
+    if screen.profession and screen.profession:getXpBoosts() then
+        boosts = transformIntoKahluaTable(screen.profession:getXpBoosts())
+    end
+    return DanTraits_AgeLevels(boosts, band, handy, ageOption("AgeBonus" .. band .. "s"))
+end
+
+-- A row with age levels: vanilla draws the row for the levels the game gives
+-- (its bars and XP rate; age gives levels, not a faster rate, so a skill only
+-- age gives is drawn like Fitness, which has no rate), then age's bars go on
+-- the end in a second colour, with vanilla's geometry.
+local AGE_BAR = { r = 0.45, g = 0.7, b = 1.0 }
+local function drawAgeXpBoost(self, y, item, alt)
+    local age = item.item.ageLevels or 0
+    if age <= 0 then return CharacterCreationProfession.drawXpBoostMap(self, y, item, alt) end
+    local base = item.item.level - age
+    local row = { text = item.text, item = { perk = base > 0 and item.item.perk or Perks.Fitness, level = base } }
+    local yy = CharacterCreationProfession.drawXpBoostMap(self, y, row, alt)
+    local fontHgt = getTextManager():getFontHeight(UIFont.Small)
+    local dy = (self.itemheight - self.fontHgt) / 2
+    local blitW = math.floor(fontHgt / (10 / 3))
+    local blitGap = math.floor(blitW / 4)
+    local x0 = self.width - (getTextManager():MeasureStringX(UIFont.Small, "+ 100%") + 13 + 12 * (blitW + blitGap))
+    for i = base + 1, item.item.level do
+        self:drawTextureScaled(CharacterCreationProfession.instance.whiteBar, x0 + i * (blitW + blitGap), y + dy,
+            blitW, fontHgt, 1, AGE_BAR.r, AGE_BAR.g, AGE_BAR.b)
+    end
+    return yy
+end
+
+local function addAgeLevels(screen)
+    local list = screen.listboxXpBoost
+    local levels = creationAgeLevels(screen)
+    if not list or not levels then return end
+    for perk, count in pairs(levels) do
+        local entry = nil
+        for _, row in pairs(list.items) do
+            if row.item.perk == perk then entry = row end
+        end
+        if not entry then entry = list:addItem(PerkFactory.getPerkName(perk), { perk = perk, level = 0 }) end
+        local add = math.min(count, 10 - entry.item.level)
+        if add > 0 then
+            entry.item.ageLevels = add
+            entry.item.level = entry.item.level + add
+            entry.text = entry.text .. " " .. getText("UI_DanTraits_AgeLevels", add)
+        end
+    end
+    list:sort()
+    -- set every time: the screen may have been built before this file loaded
+    list.doDrawItem = drawAgeXpBoost
+end
+
 local function wrapTraitList()
     DanTraits_Wrap(CharacterCreationProfession, "isTraitEnabled", "creation-hide-traits", function(original, self, trait, ...)
         local kind = nil
         pcall(function() kind = trait:getType() end)
         if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
-        if kind ~= nil and DanTraitsRegistry and (kind == DanTraitsRegistry.age20s or kind == DanTraitsRegistry.age40s)
-                and ageOffAtCreation() then
-            return false
-        end
+        local ageKey = ageKeyOf(kind)
+        if ageKey and (ageKey == "age30s" or ageOffAtCreation()) then return false end
         if kind ~= nil and DanTraitsRegistry and kind == DanTraitsRegistry.deepsleeper and isMultiplayer() then
             local ok, allowed = pcall(function()
                 return getServerOptions():getBoolean("SleepAllowed") and getServerOptions():getBoolean("SleepNeeded")
@@ -265,6 +349,11 @@ local function wrapTraitList()
             if ok and not allowed then return false end
         end
         return original(self, trait, ...)
+    end)
+    DanTraits_Wrap(CharacterCreationProfession, "checkXPBoost", "creation-age-levels", function(original, self, ...)
+        local result = original(self, ...)
+        pcall(addAgeLevels, self)
+        return result
     end)
     -- vanilla fills the lists once, when the screen is built at boot, before a
     -- new game's sandbox options exist: fill them again each time it is shown

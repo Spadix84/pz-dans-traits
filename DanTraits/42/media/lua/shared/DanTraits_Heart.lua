@@ -3,7 +3,7 @@
 -- A weak heart that only shows itself under strain. Nothing can happen while
 -- the vanilla Endurance moodle (the lungs) is off: every minute it shows, there
 -- is a chance of chest pain (angina), higher the deeper the moodle, and higher
--- again when panicking, in the 40s, for a smoker (by the nicotine meter), with
+-- again when panicking, with age (the 40s and 50s; lower in the 20s), for a smoker (by the nicotine meter), with
 -- caffeine working, and for a Run Down body (Vitality; Fit and Thriving lower
 -- it); twice as likely with too many inhaler puffs or caffeine pills in you. Chest pain lasts 15 to 30 minutes: a pain floor, and endurance recovers
 -- at a third of the speed (the enduranceRegen hook of the stat delta
@@ -41,8 +41,6 @@ local HC_EPISODE_MIN   = { 0.002, 0.005, 0.015, 0.03 }  -- chance a minute of ch
 local HC_ENDURANCE_AT  = { 0.75, 0.5, 0.25, 0.1 }      -- endurance under which each moodle level shows (if the moodle cannot be read)
 local HC_PANIC_AT      = 0.5     -- panic (0..1 of its range) over this...
 local HC_PANIC         = 1.5     -- ...x this
-local HC_AGE40         = 1.25    -- in their 40s
-local HC_AGE20         = 0.8     -- in their 20s
 local HC_SMOKER        = 0.5     -- x (1 + this x nicotine meter)
 local HC_CAFFEINE      = 1.3     -- while caffeine is working (Sleep's six-hour clock)
 local HC_STIM_OVER     = 2       -- while too many inhaler puffs or caffeine pills are in the system (DanTraits_Meds.lua)
@@ -91,7 +89,7 @@ local function episodeChance(player, d)
     if level <= 0 then return 0 end
     local chance = HC_EPISODE_MIN[math.min(level, #HC_EPISODE_MIN)]
     if fraction(player:getStats(), CharacterStat.PANIC) > HC_PANIC_AT then chance = chance * HC_PANIC end
-    if hasTrait(player, "age40s") then chance = chance * HC_AGE40 elseif hasTrait(player, "age20s") then chance = chance * HC_AGE20 end
+    if DanTraits_AgeHeart then chance = chance * DanTraits_AgeHeart(player) end
     if DanTraits_IsSmoker and DanTraits_IsSmoker(player) then chance = chance * (1 + HC_SMOKER * clamp01(d.nicMeter or 0)) end
     if (d.slCaffeineHours or 0) > 0 then chance = chance * HC_CAFFEINE end
     if DanTraits_MedHeartStrain and DanTraits_MedHeartStrain(player) then chance = chance * HC_STIM_OVER end

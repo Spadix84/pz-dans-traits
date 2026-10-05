@@ -4,7 +4,7 @@ option DanTraits.AgeEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsAgeEnabled,}
 
 option DanTraits.AgeDefault
-{type = integer, min = 20, max = 49, default = 30, page = DanTraits, translation = DanTraitsAgeDefault,}
+{type = integer, min = 20, max = 59, default = 30, page = DanTraits, translation = DanTraitsAgeDefault,}
 
 option DanTraits.AgeBonus20s
 {type = integer, min = 0, max = 5, default = 0, page = DanTraits, translation = DanTraitsAgeBonus20s,}
@@ -13,7 +13,10 @@ option DanTraits.AgeBonus30s
 {type = integer, min = 0, max = 5, default = 1, page = DanTraits, translation = DanTraitsAgeBonus30s,}
 
 option DanTraits.AgeBonus40s
-{type = integer, min = 0, max = 5, default = 1, page = DanTraits, translation = DanTraitsAgeBonus40s,}
+{type = integer, min = 0, max = 5, default = 2, page = DanTraits, translation = DanTraitsAgeBonus40s,}
+
+option DanTraits.AgeBonus50s
+{type = integer, min = 0, max = 5, default = 3, page = DanTraits, translation = DanTraitsAgeBonus50s,}
 
 option DanTraits.BloodEnabled
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsBloodEnabled,}

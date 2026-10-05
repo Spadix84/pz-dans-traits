@@ -256,19 +256,32 @@ module DanTraits {
         UIDescription = UI_trait_NightVisionDesc,
     }
 
-    /* Age: 30s is the default and has no trait. The 20s lose the
-       profession's extra level and can't take Handy or Arthritis, but
-       Gym Regular starts higher. The 40s make Handy stronger and Arthritis
-       harsher. media/lua/shared/DanTraits_Age.lua. */
+    /* Age: every character carries one of the four, and they exclude each
+       other. The 30s are the default: cost 0, hidden at creation and
+       granted at spawn to a character who picked none. The 20s cost points
+       (they recover and train faster), the 40s and 50s give points back
+       (more profession levels, a slower body). The 20s can't take Handy or
+       Arthritis. media/lua/shared/DanTraits_Age.lua, docs/age.md. */
     character_trait_definition DanTraits:age20s
     {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:age20s,
-        Cost = -2,
+        Cost = 3,
         UIName = UI_trait_DanAge20s,
         UIDescription = UI_trait_DanAge20sdesc,
-        MutuallyExclusiveTraits = DanTraits:age40s;base:handy;DanTraits:arthritis,
+        MutuallyExclusiveTraits = DanTraits:age30s;DanTraits:age40s;DanTraits:age50s;base:handy;DanTraits:arthritis,
+    }
+
+    character_trait_definition DanTraits:age30s
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:age30s,
+        Cost = 0,
+        UIName = UI_trait_DanAge30s,
+        UIDescription = UI_trait_DanAge30sdesc,
+        MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:age40s;DanTraits:age50s,
     }
 
     character_trait_definition DanTraits:age40s
@@ -276,10 +289,21 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:age40s,
-        Cost = 1,
+        Cost = -2,
         UIName = UI_trait_DanAge40s,
         UIDescription = UI_trait_DanAge40sdesc,
-        MutuallyExclusiveTraits = DanTraits:age20s,
+        MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:age30s;DanTraits:age50s,
+    }
+
+    character_trait_definition DanTraits:age50s
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:age50s,
+        Cost = -4,
+        UIName = UI_trait_DanAge50s,
+        UIDescription = UI_trait_DanAge50sdesc,
+        MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:age30s;DanTraits:age40s,
     }
 
     /* Vanilla Fear of Blood, re-costed from -5 to -6 for the rework
