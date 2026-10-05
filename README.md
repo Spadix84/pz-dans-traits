@@ -26,16 +26,16 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Jinxed](#jinxed--4) | -4 | Containers near you sometimes lose an item. |
 | [Smoker](#smoker--4-vanilla-reworked) | -4 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
 | [Vegetarian](#vegetarian--4) | -4 | Refuses meat, fish and anything cooked with them. |
+| [In Their 50s](#age-in-their-20s-3-30s-40s--2-and-50s--4) | -4 | Three extra profession levels; a body that recovers, heals and trains slower. |
 | [Germaphobe](#germaphobe--3) | -3 | Dirty skin and clothes build stress; clean is a relief. |
 | [Alcoholic](#alcoholic--2) | -2 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Caffeine Dependent](#caffeine-dependent--2) | -2 | Half a day without coffee or tea brings a headache. |
 | [Hallucinations](#hallucinations--2) | -2 | Phantom zombies, sounds, whispers and panic. |
 | [Tinnitus](#tinnitus--2) | -2 | Your own gunfire deafens you for a while. |
-| [In Their 20s](#age-in-their-20s--2-and-in-their-40s-1) | -2 | No bonus profession level; heals fast, mild hangovers. |
+| [In Their 40s](#age-in-their-20s-3-30s-40s--2-and-50s--4) | -2 | Two extra profession levels; a body a little slower to recover. |
 | [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
 | [Straight Edge](#straight-edge--1) | -1 | Refuses alcohol and tobacco. |
 | [Cat's Eyes](#cats-eyes-1-vanilla-re-costed) | 1 | Vanilla night vision, re-costed; light wakes you more easily. |
-| [In Their 40s](#age-in-their-20s--2-and-in-their-40s-1) | +1 | An extra profession level; slower healing, worse hangovers. |
 | [Early Riser](#early-riser-1) | +1 | Starts rested; every night scores a little better. |
 | [Gym Regular](#gym-regular-1) | +1 | Every exercise starts with a Fitness Instructor's head start. |
 | [Hollow Legs](#hollow-legs-1) | +1 | Drink hits less; hangovers milder and shorter. |
@@ -45,6 +45,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
 | [Thick Skull](#thick-skull-2) | +2 | Concussed half as often, less badly, heals faster. |
 | [Good Clotter](#good-clotter-3) | +3 | Bleeds run down twice as fast and lose less blood. |
+| [In Their 20s](#age-in-their-20s-3-30s-40s--2-and-50s--4) | +3 | No bonus profession level; recovers, heals and trains faster. |
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often. |
 | [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
 | [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
@@ -324,13 +325,21 @@ Attacks that cost you hours.
 - Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest.
 - Not with Early Riser.
 
-### Age: In Their 20s (-2) and In Their 40s (+1)
+### Age: In Their 20s (+3), 30s, 40s (-2) and 50s (-4)
 
-Every character is in their 20s, 30s or 40s. The 30s are the default and have no trait; the two age traits pick the others. Sandbox options turn age off, set the default decade and the profession levels per decade.
+Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Younger bodies recover and train faster; older characters start with more skill. The 30s are the game as it is: pick no Age trait and In Their 30s is given at the start. The 20s cost 3 points, the 40s give 2 and the 50s 4. The whole system, with every number, is in [docs/age.md](docs/age.md).
 
-- **Profession:** a new character gets extra levels in the profession's main skill: none in the 20s, one in the 30s and 40s.
-- **In Their 20s:** cannot take Handy or Arthritis; Gym Regular starts at 65. Red cells rebuild a seventh faster, concussions heal a fifth faster, hangovers are milder (x0.85), Type 2 resistance is a little lower.
-- **In Their 40s:** Handy gives +1 Carpentry more; Arthritis flares sooner. Red cells rebuild a fifth slower, concussions heal a quarter slower, hangovers are worse (x1.25), Type 2 resistance is higher, Brittle bones snap a quarter more often.
+- **Profession:** extra levels in the profession's main skill at the start: 0 / 1 / 2 / 3. Every skill tied for the top boost gets them; Fitness and Strength never count; the Unemployed get Maintenance. The creation screen shows them in blue in the Major Skills list.
+- **Every day (20s / 40s / 50s against the 30s):**
+  - Endurance recovery x1.25 / x0.92 / x0.85.
+  - Fitness and Strength experience x1.5 / x0.9 / x0.8.
+  - Scratches, cuts and unstitched deep wounds heal x1.5 / x0.9 / x0.8.
+  - Stiffness fades x1.5 / x0.85 / x0.7.
+  - Night wakes count x0.8 / x1.15 / x1.3 in the sleep score.
+  - Red cells rebuild x1.15 / x0.8 / x0.65; a concussion heals x1.2 / x0.75 / x0.6; hangovers x0.85 / x1.25 / x1.5.
+- **In Their 20s:** cannot take Handy or Arthritis; Gym Regular starts at 65; Type 2 resistance a little lower; a Heart Condition acts up less (x0.8).
+- **In Their 40s and 50s:** Handy gives +1 Carpentry more; Arthritis flares sooner (x1.3 / x1.6); Brittle bones snap more often (x1.25 / x1.5); a Heart Condition acts up more (x1.25 / x1.5); Type 2 resistance is higher.
+- **Sandbox:** turn age off, set the default decade, set the profession levels per decade.
 
 ## For everyone
 

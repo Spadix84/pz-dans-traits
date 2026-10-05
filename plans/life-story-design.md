@@ -38,7 +38,7 @@ It is a sandbox mode, off by default. Vanilla creation stays available.
 ```
 Profession  ->  Age  ->  Chapters  ->  Who you are  ->  Free points  ->  Play
                  |          |              |                 |
-             20s/30s/40s  one card per   personality       3 points,
+           20s/30s/40s/50s one card per   personality       3 points,
              (existing)   deck, decks    summary, one      vanilla list,
                           by age         nudge allowed     locked otherwise
 ```
@@ -46,7 +46,8 @@ Profession  ->  Age  ->  Chapters  ->  Who you are  ->  Free points  ->  Play
 - **Profession and age** are the existing screens and the existing Age system.
 - **Chapters.** Everyone draws from the *Upbringing* deck. Then one card per
   decade lived: a 20-something plays Upbringing + Twenties (2 cards), a
-  30-something adds Thirties (3), a 40-something adds Forties (4). Older means
+  30-something adds Thirties (3), a 40-something adds Forties (4), a
+  50-something adds Fifties (5; that deck is not written yet). Older means
   more skills and more baggage, which is the trade Age already wants to express.
 - **Cards constrain cards.** A card can require, exclude or cheapen later cards.
   Desk Job after Construction Crew is "got out of the trade"; Construction Crew

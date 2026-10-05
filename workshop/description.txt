@@ -13,7 +13,7 @@ Realistic, balanced traits, mostly negative, that add complications to work arou
 [*][b]Sunburn and dehydration:[/b] bare skin burns in about three hours of midday sun and hurts for a day; sun block keeps it off. Hours of thirst bring a headache and tiredness.
 [*][b]Hangovers and drink relief:[/b] drink past a buzz and a hangover waits for you to sober up or wake. Alcohol dulls pain and panic by how drunk you are.
 [*][b]Medication:[/b] every pill has a level in the blood, a build-up for the daily ones, a wearing-off notice, side effects now and then, and an overdose. Diazepam (new) for panic; a Pill Caddy (new) for the belt.
-[*][b]Age:[/b] 20s, 30s or 40s shade healing, hangovers, red cells and concussions.
+[*][b]Age:[/b] 20s to 50s. The young recover, heal and train faster; the old know more.
 [/list]
 Most systems have a switch on the Vitality Project sandbox page. Every lasting effect has a moodle.
 
@@ -81,7 +81,7 @@ Most systems have a switch on the Vitality Project sandbox page. Every lasting e
 [*][b]Caffeine Dependent (-2):[/b] half a day without coffee or tea brings a headache and low mood; cola and chocolate only put it off.
 [*][b]Hallucinations (-2):[/b] phantom zombies, sounds, whispers and panic, worse tired, stressed, feverish, concussed or in withdrawal.
 [*][b]Tinnitus (-2):[/b] your own gunfire brings on Hard of Hearing for a while and lightens sleep.
-[*][b]In Their 20s (-2):[/b] no bonus profession level; heals fast, mild hangovers.
+[*][b]In Their 40s (-2), 50s (-4):[/b] 2 or 3 extra profession levels; slower to recover, heal and train.
 [*][b]Lactose Intolerance (-1):[/b] dairy brings a mild gut flare.
 [*][b]Straight Edge (-1):[/b] refuses alcohol and tobacco, and their relief.
 [/list]
@@ -96,7 +96,7 @@ Most systems have a switch on the Vitality Project sandbox page. Every lasting e
 [*][b]Thick Skull (+2):[/b] concussed half as often, less badly, heals faster.
 [*][b]Outdoorsman (2, reworked):[/b] as vanilla, and burns half as fast.
 [*][b]Cat's Eyes (1, re-costed):[/b] as vanilla; light wakes you more easily.
-[*][b]In Their 40s (+1):[/b] an extra profession level; slower healing, worse hangovers, brittler bones.
+[*][b]In Their 20s (+3):[/b] recovers, heals and trains faster; no extra profession level.
 [*][b]Early Riser, Meal Prepper, Gym Regular, Iron Stomach, Night Shift, Hollow Legs (+1 each):[/b] a head start on sleep, diet or exercise; rotten food does half the harm; daylight hardly wakes you; drink hits less and hangovers are milder.
 [/list]
 

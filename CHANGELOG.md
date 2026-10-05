@@ -3,6 +3,43 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Unreleased
+
+### Age, reworked: four decades, felt every day
+
+Age used to show only when something rare happened (blood loss, a concussion, a hangover).
+It now sits on the everyday systems. The whole system is written up in `docs/age.md`.
+
+- **In Their 50s (-4)**, a new band: three extra profession levels, and the slowest body.
+- **Prices changed sides.** In Their 20s now costs 3 points (it gave 2) and In Their 40s
+  gives 2 (it cost 1): youth is the advantage in play, age is the trade for skill.
+- **Profession levels** are 0 / 1 / 2 / 3 (the 40s had 1). Fitness and Strength are never
+  the main skill (a Fitness Instructor's is Sprinting). The Unemployed get the levels in
+  Maintenance.
+- **Every day**, by band (20s / 40s / 50s against the 30s): endurance recovery x1.25 /
+  x0.92 / x0.85; Fitness and Strength experience x1.5 / x0.9 / x0.8; scratches, cuts and
+  unstitched deep wounds heal x1.5 / x0.9 / x0.8; stiffness fades x1.5 / x0.85 / x0.7;
+  night wakes count x0.8 / x1.15 / x1.3 in the sleep score.
+- **The 50s on the existing effects:** red cells x0.65, concussion x0.6, hangover x1.5,
+  Type 2 resistance +0.2, Brittle x1.5, Arthritis joint factor x1.6, Heart Condition x1.5,
+  Handy +1 Carpentry.
+- **Everyone carries an Age trait.** Pick none and In Their 30s (cost 0, not in the
+  creation lists) is given at the start. The four exclude each other.
+- **The creation screen shows age's levels:** in the Major Skills list, "(+N age)" after
+  the skill and the extra bars in blue. The XP rate column counts only the game's levels.
+- **Sandbox:** Default Age goes to 59; Profession Levels (40s) defaults to 2; new
+  Profession Levels (50s), default 3.
+- **Heart Condition** reads the age band instead of the traits, so Default Age and the
+  Age switch count for it.
+
+Old saves: nobody's skills change. A character with no Age trait is given the default
+band's the first time the save loads. Characters already in their 20s or 40s feel the
+everyday effects from then on. A saved sandbox keeps its old Profession Levels (40s).
+
+For mod authors: `DanTraits_AgeLevels(boosts, band, handy, bonus)` and
+`DanTraits_AgeRoundBand(age)` are new; `DanTraits_AgeBand` can return 50; Age subscribes
+to `enduranceRegen`, `woundHeal` and `nightWakes`, and runs a minute step at order 23.5.
+
 ## 1.1.0 - 2026-10-03
 
 Everything since the first public upload (1.0.0, 2026-09-30). Singleplayer, Build 42.

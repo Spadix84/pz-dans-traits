@@ -1,8 +1,15 @@
 # Age, version 2
 
-Design note, drafted 2026-10-03, decisions recorded 2026-10-05 (see
-"Decided"). Nothing here is built. The effect multipliers are still first
-drafts, to be tuned in play.
+Design note, drafted 2026-10-03, decided and BUILT 2026-10-05 on branch
+`age-v2` (unplayed). How the built system works is in `docs/age.md`; this note
+is the reasoning. Where the two differ, the code and `docs/age.md` are right.
+
+A note on signs: the costs in this note are the player's points (-3 = the
+player pays 3). The trait script uses the game's sign, the other way round:
+`Cost = 3` for the 20s, `-2` for the 40s, `-4` for the 50s. The first
+version's script had the 20s at `Cost = -2` (it gave 2 points) and the 40s at
+`Cost = 1`, the opposite of what "Why" below assumes; the build follows the
+pricing reasoning here.
 
 ## Why
 
@@ -67,11 +74,14 @@ pays for it. Against the 30s:
 
 | Effect | 20s | 30s | 40s | 50s | How |
 |---|---|---|---|---|---|
-| Endurance recovery | x1.10 | 1 | x0.92 | x0.85 | `enduranceRegen` hook (exists, Vitality uses it) |
-| Fitness and Strength XP | x1.20 | 1 | x0.90 | x0.80 | `Events.AddXP`, the pattern Vitality's Thriving bonus uses |
-| Wound healing (scratches, cuts, deep wounds) | x1.15 | 1 | x0.90 | x0.80 | Per-minute heal clocks, the pattern Infection uses to hold them; `woundHeal` (exists) for unstitched deep wounds |
-| Stiffness after exertion fades | x1.20 | 1 | x0.85 | x0.70 | New: per-minute check on each part's stiffness, undo part of a fall (or add to it) |
+| Endurance recovery | x1.25 | 1 | x0.92 | x0.85 | `enduranceRegen` hook (exists, Vitality uses it) |
+| Fitness and Strength XP | x1.50 | 1 | x0.90 | x0.80 | `Events.AddXP`, the pattern Vitality's Thriving bonus uses |
+| Wound healing (scratches, cuts, deep wounds) | x1.50 | 1 | x0.90 | x0.80 | Per-minute heal clocks, the pattern Infection uses to hold them; `woundHeal` (exists) for unstitched deep wounds |
+| Stiffness after exertion fades | x1.50 | 1 | x0.85 | x0.70 | New: per-minute check on each part's stiffness, undo part of a fall (or add to it) |
 | Night wakes counted in the sleep score | x0.80 | 1 | x1.15 | x1.30 | `nightWakes` hook (exists) |
+
+The 20s numbers in the first four rows are the user's (2026-10-05); the
+drafts were x1.10, x1.20, x1.15 and x1.20.
 
 The stiffness row is the one players will notice first: the day after a big
 fight or a long chop, a 50-year-old is still sore when a 25-year-old is not.
@@ -191,12 +201,38 @@ In game (checklist, ids `age2-*`):
 3. **Unemployed.** The levels go into a fixed skill: Maintenance.
 4. **A visible 30s trait.** Yes: granted at spawn, cost 0, hidden at creation.
 
+5. **Lock-outs for the 50s.** None.
+6. **20s numbers.** Endurance x1.25, Fitness and Strength XP x1.5, healing
+   x1.5, stiffness x1.5.
+
+## What the build did differently
+
+- **Fitness and Strength are never the main skill.** Otherwise a 50s Fitness
+  Instructor starts at Fitness 10. Their main skill is Sprinting. Not asked
+  for; one condition in `mainSkills` if it should go.
+- **No "blue: age" key line** under the Major Skills header. Each row that age
+  adds to says "(+N age)" after the skill name instead, and has its bars in
+  blue.
+- **Trait descriptions are fixed text** with the default level counts; they do
+  not follow the sandbox setting.
+- **The negative-XP spike was settled from vanilla code**: the debug panel's
+  "lower perk" button calls `AddXP(perk, negative, false, false, false,
+  false)`. The take-back also stops at the held level's threshold.
+- **Stitches, burns and fractures** are not scaled by age; scratches, cuts and
+  unstitched deep wounds are.
+- **Heart Condition** reads the band (it read the traits), and has a 50s
+  factor of x1.5.
+
 ## Open questions
 
-1. **Lock-outs for the 50s.** None proposed. Athletic and Gym Regular at 55
-   are possible, just harder. Agree?
-2. **Maintenance for the Unemployed.** It was the example in the question, not
-   a stated choice. Another skill instead?
+1. **The 20s price.** With the stronger 20s numbers, 3 points buys about what
+   Fast Healer (6) and a training bonus would. Raise it?
+2. **Wide ties.** Park Ranger boosts five skills equally, so a 50s Park
+   Ranger starts with +3 in all five. Burglar has three.
+3. **Age-exclusive traits** (a trait only one band can take): possible with
+   the script's exclusions for "not in the 20s" style rules; "only in the
+   50s" needs the hidden 30s handled in Lua, since a character who picks no
+   age has no trait on the creation screen.
 
 ## Considered and left out
 
