@@ -12,11 +12,12 @@ train faster; older characters start with more skill and recover slower. The
 
 | | In Their 20s | In Their 30s | In Their 40s | In Their 50s |
 |---|---|---|---|---|
-| Points | costs 3 | free | gives 2 | gives 4 |
+| Points | costs 6 | free | gives 2 | gives 4 |
 | Where it shows at creation | positive traits | hidden (the default) | negative traits | negative traits |
-| Profession levels | +0 | +1 | +2 | +3 |
+| Main skill | +0 | +1 | +2 | +3 |
+| Each other profession skill | +0 | +0 | +1 | +1 |
 
-Points are fixed by the trait script (`Cost = 3 / 0 / -2 / -4`). Age never
+Points are fixed by the trait script (`Cost = 6 / 0 / -2 / -4`). Age never
 changes what another trait costs; it changes what the trait does.
 
 ## Picking an age
@@ -33,16 +34,26 @@ changes what another trait costs; it changes what the trait does.
 ## Profession levels
 
 A new character gets extra levels in their profession's **main skill**: the
-skill the profession boosts most.
+skill the profession boosts most. In the 40s and 50s, every **other skill the
+profession boosts** gets one level as well: years on the job teach the whole
+trade, not only the speciality.
+
+| Example | 30s | 40s | 50s |
+|---|---|---|---|
+| Carpenter | Carpentry +1 | Carpentry +2; Carving, Short Blunt, Masonry, Maintenance +1 | Carpentry +3; the other four +1 |
+| Doctor | First Aid +1 | First Aid +2; Short Blade +1 | First Aid +3; Short Blade +1 |
+| Electrician | Electrical +1 | Electrical +2 | Electrical +3 |
+| Veteran | Aiming, Reloading +1 | both +2 | both +3 |
 
 - **Ties.** If several skills share the top boost, each one gets the full
   levels. A 50s Veteran starts with +3 Aiming and +3 Reloading. The widest
   ties in vanilla are Burglar (Nimble, Sneaking, Lightfooted) and Park Ranger
   (five skills), so those two gain the most from age.
-- **Fitness and Strength never count as the main skill.** Age is years of
-  practice, not a better body. A Fitness Instructor's main skill is Sprinting;
-  a Fire Officer's are Sprinting and Axe.
-- **Unemployed** has no main skill, so the levels go into Maintenance.
+- **Fitness and Strength never get age's levels**, as a main skill or
+  otherwise. Age is years of practice, not a better body. A Fitness
+  Instructor's main skill is Sprinting; a Fire Officer's are Sprinting and Axe.
+- **Unemployed** has no main skill, so the main-skill levels go into
+  Maintenance. There are no other skills to add to.
 - Levels stop at 10. They are levels, not an XP rate: the skill does not
   train faster afterwards.
 - They are applied once, when the character is created.
@@ -130,7 +141,7 @@ Notes on the less obvious rows:
 |---|---|---|
 | Age | on | Off: the Age traits are hidden at creation, nothing is granted, and every character counts as in their 30s |
 | Default Age | 30 | The age of a character who picks no Age trait (20 to 59) |
-| Profession Levels (20s / 30s / 40s / 50s) | 0 / 1 / 2 / 3 | The extra levels per band, 0 to 5 |
+| Profession Levels (20s / 30s / 40s / 50s) | 0 / 1 / 2 / 3 | The main-skill levels per band, 0 to 5. At 0 the band gets no levels at all, the other skills included |
 
 There is no separate switch for the everyday effects.
 
@@ -141,10 +152,11 @@ There is no separate switch for the everyday effects.
   night wakes) are new. Characters already in their 20s or 40s feel them from
   the first minute after the update.
 - Prices swapped sides. Before, In Their 20s gave 2 points and In Their 40s
-  cost 1. Now the 20s cost 3 and the 40s give 2, because youth is the
+  cost 1. Now the 20s cost 6 and the 40s give 2, because youth is the
   advantage in play and age is the trade for skill.
-- The 40s get two profession levels, not one.
-- Fitness and Strength are no longer picked as a main skill, and the
+- The 40s get two main-skill levels, not one, and the 40s and 50s get a
+  level in each of the profession's other skills.
+- Fitness and Strength no longer get age's levels, and the
   Unemployed get Maintenance.
 - Everyone carries an Age trait.
 - The creation screen shows age's levels.

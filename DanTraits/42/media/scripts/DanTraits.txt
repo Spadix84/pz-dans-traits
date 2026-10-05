@@ -267,7 +267,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:age20s,
-        Cost = 3,
+        Cost = 6,
         UIName = UI_trait_DanAge20s,
         UIDescription = UI_trait_DanAge20sdesc,
         MutuallyExclusiveTraits = DanTraits:age30s;DanTraits:age40s;DanTraits:age50s;base:handy;DanTraits:arthritis,

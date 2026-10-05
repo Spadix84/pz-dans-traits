@@ -26,13 +26,13 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Jinxed](#jinxed--4) | -4 | Containers near you sometimes lose an item. |
 | [Smoker](#smoker--4-vanilla-reworked) | -4 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
 | [Vegetarian](#vegetarian--4) | -4 | Refuses meat, fish and anything cooked with them. |
-| [In Their 50s](#age-in-their-20s-3-30s-40s--2-and-50s--4) | -4 | Three extra profession levels; a body that recovers, heals and trains slower. |
+| [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--4) | -4 | Three levels in the main skill, one in the rest of the trade; a body that recovers, heals and trains slower. |
 | [Germaphobe](#germaphobe--3) | -3 | Dirty skin and clothes build stress; clean is a relief. |
 | [Alcoholic](#alcoholic--2) | -2 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Caffeine Dependent](#caffeine-dependent--2) | -2 | Half a day without coffee or tea brings a headache. |
 | [Hallucinations](#hallucinations--2) | -2 | Phantom zombies, sounds, whispers and panic. |
 | [Tinnitus](#tinnitus--2) | -2 | Your own gunfire deafens you for a while. |
-| [In Their 40s](#age-in-their-20s-3-30s-40s--2-and-50s--4) | -2 | Two extra profession levels; a body a little slower to recover. |
+| [In Their 40s](#age-in-their-20s-6-30s-40s--2-and-50s--4) | -2 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
 | [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
 | [Straight Edge](#straight-edge--1) | -1 | Refuses alcohol and tobacco. |
 | [Cat's Eyes](#cats-eyes-1-vanilla-re-costed) | 1 | Vanilla night vision, re-costed; light wakes you more easily. |
@@ -45,9 +45,9 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
 | [Thick Skull](#thick-skull-2) | +2 | Concussed half as often, less badly, heals faster. |
 | [Good Clotter](#good-clotter-3) | +3 | Bleeds run down twice as fast and lose less blood. |
-| [In Their 20s](#age-in-their-20s-3-30s-40s--2-and-50s--4) | +3 | No bonus profession level; recovers, heals and trains faster. |
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often. |
 | [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
+| [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--4) | +6 | No bonus profession level; recovers, heals and trains faster. |
 | [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
 
@@ -325,11 +325,11 @@ Attacks that cost you hours.
 - Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest.
 - Not with Early Riser.
 
-### Age: In Their 20s (+3), 30s, 40s (-2) and 50s (-4)
+### Age: In Their 20s (+6), 30s, 40s (-2) and 50s (-4)
 
-Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Younger bodies recover and train faster; older characters start with more skill. The 30s are the game as it is: pick no Age trait and In Their 30s is given at the start. The 20s cost 3 points, the 40s give 2 and the 50s 4. The whole system, with every number, is in [docs/age.md](docs/age.md).
+Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Younger bodies recover and train faster; older characters start with more skill. The 30s are the game as it is: pick no Age trait and In Their 30s is given at the start. The 20s cost 6 points, the 40s give 2 and the 50s 4. The whole system, with every number, is in [docs/age.md](docs/age.md).
 
-- **Profession:** extra levels in the profession's main skill at the start: 0 / 1 / 2 / 3. Every skill tied for the top boost gets them; Fitness and Strength never count; the Unemployed get Maintenance. The creation screen shows them in blue in the Major Skills list.
+- **Profession:** extra levels in the profession's main skill at the start: 0 / 1 / 2 / 3. Every skill tied for the top boost gets them. In the 40s and 50s each other skill the profession boosts gets +1. Fitness and Strength never get any; the Unemployed get Maintenance. The creation screen shows them in blue in the Major Skills list.
 - **Every day (20s / 40s / 50s against the 30s):**
   - Endurance recovery x1.25 / x0.92 / x0.85.
   - Fitness and Strength experience x1.5 / x0.9 / x0.8.

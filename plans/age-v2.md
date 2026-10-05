@@ -6,7 +6,7 @@ is the reasoning. Where the two differ, the code and `docs/age.md` are right.
 
 A note on signs: the costs in this note are the player's points (-3 = the
 player pays 3). The trait script uses the game's sign, the other way round:
-`Cost = 3` for the 20s, `-2` for the 40s, `-4` for the 50s. The first
+`Cost = 6` for the 20s, `-2` for the 40s, `-4` for the 50s. The first
 version's script had the 20s at `Cost = -2` (it gave 2 points) and the 40s at
 `Cost = 1`, the opposite of what "Why" below assumes; the build follows the
 pricing reasoning here.
@@ -205,6 +205,14 @@ In game (checklist, ids `age2-*`):
 6. **20s numbers.** Endurance x1.25, Fitness and Strength XP x1.5, healing
    x1.5, stiffness x1.5.
 
+7. **The 20s cost 6** (the user, later on 2026-10-05, after the stronger
+   numbers): -6 / 0 / +2 / +4.
+8. **Side skills.** The user asked for the age levels to reach every skill in
+   the occupation, and picked: the main skill keeps 0 / 1 / 2 / 3, and every
+   other skill the profession boosts gets +1 in the 40s and 50s. (Considered:
+   sides one step behind the main skill; every skill the full levels; a flat
+   +1 from the 30s.)
+
 ## What the build did differently
 
 - **Fitness and Strength are never the main skill.** Otherwise a 50s Fitness
@@ -225,11 +233,9 @@ In game (checklist, ids `age2-*`):
 
 ## Open questions
 
-1. **The 20s price.** With the stronger 20s numbers, 3 points buys about what
-   Fast Healer (6) and a training bonus would. Raise it?
-2. **Wide ties.** Park Ranger boosts five skills equally, so a 50s Park
+1. **Wide ties.** Park Ranger boosts five skills equally, so a 50s Park
    Ranger starts with +3 in all five. Burglar has three.
-3. **Age-exclusive traits** (a trait only one band can take): possible with
+2. **Age-exclusive traits** (a trait only one band can take): possible with
    the script's exclusions for "not in the 20s" style rules; "only in the
    50s" needs the hidden 30s handled in Lua, since a character who picks no
    age has no trait on the creation screen.

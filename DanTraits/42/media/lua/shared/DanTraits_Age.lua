@@ -7,8 +7,10 @@
 --
 -- Experience: a new character gets extra levels in their profession's main
 -- skill (the one the profession boosts most; every one of them on a tie):
--- 0 / 1 / 2 / 3 by default. Fitness and Strength are never the main skill:
--- age is years of practice, not a better body (a Fitness Instructor's is
+-- 0 / 1 / 2 / 3 by default. In the 40s and 50s every other skill the
+-- profession boosts gets one level too: years on the job teach the whole
+-- trade. Fitness and Strength never get age's levels: age is years of
+-- practice, not a better body (a Fitness Instructor's main skill is
 -- Sprinting). The Unemployed have no main skill and get the levels in
 -- Maintenance. DanTraits_AgeLevels works that out for the spawn code here
 -- and for the creation screen (DanTraits_Client.lua), so the two agree.
@@ -34,7 +36,7 @@
 --
 -- Trait costs are fixed by the script, so age is priced through the Age
 -- traits' own cost and changes what other traits do, never how much they
--- cost: In Their 20s costs 3 points, the 40s give 2 back and the 50s 4.
+-- cost: In Their 20s costs 6 points, the 40s give 2 back and the 50s 4.
 --
 -- Sandbox (page DanTraits): AgeEnabled turns all of this off (the Age traits
 -- are then hidden at character creation, DanTraits_Client.lua),
@@ -51,10 +53,10 @@ local AGE = {
     [20] = { levels = 0, endurance = 1.25, xp = 1.5, heal = 1.5, stiff = 1.5, wakes = 0.8,
              cells = 1.15, concussion = 1.2, hangover = 0.85, dia = -0.05, heart = 0.8, gym = 65 },
     [30] = { levels = 1 },
-    [40] = { levels = 2, endurance = 0.92, xp = 0.9, heal = 0.9, stiff = 0.85, wakes = 1.15,
+    [40] = { levels = 2, side = 1, endurance = 0.92, xp = 0.9, heal = 0.9, stiff = 0.85, wakes = 1.15,
              cells = 0.8, concussion = 0.75, hangover = 1.25, dia = 0.1, heart = 1.25,
              brittle = 1.25, arthritis = 1.3, handy = 1 },
-    [50] = { levels = 3, endurance = 0.85, xp = 0.8, heal = 0.8, stiff = 0.7, wakes = 1.3,
+    [50] = { levels = 3, side = 1, endurance = 0.85, xp = 0.8, heal = 0.8, stiff = 0.7, wakes = 1.3,
              cells = 0.65, concussion = 0.6, hangover = 1.5, dia = 0.2, heart = 1.5,
              brittle = 1.5, arthritis = 1.6, handy = 1 },
 }
@@ -106,11 +108,11 @@ local function bonusLevels(band)
 end
 
 -- the most-boosted skills in a profession's XP boosts (perk -> level, the
--- levels numbers or Java Integers), Fitness and Strength aside:
--- { perk, ... }, empty for no boosts
-local function mainSkills(boosts)
-    local out = {}
-    if not boosts then return out end
+-- levels numbers or Java Integers), Fitness and Strength aside, and the
+-- other skills it boosts: { perk, ... }, { perk, ... }; both empty for no boosts
+local function professionSkills(boosts)
+    local out, rest = {}, {}
+    if not boosts then return out, rest end
     local best = 0
     local levels = {}
     for perk, level in pairs(boosts) do
@@ -121,11 +123,12 @@ local function mainSkills(boosts)
             if n > best then best = n end
         end
     end
-    if best <= 0 then return out end
+    if best <= 0 then return out, rest end
     for _, e in ipairs(levels) do
-        if e.level == best then out[#out + 1] = e.perk end
+        if e.level == best then out[#out + 1] = e.perk
+        elseif e.level > 0 then rest[#rest + 1] = e.perk end
     end
-    return out
+    return out, rest
 end
 
 -- The levels age gives a new character: { perk = levels }.
@@ -139,9 +142,12 @@ function DanTraits_AgeLevels(boosts, band, handy, bonus)
     local info = AGE[band] or AGE[30]
     bonus = tonumber(bonus) or bonusLevels(band)
     if bonus > 0 then
-        local main = mainSkills(boosts)
+        local main, rest = professionSkills(boosts)
         if #main == 0 then main = { Perks.Maintenance } end
         for _, perk in ipairs(main) do out[perk] = bonus end
+        if info.side then
+            for _, perk in ipairs(rest) do out[perk] = info.side end
+        end
     end
     if handy and info.handy then
         out[Perks.Woodwork] = (out[Perks.Woodwork] or 0) + info.handy

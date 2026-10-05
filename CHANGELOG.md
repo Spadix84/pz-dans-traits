@@ -11,11 +11,12 @@ Age used to show only when something rare happened (blood loss, a concussion, a 
 It now sits on the everyday systems. The whole system is written up in `docs/age.md`.
 
 - **In Their 50s (-4)**, a new band: three extra profession levels, and the slowest body.
-- **Prices changed sides.** In Their 20s now costs 3 points (it gave 2) and In Their 40s
+- **Prices changed sides.** In Their 20s now costs 6 points (it gave 2) and In Their 40s
   gives 2 (it cost 1): youth is the advantage in play, age is the trade for skill.
-- **Profession levels** are 0 / 1 / 2 / 3 (the 40s had 1). Fitness and Strength are never
-  the main skill (a Fitness Instructor's is Sprinting). The Unemployed get the levels in
-  Maintenance.
+- **Profession levels** in the main skill are 0 / 1 / 2 / 3 (the 40s had 1), and in the
+  40s and 50s every other skill the profession boosts gets one level too. Fitness and
+  Strength never get age's levels (a Fitness Instructor's main skill is Sprinting). The
+  Unemployed get the levels in Maintenance.
 - **Every day**, by band (20s / 40s / 50s against the 30s): endurance recovery x1.25 /
   x0.92 / x0.85; Fitness and Strength experience x1.5 / x0.9 / x0.8; scratches, cuts and
   unstitched deep wounds heal x1.5 / x0.9 / x0.8; stiffness fades x1.5 / x0.85 / x0.7;
