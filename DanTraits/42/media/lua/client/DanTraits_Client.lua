@@ -401,13 +401,16 @@ local function ageOnlyOf(kind)
 end
 
 local function ageAllows(screen, kind)
+    -- the Age traits themselves: not with Age switched off
+    if ageKeyOf(kind) then return not ageOffAtCreation() end
     local bands = ageOnlyOf(kind)
     if not bands then return true end
     local band = creationAgeBand(screen)
     return band ~= nil and bands[band] == true
 end
 
--- the age changed under a chosen trait: take it back off (its points come back)
+-- the age changed under a chosen trait, or Age was switched off with an Age
+-- trait chosen: take it back off (its points come back)
 local function dropAgeOnly(screen)
     if screen.danTraitsLoadingBuild then return end
     local items = screen.listboxTraitSelected and screen.listboxTraitSelected.items
@@ -415,6 +418,26 @@ local function dropAgeOnly(screen)
     for i = #items, 1, -1 do
         if items[i] and not ageAllows(screen, items[i].item:getType()) then screen:removeTrait(i) end
     end
+end
+
+-- The new game's Age settings can change while the creation screen exists
+-- (back to the sandbox screen, another preset, a different route into
+-- creation), and not every route tells the screen. So it looks each frame it
+-- is drawn: when the Age switch, the default age or a level count is not what
+-- it last saw, the lists are worked out again (which also drops a chosen
+-- trait Age no longer allows). One log line per change says what it read.
+local function watchAgeSettings(screen)
+    if not screen.listboxTrait or not screen.listboxBadTrait then return end
+    local off = ageOffAtCreation()
+    local seen = tostring(off)
+    for _, name in ipairs({ "AgeDefault", "AgeBonus20s", "AgeBonus30s", "AgeBonus40s", "AgeBonus50s" }) do
+        seen = seen .. "/" .. tostring(ageOption(name))
+    end
+    if seen == screen.danTraitsAgeSeen then return end
+    screen.danTraitsAgeSeen = seen
+    print("[DanTraits] character creation: Age is " .. (off and "off" or "on") .. " (off/default/levels: " .. seen .. ")")
+    screen:repopulateTraitLists()
+    screen:checkXPBoost()
 end
 
 local function wrapTraitList()
@@ -470,6 +493,10 @@ local function wrapTraitList()
         local ok, extra = pcall(ageSurchargeTotal, self)
         if ok and type(extra) == "number" then points = points - extra end
         return points
+    end)
+    DanTraits_Wrap(CharacterCreationProfession, "prerender", "creation-age-watch", function(original, self, ...)
+        pcall(watchAgeSettings, self)
+        return original(self, ...)
     end)
     -- vanilla fills the lists once, when the screen is built at boot, before a
     -- new game's sandbox options exist: fill them again each time it is shown
