@@ -11,7 +11,7 @@
     "Sandbox_DanTraitsAgeBonus40s": "Profession Levels (40s)",
     "Sandbox_DanTraitsAgeBonus40s_tooltip": "Extra levels a new character in their 40s gets in their profession's main skill (Maintenance for the Unemployed). Above 0, the profession's other skills get one level each.",
     "Sandbox_DanTraitsAgeBonus50s": "Profession Levels (50s)",
-    "Sandbox_DanTraitsAgeBonus50s_tooltip": "Extra levels a new character in their 50s gets in their profession's main skill (Maintenance for the Unemployed). Above 0, the profession's other skills get one level each.",
+    "Sandbox_DanTraitsAgeBonus50s_tooltip": "Extra levels a new character in their 50s gets in their profession's main skill (Maintenance for the Unemployed). Above 0, the profession's other skills get two levels each.",
     "Sandbox_DanTraitsBloodEnabled": "Blood Loss",
     "Sandbox_DanTraitsBloodEnabled_tooltip": "Bleeding drains blood instead of health: pale, then light-headed, then shock. Blood comes back with water, food and rest.<br>Off: vanilla bleeding.",
     "Sandbox_DanTraitsInfectionEnabled": "Wound Infection",

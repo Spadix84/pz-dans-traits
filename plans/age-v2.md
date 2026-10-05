@@ -209,7 +209,8 @@ In game (checklist, ids `age2-*`):
    numbers): -6 / 0 / +2 / +4.
 8. **Side skills.** The user asked for the age levels to reach every skill in
    the occupation, and picked: the main skill keeps 0 / 1 / 2 / 3, and every
-   other skill the profession boosts gets +1 in the 40s and 50s. (Considered:
+   other skill the profession boosts gets +1 in the 40s and, after seeing how
+   close the 40s and 50s came out, +2 in the 50s. (Considered:
    sides one step behind the main skill; every skill the full levels; a flat
    +1 from the 30s.)
 

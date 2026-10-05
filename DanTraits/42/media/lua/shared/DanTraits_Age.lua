@@ -7,8 +7,8 @@
 --
 -- Experience: a new character gets extra levels in their profession's main
 -- skill (the one the profession boosts most; every one of them on a tie):
--- 0 / 1 / 2 / 3 by default. In the 40s and 50s every other skill the
--- profession boosts gets one level too: years on the job teach the whole
+-- 0 / 1 / 2 / 3 by default. Every other skill the profession boosts gets
+-- one level in the 40s and two in the 50s: years on the job teach the whole
 -- trade. Fitness and Strength never get age's levels: age is years of
 -- practice, not a better body (a Fitness Instructor's main skill is
 -- Sprinting). The Unemployed have no main skill and get the levels in
@@ -56,7 +56,7 @@ local AGE = {
     [40] = { levels = 2, side = 1, endurance = 0.92, xp = 0.9, heal = 0.9, stiff = 0.85, wakes = 1.15,
              cells = 0.8, concussion = 0.75, hangover = 1.25, dia = 0.1, heart = 1.25,
              brittle = 1.25, arthritis = 1.3, handy = 1 },
-    [50] = { levels = 3, side = 1, endurance = 0.85, xp = 0.8, heal = 0.8, stiff = 0.7, wakes = 1.3,
+    [50] = { levels = 3, side = 2, endurance = 0.85, xp = 0.8, heal = 0.8, stiff = 0.7, wakes = 1.3,
              cells = 0.65, concussion = 0.6, hangover = 1.5, dia = 0.2, heart = 1.5,
              brittle = 1.5, arthritis = 1.6, handy = 1 },
 }

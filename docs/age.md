@@ -15,7 +15,7 @@ train faster; older characters start with more skill and recover slower. The
 | Points | costs 6 | free | gives 2 | gives 4 |
 | Where it shows at creation | positive traits | hidden (the default) | negative traits | negative traits |
 | Main skill | +0 | +1 | +2 | +3 |
-| Each other profession skill | +0 | +0 | +1 | +1 |
+| Each other profession skill | +0 | +0 | +1 | +2 |
 
 Points are fixed by the trait script (`Cost = 6 / 0 / -2 / -4`). Age never
 changes what another trait costs; it changes what the trait does.
@@ -34,14 +34,14 @@ changes what another trait costs; it changes what the trait does.
 ## Profession levels
 
 A new character gets extra levels in their profession's **main skill**: the
-skill the profession boosts most. In the 40s and 50s, every **other skill the
-profession boosts** gets one level as well: years on the job teach the whole
-trade, not only the speciality.
+skill the profession boosts most. Every **other skill the profession boosts**
+gets one level in the 40s and two in the 50s: years on the job teach the
+whole trade, not only the speciality.
 
 | Example | 30s | 40s | 50s |
 |---|---|---|---|
-| Carpenter | Carpentry +1 | Carpentry +2; Carving, Short Blunt, Masonry, Maintenance +1 | Carpentry +3; the other four +1 |
-| Doctor | First Aid +1 | First Aid +2; Short Blade +1 | First Aid +3; Short Blade +1 |
+| Carpenter | Carpentry +1 | Carpentry +2; Carving, Short Blunt, Masonry, Maintenance +1 | Carpentry +3; the other four +2 |
+| Doctor | First Aid +1 | First Aid +2; Short Blade +1 | First Aid +3; Short Blade +2 |
 | Electrician | Electrical +1 | Electrical +2 | Electrical +3 |
 | Veteran | Aiming, Reloading +1 | both +2 | both +3 |
 
@@ -154,8 +154,8 @@ There is no separate switch for the everyday effects.
 - Prices swapped sides. Before, In Their 20s gave 2 points and In Their 40s
   cost 1. Now the 20s cost 6 and the 40s give 2, because youth is the
   advantage in play and age is the trade for skill.
-- The 40s get two main-skill levels, not one, and the 40s and 50s get a
-  level in each of the profession's other skills.
+- The 40s get two main-skill levels, not one, and the profession's other
+  skills get one level each in the 40s and two in the 50s.
 - Fitness and Strength no longer get age's levels, and the
   Unemployed get Maintenance.
 - Everyone carries an Age trait.

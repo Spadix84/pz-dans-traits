@@ -13,8 +13,8 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
 - **In Their 50s (-4)**, a new band: three extra profession levels, and the slowest body.
 - **Prices changed sides.** In Their 20s now costs 6 points (it gave 2) and In Their 40s
   gives 2 (it cost 1): youth is the advantage in play, age is the trade for skill.
-- **Profession levels** in the main skill are 0 / 1 / 2 / 3 (the 40s had 1), and in the
-  40s and 50s every other skill the profession boosts gets one level too. Fitness and
+- **Profession levels** in the main skill are 0 / 1 / 2 / 3 (the 40s had 1), and every
+  other skill the profession boosts gets one level in the 40s and two in the 50s. Fitness and
   Strength never get age's levels (a Fitness Instructor's main skill is Sprinting). The
   Unemployed get the levels in Maintenance.
 - **Every day**, by band (20s / 40s / 50s against the 30s): endurance recovery x1.25 /
