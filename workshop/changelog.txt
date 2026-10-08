@@ -33,6 +33,7 @@
 [*]The Pill Caddy's tab showed your whole carried weight ("12.3 / 1") while it hung on the belt, and Organized did not give it the second slot.
 [*]In Their 20s did not hide Arthritis or Handy if the age was picked first. Exclusions now work in either order, for every trait.
 [*]A drink no longer shows the Antidepressants moodle on a character without Major Depressive Disorder (the game gives a hidden antidepressant dose with every sip; the mod now undoes it like the beta-blocker and painkiller ones).
+[*]Turning Concussion or Wound Care off mid-save now stands them down (the moodle, the tier, rough stitches) instead of leaving stale effects on, as Blood Loss and Infection already did.
 [/list]
 
 [h1]1.1.0: Multiple Sclerosis, medication, and the Reddit round[/h1]

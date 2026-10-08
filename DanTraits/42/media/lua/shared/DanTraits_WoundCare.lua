@@ -152,9 +152,9 @@ local function recFor(player, part)
     return parts and parts[tostring(part:getType())] or nil
 end
 
--- stitched roughly, and not yet sound (Infection reads this)
+-- stitched roughly, and not yet sound (Infection reads this); false while the option is off
 function DanTraits_PoorStitches(player, part)
-    if not player or not part then return false end
+    if not player or not part or not sandboxOn() then return false end
     local ok, rec = pcall(recFor, player, part)
     return ok and rec ~= nil and rec.poorStitch == true and num(part, "getStitchTime") > 0
 end
@@ -312,8 +312,21 @@ local function updatePart(player, d, part, name, wet, summary)
     if rec and not rec.deep and not rec.badSet and not rec.poorStitch then d.wcParts[name] = nil end
 end
 
+-- switched off mid-game (sandbox, a server admin): stand down once. The
+-- records go (a rough stitch or a bad set is the mod's own judgement, and
+-- DanTraits_PoorStitches must stop saying true), and so does the bandage
+-- life remembered from last minute, so vanilla's own drain is no longer put
+-- back. Nothing on the body is changed.
+local function standDown(player, d)
+    moved = false
+    if not d then return end
+    if d.wcParts or d.wcLife or d.wcSummary or d.wcMoved then
+        d.wcParts, d.wcLife, d.wcSummary, d.wcMoved = nil, nil, nil, nil
+    end
+end
+
 local function updateWoundMinute(player, d)
-    if not sandboxOn() then return end
+    if not sandboxOn() then standDown(player, d) return end
     d = wcData(player)
     d.wcLife = d.wcLife or {}
     local wet = wetness(player)

@@ -130,6 +130,14 @@ Fear of Blood) did not, so the black covered the pause menu as well and Escape d
 you could see. The fade is now drawn before the UI, as in sleep: the menu, the inventory
 and the moodles show over the black.
 
+### Fixed: Concussion and Wound Care did not stand down when switched off mid-save
+
+Turning either option off in a running save left its effects on: the Concussion moodle and
+tier stayed, and Migraines, Epilepsy and Hallucinations went on reading the concussion;
+Wound Care's rough-stitch records kept telling Infection the stitches were rough. Both now
+stand down the next minute, as Blood Loss and Infection already did (2026-10-08). The
+concussion score and the headache to come are kept and resume if it is switched back on.
+
 ### Pill Caddy: the right weight, easier to find, sometimes full
 
 - **Fixed: on the belt, the caddy's tab showed the whole carried weight** ("12.3 / 1").

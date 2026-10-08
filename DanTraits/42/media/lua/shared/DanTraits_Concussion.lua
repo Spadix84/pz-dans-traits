@@ -99,8 +99,9 @@ local function sandboxOn() return DanTraits_SandboxOn("ConcussionEnabled") end
 local roll = DanTraits_Roll
 local randRange = DanTraits_RandRange
 
--- 0..1, for other systems (Migraines, the health panel)
+-- 0..1, for other systems (Migraines, the health panel); 0 while the option is off
 function DanTraits_ConcussionStrength(player)
+    if not sandboxOn() then return 0 end
     local d = player and player:getModData().DanTraits
     return (d and d.ccScore) or 0
 end
@@ -216,7 +217,9 @@ local function onConcussionSwing(character)
     if player and character == player then fought = true end
 end
 
+local moodleShown = false   -- whether the moodle was last set above nothing
 local function updateMoodle(player, s)
+    moodleShown = s > 0
     DanTraits_BadMoodle(player, "Concussion", s, CC_TIER)
 end
 
@@ -237,6 +240,7 @@ local function lateStrength(late)
     return lateShape(late) * (late and late.s or 0)
 end
 DanTraits_ConcussionLateStrength = function(player)
+    if not sandboxOn() then return 0 end
     local d = player and player:getModData().DanTraits
     return lateStrength(d and d.ccLate)
 end
@@ -266,8 +270,19 @@ local function updateLate(player, d, asleep)
     return shape * (late.s or 0)
 end
 
+-- switched off mid-game (sandbox, a server admin): stand down once, so the
+-- tier and the moodle do not stay on (the strength getters above already
+-- read 0, so Migraines, Epilepsy and Hallucinations stop feeling it). The
+-- score and the headache to come are kept and it all resumes if it is
+-- switched back on.
+local function standDown(player, d)
+    ran, fought = false, false
+    if d and (d.ccTier or 0) > 0 then d.ccTier = 0 end
+    if moodleShown then updateMoodle(player, 0) end
+end
+
 local function updateConcussionMinute(player, d)
-    if not sandboxOn() then return end
+    if not sandboxOn() then standDown(player, d) return end
     local strained = ran or fought
     ran, fought = false, false
     local lateNow = updateLate(player, d, DanTraits_Asleep(player))
