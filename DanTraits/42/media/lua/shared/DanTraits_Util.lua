@@ -391,7 +391,10 @@ function DanTraits_DeltaHook(stat, name, cadence, access)
         return player:getStats():get(stat)
     end
     return DanTraits_Every(cadence, "Delta:" .. name, function(player, d)
-        local now = tonumber(read(player))
+        -- the read is a game-object call (a stat, the body's catch-a-cold), so it is
+        -- guarded like the write below; nothing to read, nothing to do
+        local okR, now = pcall(read, player)
+        now = okR and tonumber(now) or nil
         if not now then return end
         d.deltaLast = d.deltaLast or {}
         local last = d.deltaLast[name]

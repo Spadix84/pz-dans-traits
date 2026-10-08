@@ -12,6 +12,14 @@
 -- unless the player actually has it, so an unaffected character costs a
 -- handful of lookups.
 --
+-- Every place core runs another file's function (a clock system, a value
+-- hook, a Later job, an eat or refuse reader, a story listener, a moodle
+-- spec) goes through DanTraits_Guard(tag, fn, ...): a pcall that logs the
+-- first failure per tag and is then quiet, so a typo cannot fail silently
+-- every minute. With DanTraits_STRICT set (the offline tests set it) the
+-- error is raised instead, so a broken hook fails the test rather than
+-- leaving the value it should have adjusted alone.
+--
 -- The small copy-and-paste helpers (clamp, floor a stat, dice, body-part
 -- lookups, the asleep check, the sandbox toggle, the Moodle Framework updater)
 -- and the stat delta pipeline live in DanTraits_Util.lua, required below; the
@@ -52,6 +60,22 @@ local function hasTrait(player, key)
     return ok and res == true
 end
 
+-- The one guarded call. Returns what pcall returns (ok, result). The first
+-- failure under each tag is printed; later ones are quiet. Under
+-- DanTraits_STRICT (the offline tests) the error is raised again instead.
+local guardFailed = {}
+function DanTraits_Guard(tag, fn, ...)
+    local ok, res = pcall(fn, ...)
+    if not ok then
+        if not guardFailed[tag] then
+            guardFailed[tag] = true
+            print("[DanTraits] " .. tostring(tag) .. " failed: " .. tostring(res))
+        end
+        if DanTraits_STRICT then error(tostring(tag) .. " failed: " .. tostring(res), 0) end
+    end
+    return ok, res
+end
+
 -- Story events: every notice is also published as the Lua event
 --   OnStoryEvent(player, { source, kind, text, tone })
 -- so a diary (PZ Chronicle), the dashboard, or any other mod can tell the
@@ -66,9 +90,7 @@ end)
 
 function DanTraits_Story(player, kind, text, tone)
     if not player or not triggerEvent then return end
-    pcall(function()
-        triggerEvent(STORY_EVENT, player, { source = "DanTraits", kind = kind, text = text, tone = tone or "bad" })
-    end)
+    DanTraits_Guard("story", triggerEvent, STORY_EVENT, player, { source = "DanTraits", kind = kind, text = text, tone = tone or "bad" })
 end
 
 -- How long a notice stays over the head. The game keeps one halo display
@@ -249,7 +271,8 @@ end
 
 -- Value hooks: a system (Vitality, mostly) offers a value, every file that
 -- registered for that name gets to adjust it, in load order. A hook returns
--- the new value or nil to leave it. Errors in a hook are swallowed.
+-- the new value or nil to leave it. A hook that errors is logged once
+-- (DanTraits_Guard) and leaves the value alone.
 DanTraits_Hooks = DanTraits_Hooks or {}
 function DanTraits_AddHook(name, fn)
     local list = DanTraits_Hooks[name] or {}
@@ -259,17 +282,18 @@ end
 function DanTraits_RunHooks(name, value, ...)
     local list = DanTraits_Hooks[name]
     if not list then return value end
-    for _, fn in ipairs(list) do
-        local ok, res = pcall(fn, value, ...)
+    for i, fn in ipairs(list) do
+        local ok, res = DanTraits_Guard("hook:" .. name .. "#" .. i, fn, value, ...)
         if ok and res ~= nil then value = res end
     end
     return value
 end
 
 -- Tiny frame scheduler shared by the traits: run fn after that many frames.
+-- tag (optional) names the job in the log when it fails.
 local laterPending = {}
-function DanTraits_Later(frames, fn)
-    laterPending[#laterPending + 1] = { frames = frames, fn = fn }
+function DanTraits_Later(frames, fn, tag)
+    laterPending[#laterPending + 1] = { frames = frames, fn = fn, tag = tag }
 end
 local function laterOnTick()
     if #laterPending == 0 then return end
@@ -278,7 +302,7 @@ local function laterOnTick()
         job.frames = job.frames - 1
         if job.frames <= 0 then
             table.remove(laterPending, i)
-            pcall(job.fn)
+            DanTraits_Guard(job.tag or "later", job.fn)
         end
     end
 end
@@ -318,7 +342,7 @@ end
 -- Core registers the only three handlers. Each does the preamble once (the
 -- local player, dead check; the frame one also skips non-local players), then
 -- runs every registration in order through DanTraits_Track(label, ...) inside
--- pcall, so one system's error is logged once and never stops the next.
+-- DanTraits_Guard, so one system's error is logged once and never stops the next.
 -- Order decides which system sees which other system's floors and stat writes
 -- in the same minute, so it is written down here:
 --
@@ -355,7 +379,6 @@ end
 --   are still registered by their own files.)
 local drivers = { minute = {}, ten = {}, frame = {} }
 DanTraits_Drivers = drivers      -- read-only view for the tests and the dashboard
-local driverFailed = {}
 
 function DanTraits_Every(cadence, label, fn, order)
     local list = drivers[cadence]
@@ -372,14 +395,7 @@ local function runDrivers(list, player, d)
     local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
     for i = 1, #list do
         local entry = list[i]
-        local ok, err = pcall(track, entry.label, entry.fn, player, d)
-        if not ok then
-            local key = entry.cadence .. ":" .. entry.label
-            if not driverFailed[key] then
-                driverFailed[key] = true
-                print("[DanTraits] " .. entry.label .. " (" .. entry.cadence .. ") failed: " .. tostring(err))
-            end
-        end
+        DanTraits_Guard(entry.label .. " (" .. entry.cadence .. ")", track, entry.label, entry.fn, player, d)
     end
 end
 
@@ -413,16 +429,16 @@ DanTraits_Every("minute", "PainFloor", DanTraits_ApplyPainFloors, 95)
 
 -- Called by the eat action wrapper below with the portion actually eaten.
 -- Each trait that cares hooks in through a global (the trait files load
--- after this one, so every call is guarded). Returns the gluten result so
--- the offline tests can see it.
+-- after this one, so every call is guarded; never throws). Returns the
+-- gluten result so the offline tests can see it.
 function DanTraits_OnEat(player, item, fraction)
     if not player or not item then return false end
-    if DanTraits_MddOnEat then pcall(function() DanTraits_MddOnEat(player, item) end) end
-    if DanTraits_DiaOnEat then pcall(function() DanTraits_DiaOnEat(player, item, fraction) end) end
-    if DanTraits_VitalityOnEat then pcall(function() DanTraits_VitalityOnEat(player, item, fraction) end) end
+    if DanTraits_MddOnEat then DanTraits_Guard("eat:MDD", DanTraits_MddOnEat, player, item) end
+    if DanTraits_DiaOnEat then DanTraits_Guard("eat:Diabetes", DanTraits_DiaOnEat, player, item, fraction) end
+    if DanTraits_VitalityOnEat then DanTraits_Guard("eat:Vitality", DanTraits_VitalityOnEat, player, item, fraction) end
     DanTraits_RunHooks("eat", nil, player, item, fraction)
     if not DanTraits_GlutenOnEat then return false end
-    local ok, res = pcall(DanTraits_GlutenOnEat, player, item, fraction)
+    local ok, res = DanTraits_Guard("eat:Gluten", DanTraits_GlutenOnEat, player, item, fraction)
     return ok and res == true
 end
 
@@ -433,7 +449,7 @@ local function wrapEatAction()
     -- the reason (a text key) this character will not eat it, or nil
     local function refused(action)
         if not DanTraits_RefuseReason then return nil end
-        local ok, res = pcall(DanTraits_RefuseReason, action.character, action.item)
+        local ok, res = DanTraits_Guard("refuse", DanTraits_RefuseReason, action.character, action.item)
         if ok and type(res) == "string" then return res end
         return nil
     end
@@ -452,16 +468,14 @@ local function wrapEatAction()
     end
     DanTraits_Wrap(ISEatFoodAction, "complete", "core-eat", function(original, self, ...)
         if refused(self) then return true end
-        pcall(function() DanTraits_OnEat(self.character, self.item, self.percentage or 1) end)
+        DanTraits_OnEat(self.character, self.item, tonumber(self.percentage) or 1)
         return original(self, ...)
     end)
     DanTraits_Wrap(ISEatFoodAction, "eat", "core-eat", function(original, self, food, percentage, ...)
         if refused(self) then return end
-        pcall(function()
-            local progress = percentage or 0
-            if progress > 0.95 then progress = 1 end
-            DanTraits_OnEat(self.character, self.item, (self.percentage or 1) * progress)
-        end)
+        local progress = tonumber(percentage) or 0
+        if progress > 0.95 then progress = 1 end
+        DanTraits_OnEat(self.character, self.item, (tonumber(self.percentage) or 1) * progress)
         return original(self, food, percentage, ...)
     end)
 end
@@ -471,19 +485,22 @@ Events.OnGameStart.Add(wrapEatAction)
 -- Antidepressants go through the pill action. The vanilla effect is applied
 -- inside complete() (JustTookPill), so it is cancelled straight after.
 local function wrapPillAction()
+    -- the item's type, as the hooks are keyed on it ("PillsAntiDep"); nil without an item
+    local function pillKind(action)
+        local kind = nil
+        pcall(function() if action.item then kind = tostring(action.item:getType()) end end)
+        return kind
+    end
     DanTraits_Wrap(ISTakePillAction, "complete", "core-pill", function(original, self, ...)
+        local kind = pillKind(self)
         -- before the vanilla effect, for anything that wants the state it acts on
         -- (cigarettes from a pack and chewing tobacco also come through here)
-        pcall(function()
-            if self.item then DanTraits_RunHooks("prePill", nil, self.character, tostring(self.item:getType()), self.item) end
-        end)
+        if kind then DanTraits_RunHooks("prePill", nil, self.character, kind, self.item) end
         local result = original(self, ...)
-        pcall(function()
-            if not self.item then return end
-            local kind = tostring(self.item:getType())
-            if kind == "PillsAntiDep" and DanTraits_MddOnPill then DanTraits_MddOnPill(self.character) end
+        if kind then
+            if kind == "PillsAntiDep" and DanTraits_MddOnPill then DanTraits_Guard("pill:MDD", DanTraits_MddOnPill, self.character) end
             DanTraits_RunHooks("pill", nil, self.character, kind)
-        end)
+        end
         return result
     end)
 end

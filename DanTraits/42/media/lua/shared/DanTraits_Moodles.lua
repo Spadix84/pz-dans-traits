@@ -182,12 +182,12 @@ local SPECS = {
 DanTraits_MoodleNames = {}
 for i, spec in ipairs(SPECS) do DanTraits_MoodleNames[i] = spec.name end
 
--- every level now, by name; a spec that fails shows nothing
+-- every level now, by name; a spec that fails shows nothing (and is logged once, DanTraits_Guard)
 function DanTraits_MoodleLevels(player, d)
     local levels = {}
     d = d or {}
     for _, spec in ipairs(SPECS) do
-        local ok, level = pcall(spec.level, player, d)
+        local ok, level = DanTraits_Guard("moodle:" .. spec.name, spec.level, player, d)
         levels[spec.name] = ok and tonumber(level) or 0
     end
     return levels
