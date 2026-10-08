@@ -152,18 +152,16 @@ local function updateHangoverMinute(player, d)
     d.hoFelt = s
     updateMoodle(player, s)
     if s <= 0 then return end
-    pcall(function()
-        local pain = HO_PAIN
-        if DanTraits_InBrightLight and DanTraits_InBrightLight(player) then pain = pain + HO_LIGHT_PAIN end
-        DanTraits_PainFloor(player, d, "hangover", pain * s, HO_MOOD_RAMP)
-        floorUp(stats, CharacterStat.UNHAPPINESS, HO_MOOD * s, HO_MOOD_RAMP)
-        DanTraits_StatAdd(stats, CharacterStat.FATIGUE, HO_FATIGUE * s)
-        DanTraits_StatAdd(stats, CharacterStat.THIRST, HO_THIRST * s)
-        DanTraits_StatAdd(stats, CharacterStat.STRESS, HO_STRESS * s)
-        if d.hoSeverity >= HO_SICK_FROM then
-            floorUp(stats, CharacterStat.FOOD_SICKNESS, HO_SICK * s, HO_MOOD_RAMP)
-        end
-    end)
+    local pain = HO_PAIN
+    if DanTraits_InBrightLight and DanTraits_InBrightLight(player) then pain = pain + HO_LIGHT_PAIN end
+    DanTraits_PainFloor(player, d, "hangover", pain * s, HO_MOOD_RAMP)
+    floorUp(stats, CharacterStat.UNHAPPINESS, HO_MOOD * s, HO_MOOD_RAMP)
+    DanTraits_StatAdd(stats, CharacterStat.FATIGUE, HO_FATIGUE * s)
+    DanTraits_StatAdd(stats, CharacterStat.THIRST, HO_THIRST * s)
+    DanTraits_StatAdd(stats, CharacterStat.STRESS, HO_STRESS * s)
+    if d.hoSeverity >= HO_SICK_FROM then
+        floorUp(stats, CharacterStat.FOOD_SICKNESS, HO_SICK * s, HO_MOOD_RAMP)
+    end
 end
 
 -- the night's sleep is worse for it

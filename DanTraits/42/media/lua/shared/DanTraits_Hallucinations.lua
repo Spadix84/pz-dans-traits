@@ -94,7 +94,7 @@ local function offsetFromPlayer(player, minDist, spread)
 end
 
 local function addPanic(player, amount)
-    pcall(function() DanTraits_StatAdd(player:getStats(), CharacterStat.PANIC, amount) end)
+    DanTraits_StatAdd(player:getStats(), CharacterStat.PANIC, amount)
 end
 
 local function isNight()

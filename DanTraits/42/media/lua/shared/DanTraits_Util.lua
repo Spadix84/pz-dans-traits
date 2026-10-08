@@ -14,7 +14,9 @@
 --   DanTraits_FloorUp(stats, stat, floor, ramp)
 --                                          raise the stat toward floor by at
 --                                          most ramp; never above floor or the
---                                          stat's maximum. When the stat has a
+--                                          stat's maximum (read and write in
+--                                          pcall: nothing happens when the stat
+--                                          cannot be read). When the stat has a
 --                                          delta hook (below) and the floor did
 --                                          raise it, records
 --                                          d.floorsThisMinute[hookName] = true
@@ -101,11 +103,13 @@ end
 DanTraits_DeltaKeys = {}
 
 function DanTraits_FloorUp(stats, stat, floor, ramp)
-    local value = stats:get(stat) or 0
+    local okV, value = pcall(function() return stats:get(stat) end)
+    if not okV then return end
+    value = tonumber(value) or 0
     floor = math.min(floor, DanTraits_StatMax(stat))
     if value < floor then
-        stats:set(stat, math.min(floor, value + ramp))
-        local key = DanTraits_DeltaKeys[stat]
+        local okS = pcall(function() stats:set(stat, math.min(floor, value + ramp)) end)
+        local key = okS and DanTraits_DeltaKeys[stat]
         if key then
             pcall(function()
                 local d = DanTraits_Data(getSpecificPlayer(0))

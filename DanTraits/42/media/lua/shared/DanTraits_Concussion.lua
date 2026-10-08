@@ -224,9 +224,7 @@ local function updateMoodle(player, s)
 end
 
 local function inBright(player)
-    if not DanTraits_InBrightLight then return false end
-    local ok, res = pcall(DanTraits_InBrightLight, player)
-    return ok and res == true
+    return DanTraits_InBrightLight ~= nil and DanTraits_InBrightLight(player) == true
 end
 
 -- 0..1 where the headache that came back is in its course: building, at its worst, fading
@@ -314,12 +312,10 @@ local function updateConcussionMinute(player, d)
     DanTraits_HeadPainAtLeast(player, pain)
     local stats = player:getStats()
     if s >= CC_MODERATE then
-        pcall(function()
-            -- straight to the floor (a ramp as wide as the stat), recorded as a mod floor
-            local stat = CharacterStat.FOOD_SICKNESS
-            local max = DanTraits_StatMax(stat)
-            DanTraits_FloorUp(stats, stat, CC_SICK * s * max, max)
-        end)
+        -- straight to the floor (a ramp as wide as the stat), recorded as a mod floor
+        local stat = CharacterStat.FOOD_SICKNESS
+        local max = DanTraits_StatMax(stat)
+        DanTraits_FloorUp(stats, stat, CC_SICK * s * max, max)
         if strained and not asleep and roll(CC_DIZZY * s) then
             if DanTraits_Collapse then DanTraits_Collapse(player) end
             notify(player, "UI_DanTraits_ConcussionDizzy")

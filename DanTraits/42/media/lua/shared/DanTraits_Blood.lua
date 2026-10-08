@@ -141,8 +141,8 @@ local function partRate(part, player)
     pcall(function() name = tostring(part:getType()) end)
     local open = BL_RATE * t / 10 * (BL_PART[name] or 1)
     if player and DanTraits_ClotFactor then
-        local ok, clot = pcall(DanTraits_ClotFactor, player, part)
-        if ok and tonumber(clot) then open = open * clot end
+        local clot = tonumber(DanTraits_ClotFactor(player, part))
+        if clot then open = open * clot end
     end
     local rate = open
     local bandaged = partIs(part, "bandaged")
@@ -242,10 +242,8 @@ local function updateBloodMinute(player, d)
 
     if tier >= 2 and not asleep then
         -- straight to the floor (a ramp as wide as the stat)
-        pcall(function()
-            local panic = CharacterStat.PANIC
-            DanTraits_FloorUp(stats, panic, BL_PANIC[tier] * DanTraits_StatMax(panic), math.huge)
-        end)
+        local panic = CharacterStat.PANIC
+        DanTraits_FloorUp(stats, panic, BL_PANIC[tier] * DanTraits_StatMax(panic), math.huge)
     end
     -- fainting spells in shock (DanTraits_Faint.lua)
     if (d.bloodFaintGap or 0) > 0 then d.bloodFaintGap = d.bloodFaintGap - 1 end

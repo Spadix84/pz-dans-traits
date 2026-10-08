@@ -303,22 +303,32 @@ local function sleepLit(player)
     return lit
 end
 
--- each trigger's share of the chance right now, before the character's weights (percent per ten minutes)
+-- a stat as 0..1 (the game's read is the only call that can fail: 0 then)
+local function statOf(player, stat)
+    local value = 0
+    pcall(function() value = player:getStats():get(stat) or 0 end)
+    return clamp01(tonumber(value) or 0)
+end
+
+-- another system's 0..1, when that system is loaded (its getters never throw)
+local function strengthOf(getter, player)
+    if not getter then return 0 end
+    return clamp01(tonumber(getter(player)) or 0)
+end
+
+-- each trigger's share of the chance right now, before the character's weights (percent per ten minutes).
+-- Each trigger is read on its own, so one that cannot be read leaves the others standing.
 local function migraineParts(player)
     local parts = {}
-    pcall(function()
-        local stats = player:getStats()
-        local debt = DanTraits_SleepDebt and DanTraits_SleepDebt(player) or 0
-        parts.sleep = MIG_SLEEP_DEBT * clamp01(debt)
-        local thirst = stats:get(CharacterStat.THIRST) or 0
-        if thirst > MIG_THIRST_FROM then parts.thirst = MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
-        parts.stress = MIG_STRESS * clamp01(stats:get(CharacterStat.STRESS) or 0)
-        if DanTraits_HangoverStrength then parts.hangover = MIG_HANGOVER * clamp01(DanTraits_HangoverStrength(player)) end
-        if DanTraits_NicotineWithdrawal then parts.nicotine = MIG_NICOTINE * clamp01(DanTraits_NicotineWithdrawal(player)) end
-        if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * clamp01(DanTraits_ConcussionStrength(player)) end
-        if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * clamp01(DanTraits_CaffeineWithdrawalOf(player)) end
-        if DanTraits_InfectionFever then parts.fever = MIG_FEVER * clamp01(DanTraits_InfectionFever(player)) end
-    end)
+    parts.sleep = MIG_SLEEP_DEBT * strengthOf(DanTraits_SleepDebt, player)
+    local thirst = statOf(player, CharacterStat.THIRST)
+    if thirst > MIG_THIRST_FROM then parts.thirst = MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
+    parts.stress = MIG_STRESS * statOf(player, CharacterStat.STRESS)
+    if DanTraits_HangoverStrength then parts.hangover = MIG_HANGOVER * strengthOf(DanTraits_HangoverStrength, player) end
+    if DanTraits_NicotineWithdrawal then parts.nicotine = MIG_NICOTINE * strengthOf(DanTraits_NicotineWithdrawal, player) end
+    if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * strengthOf(DanTraits_ConcussionStrength, player) end
+    if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * strengthOf(DanTraits_CaffeineWithdrawalOf, player) end
+    if DanTraits_InfectionFever then parts.fever = MIG_FEVER * strengthOf(DanTraits_InfectionFever, player) end
     parts.light = MIG_SLEEP_LIGHT * sleepLit(player) + (inBrightLight(player) and MIG_LIGHT or 0)
     parts.heat = MIG_HEAT * heatOf(player)
     if DanTraits_CorpsesNearby then parts.corpses = MIG_CORPSE * math.min(MIG_CORPSE_MAX, DanTraits_CorpsesNearby(player, MIG_CORPSE_TILES)) end

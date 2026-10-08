@@ -149,14 +149,17 @@ end
 local function recFor(player, part)
     local d = player:getModData().DanTraits
     local parts = d and d.wcParts
-    return parts and parts[tostring(part:getType())] or nil
+    if not parts then return nil end
+    local name = ""
+    pcall(function() name = tostring(part:getType()) end)
+    return parts[name]
 end
 
 -- stitched roughly, and not yet sound (Infection reads this); false while the option is off
 function DanTraits_PoorStitches(player, part)
     if not player or not part or not sandboxOn() then return false end
-    local ok, rec = pcall(recFor, player, part)
-    return ok and rec ~= nil and rec.poorStitch == true and num(part, "getStitchTime") > 0
+    local rec = recFor(player, part)
+    return rec ~= nil and rec.poorStitch == true and num(part, "getStitchTime") > 0
 end
 
 -- one bout of strain on a part: a swing (chances per swing) or a minute on
@@ -242,8 +245,8 @@ local function updatePart(player, d, part, name, wet, summary)
         if life > 0 then
             local loss = WC_AGE_H / 60 * (1 + WC_WET * wet)
             if DanTraits_BloodPartRate then
-                local okR, rate = pcall(DanTraits_BloodPartRate, part, player)
-                if okR and rate then loss = loss + rate * 100 * WC_SOAK end
+                local rate = DanTraits_BloodPartRate(part, player)
+                if rate then loss = loss + rate * 100 * WC_SOAK end
             end
             life = math.max(0, life - loss)
             pcall(function() part:setBandageLife(life) end)

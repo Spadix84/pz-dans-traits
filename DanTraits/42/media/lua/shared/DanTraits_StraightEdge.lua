@@ -27,8 +27,7 @@ local function tobacco(item)
     if not DanTraits_NicotineOf then return false end
     local kind = ""
     pcall(function() kind = item:getType() end)
-    local ok, dose = pcall(DanTraits_NicotineOf, kind, item)
-    return ok and dose ~= nil
+    return DanTraits_NicotineOf(kind, item) ~= nil
 end
 
 -- the text key for refusing this item, or nil

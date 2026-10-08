@@ -332,11 +332,9 @@ local function updateVitalityMinute(player, d)
     local debt = d.vitSleepDebt or 0
     updateDebtMoodle(player, debt)
     if debt > 0 and not asleep then
-        pcall(function()
-            DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, VIT_DEBT_MOOD_FLOOR * debt, VIT_MOOD_RAMP)
-            DanTraits_StatAdd(stats, CharacterStat.STRESS, VIT_DEBT_STRESS * debt)
-            DanTraits_StatAdd(stats, CharacterStat.FATIGUE, VIT_DEBT_FATIGUE * debt)
-        end)
+        DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, VIT_DEBT_MOOD_FLOOR * debt, VIT_MOOD_RAMP)
+        DanTraits_StatAdd(stats, CharacterStat.STRESS, VIT_DEBT_STRESS * debt)
+        DanTraits_StatAdd(stats, CharacterStat.FATIGUE, VIT_DEBT_FATIGUE * debt)
     end
 
     -- combine, slowly
@@ -380,14 +378,12 @@ local function updateVitalityMinute(player, d)
         if kg ~= applied then player:setMaxWeightBase(base + kg) end
         d.vitCarryKg = kg
     end)
-    pcall(function()
-        if e > 0 then
-            DanTraits_StatAdd(stats, CharacterStat.UNHAPPINESS, -VIT_MOOD_LIFT * e)
-            DanTraits_StatAdd(stats, CharacterStat.STRESS, -VIT_STRESS_LIFT * e)
-        elseif e < 0 then
-            DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, VIT_MOOD_FLOOR * -e, VIT_MOOD_RAMP)
-        end
-    end)
+    if e > 0 then
+        DanTraits_StatAdd(stats, CharacterStat.UNHAPPINESS, -VIT_MOOD_LIFT * e)
+        DanTraits_StatAdd(stats, CharacterStat.STRESS, -VIT_STRESS_LIFT * e)
+    elseif e < 0 then
+        DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, VIT_MOOD_FLOOR * -e, VIT_MOOD_RAMP)
+    end
     pcall(function()
         local bd = player:getBodyDamage()
         if e > 0 and bd:getOverallBodyHealth() < 100 then bd:AddGeneralHealth(VIT_HEALTH_REGEN * e) end

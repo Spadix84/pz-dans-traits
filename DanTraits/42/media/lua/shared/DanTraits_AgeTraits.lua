@@ -457,8 +457,8 @@ end)
 -- Delicate Stomach ---------------------------------------------------------------
 DanTraits_AddHook("eat", function(_, player, item, fraction)
     if not hasTrait(player, "delicatestomach") or not DanTraits_GradeFood then return nil end
-    local ok, grade, why = pcall(DanTraits_GradeFood, item)
-    if not ok or tostring(why) ~= "junk" then return nil end
+    local grade, why = DanTraits_GradeFood(item)
+    if tostring(why) ~= "junk" then return nil end
     DanTraits_StatAdd(player:getStats(), CharacterStat.FOOD_SICKNESS, DS_JUNK_SICK * (tonumber(fraction) or 1))
     return nil
 end)

@@ -511,7 +511,7 @@ local function updateDiabetesMinute(player, d)
     if asleep then g = g - DIA_SLEEP_DROP end
     if drunk then g = g - DIA_ALCOHOL_DROP end
     if panic > DIA_PANIC_MIN then g = g + (panic - DIA_PANIC_MIN) / (100 - DIA_PANIC_MIN) * DIA_PANIC_RISE end
-    if DanTraits_InfectionFever then pcall(function() g = g + DIA_FEVER_RISE * DanTraits_InfectionFever(player) end) end
+    if DanTraits_InfectionFever then g = g + DIA_FEVER_RISE * (tonumber(DanTraits_InfectionFever(player)) or 0) end
 
     g = diaClamp(g)
     d.glucose = g
@@ -526,35 +526,36 @@ local function updateDiabetesMinute(player, d)
     d.diaLow = low > 0 and low or nil
     if low == 0 and high == 0 then return end
 
-    pcall(function()
-        local function drainHealth(perMinute, floorOff)
+    -- the symptoms (the stat helpers never throw; the body-damage calls are the game's)
+    local function drainHealth(perMinute, floorOff)
+        pcall(function()
             local bd = player:getBodyDamage()
             local floor = floorOff and 0 or DIA_HEALTH_FLOOR
             if bd:getOverallBodyHealth() > floor then
                 bd:ReduceGeneralHealth(math.min(perMinute, bd:getOverallBodyHealth() - floor))
             end
+        end)
+    end
+    if low > 0 then
+        if DIA_LOW_END_DRAIN[low] > 0 then statAdd(stats, CharacterStat.ENDURANCE, -DIA_LOW_END_DRAIN[low]) end
+        statAdd(stats, CharacterStat.FATIGUE, DIA_LOW_FATIGUE[low])
+        statAdd(stats, CharacterStat.PANIC, DIA_LOW_PANIC[low])
+        floorUp(stats, CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
+        if low >= 3 then
+            drainHealth(DIA_LOW_HP_DRAIN, false)
+            if not asleep then diaBlackout(player, d) end
         end
-        if low > 0 then
-            if DIA_LOW_END_DRAIN[low] > 0 then statAdd(stats, CharacterStat.ENDURANCE, -DIA_LOW_END_DRAIN[low]) end
-            statAdd(stats, CharacterStat.FATIGUE, DIA_LOW_FATIGUE[low])
-            statAdd(stats, CharacterStat.PANIC, DIA_LOW_PANIC[low])
-            floorUp(stats, CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
-            if low >= 3 then
-                drainHealth(DIA_LOW_HP_DRAIN, false)
-                if not asleep then diaBlackout(player, d) end
-            end
-        else
-            statAdd(stats, CharacterStat.THIRST, DIA_HIGH_THIRST[high])
-            statAdd(stats, CharacterStat.FATIGUE, DIA_HIGH_FATIGUE[high])
-            local mood = DIA_HIGH_UNHAPPY_FLOOR[high]
-            if d.mddEpisode then mood = mood * DIA_MDD_UNHAPPY_MULT end
-            floorUp(stats, CharacterStat.UNHAPPINESS, mood, DIA_STAT_RAMP)
-            floorUp(stats, CharacterStat.FOOD_SICKNESS, DIA_HIGH_SICK_FLOOR[high], DIA_STAT_RAMP)
-            if high >= 3 and d.diaKetoHours >= DIA_HIGH_DRAIN_AFTER then
-                drainHealth(DIA_HIGH_HP_DRAIN, d.diaKetoHours >= DIA_KETO_HOURS)
-            end
+    else
+        statAdd(stats, CharacterStat.THIRST, DIA_HIGH_THIRST[high])
+        statAdd(stats, CharacterStat.FATIGUE, DIA_HIGH_FATIGUE[high])
+        local mood = DIA_HIGH_UNHAPPY_FLOOR[high]
+        if d.mddEpisode then mood = mood * DIA_MDD_UNHAPPY_MULT end
+        floorUp(stats, CharacterStat.UNHAPPINESS, mood, DIA_STAT_RAMP)
+        floorUp(stats, CharacterStat.FOOD_SICKNESS, DIA_HIGH_SICK_FLOOR[high], DIA_STAT_RAMP)
+        if high >= 3 and d.diaKetoHours >= DIA_HIGH_DRAIN_AFTER then
+            drainHealth(DIA_HIGH_HP_DRAIN, d.diaKetoHours >= DIA_KETO_HOURS)
         end
-    end)
+    end
 end
 
 -- 0..1 how bad a low is now (a third a tier), 0 for anyone else; Epilepsy and

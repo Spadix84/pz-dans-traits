@@ -107,11 +107,7 @@ local function updateAnemiaMinute(player, d)
         d.anTier = tier
     end
     if deficit <= 0 then return end
-    pcall(function()
-        local stats = player:getStats()
-        local asleep = DanTraits_Asleep(player)
-        if not asleep then DanTraits_StatAdd(stats, CharacterStat.FATIGUE, AN_FATIGUE * deficit) end
-    end)
+    if not DanTraits_Asleep(player) then DanTraits_StatAdd(player:getStats(), CharacterStat.FATIGUE, AN_FATIGUE * deficit) end
 end
 
 -- slower endurance recovery and easier colds go through the stat delta pipeline
