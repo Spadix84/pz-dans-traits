@@ -83,7 +83,9 @@ local DIA_HIGH_THIRST       = { 0.002, 0.004, 0.006 }  -- per minute (0..1)
 local DIA_HIGH_FATIGUE      = { 0.0005, 0.0015, 0.003 }
 local DIA_HIGH_UNHAPPY_FLOOR = { 0, 15, 30 }
 local DIA_HIGH_SICK_FLOOR   = { 0, 20, 50 }       -- food sickness (Queasy, then Nauseous)
-local DIA_HIGH_HP_DRAIN     = 0.3                 -- per minute at the worst tier
+local DIA_HIGH_HP_DRAIN     = 0.3                 -- per minute at the worst tier...
+local DIA_HIGH_DRAIN_AFTER  = 2                   -- ...once this many hours have been spent up there (d.diaKetoHours):
+                                                  -- a spike after a meal costs nothing, hours of it do (2026-10-08)
 local DIA_FEVER_RISE        = 0.1                 -- mg/dL per minute at full fever: illness raises blood sugar (sick day rules)
 local DIA_HEALTH_FLOOR      = 15                  -- percent: symptoms stop short of this...
 local DIA_KETO_HOURS        = 24                  -- ...until you have spent this long above the top threshold, then the floor is gone
@@ -145,6 +147,13 @@ local function diaInsulinProfile(t)
     return (DIA_INSULIN_END - t) / (DIA_INSULIN_END - DIA_INSULIN_PEAK) / area
 end
 
+-- how hard a dose hits: resistance blunts it, fitness and Vitality sharpen it
+local function diaSensitivity(player, res, fitness)
+    local k = (1 - DIA_INSULIN_RES_CUT * res) * (1 + DIA_INSULIN_FIT_BONUS * fitness)
+    if DanTraits_VitalityDiaSensitivity then k = k * DanTraits_VitalityDiaSensitivity(player) end
+    return k
+end
+
 -- called from the eat hook with the portion actually eaten
 function DanTraits_DiaOnEat(player, item, fraction)
     if not diaHas(player) then return false end
@@ -196,6 +205,212 @@ function DanTraits_DiaRead(player)
     if diaHas(player) then g = diaData(player).glucose else g = 85 + ZombRand(30) end
     g = math.floor(g + 0.5)
     return g, (g < DIA_LOW[1] or g >= DIA_HIGH[1])
+end
+
+-- Knowing your insulin --------------------------------------------------------
+-- What a Type 1 character can work out about insulin, by First Aid, or from
+-- the magazine Living With Type 1 (DanTraits.InsulinMag, which teaches the
+-- knowledge flag DIA_KNOW_RECIPE the way vanilla's Herbalist magazine does):
+--   level 1 (First Aid 3-5): a food's or a sugary drink's tooltip says whether its sugar hits fast
+--     or slowly, and gives a wide range of doses to cover it.
+--   level 2 (First Aid 6-8): a narrow range; the meter adds how much insulin is
+--     still working.
+--   level 3 (First Aid 9-10, or the magazine at any level): the exact doses
+--     for this body (fitness and Vitality counted), and the meter adds what it
+--     takes to bring sugar back to 110: more doses, or grams of fast sugar.
+-- Doses to cover a food: carbohydrates x DIA_CARB_MGDL / (DIA_DOSE_MGDL x
+-- sensitivity), about one dose per 12.5 g. Type 2 is not told doses: its own
+-- insulin covers most of a meal, so the Type 1 sum would overdose it.
+local DIA_KNOW_FA     = { 3, 6, 9 }   -- First Aid for levels 1, 2, 3
+local DIA_KNOW_RECIPE = "DanTraitsInsulinDosing"
+local DIA_KNOW_RANGE  = { 0.6, 0.8 }  -- levels 1 and 2: doses x this, rounded down, to doses x (2 - this), rounded up
+local DIA_TARGET      = 110           -- the meter's correction aims here
+
+-- isRecipeActuallyKnown, not isRecipeKnown: the latter answers true for any
+-- name the game has no recipe of that name for (found in play 2026-10-08)
+local function diaKnowsDosing(player)
+    local known = false
+    pcall(function() known = player:isRecipeActuallyKnown(DIA_KNOW_RECIPE) end)
+    return known == true
+end
+
+-- 0 to 3; 0 for anyone without Type 1
+function DanTraits_DiaKnowledge(player)
+    if not player or not hasTrait(player, "diabetes1") then return 0 end
+    if diaKnowsDosing(player) then return 3 end
+    local fa = 0
+    pcall(function() fa = player:getPerkLevel(Perks.Doctor) or 0 end)
+    local level = 0
+    for i, need in ipairs(DIA_KNOW_FA) do if fa >= need then level = i end end
+    return level
+end
+
+local function diaFitness(player)
+    return DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0
+end
+
+-- what an item would put in: carbohydrates, whether they hit fast, and
+-- whether it is something to ask at all. A food counts by its own
+-- carbohydrates (as DanTraits_DiaOnEat does); a drink in a fluid container
+-- (a bottle of pop, a carton of juice, a mug of milk) by everything in the
+-- container, all of it fast (as the drink hook counts it). Water, fuel and
+-- anything else with no sugar in it is not asked about.
+local function diaItemCarbs(item)
+    local isFood = false
+    pcall(function() isFood = instanceof(item, "Food") end)
+    if isFood then
+        local carbs = 0
+        pcall(function() carbs = item:getCarbohydrates() or 0 end)
+        return carbs, carbs > 0 and DanTraits_IsFastCarb(item), true
+    end
+    local carbs = 0
+    pcall(function()
+        local fc = item:getFluidContainer()
+        if fc and not fc:isEmpty() then carbs = fc:getProperties():getCarbohydrates() or 0 end
+    end)
+    return carbs, true, carbs > 0
+end
+
+-- doses a food or a drink takes for this Type 1 body, and whether its sugar is fast
+function DanTraits_DiaFoodDoses(player, item)
+    local carbs, fast = diaItemCarbs(item)
+    if carbs <= 0 then return 0, false end
+    local k = diaSensitivity(player, 0, diaFitness(player))
+    return carbs * DIA_CARB_MGDL / (DIA_DOSE_MGDL * k), fast
+end
+
+-- where sugar would peak over the next four hours if this food went in now
+-- with its doses: the model's own minute steps for carbohydrates, insulin
+-- (what is on board as well), Type 1's creep and the kidneys, nothing else
+-- (no exercise, sleep or drink). The doses are given for an ordinary body, so
+-- the sensitivity cancels out of the insulin step.
+local DIA_SIM_MINUTES = DIA_INSULIN_END
+local function diaPeakIfDosed(d, carbs, fast, doses)
+    local g = d.glucose
+    local f = d.diaFast + (fast and carbs or 0)
+    local s = d.diaSlow + (fast and 0 or carbs)
+    local shots = {}
+    for _, shot in ipairs(d.diaInsulin or {}) do shots[#shots + 1] = { dose = shot.dose, t = shot.t } end
+    shots[#shots + 1] = { dose = doses, t = 0 }
+    local peak = g
+    for _ = 1, DIA_SIM_MINUTES do
+        local a, b = f * DIA_FAST_RATE, s * DIA_SLOW_RATE
+        f, s = f - a, s - b
+        g = g + (a + b) * DIA_CARB_MGDL + DIA_T1_DRIFT
+        for _, shot in ipairs(shots) do
+            g = g - shot.dose * DIA_DOSE_MGDL * diaInsulinProfile(shot.t)
+            shot.t = shot.t + 1
+        end
+        if g > DIA_RENAL_ABOVE then g = g - (g - DIA_RENAL_ABOVE) * DIA_RENAL_RATE end
+        if g > peak then peak = g end
+    end
+    return peak
+end
+
+-- nil if the whole thing is safe to eat dosed, else how many parts to eat it
+-- in (2 to 4), or 5 for "a little at a time"
+function DanTraits_DiaParts(player, item)
+    local carbs, fast = diaItemCarbs(item)
+    if carbs <= 0 then return nil end
+    local d = diaData(player)
+    local doses = carbs * DIA_CARB_MGDL / DIA_DOSE_MGDL
+    if diaPeakIfDosed(d, carbs, fast, doses) < DIA_HIGH[3] then return nil end
+    for n = 2, 4 do
+        if diaPeakIfDosed(d, carbs / n, fast, doses / n) < DIA_HIGH[3] then return n end
+    end
+    return 5
+end
+
+local function oneDecimal(x) return string.format("%.1f", math.floor(x * 10 + 0.5) / 10) end
+
+-- the lines a food's or a drink's tooltip gets (already translated), or nil
+function DanTraits_DiaFoodLines(player, item)
+    local level = DanTraits_DiaKnowledge(player)
+    if level == 0 or not item then return nil end
+    local _, _, ask = diaItemCarbs(item)
+    if not ask then return nil end
+    local doses, fast = DanTraits_DiaFoodDoses(player, item)
+    if doses <= 0 then return { getText("Tooltip_DanTraits_DiaNone") } end
+    local lines = { getText(fast and "Tooltip_DanTraits_DiaFast" or "Tooltip_DanTraits_DiaSlow") }
+    if level >= 3 then
+        lines[2] = getText("Tooltip_DanTraits_DiaExact", oneDecimal(doses))
+        -- too much sugar at once lands before the insulin can catch it: say how to split it
+        local parts = DanTraits_DiaParts(player, item)
+        if parts then lines[3] = getText("Tooltip_DanTraits_DiaParts" .. parts) end
+    else
+        -- the ranges use an ordinary body, not this one: only level 3 knows its own
+        local base = doses * diaSensitivity(player, 0, diaFitness(player))
+        local k = DIA_KNOW_RANGE[level]
+        local lo = math.max(0, math.floor(base * k))
+        local hi = math.max(lo + 1, math.ceil(base * (2 - k)))
+        lines[2] = getText("Tooltip_DanTraits_DiaRange", lo, hi)
+    end
+    return lines
+end
+
+-- doses still to come from what was injected (the same minute steps the model takes)
+local function diaInsulinLeft(d)
+    local left = 0
+    for _, shot in ipairs(d.diaInsulin or {}) do
+        for t = math.max(0, shot.t), DIA_INSULIN_END - 1 do left = left + shot.dose * diaInsulinProfile(t) end
+    end
+    return left
+end
+DanTraits_DiaInsulinLeft = function(player) return diaInsulinLeft(diaData(player)) end
+
+-- the meter's extra lines: { key, arg } pairs, good = true when nothing needs doing
+function DanTraits_DiaMeterAdvice(player, g)
+    local level = DanTraits_DiaKnowledge(player)
+    if level < 2 then return {} end
+    local d = diaData(player)
+    local onBoard = diaInsulinLeft(d)
+    local out = { { "UI_DanTraits_DiaOnBoard", oneDecimal(onBoard) } }
+    if level < 3 then return out end
+    local k = diaSensitivity(player, 0, diaFitness(player))
+    -- where sugar is heading: now, plus food still going in, minus insulin still working
+    local heading = g + (d.diaFast + d.diaSlow) * DIA_CARB_MGDL - onBoard * DIA_DOSE_MGDL * k
+    local gap = heading - DIA_TARGET
+    if gap >= DIA_DOSE_MGDL * k * 0.5 then
+        out[#out + 1] = { "UI_DanTraits_DiaCorrect", math.floor(gap / (DIA_DOSE_MGDL * k) + 0.5) }
+    elseif gap <= -DIA_CARB_MGDL * 5 then
+        out[#out + 1] = { "UI_DanTraits_DiaEat", math.floor(-gap / DIA_CARB_MGDL / 5 + 0.5) * 5 }
+    else
+        out[#out + 1] = { "UI_DanTraits_DiaSteady", nil, true }
+    end
+    return out
+end
+
+-- The meter remembers its last reading, for its tooltip: the number, when,
+-- and the advice it gave then (as text keys, so it is said in the reader's
+-- language; marked as of then, because insulin on board goes stale).
+-- Item mod data DanTraitsLast = { g, h (world-age hours), advice = { {key, arg, good} } }.
+function DanTraits_DiaMeterRecord(item, value, advice)
+    if not item or not value then return end
+    pcall(function()
+        local h = getGameTime():getWorldAgeHours()
+        local keep = {}
+        for i, line in ipairs(advice or {}) do keep[i] = { line[1], line[2], line[3] == true } end
+        item:getModData().DanTraitsLast = { g = value, h = h, advice = keep }
+    end)
+end
+
+-- the meter's tooltip lines (already translated), or nil before its first reading
+function DanTraits_DiaMeterLines(item)
+    if not item or not DanTraits_IsMeter(item) then return nil end
+    local last
+    pcall(function() last = item:getModData().DanTraitsLast end)
+    if type(last) ~= "table" or not last.g then return nil end
+    local ago = 0
+    pcall(function() ago = math.max(0, getGameTime():getWorldAgeHours() - (last.h or 0)) end)
+    local line
+    if ago < 1 then line = getText("Tooltip_DanTraits_MeterLastMin", last.g, math.floor(ago * 60 + 0.5))
+    elseif ago < 48 then line = getText("Tooltip_DanTraits_MeterLastHours", last.g, math.floor(ago + 0.5))
+    else line = getText("Tooltip_DanTraits_MeterLastDays", last.g, math.floor(ago / 24 + 0.5)) end
+    local lines = { line }
+    for _, a in ipairs(last.advice or {}) do
+        if a[2] ~= nil then lines[#lines + 1] = getText(a[1], a[2]) else lines[#lines + 1] = getText(a[1]) end
+    end
+    return lines
 end
 
 local function diaTier(g)
@@ -273,8 +488,7 @@ local function updateDiabetesMinute(player, d)
     g = g + (fast + slow) * DIA_CARB_MGDL
 
     -- injected insulin on board
-    local sensitivity = (1 - DIA_INSULIN_RES_CUT * res) * (1 + DIA_INSULIN_FIT_BONUS * fitness)
-    if DanTraits_VitalityDiaSensitivity then sensitivity = sensitivity * DanTraits_VitalityDiaSensitivity(player) end
+    local sensitivity = diaSensitivity(player, res, fitness)
     local keep = {}
     for _, shot in ipairs(d.diaInsulin) do
         g = g - shot.dose * DIA_DOSE_MGDL * diaInsulinProfile(shot.t) * sensitivity
@@ -336,7 +550,9 @@ local function updateDiabetesMinute(player, d)
             if d.mddEpisode then mood = mood * DIA_MDD_UNHAPPY_MULT end
             floorUp(stats, CharacterStat.UNHAPPINESS, mood, DIA_STAT_RAMP)
             floorUp(stats, CharacterStat.FOOD_SICKNESS, DIA_HIGH_SICK_FLOOR[high], DIA_STAT_RAMP)
-            if high >= 3 then drainHealth(DIA_HIGH_HP_DRAIN, d.diaKetoHours >= DIA_KETO_HOURS) end
+            if high >= 3 and d.diaKetoHours >= DIA_HIGH_DRAIN_AFTER then
+                drainHealth(DIA_HIGH_HP_DRAIN, d.diaKetoHours >= DIA_KETO_HOURS)
+            end
         end
     end)
 end

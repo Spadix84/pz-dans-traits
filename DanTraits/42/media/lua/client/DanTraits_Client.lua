@@ -98,7 +98,7 @@ local function onInject(pen, playerObj, doses) queue(playerObj, pen, "inject", d
 local function onCheckSugar(meter, playerObj, strips) queue(playerObj, meter, "test", nil, strips) end
 local function onTakeMetformin(pills, playerObj) queue(playerObj, pills, "pill") end
 
-local INJECT_DOSES = { 1, 2, 4, 8 }
+local INJECT_DOSES = { 1, 2, 3, 4, 8 }
 
 local function diabetesMenu(playerNum, context, items)
     local playerObj = getSpecificPlayer(playerNum)
@@ -242,8 +242,14 @@ Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)
 -- Character creation: Wakeful is folded into Deep Sleeper, so it is hidden
 -- from the list (Deep Sleeper grants it). Deep Sleeper follows vanilla's rule
 -- for the sleep traits: hidden on a server where sleep is off. The Age traits
--- are hidden when the sandbox switches Age off (they would do nothing), and
--- In Their 30s always: it is what a character who picks no age is given.
+-- are hidden when the sandbox switches Age off (they would do nothing).
+-- The age gate: with Age on, the lists offer nothing but the four ages until
+-- one is chosen (In Their 30s at 0 points among them, put into the positive
+-- list by hand since vanilla lists only a cost above or below zero); the rest
+-- unlocks then, Next is greyed until then with the reason as its tooltip and
+-- on the screen, Random picks an age first, and a saved build loads first
+-- and is gated after. Age off: no gate, no ages. A character with no Age
+-- trait at spawn (an old save) still gets the sandbox default's (DanTraits_Age.lua).
 -- at character creation SandboxVars is still the previous copy: read the live
 -- sandbox options the way vanilla's creation screen does (NegativeTraitsPenalty)
 local function ageOffAtCreation()
@@ -270,19 +276,46 @@ local function ageKeyOf(kind)
     return nil
 end
 
+-- the Age trait chosen on the screen, as its key ("age40s"), or nil
+local function chosenAgeKey(screen)
+    local items = screen and screen.listboxTraitSelected and screen.listboxTraitSelected.items
+    if not items then return nil end
+    for _, row in pairs(items) do
+        local key = ageKeyOf(row.item:getType())
+        if key then return key end
+    end
+    return nil
+end
+
+-- the gate is up: Age on, a screen with a chosen list, no build loading, and
+-- no Age trait chosen yet
+local function ageGateOn(screen)
+    if ageOffAtCreation() then return false end
+    if not screen or not screen.listboxTraitSelected or screen.danTraitsLoadingBuild then return false end
+    return chosenAgeKey(screen) == nil
+end
+
+local AGE_KEYS = { "age20s", "age30s", "age40s", "age50s" }
+
+-- Random: one of the four, added like a click
+local function addRandomAge(screen)
+    if not DanTraitsRegistry or not CharacterTraitDefinition then return end
+    local key = AGE_KEYS[ZombRand(#AGE_KEYS) + 1]
+    local def = CharacterTraitDefinition.getCharacterTraitDefinition(DanTraitsRegistry[key])
+    if def then screen:addTrait(def) end
+end
+
 -- Age in the Major Skills list. Vanilla builds the list from the XP boosts of
 -- the profession and the chosen traits; age adds its levels in Lua at spawn,
 -- so they are added to the list here, from the same function the spawn code
 -- uses (DanTraits_AgeLevels). Returns { perk = levels }, or nil with age off.
--- the band of the character being made (the picked Age trait, else the new
--- game's default), or nil with age off
+-- the band of the character being made (the chosen Age trait), or nil with
+-- age off or none chosen yet (the sandbox default no longer stands in at
+-- creation: the gate makes the player choose)
 local function creationAgeBand(screen)
-    if ageOffAtCreation() or not DanTraits_AgeRoundBand then return nil end
-    for _, row in pairs(screen.listboxTraitSelected.items) do
-        local key = ageKeyOf(row.item:getType())
-        if key then return AGE_BAND_OF[key] end
-    end
-    return DanTraits_AgeRoundBand(ageOption("AgeDefault"))
+    if ageOffAtCreation() then return nil end
+    local key = chosenAgeKey(screen)
+    return key and AGE_BAND_OF[key] or nil
 end
 
 local function creationAgeLevels(screen)
@@ -372,10 +405,11 @@ local function drawAgeTrait(self, y, item, alt)
     pcall(function()
         local band = creationAgeBand(CharacterCreationProfession.instance)
         local extra = band and DanTraits_AgeSurcharge(band, item.item:getType()) or 0
-        if extra <= 0 then return end
-        local hc = getCore():getBadHighlitedColor()
+        if extra == 0 then return end
+        local hc = extra > 0 and getCore():getBadHighlitedColor() or getCore():getGoodHighlitedColor()
+        local label = extra > 0 and getText("UI_DanTraits_AgeSurcharge", extra) or getText("UI_DanTraits_AgeDiscount", extra)
         local costWid = getTextManager():MeasureStringX(UIFont.Small, item.item:getRightLabel())
-        self:drawTextRight(getText("UI_DanTraits_AgeSurcharge", extra), self:getWidth() - 30 - costWid,
+        self:drawTextRight(label, self:getWidth() - 30 - costWid,
             y + (self.itemheight - self.fontHgt) / 2, hc:getR(), hc:getG(), hc:getB(), 0.9, UIFont.Small)
     end)
     return yy
@@ -445,8 +479,16 @@ local function wrapTraitList()
         local kind = nil
         pcall(function() kind = trait:getType() end)
         if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
+        -- retired traits (DanTraits_RETIRED in DanTraits.lua) are never offered
+        if kind ~= nil and DanTraits_RETIRED and DanTraitsRegistry then
+            for key in pairs(DanTraits_RETIRED) do
+                if kind == DanTraitsRegistry[key] then return false end
+            end
+        end
         local ageKey = ageKeyOf(kind)
-        if ageKey and (ageKey == "age30s" or ageOffAtCreation()) then return false end
+        if ageKey and ageOffAtCreation() then return false end
+        -- the gate: until an age is chosen, only the ages
+        if not ageKey and ageGateOn(self) then return false end
         -- a saved build lists its traits in no useful order: while one loads, every
         -- age-only trait is offered, and the ones the build's age cannot have are dropped after
         if not self.danTraitsLoadingBuild then
@@ -469,6 +511,56 @@ local function wrapTraitList()
             if ok and not allowed then return false end
         end
         return original(self, trait, ...)
+    end)
+    -- In Their 30s costs nothing, and vanilla's lists take only a cost above or
+    -- below zero: it goes into the positive list by hand, where it is allowed
+    DanTraits_Wrap(CharacterCreationProfession, "populateTraitList", "creation-age30s", function(original, self, list, ...)
+        local result = original(self, list, ...)
+        pcall(function()
+            if ageOffAtCreation() or not DanTraitsRegistry or not DanTraitsRegistry.age30s then return end
+            local def = CharacterTraitDefinition.getCharacterTraitDefinition(DanTraitsRegistry.age30s)
+            if not def or def:isFree() then return end
+            local label = def:getLabel()
+            if self.listboxTraitSelected and self.listboxTraitSelected:contains(label) then return end
+            if self:isTraitEnabled(def) and not self:isTraitExcluded(def) and not list:contains(label) then
+                list:addItem(label, def, def:getDescription())
+            end
+        end)
+        return result
+    end)
+    -- the gate on Next: greyed until an age is chosen, the reason as its
+    -- tooltip and written on the screen (vanilla sets the button each frame
+    -- from the points; this runs after it)
+    DanTraits_Wrap(CharacterCreationProfession, "render", "creation-age-gate", function(original, self, ...)
+        local result = original(self, ...)
+        pcall(function()
+            if not ageGateOn(self) then return end
+            self.playButton:setEnable(false)
+            self.playButton:setTooltip(getText("UI_DanTraits_PickAgeFirst"))
+            local hc = getCore():getBadHighlitedColor()
+            local y = self.playButton:getY() - getTextManager():getFontHeight(UIFont.Medium) - 15
+            self:drawText(getText("UI_DanTraits_PickAgeHint"), self.listboxTrait:getX(), y, hc:getR(), hc:getG(), hc:getB(), 1, UIFont.Medium)
+        end)
+        return result
+    end)
+    -- Random picks an age first (any of the four, right after vanilla's reset),
+    -- then rolls the rest from the full lists; if its balancing takes the age
+    -- back off, one is added at the end, so a random build always has an age
+    DanTraits_Wrap(CharacterCreationProfession, "randomizeTraits", "creation-age-random", function(original, self, ...)
+        local gated = not ageOffAtCreation()
+        if gated then
+            local reset = self.resetBuild
+            self.resetBuild = function(screen, ...)
+                local r = reset(screen, ...)
+                pcall(addRandomAge, screen)
+                return r
+            end
+        end
+        local ok, result = pcall(original, self, ...)
+        if gated then self.resetBuild = nil end
+        if gated and chosenAgeKey(self) == nil then pcall(addRandomAge, self) end
+        if not ok then error(result, 0) end
+        return result
     end)
     DanTraits_Wrap(CharacterCreationProfession, "checkXPBoost", "creation-age-levels", function(original, self, ...)
         pcall(dropAgeOnly, self)

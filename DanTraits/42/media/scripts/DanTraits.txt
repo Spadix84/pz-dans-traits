@@ -5,7 +5,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:dependent,
-        Cost = -2,
+        Cost = -4,
         UIName = UI_trait_DanDependent,
         UIDescription = UI_trait_DanDependentdesc,
         MutuallyExclusiveTraits = DanTraits:straightedge,
@@ -21,6 +21,10 @@ module DanTraits {
         UIDescription = UI_trait_DanBrittledesc,
     }
 
+    /* Retired (2026-10-07): removed, nothing replaces it. The definition stays so a save that has
+       it still loads; the creation screen hides it (DanTraits_Client.lua)
+       and a loaded character has it swapped out (DanTraits_RetireTraits,
+       DanTraits.lua). */
     character_trait_definition DanTraits:jinxed
     {
         IsProfessionTrait = false,
@@ -46,7 +50,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:badday,
-        Cost = -12,
+        Cost = -8,
         UIName = UI_trait_DanBadDay,
         UIDescription = UI_trait_DanBadDaydesc,
         MutuallyExclusiveTraits = DanTraits:hemophilia;DanTraits:straightedge,
@@ -67,7 +71,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:asthma,
-        Cost = -8,
+        Cost = -10,
         UIName = UI_trait_DanAsthma,
         UIDescription = UI_trait_DanAsthmadesc,
         MutuallyExclusiveTraits = base:asthmatic,
@@ -193,7 +197,10 @@ module DanTraits {
         UIDescription = UI_trait_DanAnemiadesc,
     }
 
-    /* Positive, cheap: the three below are one-shot starts and small hooks (DanTraits_Positives.lua). */
+    /* Retired (2026-10-07): folded into vanilla Iron Gut, which takes its place. The definition stays so a save that has
+       it still loads; the creation screen hides it (DanTraits_Client.lua)
+       and a loaded character has it swapped out (DanTraits_RetireTraits,
+       DanTraits.lua). */
     character_trait_definition DanTraits:ironstomach
     {
         IsProfessionTrait = false,
@@ -204,6 +211,7 @@ module DanTraits {
         UIDescription = UI_trait_DanIronStomachdesc,
     }
 
+    /* Positive, cheap: the two below are one-shot starts and small hooks (DanTraits_Positives.lua). */
     character_trait_definition DanTraits:earlyriser
     {
         IsProfessionTrait = false,
@@ -301,7 +309,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:age50s,
-        Cost = -4,
+        Cost = -6,
         UIName = UI_trait_DanAge50s,
         UIDescription = UI_trait_DanAge50sdesc,
         MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:age30s;DanTraits:age40s,
@@ -395,6 +403,93 @@ module DanTraits {
         UIDescription = UI_trait_DanSetInWaysdesc,
     }
 
+    /* Retired (2026-10-07): folded into Thick Skull, which takes its place. The definition stays so a save that has
+       it still loads; the creation screen hides it (DanTraits_Client.lua)
+       and a loaded character has it swapped out (DanTraits_RetireTraits,
+       DanTraits.lua). */
+    character_trait_definition DanTraits:bouncesback
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:bouncesback,
+        Cost = 3,
+        UIName = UI_trait_DanBouncesBack,
+        UIDescription = UI_trait_DanBouncesBackdesc,
+    }
+
+    character_trait_definition DanTraits:bottomlesspit
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:bottomlesspit,
+        Cost = -6,
+        UIName = UI_trait_DanBottomlessPit,
+        UIDescription = UI_trait_DanBottomlessPitdesc,
+        MutuallyExclusiveTraits = base:lighteater,
+    }
+
+    character_trait_definition DanTraits:seenitall
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:seenitall,
+        Cost = 3,
+        UIName = UI_trait_DanSeenItAll,
+        UIDescription = UI_trait_DanSeenItAlldesc,
+        MutuallyExclusiveTraits = base:cowardly,
+    }
+
+    character_trait_definition DanTraits:paceyourself
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:paceyourself,
+        Cost = 2,
+        UIName = UI_trait_DanPaceYourself,
+        UIDescription = UI_trait_DanPaceYourselfdesc,
+    }
+
+    character_trait_definition DanTraits:settled
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:settled,
+        Cost = -2,
+        UIName = UI_trait_DanSettled,
+        UIDescription = UI_trait_DanSettleddesc,
+    }
+
+    character_trait_definition DanTraits:oldbones
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:oldbones,
+        Cost = 1,
+        UIName = UI_trait_DanOldBones,
+        UIDescription = UI_trait_DanOldBonesdesc,
+    }
+
+    character_trait_definition DanTraits:castiron
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:castiron,
+        Cost = 2,
+        UIName = UI_trait_DanCastIron,
+        UIDescription = UI_trait_DanCastIrondesc,
+    }
+
+    character_trait_definition DanTraits:delicatestomach
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:delicatestomach,
+        Cost = -2,
+        UIName = UI_trait_DanDelicateStomach,
+        UIDescription = UI_trait_DanDelicateStomachdesc,
+        MutuallyExclusiveTraits = base:irongut,
+    }
+
     /* Vanilla Fear of Blood, re-costed from -5 to -6 for the rework
        (fainting at first aid and heavy bleeding, slower first aid:
        DanTraits_Hemophobia.lua); vanilla's panic and stress stay. Same
@@ -434,6 +529,70 @@ module DanTraits {
         UIName = UI_trait_Smoker,
         UIDescription = UI_trait_SmokerDesc,
         MutuallyExclusiveTraits = base:athletic,
+    }
+
+    /* Vanilla Iron Gut, re-costed from 2 to 4 with Iron Stomach folded in
+       (rotten and burnt food hurts the diet half as much, food sickness
+       builds half as fast: DanTraits_Positives.lua); vanilla's own effect
+       stays. Same exclusion as vanilla: not with Weak Stomach. Whole-block
+       override: a field a game update adds to the vanilla definition is
+       lost here, so after a game update compare with media/scripts/
+       generated/characters/character_traits.txt in the game folder.
+       Vanilla fields copied (game 42.21.0, Steam build 25485521):
+       IsProfessionTrait, DisabledInMultiplayer, CharacterTrait, Cost (2,
+       changed to 4), UIName, UIDescription, MutuallyExclusiveTraits. */
+    character_trait_definition base:irongut
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = base:irongut,
+        Cost = 4,
+        UIName = UI_trait_IronGut,
+        UIDescription = UI_trait_IronGutDesc,
+        MutuallyExclusiveTraits = base:weakstomach,
+    }
+
+    /* Vanilla Resilient, re-costed from 4 to 10: a chance (sandbox
+       KnoxSurviveChance, 25%) that the body beats the Knox infection
+       (DanTraits_Knox.lua); vanilla's own effect stays. Same exclusion as
+       vanilla: not with Prone to Illness. Whole-block override: a field a
+       game update adds to the vanilla definition is lost here, so after a
+       game update compare with media/scripts/generated/characters/
+       character_traits.txt in the game folder. Vanilla fields copied (game
+       42.21.0, Steam build 25485521): IsProfessionTrait,
+       DisabledInMultiplayer, CharacterTrait, Cost (4, changed to 10),
+       UIName, UIDescription, MutuallyExclusiveTraits. */
+    character_trait_definition base:resilient
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = base:resilient,
+        Cost = 10,
+        UIName = UI_trait_resilient,
+        UIDescription = UI_trait_resilientdesc,
+        MutuallyExclusiveTraits = base:pronetoillness,
+    }
+
+    /* Vanilla Keen Cook, re-costed from 3 to 4 with a level of Short Blade
+       added (knife work). Same exclusion and recipes as vanilla. Whole-block
+       override: a field a game update adds to the vanilla definition is lost
+       here, so after a game update compare with media/scripts/generated/
+       characters/character_traits.txt in the game folder. Vanilla fields
+       copied (game 42.21.0, Steam build 25485521): IsProfessionTrait,
+       DisabledInMultiplayer, CharacterTrait, Cost (3, changed to 4), UIName,
+       UIDescription, MutuallyExclusiveTraits, XPBoosts (SmallBlade=1 added),
+       GrantedRecipes. */
+    character_trait_definition base:cook
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = base:cook,
+        Cost = 4,
+        UIName = UI_trait_Cook,
+        UIDescription = UI_trait_CookDesc,
+        MutuallyExclusiveTraits = base:cook2,
+        XPBoosts = Cooking=2;Butchering=1;SmallBlade=1,
+        GrantedRecipes = MakeCakeBatter;MakePieDough;MakeBreadDough;MakeBaguetteDough;MakeBiscuits;MakeChocolateChipCookieDough;MakeOatmealCookieDough;MakeShortbreadCookieDough;MakeSugarCookieDough;MakePizza;MakeFriedOnionRings;MakeFriedShrimp;MakeCabbageRolls;MakeJar;MakeGuacamole,
     }
 
     /* Chest pain, and at worst a heart attack, only ever while the Endurance
@@ -491,7 +650,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:germaphobe,
-        Cost = -3,
+        Cost = -4,
         UIName = UI_trait_DanGermaphobe,
         UIDescription = UI_trait_DanGermaphobedesc,
     }
@@ -547,14 +706,14 @@ module DanTraits {
     }
 
     /* Fast Healer folded in (granted with it), and blood comes back faster
-       after a bleed. Priced over vanilla Fast Healer (6), which it contains.
-       DanTraits_Positives.lua. */
+       after a bleed. Priced the same as vanilla Fast Healer (6), which it
+       contains. DanTraits_Positives.lua. */
     character_trait_definition DanTraits:fastrecovery
     {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:fastrecovery,
-        Cost = 8,
+        Cost = 6,
         UIName = UI_trait_DanFastRecovery,
         UIDescription = UI_trait_DanFastRecoverydesc,
         MutuallyExclusiveTraits = base:fasthealer;base:slowhealer,
@@ -573,8 +732,9 @@ module DanTraits {
         MutuallyExclusiveTraits = DanTraits:hemophilia,
     }
 
-    /* Knocks to the head concuss less often and less badly, and concussions
-       heal faster. DanTraits_Positives.lua. */
+    /* Knocks to the head concuss less often and less badly, concussions
+       heal faster, and knockouts and faints are shorter (Bounces Back
+       folded in, 2026-10-07). Any age. DanTraits_Positives.lua. */
     character_trait_definition DanTraits:thickskull
     {
         IsProfessionTrait = false,
@@ -583,6 +743,18 @@ module DanTraits {
         Cost = 2,
         UIName = UI_trait_DanThickSkull,
         UIDescription = UI_trait_DanThickSkulldesc,
+    }
+
+    /* Pain is felt about a third less: the moodle and everything pain
+       drives (aim, mood, sleep). DanTraits_Positives.lua. */
+    character_trait_definition DanTraits:grit
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:grit,
+        Cost = 8,
+        UIName = UI_trait_DanGrit,
+        UIDescription = UI_trait_DanGritdesc,
     }
 
     /* Multiple Sclerosis: heat makes the hands stiff, clumsy and painful
@@ -601,7 +773,7 @@ module DanTraits {
         MutuallyExclusiveTraits = base:athletic;base:strong,
     }
 
-    /* Rescue inhaler for Brittle Asthma: 10 puffs, each halves airway
+    /* Rescue inhaler for Asthma: 10 puffs, each halves airway
        irritation. Spawns via media/lua/server/Items/DanTraits_Distributions.lua. */
     item Inhaler
     {
@@ -753,12 +925,12 @@ module DanTraits {
         Tags = base:consumable,
     }
 
-    /* Sumatriptan, the migraine pill (1990s: new and hard to come by): 6
+    /* Sumatriptan, the migraine pill (1990s: new, not yet everywhere): 6
        tablets. In the system during an aura it halves the attack to come;
        during an attack it ends it within two hours. A day of heaviness and
        clumsiness after, for anyone (media/lua/shared/DanTraits_Migraine.lua,
        on the shared medication list). Swallowed with the game's own Take
-       Pills option, like diazepam. Rarer than the other prescriptions. */
+       Pills option, like diazepam. A little rarer than the other prescriptions. */
     item Sumatriptan
     {
         DisplayCategory = FirstAid,
@@ -844,6 +1016,26 @@ module DanTraits {
         WorldStaticModel = PillBottleGround,
     }
 
+    /* Clotting powder (styptic powder): 5 packings. Right-click a bleeding
+       part in the health panel, dressing off: a scratch or cut stops, a deep
+       wound bleeds at a quarter for 12 hours and still wants stitches
+       (media/lua/shared/DanTraits_Clotting.lua, ISVitalityClotAction).
+       Medical places, first aid kits, pet shops, salons, army medical. */
+    item ClottingPowder
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Clotting Powder,
+        Weight = 0.1,
+        Icon = ClottingPowder,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_ClottingPowder,
+        UseDelta = 0.2,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
     /* Pill Caddy: a weekly pill organiser that holds medication only
        (AcceptItemFunction.DanPillCaddy). Hangs on a small belt slot like a
        canteen (AttachmentType Walkie) and has its own inventory tab while it
@@ -866,6 +1058,29 @@ module DanTraits {
         PutInSound = StoreItemSmallMetalBox,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
+    }
+
+    /* Living With Type 1: a magazine on insulin and carbohydrate counting.
+       Reading it teaches the "recipe" DanTraitsInsulinDosing, a knowledge
+       flag like vanilla's Herbalist: a Type 1 character who knows it reads
+       the exact insulin doses on a food's tooltip and gets a correction
+       from the meter, whatever their First Aid
+       (media/lua/shared/DanTraits_Diabetes.lua, client/DanTraits_InsulinInfo.lua).
+       Fields after vanilla's HerbalistMag and Magazine_Health. Hospital
+       magazine racks, medical offices, pharmacies, waiting rooms. */
+    item InsulinMag
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        DisplayName = Living With Type 1,
+        Weight = 0.5,
+        Icon = InsulinMag,
+        BoredomChange = -20,
+        StressChange = -15,
+        LearnedRecipes = DanTraitsInsulinDosing,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineGround,
+        Tags = base:magazine,
     }
 
 }

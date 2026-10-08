@@ -5,13 +5,16 @@
 --
 -- Vanilla (B42) hands any alcoholic drink to BodyDamage.JustDrankBoozeFluid,
 -- which raises intoxication by the amount drunk and then calls the same
--- BetaBlockers and PainMeds methods a pill does. Those ignore the dose: the
--- beta-blocker timer (6600 ticks) and the painkiller timer (5400 ticks) are
--- set in full, and the per-tick update takes a flat 0.6 panic and 0.023
--- pain off while they run. One sip of whiskey is a full dose of both.
+-- BetaBlockers, PainMeds and BetaAntiDepress methods a pill does (and
+-- SleepingTablet at a fiftieth of a tablet). Those ignore the dose: the
+-- beta-blocker timer (6600 ticks), the painkiller timer (5400 ticks) and the
+-- antidepressant timer (6600 ticks) are set in full, and the per-tick update
+-- takes a flat 0.6 panic and 0.023 pain off while they run. One sip of
+-- whiskey is a full dose of all three.
 --
--- Here the drink action is wrapped to put those timers back the way they
--- were (real pills taken earlier keep working), and the relief comes from
+-- Here the drink action is wrapped to put those three timers back the way
+-- they were (real pills taken earlier keep working; the sip's drowsiness is
+-- vanilla's and is left alone), and the relief comes from
 -- the Drunk moodle instead: the body's pain reduction is floored by level
 -- (ALC_PAIN_CUT), and panic decays each tick at a share of the beta-blocker
 -- rate (a quarter per level). The floor is bookkept so it steps down as the
@@ -77,7 +80,8 @@ local function snapshotMeds(player)
     local snap
     pcall(function()
         snap = { beta = player:getBetaEffect(), betaDelta = player:getBetaDelta(),
-                 pain = player:getPainEffect(), painDelta = player:getPainDelta() }
+                 pain = player:getPainEffect(), painDelta = player:getPainDelta(),
+                 depress = player:getDepressEffect(), depressDelta = player:getDepressDelta() }
     end)
     return snap
 end
@@ -88,6 +92,8 @@ local function restoreMeds(player, snap)
         player:setBetaDelta(snap.betaDelta)
         player:setPainEffect(snap.pain)
         player:setPainDelta(snap.painDelta)
+        player:setDepressEffect(snap.depress)
+        player:setDepressDelta(snap.depressDelta)
     end)
 end
 
@@ -109,6 +115,7 @@ local function wrapDrinkAction()
         local alcoholic = snap and isAlcoholic(self.fluidContainer)
         local result = original(self, ...)
         if alcoholic and DanTraits_SandboxOn("DrinkReliefEnabled") then restoreMeds(self.character, snap) end
+        if alcoholic then pcall(DanTraits_RunHooks, "alcoholDrunk", nil, self.character, self.fluidContainer) end   -- Delicate Stomach
         return result
     end)
 end

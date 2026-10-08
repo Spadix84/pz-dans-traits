@@ -32,7 +32,7 @@
 --                                          list `tiers` whose point value reaches; 0 under
 --                                          the first
 --   DanTraits_IsItem(item, fullType)       item:getFullType() == fullType, false on failure
---   DanTraits_ItemUses(item)               item:getCurrentUsesFloat(), 0 on failure
+--   DanTraits_ItemUses(item)               uses left (item:getCurrentUses()), 0 on failure
 --   DanTraits_FluidName(container)         the container's main fluid, lowercase
 --                                          ("coffee", "milk"), nil when empty or unknown
 --   DanTraits_FluidRatio(container)        that fluid's share of the mix, 1 on failure
@@ -162,9 +162,14 @@ function DanTraits_IsItem(item, fullType)
     return ok and res == true
 end
 
+-- the count of uses left (a full 40-dose pen is 40). getCurrentUses() is the
+-- count; getCurrentUsesFloat() is how full it is, 0 to 1 (vanilla shows it
+-- x100 as a percent), which made a full pen read as one dose (found in play
+-- 2026-10-08). The float stays as a fallback for stand-ins that only have it.
 function DanTraits_ItemUses(item)
-    local n = 0
-    pcall(function() n = item:getCurrentUsesFloat() or 0 end)
+    local n
+    pcall(function() n = item:getCurrentUses() end)
+    if tonumber(n) == nil then pcall(function() n = item:getCurrentUsesFloat() end) end
     return tonumber(n) or 0
 end
 
@@ -347,7 +352,7 @@ end
 -- The stat delta pipeline ---------------------------------------------------------
 -- Several systems scale how fast one stat recovers (endurance: Vitality, Smoker
 -- lungs, Blood, Anemia, Concussion, Asthma; catch-a-cold: Vitality, Anemia; food
--- sickness: Iron Stomach). Each used to remember its own "last" value and scale
+-- sickness: Iron Gut). Each used to remember its own "last" value and scale
 -- whatever had risen since, which made every handler's "gain" include the
 -- earlier handlers' cuts. Now there is one remembered value per stat and the
 -- systems only subscribe:
@@ -378,7 +383,7 @@ end
 -- DanTraits_FloorUp records d.floorsThisMinute[name] = true when it raised a
 -- stat that has a hook; the pipeline clears that flag after each run, so during
 -- the run the table says whether a mod floor moved the stat since the last one.
--- A subscriber that must not touch mod-made rises (Iron Stomach) checks it.
+-- A subscriber that must not touch mod-made rises (Iron Gut) checks it.
 function DanTraits_DeltaHook(stat, name, cadence, access)
     if stat then DanTraits_DeltaKeys[stat] = name end
     local function read(player)

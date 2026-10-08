@@ -1,6 +1,7 @@
 {
     "DanTraits.Inhaler": "Rescue Inhaler",
     "DanTraits.InsulinPen": "Insulin Pen",
+    "DanTraits.InsulinMag": "Living With Type 1",
     "DanTraits.GlucoseMeter": "Glucose Meter",
     "DanTraits.TestStrips": "Test Strips",
     "DanTraits.Metformin": "Metformin",
@@ -8,6 +9,7 @@
     "DanTraits.NicotineGum": "Nicotine Gum",
     "DanTraits.Anticonvulsants": "Anticonvulsants",
     "DanTraits.Sunblock": "Sun Block",
+    "DanTraits.ClottingPowder": "Clotting Powder",
     "DanTraits.Prednisone": "Prednisone",
     "DanTraits.Baclofen": "Baclofen",
     "DanTraits.Amantadine": "Amantadine",

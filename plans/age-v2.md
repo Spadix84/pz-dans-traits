@@ -257,6 +257,258 @@ In game (checklist, ids `age2-*`):
    50s" needs the hidden 30s handled in Lua, since a character who picks no
    age has no trait on the creation screen.
 
+## The 20s, rethought (2026-10-07; BUILT the same day, see "What the second build did")
+
+The eight age-only traits proved the idea; the 20s came out thin (Green and
+Quick Study, both skill numbers, nothing about the body or the person). The
+user's frame: in your 20s you are learning, the brain is a sponge and you
+are not set in your ways; physically you are in your prime; your metabolism
+runs higher. Three themes, each on its own layer, so each can be priced on
+its own.
+
+### Three dials
+
+1. **The band's own effects and price** (the `AGE[20]` row). The identity.
+2. **Age pricing of other traits** (`AGE_BODY` grown into a general table:
+   trait -> points more or fewer, per band). "Natural at that age" without
+   touching what the trait does. Already built for Strong, Athletic, Stout
+   and Fit in the 40s and 50s; negative entries make a trait cheaper.
+3. **Band-only traits.** The flavour. Each band should carry at least one
+   perk and one flaw of its own, and each should be felt in play.
+
+### Spongey brain (learning)
+
+| Layer | Change |
+|---|---|
+| Band | Every skill under level 3 trains x1.2. The first levels of anything come quickly because it is all new. Fitness and Strength keep their x1.5 on top. |
+| Pricing | Fast Learner costs 1 less in the 20s, 1 more in the 50s. Slow Learner gives 1 less in the 20s. |
+| Trait | **Quick Study** becomes the strong version: x1.4 on skills under level 5, still 4 points. The band got its old job. |
+| Mirror | Set in Their Ways (50s) is already the other end. |
+
+Mechanism: the XP hook Quick Study uses, with the band read from the Age
+trait; a cap at level 3 (band) or 5 (trait) on the perk's level before the
+gain.
+
+### Physical prime
+
+| Layer | Change |
+|---|---|
+| Band | As built: endurance x1.25, Fitness and Strength XP x1.5, healing x1.5, stiffness x1.5, night wakes x0.8, cells x1.15, concussion x1.2, hangover x0.85. |
+| Pricing | Fit and Athletic cost 1 less in the 20s (the mirror of the 40s and 50s surcharge). Strong and Stout unchanged: muscle is work at any age. |
+| Trait | **Bounces Back** (costs 3): faints, knockouts and shock half as long, a concussion clearing x1.5, the sumatriptan day-after half as long. |
+
+Mechanism: a `passOutMinutes` hook in DanTraits_Faint.lua (new), the
+existing `concussionHeal` hook, and the trip-after timer in Migraine.
+
+### Higher metabolism
+
+The one theme with a built-in cost, which is what makes the band priceable.
+
+| Layer | Change |
+|---|---|
+| Band | Hunger builds x1.15. Alcohol, caffeine, food sickness and every medication clear a fifth faster (x1.2 on the clearance). You eat more and burn through everything faster, good and bad: a 20s character on beta blockers doses more often. |
+| Pricing | Hearty Appetite gives 1 less in the 20s (you are halfway there). Light Eater costs 1 more. |
+| Trait, perk | **Iron Stomach** (costs 2): rotten and raw food half as sickening, a hangover's nausea gone sooner. |
+| Trait, flaw | **Bottomless Pit** (gives 3): hunger x1.3 on top of the band, and the Hungry moodle bites harder (its mood and strength cost x1.5). |
+
+Mechanism: hunger through the stat delta pipeline (a `hungerRate` hook, new,
+on the minute step); `caffeineClearance` and `hangoverHours` exist;
+medication needs a `medHalfLife` hook in DanTraits_Meds.lua (new); food
+sickness a `sickClear` hook (new) where the game's own decay is read.
+
+### Point math
+
+The 20s cost 6 now, for the body alone. Learning adds value, metabolism
+takes some back. Proposed: **the 20s cost 7**; revisit after play. Each new
+band trait is priced like its nearest vanilla cousin: Bounces Back against
+Fast Healer (costs 4), Iron Stomach against Iron Gut (costs 3, vanilla's is
+food poisoning only), Bottomless Pit against Hearty Appetite (gives 4).
+
+### The pricing table, in one place
+
+| Trait | 20s | 30s | 40s | 50s |
+|---|---|---|---|---|
+| Strong, Athletic | 0 | 0 | +2 | +4 (built) |
+| Stout, Fit | -1 (Fit only) | 0 | +1 | +2 (built) |
+| Fast Learner | -1 | 0 | 0 | +1 |
+| Slow Learner (gives) | -1 | 0 | 0 | 0 |
+| Hearty Appetite (gives) | -1 | 0 | 0 | 0 |
+| Light Eater | +1 | 0 | 0 | 0 |
+
+A "gives 1 less" is written as a surcharge on a negative-cost trait: the
+same sign convention as the script (positive takes points).
+
+### What this does not do
+
+- It does not make the 20s strictly better. The metabolism half and the
+  missing profession levels are the price, and both have to stay felt.
+- It does not touch weight. B42's calories and weight model is the game's
+  own; the band changes how fast hunger builds, not how the body stores it.
+  (Open: should a faster metabolism also mean weight comes off faster?)
+
+### Open
+
+1. The 40s and 50s next, by the same frame: experience and judgement, a
+   body that keeps the receipts, a slower metabolism (hunger x0.9, slower
+   clearance, which makes a dose last longer: a real perk for the old).
+2. Whether the band's under-3 learning bonus should show on the creation
+   screen's XP rate column (it is a rate, not a level).
+3. Bottomless Pit's "Hungry moodle bites harder": vanilla's hunger effects
+   are in Java; the mod can add its own on top (unhappiness, a strength
+   factor), not scale the game's.
+
+### Build order, when it is wanted
+
+1. The pricing table (grow `AGE_BODY` and `DanTraits_AgeSurcharge`; the
+   creation screen already draws "+N at this age", add "-N at this age" in
+   green). Smallest, and it changes nothing in play.
+2. The band's learning effect, and Quick Study's rework.
+3. The metabolism band effect with its hooks.
+4. Bounces Back, Iron Stomach, Bottomless Pit.
+5. The 20s price to 7. Play.
+
+## The 40s and 50s, by the same frame (2026-10-07; BUILT the same day)
+
+The same three themes, turned round: experience and judgement in place of
+the sponge; a body that keeps the receipts in place of the prime; a
+metabolism that has slowed, which costs in one place and pays in another.
+The same three dials. What is already built stays; this adds the layers the
+20s got.
+
+### Experience and judgement (learning)
+
+| Layer | 40s | 50s |
+|---|---|---|
+| Band | Skills the profession boosts train x1.1 (the trade you know keeps coming); skills under level 3 train at the plain rate (nothing new comes easily). | Profession skills x1.15; skills under level 3 train x0.9. |
+| Pricing | Fast Learner as it is. | Fast Learner costs 1 more; Slow Learner gives 1 less (it is natural now). |
+| Trait, perk | **Old Hand** (as built, 40s and 50s): the main skill x1.25. | **Seen It All** (50s only, costs 3): panic builds x0.6, Fear of Blood faints half as often, the stress of filth and corpses half. Judgement, not nerve. |
+| Trait, flaw | | **Set in Their Ways** (as built): skills outside the occupation x0.85. |
+
+Mechanism: the same XP hook as the 20s, reading the band and whether the
+perk is a profession boost (`professionBoosts`, already in the age file).
+Seen It All reads into the panic floor code Blood already uses, Hemophobia's
+faint roll and Germaphobe's stress rate: three hooks, two of them new
+(`panicRate`, `filthStress`); the faint roll has `concussionChance`-style
+hooks to copy.
+
+### A body that keeps the receipts (physical)
+
+| Layer | 40s | 50s |
+|---|---|---|
+| Band | As built: endurance x0.92, Fitness and Strength XP x0.9, healing x0.9, stiffness x0.85, wakes x1.15, cells x0.8, concussion x0.75, hangover x1.25, Type 2 +0.1, heart x1.25, Brittle x1.25, Arthritis x1.3. | As built, one step harsher on each. |
+| Pricing | Strong and Athletic +2, Stout and Fit +1 (built). | +4 and +2 (built). |
+| Trait, perk | **Pace Yourself** (40s only, costs 2): swings and sprinting spend a tenth less endurance. You do not waste effort any more. | **Old Bones Know Rain** (50s only, costs 1): the weather in the joints is felt a day early: a notice when a storm or cold snap is forecast (the storm-forecast code Migraine already has). Flavour, cheap, and only an old body has it. |
+| Trait, flaw | **Settled** (40s only, gives 2): a night anywhere but a bed in a house scores a tier worse; the first night in a new bed too. Moving base costs sleep. | **Reading Glasses, Bad Back, Bad Knees** (as built, shared with the 40s); **Old Injury** (as built). |
+
+Mechanism: Pace Yourself through a new `enduranceSpend` hook where Anger
+already adds swing cost; Settled through `nightQuality`, which exists, with
+the bed's square read at sleep.
+
+### A slower metabolism
+
+The 20s pay here; the 40s and 50s are paid here. A dose lasts longer, a
+meal goes further, and the cost is that everything bad lingers too.
+
+| Layer | 40s | 50s |
+|---|---|---|
+| Band | Hunger x0.95. Alcohol, caffeine, food sickness and medication clear x0.9 (a dose lasts a tenth longer; so does a hangover, which the band already makes x1.25). | Hunger x0.9. Clearance x0.8: a daily pill holds a fifth longer, a bottle lasts a fifth longer, and the shakes, the nausea and the drink take a fifth longer to leave. |
+| Pricing | | Hearty Appetite gives 1 more (unnatural now); Light Eater costs 1 less. |
+| Trait, perk | | **Cast Iron** (50s only, costs 2): side effects of medication half as often, and an overdose's threshold one pill higher. Decades of pills. |
+| Trait, flaw | **Delicate Stomach** (40s and 50s, gives 2): a junk or greasy meal (the Vitality grade the mod already gives every meal) brings mild food sickness; strong drink on an empty stomach too. | the same, shared. |
+
+Mechanism: the same new hooks as the 20s (`hungerRate`, `medHalfLife`,
+`sickClear`); Cast Iron reads the medication side-effect roll (`sideChance`
+in DanTraits_Meds.lua, a hook to add) and `overAt`; Delicate Stomach reads
+the `foodGrade` and `drink` hooks, which exist.
+
+### Point math
+
+The 40s give 2 and the 50s 4 now. The learning band effect (profession
+skills x1.1 / x1.15) and the metabolism perk (doses last longer) add real
+value to both; the slower clearance of everything bad and the sleep and
+stomach flaws take some back. Proposed: **leave the prices** and read them
+against play with the 20s at 7. If the 50s turn out too generous once the
+trade levels and the long doses are felt together, the first lever is the
+50s side-skill levels (2 -> 1), not the band price.
+
+### The pricing table, complete
+
+| Trait | 20s | 30s | 40s | 50s |
+|---|---|---|---|---|
+| Strong, Athletic | 0 | 0 | +2 | +4 (built) |
+| Stout | 0 | 0 | +1 | +2 (built) |
+| Fit | -1 | 0 | +1 | +2 (built) |
+| Fast Learner | -1 | 0 | 0 | +1 |
+| Slow Learner (gives) | -1 | 0 | 0 | -1 |
+| Hearty Appetite (gives) | -1 | 0 | 0 | +1 |
+| Light Eater | +1 | 0 | 0 | -1 |
+
+### The band-only traits, complete
+
+| Band | Perks | Flaws |
+|---|---|---|
+| 20s | Quick Study (4), Bounces Back (3), Iron Stomach (2) | Green (4), Bottomless Pit (3) |
+| 40s | Old Hand (4), Pace Yourself (2) | Reading Glasses (2), Bad Back (4), Bad Knees (3), Settled (2), Delicate Stomach (2) |
+| 50s | Old Hand (4), Seen It All (3), Cast Iron (2), Old Bones Know Rain (1) | Reading Glasses (2), Bad Back (4), Bad Knees (3), Old Injury (3), Set in Their Ways (2), Delicate Stomach (2) |
+
+Every band has a perk and a flaw of its own; the 40s stop being a lighter
+50s (Pace Yourself and Settled are theirs alone); the 50s get three perks
+where they had none.
+
+### Open
+
+1. **Clearance and the shared medication system.** `medHalfLife` scales
+   every drug's half-life by the band. Daily drugs (beta blockers,
+   anticonvulsants, metformin) then hold longer for the old, which is the
+   perk; rescue drugs (diazepam, painkillers) too, which may be too kind.
+   Option: scale daily and course drugs only.
+2. **Hunger and the Vitality meal model.** Vitality grades meals; the band
+   changes how fast hunger builds, not what a meal is worth. Keep it so.
+3. **Seen It All against Brave and Desensitized.** Vanilla Brave and
+   Desensitized already cut panic; Seen It All should stack as a factor on
+   whatever is left, not replace them, and it is excluded with Cowardly.
+4. **Settled and multiplayer safehouses.** "A bed in a house" needs a
+   definition the server agrees with: a bed object on a square whose room
+   is not nil.
+
+### Build order, when it is wanted
+
+Same as the 20s, one band at a time: the pricing rows first (nothing in
+play changes), the band learning effect, the metabolism effect and its
+hooks, then the traits. The 50s before the 40s, since the 50s need the
+perks most.
+
+## What the second build did (2026-10-07)
+
+Everything in the two sections above, with these decisions and deviations:
+
+- **Clearance applies to daily and course drugs only** (the user); rescue
+  drugs keep their half-life. `medHalfLife` is run by DanTraits_Meds.lua for
+  those kinds alone.
+- **The 20s stay at 6 points** (the user). The 40s and 50s at -2 / -4.
+- **No "fast metabolism" trait exists** in vanilla B42 or the mod (the user
+  thought one did): the nearest are Hearty Appetite and Light Eater, which
+  are now age-priced, and the mod's Iron Stomach, left as it is and unpriced.
+  Iron Stomach is therefore not a 20s trait; the 20s' second perk is Bounces
+  Back alone, with Bottomless Pit the flaw.
+- **Seen It All's panic** is the `panicRise` stat delta pipeline (per frame),
+  so it scales the game's own rise and stacks with Brave and Desensitized;
+  it excludes Cowardly. Its "corpse stress" half is Germaphobe's filth
+  stress only: vanilla's corpse stress is Java and not reachable.
+- **Pace Yourself** refunds a tenth of an endurance fall seen while
+  `isAttacking()` or `isSprinting()`, per frame, and tells the recovery
+  pipeline the new value.
+- **Settled** reads `player:getBed()` and its square's room; a bed with no
+  room (a tent, outdoors) or no bed at all is "not a house".
+- **Old Bones Know Rain** reads tomorrow's forecast (`getForecast(1)`) once a
+  day from 6 AM: storm, tropical storm, heavy rain, blizzard, or
+  `getTemperature():getTotalMin() <= 0`.
+- **Delicate Stomach** reads the Vitality grade's "junk" reason on the eat
+  hook, and a new `alcoholDrunk` hook from the drink wrap.
+- **Drunkenness and food sickness clearance** stretch or hurry each minute's
+  fall in Age's minute step; a fall to nothing still lingers for the old; the
+  food sickness pipeline is told the new value.
+
 ## Considered and left out
 
 - **Continuous ages (exact years).** Bands are easier to price and explain;
@@ -271,5 +523,8 @@ In game (checklist, ids `age2-*`):
 
 - **Life Story** (`life-story-design.md`) draws one chapter card per decade
   lived: the 50s mean five cards (Upbringing plus four decades) and a Fifties
-  deck. Update that doc once this is settled.
+  deck. Update that doc once this is settled, and give each deck the new
+  band-only traits (Bounces Back and Iron Stomach in the Twenties deck,
+  Pace Yourself and Settled in the Forties, Seen It All and Cast Iron in the
+  Fifties).
 - **PZ Chronicle** can mention the band in the diary voice.

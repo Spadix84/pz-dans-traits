@@ -151,6 +151,42 @@ end
 Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_MigrateModData(player) end)
 Events.OnGameStart.Add(function() DanTraits_MigrateModData(getSpecificPlayer(0)) end)
 
+-- Retired traits (2026-10-07): still registered and defined, so a save that
+-- has one loads, and hidden at creation (DanTraits_Client.lua). A loaded
+-- character has it taken off and, where one took its place, gets that
+-- instead: a mod key, or "base:" and the CharacterTrait constant's name.
+-- false: nothing replaces it.
+DanTraits_RETIRED = {
+    jinxed      = false,
+    ironstomach = "base:IRON_GUT",
+    bouncesback = "thickskull",
+}
+function DanTraits_RetireTraits(player)
+    if not player or not DanTraitsRegistry then return 0 end
+    local n = 0
+    for key, into in pairs(DanTraits_RETIRED) do
+        local entry = DanTraitsRegistry[key]
+        if entry and hasTrait(player, key) then
+            pcall(function()
+                local traits = player:getCharacterTraits()
+                traits:remove(entry)
+                local new = nil
+                if into and string.sub(into, 1, 5) == "base:" then new = CharacterTrait[string.sub(into, 6)]
+                elseif into then new = DanTraitsRegistry[into] end
+                if new and not traits:get(new) then traits:add(new) end
+            end)
+            n = n + 1
+        end
+    end
+    if n > 0 then
+        DanTraits_TraitsChanged(player)
+        print("[DanTraits] retired " .. n .. " trait(s) swapped out")
+    end
+    return n
+end
+Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_RetireTraits(player) end)
+Events.OnGameStart.Add(function() DanTraits_RetireTraits(getSpecificPlayer(0)) end)
+
 -- vanilla traits by id, as the game names them (lowercase "base:needslesssleep").
 -- Walking getKnownTraits is a Java list walk with a tostring and a lowercase
 -- per element, and the trait files ask several times a minute, so the walk is
@@ -369,6 +405,8 @@ DanTraits_DeltaHook(nil, "catchCold", "minute", {
     set = function(player, value) player:getBodyDamage():setCatchACold(value) end,
 })
 DanTraits_DeltaHook(CharacterStat and CharacterStat.FOOD_SICKNESS, "foodSicknessRise", "minute")
+DanTraits_DeltaHook(CharacterStat and CharacterStat.HUNGER, "hungerRise", "minute")   -- Age: a metabolism
+DanTraits_DeltaHook(CharacterStat and CharacterStat.PANIC, "panicRise", "frame")      -- Seen It All
 -- and the pain floors (Util): systems register floors, this applies the largest once
 DanTraits_Every("minute", "PainFloor", DanTraits_ApplyPainFloors, 95)
 

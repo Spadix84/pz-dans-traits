@@ -7,6 +7,11 @@
 -- splints and the glucose meter stay out.
 --   server/Items/DanTraits_PillCaddyAccept.lua  the item's AcceptItemFunction
 --   client/DanTraits_PillCaddyTab.lua           its tab in the inventory window
+--                                               (and the parent fix: on the belt the
+--                                               game parents its container to the
+--                                               character, which breaks its weight)
+--   server/Items/DanTraits_Distributions.lua    where it is found, and what a
+--                                               found one holds
 -- It hangs on a small belt slot like a canteen (AttachmentType Walkie in the
 -- item script). Capacity 1; the game makes that 2 for an Organized character
 -- (capacity x 1.3, at least +1), as it does for a fanny pack.

@@ -9,47 +9,49 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | Trait | Cost | In one line |
 |---|---|---|
 | [Multiple Sclerosis](#multiple-sclerosis--15) | -15 | Heat is the enemy, and your energy is a daily budget of spoons. |
-| [A Really Bad Day](#a-really-bad-day--12) | -12 | Drunk, sick, a shard wound, no clothes, house on fire. |
 | [Arthritis](#arthritis--10) | -10 | Stiff joints, flares in the cold and damp, a grip that slips. |
+| [Asthma](#asthma--10) | -10 | Irritated airways that build to an attack zombies can hear. |
 | [Diabetes Type 1](#diabetes-type-1--10-and-type-2--5) | -10 | A hidden blood sugar model with an insulin pen and a meter. |
 | [Heart Condition](#heart-condition--10) | -10 | Chest pain when winded; push on and it is a heart attack. |
-| [Brittle](#brittle--8) | -8 | Solid hits can fracture a limb. |
-| [Brittle Asthma](#brittle-asthma--8) | -8 | Irritated airways that build to an attack zombies can hear. |
 | [Hemophilia](#hemophilia--10) | -10 | Bleeds never stop on their own; stitches are what stop them. |
-| [Major Depressive Disorder](#major-depressive-disorder--8) | -8 | Episodes that hold mood down for days. |
 | [Migraines](#migraines--10) | -10 | Hours of pain and nausea from personal triggers. |
+| [Brittle](#brittle--8) | -8 | Solid hits can fracture a limb. |
+| [Major Depressive Disorder](#major-depressive-disorder--8) | -8 | Episodes that hold mood down for days. |
+| [A Really Bad Day](#a-really-bad-day--8) | -8 | Drunk, sick, an infected cut, no clothes, house on fire. |
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
 | [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
+| [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
+| [Alcoholic](#alcoholic--4) | -4 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
+| [Germaphobe](#germaphobe--4) | -4 | Dirty skin and clothes build stress; clean is a relief. |
 | [Gluten Intolerance](#gluten-intolerance--4) | -4 | Wheat brings a gut flare. |
-| [Jinxed](#jinxed--4) | -4 | Containers near you sometimes lose an item. |
 | [Smoker](#smoker--4-vanilla-reworked) | -4 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
 | [Vegetarian](#vegetarian--4) | -4 | Refuses meat, fish and anything cooked with them. |
-| [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--4) | -4 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
-| [Germaphobe](#germaphobe--3) | -3 | Dirty skin and clothes build stress; clean is a relief. |
-| [Alcoholic](#alcoholic--2) | -2 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Caffeine Dependent](#caffeine-dependent--2) | -2 | Half a day without coffee or tea brings a headache. |
 | [Hallucinations](#hallucinations--2) | -2 | Phantom zombies, sounds, whispers and panic. |
 | [Tinnitus](#tinnitus--2) | -2 | Your own gunfire deafens you for a while. |
-| [In Their 40s](#age-in-their-20s-6-30s-40s--2-and-50s--4) | -2 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
+| [In Their 40s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -2 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
 | [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
 | [Straight Edge](#straight-edge--1) | -1 | Refuses alcohol and tobacco. |
 | [Cat's Eyes](#cats-eyes-1-vanilla-re-costed) | 1 | Vanilla night vision, re-costed; light wakes you more easily. |
 | [Early Riser](#early-riser-1) | +1 | Starts rested; every night scores a little better. |
 | [Gym Regular](#gym-regular-1) | +1 | Every exercise starts with a Fitness Instructor's head start. |
 | [Hollow Legs](#hollow-legs-1) | +1 | Drink hits less; hangovers milder and shorter. |
-| [Iron Stomach](#iron-stomach-1) | +1 | Rotten and burnt food does half the harm. |
 | [Meal Prepper](#meal-prepper-1) | +1 | Starts on a good diet; variety counts over five days. |
 | [Night Shift](#night-shift-1) | +1 | Daylight hardly wakes you. |
 | [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
-| [Thick Skull](#thick-skull-2) | +2 | Concussed half as often, less badly, heals faster. |
+| [Thick Skull](#thick-skull-2) | +2 | Concussed half as often and less badly; knockouts and faints half as long. |
 | [Good Clotter](#good-clotter-3) | +3 | Bleeds run down twice as fast and lose less blood. |
-| [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often. |
+| [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
+| [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
+| [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
 | [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
-| [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--4) | +6 | No bonus profession level; recovers, heals and trains faster. |
-| [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
+| [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | +6 | No bonus profession level; recovers, heals and trains faster. |
+| [Fast Recovery](#fast-recovery-6) | +6 | Fast Healer folded in; blood comes back faster. |
+| [Grit](#grit-8) | +8 | Feels pain a third less. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
+| [Resilient](#resilient-10-vanilla-reworked) | 10 | Vanilla's disease resistance, plus a 25% chance to beat the Knox infection. |
 
 ### Negative traits
 
@@ -71,13 +73,13 @@ Heat is the enemy, and no medicine helps with it. Your energy is a budget.
 - **Also:** -1 Fitness and -1 Strength; not with Athletic or Strong. Warms up a tenth faster than anyone else. Discomfort (the Uncomfortable moodle) adds stress and spends spoons half as fast again at full discomfort.
 - **Moodles:** MS Heat, MS Flare, Spoons.
 
-#### A Really Bad Day (-12)
+#### A Really Bad Day (-8)
 
 A CDDA-style start.
 
-- You begin drunk, sick, with a shard lodged in a groin wound, no clothes, and the house on fire.
-- Under the health overhaul the shard wound is deadly: pull the shard, stop the bleeding, stitch it.
-- A needle and thread wait in a container in another house 15 to 40 tiles away. No marker; the trait text only says next door.
+- You begin drunk, sick, with an infected laceration on the left forearm, no clothes, and the house on fire.
+- The cut is already infected and won't heal until it is treated: about a day and a half before it spreads into the body. Disinfectant pushes it back; once it has spread, only antibiotics do (see [Wound infection](#wound-infection)).
+- Disinfectant and a bandage wait in a container in another house 15 to 40 tiles away. No marker; the trait text only says next door.
 - Not with Hemophilia or Straight Edge.
 - Not balanced yet; see Status and known issues.
 
@@ -86,9 +88,10 @@ A CDDA-style start.
 Stiff joints and an unreliable grip.
 
 - Slower to move and swing. A Stiff Joints moodle shows how much the weather is in the joints.
-- Flares in the cold and damp (humidity, rain outdoors).
+- Flares in the cold and damp (humidity, rain outdoors). The cold is read from the joints' own skin temperature, the game's thermoregulator, which clothing, wind and wet feed: gloves and a coat keep a flare off. Only with no reading does the air decide.
+- Relief: painkillers halve the weather's share of a flare while they are in your system (about two hours a pill); prednisone cuts it to a third while you take it. The stronger counts, they do not stack, and neither touches the everyday stiffness. A new character starts with a bottle of painkillers (Starting Medication).
 - A swing can slip: 1% calm, more when panicked, hurt, tired or flaring. A slipped swing lands at a third of the weapon's damage.
-- In a bad flare one slip in three throws the weapon to the ground instead. The sandbox option Arthritis Drops Weapons turns that off.
+- Past half a flare one slip in three throws the weapon to the ground instead (a dosed full flare sits exactly at half, and is safe). The sandbox option Arthritis Drops Weapons turns that off.
 - Cannot be taken in the 20s; flares sooner in the 40s.
 
 #### Diabetes Type 1 (-10) and Type 2 (-5)
@@ -98,8 +101,9 @@ A hidden blood sugar model. You read it with a meter, not a number on screen.
 - **Sugar** rises with the carbohydrates you eat and drink, and falls with insulin, exercise and time. Alcohol lowers it.
 - **The moodle** (Blood Sugar) says the sugar is out of range, not which way. The glucose meter and a test strip say which.
 - **Low:** shaky, tired, anxious, and a bad low puts you on the floor. Steady Hands stops working; Epilepsy seizures are likelier.
-- **High:** thirst, and wound infections are likelier and climb faster.
+- **High:** thirst, and wound infections are likelier and climb faster. Over 350: nausea, and after two hours up there, health drains (a spike after a meal costs nothing; hours of it do).
 - **Type 1:** no insulin of your own. An insulin pen (any number of doses) is the only way down. Starts with a pen, a meter and strips.
+- **Knowing your doses (Type 1):** one dose covers about 12.5 g of carbohydrate. With First Aid 3 a food's tooltip (or a sugary drink's, for the whole bottle or mug) says whether its sugar hits fast or slowly and gives a wide range of doses; First Aid 6 narrows the range, and the meter adds how much insulin is still working; First Aid 9 gives the exact doses for your body, and the meter says what it takes to get back to 110 (more doses, or grams of fast sugar), and a food that would spike you past 350 even with its doses says to eat it half, a third or a quarter at a time. The meter's tooltip keeps its last reading and advice. The magazine **Living With Type 1** (new item: hospital magazine racks, medical offices, pharmacies, bookstore and library medical shelves) teaches the First Aid 9 knowledge at any level.
 - **Type 2:** the body's own insulin, limited by weight (and by age: more resistance in the 40s, a little less in the 20s). Metformin builds up over two days. Starts on it with a bottle.
 
 #### Heart Condition (-10)
@@ -117,20 +121,20 @@ Chest pain when you are winded, and a heart attack if you push through it.
 - A solid hit (2 damage or more) has a 20% chance to fracture one of six limbs.
 - Likelier in the 40s.
 
-#### Brittle Asthma (-8)
+#### Asthma (-10)
 
 Airway irritation that builds through four tiers to an attack.
 
 - **What irritates:** cold air, corpses nearby, exertion (spending endurance when it is already low), panic, smoke, and a wound infection's fever. A mask halves the environmental share.
 - **Tier 1:** a warning. **Tier 2:** endurance recovers at half speed, the odd quiet cough. **Tier 3:** no recovery and coughing. **Tier 4, the attack:** endurance and health drain to a 20% floor, you cough loud enough to pull zombies, and an attack that empties you can black you out.
-- At rest an attack eases over about four hours. The rescue inhaler (new item) ends it at once.
+- At rest an attack eases over about four hours. The rescue inhaler (new item) ends it at once. Inhalers turn up half as often again as they used to; the sandbox option Inhaler Loot sets the rate.
 - Smoking, and a smoker's lungs, make it worse.
 - Moodle: Airway Irritation.
 
 #### Hemophilia (-10)
 
-- Bleeds never run down on their own while unbandaged, and open wounds bleed again until bandaged.
-- With [Blood](#blood) on: bleeds lose half as much again, and a bandage only slows one to two fifths. A soaked bandage, or one over a shard, is no better than none, so change it. Stitches are what stop it.
+- Bleeds never run down on their own while unbandaged: the bleeding clock is held where it is. A bandage runs it down as usual, and the clock is remembered under the dressing, so changing a bandage carries on from where the old one got to instead of starting the bleed over. Open wounds bleed again until bandaged, unless a bandage already ran their clock to nothing.
+- With [Blood](#blood) on: bleeds lose half as much again, and a bandage only slows one to a quarter. A soaked bandage, or one over a shard, is never worse than anyone else's open wound, so change it. Stitches stop a deep wound; a scratch stops only under a bandage.
 - With Blood off: every unbandaged bleed costs extra health instead.
 - Not with Good Clotter or A Really Bad Day.
 
@@ -152,7 +156,7 @@ Attacks that cost you hours.
 - **Personal triggers:** of the eight lifestyle ones, each character draws three that count double; the other five count half. You are not told which. Once a strong trigger has brought on two attacks, your character works it out and says so.
 - **The attack:** an aura first, then hours of pain and nausea (Queasy untreated). Daylight outdoors adds the most pain and halves the recovery; a lit room adds some and slows it; a dark room speeds it. Sunglasses halve the pain the light adds. Your vision blurs for the attack (Short Sighted's blur, its shorter sight and worse aim with it). Sleep shortens it, less in a lit room. A refractory day follows.
 - **Painkillers** barely touch an attack: a third of their usual relief, a tenth off the time.
-- **Sumatriptan** (new item, rare) is what works. Taken in the aura the attack is half as bad; taken during one it is over within two hours with the pain and nausea halved. Once per attack. The day after you are heavy and a little clumsy (a 3% grip slip a swing; moodle: Heavy-Limbed). Starts with a pack down to its last two tablets.
+- **Sumatriptan** (uncommon) is what works. Taken in the aura the attack is half as bad; taken during one it is over within two hours with the pain and nausea halved. Once per attack. The day after you are heavy and a little clumsy (a 3% grip slip a swing; moodle: Heavy-Limbed). Starts with a pack down to its last two tablets.
 - Moodles: Migraine, Heavy-Limbed the day after sumatriptan (for anyone who takes it), and Light Too Bright during an attack (too bright, the light hurts, blinding: how much the light is adding; sunglasses take it down).
 
 #### Epilepsy (-6)
@@ -184,10 +188,6 @@ Attacks that cost you hours.
 - The flare ramps up: cramps, nausea, low mood. It takes about ten hours to clear; a second meal during one adds to it.
 - Moodle: Gut Flare.
 
-#### Jinxed (-4)
-
-- Freshly generated containers near you have a 35% chance to lose one item.
-
 #### Smoker (-4, vanilla reworked)
 
 - Cravings build at half vanilla's pace for a typical smoker, faster the heavier the habit. Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), hunger and restless sleep.
@@ -203,14 +203,14 @@ Attacks that cost you hours.
 - Meat, fish, insects and anything cooked with them are refused: the eat action will not start.
 - Judged by food type, by name and by a dish's ingredients.
 
-#### Germaphobe (-3)
+#### Germaphobe (-4)
 
 - Dirty or bloody skin (the four worst parts count, not the average) and dirty clothes build stress and hold mood down.
 - Getting clean is a real relief.
 - Wounds are a fifth less likely to take an infection.
 - Moodle: Filthy.
 
-#### Alcoholic (-2)
+#### Alcoholic (-4)
 
 - Withdrawal after a day without a drink: craving, low mood and poor sleep, then pain, nausea and the shakes. Heavy drinkers get hallucinations and seizures, and a seizure can concuss.
 - The deeper the habit, the sooner and harder it comes. Feeling tipsy ends the craving at a normal habit.
@@ -256,7 +256,16 @@ Attacks that cost you hours.
 
 - +1 Spear, Long Blade, Axe and Blacksmithing.
 
-#### Fast Recovery (+8)
+#### Resilient (10, vanilla reworked)
+
+- Less prone to disease and slower to turn, as vanilla. Re-costed from 4 to 10.
+- A 25% chance to beat the Knox infection (sandbox option Resilient: Knox Survival Chance). The roll is hidden: you get sick like anyone else, and if you are lucky the fever breaks partway through and the infection is gone. Every new infection rolls again.
+
+#### Grit (+8)
+
+- Pain is felt a third less: the moodle and everything pain drives (aim, mood, sleep). Painkillers still work as vanilla.
+
+#### Fast Recovery (+6)
 
 - Fast Healer folded in (granted; not with Fast Healer or Slow Healer).
 - After a bleed, blood volume and red cells come back half as fast again.
@@ -271,7 +280,19 @@ Attacks that cost you hours.
 - Dexterous folded in (granted; not with Dexterous or All Thumbs).
 - Splints you set go wrong and stitches you put in come out rough half as often. Your fresh stitches tear half as often.
 - Stitching, pulling glass or bullets, and splinting take a quarter less time.
+- Reloading and racking run a quarter faster (an ammo strap stacks), and a weapon goes to and from the belt a quarter faster.
 - Not while your hands shake (alcohol withdrawal, a diabetic low).
+
+#### Iron Gut (4, vanilla reworked)
+
+- Less chance of food illness, as vanilla. Re-costed from 2 to 4, with the old Iron Stomach folded in:
+- Rotten and burnt food does half the harm.
+- Food sickness climbs half as fast.
+- A character with Iron Stomach from an older save gets Iron Gut in its place.
+
+#### Keen Cook (4, vanilla reworked)
+
+- Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade (knife work). Re-costed from 3 to 4.
 
 #### Good Clotter (+3)
 
@@ -283,6 +304,7 @@ Attacks that cost you hours.
 
 - A knock to the head concusses half as often and a quarter less badly, on top of a helmet.
 - Concussions heal half as fast again.
+- Faints, knockouts and shock last half as long, and so does the day after a sumatriptan (the old Bounces Back, folded in; any age).
 
 #### Outdoorsman (2, vanilla reworked)
 
@@ -310,11 +332,6 @@ Attacks that cost you hours.
 - Hangovers are milder (x0.6) and shorter (x0.7).
 - Not with Straight Edge.
 
-#### Iron Stomach (+1)
-
-- Rotten and burnt food does half the harm.
-- Food sickness climbs half as fast.
-
 #### Meal Prepper (+1)
 
 - Starts on a good diet.
@@ -325,9 +342,9 @@ Attacks that cost you hours.
 - Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest.
 - Not with Early Riser.
 
-### Age: In Their 20s (+6), 30s, 40s (-2) and 50s (-4)
+### Age: In Their 20s (+6), 30s, 40s (-2) and 50s (-6)
 
-Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Younger bodies recover and train faster; older characters start with more skill. The 30s are the game as it is: pick no Age trait and In Their 30s is given at the start. The 20s cost 6 points, the 40s give 2 and the 50s 4. The whole system, with every number, is in [docs/age.md](docs/age.md).
+Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Younger bodies recover and train faster; older characters start with more skill. The 30s are the game as it is. The creation screen asks for the age first: until one of the four is chosen nothing else is offered and Next is greyed. In Their 30s costs nothing, the 20s cost 6 points, the 40s give 2 and the 50s 6. The whole system, with every number, is in [docs/age.md](docs/age.md).
 
 - **Profession:** extra levels in the profession's main skill at the start: 0 / 1 / 2 / 3. Every skill tied for the top boost gets them. Each other skill the profession boosts gets +1 in the 40s and +2 in the 50s. Fitness and Strength never get any; the Unemployed get Maintenance. The creation screen shows them in blue in the Major Skills list.
 - **Every day (20s / 40s / 50s against the 30s):**
@@ -337,13 +354,17 @@ Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Youn
   - Stiffness fades x1.5 / x0.85 / x0.7.
   - Night wakes count x0.8 / x1.15 / x1.3 in the sleep score.
   - Red cells rebuild x1.15 / x0.8 / x0.65; a concussion heals x1.2 / x0.75 / x0.6; hangovers x0.85 / x1.25 / x1.5.
+  - **The mind:** any skill under level 3 trains x1.2 / x1 / x0.9; the profession's own skills train x1 / x1.1 / x1.15.
+  - **The metabolism:** hunger builds x1.15 / x0.95 / x0.9; caffeine, drink, food sickness and daily or course medication clear x1.2 / x0.9 / x0.8 (a daily pill holds a fifth longer in the 50s, and so does everything bad).
 - **In Their 20s:** cannot take Handy or Arthritis; Gym Regular starts at 65; Type 2 resistance a little lower; a Heart Condition acts up less (x0.8).
 - **In Their 40s and 50s:** Handy gives +1 Carpentry more; Arthritis flares sooner (x1.3 / x1.6); Brittle bones snap more often (x1.25 / x1.5); a Heart Condition acts up more (x1.25 / x1.5); Type 2 resistance is higher.
-- **Staying in shape costs more with age:** Strong and Athletic cost 2 points more in the 40s and 4 more in the 50s; Stout and Fit 1 and 2. The creation screen shows the extra beside the trait's cost.
+- **Age pricing:** a trait can cost more or fewer points in a band, shown beside its cost on the creation screen (red dearer, green cheaper). Strong and Athletic +2 / +4 in the 40s / 50s, Stout +1 / +2, Fit -1 in the 20s then +1 / +2; Fast Learner -1 in the 20s and +1 in the 50s; Slow Learner gives a point fewer in the 20s and the 50s; Hearty Appetite gives a point fewer in the 20s and one more in the 50s.
 - **Traits only one age can take:**
-  - 20s: **Green (-4)**, every occupation skill starts a level lower; **Quick Study (+4)**, skills under level 3 gain experience x1.25.
-  - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-4)**, a heavy load builds back pain; **Bad Knees (-3)**, running, sprinting and climbing build knee pain; **Old Hand (+4)**, the occupation's main skill gains experience x1.25.
-  - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-2)**, skills outside the occupation gain experience x0.85.
+  - 20s: **Green (-4)**, every occupation skill starts a level lower; **Quick Study (+4)**, skills under level 5 gain experience x1.4; **Bottomless Pit (-6)**, hunger a third faster again and going hungry drags the mood down.
+  - 40s: **Pace Yourself (+2)**, a tenth of the stamina a swing or sprint spends comes back; **Settled (-2)**, sleeps badly off a house bed and the first night in any new one.
+  - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-4)**, a heavy load builds back pain; **Bad Knees (-3)**, running, sprinting and climbing build knee pain; **Old Hand (+4)**, every skill the occupation boosts gains experience x1.25; **Delicate Stomach (-2)**, junk food and a drink on an empty stomach bring a queasy stomach.
+  - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-2)**, skills outside the occupation gain experience x0.85; **Seen It All (+3)**, panic builds at six tenths the pace, Fear of Blood faints and filth stress halved; **Cast Iron (+2)**, medication side effects half as often and the overdose line a pill higher; **Old Bones Know Rain (+1)**, tomorrow's storm or freezing night announced the morning before.
+- **Green** takes the levels away only; it does not change how fast anything trains.
 - **Sandbox:** turn age off, set the default decade, set the profession levels per decade.
 
 ## For everyone
@@ -378,7 +399,7 @@ The light on your square while asleep sets how deep the sleep is.
 
 Bleeding drains blood instead of health.
 
-- **How fast:** by how bad the bleed is (the game's own bleeding clock), where it is (neck three times, head, thigh and groin half as much again, chest and belly a little more, hands and feet less), and the dressing: a bandage slows it to a tenth, a shard or bullet left in bleeds through the bandage, stitches stop it.
+- **How fast:** by how bad the bleed is (the game's own bleeding clock), where it is (neck three times, head, thigh and groin half as much again, chest and belly a little more, hands and feet less), and the dressing: a bandage slows it to a tenth, a shard or bullet left in bleeds through the bandage, stitches stop it, [clotting powder](#wound-care) cuts it to a quarter.
 - **15% lost, Pale:** endurance recovers slower.
 - **30%, Light-headed:** no sprinting, anxious.
 - **40%, Shock:** endurance capped, health draining, and you can pass out for 5 to 15 game minutes.
@@ -398,7 +419,7 @@ Replaces vanilla's one-roll infection.
 - **Level 5, spread:** fever (temperature, the Sick moodle, tiredness, thirst) and only antibiotics work. Past that, sepsis drains health, faster the worse it gets. Untreated it kills in a couple of days.
 - **Antibiotics** are the game's own pills, one a dose. Each tops up a level in the blood that halves every six hours; while it is high enough the infection falls back. A dose every eight hours keeps it there; ten doses finish a course (a box holds 12). Stop early once it is gone and it has a coin flip to come back. Vanilla's one-pill cure is gone.
 - A fever makes for a bad night, brings on migraines, raises blood sugar and irritates asthma. Sepsis brings delirium.
-- Zombie infection is untouched.
+- Zombie infection is untouched, except for [Resilient](#resilient-10-vanilla-reworked)'s chance to beat it.
 - Moodle: Infection. A sandbox option turns it off.
 
 ### Wound care
@@ -410,6 +431,7 @@ Replaces vanilla's one-roll infection.
 - **Splinting is a First Aid roll:** half the time badly set at level 0, 6% less a level, never under 2%. Set badly, the bone heals at half speed and hurts; only a setter at level 3 or more can tell. Take it off and set it again.
 - Moving on a broken leg with no splint makes the break worse.
 - A sandbox option turns it off.
+- **Clotting powder** (new item, 5 uses; medicine cabinets, first aid kits, doctors' and medics' bags, pet shops, salons, army medical): right-click a bleeding part in the health panel with the dressing off. A scratch or cut stops bleeding; a deep wound's bleed is halved and then cut to a quarter for 12 hours (it still needs stitches), and a bandage over it soaks that much slower. It stings, less with First Aid. Barely helps with a shard or bullet still in (x0.6); a hemophiliac's bleed only halves and never stops. The clot breaks if the wound tears or opens again. Fear of Blood can faint at it, like a bandage. Not switched off with wound care.
 
 ### What First Aid tells you
 
@@ -493,7 +515,7 @@ One list of drugs that every trait reads (`DanTraits_Meds.lua`).
 - **Wearing off:** a drug's moodle (beta blockers, anticonvulsants) is paler green while it builds up and full green once it has, and goes out when the drug leaves your system. You are told when a protecting drug lapses.
 - **Starting Medication** (sandbox option, on): a character who starts with a condition starts on its drug, built up, with the medication. Off, they find their own.
 - **Diazepam** (new item): the panic drop vanilla beta blockers used to give, for about an hour and a half. Beta blockers now only do what Heart Condition needs.
-- **Pill Caddy** (new item, rare): a belt-worn weekly organiser that holds medication only. Capacity 1 (Organized makes it 2). A new character with a medical trait has a 1% chance to start with one.
+- **Pill Caddy** (new item, uncommon): a belt-worn weekly organiser that holds medication only. Capacity 1 (Organized makes it 2). Found in medicine cabinets, bedside drawers, handbags, on pharmacy shelves and on the odd zombie, and a found one often has a bottle or two in it. A new character with a medical trait has a 1% chance to start with one.
 - Daily drug bottles hold 30 pills, the mod's bottles spawn partly used, and part bottles merge like vanilla's. Every tooltip says what the drug treats, how to take it and its side effects. Antidepressants keep Depression's own two-week regimen, with a moodle of their own: paler green while a pill's coverage runs, full green once the two weeks are up, gone when a day is missed.
 
 ### Moodles
@@ -514,7 +536,7 @@ DanTraits/common/        empty; Build 42 expects it beside 42/
   media/lua/client/      context menus, moodles, telemetry for the dashboard
   media/scripts/         trait and item definitions
 DanTraits/tools/         dashboard.py + Dashboard.bat (live readout and command console),
-                         make_icons.py (draws the moodle and sun block icons)
+                         make_icons.py (draws the moodle, item and age trait icons)
 tests/                   offline tests (fengari); python tests/run_tests.py
 workshop/                workshop.txt and preview.png for the Steam Workshop page
 deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back, or --workshop)
@@ -537,7 +559,7 @@ The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file
 
 Version 1.1.0, Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
 
-- **A Really Bad Day** is not balanced yet. Without stitching supplies the shard wound kills even a character with no other traits, which is why a needle and thread now wait in a nearby house. Other options (a lower bleed on the shard, a starting bandage, no hangover from the opening drink) are waiting on more play.
+- **A Really Bad Day** is not balanced yet. Its glass shard killed even a character with no other traits, so for now the wound is an infected cut and the trait gives 8 points instead of 12, until a proper balance is found.
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
 - **Project A-Life** (NPCs on zombie bodies) is supported: its NPCs and its zombie steering leave a Hallucinations phantom alone (`DanTraits_ALife.lua`, which does nothing when A-Life is not loaded). NPC wounds are ordinary wounds, so blood, infection and wound care apply to them.

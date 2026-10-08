@@ -2,8 +2,16 @@
 -- Stiff, painful joints. Hands, forearms and legs carry a floor of the
 -- game's own stiffness all the time (the fitness system's muscle
 -- stiffness, which the game turns into pain and slower movement), and the
--- floor rises in the cold and the damp: a flare. Stiffness is not the pain
--- stat, so painkillers ease the ache but not the slowness. Every attack is
+-- floor rises in the cold and the damp: a flare. The cold is read from the
+-- joints' own skin temperature (the game's thermoregulator, which clothing,
+-- wind and wet feed), so gloves and a coat keep it out; the air decides only
+-- when there is no reading. Relief: painkillers halve the weather's share of
+-- a flare while they are in the system (DanTraits_Meds.lua, about two hours
+-- a pill) and prednisone cuts it to a third; the stronger counts, they do
+-- not stack, and neither touches the everyday stiffness. Stiffness is not
+-- the pain stat, so painkillers also ease the ache but not the slowness.
+-- A new Arthritis character starts with a bottle of painkillers (Starting
+-- Medication). Every attack is
 -- slower on top of that, more so in a flare. And the grip is unreliable: a
 -- swing can slip, worse when panicked, hurt or tired, and worse again when
 -- the joints are flaring. A slipped swing lands weak (the weapon's damage cut
@@ -11,7 +19,9 @@
 -- flare can a slip throw the weapon to the ground, and the
 -- ArthritisWeaponDrop sandbox option turns that off.
 --
--- Mod data: artJoint, artStiffTarget, artCombatSet; on the weapon,
+-- Mod data: artJoint (the flare as felt), artWeather (before relief),
+-- artRelief (the x applied), artSkin (the joints' mean skin temperature, 0
+-- with no reading), artStiffTarget, artCombatSet, artKitGiven; on the weapon,
 -- DanTraitsSlip = { min, max } while a slipped swing is weakened.
 require "DanTraits"
 
@@ -27,6 +37,12 @@ local ART_COLD_FULL     = 0       -- ...to full here
 local ART_DAMP_WEIGHT   = 0.7     -- how much damp counts against cold
 local ART_HUMID         = 0.8     -- humidity above this counts as half damp
 local ART_FLARE_NOTICE  = 0.5     -- joint factor crossing this upward: a notice
+local ART_SKIN_WARM     = 33      -- a joint's skin temperature (C) at which the cold is nothing (the game's normal skin)...
+local ART_SKIN_COLD     = 23      -- ...and at which it is everything
+-- relief
+local ART_MED_PAINKILLER = 0.5    -- the weather's share of a flare x this while painkillers are in the system
+local ART_MED_PREDNISONE = 0.35   -- ...and x this on prednisone (the stronger counts; they do not stack)
+local ART_START_PILLS   = "Base.Pills"   -- a new character's bottle (Starting Medication)
 -- combat
 local ART_COMBAT_SLOW   = 0.15    -- every attack this much slower...
 local ART_COMBAT_FLARE  = 0.15    -- ...and this much more at a full flare
@@ -37,7 +53,7 @@ local FUMBLE_PAIN       = 6       -- added at full pain
 local FUMBLE_FATIGUE    = 5       -- added at full fatigue
 local FUMBLE_FLARE      = 4       -- added at a full flare
 local SLIP_DAMAGE       = 0.35    -- a slipped swing hits for this share of the weapon's damage
-local SLIP_DROP_FLARE   = 0.5     -- a slip can only throw the weapon at this flare or worse...
+local SLIP_DROP_FLARE   = 0.5     -- a slip can only throw the weapon past this flare (a dosed full flare is exactly this, and safe)...
 local SLIP_DROP_SHARE   = 0.33    -- ...and then one slip in three does
 local SLIP_RESTORE_MS   = 3000    -- the weakened damage is put back after this long whatever happens
 
@@ -45,13 +61,40 @@ local JOINTS = { "Hand_L", "Hand_R", "ForeArm_L", "ForeArm_R", "UpperLeg_L", "Up
 
 local clamp01 = DanTraits_Clamp01
 
+-- 0..1 how cold the joints are by their skin (the mean over the eight; a
+-- bare hand counts against a warm leg), with the mean temperature; nil
+-- when no joint has a reading (no thermal node: the air decides instead)
+local function skinCold(player)
+    local sum, temps, n = 0, 0, 0
+    pcall(function()
+        local bd = player:getBodyDamage()
+        for _, name in ipairs(JOINTS) do
+            local part = bd:getBodyPart(BodyPartType[name])
+            local skin = part and part.getSkinTemperature and tonumber(part:getSkinTemperature()) or 0
+            if skin > 0 then
+                sum = sum + clamp01((ART_SKIN_WARM - skin) / (ART_SKIN_WARM - ART_SKIN_COLD))
+                temps = temps + skin
+                n = n + 1
+            end
+        end
+    end)
+    if n == 0 then return nil, 0 end
+    return sum / n, temps / n
+end
+
 -- 0..1 how much the weather is in the joints
 local function jointFactor(player)
     local cold, damp = 0, 0
     pcall(function()
         local climate = getClimateManager()
-        local temp = DanTraits_AirTemp(player) or ART_COLD_FROM
-        cold = clamp01((ART_COLD_FROM - temp) / (ART_COLD_FROM - ART_COLD_FULL))
+        local skin, meanSkin = skinCold(player)
+        pcall(function() DanTraits_Data(player).artSkin = meanSkin end)
+        if skin ~= nil then
+            cold = skin
+        else
+            local temp = DanTraits_AirTemp(player) or ART_COLD_FROM
+            cold = clamp01((ART_COLD_FROM - temp) / (ART_COLD_FROM - ART_COLD_FULL))
+        end
         local outside = false
         pcall(function() outside = player:isOutside() end)
         if outside then damp = math.max(damp, clamp01(climate:getRainIntensity() or 0)) end
@@ -62,10 +105,27 @@ local function jointFactor(player)
 end
 DanTraits_ArthritisJoint = jointFactor
 
+-- x on the weather's share of a flare from what is in the system: the
+-- stronger of painkillers and prednisone, 1 with neither
+local function reliefScale(player)
+    local scale = 1
+    if not DanTraits_MedEffect then return scale end
+    local ok, e = pcall(DanTraits_MedEffect, player, "painkillers")
+    if ok and (tonumber(e) or 0) > 0 then scale = math.min(scale, 1 - (1 - ART_MED_PAINKILLER) * e) end
+    ok, e = pcall(DanTraits_MedEffect, player, "prednisone")
+    if ok and (tonumber(e) or 0) > 0 then scale = math.min(scale, 1 - (1 - ART_MED_PREDNISONE) * e) end
+    return scale
+end
+DanTraits_ArthritisRelief = reliefScale
+
 local function updateArthritisMinute(player, d)
     if not hasTrait(player, "arthritis") then return end
-    local joint = DanTraits_RunHooks("arthritisJoint", jointFactor(player), player)   -- Age: sooner in the 40s
+    local weather = DanTraits_RunHooks("arthritisJoint", jointFactor(player), player)   -- Age: sooner in the 40s
+    local relief = reliefScale(player)
+    local joint = weather * relief
     local before = d.artJoint or 0
+    d.artWeather = weather
+    d.artRelief = relief
     d.artJoint = joint
     if joint >= ART_FLARE_NOTICE and before < ART_FLARE_NOTICE then notify(player, "UI_DanTraits_ArthritisFlare") end
     local target = ART_STIFF_BASE + (ART_STIFF_FLARE - ART_STIFF_BASE) * joint
@@ -200,7 +260,7 @@ local function onWeaponSwing(player, weapon)
     local slip = DanTraits_GripSlipChance(player)
     if slip <= 0 or ZombRand(1000) >= slip * 10 then return end
     local d = player:getModData().DanTraits
-    if hasTrait(player, "arthritis") and (d and d.artJoint or 0) >= SLIP_DROP_FLARE and DanTraits_SandboxOn("ArthritisWeaponDrop")
+    if hasTrait(player, "arthritis") and (d and d.artJoint or 0) > SLIP_DROP_FLARE and DanTraits_SandboxOn("ArthritisWeaponDrop")
         and ZombRand(100) < SLIP_DROP_SHARE * 100 then
         dropWeapon(player)
         return
@@ -227,3 +287,23 @@ Events.OnPlayerAttackFinished.Add(onAttackFinished)
 DanTraits_Every("frame", "ArthritisGrip", restoreDue, 40)
 DanTraits_Every("minute", "Arthritis", updateArthritisMinute, 40)
 DanTraits_Every("frame", "Arthritis", updateArthritisFrame, 40)
+
+-- a new character has lived with it: a bottle of painkillers at the start
+-- (the Starting Medication option), once
+local function onArthritisCreate(playerNum, player)
+    if not player or not hasTrait(player, "arthritis") then return end
+    local hours = 0
+    pcall(function() hours = player:getHoursSurvived() or 0 end)
+    if hours > 0 then return end
+    local d = DanTraits_Data(player)
+    if d.artKitGiven then return end
+    d.artKitGiven = true
+    if not DanTraits_SandboxOn("StartingMedication") then return end
+    pcall(function()
+        local bottle = player:getInventory():AddItem(ART_START_PILLS)
+        if bottle then bottle:getModData().DanTraitsFilled = true end   -- a full bottle, not the random spawn fill
+    end)
+end
+
+Events.OnCreatePlayer.Add(onArthritisCreate)
+

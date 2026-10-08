@@ -6,6 +6,12 @@
 -- zombie). Insulin also turns up in fridges, where people keep it. Sun block
 -- is not medicine: it is as common as toothpaste (10 in a bathroom cabinet,
 -- 20 on a toiletry shelf), and turns up in lockers, camping gear and glove boxes.
+-- The Pill Caddy is uncommon (0.5 in a bathroom cabinet) and a found one may
+-- have medication in it (CADDY_CONTENTS, registered as the container's own
+-- distribution).
+-- A spec may carry `boost` (every weight x this) and `sandbox` (a percent
+-- option on top: 100 is the default, 0 none). Inhalers: x1.5 since
+-- 2026-10-07, and sandbox InhalerLoot.
 require "Items/ProceduralDistributions"
 require "Items/Distributions"
 
@@ -42,6 +48,8 @@ end
 local ITEMS = {
     {
         name = "DanTraits.Inhaler",
+        boost = 1.5,
+        sandbox = "InhalerLoot",
         -- ProceduralDistributions.list[name].items
         procedural = {
             BathroomCabinet = 1, BathroomCounter = 0.5, BathroomShelf = 0.5,
@@ -142,7 +150,7 @@ local ITEMS = {
     prescription("DanTraits.Prednisone", 1.25),     -- MS: an everyday steroid, more common than most prescriptions
     prescription("DanTraits.Baclofen", 1),          -- MS
     prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
-    prescription("DanTraits.Sumatriptan", 0.4),     -- Migraines: new in the early 90s, rare
+    prescription("DanTraits.Sumatriptan", 0.8),     -- Migraines: new in the early 90s, a little rarer
     {
         -- anti-anxiety pills: the vanilla beta blocker's old job, found where
         -- prescriptions are, a little more often in a drug shack
@@ -188,6 +196,29 @@ local ITEMS = {
         clutter = { ClosetItems = 0.5, GloveBoxItems = 2 },
     },
     {
+        -- clotting (styptic) powder: wherever bandages are kept, a little
+        -- rarer than them, and where barbers, groomers and medics kept it
+        -- (for scale: a bandage is 6 in a medicine cabinet, 30 over a first
+        -- aid kit's list, disinfectant 4 there)
+        name = "DanTraits.ClottingPowder",
+        procedural = {
+            BathroomCabinet = 0.5, MedicalCabinet = 3, StoreShelfMedical = 4,
+            MedicalClinicTools = 4, MedicalStorageTools = 4, HospitalRoomShelves = 2,
+            DoctorTools = 6, NurseTools = 4, AmbulanceDriverTools = 8,
+            SafehouseMedical = 6, SafehouseMedical_Mid = 3, SafehouseMedical_Late = 1,
+            ArmyStorageMedical = 6, ArmyBunkerMedical = 4,
+            PetShopShelf = 4, CratePetSupplies = 4, SalonCounter = 2,
+            HuntingLockers = 1, CampingStoreGear = 1,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 1 },
+            { { "Bag_MedicalBag", "items" }, 10 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 4 },
+        },
+        bags = { FirstAidKit = 6 },
+        clutter = {},
+    },
+    {
         name = "DanTraits.IronPills",
         procedural = {
             BathroomCabinet = 1.5, BathroomCounter = 0.5, BathroomShelf = 0.5,
@@ -225,19 +256,67 @@ local ITEMS = {
         clutter = { DeskItems = 0.1 },
     },
     {
-        -- a rare find: a weekly pill organiser in a medicine cabinet, a bedside
-        -- drawer, a handbag, or for sale on a pharmacy shelf
+        -- an uncommon find (about a tenth as often as a bottle of beta blockers,
+        -- as often as a first aid kit): a weekly pill organiser in a medicine
+        -- cabinet, a bedside drawer, a handbag, on the odd zombie's belt, or for
+        -- sale on a pharmacy shelf. Found ones may have pills in them (CADDY_CONTENTS).
         name = "DanTraits.PillCaddy",
         procedural = {
-            BathroomCabinet = 0.05, BathroomCounter = 0.03, BedroomSidetable = 0.02,
-            MedicalCabinet = 0.1, MedicalClinicDrugs = 0.2, MedicalStorageDrugs = 0.1,
-            StoreShelfMedical = 0.3, HospitalRoomShelves = 0.1, SafehouseMedical = 0.3,
+            BathroomCabinet = 0.5, BathroomCounter = 0.3, BedroomSidetable = 0.2,
+            MedicalCabinet = 1, MedicalClinicDrugs = 2, MedicalStorageDrugs = 1,
+            StoreShelfMedical = 3, HospitalRoomShelves = 1, SafehouseMedical = 3,
         },
         suburbs = {
-            { { "all", "medicine", "items" }, 0.05 },
+            { { "all", "medicine", "items" }, 0.5 },
+            { { "all", "inventoryfemale", "items" }, 0.02 },   -- zombie pockets and belts
+            { { "all", "inventorymale", "items" }, 0.02 },
         },
-        bags = { HandbagsAndPurses = 0.01 },
+        bags = { HandbagsAndPurses = 0.1 },
         clutter = {},
+    },
+    {
+        -- Living With Type 1: where health magazines are (vanilla's Magazine_Health
+        -- is 10 to 20 in these lists, so about one in eight to ten of them), the
+        -- medical shelves of bookstores and libraries, now and then a diabetic's
+        -- bathroom or bedside.
+        name = "DanTraits.InsulinMag",
+        procedural = {
+            HospitalMagazineRack = 2, MedicalOfficeDesk = 1.5, MedicalOfficeCounter = 1.5,
+            WaitingRoomDesk = 1, StoreShelfMedical = 1, BookstoreMedical = 2, LibraryMedical = 2,
+            LibraryMagazines = 0.5, MagazineRackMixed = 0.3, CrateMagazines = 0.3,
+            BathroomShelf = 0.05, BedroomSidetable = 0.05,
+        },
+        suburbs = {},
+        bags = {},
+        clutter = {},
+    },
+}
+
+-- What a found Pill Caddy holds. The game rolls a container item's contents
+-- from SuburbsDistributions[item type] (vanilla's Bag_ALICEpack_Army and
+-- friends, FirstAidKit), so the caddy gets an entry under its type. Two
+-- rolls at these odds: most caddies have a bottle or two, some are empty, a
+-- shop one is usually empty (it is new stock, so the pharmacy shelf list
+-- is not the one this reads; the game rolls contents by the item, not the
+-- shelf). Bottles come part-used as any looted bottle does.
+local CADDY_CONTENTS = {
+    rolls = 2,
+    items = {
+        "Base.Pills", 10,
+        "Base.PillsVitamins", 6,
+        "Base.PillsAntiDep", 4,
+        "Base.PillsBeta", 4,
+        "Base.PillsSleepingTablets", 4,
+        "Base.Antibiotics", 2,
+        "DanTraits.Anticonvulsants", 3,
+        "DanTraits.Metformin", 3,
+        "DanTraits.IronPills", 3,
+        "DanTraits.Diazepam", 2,
+        "DanTraits.NicotineGum", 2,
+        "DanTraits.Sumatriptan", 2,
+        "DanTraits.Prednisone", 1,
+        "DanTraits.Baclofen", 1,
+        "DanTraits.Amantadine", 1,
     },
 }
 
@@ -257,29 +336,47 @@ local function walk(root, path)
     return node
 end
 
+-- a spec's weights x its boost and its sandbox percent
+local function lootScale(spec)
+    local k = spec.boost or 1
+    if spec.sandbox then
+        local pct = SandboxVars and SandboxVars.DanTraits and tonumber(SandboxVars.DanTraits[spec.sandbox])
+        if pct then k = k * math.max(0, pct) / 100 end
+    end
+    return k
+end
+
 local function addLoot(spec)
+    local k = lootScale(spec)
+    if k <= 0 then return end
     local added, missing = 0, {}
     for name, weight in pairs(spec.procedural) do
         local entry = ProceduralDistributions and ProceduralDistributions.list and ProceduralDistributions.list[name]
-        if entry and append(entry.items, spec.name, weight) then added = added + 1 else missing[#missing + 1] = name end
+        if entry and append(entry.items, spec.name, weight * k) then added = added + 1 else missing[#missing + 1] = name end
     end
     for _, s in ipairs(spec.suburbs) do
         local path, weight = s[1], s[2]
-        if append(walk(SuburbsDistributions, path), spec.name, weight) then added = added + 1 else missing[#missing + 1] = table.concat(path, ".") end
+        if append(walk(SuburbsDistributions, path), spec.name, weight * k) then added = added + 1 else missing[#missing + 1] = table.concat(path, ".") end
     end
     for name, weight in pairs(spec.bags) do
         local entry = BagsAndContainers and BagsAndContainers[name]
-        if entry and append(entry.items, spec.name, weight) then added = added + 1 else missing[#missing + 1] = "BagsAndContainers." .. name end
+        if entry and append(entry.items, spec.name, weight * k) then added = added + 1 else missing[#missing + 1] = "BagsAndContainers." .. name end
     end
     for name, weight in pairs(spec.clutter) do
-        if append(ClutterTables and ClutterTables[name], spec.name, weight) then added = added + 1 else missing[#missing + 1] = "ClutterTables." .. name end
+        if append(ClutterTables and ClutterTables[name], spec.name, weight * k) then added = added + 1 else missing[#missing + 1] = "ClutterTables." .. name end
     end
     if not (isDebugEnabled and isDebugEnabled()) then return end
     print("[DanTraits] " .. spec.name .. " added to " .. added .. " loot lists" .. (#missing > 0 and ("; not found: " .. table.concat(missing, ", ")) or ""))
 end
 
+local function addCaddyContents()
+    if type(SuburbsDistributions) ~= "table" or SuburbsDistributions.PillCaddy then return end
+    SuburbsDistributions.PillCaddy = CADDY_CONTENTS
+end
+
 local function addAllLoot()
     for _, spec in ipairs(ITEMS) do addLoot(spec) end
+    addCaddyContents()
 end
 
 Events.OnPreDistributionMerge.Add(addAllLoot)

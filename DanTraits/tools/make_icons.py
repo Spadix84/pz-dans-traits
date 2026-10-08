@@ -1,7 +1,9 @@
 """Draw the mod's simple pixel icons: the moodles fed by DanTraits_Moodles.lua
 (all but Spoons, whose art was drawn by hand), Diabetes' Blood Sugar moodle, the
-sun block item, the MS pill bottles and the pill caddy. Each is a 16 x 16 grid of
-palette letters, written out at 32 x 32 as a PNG (no libraries needed).
+sun block item, the MS pill bottles, the clotting powder, the pill caddy and the insulin magazine. Each is a 16 x 16 grid of
+palette letters, written out at 32 x 32 as a PNG (no libraries needed). Also the
+age trait icons (TRAIT_ICONS), written at 18 x 18 into 42/media/ui/Traits; the
+other trait icons there were drawn by hand.
 
     python DanTraits/tools/make_icons.py            write them into the mod
     python DanTraits/tools/make_icons.py --sheet F  also write one sheet of all of them to F
@@ -474,6 +476,44 @@ kwwwwwk.........
 ...kkkkkkkkkk...
 ................
 """,
+    # clotting powder: a shaker tin, holes in the lid, a drop of blood on the label
+    "textures/Item_ClottingPowder": """
+................
+.....kkkkkk.....
+....kldldldk....
+....kllllllk....
+....kkkkkkkk....
+...kbbbbbbbbk...
+...kwwwwwwwwk...
+...kwwwrwwwwk...
+...kwwrrrwwwk...
+...kwrrrrrwwk...
+...kwrrrrrwwk...
+...kwwrrrwwwk...
+...kwwwwwwwwk...
+...kbbbbbbbbk...
+...kkkkkkkkkk...
+................
+""",
+    # Living With Type 1: a magazine, a blue masthead over a drop of blood
+    "textures/Item_InsulinMag": """
+................
+..kkkkkkkkkkk...
+..kbbbbbbbbbkk..
+..kbwbwwbwbbkdk.
+..kbbbbbbbbbkdk.
+..kwwwwwwwwwkdk.
+..kwwwwkwwwwkdk.
+..kwwwkrkwwwkdk.
+..kwwkrrrkwwkdk.
+..kwkrrrrrkwkdk.
+..kwkrwrrrkwkdk.
+..kwwkrrrkwwkdk.
+..kwwwkkkwwwkdk.
+..kwldldldlwkdk.
+..kkkkkkkkkkkdk.
+...kkkkkkkkkkk..
+""",
     # pill caddy: a weekly organiser, seven coloured lids over the
     # compartments, a few pills showing (placeholder until it has real art)
     "textures/Item_PillCaddy": """
@@ -497,6 +537,314 @@ kkkkkkkkkkkkkkk.
 }
 
 
+# Trait icons: 18 x 18 at 1x like the vanilla ones, written to
+# 42/media/ui/Traits/trait_<key>.png (the game finds them by the trait's key).
+# The art may be any size up to 18 x 18; it is centred on its drawn pixels.
+TRAIT_SIZE = 18
+
+# The four Age traits are a disc in the band's colour with the decade on it.
+DIGITS = {
+    "0": [".ww.", "w..w", "w..w", "w..w", "w..w", "w..w", ".ww."],
+    "2": [".ww.", "w..w", "...w", "..w.", ".w..", "w...", "wwww"],
+    "3": ["www.", "...w", "...w", ".ww.", "...w", "...w", "www."],
+    "4": ["w..w", "w..w", "w..w", "wwww", "...w", "...w", "...w"],
+    "5": ["wwww", "w...", "w...", "www.", "...w", "...w", "www."],
+}
+AGE_BADGES = {"age20s": ("20", "g"), "age30s": ("30", "b"), "age40s": ("40", "o"), "age50s": ("50", "d")}
+
+
+def age_badge(text, fill):
+    n = 16
+    grid = [["."] * n for _ in range(n)]
+    c = (n - 1) / 2.0
+    for y in range(n):
+        for x in range(n):
+            d = ((x - c) ** 2 + (y - c) ** 2) ** 0.5
+            if d <= 7.6:
+                grid[y][x] = "k" if d > 6.6 else fill
+    x0, y0 = 3, 4
+    for i, ch in enumerate(text):
+        for dy, row in enumerate(DIGITS[ch]):
+            for dx, p in enumerate(row):
+                if p == "w":
+                    grid[y0 + dy][x0 + i * 6 + dx] = "w"
+    return "\n".join("".join(r) for r in grid)
+
+
+TRAIT_ICONS = {
+    # Green: a sprout in a pot
+    "green": """
+..kkk......kkk..
+.kgggk....kgggk.
+.kggggk..kggggk.
+..kgggkkkkgggk..
+...kkggkkggkk...
+.....kkggkk.....
+.......gk.......
+.......gk.......
+.......gk.......
+...kkkkkkkkkk...
+...knnnnnnnnk...
+....knNnnNnk....
+....knnnnnnk....
+.....kkkkkk.....
+""",
+    # Quick Study: a light bulb
+    "quickstudy": """
+y.....kkkk.....y
+.y...kyyyyk...y.
+....kywwyyyk....
+...kywwyyyyyk...
+...kywyyyyyyk...
+...kyyyyyyyyk...
+yy.kyyyyyyyyk.yy
+....kyyyyyyk....
+.....kyyyyk.....
+.....kllllk.....
+.....kddddk.....
+.....kllllk.....
+......kkkk......
+""",
+    # Reading Glasses: a pair of round lenses
+    "readingglasses": """
+k..............k
+k..............k
+.kkkkkk..kkkkkk.
+kkwccckkkkwccckk
+kkcwcck..kcwcckk
+.kcccck..kcccck.
+.kcccck..kcccck.
+..kkkk....kkkk..
+""",
+    # Bad Back: a spine, the lowest vertebrae red and hurting
+    "badback": """
+.....kkkkkk.....
+...kkwwwwwwkk...
+.....kkkkkk.....
+.....kllllk.....
+.....kkkkkk.....
+...kkwwwwwwkk...
+.....kkkkkk.....
+.....kllllk.....
+.....kkkkkk.....
+...kkrrrrrrkk...
+.r...kkkkkk...r.
+..r..krrrrk..r..
+.r...kkkkkk...r.
+...kkrrrrrrkk...
+.....kkkkkk.....
+""",
+    # Bad Knees: a leg with a sore red knee
+    "badknees": """
+....kkkk....
+....kssk....
+....kssk....
+....kssk....
+....kssk....
+.r.krrrrk.r.
+r..krrrrk..r
+.r.krrrrk.r.
+....kssk....
+....kssk....
+....kssk....
+....kssk....
+....ksskkkk.
+....knnnnnnk
+....kkkkkkkk
+""",
+    # Old Hand: a well-used hammer
+    "oldhand": """
+.kkkkkkkkkk.
+kllllllllddk
+kddddddddddk
+.kkkknnkkkk.
+....knnk....
+....knnk....
+....knNk....
+....knnk....
+....knNk....
+....knnk....
+....knnk....
+....kkkk....
+""",
+    # Old Injury: a bone with an old bandage round it
+    "oldinjury": """
+.kk....kkk....kk.
+kwwk...klk...kwwk
+kwwwkkkklkkkkwwwk
+.kwwwwwkrkwwwwwk.
+kwwwkkkklkkkkwwwk
+kwwk...klk...kwwk
+.kk....kkk....kk.
+""",
+    # Set in Their Ways: a favourite armchair
+    "setinways": """
+..kkkkkkkkkk..
+..knnnnnnnnk..
+..knNnnnnNnk..
+..knnnnnnnnk..
+kkknnnnnnnnkkk
+knnknnnnnnknnk
+knnkkkkkkkknnk
+knnkNNNNNNknnk
+knnkkkkkkkknnk
+knnnnnnnnnnnnk
+kkkkkkkkkkkkkk
+.kk........kk.
+""",
+    # Bounces Back: a ball on the rebound
+    "bouncesback": """
+..........kkkk..
+.........krrrrk.
+........krwrrrrk
+........krrrrrrk
+........krrrrrrk
+.........krrrrk.
+.......d..kkkk..
+................
+.....d..........
+................
+...d............
+................
+.d..............
+kkkkkkkkkkkkkkkk
+""",
+    # Grit: a clenched fist
+    "grit": """
+...kkkkkkkkk..
+..ksskssksskk.
+.kssksskssksk.
+.kssksskssksk.
+.kssksskssksk.
+kkkkkkkkkkkssk
+ksssssssskssk.
+.kkkkkkkkksssk
+..kssssssssssk
+..kssssssssssk
+...kssssssssk.
+...kssssssssk.
+....kkkkkkkk..
+""",
+    # Bottomless Pit: a drumstick, half gone
+    "bottomlesspit": """
+....kkkk......
+..kknnnnkk....
+.knnnnnnnnk...
+knnNnnnnnnnk..
+knnnnnnnnnnk..
+knnnnnnNnnnk..
+.knnnnnnnnk...
+..knnnnnnk....
+...kknnnkk....
+.....kwwk.....
+......kwwk....
+.......kwwkk..
+......kwwwwwk.
+......kwkkwwk.
+.......k..kk..
+""",
+    # Seen It All: an unimpressed eye under a grey brow
+    "seenitall": """
+...llllllllll...
+..l..........l..
+....kkkkkkkk....
+..kksssssssskk..
+.kssssssssssssk.
+kkkkkkkkkkkkkkkk
+kwwwwkbkkbkwwwwk
+.kwwwkbbbbkwwwk.
+..kkwwkkkkwwkk..
+....kkkkkkkk....
+""",
+    # Pace Yourself: an hourglass, half run
+    "paceyourself": """
+kkkkkkkkk
+knnnnnnnk
+.kccccck.
+.kyyyyyk.
+..kyyyk..
+...kyk...
+...kyk...
+..kcyck..
+.kccycck.
+.kcyyyck.
+.kyyyyyk.
+knnnnnnnk
+kkkkkkkkk
+""",
+    # Settled: a house
+    "settled": """
+.......kk.......
+......krrk......
+.....krrrrk.....
+....krrrrrrk....
+...krrrrrrrrk...
+..krrrrrrrrrrk..
+.kkkkkkkkkkkkkk.
+..kllllllllllk..
+..klkkkllkkklk..
+..klkckllknklk..
+..klkkkllknklk..
+..kllllllknklk..
+..kllllllknklk..
+kkkkkkkkkkkkkkkk
+""",
+    # Old Bones Know Rain: a storm cloud over a bone
+    "oldbones": """
+....kkkk........
+...kddddk.kk....
+..kddddddkddk...
+.kkddddddddddk..
+kddddddddddddk..
+.kkkkkkkkkkkk...
+..b..y...b......
+.b..yy..b.......
+...yy...........
+...y............
+................
+.kk.........kk..
+kwwkkkkkkkkkwwk.
+.kwwwwwwwwwwwk..
+kwwkkkkkkkkkwwk.
+.kk.........kk..
+""",
+    # Cast Iron: a cast-iron frying pan
+    "castiron": """
+...kkkk.........
+.kkddddkk.......
+.kdlldddk.......
+kdlddddddk......
+kddddddddkkkkkk.
+kddddddddddddddk
+kddddddddkkkkkk.
+.kddddddk.......
+.kkddddkk.......
+...kkkk.........
+""",
+    # Delicate Stomach: a stomach gone green and queasy
+    "delicatestomach": """
+.....kk.........
+....kppk........
+....kppk.kkkk...
+....kppkkppppk..
+....kpppppppppk.
+...kppppppppppk.
+..kppppggppppk..
+..kpppgppgpppk..
+..kppgppppgppk..
+..kpppppggpppk..
+..kppppppppppk..
+...kpppppppppk..
+....kkpppppkk...
+......kkppk.....
+........kppk....
+.........kk.....
+""",
+}
+for _key, (_text, _fill) in AGE_BADGES.items():
+    TRAIT_ICONS[_key] = age_badge(_text, _fill)
+
+
 def rows_of(art):
     rows = [r for r in art.strip("\n").split("\n")]
     if len(rows) != 16:
@@ -505,6 +853,25 @@ def rows_of(art):
     for r in rows:
         r = (r + "." * 16)[:16]
         out.append([PALETTE[ch] for ch in r])
+    return out
+
+
+def trait_rows(name, art):
+    """The art centred on its drawn pixels in an 18 x 18 grid."""
+    rows = art.strip("\n").split("\n")
+    width = max(len(r) for r in rows)
+    if width > TRAIT_SIZE or len(rows) > TRAIT_SIZE:
+        raise ValueError("%s: art is %d x %d, at most %d" % (name, width, len(rows), TRAIT_SIZE))
+    if any(len(r) != width for r in rows):
+        raise ValueError("%s: rows of different widths" % name)
+    drawn = [(x, y) for y, r in enumerate(rows) for x, ch in enumerate(r) if ch != "."]
+    x0, x1 = min(x for x, _ in drawn), max(x for x, _ in drawn)
+    y0, y1 = min(y for _, y in drawn), max(y for _, y in drawn)
+    ox = (TRAIT_SIZE - (x1 - x0 + 1)) // 2 - x0
+    oy = (TRAIT_SIZE - (y1 - y0 + 1)) // 2 - y0
+    out = [[PALETTE["."]] * TRAIT_SIZE for _ in range(TRAIT_SIZE)]
+    for x, y in drawn:
+        out[y + oy][x + ox] = PALETTE[rows[y][x]]
     return out
 
 
@@ -541,19 +908,26 @@ def main(argv):
             with open(path, "wb") as f:
                 f.write(data)
             written.append(path)
+    for key, art in TRAIT_ICONS.items():
+        path = os.path.join(MEDIA, "ui", "Traits", "trait_%s.png" % key)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as f:
+            f.write(png(trait_rows(key, art)))
+        written.append(path)
     print("wrote %d files" % len(written))
     if "--sheet" in argv:
         if argv.index("--sheet") + 1 >= len(argv):
             raise SystemExit("usage: make_icons.py [--sheet <out.png>]")
         path = argv[argv.index("--sheet") + 1]
-        names = list(ICONS)
+        grids = [rows_of(art) for art in ICONS.values()]
+        grids += [trait_rows(key, art) for key, art in TRAIT_ICONS.items()]
         cols, k, pad = 7, 6, 8
-        cell = 16 * k + pad
-        lines = (len(names) + cols - 1) // cols
+        cell = TRAIT_SIZE * k + pad
+        lines = (len(grids) + cols - 1) // cols
         bg = (120, 120, 120, 255)
         sheet = [[bg] * (cols * cell + pad) for _ in range(lines * cell + pad)]
-        for i, name in enumerate(names):
-            big = scaled(rows_of(ICONS[name]), k)
+        for i, grid in enumerate(grids):
+            big = scaled(grid, k)
             x0, y0 = pad + (i % cols) * cell, pad + (i // cols) * cell
             for y, row in enumerate(big):
                 for x, p in enumerate(row):

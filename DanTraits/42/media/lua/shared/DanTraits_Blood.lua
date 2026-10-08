@@ -17,7 +17,8 @@
 -- for how bad the bleed is), where it is (neck worst, then head, thigh,
 -- groin, torso) and how it is dressed: a bandage slows it to a tenth, a
 -- shard or bullet left in bleeds through the bandage, a spent (soaked)
--- bandage only halves it, stitches stop it.
+-- bandage only halves it, stitches stop it, clotting powder packed in cuts
+-- it to a quarter (DanTraits_Clotting.lua).
 --
 -- Vanilla's health loss from bleeding is given back tick by tick. What
 -- vanilla does (BodyPart.DamageUpdate, read from the jar), all x the part's
@@ -126,18 +127,23 @@ local partIs = DanTraits_PartIs
 
 -- volume lost per minute from one part, before hooks; nil when not bleeding.
 -- Also returns the part's name, whether it is bandaged, and the rate it
--- would bleed at with no bandage.
+-- would bleed at with no bandage. With the player, clotting powder packed
+-- into the wound slows both (DanTraits_ClotFactor, DanTraits_Clotting.lua).
 -- Read from the bleeding time, not the flag: a bandage clears the part's
 -- bleeding, cut, deep wound and stitched flags and keeps the times
 -- (BodyPart.setBandaged; taking it off sets the flags again from the
 -- times). Stitching zeroes the bleeding time (BodyPart.setStitched).
-local function partRate(part)
+local function partRate(part, player)
     local t = 0
     pcall(function() t = part:getBleedingTime() or 0 end)
     if t <= 0 then return nil end
     local name = ""
     pcall(function() name = tostring(part:getType()) end)
     local open = BL_RATE * t / 10 * (BL_PART[name] or 1)
+    if player and DanTraits_ClotFactor then
+        local ok, clot = pcall(DanTraits_ClotFactor, player, part)
+        if ok and tonumber(clot) then open = open * clot end
+    end
     local rate = open
     local bandaged = partIs(part, "bandaged")
     if bandaged then
@@ -159,7 +165,7 @@ local function bleedMinute(player, d)
         local parts = player:getBodyDamage():getBodyParts()
         for i = 0, parts:size() - 1 do
             local part = parts:get(i)
-            local rate, name, bandaged, open = partRate(part)
+            local rate, name, bandaged, open = partRate(part, player)
             if rate then
                 rate = DanTraits_RunHooks("bloodBleed", rate, player, part, bandaged, open)
                 total = total + rate

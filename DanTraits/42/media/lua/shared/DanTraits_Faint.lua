@@ -87,9 +87,19 @@ local function setBlocked(player, blocked)
     pcall(function() player:setAuthorizeShoveStomp(not blocked) end)
 end
 
+-- The game draws its fade after the UI unless told otherwise, so a faded
+-- screen hid the pause menu too (Escape did nothing you could see). Vanilla
+-- sleep sets the fade to draw before the UI, so the menu, the inventory and
+-- the moodles stay on top of the black; the same here.
 local function fade(player, out)
     pcall(function()
-        if out then UIManager.FadeOut(player:getPlayerNum(), 1) else UIManager.FadeIn(player:getPlayerNum(), 1) end
+        local num = player:getPlayerNum()
+        if out then
+            pcall(UIManager.setFadeBeforeUI, num, true)
+            UIManager.FadeOut(num, 1)
+        else
+            UIManager.FadeIn(num, 1)
+        end
     end)
 end
 
@@ -126,6 +136,7 @@ function DanTraits_PassOut(player, minutes, textKey, deep)
     if not player or player:isDead() or hold then return false end
     local car = vehicleOf(player)
     if car then stopCar(player, car) else DanTraits_Collapse(player) end
+    minutes = tonumber(DanTraits_RunHooks("passOutMinutes", minutes or 5, player, deep)) or minutes or 5   -- Thick Skull
     local now = getTimestampMs()
     hold = { player = player, startMs = now, untilMs = now + FT_MIN_REAL_S * 1000,
              untilHours = worldHours() + (minutes or 5) / 60, textKey = textKey or "UI_DanTraits_ComeTo",

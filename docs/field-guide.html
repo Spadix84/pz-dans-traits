@@ -1,0 +1,518 @@
+<title>Vitality Project Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a clinical chart. A fixed-width side index on wide screens, one reading column; trait and system cards carry a points stamp in the corner. */
+:root {
+  --bg: #f3f4f1; --panel: #fbfbf9; --ink: #1d2226; --muted: #5d6a6f; --line: #cfd6d2; --line-soft: #e3e8e5;
+  --blood: #a1232d; --blood-bg: #f6e3e4;
+  --well: #246b70; --well-bg: #dcecec;
+  --age: #8a5a12; --age-bg: #f1e7d2;
+  --f-display: "Bitter", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #171a1c; --panel: #1f2326; --ink: #e5e8e4; --muted: #9aa6aa; --line: #363d41; --line-soft: #2a3034;
+  --blood: #e2676f; --blood-bg: #3a2426; --well: #6fc3c6; --well-bg: #1d3537; --age: #dba44d; --age-bg: #3a2f1a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #171a1c; --panel: #1f2326; --ink: #e5e8e4; --muted: #9aa6aa; --line: #363d41; --line-soft: #2a3034;
+  --blood: #e2676f; --blood-bg: #3a2426; --well: #6fc3c6; --well-bg: #1d3537; --age: #dba44d; --age-bg: #3a2f1a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 16px/1.55 var(--f-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 80px; display: grid; grid-template-columns: 1fr; gap: 32px }
+@media (min-width: 900px) { .wrap { grid-template-columns: 220px minmax(0, 1fr); gap: 48px } }
+nav.index { font-size: .9rem }
+@media (min-width: 900px) { nav.index { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start } }
+nav.index .eyebrow { font: 500 .72rem var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px }
+nav.index ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px }
+@media (min-width: 900px) { nav.index ol { display: grid; gap: 2px } }
+nav.index a { color: var(--ink); text-decoration: none; padding: 4px 0; display: inline-block; border-bottom: 1px solid transparent }
+nav.index a:hover, nav.index a:focus-visible { border-bottom-color: var(--blood); outline: none }
+nav.index .n { font: 500 .75rem var(--f-mono); color: var(--muted); margin-right: 6px }
+main { min-width: 0; display: grid; gap: 56px }
+h1 { font: 700 clamp(2.1rem, 5vw, 3rem)/1.05 var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -.01em }
+h2 { font: 700 1.6rem/1.15 var(--f-display); margin: 0; text-wrap: balance; padding-top: 8px; border-top: 2px solid var(--ink) }
+h3 { font: 600 1.05rem/1.3 var(--f-body); margin: 0 }
+h4 { font: 700 1rem/1.3 var(--f-display); margin: 0 }
+p { margin: 0; max-width: 68ch }
+.lede { font-size: 1.1rem; color: var(--muted); max-width: 62ch }
+header.hero { display: grid; gap: 14px }
+.stamp-row { display: flex; flex-wrap: wrap; gap: 10px 22px; font: 500 .8rem var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums }
+.stamp-row b { color: var(--ink); font-weight: 500 }
+.counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 6px }
+.count { border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px; background: var(--panel) }
+.count b { display: block; font: 700 1.6rem/1 var(--f-display); font-variant-numeric: tabular-nums }
+.count span { font: 500 .72rem var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+section { display: grid; gap: 18px }
+.sec-intro { max-width: 68ch }
+.key { display: flex; flex-wrap: wrap; gap: 8px; font-size: .85rem; color: var(--muted) }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--panel); color: var(--ink); font: 500 .8rem var(--f-body); cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.chip:focus-visible, .search:focus-visible { outline: 2px solid var(--blood); outline-offset: 2px }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.search { flex: 1 1 220px; min-width: 0; font: 1rem var(--f-body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 8px 12px }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px }
+.card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 14px 16px 14px; display: grid; gap: 8px; min-width: 0; align-content: start }
+.card .top { display: flex; gap: 10px; align-items: baseline; justify-content: space-between }
+.pts { font: 500 .85rem var(--f-mono); padding: 1px 8px; border-radius: 3px; white-space: nowrap; font-variant-numeric: tabular-nums }
+.pts.neg { color: var(--blood); background: var(--blood-bg) }
+.pts.pos { color: var(--well); background: var(--well-bg) }
+.pts.age { color: var(--age); background: var(--age-bg) }
+.card .lead { color: var(--muted); font-size: .92rem }
+.card ul { margin: 0; padding-left: 18px; font-size: .9rem; display: grid; gap: 4px }
+.card ul li::marker { color: var(--muted) }
+.card .band { font: 500 .72rem var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--age) }
+.note { font-size: .9rem; color: var(--muted); max-width: 68ch }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 3px; background: var(--panel) }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 480px }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top }
+th { font: 500 .72rem var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+tr:last-child td { border-bottom: 0 }
+td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap }
+.up { color: var(--well) } .down { color: var(--blood) }
+.sys { display: grid; gap: 14px }
+.sys .card { padding: 16px 18px }
+.sys .card h3 { font: 700 1.1rem var(--f-display) }
+.sys .card ul { font-size: .92rem }
+.pills { display: flex; flex-wrap: wrap; gap: 6px }
+.pill { font: 500 .8rem var(--f-mono); border: 1px solid var(--line); border-radius: 3px; padding: 2px 8px; background: var(--panel) }
+.pill.good { border-color: var(--well); color: var(--well) }
+.two { display: grid; gap: 14px; grid-template-columns: 1fr }
+@media (min-width: 700px) { .two { grid-template-columns: 1fr 1fr } }
+.empty { color: var(--muted); font-size: .9rem; padding: 12px 0 }
+footer { color: var(--muted); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 14px; max-width: 68ch }
+a { color: var(--ink) }
+@media (prefers-reduced-motion: no-preference) { .card { transition: opacity .15s } }
+</style>
+
+<div class="wrap">
+<nav class="index" aria-label="Sections">
+  <p class="eyebrow">Field guide</p>
+  <ol>
+    <li><a href="#how"><span class="n">01</span>How it fits</a></li>
+    <li><a href="#traits"><span class="n">02</span>Traits</a></li>
+    <li><a href="#age"><span class="n">03</span>Age</a></li>
+    <li><a href="#systems"><span class="n">04</span>For everyone</a></li>
+    <li><a href="#meds"><span class="n">05</span>Medication</a></li>
+    <li><a href="#items"><span class="n">06</span>Items</a></li>
+    <li><a href="#moodles"><span class="n">07</span>Moodles</a></li>
+    <li><a href="#sandbox"><span class="n">08</span>Sandbox</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="stamp-row"><span>Dan's Traits <b>&middot;</b> Project Zomboid Build 42</span><span>mod version <b>1.1.0</b>, with the next update's changes</span><span>Knox County, 1993</span></div>
+  <h1>Vitality Project Field Guide</h1>
+  <p class="lede">Every trait, system, drug, item, moodle and sandbox switch in the mod, on one page. Points follow the game's sign: a positive number costs you, a negative one pays you.</p>
+  <div class="counts">
+    <div class="count"><b>46</b><span>Traits</span></div>
+    <div class="count"><b>15</b><span>Age-only</span></div>
+    <div class="count"><b>14</b><span>Systems</span></div>
+    <div class="count"><b>16</b><span>Drugs</span></div>
+    <div class="count"><b>17</b><span>New items</span></div>
+    <div class="count"><b>28</b><span>Moodles</span></div>
+  </div>
+</header>
+
+<section id="how">
+  <h2>01 &nbsp;How it fits together</h2>
+  <p class="sec-intro">The mod is a health model underneath a set of traits. The <b>systems</b> run for every character: blood instead of health loss, wound infection as a process, bandages that wear out, a concussion that heals, a night scored by its light, a slow Vitality score from diet, exercise and sleep. The <b>traits</b> are the choices: conditions that read those systems and push on them. <b>Medication</b> is one shared list every condition reads, with levels, build-up, side effects and overdoses. <b>Age</b> is a fourth layer: a band every character carries that changes how the body, the mind and the metabolism behave, prices other traits, and offers traits only one age can take. Every effect that lasts has a <b>moodle</b>, and most systems have a <b>sandbox switch</b>.</p>
+  <p class="note">Systems read each other. A fever from an infected wound brings on migraines, spoils sleep, raises blood sugar and irritates asthma. Blood loss slows recovery. A bad night makes a depressive episode likelier. The factors multiply, and nothing is hidden from the health panel for long.</p>
+</section>
+
+<section id="traits">
+  <h2>02 &nbsp;Traits</h2>
+  <p class="sec-intro">Conditions you choose at creation, or in two cases earn in play. Filter by kind or search by any word in a card.</p>
+  <div class="toolbar">
+    <input class="search" id="q" type="search" placeholder="Search traits: bleed, pill, panic, sleep…" aria-label="Search traits">
+    <div class="key" role="group" aria-label="Filter by kind">
+      <button type="button" class="chip" data-k="all" aria-pressed="true">All</button>
+      <button type="button" class="chip" data-k="neg" aria-pressed="false">Negative</button>
+      <button type="button" class="chip" data-k="pos" aria-pressed="false">Positive</button>
+      <button type="button" class="chip" data-k="age" aria-pressed="false">Age bands</button>
+      <button type="button" class="chip" data-k="ageonly" aria-pressed="false">Age-only</button>
+    </div>
+  </div>
+  <div class="grid" id="traitgrid">
+
+  <article class="card" data-k="neg"><div class="top"><h3>Multiple Sclerosis</h3><span class="pts neg">-15</span></div><p class="lead">Heat is the enemy, and your energy is a daily budget of spoons.</p><ul>
+    <li>A heat load follows warm air (24 to 34 C) and body temperature; builds over half an hour, fades in twenty minutes once cool, twice as fast wet. A drink straight from a tap or river takes some off; bottles do not.</li>
+    <li>Warm: tire sooner. Hot: stiff, sore, clumsy hands; swings can throw the weapon (5% to 15%); pain to about 60. Overheated: severe pain and a 5% chance a minute the hands give out.</li>
+    <li>Flares about once a month for three to six days: heat hits half as hard again, stiff legs, weak hands, exhaustion.</li>
+    <li>Spoons: 12 a day after a good night, fewer after a bad one, capped at eight in a flare. Everything spends them by effort; at none you hit the wall and borrow from tomorrow. Rest, naps and coffee give some back or hide it.</li>
+    <li>Pills: prednisone makes a flare pass three times as fast; baclofen halves the stiffness; amantadine adds two spoons a morning.</li>
+    <li>-1 Fitness and Strength; not with Athletic or Strong. Moodles: MS Heat, MS Flare, Spoons.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>A Really Bad Day</h3><span class="pts neg">-8</span></div><p class="lead">A CDDA-style start: drunk, sick, an infected cut on the forearm, no clothes, the house on fire.</p><ul>
+    <li>The cut is already infected and won't heal until treated; it spreads into the body in about a day and a half. Disinfectant pushes it back, antibiotics always do.</li>
+    <li>Disinfectant and a bandage wait in a container 15 to 40 tiles away. No marker.</li>
+    <li>Not with Hemophilia or Straight Edge. Balance still open.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Arthritis</h3><span class="pts neg">-10</span></div><p class="lead">Stiff joints, flares in the cold and damp, a grip that slips.</p><ul>
+    <li>Slower to move and swing. The cold is read from the joints' own skin temperature, which clothing, wind and wet feed: gloves and a coat keep a flare off.</li>
+    <li>Painkillers halve a flare while they last; prednisone cuts it to a third. Neither touches the everyday stiffness. Starts with a bottle of painkillers.</li>
+    <li>A swing can slip (1% calm, more panicked, hurt, tired or flaring) and land at a third of the damage. Past half a flare one slip in three throws the weapon; a dosed full flare sits exactly at half and is safe.</li>
+    <li>Not in the 20s; flares sooner in the 40s and 50s. Moodle: Stiff Joints.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Diabetes Type 1</h3><span class="pts neg">-10</span></div><p class="lead">A hidden blood sugar model read with a meter, no insulin of your own.</p><ul>
+    <li>Sugar rises with carbohydrates, falls with insulin, exercise, alcohol and time. The Blood Sugar moodle says out of range, not which way; the meter and a strip say which.</li>
+    <li>Low: shaky, tired, anxious; a bad low puts you on the floor. Steady Hands stops working; seizures likelier. High: thirst, and infections take hold faster; over 350 for two hours, health drains.</li>
+    <li>The insulin pen is the only way down. Starts with a pen, a meter and strips.</li>
+    <li>A dose covers about 12.5 g of carbohydrate. First Aid 3: a food's or sugary drink's tooltip says fast or slow sugar and a rough range of doses; 6: a closer range, and the meter says how much insulin is still working; 9, or the magazine Living With Type 1 at any level: the exact doses, a warning to eat it in parts if it would spike you past 350, and the meter says what gets you back to 110. The meter's tooltip keeps its last reading.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Diabetes Type 2</h3><span class="pts neg">-5</span></div><p class="lead">The same sugar model with the body's own insulin, limited by weight and age.</p><ul>
+    <li>More resistance in the 40s and 50s, a little less in the 20s.</li>
+    <li>Metformin builds up over two days and lowers resistance. Starts on it with a bottle.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Heart Condition</h3><span class="pts neg">-10</span></div><p class="lead">Chest pain when winded; push on and it is a heart attack.</p><ul>
+    <li>Only while the Endurance moodle shows; likelier with its depth, panic, age, a smoking habit, caffeine and a Run Down body.</li>
+    <li>Chest pain holds pain and slows recovery for 15 to 30 minutes, twice as fast to pass at rest. Pushing through can bring a heart attack: out 5 to 15 minutes, health lost, a day of weak recovery.</li>
+    <li>Beta blockers build up over three days to cut both to a quarter. Starts on them with two bottles. Moodle: Chest Pain, green while they work.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Brittle</h3><span class="pts neg">-8</span></div><p class="lead">Solid hits can fracture a limb.</p><ul>
+    <li>A hit of 2 damage or more has a 20% chance to fracture one of six limbs. Likelier in the 40s (x1.25) and 50s (x1.5).</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Asthma</h3><span class="pts neg">-10</span></div><p class="lead">Irritated airways that build through four tiers to an attack zombies can hear.</p><ul>
+    <li>Irritants: cold air, corpses, exertion when endurance is low, panic, smoke, a fever. A mask halves the environmental share.</li>
+    <li>Tier 2: recovery at half speed. Tier 3: none, and coughing. Tier 4: endurance and health drain to a 20% floor, loud coughing, and an attack that empties you can black you out.</li>
+    <li>Eases over four hours at rest; the rescue inhaler ends it at once (sandbox Inhaler Loot sets how often they turn up). Smoking makes it worse. Moodle: Airway Irritation.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Hemophilia</h3><span class="pts neg">-10</span></div><p class="lead">Blood does not clot. Bleeds never stop on their own.</p><ul>
+    <li>Uncovered, the bleeding clock is held where it is. A bandage runs it down, the clock is remembered under the dressing, and a change of bandage carries on from there. A clock run to nothing stays closed.</li>
+    <li>With Blood on: open bleeds lose half as much again, a bandage slows one to a quarter, a soaked bandage is never worse than anyone else's open wound. Stitches stop a deep wound; a scratch stops only under a bandage.</li>
+    <li>Not with Good Clotter or A Really Bad Day.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Major Depressive Disorder</h3><span class="pts neg">-8</span></div><p class="lead">Episodes that hold mood down for days.</p><ul>
+    <li>Pain and stress drag mood; a bad night makes an episode likelier. An episode holds a mood floor by its severity, with a refractory window after.</li>
+    <li>Lifts: drink briefly, cigarettes, comfort food, nicotine gum a little, exercise, time outdoors, a real antidepressant regimen (a pill a day, 14 days to build, discontinuation if you stop).</li>
+    <li>Moodles: Depression, Antidepressants.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Migraines</h3><span class="pts neg">-10</span></div><p class="lead">Hours of pain and nausea from personal triggers.</p><ul>
+    <li>Triggers: bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat, corpses, a storm on the way, bright daylight. Three of the eight lifestyle triggers count double for each character, worked out in play.</li>
+    <li>An aura, then hours of pain and nausea with blurred vision. Daylight adds the most pain and halves recovery; a dark room and sleep speed it. Sunglasses halve the light's share.</li>
+    <li>Painkillers barely touch it. Sumatriptan in the aura halves the attack; during one it ends within two hours, with a heavy-limbed day after.</li>
+    <li>Moodles: Migraine, Light Too Bright, Heavy-Limbed.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Epilepsy</h3><span class="pts neg">-6</span></div><p class="lead">Seizures with an aura; anticonvulsants cut them to a tenth.</p><ul>
+    <li>About one in eight days rested and well; likelier tired, in withdrawal, hungover, feverish, concussed, stressed, dehydrated, in a diabetic low or bright sun.</li>
+    <li>Five to ten minutes of aura, then out for 2 to 5 minutes, which can concuss, then an hour of headache. Asleep, a seizure wakes you.</li>
+    <li>Anticonvulsants every 12 hours build up over five days. Starts on them with a bottle. Moodle: Seizure.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Fear of Blood</h3><span class="pts neg">-6</span></div><p class="lead">Vanilla reworked: slower first aid, and fainting at the sight of a wound.</p><ul>
+    <li>Treating a wound takes a quarter longer. Stitching (25%), pulling a bullet (35%) or glass (20%), or dressing a bleeding wound (10%) can make you faint for about eight seconds. So can losing blood fast.</li>
+    <li>Cannot perform first aid on others, as in vanilla.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Anaemic</h3><span class="pts neg">-4</span></div><p class="lead">Needs iron; short of it you tire, chill and rebuild blood slowly.</p><ul>
+    <li>Iron drains over five days; fresh meat, fish, greens, eggs and iron pills top it up.</li>
+    <li>Short: slower endurance recovery, tire sooner, catch cold easier. Red cells rebuild at half speed after blood loss, and rebuilding spends iron. Infections climb faster. Moodle: Low Iron.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Gluten Intolerance</h3><span class="pts neg">-4</span></div><p class="lead">Wheat brings a gut flare.</p><ul>
+    <li>Bread, pasta, baked goods, beer and dishes made with them bring cramps, nausea and low mood after a short onset; about ten hours to clear. Moodle: Gut Flare.</li></ul></article>
+
+
+  <article class="card" data-k="neg"><div class="top"><h3>Smoker</h3><span class="pts neg">-4</span></div><p class="lead">Vanilla reworked: cravings by habit, withdrawal, damaged lungs; quit or relapse.</p><ul>
+    <li>Cravings build at half vanilla's pace for a typical smoker, faster the heavier the habit. Withdrawal brings irritability (the Angry moodle, which now has effects), hunger and restless sleep.</li>
+    <li>Damaged lungs recover endurance slower and cough. Anyone who smokes regularly gains the trait; three weeks without loses it, and a smoke after that is a coin flip to relapse. Nicotine gum eases quitting.</li>
+    <li>Smoking speeds caffeine clearance, lets infections climb faster and slows deep wounds. Moodle: Nicotine Craving.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Vegetarian</h3><span class="pts neg">-4</span></div><p class="lead">Refuses meat, fish and anything cooked with them.</p><ul>
+    <li>Judged by food type, by name and by a dish's ingredients. The eat action will not start.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Germaphobe</h3><span class="pts neg">-4</span></div><p class="lead">Dirty skin and clothes build stress; clean is a relief.</p><ul>
+    <li>The four worst body parts count, not the average. Getting clean is a real relief. Wounds are a fifth less likely to take an infection. Moodle: Filthy.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Alcoholic</h3><span class="pts neg">-4</span></div><p class="lead">Withdrawal after a day dry; gained by drinking, lost by a sober month.</p><ul>
+    <li>Craving, low mood and poor sleep, then pain, nausea and the shakes; heavy drinkers get hallucinations and seizures.</li>
+    <li>The habit is tolerance too: more drink to feel it, hangovers a little milder. Moodle: Alcohol Withdrawal.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Caffeine Dependent</h3><span class="pts neg">-2</span></div><p class="lead">Half a day without coffee or tea brings a headache.</p><ul>
+    <li>Coffee, tea and caffeine pills end a craving; a mug counts by what went into it. Cola and chocolate only put it off (six hours a can, three a bar). A week dry breaks the habit. Moodle: Caffeine Withdrawal.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Hallucinations</h3><span class="pts neg">-2</span></div><p class="lead">Phantom zombies, sounds, whispers and panic.</p><ul>
+    <li>Episodes roll every ten minutes, likelier with stress, tiredness, night, sleep debt, a concussion, withdrawal or a fever. Sounds are audio only. No moodle, on purpose.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Tinnitus</h3><span class="pts neg">-2</span></div><p class="lead">Your own gunfire deafens you for a while.</p><ul>
+    <li>Half a dozen pistol shots or three from a shotgun put Hard of Hearing on for half an hour or more. The ringing makes light sleep lighter. Not with Hard of Hearing or Deaf. Moodle: Tinnitus.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Lactose Intolerance</h3><span class="pts neg">-1</span></div><p class="lead">Dairy brings a mild gut flare.</p><ul>
+    <li>Cramps, queasiness and low mood, gone in about six hours. Moodle: Gut Flare, topping out at the second level.</li></ul></article>
+
+  <article class="card" data-k="neg"><div class="top"><h3>Straight Edge</h3><span class="pts neg">-1</span></div><p class="lead">Refuses alcohol and tobacco, and so their relief.</p><ul>
+    <li>Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Renaissance Faire Geek</h3><span class="pts pos">+10</span></div><p class="lead">+1 Spear, Long Blade, Axe and Blacksmithing.</p></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Resilient</h3><span class="pts pos">+10</span></div><p class="lead">Vanilla reworked: less prone to disease, and a chance to beat the Knox virus.</p><ul>
+    <li>A hidden 25% roll when infected (sandbox Resilient: Knox Survival Chance). The lucky get sick like anyone else, then the fever breaks 40 to 70% of the way through. Every infection rolls again. Re-costed from 4.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Grit</h3><span class="pts pos">+8</span></div><p class="lead">Feels pain a third less: the moodle and everything pain drives.</p><ul>
+    <li>Holds its own share of the body's pain reduction at 35% of the pain felt without it, so it stacks with drink relief. Painkillers work as vanilla.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Fast Recovery</h3><span class="pts pos">+6</span></div><p class="lead">Fast Healer folded in; blood comes back faster.</p><ul>
+    <li>After a bleed, blood volume and red cells return half as fast again. Not with Fast Healer or Slow Healer.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Deep Sleeper</h3><span class="pts pos">+6</span></div><p class="lead">Wakeful folded in; light rarely wakes you.</p><ul>
+    <li>Light costs half the rest, and the dark does more good.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Steady Hands</h3><span class="pts pos">+5</span></div><p class="lead">Dexterous folded in; a surgeon's hands and a gun hand.</p><ul>
+    <li>Splints and stitches go wrong half as often; fresh stitches tear half as often; stitching, pulling glass or a bullet and splinting take a quarter less time.</li>
+    <li>Reloading, racking, and drawing or holstering from the belt are a quarter faster. Not while the hands shake. Not with Dexterous or All Thumbs.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Iron Gut</h3><span class="pts pos">+4</span></div><p class="lead">Vanilla reworked: less food illness, and Iron Stomach folded in.</p><ul>
+    <li>Rotten and burnt food does half the harm; food sickness climbs half as fast. Re-costed from 2. A save with Iron Stomach gets Iron Gut.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Keen Cook</h3><span class="pts pos">+4</span></div><p class="lead">Vanilla reworked: knife work comes with the kitchen.</p><ul>
+    <li>Vanilla's baking and cooking recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. Re-costed from 3.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Good Clotter</h3><span class="pts pos">+3</span></div><p class="lead">Bleeds run down twice as fast and lose less blood.</p><ul>
+    <li>Not while glass or a bullet is still in. With Blood on, a bleed loses a quarter less. Not with Hemophilia.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Thick Skull</h3><span class="pts pos">+2</span></div><p class="lead">Concussed half as often, a quarter less badly, heals half as fast again.</p><ul>
+    <li>Bounces Back folded in: faints, knockouts and shock half as long, and the sumatriptan day-after too. Any age.</li></ul></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Outdoorsman</h3><span class="pts pos">+2</span></div><p class="lead">Vanilla weather resistance; takes twice as long to burn.</p></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Cat's Eyes</h3><span class="pts pos">+1</span></div><p class="lead">Vanilla night vision re-costed from 3; light wakes you more easily.</p></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Early Riser</h3><span class="pts pos">+1</span></div><p class="lead">Starts rested; every night scores a little better. Not with Night Shift.</p></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Gym Regular</h3><span class="pts pos">+1</span></div><p class="lead">Every exercise starts with a Fitness Instructor's head start (65 regularity in the 20s).</p></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Hollow Legs</h3><span class="pts pos">+1</span></div><p class="lead">Drink hits a fifth less; hangovers milder (x0.6) and shorter (x0.7). Not with Straight Edge.</p></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Meal Prepper</h3><span class="pts pos">+1</span></div><p class="lead">Starts on a good diet; variety counts over five days instead of three.</p></article>
+
+  <article class="card" data-k="pos"><div class="top"><h3>Night Shift</h3><span class="pts pos">+1</span></div><p class="lead">Between 6 AM and 8 PM, light wakes you a quarter as easily. Not with Early Riser.</p></article>
+
+  <article class="card" data-k="age"><div class="top"><h3>In Their 20s</h3><span class="pts age">+6</span></div><p class="lead">Young, and the body shows it; the brain is a sponge; the metabolism runs high.</p><ul>
+    <li>Endurance back a quarter faster; Fitness and Strength train x1.5; wounds heal and stiffness fades x1.5; sleeps through more. No extra profession level.</li>
+    <li>Any skill under level 3 trains x1.2. Hunger x1.15; caffeine, drink, food sickness and daily medication clear x1.2.</li>
+    <li>Not with Handy or Arthritis. Fit and Fast Learner a point cheaper.</li></ul></article>
+
+  <article class="card" data-k="age"><div class="top"><h3>In Their 30s</h3><span class="pts age">0</span></div><p class="lead">The game as it is. One extra level in the profession's main skill.</p></article>
+
+  <article class="card" data-k="age"><div class="top"><h3>In Their 40s</h3><span class="pts age">-2</span></div><p class="lead">Years on the job, in a body a little slower.</p><ul>
+    <li>Two levels in the main skill, one in each other skill the profession boosts. The trade trains x1.1.</li>
+    <li>Endurance x0.92, Fitness and Strength XP x0.9, healing x0.9, stiffness x0.85, more night wakes. Hunger x0.95; everything clears x0.9, so a daily pill holds longer and so does a hangover.</li>
+    <li>Strong and Athletic +2 points, Stout and Fit +1. Arthritis flares sooner; Brittle, Heart Condition and Type 2 bite harder.</li></ul></article>
+
+  <article class="card" data-k="age"><div class="top"><h3>In Their 50s</h3><span class="pts age">-6</span></div><p class="lead">A lifetime of knowing how, in a body that keeps the receipts.</p><ul>
+    <li>Three levels in the main skill, two in the rest of the trade. The trade trains x1.15; a new skill under level 3 only x0.9.</li>
+    <li>Endurance x0.85, XP x0.8, healing x0.8, stiffness x0.7, wakes x1.3, red cells x0.65, concussions x0.6, hangovers x1.5. Hunger x0.9; everything clears x0.8.</li>
+    <li>Strong and Athletic +4, Stout and Fit +2, Fast Learner +1; Hearty Appetite gives one more.</li></ul></article>
+
+  <article class="card" data-k="ageonly"><span class="band">20s only</span><div class="top"><h3>Green</h3><span class="pts neg">-4</span></div><p class="lead">New to the job: every occupation skill starts a level lower. Experience gain is unchanged.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">20s only</span><div class="top"><h3>Quick Study</h3><span class="pts pos">+4</span></div><p class="lead">Any skill under level 5 gains experience x1.4, on top of the band's x1.2 under level 3.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">20s only</span><div class="top"><h3>Bottomless Pit</h3><span class="pts neg">-6</span></div><p class="lead">Hunger a third faster again, and going hungry drags the mood down. Not with Light Eater.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">40s only</span><div class="top"><h3>Pace Yourself</h3><span class="pts pos">+2</span></div><p class="lead">A tenth of the stamina a swing or a sprint spends comes straight back.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">40s only</span><div class="top"><h3>Settled</h3><span class="pts neg">-2</span></div><p class="lead">Sleeps 0.2 worse anywhere but a bed in a house, and the first night in any new bed.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">40s and 50s</span><div class="top"><h3>Reading Glasses</h3><span class="pts neg">-2</span></div><p class="lead">Starts with a pair. Without glasses, reading takes x1.5 and needs a properly lit room.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">40s and 50s</span><div class="top"><h3>Bad Back</h3><span class="pts neg">-4</span></div><p class="lead">A heavy load builds lower-back pain over about two hours; it eases over four with the load off. Not with Strong.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">40s and 50s</span><div class="top"><h3>Bad Knees</h3><span class="pts neg">-3</span></div><p class="lead">Running, sprinting and every fence, wall or window climbed build pain in both lower legs.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">40s and 50s</span><div class="top"><h3>Old Hand</h3><span class="pts pos">+4</span></div><p class="lead">Every skill the occupation boosts gains experience x1.25 (Maintenance for the Unemployed).</p></article>
+  <article class="card" data-k="ageonly"><span class="band">40s and 50s</span><div class="top"><h3>Delicate Stomach</h3><span class="pts neg">-2</span></div><p class="lead">A junk meal brings food sickness, and so does a drink on an empty stomach. Not with Iron Gut.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">50s only</span><div class="top"><h3>Old Injury</h3><span class="pts neg">-3</span></div><p class="lead">One arm or leg, picked at the start, always a little stiff; stiffer and sore in the cold and damp. Not with Arthritis.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">50s only</span><div class="top"><h3>Set in Their Ways</h3><span class="pts neg">-2</span></div><p class="lead">Skills the occupation does not boost gain experience x0.85.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">50s only</span><div class="top"><h3>Seen It All</h3><span class="pts pos">+3</span></div><p class="lead">Panic builds at six tenths the pace; Fear of Blood faints half as often; a Germaphobe's filth weighs half. Not with Cowardly.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">50s only</span><div class="top"><h3>Cast Iron</h3><span class="pts pos">+2</span></div><p class="lead">Medication side effects half as often, and every overdose line one pill higher.</p></article>
+  <article class="card" data-k="ageonly"><span class="band">50s only</span><div class="top"><h3>Old Bones Know Rain</h3><span class="pts pos">+1</span></div><p class="lead">Tomorrow's storm, heavy rain, blizzard or freezing night is announced the morning before.</p></article>
+  </div>
+  <p class="empty" id="noresults" hidden>No trait matches that search.</p>
+</section>
+
+<section id="age">
+  <h2>03 &nbsp;Age</h2>
+  <p class="sec-intro">Every character carries one Age trait, and the creation screen asks for it first: nothing else is offered until an age is picked. The 30s are the game as it is. Three dials sit on the band: what the body, the mind and the metabolism do every day; what other traits cost at that age; and the traits only that age can take.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Every day</th><th class="num">20s</th><th class="num">30s</th><th class="num">40s</th><th class="num">50s</th></tr></thead>
+    <tbody>
+      <tr><td>Points</td><td class="num">costs 6</td><td class="num">0</td><td class="num">gives 2</td><td class="num">gives 6</td></tr>
+      <tr><td>Main profession skill, and each other skill the profession boosts</td><td class="num">+0 / +0</td><td class="num">+1 / +0</td><td class="num">+2 / +1</td><td class="num">+3 / +2</td></tr>
+      <tr><td>Endurance recovery</td><td class="num up">x1.25</td><td class="num">x1</td><td class="num down">x0.92</td><td class="num down">x0.85</td></tr>
+      <tr><td>Fitness and Strength experience</td><td class="num up">x1.5</td><td class="num">x1</td><td class="num down">x0.9</td><td class="num down">x0.8</td></tr>
+      <tr><td>Scratches, cuts and open deep wounds heal</td><td class="num up">x1.5</td><td class="num">x1</td><td class="num down">x0.9</td><td class="num down">x0.8</td></tr>
+      <tr><td>Stiffness fades</td><td class="num up">x1.5</td><td class="num">x1</td><td class="num down">x0.85</td><td class="num down">x0.7</td></tr>
+      <tr><td>Night wakes counted in the sleep score</td><td class="num up">x0.8</td><td class="num">x1</td><td class="num down">x1.15</td><td class="num down">x1.3</td></tr>
+      <tr><td>Red cells rebuild after blood loss</td><td class="num up">x1.15</td><td class="num">x1</td><td class="num down">x0.8</td><td class="num down">x0.65</td></tr>
+      <tr><td>A concussion heals</td><td class="num up">x1.2</td><td class="num">x1</td><td class="num down">x0.75</td><td class="num down">x0.6</td></tr>
+      <tr><td>Hangover severity</td><td class="num up">x0.85</td><td class="num">x1</td><td class="num down">x1.25</td><td class="num down">x1.5</td></tr>
+      <tr><td>Any skill under level 3 trains</td><td class="num up">x1.2</td><td class="num">x1</td><td class="num">x1</td><td class="num down">x0.9</td></tr>
+      <tr><td>The profession's own skills train</td><td class="num">x1</td><td class="num">x1</td><td class="num up">x1.1</td><td class="num up">x1.15</td></tr>
+      <tr><td>Hunger builds</td><td class="num down">x1.15</td><td class="num">x1</td><td class="num up">x0.95</td><td class="num up">x0.9</td></tr>
+      <tr><td>Caffeine, drink, food sickness and daily or course medication clear</td><td class="num">x1.2</td><td class="num">x1</td><td class="num">x0.9</td><td class="num">x0.8</td></tr>
+    </tbody></table></div>
+  <p class="note">Clearance cuts both ways: a young body burns through a dose and a hangover alike; an old one holds a daily pill a fifth longer and the shakes too. Rescue drugs (diazepam, painkillers, the inhaler) keep their own half-life for everyone.</p>
+  <h3>Age pricing</h3>
+  <p class="note">A trait can cost more or fewer points in a band. The difference shows beside its cost on the creation screen, red when dearer and green when cheaper. A positive number on a trait that gives points means it gives that many fewer.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Trait</th><th class="num">20s</th><th class="num">30s</th><th class="num">40s</th><th class="num">50s</th></tr></thead>
+    <tbody>
+      <tr><td>Strong, Athletic</td><td class="num">0</td><td class="num">0</td><td class="num down">+2</td><td class="num down">+4</td></tr>
+      <tr><td>Stout</td><td class="num">0</td><td class="num">0</td><td class="num down">+1</td><td class="num down">+2</td></tr>
+      <tr><td>Fit</td><td class="num up">-1</td><td class="num">0</td><td class="num down">+1</td><td class="num down">+2</td></tr>
+      <tr><td>Fast Learner</td><td class="num up">-1</td><td class="num">0</td><td class="num">0</td><td class="num down">+1</td></tr>
+      <tr><td>Slow Learner (gives)</td><td class="num down">+1</td><td class="num">0</td><td class="num">0</td><td class="num down">+1</td></tr>
+      <tr><td>Hearty Appetite (gives)</td><td class="num down">+1</td><td class="num">0</td><td class="num">0</td><td class="num up">-1</td></tr>
+    </tbody></table></div>
+  <p class="note">The fifteen age-only traits are in the Traits section above, under the Age-only filter. Sandbox: Age (on), Default Age (the band given to a character who reaches the world with no Age trait, such as an old save), and Profession Levels per band.</p>
+</section>
+
+<section id="systems">
+  <h2>04 &nbsp;For everyone</h2>
+  <p class="sec-intro">These run for every character, trait or not. Most have a switch on the Vitality Project sandbox page.</p>
+  <div class="sys">
+    <article class="card"><h3>Vitality</h3><p class="lead">Diet, exercise and sleep roll into one slow score.</p><ul>
+      <li>Fresh, varied food lifts it; junk and neglect drag it. Training, or a day of hard activity read from the body's metabolic rate, lifts it. The night's score feeds it.</li>
+      <li>Fit and Thriving: faster endurance recovery, mood and stress relief, faster healing, cold and infection resistance, a kilo of carry weight, 1.5x Fitness and Strength experience. Run Down and Sluggish: the reverse.</li>
+      <li>A new character starts neutral and cannot fall below it for a day. Moodles: Vitality, Slept Badly.</li></ul></article>
+    <article class="card"><h3>Sleep and light</h3><p class="lead">The light on your square while asleep sets how deep the sleep is.</p><ul>
+      <li>Dark: tiredness drains faster, the night scores better. Lit: slower, worse, and anything brighter than reading light can wake you. Close the curtains.</li>
+      <li>Exhaustion, drink and sleeping pills sleep through it. Light wakes Restless Sleepers, Night Owls, Cat's Eyes, anyone within six hours of a coffee, and the depressed or migrainous more easily. Desensitized characters have nightmares.</li></ul></article>
+    <article class="card"><h3>Blood</h3><p class="lead">Bleeding drains blood instead of health.</p><ul>
+      <li>How fast: the game's bleeding clock, the part (neck x3; head, thigh and groin x1.5), and the dressing (a bandage a tenth, a shard through it, stitches stop it).</li>
+      <li>15% lost: Pale. 30%: Light-headed, no sprinting. 40%: Shock, health draining, fainting. 45%: Bleeding Out. Half your blood is death.</li>
+      <li>Volume comes back in about a day if you drink; red cells take about a week. Moodle: Blood Loss.</li></ul></article>
+    <article class="card"><h3>Wound infection</h3><p class="lead">Replaces vanilla's one-roll infection with a process.</p><ul>
+      <li>Each hour a wound may take an infection: likelier deep, bitten, with a shard in, open, under a spent bandage or dirty clothes; far less once disinfected. Prone to Illness, Resilient, Diabetes, Vitality, iron and smoking count.</li>
+      <li>8 to 16 hours unseen, then the wound's infection climbs about 2 a day and stops healing. At 5, fever, and only antibiotics work: a level that halves every six hours, a dose every eight keeps it up, ten doses finish a course. Past that, sepsis kills in a couple of days.</li>
+      <li>Zombie infection is untouched (Resilient aside). Moodle: Infection.</li></ul></article>
+    <article class="card"><h3>Wound care</h3><p class="lead">Bandages wear out, deep wounds reopen, stitches tear, splints can be set badly.</p><ul>
+      <li>A bandage lasts about a day, less wet or soaking blood; spent, it only halves a bleed and invites infection. Unstitched deep wounds heal at a third of the speed and hard use opens them.</li>
+      <li>Stitching is a First Aid roll (45% rough at level 0, 5% less a level; a suture needle or Steady Hands help). Rough stitches knit at half speed, tear twice as easily, ache and let infection in. Splinting likewise: set badly, the bone heals at half speed.</li></ul></article>
+    <article class="card"><h3>What First Aid tells you</h3><p class="lead">The health panel is written for the examiner's level.</p><ul>
+      <li>0 to 2: what anyone can see. 3 to 5: the game's detail plus infected, a thinning dressing, a badly set bone, rough stitches. 6 to 8: how far an infection has got. 9 and 10: an infection that has not shown yet.</li></ul></article>
+    <article class="card"><h3>Concussion</h3><p class="lead">A hard landing, a crash by speed, a car, or a hit to the head.</p><ul>
+      <li>Dazed: headache, drowsy. Concussed: sick, daylight hurts, running or fighting can bring a dizzy fall. Badly concussed: out on the spot for 5 to 15 minutes. Rest heals it, sleep twice as fast.</li>
+      <li>A post-concussion headache often follows a day or two later, worse than the knock's own, lasting a day or two. Moodle: Concussion.</li></ul></article>
+    <article class="card"><h3>Passing out</h3><p class="lead">Shock, a concussion and Fear of Blood can all put you on the floor.</p><ul>
+      <li>You fall, sit, the screen goes black behind the menu, and you can do nothing until you come round: game minutes in real time, never under eight real seconds. Zombies can still reach you. In a car the engine cuts out.</li>
+      <li>A faint is shallow and a wound wakes you; a concussion knockout is not.</li></ul></article>
+    <article class="card"><h3>Sunburn</h3><p class="lead">Bare skin in summer sun burns in about three hours.</p><ul>
+      <li>Every uncovered part builds exposure in sunshine between 7 and 7, full from 20 C. A burnt part hurts for a day. Skin toughens with each burn; Outdoorsman takes twice as long.</li>
+      <li>Sun block, as common as toothpaste, keeps the sun off for 8 hours a coat. Moodle: Sunburn.</li></ul></article>
+    <article class="card"><h3>Dehydration</h3><p class="lead">Hours at Thirsty or worse build a load.</p><ul>
+      <li>A headache, tiredness and slower endurance recovery; twice as fast Parched, three times Dying of Thirst. Drains in two hours once you drink. Moodle: Dehydration.</li></ul></article>
+    <article class="card"><h3>Anger</h3><p class="lead">The vanilla Angry moodle now costs you, from Annoyed up.</p><ul>
+      <li>Rough: melee hits wear the weapon more (never its last point); Furious swings cost endurance. Loud: from Angry up you curse out loud and zombies hear. Can't concentrate: reading x1.15 to x1.5. Sloppy: splints, stitches and vehicle parts go wrong more often.</li></ul></article>
+    <article class="card"><h3>Hangovers</h3><p class="lead">Drink past a light buzz and one waits for you to sober up or wake.</p><ul>
+      <li>At least six hours of headache, low mood, thirst and tiredness; two hours properly drunk is a full one, and even a small one is felt. Endurance up to 40% slower, worse in daylight, painkillers only dull it. A drink hides it and counts toward the next. Moodle: Hangover.</li></ul></article>
+    <article class="card"><h3>Drink relief</h3><p class="lead">Vanilla's sip-of-whiskey miracle is undone.</p><ul>
+      <li>Relief follows the Drunk moodle: pain reduction and panic by level. Being drunk lifts the mood too, faster the drunker: tipsy takes the edge off, blind drunk clears even a severe mood. The hangover is the price.</li></ul></article>
+    <article class="card"><h3>Moodles</h3><p class="lead">Every effect that lasts has one. Needs Moodle Framework; everything else works without it.</p></article>
+  </div>
+</section>
+
+<section id="meds">
+  <h2>05 &nbsp;Medication</h2>
+  <p class="sec-intro">One list of drugs that every trait reads. Each pill adds a level that a half-life drains. Daily drugs build up over days and fade slowly when missed; rescue drugs work while they are in the system; everything else keeps what it does and gains a level, a side-effect roll (3% a day by default) and a too-many effect. You are told when a protecting drug lapses. With Starting Medication on, a character who starts with a condition starts on its drug, built up.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Drug</th><th>Item</th><th>Kind</th><th>Treats</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Beta blockers</td><td>Beta Blockers (vanilla)</td><td>daily</td><td>Heart Condition</td><td>Builds over 3 days; chest pain and heart attacks x0.25. No longer calms panic.</td></tr>
+      <tr><td>Anticonvulsants</td><td>Anticonvulsants</td><td>daily</td><td>Epilepsy</td><td>Every 12 hours; builds over 5 days; seizures x0.1.</td></tr>
+      <tr><td>Metformin</td><td>Metformin</td><td>daily</td><td>Type 2 Diabetes</td><td>Builds over 2 days; lowers insulin resistance.</td></tr>
+      <tr><td>Baclofen</td><td>Baclofen</td><td>daily</td><td>Multiple Sclerosis</td><td>Builds over 2 days; halves the stiffness; mild drowsiness.</td></tr>
+      <tr><td>Amantadine</td><td>Amantadine</td><td>daily</td><td>Multiple Sclerosis</td><td>Builds over 3 days; two more spoons each morning; dry mouth.</td></tr>
+      <tr><td>Antidepressants</td><td>Antidepressants (vanilla)</td><td>regimen</td><td>Major Depressive Disorder</td><td>A pill a day, 14 days to build, discontinuation if stopped; a moodle of its own.</td></tr>
+      <tr><td>Insulin</td><td>Insulin Pen</td><td>regimen</td><td>Diabetes</td><td>Any number of doses; the only way down for Type 1.</td></tr>
+      <tr><td>Prednisone</td><td>Prednisone</td><td>course</td><td>MS flares, Arthritis flares</td><td>An MS flare passes three times as fast; an arthritis flare is cut to a third. Hunger while taking it.</td></tr>
+      <tr><td>Diazepam</td><td>Diazepam</td><td>rescue</td><td>Panic</td><td>Calms panic quickly for about an hour and a half. 20 a bottle.</td></tr>
+      <tr><td>Sumatriptan</td><td>Sumatriptan</td><td>rescue</td><td>Migraines</td><td>In the aura the attack is half as bad; during one it ends within two hours. A heavy-limbed day after. 6 tablets.</td></tr>
+      <tr><td>Painkillers</td><td>Painkillers (vanilla)</td><td>rescue</td><td>Pain, Arthritis flares</td><td>About two hours a pill; halves an arthritis flare; barely touches a migraine; four at once is strong nausea.</td></tr>
+      <tr><td>Rescue inhaler</td><td>Rescue Inhaler</td><td>rescue</td><td>Asthma</td><td>Ends an attack at once; five puffs close together bring the shakes.</td></tr>
+      <tr><td>Nicotine gum</td><td>Nicotine Gum</td><td>rescue</td><td>Smoker</td><td>Eases quitting; a little lift for Depression.</td></tr>
+      <tr><td>Sleeping tablets</td><td>Sleeping Tablets (vanilla)</td><td>rescue</td><td>Sleep</td><td>Too many: a blackout risk.</td></tr>
+      <tr><td>Caffeine pills</td><td>Vitamins (vanilla, read as caffeine)</td><td>rescue</td><td>Tiredness</td><td>Ends a caffeine craving; four at once bring the shakes.</td></tr>
+      <tr><td>Iron</td><td>Iron Pills</td><td>supplement</td><td>Anaemic</td><td>One a day builds iron back up; mild nausea now and then.</td></tr>
+    </tbody></table></div>
+  <p class="note">Age changes the half-life of daily and course drugs (x1.2 faster in the 20s, x0.9 in the 40s, x0.8 in the 50s). Cast Iron halves side effects and raises every overdose line by a pill. Daily bottles hold 30; the mod's bottles spawn partly used and merge like vanilla's.</p>
+</section>
+
+<section id="items">
+  <h2>06 &nbsp;Items</h2>
+  <div class="pills">
+    <span class="pill">Rescue Inhaler</span><span class="pill">Insulin Pen</span><span class="pill">Glucose Meter</span><span class="pill">Test Strips</span><span class="pill">Iron Pills</span><span class="pill">Metformin</span><span class="pill">Nicotine Gum</span><span class="pill">Anticonvulsants</span><span class="pill">Diazepam</span><span class="pill">Sumatriptan</span><span class="pill">Sun Block</span><span class="pill">Prednisone</span><span class="pill">Baclofen</span><span class="pill">Amantadine</span><span class="pill">Pill Caddy</span><span class="pill">Clotting Powder</span><span class="pill">Living With Type 1</span>
+  </div>
+  <p class="note">The Pill Caddy is a belt-worn weekly organiser that holds medication only: capacity 1, or 2 for the Organized. Uncommon in medicine cabinets, bedside drawers, handbags, pharmacy shelves and on the odd zombie, and a found one often has a bottle or two in it. A new character with a medical trait has a 1% chance to start with one. Sun block is as common as toothpaste; the prescription bottles turn up where vanilla's do, partly used.</p>
+</section>
+
+<section id="moodles">
+  <h2>07 &nbsp;Moodles</h2>
+  <p class="sec-intro">Every lasting effect has one. The older systems feed their own; the rest come from one place. Three have a good side, and the icon going out is the reminder to take the next pill.</p>
+  <div class="pills">
+    <span class="pill">Vitality</span><span class="pill">Slept Badly</span><span class="pill">Blood Loss</span><span class="pill">Infection</span><span class="pill">Concussion</span><span class="pill">Hangover</span><span class="pill">Migraine</span><span class="pill">Blood Sugar</span><span class="pill">Airway Irritation</span>
+    <span class="pill">Chest Pain</span><span class="pill">Seizure</span><span class="pill">Tinnitus</span><span class="pill">Gut Flare</span><span class="pill">Filthy</span><span class="pill">Sunburn</span><span class="pill">Dehydration</span><span class="pill">Caffeine Withdrawal</span><span class="pill">Alcohol Withdrawal</span><span class="pill">Nicotine Craving</span><span class="pill">Depression</span><span class="pill">Low Iron</span><span class="pill">Stiff Joints</span><span class="pill">MS Heat</span><span class="pill">MS Flare</span><span class="pill">Spoons</span><span class="pill">Light Too Bright</span><span class="pill">Heavy-Limbed</span>
+    <span class="pill good">Beta Blockers Working</span><span class="pill good">Anticonvulsants Working</span><span class="pill good">Sun Block On</span><span class="pill good">Antidepressants</span>
+  </div>
+  <p class="note">Blood Sugar says the sugar is out of range but not which way; the meter is how you find out. Hallucinations has no moodle, on purpose.</p>
+</section>
+
+<section id="sandbox">
+  <h2>08 &nbsp;Sandbox options</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Option</th><th>Default</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td>Age</td><td>on</td><td>Off: no Age traits, no gate, no everyday effects, no age pricing.</td></tr>
+      <tr><td>Default Age</td><td>30</td><td>The band given to a character who reaches the world with no Age trait (an old save). Rounds down to the decade.</td></tr>
+      <tr><td>Profession Levels (20s / 30s / 40s / 50s)</td><td>0 / 1 / 2 / 3</td><td>The main-skill levels per band; at 0 a band gets no levels at all.</td></tr>
+      <tr><td>Blood Loss</td><td>on</td><td>Off: vanilla bleeding, health loss instead of blood.</td></tr>
+      <tr><td>Wound Infection</td><td>on</td><td>Off: vanilla's one-roll infection.</td></tr>
+      <tr><td>Wound Care</td><td>on</td><td>Off: bandages, stitches and splints as vanilla.</td></tr>
+      <tr><td>Concussion</td><td>on</td><td>Off: no concussions from falls, crashes or hits.</td></tr>
+      <tr><td>Vitality</td><td>on</td><td>Off: every reader of the score goes neutral.</td></tr>
+      <tr><td>Sleep and Light</td><td>on</td><td>Off: light does not score or wake.</td></tr>
+      <tr><td>Hangovers</td><td>on</td><td>Off: no hangovers.</td></tr>
+      <tr><td>Drink Relief</td><td>on</td><td>Off: vanilla's full-dose sip stays.</td></tr>
+      <tr><td>Sunburn</td><td>on</td><td>Off: no exposure, no burns, sun block does nothing.</td></tr>
+      <tr><td>Dehydration</td><td>on</td><td>Off: thirst as vanilla.</td></tr>
+      <tr><td>Medication Side Effect Chance</td><td>3</td><td>Percent per day a drug is taken; 0 turns side effects off.</td></tr>
+      <tr><td>Starting Medication</td><td>on</td><td>A character who starts with a condition starts on its drug, with the bottle. Off: find your own.</td></tr>
+      <tr><td>Arthritis Drops Weapons</td><td>on</td><td>Off: a bad-flare slip is a weak swing, never a drop.</td></tr>
+      <tr><td>MS Spoons a Day</td><td>12</td><td>The energy budget; 0 turns it off and brings back the old fatigue drip.</td></tr>
+      <tr><td>Anger Has Effects</td><td>on</td><td>Off: the Angry moodle is vanilla's, which does nothing.</td></tr>
+      <tr><td>Nicotine Craving Moodle</td><td>on</td><td>Off: the craving has to be read from irritability and stress.</td></tr>
+      <tr><td>Inhaler Loot (%)</td><td>100</td><td>How often inhalers spawn, in percent of the mod's rate; 0 none.</td></tr>
+      <tr><td>Resilient: Knox Survival Chance (%)</td><td>25</td><td>Resilient's chance to beat a zombie infection; 0 as vanilla.</td></tr>
+    </tbody></table></div>
+</section>
+
+<footer>Written from the mod's own README, docs/age.md and the trait scripts on 2026-10-07. Numbers are the ones in the code at that date; the age rework of the same day (the mind, the metabolism, age pricing, the second eight age-only traits) is built but not yet play-tested, so some of them will move. Updated the same evening for the balance pass (Grit, Resilient against the Knox virus, Iron Gut and Thick Skull taking in Iron Stomach and Bounces Back, Jinxed retired, new prices), and on 2026-10-08 for Keen Cook (4 points, +1 Short Blade) and for knowing your insulin (First Aid and the magazine Living With Type 1).</footer>
+</main>
+</div>
+
+<script>
+(function () {
+  var q = document.getElementById("q");
+  var chips = Array.prototype.slice.call(document.querySelectorAll(".chip"));
+  var cards = Array.prototype.slice.call(document.querySelectorAll("#traitgrid .card"));
+  var none = document.getElementById("noresults");
+  var kind = "all";
+  function apply() {
+    var text = (q.value || "").trim().toLowerCase();
+    var shown = 0;
+    cards.forEach(function (c) {
+      var okKind = kind === "all" || c.getAttribute("data-k") === kind;
+      var okText = !text || c.textContent.toLowerCase().indexOf(text) !== -1;
+      var show = okKind && okText;
+      c.hidden = !show;
+      if (show) shown++;
+    });
+    none.hidden = shown !== 0;
+  }
+  chips.forEach(function (b) {
+    b.addEventListener("click", function () {
+      kind = b.getAttribute("data-k");
+      chips.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      apply();
+    });
+  });
+  q.addEventListener("input", apply);
+  var hash = (location.hash || "").replace("#", "");
+  if (hash === "ageonly" || hash === "neg" || hash === "pos" || hash === "age") {
+    var b = chips.filter(function (x) { return x.getAttribute("data-k") === hash; })[0];
+    if (b) b.click();
+  }
+})();
+</script>

@@ -88,7 +88,7 @@ local function updateGermMinute(player, d)
             d.gmFilthy = true
             notify(player, "UI_DanTraits_GermFilthy")
         end
-        DanTraits_StatAdd(stats, CharacterStat.STRESS, GM_STRESS_MIN * grime)
+        DanTraits_StatAdd(stats, CharacterStat.STRESS, tonumber(DanTraits_RunHooks("filthStress", GM_STRESS_MIN * grime, player)) or GM_STRESS_MIN * grime)   -- Seen It All
         pcall(function() DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, GM_UNHAPPY * grime, GM_UNHAPPY_RAMP) end)
     elseif d.gmFilthy and grime < GM_CLEAN then
         d.gmFilthy = nil

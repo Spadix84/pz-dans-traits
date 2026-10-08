@@ -12,23 +12,31 @@ train faster; older characters start with more skill and recover slower. The
 
 | | In Their 20s | In Their 30s | In Their 40s | In Their 50s |
 |---|---|---|---|---|
-| Points | costs 6 | free | gives 2 | gives 4 |
-| Where it shows at creation | positive traits | hidden (the default) | negative traits | negative traits |
+| Points | costs 6 | free | gives 2 | gives 6 |
+| Where it shows at creation | positive traits | positive traits (0 points) | negative traits | negative traits |
 | Main skill | +0 | +1 | +2 | +3 |
 | Each other profession skill | +0 | +0 | +1 | +2 |
 
-Points are fixed by the trait script (`Cost = 6 / 0 / -2 / -4`). With one
+Points are fixed by the trait script (`Cost = 6 / 0 / -2 / -6`; the 50s gave 4 until 2026-10-07). With one
 exception (the body traits, below), age never changes what another trait
 costs; it changes what the trait does.
 
 ## Picking an age
 
 - The four Age traits exclude each other, so a character has exactly one.
-- In Their 30s is never offered at creation. Pick no Age trait and it is
-  granted when the character spawns, so the trait list always shows an age.
-- The sandbox option *Default Age* (20 to 59, rounds down to the decade) sets
-  which band a character with no pick gets. If that is the 40s or 50s, they
-  are given that trait without its points.
+- The age comes first. With Age on, the creation screen offers nothing but
+  the four Age traits until one is chosen; then the rest of the lists appear.
+  Next is greyed until then, with the reason as its tooltip and written on
+  the screen. Random picks an age first and rolls the rest after. A saved
+  preset loads as it was and is gated after, so one with no age shows its
+  traits but cannot start until an age is added. In Their 30s sits in the
+  positive list at 0 points (vanilla lists only a cost above or below zero,
+  so the mod puts it there itself).
+- The sandbox option *Default Age* (20 to 59, rounds down to the decade) is
+  the band given to a character who reaches the world with no Age trait: a
+  save from before Age had traits, or a character made without the creation
+  screen. If that is the 40s or 50s, they are given that trait without its
+  points. It no longer stands in at creation.
 - A save from before this version gets the default band's trait the first
   time it loads. Skills are not touched.
 
@@ -81,6 +89,20 @@ A multiplier above 1 on a recovery row means faster.
 | Red cells rebuild after blood loss | x1.15 | x1 | x0.8 | x0.65 |
 | A concussion heals | x1.2 | x1 | x0.75 | x0.6 |
 | Hangover severity | x0.85 | x1 | x1.25 | x1.5 |
+| Any skill under level 3 trains | x1.2 | x1 | x1 | x0.9 |
+| The profession's own skills train | x1 | x1 | x1.1 | x1.15 |
+| Hunger builds | x1.15 | x1 | x0.95 | x0.9 |
+| Caffeine, drink, food sickness and daily or course medication clear | x1.2 | x1 | x0.9 | x0.8 |
+
+The last four are the mind and the metabolism (2026-10-07): in your 20s you
+are learning and the brain is a sponge, the body burns through everything
+fast; in your 50s the trade you know keeps coming, new skills do not, and
+everything lingers, good and bad. The learning factors multiply with each
+other and with Quick Study, Old Hand and Set in Their Ways. The clearance
+factor divides a hangover's hours and a daily or course drug's half-life (a
+dose holds a fifth longer in the 50s; rescue drugs such as diazepam and
+painkillers keep their own), scales caffeine's decay, and stretches or
+hurries whatever drunkenness and food sickness fell by each minute.
 
 How each one works:
 
@@ -104,44 +126,55 @@ How each one works:
 - **Night wakes.** Vitality scores each night, and every wake after the first
   costs a little. Age scales the count before it is scored.
 
-## Strong, Athletic, Stout and Fit cost more with age
+## Age pricing
 
-Older characters train Fitness and Strength slower, so buying them at creation
-would otherwise be the best deal for exactly the people least likely to be in
-that shape. Staying in shape costs extra points:
+A trait can cost more or fewer points in a band. The trait itself is
+unchanged; the difference shows beside its cost on the creation screen (red
+for dearer, green for cheaper) and comes off Points to Spend. The body costs
+more to keep with age; learning is cheap young and dear old; a hearty
+appetite is natural young. (Light Eater had a row until 2026-10-07; it was
+taken out as not worth the attention.) A positive number on
+a trait that gives points means it gives that many fewer.
 
-| Trait | 20s and 30s | 40s | 50s |
-|---|---|---|---|
-| Strong, Athletic | 10 | 12 | 14 |
-| Stout, Fit | 6 | 7 | 8 |
+| Trait | 20s | 30s | 40s | 50s |
+|---|---|---|---|---|
+| Strong, Athletic | 0 | 0 | +2 | +4 |
+| Stout | 0 | 0 | +1 | +2 |
+| Fit | -1 | 0 | +1 | +2 |
+| Fast Learner | -1 | 0 | 0 | +1 |
+| Slow Learner (gives) | +1 | 0 | 0 | +1 |
+| Hearty Appetite (gives) | +1 | 0 | 0 | -1 |
 
-- The trait still shows its own cost. The extra shows beside it in red
-  ("+4 at this age"), in the list to pick from and in the chosen list, and
-  comes off Points to Spend.
-- It follows the age picked, or the *Default Age* when none is. Change age
-  and the total changes at once.
-- The traits do exactly what they do in vanilla. Nothing changes after
-  creation, and existing characters are not affected.
-- Weak, Feeble, Unfit and Out of Shape are unchanged.
-- With the Age option off there is no surcharge.
+Existing characters are not affected; the table is read on the creation
+screen only (`DanTraits_AgeSurcharge`, `DanTraits_AgePrices`).
 
 ## Traits only one age can take
 
-Eight traits are offered only to the right age. Pick the age first; change it
-and a trait the new age cannot have comes back off, with its points. The
-*Default Age* counts as the age when none is picked. With the Age option off
-none of them is offered.
+Fifteen traits are offered only to the right age: eight from the first
+build, and from 2026-10-07 one perk and one flaw of each band's own, so the
+40s stop being a lighter 50s and the 50s have perks at all. (The 20s perk,
+Bounces Back, was folded into Thick Skull the same day and is open to any
+age; a save that has it gets Thick Skull instead.) Pick the age
+first; change it and a trait the new age cannot have comes back off, with
+its points. With the Age option off none of them is offered.
 
 | Trait | Age | Points | What it does |
 |---|---|---|---|
-| Green | 20s | gives 4 | Every skill the occupation boosts starts one level lower (not under 0). The skills still train at the occupation's faster rate. Shown greyed on the creation screen |
-| Quick Study | 20s | costs 4 | Any skill below level 3 gains experience x1.25 |
+| Green | 20s | gives 4 | Every skill the occupation boosts starts one level lower (not under 0). The skills still train at the occupation's faster rate: experience gain is unchanged (the description says so). Shown greyed on the creation screen |
+| Quick Study | 20s | costs 4 | Any skill below level 5 gains experience x1.4 (on top of the band's x1.2 under level 3) |
 | Reading Glasses | 40s, 50s | gives 2 | Starts with a pair of reading glasses. Without reading or prescription glasses on, reading takes x1.5 as long and needs a properly lit room (sunglasses do not count) |
 | Bad Back | 40s, 50s | gives 4 | The Heavy Load moodle builds lower-back pain, faster the heavier the load (about two hours at the second level to the worst of it). It eases over about four hours with the load off, twice as fast asleep. Not with Strong |
 | Bad Knees | 40s, 50s | gives 3 | Running, sprinting (four times as fast) and each fence, wall or window climbed build pain in both lower legs. It eases over about three hours of walking or rest |
-| Old Hand | 40s, 50s | costs 4 | The occupation's main skill gains experience x1.25 (Maintenance for the Unemployed) |
+| Old Hand | 40s, 50s | costs 4 | Every skill the occupation boosts gains experience x1.25 (Maintenance for the Unemployed); until 2026-10-07 only the main skill |
 | Old Injury | 50s | gives 3 | One arm or leg, picked at the start and announced once, always carries a little stiffness; in the cold and damp it stiffens further and hurts. Not with Arthritis |
 | Set in Their Ways | 50s | gives 2 | Skills the occupation does not boost gain experience x0.85. Fitness and Strength are left to age |
+| Bottomless Pit | 20s | gives 6 | Hunger builds x1.3 on top of the band's x1.15; from the Hungry moodle's second level, 0.1 unhappiness a minute awake (0.2 at the third). Not with Light Eater |
+| Pace Yourself | 40s | costs 2 | A tenth of the endurance a swing or a sprint spends comes straight back |
+| Settled | 40s | gives 2 | A night anywhere but a bed in a house (a bed object on a square with a room) scores 0.2 worse, and so does the first night in any new bed |
+| Delicate Stomach | 40s, 50s | gives 2 | A junk meal (the Vitality grade) brings 15 food sickness for a whole portion; a drink with hunger over half brings 10. Not with Iron Gut |
+| Seen It All | 50s | costs 3 | Panic builds x0.6 (the game's own rise, through the stat delta pipeline); Fear of Blood faints half as often; Germaphobe's filth stress half. Not with Cowardly |
+| Cast Iron | 50s | costs 2 | Medication side effects half as often; every drug's overdose line one pill higher |
+| Old Bones Know Rain | 50s | costs 1 | Once a day from 6 AM: a storm, tropical storm, heavy rain or blizzard tomorrow, or a night below freezing, is announced today |
 
 Notes:
 
@@ -153,7 +186,8 @@ Notes:
   floor; age's slower fading applies to anything above it.
 - The age check happens on the creation screen only. A character who has one
   of these traits keeps it.
-- These traits have no icons yet, like the Age traits themselves.
+- Each has its own icon, as do the four Age traits (a disc with the decade
+  on it). The creation screen's description lists everything a trait does.
 
 ## What age does to other traits
 
@@ -195,7 +229,7 @@ Notes on the less obvious rows:
 | Option | Default | What it does |
 |---|---|---|
 | Age | on | Off: the Age traits are hidden at creation, nothing is granted, and every character counts as in their 30s |
-| Default Age | 30 | The age of a character who picks no Age trait (20 to 59) |
+| Default Age | 30 | The age given to a character who has no Age trait at spawn: an old save, or one made without the creation screen (20 to 59) |
 | Profession Levels (20s / 30s / 40s / 50s) | 0 / 1 / 2 / 3 | The main-skill levels per band, 0 to 5. At 0 the band gets no levels at all, the other skills included |
 
 There is no separate switch for the everyday effects.

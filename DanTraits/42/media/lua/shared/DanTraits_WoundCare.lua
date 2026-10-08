@@ -3,7 +3,7 @@
 -- Not a trait: every character has it. Wounds are ongoing work:
 --   dressings  a bandage wears out over about a day (WC_AGE_H life an
 --              hour; a bandage starts near 5, a rag near 3), faster wet and
---              faster still soaking up blood. Spent (the game's "dirty":
+--              faster still soaking up blood (less over clotting powder). Spent (the game's "dirty":
 --              life 0), it only half slows a bleed (DanTraits_Blood.lua) and
 --              invites infection (DanTraits_Infection.lua). Change it.
 --   deep       an unstitched deep wound heals at WC_UNSTITCHED of the speed
@@ -131,6 +131,7 @@ local function tearOpen(player, part)
             part:setBleeding(true)
         end
     end)
+    if DanTraits_ClotBreak then DanTraits_ClotBreak(player, part) end
     say(player, "UI_DanTraits_StitchesTore", part)
 end
 
@@ -140,6 +141,7 @@ local function openAgain(player, part)
         part:setBleedingTime(randRange(WC_REOPEN_BLEED[1], WC_REOPEN_BLEED[2]))
         if not bandaged then part:setBleeding(true) end
     end)
+    if DanTraits_ClotBreak then DanTraits_ClotBreak(player, part) end
     say(player, "UI_DanTraits_WoundOpened", part)
 end
 
@@ -240,7 +242,7 @@ local function updatePart(player, d, part, name, wet, summary)
         if life > 0 then
             local loss = WC_AGE_H / 60 * (1 + WC_WET * wet)
             if DanTraits_BloodPartRate then
-                local okR, rate = pcall(DanTraits_BloodPartRate, part)
+                local okR, rate = pcall(DanTraits_BloodPartRate, part, player)
                 if okR and rate then loss = loss + rate * 100 * WC_SOAK end
             end
             life = math.max(0, life - loss)

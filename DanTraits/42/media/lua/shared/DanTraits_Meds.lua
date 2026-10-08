@@ -29,7 +29,8 @@
 -- A drug can also do something every minute it is in the system, for anyone
 -- who takes it (taking: prednisone's hunger, baclofen's drowsiness while
 -- awake, amantadine's dry mouth), and say when it wears off (lapse, for those
--- with the trait in lapseTrait; Heart Condition and Epilepsy say their own).
+-- with the trait in lapseTrait, or any of them when it is a list; Heart
+-- Condition and Epilepsy say their own).
 --
 -- Effects are a small vocabulary, applied every minute while they run:
 --   fatigue  tiredness added a minute      stress   stress added a minute
@@ -100,12 +101,12 @@ DanTraits_Drugs = {
     },
     -- Multiple Sclerosis (DanTraits_MS.lua reads the effect)
     prednisone = {
-        items = { "prednisone" }, treats = { "ms" }, kind = "course",
+        items = { "prednisone" }, treats = { "ms", "arthritis" }, kind = "course",
         halfH = 24, onAt = 0.5, overAt = 3,
         taking = { hunger = 0.0002 },
         side = { stress = 0.001 }, sideH = 8,   -- the game eases stress itself: this nets about 0.05 an hour
         over = { stress = 0.001, hunger = 0.0004 },
-        lapse = "UI_DanTraits_MSPredLapse", lapseTrait = "ms",
+        lapse = "UI_DanTraits_MSPredLapse", lapseTrait = { "ms", "arthritis" },
     },
     baclofen = {
         items = { "baclofen" }, treats = { "ms" }, kind = "daily",
@@ -307,7 +308,8 @@ local function rollSide(player, d, id)
     local day = today()
     if s.day == day then return end
     s.day = day
-    if DanTraits_Roll(sideChance() / 100) then
+    local chance = tonumber(DanTraits_RunHooks("medSideChance", sideChance() / 100, player, id)) or 0   -- Cast Iron
+    if DanTraits_Roll(chance) then
         s.sideMin = (drug.sideH or 8) * 60
         notify(player, "UI_DanTraits_MedSide_" .. id)
     end
@@ -353,15 +355,31 @@ local function applyEffect(player, d, fx, awakeOnly)
     end
 end
 
+-- the lapse notice goes to a character with the trait (or any of the traits) the drug treats
+local function hasLapseTrait(player, lapseTrait)
+    if not lapseTrait then return true end
+    if type(lapseTrait) == "table" then
+        for _, key in ipairs(lapseTrait) do if DanTraits_HasTrait(player, key) then return true end end
+        return false
+    end
+    return DanTraits_HasTrait(player, lapseTrait)
+end
+
 local function updateDrug(player, d, id, drug, s)
     local was = drug.onAt and (s.lvl or 0) >= drug.onAt
     if drug.halfH and (s.lvl or 0) > 0 then
-        s.lvl = s.lvl * 0.5 ^ (1 / (drug.halfH * 60))
+        -- a daily or course drug's half-life is the body's (Age: the old clear it
+        -- slower, a dose holds longer); a rescue drug is left alone
+        local halfH = drug.halfH
+        if drug.kind == "daily" or drug.kind == "course" then
+            local h = tonumber(DanTraits_RunHooks("medHalfLife", halfH, player, id, drug))
+            if h and h > 0 then halfH = h end
+        end
+        s.lvl = s.lvl * 0.5 ^ (1 / (halfH * 60))
         if s.lvl < 0.01 then s.lvl = 0 end
     end
     local covered = drug.onAt and (s.lvl or 0) >= drug.onAt
-    if was and not covered and drug.lapse
-        and (not drug.lapseTrait or DanTraits_HasTrait(player, drug.lapseTrait)) then
+    if was and not covered and drug.lapse and hasLapseTrait(player, drug.lapseTrait) then
         notify(player, drug.lapse)
     end
     if covered and drug.taking then applyEffect(player, d, drug.taking, true) end
@@ -379,7 +397,8 @@ local function updateDrug(player, d, id, drug, s)
     end
     -- too many: runs while the level is over, and for overH hours after it falls
     -- back (a quick-clearing drug would otherwise be over in minutes)
-    local above = drug.over and drug.overAt and (s.lvl or 0) > drug.overAt
+    local overAt = drug.overAt and tonumber(DanTraits_RunHooks("medOverAt", drug.overAt, player, id)) or drug.overAt   -- Cast Iron
+    local above = drug.over and overAt and (s.lvl or 0) > overAt
     if above then
         if drug.overH then s.overMin = drug.overH * 60 end
     elseif (s.overMin or 0) > 0 then

@@ -65,3 +65,9 @@ option DanTraits.SmokerCravingMoodle
 
 option DanTraits.MSSpoons
 {type = integer, min = 0, max = 24, default = 12, page = DanTraits, translation = DanTraitsMSSpoons,}
+
+option DanTraits.InhalerLoot
+{type = integer, min = 0, max = 500, default = 100, page = DanTraits, translation = DanTraitsInhalerLoot,}
+
+option DanTraits.KnoxSurviveChance
+{type = integer, min = 0, max = 100, default = 25, page = DanTraits, translation = DanTraitsKnoxSurviveChance,}

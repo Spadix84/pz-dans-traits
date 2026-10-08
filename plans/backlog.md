@@ -19,6 +19,7 @@ doc first). Risk: how likely it is to break something already working.
 | Dice: move the hand-rolled ZombRand dice to DanTraits_Roll/RollPercent (Sleep, Migraine, MDD, Jinxed, Dependent, Arthritis, Brittle; tests change with them) | Review 2026-10-02 | M | Low | One way to roll |
 | Diabetes and Vitality minute handlers: a constants table before they hit Kahlua's 60-upvalue cap (~50 and ~46 now) | Review 2026-10-02 | M | Low | They break the moment they grow |
 | Age v2: everyday effects, a 50s band, re-pricing, visible age, creation-screen levels (see `age-v2.md`) | User | L | Medium | Age is a real choice and felt every day |
+| Multiplayer: server-run systems, a sync layer, client state and effect messages (see `multiplayer.md`; spike first) | User | L | High | Singleplayer only today; split-screen co-op is fixed on the way |
 
 ## Built, waiting for a play test
 

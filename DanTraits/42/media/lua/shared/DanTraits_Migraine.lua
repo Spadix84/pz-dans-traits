@@ -498,7 +498,7 @@ DanTraits_AddHook("pill", function(_, player, kind)
     kind = tostring(kind)
     if kind == "Sumatriptan" then
         local d = traitData(player)
-        d.tripAfterMin = MIG_TRIP_AFTER_H * 60
+        d.tripAfterMin = tonumber(DanTraits_RunHooks("tripAfterMinutes", MIG_TRIP_AFTER_H * 60, player)) or MIG_TRIP_AFTER_H * 60   -- Thick Skull
         notify(player, "UI_DanTraits_TriptanAfter")
         return nil
     end

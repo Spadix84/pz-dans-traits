@@ -34,10 +34,12 @@ local HB_FAINT = {          -- chance of fainting when it's done
     ISRemoveGlass = 0.20,
     ISRemoveBullet = 0.35,
     ISCleanBurn = 0.10,
+    ISVitalityClotAction = 0.10,  -- clotting powder (on a bleeding wound)
 }
-local HB_NEEDS_BLEEDING = { ISApplyBandage = true, ISPlantainCataplasm = true, ISComfreyCataplasm = true, ISGarlicCataplasm = true }
+local HB_NEEDS_BLEEDING = { ISApplyBandage = true, ISPlantainCataplasm = true, ISComfreyCataplasm = true, ISGarlicCataplasm = true,
+                            ISVitalityClotAction = true }
 local HB_SLOW_ACTIONS = { "ISApplyBandage", "ISStitch", "ISRemoveGlass", "ISRemoveBullet", "ISCleanBurn", "ISDisinfect",
-                          "ISPlantainCataplasm", "ISComfreyCataplasm", "ISGarlicCataplasm" }
+                          "ISPlantainCataplasm", "ISComfreyCataplasm", "ISGarlicCataplasm", "ISVitalityClotAction" }
 local HB_SLOW         = 1.25    -- first aid takes this much longer
 local HB_BLEED_FROM   = 0.003   -- losing this much blood a minute (0.3%) and more...
 local HB_BLEED_FAINT  = 0.03    -- ...a chance a minute of fainting
@@ -51,6 +53,7 @@ end
 local roll = DanTraits_Roll
 
 local function faint(player, chance)
+    chance = tonumber(DanTraits_RunHooks("fearFaint", chance, player)) or chance   -- Seen It All
     if not DanTraits_PassOut or not roll(chance) then return false end
     local d = traitData(player)
     if (d.hbGap or 0) > 0 then return false end
@@ -67,6 +70,7 @@ local function actionClasses()
         ISApplyBandage = ISApplyBandage, ISPlantainCataplasm = ISPlantainCataplasm, ISComfreyCataplasm = ISComfreyCataplasm,
         ISGarlicCataplasm = ISGarlicCataplasm, ISStitch = ISStitch, ISRemoveGlass = ISRemoveGlass,
         ISRemoveBullet = ISRemoveBullet, ISCleanBurn = ISCleanBurn, ISDisinfect = ISDisinfect,
+        ISVitalityClotAction = ISVitalityClotAction,
     }
 end
 

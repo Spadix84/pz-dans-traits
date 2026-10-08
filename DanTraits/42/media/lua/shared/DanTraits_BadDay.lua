@@ -6,38 +6,55 @@ local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 
 -- A Really Bad Day ----------------------------------------------------------
--- The CDDA challenge's opening, as a trait: drunk, sick, a shard of glass in
--- the groin and, if you start indoors, the house on fire. Each part is
--- applied exactly once, tracked in mod data so reloads and respawns are safe.
+-- The CDDA challenge's opening, as a trait: drunk, sick, an infected
+-- laceration on the left forearm and, if you start indoors, the house on
+-- fire. Each part is applied exactly once, tracked in mod data so reloads
+-- and respawns are safe.
 --
 -- What the opening costs under the health overhaul (blood, infection, wound
--- care, hangover, the alcoholism meter): the shard is a deep wound in the
--- groin, a 1.5x bleed site that bleeds through a bandage and carries the top
--- infection hazard until it is pulled (pulling it is a Fear of Blood faint
--- roll); intoxication 100 is a full Drunk 4, which keeps the pain floor at 80
--- (what makes the shard survivable), arms a maximum hangover for when it
--- wears off and feeds the day's alcoholism cap; a cold at strength 50 rides
--- on top. Hemophilia and Bad Day are mutually exclusive (scripts/DanTraits.txt);
--- with Anaemic the start is probably unwinnable.
+-- care, hangover, the alcoholism meter): the laceration is a cut on a plain
+-- bleed site (x1.0) that is already infected at BAD_DAY_INFECTION, the
+-- local stage (it does not heal, and spreads into the body at 5, about a day
+-- and a half untreated); disinfectant pushes it back, antibiotics always do.
+-- Intoxication 100 is a full Drunk 4: a pain floor of 80, a maximum hangover
+-- armed for when it wears off, and the day's alcoholism cap fed; a cold at
+-- strength 50 rides on top. Hemophilia and Bad Day are mutually exclusive
+-- (scripts/DanTraits.txt).
 --
--- BALANCE PENDING (README, Status and known issues). Played 2026-09-30, plain
--- character: the shard bled 1.6% a minute (bleeding time about 13.6); pulled
--- and bandaged at 16 minutes with 27% lost, each bandage soaked in 5 to 6
--- minutes, 48% lost by 49 minutes. Without stitching supplies the opening
--- kills even a plain character. Left as it is for now by choice; only the
--- Hemophilia exclusion was taken. The other dials (a fixed low
--- bleeding time of 3 on the shard, a starting bandage, d.hoLoad = 0 so the
--- opening drink arms no hangover) wait for a play test. Replay the
--- opening without a new character with the console command `badday`
--- (`badday fire` also relights the house): DanTraits_BadDayReplay.
--- Since 2026-09-30 a needle and thread wait in a nearby house (below).
+-- BALANCE PENDING (README, Status and known issues). Until 2026-10-07 the
+-- wound was a glass shard in the groin (generateDeepShardWound); played
+-- 2026-09-30 it bled 1.6% a minute and killed even a plain character
+-- without stitching supplies. The user swapped it for the infected
+-- laceration and cut the trait from 12 points to 8 "so it's at least
+-- survivable", until proper balance is worked out. Replay the opening
+-- without a new character with the console command `badday` (`badday fire`
+-- also relights the house): DanTraits_BadDayReplay.
+-- Disinfectant and a bandage wait in a nearby house (below).
 local function badDayFresh(player)
     if not player or not hasTrait(player, "badday") then return nil end
     if player:getHoursSurvived() > 0 then return nil end
     return traitData(player)
 end
 
--- the body of the opening: drunk, sick, the shard, no clothes and soaking wet
+local BAD_DAY_PART      = "ForeArm_L"
+local BAD_DAY_INFECTION = 2      -- the wound's infection level (Infection.lua: 2 stops healing, 5 spreads)
+
+-- the infected laceration
+local function badDayWound(player, bd)
+    local part = bd:getBodyPart(BodyPartType[BAD_DAY_PART])
+    if not part then return end
+    pcall(function() part:setCut(true) end)
+    if DanTraits_InfectWound then
+        DanTraits_InfectWound(player, part, BAD_DAY_INFECTION)
+    else
+        pcall(function()
+            part:setInfectedWound(true)
+            part:setWoundInfectionLevel(BAD_DAY_INFECTION)
+        end)
+    end
+end
+
+-- the body of the opening: drunk, sick, the laceration, no clothes and soaking wet
 local function applyBadDay(player)
     local stats = player:getStats()
     pcall(function() stats:set(CharacterStat.INTOXICATION, 100) end)
@@ -50,8 +67,7 @@ local function applyBadDay(player)
         bd:setTimeToSneezeOrCough(0)
     end)
 
-    local groin = bd:getBodyPart(BodyPartType.Groin)
-    if groin then pcall(function() groin:generateDeepShardWound() end) end
+    badDayWound(player, bd)
 
     -- Straight out of the shower: nothing on, and soaked. Worn clothes are
     -- removed from the inventory too, not just unequipped, so there is
@@ -145,14 +161,15 @@ local function startBadDayFire(player)
     return true
 end
 
--- The way out: a needle and thread in a drawer or cupboard of another house
--- nearby, so the shard wound can be stitched if you go looking. No notice in
--- the game; the trait's description says there is one. Picked once, from
--- the containers 15 to 40 tiles away in buildings other than your own
--- (then out to 60, then your own house's far rooms); kitchen appliances,
--- bins and the like are skipped. Kept safe from Jinxed, and put back if the
--- game fills that container with loot afterwards.
-local BAD_DAY_KIT_ITEMS = { "Base.Needle", "Base.Thread" }
+-- The way out: disinfectant and a bandage in a drawer or cupboard of another
+-- house nearby, so the laceration can be cleaned and dressed if you go
+-- looking (it was a needle and thread for the old glass shard; a cut can't
+-- be stitched). No notice in the game; the trait's description says there
+-- is one. Picked once, from the containers 15 to 40 tiles away in buildings
+-- other than your own (then out to 60, then your own house's far rooms);
+-- kitchen appliances, bins and the like are skipped. Put back if the game
+-- fills that container with loot afterwards.
+local BAD_DAY_KIT_ITEMS = { "Base.Disinfectant", "Base.Bandage" }
 local BAD_DAY_KIT_NEAR, BAD_DAY_KIT_FAR, BAD_DAY_KIT_FARTHEST = 15, 40, 60
 local BAD_DAY_KIT_SKIP = { fridge = true, freezer = true, stove = true, microwave = true, oven = true,
     bin = true, toilet = true, clothingwasher = true, clothingdryer = true, barbecue = true,
@@ -216,10 +233,7 @@ end
 local function stockKit(cont)
     for _, fullType in ipairs(BAD_DAY_KIT_ITEMS) do
         if not hasItem(cont, fullType) then
-            pcall(function()
-                local item = cont:AddItem(fullType)
-                if item then item:getModData().DanTraitsKeep = true end
-            end)
+            pcall(function() cont:AddItem(fullType) end)
         end
     end
 end
@@ -275,7 +289,7 @@ end
 -- Console `badday [fire]` (Telemetry): replay the opening on the current
 -- character, for balancing it without a new game. The applied flags are
 -- cleared and the body's part is applied again (it does not undo what is
--- already there: a second shard, another cold), skipping the first-hour gate
+-- already there: another cold), skipping the first-hour gate
 -- and the trait check. The fire only with `fire`. Returns a line for the log.
 function DanTraits_BadDayReplay(player, withFire)
     if not player then return "badday: no player" end

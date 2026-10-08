@@ -53,6 +53,14 @@ function ISDiabetesAction:perform()
             if value then
                 if bad then DanTraits_NotifyFmt(self.character, "UI_DanTraits_DiaReading", value)
                 else DanTraits_NotifyFmtGood(self.character, "UI_DanTraits_DiaReading", value) end
+                -- First Aid 6+ or the magazine: insulin still working, then what to do about it
+                local advice = DanTraits_DiaMeterAdvice and DanTraits_DiaMeterAdvice(self.character, value) or {}
+                for _, line in ipairs(advice) do
+                    if line[3] then DanTraits_NotifyGood(self.character, line[1])
+                    else DanTraits_NotifyFmt(self.character, line[1], line[2]) end
+                end
+                -- the meter keeps the reading for its tooltip
+                if DanTraits_DiaMeterRecord then DanTraits_DiaMeterRecord(self.item, value, advice) end
                 pcall(function()
                     -- B42 item names are keyed by full type in ItemName.json, not "ItemName_<type>",
                     -- so getText() on that key returns the raw key; ask the item system instead

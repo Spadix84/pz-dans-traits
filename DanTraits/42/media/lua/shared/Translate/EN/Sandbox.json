@@ -3,7 +3,7 @@
     "Sandbox_DanTraitsAgeEnabled": "Age",
     "Sandbox_DanTraitsAgeEnabled_tooltip": "Characters are in their 20s, 30s, 40s or 50s, which changes their starting skills, how fast the body recovers and trains, and how some traits work.<br>Off: the age traits are hidden and do nothing.",
     "Sandbox_DanTraitsAgeDefault": "Default Age",
-    "Sandbox_DanTraitsAgeDefault_tooltip": "The age of a character who takes no age trait. Rounds down to the decade: 20-29, 30-39, 40-49, 50-59. They are given that decade's trait at the start.",
+    "Sandbox_DanTraitsAgeDefault_tooltip": "The age given to a character who has no age trait: a save from before Age had traits, or a character made without the creation screen. Rounds down to the decade: 20-29, 30-39, 40-49, 50-59. New characters pick their age on the creation screen.",
     "Sandbox_DanTraitsAgeBonus20s": "Profession Levels (20s)",
     "Sandbox_DanTraitsAgeBonus20s_tooltip": "Extra levels a new character in their 20s gets in their profession's main skill (Maintenance for the Unemployed).",
     "Sandbox_DanTraitsAgeBonus30s": "Profession Levels (30s)",
@@ -43,5 +43,9 @@
     "Sandbox_DanTraitsAngerEffects": "Anger Has Effects",
     "Sandbox_DanTraitsAngerEffects_tooltip": "The Angry moodle (a smoker's withdrawal raises it) does something, for everyone, from Annoyed up: melee weapons wear faster, reading is slower, splints, stitches and vehicle parts go wrong more often, and from Angry up the character curses out loud where zombies can hear. Furious also costs extra endurance per swing.<br>Off: the moodle is only for show, as in the base game.",
     "Sandbox_DanTraitsSmokerCravingMoodle": "Nicotine Craving Moodle",
-    "Sandbox_DanTraitsSmokerCravingMoodle_tooltip": "Smokers see a Nicotine Craving moodle and a notice when a craving starts.<br>Off: no moodle and no notice. The craving still builds, and you have to read it from irritability (the Angry moodle) and stress."
+    "Sandbox_DanTraitsSmokerCravingMoodle_tooltip": "Smokers see a Nicotine Craving moodle and a notice when a craving starts.<br>Off: no moodle and no notice. The craving still builds, and you have to read it from irritability (the Angry moodle) and stress.",
+    "Sandbox_DanTraitsInhalerLoot": "Inhaler Loot (%%)",
+    "Sandbox_DanTraitsInhalerLoot_tooltip": "How often inhalers turn up, in percent of the mod's normal rate. 100 is normal, 200 twice as often.<br>0: inhalers never spawn as loot (Asthma still starts with one).",
+    "Sandbox_DanTraitsKnoxSurviveChance": "Resilient: Knox Survival Chance (%%)",
+    "Sandbox_DanTraitsKnoxSurviveChance_tooltip": "The chance a Resilient character beats a zombie infection. They get sick like anyone else, then the fever breaks partway through. Every infection rolls again.<br>0: Resilient never survives it, as in the base game."
 }

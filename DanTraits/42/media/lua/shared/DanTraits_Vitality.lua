@@ -443,6 +443,7 @@ DanTraits_AddHook("lungHeal", healsBy(VIT_LUNG_HEAL))
 local xpReentry = false
 local function onAddXP(player, perk, amount)
     if xpReentry or not vitOn() or not player or not perk or not amount or amount <= 0 then return end
+    if DanTraits_AgeXpBusy and DanTraits_AgeXpBusy() then return end   -- age's quiet top-up
     if not (Perks and (perk == Perks.Fitness or perk == Perks.Strength)) then return end
     local d = player:getModData().DanTraits
     if not d or d.vitality == nil or tierOf(d.vitality) < VIT_XP_TIER then return end

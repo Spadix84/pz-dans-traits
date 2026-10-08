@@ -49,13 +49,13 @@ Most systems have a switch on the Vitality Project sandbox page. Every lasting e
 [*]Cold air, corpses, exertion, panic and smoke irritate the airways through four tiers.
 [*]An attack drains you and coughs loud enough for zombies. The inhaler ends it.
 [/list]
-[*][b]Hemophilia (-10):[/b] bleeds never stop on their own and reopen until bandaged. A bandage only slows one to two fifths; stitches stop it.
+[*][b]Hemophilia (-10):[/b] bleeds never stop on their own and reopen until bandaged. A bandage only slows one to a quarter; stitches stop it.
 [*][b]Major Depressive Disorder (-8):[/b] episodes hold mood down for days. Drink, comfort food, exercise, the outdoors and a real antidepressant regimen all matter.
 [*][b]Migraines (-10)[/b]
 [list]
 [*]Attacks from bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat, corpses, storms and daylight: hours of pain and nausea.
 [*]Three personal triggers hit twice as hard.
-[*]Painkillers barely help. Sumatriptan (new, rare) halves an attack in the aura or ends it within two hours.
+[*]Painkillers barely help. Sumatriptan (uncommon) halves an attack in the aura or ends it within two hours.
 [/list]
 [*][b]Epilepsy (-6)[/b]
 [list]
@@ -91,7 +91,7 @@ Most systems have a switch on the Vitality Project sandbox page. Every lasting e
 [*][b]Renaissance Faire Geek (+10):[/b] +1 Spear, Long Blade, Axe and Blacksmithing.
 [*][b]Fast Recovery (+8):[/b] Fast Healer folded in; blood comes back half as fast again.
 [*][b]Deep Sleeper (+6):[/b] Wakeful folded in; light rarely wakes you and the dark does more good.
-[*][b]Steady Hands (+5):[/b] Dexterous folded in; stitches and splints go wrong half as often and take less time. Not while your hands shake.
+[*][b]Steady Hands (+5):[/b] Dexterous folded in; stitches and splints go wrong half as often; stitching, reloading and the belt a quarter quicker. Not while your hands shake.
 [*][b]Good Clotter (+3):[/b] bleeds run down twice as fast and lose a quarter less blood.
 [*][b]Thick Skull (+2):[/b] concussed half as often, less badly, heals faster.
 [*][b]Outdoorsman (2, reworked):[/b] as vanilla, and burns half as fast.

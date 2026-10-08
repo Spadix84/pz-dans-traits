@@ -1,8 +1,9 @@
--- Project Zomboid Vitality Project: the cheap positives.
--- Iron Stomach: rotten and burnt food hurts the diet score half as much,
---   and food sickness climbs half as fast (the foodSicknessRise hook of the
---   stat delta pipeline; a rise made by a mod floor, like a hangover's, is
---   left alone).
+-- Project Zomboid Vitality Project: the positives.
+-- Iron Gut (vanilla, re-costed 2 -> 4 with Iron Stomach folded in,
+--   2026-10-07): on top of vanilla's own effect, rotten and burnt food hurts
+--   the diet score half as much, and food sickness climbs half as fast (the
+--   foodSicknessRise hook of the stat delta pipeline; a rise made by a mod
+--   floor, like a hangover's, is left alone).
 -- Early Riser: a new character's sleep score starts high, and every night
 --   scores a little better.
 -- Meal Prepper: a new character's diet score starts high, and variety is
@@ -15,7 +16,7 @@
 --   drink adds, through the drink action; so it takes more to dull pain too,
 --   since drink relief follows the Drunk moodle), and a hangover is milder
 --   (x0.6) and shorter (x0.7). Not with Straight Edge.
--- Fast Recovery (8: over vanilla Fast Healer's 6, which it contains): vanilla
+-- Fast Recovery (6, the same as vanilla Fast Healer, which it contains): vanilla
 --   Fast Healer folded in (granted with it), and after
 --   blood loss the volume and the red cells come back half as fast again
 --   (the bloodVolRefill and bloodCellRebuild hooks of DanTraits_Blood.lua).
@@ -29,13 +30,23 @@
 --   Not with Hemophilia.
 -- Thick Skull: a knock to the head concusses half as often and a quarter
 --   less badly (the concussionChance and concussionScore hooks of
---   DanTraits_Concussion.lua, before a helmet's cut, so the two stack), and a
---   concussion heals half as fast again (concussionHeal).
+--   DanTraits_Concussion.lua, before a helmet's cut, so the two stack), a
+--   concussion heals half as fast again (concussionHeal), and since
+--   2026-10-07 (Bounces Back folded in) faints, knockouts and shock last half
+--   as long (passOutMinutes; the real-time floor stays) and so does the
+--   sumatriptan day-after (tripAfterMinutes). Any age.
+-- Grit: pain is felt GR_CUT less. The game subtracts the body's
+--   painReduction from the pain stat every tick (drink relief uses it too);
+--   each minute Grit sets its own share of it to GR_CUT of the pain that
+--   would be felt without it, so the stat, the moodle and everything pain
+--   drives settle a third lower. Painkillers are vanilla's and still pull the
+--   stat to 0. d.gritCut is Grit's share.
 -- The one-shot starts are applied once, to a new character, like Gym
 -- Regular; the hooks run for as long as the trait is there.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
+local hasVanillaTrait = DanTraits_HasVanillaTrait
 local traitData = DanTraits_Data
 
 local IS_GRADE_CUT      = 0.5     -- rotten/burnt penalty x this
@@ -58,10 +69,13 @@ local GC_FLOOR          = 0.01    -- never cut a bleed below this: the game ends
 local TS_CHANCE         = 0.5     -- Thick Skull: chance a knock concusses x this
 local TS_SCORE          = 0.75    -- how bad x this
 local TS_HEAL           = 1.5     -- heals x this
+local TS_PASSOUT        = 0.5     -- faints, knockouts and shock: minutes x this
+local TS_TRIPAFTER      = 0.5     -- the sumatriptan day-after x this
+local GR_CUT            = 0.35    -- Grit: share of the pain not felt
 
--- Iron Stomach ---------------------------------------------------------------
+-- Iron Gut -------------------------------------------------------------------
 DanTraits_AddHook("foodGrade", function(grade, player, item, why)
-    if not hasTrait(player, "ironstomach") then return nil end
+    if not hasVanillaTrait(player, "base:irongut") then return nil end
     why = tostring(why or "")
     if not (string.find(why, "rotten", 1, true) or string.find(why, "burnt", 1, true)) then return nil end
     if grade >= 0.5 then return nil end
@@ -72,10 +86,10 @@ end)
 -- (DanTraits_Util.lua). Only the game's own rise is halved: when a mod system
 -- (hangover, migraine, gluten, diabetes, concussion, MDD side effects,
 -- dependence) raised food sickness with a floor since the last run, that rise
--- is theirs and Iron Stomach leaves it alone. The floor is a symptom of the
+-- is theirs and Iron Gut leaves it alone. The floor is a symptom of the
 -- condition, not something eaten.
 DanTraits_AddHook("foodSicknessRise", function(delta, player, d)
-    if not hasTrait(player, "ironstomach") then return nil end
+    if not hasVanillaTrait(player, "base:irongut") then return nil end
     if d and d.floorsThisMinute and d.floorsThisMinute.foodSicknessRise then return nil end
     return delta * IS_SICK_CUT
 end)
@@ -203,6 +217,34 @@ DanTraits_AddHook("concussionHeal", function(heal, player)
     if not hasTrait(player, "thickskull") then return nil end
     return heal * TS_HEAL
 end)
+DanTraits_AddHook("passOutMinutes", function(minutes, player)
+    if not hasTrait(player, "thickskull") then return nil end
+    return minutes * TS_PASSOUT
+end)
+DanTraits_AddHook("tripAfterMinutes", function(minutes, player)
+    if not hasTrait(player, "thickskull") then return nil end
+    return minutes * TS_TRIPAFTER
+end)
+
+-- Grit -----------------------------------------------------------------------
+-- our share of painReduction, set each minute; whatever is above it belongs
+-- to someone else (drink relief, a medicinal fluid) and is left alone
+local function updateGritMinute(player, d)
+    local on = hasTrait(player, "grit")
+    local applied = d.gritCut or 0
+    if not on and applied == 0 then return end
+    pcall(function()
+        local bd = player:getBodyDamage()
+        local other = math.max(0, (bd:getPainReduction() or 0) - applied)
+        local target = 0
+        if on then
+            local felt = player:getStats():get(CharacterStat.PAIN) or 0
+            target = GR_CUT * (felt + applied)   -- felt + our share = the pain without Grit
+        end
+        bd:setPainReduction(other + target)
+        d.gritCut = target > 0 and target or nil
+    end)
+end
 
 -- the one-shot starts, and the vanilla trait Fast Recovery carries
 local function onPositivesCreate(player)
@@ -226,5 +268,6 @@ local function onPositivesCreatePlayer(playerNum, player) onPositivesCreate(play
 local function onPositivesGameStart() onPositivesCreate(getSpecificPlayer(0)) end
 
 DanTraits_Every("minute", "GoodClotter", updateGoodClotterMinute, 19)
+DanTraits_Every("minute", "Grit", updateGritMinute, 41)
 Events.OnCreatePlayer.Add(onPositivesCreatePlayer)
 Events.OnGameStart.Add(onPositivesGameStart)

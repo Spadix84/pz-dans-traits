@@ -10,7 +10,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 Age used to show only when something rare happened (blood loss, a concussion, a hangover).
 It now sits on the everyday systems. The whole system is written up in `docs/age.md`.
 
-- **In Their 50s (-4)**, a new band: three extra profession levels, and the slowest body.
+- **In Their 50s (-6)**, a new band: three extra profession levels, and the slowest body.
 - **Prices changed sides.** In Their 20s now costs 6 points (it gave 2) and In Their 40s
   gives 2 (it cost 1): youth is the advantage in play, age is the trade for skill.
 - **Profession levels** in the main skill are 0 / 1 / 2 / 3 (the 40s had 1), and every
@@ -24,20 +24,48 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
 - **The 50s on the existing effects:** red cells x0.65, concussion x0.6, hangover x1.5,
   Type 2 resistance +0.2, Brittle x1.5, Arthritis joint factor x1.6, Heart Condition x1.5,
   Handy +1 Carpentry.
-- **Staying in shape costs more with age.** Strong and Athletic cost 2 points more in the
-  40s and 4 more in the 50s; Stout and Fit 1 and 2. The traits are unchanged; the extra
-  shows beside their cost on the creation screen and comes off Points to Spend. Existing
+- **The mind and the metabolism, by band** (2026-10-07). Any skill under level 3 trains
+  x1.2 in the 20s and x0.9 in the 50s; the profession's own skills train x1.1 in the 40s
+  and x1.15 in the 50s. Hunger builds x1.15 / x0.95 / x0.9. Caffeine, drink, food sickness
+  and daily or course medication clear x1.2 / x0.9 / x0.8: a young body burns through
+  everything, an old one holds a dose a fifth longer and a hangover too. Rescue drugs
+  (diazepam, painkillers, the inhaler) keep their own half-life.
+- **Age pricing.** A trait can cost more or fewer points in a band, drawn beside its cost
+  (red dearer, green cheaper) and taken off Points to Spend. Strong and Athletic +2 / +4 in
+  the 40s / 50s, Stout +1 / +2, Fit -1 in the 20s then +1 / +2; Fast Learner -1 in the 20s
+  and +1 in the 50s; Slow Learner gives a point fewer young or old; Hearty Appetite gives a
+  point fewer in the 20s and one more in the 50s. The traits are unchanged and existing
   characters are not affected.
-- **Eight traits only one age can take.** 20s: Green (-4), Quick Study (+4). 40s and 50s:
-  Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4). 50s: Old Injury (-3),
-  Set in Their Ways (-2). The creation screen offers each only to its age and takes it back
-  off if the age changes. `docs/age.md` says what each does.
+- **Fifteen traits only one age can take.** 20s: Green (-4, the levels only: it does not
+  slow experience), Quick Study (+4, now x1.4 under level 5), Bottomless Pit (-6). 40s: Pace Yourself (+2), Settled
+  (-2). 40s and 50s: Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4),
+  Delicate Stomach (-2). 50s: Old Injury (-3), Set in Their Ways (-2), Seen It All (+3),
+  Cast Iron (+2), Old Bones Know Rain (+1). Every band has a perk and a flaw of its own. The
+  creation screen offers each only to its age and takes it back off if the age changes.
+  `docs/age.md` says what each does. New hooks for mod authors: `hungerRise` and `panicRise`
+  (stat delta pipelines), `medHalfLife`, `medSideChance`, `medOverAt`, `passOutMinutes`,
+  `tripAfterMinutes`, `fearFaint`, `filthStress`, `alcoholDrunk`.
+- **Age traits have icons.** The four Age traits are a disc in the
+  band's colour with the decade on it; the fifteen age-only traits have a picture each
+  (drawn by `DanTraits/tools/make_icons.py`, 18 x 18 like vanilla's).
+- **Shorter trait descriptions.** Every trait's creation-screen text is rewritten in
+  vanilla's style: two to four short lines, the headline effects only, so the tooltips
+  are about vanilla's size. The numbers live in the README and `docs/age.md`.
 - **Fixed: In Their 20s did not hide Arthritis or Handy** when the age was picked first
   (the game only checks an exclusion from the side of the trait in the list). The creation
   screen now checks from both sides, for every trait, so one-sided exclusions such as
   Multiple Sclerosis with Athletic and Strong work in either order too.
-- **Everyone carries an Age trait.** Pick none and In Their 30s (cost 0, not in the
-  creation lists) is given at the start. The four exclude each other.
+- **Fixed: a drink showed the Antidepressants moodle** on a character without Major
+  Depressive Disorder. Vanilla's drink gives a full antidepressant dose along with the
+  beta-blocker and painkiller ones the mod already undoes; the antidepressant timer is now
+  put back as well, so only a pill starts it. Antidepressants taken earlier keep working.
+- **Everyone carries an Age trait, and the age comes first.** The creation screen offers
+  nothing but the four Age traits until one is chosen (In Their 30s at 0 points among
+  them); then the rest appears. Next is greyed until then, with the reason as its tooltip
+  and on the screen. Random picks an age first. A preset loads as it was and is gated
+  after. Age off in the sandbox: no gate and no Age traits. The four exclude each other.
+  Default Age now only applies to a character who reaches the world with no Age trait (an
+  old save), since nobody picks none any more.
 - **The creation screen shows age's levels:** in the Major Skills list, "(+N age)" after
   the skill and the extra bars in blue. The XP rate column counts only the game's levels.
 - **Sandbox:** Default Age goes to 59; Profession Levels (40s) defaults to 2; new
@@ -52,6 +80,192 @@ everyday effects from then on. A saved sandbox keeps its old Profession Levels (
 For mod authors: `DanTraits_AgeLevels(boosts, band, handy, bonus)` and
 `DanTraits_AgeRoundBand(age)` are new; `DanTraits_AgeBand` can return 50; Age subscribes
 to `enduranceRegen`, `woundHeal` and `nightWakes`, and runs a minute step at order 23.5.
+
+### Hemophilia: punishing, survivable
+
+A neck scratch, bandaged at once and the bandage changed whenever it soaked, killed a
+hemophiliac in play (2026-10-05). Three causes, three changes.
+
+- **The bleeding clock is held, not floored.** Hemophilia used to keep an uncovered bleed's
+  clock at 5 or more, so every bandage change reset the bleed to 5 however far the old
+  bandage had run it down. It now holds the clock where it is while the part is uncovered,
+  remembers it under the dressing, and a new bandage carries on from there. A wound whose
+  clock a bandage ran to nothing stays closed when the bandage comes off; a scratch can
+  therefore end, which it could not before (scratches cannot be stitched).
+- **A bandage slows a hemophiliac's bleed to a quarter** (x2.5 the normal bandaged rate;
+  it was two fifths, x4).
+- **A soaked bandage, or one over a shard, is capped at a plain character's open rate**
+  (it was capped at the hemophiliac's open rate, x1.5, so a soaked bandage was as bad as
+  none).
+
+On the neck (x3) with the clock at 5, per game minute of blood volume: open 1.8% (as before),
+clean bandage 0.3% (was 0.48%), soaked 1.2% (was 1.8%). The cost stays at -10.
+
+### Arthritis: warm clothes and two pills take the edge off a flare
+
+A flare is the stiffness floor rising from 12 to 45 on eight joints, attacks up to 15% slower
+on top of the usual 15%, slips 4% likelier, and past half a flare the odd slip throwing the
+weapon. Three ways to ease it, none of which touches the everyday stiffness:
+
+- **Warm clothes count.** The cold is now read from the joints' own skin temperature (the
+  game's thermoregulator, fed by clothing, wind and wet; normal skin is 33 C, and the cold is
+  everything at 23) as the mean over the eight joints, so a bare hand counts against a warm
+  leg. The air temperature decides only when there is no reading. `artSkin` in the mod data
+  is the mean skin temperature, for tuning.
+- **Painkillers halve a flare** while they are in the system (the shared medication system's
+  level: about two hours a pill, a few with two). The same bottle that eased the ache.
+- **Prednisone cuts a flare to a third** while taken, and now says it treats arthritis; its
+  wearing-off notice reaches Arthritis characters too. The stronger of the two counts; they
+  do not stack.
+- A dosed full flare sits exactly at half, and the weapon-drop line is now "past half", so a
+  character on painkillers never throws the weapon. `artWeather` and `artRelief` in the mod
+  data show the flare before relief and the factor applied.
+- A new Arthritis character starts with a bottle of painkillers under Starting Medication.
+
+### Fixed: the pause menu was hidden while passed out
+
+The game draws its screen fade after the UI unless told to draw it before, which vanilla
+sleep does. The mod's blackouts (concussion knockout, shock, seizures, a diabetic low,
+Fear of Blood) did not, so the black covered the pause menu as well and Escape did nothing
+you could see. The fade is now drawn before the UI, as in sleep: the menu, the inventory
+and the moodles show over the black.
+
+### Pill Caddy: the right weight, easier to find, sometimes full
+
+- **Fixed: on the belt, the caddy's tab showed the whole carried weight** ("12.3 / 1").
+  Attaching an item to the belt makes the character the parent of the item's container,
+  and the game reports a character-parented container's weight as everything the
+  character carries (and skips the Organized bonus on it). No vanilla container goes on
+  a belt, so only the caddy hit it. Its container is now unparented whenever the inventory
+  window refreshes, before its tab is made: the tab reads the caddy's own contents, and
+  Organized gives it 2 as intended.
+- **Uncommon, not rare:** ten times as likely wherever it was found (0.5 in a bathroom
+  cabinet, 3 on a pharmacy shelf: a tenth of a bottle of beta blockers, about a first aid
+  kit), and now on the odd zombie's belt.
+- **Found caddies may have medication in them:** two rolls over the vanilla pills,
+  antibiotics and the mod's bottles (painkillers and vitamins likeliest, the MS pills
+  rarest). Bottles come part-used like any looted bottle.
+
+### Sumatriptan, easier to find
+
+- Twice as likely wherever it was found: 0.8 of an ordinary prescription bottle (was 0.4),
+  so a little rarer than anticonvulsants or baclofen rather than the rarest pill in the
+  mod. In a found Pill Caddy it is as likely as diazepam (2, was 1).
+
+### New item: clotting powder
+
+- **Clotting Powder** (styptic powder, 5 uses): right-click a bleeding part in the health
+  panel, dressing off, and pack the wound. A scratch or cut stops bleeding there and then.
+  A deep wound's bleeding time is halved and, for 12 game hours, it loses blood at a quarter
+  of the rate; it still needs stitches. Dress it after: a bandage over the powder leaves a
+  fortieth of the open bleed and soaks that much slower.
+- It stings: 20 pain on the part, less half the First Aid level. 100 - 4 x First Aid ticks
+  to apply, 5 First Aid xp, like a bandage.
+- A shard or bullet still in: the bleeding time stays and the rate is only x0.6.
+  Hemophilia: nothing stops, the rate halves.
+- The clot ends after 12 hours, when the part stops bleeding, or when the wound tears or
+  opens again (wound care). The health panel shows "Packed with clotting powder".
+- Fear of Blood: 10% faint when it's done on a bleeding wound, and 25% slower, like a bandage.
+- Loot: medicine cabinets 3 (a bandage is 6), first aid kits 6 (disinfectant 4, a bandage 20), doctors' bags,
+  ambulances, safehouse medical, army medical, pet shops and pet crates (vets and groomers
+  used it), salon counters, a little in bathroom cabinets, hunting lockers and camping gear.
+- Mod authors: `DanTraits_BloodPartRate(part, player)` takes the player now; with it the
+  rate includes the clot (`DanTraits_ClotFactor`). Called with the part alone it is as before.
+
+### Steady Hands, quicker with a gun
+
+- Reloading and racking run a quarter faster: the game's reload speed (Reloading skill,
+  panic, an ammo strap's x1.15, which stacks) is raised by x1.25 after it is worked out.
+- A weapon goes to and from the belt a quarter faster (the hotbar's draw, holster, attach
+  and detach). Equipping from the inventory is unchanged.
+- Not while your hands shake, like the rest of the trait.
+- Steady Hands already could not be taken with Dexterous or All Thumbs; the exclusion fix
+  above means that now holds whichever is picked first.
+
+### Knowing your insulin (2026-10-08)
+
+A Type 1 character can now work out insulin doses instead of guessing. One pen dose covers about
+12.5 g of carbohydrate (`DIA_CARB_MGDL` 4 / `DIA_DOSE_MGDL` 50).
+
+- **First Aid 3-5:** a food's tooltip says whether its sugar hits fast or slowly, and gives a
+  wide range of doses (the true number x0.6 rounded down to x1.4 rounded up).
+- **First Aid 6-8:** a narrower range (x0.8 to x1.2), and the glucose meter adds how much
+  insulin is still working.
+- **First Aid 9-10, or the magazine:** the exact doses for this body (fitness and Vitality
+  counted), and the meter adds what it takes to bring sugar back to 110: more doses, or grams
+  of fast sugar, counting the insulin still working and the food still going in.
+- **New item: Living With Type 1** (`DanTraits.InsulinMag`), a magazine. Reading it teaches the
+  knowledge flag `DanTraitsInsulinDosing` (as vanilla's Herbalist magazine teaches Herbalist),
+  which gives the top tier at any First Aid. Hospital magazine racks, medical offices, waiting
+  rooms, pharmacies, bookstore and library medical shelves, rarely a bathroom or bedside.
+- **Drinks too:** a bottle, carton or mug with sugar in it shows the same lines for everything
+  in it, always fast sugar (as the drink hook counts it). Water, fuel and other sugarless fluids
+  show nothing.
+- Type 2 is not told doses: its own insulin covers most of a meal.
+- The insulin pen's menu offers 3 doses as well as 1, 2, 4 and 8.
+- **Too much at once (found in play):** a dosed 110 g chocolate bar still peaked at 505, because
+  fast sugar lands inside half an hour and insulin peaks at 75 minutes. The top tier now adds
+  "Too much sugar at once: eat half (a third, a quarter, a little) at a time" when a four-hour
+  forecast of the dosed food from the current state (sugar, food still going in, insulin on
+  board) would pass 350 (`DanTraits_DiaParts`). A loaf of bread, a can of pop and a carton of
+  milk eat whole.
+- **High blood sugar costs health only after two hours over 350** (`DIA_HIGH_DRAIN_AFTER`,
+  counted on `diaKetoHours`, which ebbs at the same pace below). It cost health from the first
+  minute, so the spike above took 27; nausea, thirst and mood are unchanged.
+- **The glucose meter's tooltip** keeps its last reading, how long ago, and the advice it gave
+  then (item mod data `DanTraitsLast`).
+- **Fixed (found in play):** the insulin pen counted a full pen as one dose: the uses helper
+  read `getCurrentUsesFloat()`, which is how full it is (0 to 1), not a count. It now reads
+  `getCurrentUses()`, so 2 to 8 doses can be injected at once. The magazine's knowledge check
+  used `isRecipeKnown`, which answers true for any name that is not a real recipe, so everyone
+  read as having read it; it now uses `isRecipeActuallyKnown`.
+- For mod authors: `DanTraits_DiaKnowledge(player)` (0 to 3), `DanTraits_DiaFoodDoses`,
+  `DanTraits_DiaFoodLines`, `DanTraits_DiaMeterAdvice`, `DanTraits_DiaInsulinLeft`; the tooltip
+  strip is `client/DanTraits_InsulinInfo.lua` (a wrap of `ISToolTipInv.render`).
+
+### Balance pass (2026-10-07)
+
+Costs below use the script's sign: positive costs points, negative gives them.
+
+- **Old Hand** (still 4, 40s and 50s) now speeds up every skill the occupation boosts by
+  x1.25, not just the main skill.
+- **In Their 50s gives 6** (was 4). **Bottomless Pit gives 6** (was 3). **Alcoholic gives
+  4** (was 2). **Germaphobe gives 4** (was 3). **Fast Recovery costs 6** (was 8, now the same
+  as the Fast Healer it contains).
+- **Asthma** (was Brittle Asthma) **gives 10** (was 8). Inhalers turn up half as often
+  again, and the new sandbox option Inhaler Loot (percent, default 100) sets the rate on top.
+- **Iron Gut costs 4** (vanilla 2) and takes in Iron Stomach: on top of vanilla's lower food
+  illness chance, rotten and burnt food hurts the diet half as much and food sickness climbs
+  half as fast. Iron Stomach is retired.
+- **Thick Skull** (still 2, any age) takes in Bounces Back: faints, knockouts and shock half
+  as long, and the day after a sumatriptan too. Bounces Back is retired.
+- **Resilient costs 10** (vanilla 4) and can beat the Knox virus: a hidden roll the first
+  minute the body is infected (sandbox option Resilient: Knox Survival Chance, default 25%).
+  A lucky character gets sick like anyone else, and when the infection has run 40 to 70% of
+  its course the fever breaks and it is gone. Every new infection rolls again.
+  `DanTraits_Knox.lua`; console `knox [infect|lucky|unlucky|jump <percent>]`.
+- **New trait: Grit (+8).** Pain is felt 35% less: each minute Grit holds its own share of
+  the body's pain reduction (the same lever drink relief uses) at 35% of the pain that would
+  be felt without it, so the moodle and everything pain drives settle a third lower.
+  Painkillers are untouched.
+- **Jinxed is retired.**
+- **A Really Bad Day gives 8** (was 12), and the glass shard in the groin is now an
+  infected laceration on the left forearm (already at the local stage: it won't heal, and
+  spreads in about a day and a half untreated), "so it's at least survivable" until proper
+  balance is worked out. The kit next door is disinfectant and a bandage now (a cut can't be
+  stitched). With Wound Infection off the game's own infected wound is used.
+- **Keen Cook costs 4** (vanilla 3) and adds a level of Short Blade to vanilla's +2 Cooking
+  and +1 Butchering (2026-10-08).
+- **Light Eater** is no longer priced by age.
+- **Green's** description says it does not change experience gain.
+
+Old saves: a character with a retired trait has it taken off when the save loads, and gets
+Iron Gut in place of Iron Stomach and Thick Skull in place of Bounces Back. The retired traits
+stay registered (and hidden at creation) so those saves load.
+
+For mod authors: `DanTraits_RETIRED` and `DanTraits_RetireTraits(player)` (DanTraits.lua),
+`DanTraits_InfectWound(player, part, level)` (Infection), and a loot spec's `boost` and
+`sandbox` fields (Distributions).
 
 ## 1.1.0 - 2026-10-03
 

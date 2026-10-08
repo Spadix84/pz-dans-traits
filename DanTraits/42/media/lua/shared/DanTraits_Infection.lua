@@ -178,6 +178,20 @@ end
 
 local function abxOn(d) return (d.infAbx or 0) >= INF_ABX_MIN end
 
+-- An infection already showing (A Really Bad Day's laceration): the part
+-- goes straight to the local stage at `level`. With wound infection off,
+-- the game's own infected wound at that level instead.
+function DanTraits_InfectWound(player, part, level)
+    if not player or not part then return end
+    level = level or INF_START_L
+    if sandboxOn() then
+        local d = infData(player)
+        local name = tostring(part:getType())
+        d.infParts[name] = { L = level }
+    end
+    showLevel(part, level)
+end
+
 -- one part, one minute; returns its infection level
 local function updatePart(player, d, part, name, perMin)
     local rec = d.infParts[name]
