@@ -47,20 +47,10 @@ local ALC_PANIC_RATE = 0.6                   -- vanilla beta blocker: panic per 
 local ALC_MOOD       = { 0.05, 0.12, 0.3, 0.5 }           -- unhappiness (0..100) off per minute awake, by Drunk level
 local ALC_STRESS     = { 0.0005, 0.001, 0.0025, 0.004 }   -- stress (0..1) off per minute awake
 local ALC_BOREDOM    = { 0.1, 0.2, 0.4, 0.6 }             -- boredom (0..100) off per minute awake
-local ALC_LEVELS     = {}                     -- intoxication (0..100) above which each Drunk level starts (fallback)
-for i, v in ipairs(DanTraits_DRUNK_LEVELS) do ALC_LEVELS[i] = v * 100 end
 
--- Drunk moodle level 0..4; from intoxication if the moodle cannot be read
+-- Drunk moodle level 0..4; from intoxication (DanTraits_DRUNK_LEVELS) if the moodle cannot be read
 local function drunkLevel(player)
-    local level
-    if MoodleType and MoodleType.DRUNK then
-        pcall(function() level = player:getMoodles():getMoodleLevel(MoodleType.DRUNK) end)
-    end
-    if type(level) == "number" then return level end
-    local intox = fraction(player:getStats(), CharacterStat.INTOXICATION) * 100
-    level = 0
-    for i, threshold in ipairs(ALC_LEVELS) do if intox > threshold then level = i end end
-    return level
+    return DanTraits_MoodleLevel(player, "DRUNK", CharacterStat.INTOXICATION, DanTraits_DRUNK_LEVELS)
 end
 DanTraits_DrunkLevel = drunkLevel
 

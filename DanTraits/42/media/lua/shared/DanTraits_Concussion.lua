@@ -299,8 +299,7 @@ local function updateConcussionMinute(player, d)
     s = clamp01(s)
     if s < 0.005 then s = 0 end
     d.ccScore = s > 0 and s or nil
-    local tier = 0
-    for i, threshold in ipairs(CC_TIER) do if s >= threshold then tier = i end end
+    local tier = DanTraits_TierOf(s, CC_TIER)
     if tier == 0 and (d.ccTier or 0) > 0 then notifyGood(player, "UI_DanTraits_ConcussionClear") end
     d.ccTier = tier
     updateMoodle(player, s)

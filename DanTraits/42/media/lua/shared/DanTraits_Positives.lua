@@ -183,24 +183,19 @@ local function updateGoodClotterMinute(player, d)
     end
     local last = d.gcBleed or {}
     local now, any = {}, false
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            local t = 0
-            pcall(function() t = part:getBleedingTime() or 0 end)
-            if t > 0 and not (partIs(part, "haveGlass") or partIs(part, "haveBullet")) then
-                local key = "p" .. i
-                local was = last[key]
-                if was and t < was and t > GC_FLOOR then
-                    local cut = math.max(GC_FLOOR, t - (was - t) * (GC_CLOT - 1))
-                    if pcall(function() part:setBleedingTime(cut) end) then t = cut end
-                end
-                now[key] = t
-                any = true
+    DanTraits_EachPart(player, function(part, _, i)
+        local t = DanTraits_PartNum(part, "getBleedingTime")
+        if t > 0 and not DanTraits_PartLodged(part) then
+            local key = "p" .. i
+            local was = last[key]
+            if was and t < was and t > GC_FLOOR then
+                local cut = math.max(GC_FLOOR, t - (was - t) * (GC_CLOT - 1))
+                if pcall(function() part:setBleedingTime(cut) end) then t = cut end
             end
+            now[key] = t
+            any = true
         end
-    end)
+    end, "GoodClotter")
     d.gcBleed = any and now or nil
 end
 

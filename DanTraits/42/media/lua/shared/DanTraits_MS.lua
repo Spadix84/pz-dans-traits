@@ -141,12 +141,7 @@ end
 local function tierOf(load) return DanTraits_TierOf(load, MS_TIER) end
 
 -- the spoon budget: the sandbox count a day, 0 for none
-local function spoonCount()
-    local sv = SandboxVars and SandboxVars.DanTraits
-    local v = sv and tonumber(sv.MSSpoons)
-    if v == nil then return MS_SPOONS_DEFAULT end
-    return math.max(0, math.floor(v))
-end
+local function spoonCount() return math.max(0, math.floor(DanTraits_SandboxNum("MSSpoons", MS_SPOONS_DEFAULT))) end
 local function spoonsOn() return spoonCount() > 0 end
 local function spoonTier(player) return DanTraits_SpoonTier and DanTraits_SpoonTier(player) or 0 end
 

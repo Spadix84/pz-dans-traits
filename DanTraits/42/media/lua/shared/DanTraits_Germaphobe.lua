@@ -58,15 +58,10 @@ end
 
 -- 0..1 share of the body parts under dirty clothes
 local function clothesGrime(player)
-    local dirty, n = 0, 0
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            n = n + 1
-            if DanTraits_PartIs(part, "hasDirtyClothing") then dirty = dirty + 1 end
-        end
-    end)
+    local dirty = 0
+    local n = DanTraits_EachPart(player, function(part)
+        if DanTraits_PartIs(part, "hasDirtyClothing") then dirty = dirty + 1 end
+    end, "Germaphobe")
     if n == 0 then return 0 end
     return math.min(1, dirty / n * GM_CLOTHES)
 end

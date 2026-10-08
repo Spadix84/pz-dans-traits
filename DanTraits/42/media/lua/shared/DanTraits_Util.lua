@@ -77,6 +77,18 @@
 --   DanTraits_Asleep(player)               whether the player is asleep, false on failure
 --   DanTraits_SandboxOn(optionName)        SandboxVars.DanTraits[option] ~= false
 --                                          (true when the table is absent)
+--   DanTraits_SandboxNum(optionName, default)
+--                                          SandboxVars.DanTraits[option] as a number, or
+--                                          default when absent or not one
+--   DanTraits_MoodleLevel(player, moodleName, stat, tiers)
+--                                          a vanilla moodle's level 0..4 (MoodleType[name]),
+--                                          or when it cannot be read the tier of the stat
+--                                          (0..1 of its range) against the ascending tiers
+--   DanTraits_PartLodged(part)             glass or a bullet still in the part
+--   DanTraits_EachPart(player, fn, tag)    fn(part, name, i, n) for every body part, each
+--                                          under its own guard, so one part that cannot be
+--                                          read does not skip the rest; returns how many
+--                                          parts there were (0 when the body cannot be read)
 --   DanTraits_CorpsesNearby(player, radius)
 --                                          dead bodies on the squares within
 --                                          radius tiles, same floor (0 on failure)
@@ -327,6 +339,32 @@ function DanTraits_PartIs(part, method)
     local ok, res = pcall(function() return part[method](part) end)
     return ok and res == true
 end
+function DanTraits_PartLodged(part)
+    return DanTraits_PartIs(part, "haveGlass") or DanTraits_PartIs(part, "haveBullet")
+end
+
+-- every body part in turn, each call on its own (DanTraits_Guard once core
+-- is loaded, tag naming the caller in the log: "Blood"), so a part that
+-- cannot be read is the only one skipped; the list itself is read in pcall
+function DanTraits_EachPart(player, fn, tag)
+    local parts, n = nil, 0
+    pcall(function()
+        parts = player:getBodyDamage():getBodyParts()
+        n = parts:size()
+    end)
+    if not parts then return 0 end
+    tag = "part:" .. tostring(tag or "?")
+    for i = 0, n - 1 do
+        local part = nil
+        pcall(function() part = parts:get(i) end)
+        if part then
+            local name = ""
+            pcall(function() name = tostring(part:getType()) end)
+            if DanTraits_Guard then DanTraits_Guard(tag, fn, part, name, i, n) else pcall(fn, part, name, i, n) end
+        end
+    end
+    return n
+end
 
 function DanTraits_Asleep(player)
     local asleep = false
@@ -337,6 +375,24 @@ end
 function DanTraits_SandboxOn(optionName)
     local sv = SandboxVars and SandboxVars.DanTraits
     return not sv or sv[optionName] ~= false
+end
+function DanTraits_SandboxNum(optionName, default)
+    local sv = SandboxVars and SandboxVars.DanTraits
+    local v = sv and tonumber(sv[optionName])
+    if v == nil then return default end
+    return v
+end
+
+-- a vanilla moodle's level, else the stat tiered (the moodle is nil in the
+-- offline tests and on a character object without getMoodles)
+function DanTraits_MoodleLevel(player, moodleName, stat, tiers)
+    local level
+    local moodle = MoodleType and MoodleType[moodleName]
+    if moodle then pcall(function() level = player:getMoodles():getMoodleLevel(moodle) end) end
+    if type(level) == "number" then return level end
+    local value = 0
+    pcall(function() value = DanTraits_StatFraction(player:getStats(), stat) end)
+    return DanTraits_TierOf(value, tiers)
 end
 
 function DanTraits_CorpsesNearby(player, radius)

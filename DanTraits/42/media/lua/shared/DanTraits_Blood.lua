@@ -101,14 +101,10 @@ end
 
 -- the exact inverse of BodyDamage.ReduceGeneralHealth(amount)
 local function undoGeneralHealthLoss(player, amount)
-    return pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        local n = parts:size()
-        for i = 0, n - 1 do
-            local modifier = BodyPartType.getDamageModifyer(i)
-            if modifier and modifier > 0 then parts:get(i):AddHealth(amount / n / modifier) end
-        end
-    end)
+    return DanTraits_EachPart(player, function(part, _, i, n)
+        local modifier = BodyPartType.getDamageModifyer(i)
+        if modifier and modifier > 0 then part:AddHealth(amount / n / modifier) end
+    end, "Blood") > 0
 end
 
 local function onBloodGetDamage(character, damageType, amount)
@@ -147,7 +143,7 @@ local function partRate(part, player)
     local rate = open
     local bandaged = partIs(part, "bandaged")
     if bandaged then
-        local lodged = partIs(part, "haveGlass") or partIs(part, "haveBullet")
+        local lodged = DanTraits_PartLodged(part)
         local soaked = false
         pcall(function() soaked = part:getBandageLife() <= 0 end)
         rate = rate * ((soaked and BL_SOAKED) or (lodged and BL_LODGED) or BL_BANDAGED)
@@ -161,18 +157,14 @@ local function round3(x) return DanTraits_Round(x, 3) end
 -- how much blood is going, and from where
 local function bleedMinute(player, d)
     local total, sources = 0, {}
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            local rate, name, bandaged, open = partRate(part, player)
-            if rate then
-                rate = DanTraits_RunHooks("bloodBleed", rate, player, part, bandaged, open)
-                total = total + rate
-                sources[#sources + 1] = name .. " " .. tostring(round3(rate * 100)) .. "%" .. (bandaged and " (bandaged)" or "")
-            end
+    DanTraits_EachPart(player, function(part)
+        local rate, name, bandaged, open = partRate(part, player)
+        if rate then
+            rate = DanTraits_RunHooks("bloodBleed", rate, player, part, bandaged, open)
+            total = total + rate
+            sources[#sources + 1] = name .. " " .. tostring(round3(rate * 100)) .. "%" .. (bandaged and " (bandaged)" or "")
         end
-    end)
+    end, "Blood")
     d.bloodSources = table.concat(sources, ", ")
     return total
 end
@@ -309,22 +301,17 @@ local lastPartHealth = {}
 local round2 = DanTraits_Round
 local function partsLine(player)
     local out = {}
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            local h = part:getHealth()
-            local name = tostring(part:getType())
-            local was = lastPartHealth[name]
-            lastPartHealth[name] = h
-            if h < 99.995 or (was and was < 99.995) then
-                local modifier = 0
-                pcall(function() modifier = BodyPartType.getDamageModifyer(i) end)
-                local change = was and (" (" .. tostring(round2(h - was)) .. ")") or ""
-                out[#out + 1] = name .. " " .. tostring(round2(h)) .. change .. " x" .. tostring(round2(modifier))
-            end
+    DanTraits_EachPart(player, function(part, name, i)
+        local h = part:getHealth()
+        local was = lastPartHealth[name]
+        lastPartHealth[name] = h
+        if h < 99.995 or (was and was < 99.995) then
+            local modifier = 0
+            pcall(function() modifier = BodyPartType.getDamageModifyer(i) end)
+            local change = was and (" (" .. tostring(round2(h - was)) .. ")") or ""
+            out[#out + 1] = name .. " " .. tostring(round2(h)) .. change .. " x" .. tostring(round2(modifier))
         end
-    end)
+    end, "Blood")
     return table.concat(out, ", ")
 end
 

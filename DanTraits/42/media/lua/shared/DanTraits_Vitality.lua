@@ -318,8 +318,7 @@ local function updateVitalityMinute(player, d)
                 d.vitSleepDebt = (d.vitSleepDebt or 0) * (1 - 0.5 * math.min(1, d.vitNightHours / VIT_DEBT_NAP_HOURS))
             else
                 d.vitSleepDebt = 1 - quality
-                local tier = 0
-                for i, threshold in ipairs(VIT_DEBT_TIER) do if d.vitSleepDebt >= threshold then tier = i end end
+                local tier = DanTraits_TierOf(d.vitSleepDebt, VIT_DEBT_TIER)
                 if tier > 0 then notify(player, "UI_DanTraits_SleptBadly" .. tier) end
             end
             -- the scored night, for anything that refills on it (the spoon budget, DanTraits_Spoons.lua)

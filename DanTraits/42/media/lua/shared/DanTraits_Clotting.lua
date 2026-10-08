@@ -41,7 +41,7 @@ local function partName(part)
     return name
 end
 
-local function lodged(part) return is(part, "haveGlass") or is(part, "haveBullet") end
+local lodged = DanTraits_PartLodged
 local function hemophiliac(player) return DanTraits_HasTrait(player, "hemophilia") end
 
 -- x the part's blood loss: 1 with no clot on it

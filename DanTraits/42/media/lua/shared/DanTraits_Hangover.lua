@@ -77,8 +77,7 @@ local function startHangover(player, d)
     d.hoPending = false
     local hours = DanTraits_RunHooks("hangoverHours", HO_BASE_HOURS + HO_EXTRA_HOURS * d.hoSeverity, player)   -- Hollow Legs
     d.hoHoursLeft = math.max(d.hoHoursLeft or 0, hours)
-    local tier = 0
-    for i, threshold in ipairs(HO_TIER) do if d.hoSeverity >= threshold then tier = i end end
+    local tier = DanTraits_TierOf(d.hoSeverity, HO_TIER)
     notify(player, "UI_DanTraits_Hangover" .. math.max(1, tier))
 end
 

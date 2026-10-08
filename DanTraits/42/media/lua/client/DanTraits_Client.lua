@@ -262,7 +262,8 @@ end
 local function ageOption(name)
     local ok, value = pcall(function() return getSandboxOptions():getOptionByName("DanTraits." .. name):getValue() end)
     if ok and value ~= nil then return value end
-    return SandboxVars and SandboxVars.DanTraits and SandboxVars.DanTraits[name]
+    if DanTraits_SandboxNum then return DanTraits_SandboxNum(name) end
+    return nil
 end
 
 local AGE_BAND_OF = { age20s = 20, age30s = 30, age40s = 40, age50s = 50 }

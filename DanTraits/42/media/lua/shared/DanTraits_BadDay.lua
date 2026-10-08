@@ -84,14 +84,9 @@ local function applyBadDay(player)
         end
     end)
     pcall(function() player:clearWornItems() end)
-    pcall(function()
-        local wet = CharacterStat.WETNESS:getMaximumValue()
-        stats:set(CharacterStat.WETNESS, wet)
-        local parts = bd:getBodyParts()
-        for i = 0, parts:size() - 1 do
-            parts:get(i):setWetness(wet)
-        end
-    end)
+    local wet = DanTraits_StatMax(CharacterStat.WETNESS)
+    pcall(function() stats:set(CharacterStat.WETNESS, wet) end)
+    DanTraits_EachPart(player, function(part) part:setWetness(wet) end, "BadDay")
 end
 
 local function onBadDayCreatePlayer(playerNum, player)

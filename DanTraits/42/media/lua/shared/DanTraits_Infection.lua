@@ -125,7 +125,7 @@ local function hazardOf(player, part, rec)
     end
     if num(part, "getBiteTime") > 0 then h = h + INF_HAZARD.bite end
     if num(part, "getBurnTime") > 0 then h = h + INF_HAZARD.burn end
-    if is(part, "haveGlass") or is(part, "haveBullet") then h = h + INF_HAZARD.lodged end
+    if DanTraits_PartLodged(part) then h = h + INF_HAZARD.lodged end
     if h <= 0 then return 0 end
     if num(part, "getAlcoholLevel") > 0 or num(part, "getGarlicFactor") > 0 then return 0 end
     if is(part, "bandaged") then
@@ -305,17 +305,12 @@ local function updateInfectionMinute(player, d)
     end
 
     local maxL, contaminated = 0, false
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            local name = tostring(part:getType())
-            local L = updatePart(player, d, part, name, perMin)
-            if L > maxL then maxL = L end
-            local rec = d.infParts[name]
-            if rec and rec.inc then contaminated = true end
-        end
-    end)
+    DanTraits_EachPart(player, function(part, name)
+        local L = updatePart(player, d, part, name, perMin)
+        if L > maxL then maxL = L end
+        local rec = d.infParts[name]
+        if rec and rec.inc then contaminated = true end
+    end, "Infection")
     local woundL = maxL
     -- a relapse: infection left inside after an unfinished course, on no
     -- wound in particular; grows like one, and only antibiotics clear it

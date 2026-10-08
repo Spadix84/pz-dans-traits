@@ -340,7 +340,7 @@ end
 local function lootScale(spec)
     local k = spec.boost or 1
     if spec.sandbox then
-        local pct = SandboxVars and SandboxVars.DanTraits and tonumber(SandboxVars.DanTraits[spec.sandbox])
+        local pct = DanTraits_SandboxNum(spec.sandbox)   -- DanTraits_Util.lua (shared loads before server)
         if pct then k = k * math.max(0, pct) / 100 end
     end
     return k

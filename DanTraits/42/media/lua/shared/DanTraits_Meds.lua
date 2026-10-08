@@ -209,12 +209,7 @@ local function today()
     return math.floor(h / 24)
 end
 
-local function sideChance()
-    local sv = SandboxVars and SandboxVars.DanTraits
-    local v = sv and tonumber(sv.MedSideEffectChance)
-    if v == nil then return SIDE_CHANCE_DEFAULT end
-    return math.max(0, v)
-end
+local function sideChance() return math.max(0, DanTraits_SandboxNum("MedSideEffectChance", SIDE_CHANCE_DEFAULT)) end
 
 -- Old saves kept their own levels; carry each across the first time it turns
 -- up, so nobody loses cover on update (a protecting level counts as fully

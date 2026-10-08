@@ -34,23 +34,9 @@ local DH_TIER          = { 0.3, 0.7 }   -- a thirst headache | dehydrated
 local function sandboxOn() return DanTraits_SandboxOn("DehydrationEnabled") end
 
 -- 0..4: the vanilla Thirst moodle, or its level from the stat
-local function thirstLevel(player)
-    local level
-    if MoodleType and MoodleType.THIRST then
-        pcall(function() level = player:getMoodles():getMoodleLevel(MoodleType.THIRST) end)
-    end
-    if type(level) == "number" then return level end
-    local thirst = DanTraits_StatFraction(player:getStats(), CharacterStat.THIRST)
-    level = 0
-    for i, at in ipairs(DH_THIRST_AT) do if thirst >= at then level = i end end
-    return level
-end
+local function thirstLevel(player) return DanTraits_MoodleLevel(player, "THIRST", CharacterStat.THIRST, DH_THIRST_AT) end
 
-local function tierOf(load)
-    local tier = 0
-    for i, at in ipairs(DH_TIER) do if load >= at then tier = i end end
-    return tier
-end
+local function tierOf(load) return DanTraits_TierOf(load, DH_TIER) end
 
 local function updateDehydrationMinute(player, d)
     if not sandboxOn() then

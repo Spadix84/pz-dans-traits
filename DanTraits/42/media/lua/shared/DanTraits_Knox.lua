@@ -18,9 +18,7 @@ local KX_CHANCE    = 25           -- percent, when the sandbox has no value
 local KX_BREAK_AT  = { 40, 70 }   -- percent of the infection's way when a lucky one breaks
 
 local function chance()
-    local v = SandboxVars and SandboxVars.DanTraits and tonumber(SandboxVars.DanTraits.KnoxSurviveChance)
-    if v == nil then v = KX_CHANCE end
-    return math.max(0, math.min(100, v))
+    return math.max(0, math.min(100, DanTraits_SandboxNum("KnoxSurviveChance", KX_CHANCE)))
 end
 
 local function infected(player)
@@ -31,13 +29,7 @@ end
 
 -- how far the infection has run, 0..1
 local function progress(player)
-    local v, max = 0, 100
-    pcall(function()
-        v = player:getStats():get(CharacterStat.ZOMBIE_INFECTION) or 0
-        max = DanTraits_StatMax(CharacterStat.ZOMBIE_INFECTION)
-    end)
-    if not max or max <= 0 then max = 100 end
-    return math.max(0, math.min(1, v / max))
+    return DanTraits_StatFraction(player:getStats(), CharacterStat.ZOMBIE_INFECTION)
 end
 
 local function rollKnox()
@@ -46,13 +38,11 @@ end
 
 -- the body wins: every part's infection, the body's, its clock and the fever
 local function cure(player)
+    DanTraits_EachPart(player, function(part)
+        if part:IsInfected() then part:SetInfected(false) end
+    end, "Knox")
     pcall(function()
         local bd = player:getBodyDamage()
-        local parts = bd:getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            if part:IsInfected() then part:SetInfected(false) end
-        end
         bd:setInfected(false)
         bd:setInfectionTime(-1)
         bd:setInfectionMortalityDuration(-1)

@@ -49,16 +49,7 @@ local ANG_LEVELS       = { 0.1, 0.25, 0.5, 0.75 }
 -- the Angry moodle's level, 0..4 (0 with the sandbox option off)
 local function angerLevel(player)
     if not player or not sandboxOn("AngerEffects") then return 0 end
-    local level
-    if MoodleType and MoodleType.ANGRY then
-        pcall(function() level = player:getMoodles():getMoodleLevel(MoodleType.ANGRY) end)
-    end
-    if type(level) ~= "number" then
-        local anger = 0
-        pcall(function() anger = player:getStats():get(CharacterStat.ANGER) or 0 end)
-        level = DanTraits_TierOf(anger, ANG_LEVELS)
-    end
-    return math.max(0, math.min(4, level))
+    return math.max(0, math.min(4, DanTraits_MoodleLevel(player, "ANGRY", CharacterStat.ANGER, ANG_LEVELS)))
 end
 DanTraits_AngerLevel = angerLevel
 

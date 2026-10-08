@@ -334,13 +334,7 @@ local function updateWoundMinute(player, d)
     d.wcLife = d.wcLife or {}
     local wet = wetness(player)
     local summary = {}
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            updatePart(player, d, part, tostring(part:getType()), wet, summary)
-        end
-    end)
+    DanTraits_EachPart(player, function(part, name) updatePart(player, d, part, name, wet, summary) end, "WoundCare")
     d.wcSummary = table.concat(summary, ", ")
     d.wcMoved = moved or nil
     moved = false
@@ -354,18 +348,13 @@ local function onSwing(character, weapon)
     local twoHanded = false
     pcall(function() twoHanded = weapon and weapon:isTwoHandWeapon() end)
     local k = twoHanded and WC_TWO_HANDED or 1
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            local name = tostring(part:getType())
-            if ARMS_R[name] or (twoHanded and ARMS_L[name]) then
-                strain(player, part, WC_TEAR_SWING * k, WC_REOPEN_SWING * k)
-            elseif TORSO[name] then
-                strain(player, part, WC_TEAR_SWING * k * WC_TORSO, WC_REOPEN_SWING * k * WC_TORSO)
-            end
+    DanTraits_EachPart(player, function(part, name)
+        if ARMS_R[name] or (twoHanded and ARMS_L[name]) then
+            strain(player, part, WC_TEAR_SWING * k, WC_REOPEN_SWING * k)
+        elseif TORSO[name] then
+            strain(player, part, WC_TEAR_SWING * k * WC_TORSO, WC_REOPEN_SWING * k * WC_TORSO)
         end
-    end)
+    end, "WoundCare")
 end
 
 -- the splint action: roll the set once it is on

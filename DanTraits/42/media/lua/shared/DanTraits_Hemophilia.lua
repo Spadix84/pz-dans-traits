@@ -41,12 +41,6 @@ end)
 
 local partIs = DanTraits_PartIs
 
-local function partKey(part, i)
-    local key = nil
-    pcall(function() key = tostring(part:getType()) end)
-    return key or tostring(i)
-end
-
 -- The clock, held and remembered (d.hemoClock[part] = the bleeding time
 -- last seen). Uncovered and bleeding: never lower than remembered (the game
 -- would run it down; it does not clot), and remembered follows it up (a new
@@ -61,41 +55,37 @@ local function updateHemophiliaMinute(player, d)
     local open, reopened = 0, 0
     d.hemoClock = d.hemoClock or {}
     local clock = d.hemoClock
-    pcall(function()
-        local parts = bd:getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            local key = partKey(part, i)
-            local covered = partIs(part, "bandaged") or partIs(part, "IsBleedingStemmed")
-            local wounded = partIs(part, "scratched") or partIs(part, "isCut") or partIs(part, "deepWounded")
-            local t = 0
-            pcall(function() t = tonumber(part:getBleedingTime()) or 0 end)
-            if covered then
-                if wounded or t > 0 then clock[key] = t else clock[key] = nil end
-            elseif partIs(part, "bleeding") or t > 0 then
-                local held = clock[key]
-                if held and t < held then
-                    t = held
-                    pcall(function() part:setBleedingTime(t) end)
-                else
-                    clock[key] = t
-                end
-                if t > 0 then open = open + 1 end
-            elseif wounded and not partIs(part, "stitched") then
-                local held = clock[key]
-                if held == nil or held > 0 then
-                    t = held or HEMO_REOPEN_TIME
-                    pcall(function() part:setBleeding(true) end)
-                    pcall(function() part:setBleedingTime(t) end)
-                    clock[key] = t
-                    reopened = reopened + 1
-                    open = open + 1
-                end
-            elseif not wounded then
-                clock[key] = nil
+    DanTraits_EachPart(player, function(part, name, i)
+        local key = name ~= "" and name or tostring(i)
+        local covered = partIs(part, "bandaged") or partIs(part, "IsBleedingStemmed")
+        local wounded = partIs(part, "scratched") or partIs(part, "isCut") or partIs(part, "deepWounded")
+        local t = 0
+        pcall(function() t = tonumber(part:getBleedingTime()) or 0 end)
+        if covered then
+            if wounded or t > 0 then clock[key] = t else clock[key] = nil end
+        elseif partIs(part, "bleeding") or t > 0 then
+            local held = clock[key]
+            if held and t < held then
+                t = held
+                pcall(function() part:setBleedingTime(t) end)
+            else
+                clock[key] = t
             end
+            if t > 0 then open = open + 1 end
+        elseif wounded and not partIs(part, "stitched") then
+            local held = clock[key]
+            if held == nil or held > 0 then
+                t = held or HEMO_REOPEN_TIME
+                pcall(function() part:setBleeding(true) end)
+                pcall(function() part:setBleedingTime(t) end)
+                clock[key] = t
+                reopened = reopened + 1
+                open = open + 1
+            end
+        elseif not wounded then
+            clock[key] = nil
         end
-    end)
+    end, "Hemophilia")
     d.hemoOpen = open
     if reopened > 0 and not d.hemoWarned then
         d.hemoWarned = true

@@ -86,13 +86,7 @@ end
 
 local function asthmaCorpsesNearby(player) return DanTraits_CorpsesNearby(player, 3) end
 
-local function asthmaTierOf(irritation)
-    local tier = 0
-    for i, threshold in ipairs(ASTHMA_TIER) do
-        if irritation >= threshold then tier = i end
-    end
-    return tier
-end
+local function asthmaTierOf(irritation) return DanTraits_TierOf(irritation, ASTHMA_TIER) end
 
 -- the shared cough (Util): one gap for everyone, an attack's burst forces it
 local function asthmaCough(player, radius, force)
@@ -284,11 +278,7 @@ end
 -- through the loot tables in server/Items/DanTraits_Distributions.lua.
 local INHALER_ITEM = "DanTraits.Inhaler"
 
-function DanTraits_IsInhaler(item)
-    if not item then return false end
-    local ok, fullType = pcall(function() return item:getFullType() end)
-    return ok and fullType == INHALER_ITEM
-end
+function DanTraits_IsInhaler(item) return DanTraits_IsItem(item, INHALER_ITEM) end
 
 -- Start with one inhaler (none if the Starting Medication sandbox option is off).
 DanTraits_StartingKit({ trait = "asthma", flag = "asthmaKitGiven", items = { INHALER_ITEM } })

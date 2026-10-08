@@ -61,16 +61,11 @@ local FT_CHECK_TICKS = 10      -- look for new wounds this often
 -- open wounds, counted: a new one means something got to you
 local function woundCount(player)
     local n = 0
-    pcall(function()
-        local parts = player:getBodyDamage():getBodyParts()
-        for i = 0, parts:size() - 1 do
-            local part = parts:get(i)
-            if part:getScratchTime() > 0 then n = n + 1 end
-            if part:getCutTime() > 0 then n = n + 1 end
-            if part:getBiteTime() > 0 then n = n + 1 end
-            if part:getDeepWoundTime() > 0 then n = n + 1 end
+    DanTraits_EachPart(player, function(part)
+        for _, wound in ipairs({ "getScratchTime", "getCutTime", "getBiteTime", "getDeepWoundTime" }) do
+            if DanTraits_PartNum(part, wound) > 0 then n = n + 1 end
         end
-    end)
+    end, "Faint")
     return n
 end
 

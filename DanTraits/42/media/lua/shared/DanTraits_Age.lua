@@ -143,9 +143,7 @@ local function ageValue(player, key)
 end
 
 local function bonusLevels(band)
-    local v = tonumber(sandbox()["AgeBonus" .. band .. "s"])
-    if v == nil then v = AGE[band].levels end
-    return math.max(0, math.floor(v))
+    return math.max(0, math.floor(DanTraits_SandboxNum("AgeBonus" .. band .. "s", AGE[band].levels)))
 end
 
 -- the most-boosted skills in a profession's XP boosts (perk -> level, the
@@ -470,10 +468,7 @@ local function updateAgeMinute(player, d)
         return
     end
     d.ageParts = d.ageParts or {}
-    local parts = player:getBodyDamage():getBodyParts()
-    for i = 0, parts:size() - 1 do
-        local part = parts:get(i)
-        local name = tostring(part:getType())
+    DanTraits_EachPart(player, function(part, name)
         local rec = d.ageParts[name] or {}
         local kept = false     -- Kahlua has no next(): note whether rec holds anything
         if heal then
@@ -499,7 +494,7 @@ local function updateAgeMinute(player, d)
             kept = kept or now > 0
         end
         d.ageParts[name] = kept and rec or nil
-    end
+    end, "Age")
 end
 
 Events.OnCreatePlayer.Add(onAgeCreatePlayer)
