@@ -180,7 +180,7 @@ local function updateAsthmaMinute(player, d)
         end
     end
 
-    if DanTraits_InfectionFever then pcall(function() build = build + ASTHMA_FEVER_RATE * DanTraits_InfectionFever(player) end) end
+    build = build + ASTHMA_FEVER_RATE * DanTraits_Strength("DanTraits_InfectionFever", player)
     if build > 0 then
         if DanTraits_VitalityAsthmaBuild then build = build * DanTraits_VitalityAsthmaBuild(player) end
         irritation = irritation + build

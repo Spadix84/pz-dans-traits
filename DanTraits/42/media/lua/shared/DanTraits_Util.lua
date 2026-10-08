@@ -22,6 +22,9 @@
 --   DanTraits_StatFraction(stats, stat)    0..1 fraction of the stat's range (intoxication
 --                                          is 0..100), 0 on failure
 --   DanTraits_Intoxication(player)         intoxication as 0..1, 0 on failure
+--   DanTraits_Strength(name, player)       another system's 0..1 by the name of its
+--                                          getter ("DanTraits_InfectionFever"), resolved
+--                                          when called: 0 when that system is not loaded
 --   DanTraits_FloorUp(stats, stat, floor, ramp)
 --                                          raise the stat toward floor by at
 --                                          most ramp; never above floor or the
@@ -147,6 +150,22 @@ function DanTraits_Intoxication(player)
     local value = 0
     pcall(function() value = DanTraits_StatFraction(player:getStats(), CharacterStat.INTOXICATION) end)
     return value
+end
+
+-- Another system's 0..1 reading (a fever, a hangover, a concussion, sleep
+-- debt, a low) by the name of its getter, looked up when called so load
+-- order does not matter and a system that is not loaded reads 0. The
+-- getters never throw by contract; one that does is still caught, logged
+-- once (DanTraits_Guard, when core is loaded) and read as 0 rather than
+-- taking its reader down.
+function DanTraits_Strength(name, player)
+    local fn = _G[name]
+    if type(fn) ~= "function" then return 0 end
+    local ok, value
+    if DanTraits_Guard then ok, value = DanTraits_Guard("strength:" .. tostring(name), fn, player)
+    else ok, value = pcall(fn, player) end
+    if not ok then return 0 end
+    return DanTraits_Clamp01(tonumber(value) or 0)
 end
 
 -- stat object -> name of the delta hook registered for it (DanTraits_DeltaHook)

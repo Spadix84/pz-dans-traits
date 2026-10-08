@@ -200,10 +200,7 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
 end)
 
 -- a fever is a bad night: a worse score, and lighter sleep (DanTraits_Infection.lua)
-local function feverOf(player)
-    if not DanTraits_InfectionFever then return 0 end
-    return clamp01(tonumber(DanTraits_InfectionFever(player)) or 0)
-end
+local function feverOf(player) return DanTraits_Strength("DanTraits_InfectionFever", player) end
 DanTraits_AddHook("nightQuality", function(quality, player)
     local fever = feverOf(player)
     if fever <= 0 then return nil end

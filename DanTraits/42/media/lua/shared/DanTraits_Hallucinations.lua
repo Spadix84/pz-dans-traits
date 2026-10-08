@@ -419,11 +419,9 @@ DanTraits_Episodes = {
 }
 
 -- concussed or feverish: too far gone for a panic bout
+local strength = DanTraits_Strength   -- another system's 0..1, by the name of its getter (0 when not loaded)
 local function schizoDown(player)
-    local down = false
-    if DanTraits_ConcussionStrength then pcall(function() if DanTraits_ConcussionStrength(player) > 0 then down = true end end) end
-    if DanTraits_InfectionFever then pcall(function() if DanTraits_InfectionFever(player) > 0 then down = true end end) end
-    return down
+    return strength("DanTraits_ConcussionStrength", player) > 0 or strength("DanTraits_InfectionFever", player) > 0
 end
 
 local function schizoChance(player)
@@ -433,10 +431,10 @@ local function schizoChance(player)
         + (stats:get(CharacterStat.UNHAPPINESS) / 100) * SCHIZO_UNHAPPY_WEIGHT
         + stats:get(CharacterStat.FATIGUE) * SCHIZO_FATIGUE_WEIGHT
     if isNight() then chance = chance + SCHIZO_NIGHT_BONUS end
-    if DanTraits_InfectionFever then pcall(function() chance = chance + SCHIZO_FEVER_WEIGHT * DanTraits_InfectionFever(player) end) end
-    if DanTraits_SleepDebt then pcall(function() chance = chance + SCHIZO_SLEEP_DEBT_WEIGHT * DanTraits_SleepDebt(player) end) end
-    if DanTraits_ConcussionStrength then pcall(function() chance = chance + SCHIZO_CONCUSSION_WEIGHT * DanTraits_ConcussionStrength(player) end) end
-    if DanTraits_AlcoholWithdrawal then pcall(function() chance = chance + SCHIZO_WITHDRAWAL_WEIGHT * DanTraits_AlcoholWithdrawal(player) end) end
+    chance = chance + SCHIZO_FEVER_WEIGHT * strength("DanTraits_InfectionFever", player)
+    chance = chance + SCHIZO_SLEEP_DEBT_WEIGHT * strength("DanTraits_SleepDebt", player)
+    chance = chance + SCHIZO_CONCUSSION_WEIGHT * strength("DanTraits_ConcussionStrength", player)
+    chance = chance + SCHIZO_WITHDRAWAL_WEIGHT * strength("DanTraits_AlcoholWithdrawal", player)
     return chance
 end
 DanTraits_SchizoChance = schizoChance

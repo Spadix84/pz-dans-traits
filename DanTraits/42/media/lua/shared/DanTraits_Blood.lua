@@ -193,7 +193,7 @@ local function refill(player, d, stats, asleep)
         local hunger = fraction(stats, CharacterStat.HUNGER)
         local fed = 1 - (1 - BL_CELL_HUNGRY) * clamp01((hunger - 0.35) / 0.35)
         local vitality = 0
-        if DanTraits_VitalityEffect then pcall(function() vitality = DanTraits_VitalityEffect(player) or 0 end) end
+        if DanTraits_VitalityEffect then vitality = tonumber(DanTraits_VitalityEffect(player)) or 0 end   -- -1..1, so not DanTraits_Strength
         local rate = BL_CELL_DAY / 1440 * fed * (asleep and BL_CELL_ASLEEP or 1) * (1 + BL_CELL_VITALITY * vitality)
         rate = DanTraits_RunHooks("bloodCellRebuild", rate, player, d)
         local gain = math.max(0, math.min(1 - d.bloodCells, rate))

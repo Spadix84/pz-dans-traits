@@ -36,6 +36,7 @@ local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local clamp01 = DanTraits_Clamp01
 local fraction = DanTraits_StatFraction
+local strength = DanTraits_Strength   -- another system's 0..1, by the name of its getter
 
 local EP_BASE_H        = 1 / 192 -- seizures an hour with nothing bringing one on (one in eight days)
 local EP_TIRED_FROM    = 0.5     -- tiredness (0..1) from which it counts...
@@ -80,17 +81,14 @@ local function seizureRate(player, d)
     local rate = EP_BASE_H
     local tired = fraction(stats, CharacterStat.FATIGUE)
     if tired > EP_TIRED_FROM then rate = rate * (1 + EP_TIRED * (tired - EP_TIRED_FROM) / (1 - EP_TIRED_FROM)) end
-    if DanTraits_AlcoholWithdrawal then rate = rate * (1 + EP_WITHDRAWAL * clamp01(num(function() return DanTraits_AlcoholWithdrawal(player) end))) end
-    if DanTraits_HangoverStrength then rate = rate * (1 + EP_HANGOVER * clamp01(num(function() return DanTraits_HangoverStrength(player) end))) end
-    if DanTraits_InfectionFever then rate = rate * (1 + EP_FEVER * clamp01(num(function() return DanTraits_InfectionFever(player) end))) end
-    if DanTraits_ConcussionStrength then rate = rate * (1 + EP_CONCUSSION * clamp01(num(function() return DanTraits_ConcussionStrength(player) end))) end
+    rate = rate * (1 + EP_WITHDRAWAL * strength("DanTraits_AlcoholWithdrawal", player))
+    rate = rate * (1 + EP_HANGOVER * strength("DanTraits_HangoverStrength", player))
+    rate = rate * (1 + EP_FEVER * strength("DanTraits_InfectionFever", player))
+    rate = rate * (1 + EP_CONCUSSION * strength("DanTraits_ConcussionStrength", player))
     rate = rate * (1 + EP_STRESS * fraction(stats, CharacterStat.STRESS))
-    if DanTraits_Dehydration then rate = rate * (1 + EP_DEHYDRATION * clamp01(num(function() return DanTraits_Dehydration(player) end))) end
-    if DanTraits_DiaLow then rate = rate * (1 + EP_LOW_SUGAR * clamp01(num(function() return DanTraits_DiaLow(player) end))) end
-    if DanTraits_InBrightLight then
-        local ok, bright = pcall(DanTraits_InBrightLight, player)
-        if ok and bright then rate = rate * EP_BRIGHT end
-    end
+    rate = rate * (1 + EP_DEHYDRATION * strength("DanTraits_Dehydration", player))
+    rate = rate * (1 + EP_LOW_SUGAR * strength("DanTraits_DiaLow", player))
+    if DanTraits_InBrightLight and DanTraits_InBrightLight(player) then rate = rate * EP_BRIGHT end
     rate = rate * medsCut(player)
     return rate
 end

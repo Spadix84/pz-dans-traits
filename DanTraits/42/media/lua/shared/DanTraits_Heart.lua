@@ -93,11 +93,7 @@ local function episodeChance(player, d)
     if DanTraits_IsSmoker and DanTraits_IsSmoker(player) then chance = chance * (1 + HC_SMOKER * clamp01(d.nicMeter or 0)) end
     if (d.slCaffeineHours or 0) > 0 then chance = chance * HC_CAFFEINE end
     if DanTraits_MedHeartStrain and DanTraits_MedHeartStrain(player) then chance = chance * HC_STIM_OVER end
-    if DanTraits_VitalityEffect then
-        local vit = 0
-        pcall(function() vit = DanTraits_VitalityEffect(player) or 0 end)
-        chance = chance * (1 - HC_VITALITY * vit)
-    end
+    if DanTraits_VitalityEffect then chance = chance * (1 - HC_VITALITY * (tonumber(DanTraits_VitalityEffect(player)) or 0)) end   -- -1..1, so not DanTraits_Strength
     chance = chance * betaCut(player)
     return math.max(0, chance)
 end

@@ -507,7 +507,7 @@ local function updateDiabetesMinute(player, d)
     if asleep then g = g - DIA_SLEEP_DROP end
     if drunk then g = g - DIA_ALCOHOL_DROP end
     if panic > DIA_PANIC_MIN then g = g + (panic - DIA_PANIC_MIN) / (100 - DIA_PANIC_MIN) * DIA_PANIC_RISE end
-    if DanTraits_InfectionFever then g = g + DIA_FEVER_RISE * (tonumber(DanTraits_InfectionFever(player)) or 0) end
+    g = g + DIA_FEVER_RISE * DanTraits_Strength("DanTraits_InfectionFever", player)
 
     g = diaClamp(g)
     d.glucose = g

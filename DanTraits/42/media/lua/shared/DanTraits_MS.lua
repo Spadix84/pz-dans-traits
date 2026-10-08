@@ -258,10 +258,7 @@ end
 
 local function flareRate(player, d)
     local rate = MS_FLARE_H
-    if DanTraits_InfectionFever then
-        local ok, fever = pcall(DanTraits_InfectionFever, player)
-        if ok then rate = rate * (1 + MS_FLARE_FEVER * clamp01(tonumber(fever) or 0)) end
-    end
+    rate = rate * (1 + MS_FLARE_FEVER * DanTraits_Strength("DanTraits_InfectionFever", player))
     rate = rate * (1 + MS_FLARE_STRESS * fraction(player:getStats(), CharacterStat.STRESS))
     if spoonsOn() and DanTraits_SpoonDebt then rate = rate * (1 + MS_SPOON_DEBT_FLARE * DanTraits_SpoonDebt(player)) end
     return rate

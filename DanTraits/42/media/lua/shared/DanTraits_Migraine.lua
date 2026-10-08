@@ -311,25 +311,21 @@ local function statOf(player, stat)
     return clamp01(tonumber(value) or 0)
 end
 
--- another system's 0..1, when that system is loaded (its getters never throw)
-local function strengthOf(getter, player)
-    if not getter then return 0 end
-    return clamp01(tonumber(getter(player)) or 0)
-end
+local strength = DanTraits_Strength   -- another system's 0..1, by the name of its getter (0 when not loaded)
 
 -- each trigger's share of the chance right now, before the character's weights (percent per ten minutes).
 -- Each trigger is read on its own, so one that cannot be read leaves the others standing.
 local function migraineParts(player)
     local parts = {}
-    parts.sleep = MIG_SLEEP_DEBT * strengthOf(DanTraits_SleepDebt, player)
+    parts.sleep = MIG_SLEEP_DEBT * strength("DanTraits_SleepDebt", player)
     local thirst = statOf(player, CharacterStat.THIRST)
     if thirst > MIG_THIRST_FROM then parts.thirst = MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
     parts.stress = MIG_STRESS * statOf(player, CharacterStat.STRESS)
-    if DanTraits_HangoverStrength then parts.hangover = MIG_HANGOVER * strengthOf(DanTraits_HangoverStrength, player) end
-    if DanTraits_NicotineWithdrawal then parts.nicotine = MIG_NICOTINE * strengthOf(DanTraits_NicotineWithdrawal, player) end
-    if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * strengthOf(DanTraits_ConcussionStrength, player) end
-    if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * strengthOf(DanTraits_CaffeineWithdrawalOf, player) end
-    if DanTraits_InfectionFever then parts.fever = MIG_FEVER * strengthOf(DanTraits_InfectionFever, player) end
+    if DanTraits_HangoverStrength then parts.hangover = MIG_HANGOVER * strength("DanTraits_HangoverStrength", player) end
+    if DanTraits_NicotineWithdrawal then parts.nicotine = MIG_NICOTINE * strength("DanTraits_NicotineWithdrawal", player) end
+    if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * strength("DanTraits_ConcussionStrength", player) end
+    if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * strength("DanTraits_CaffeineWithdrawalOf", player) end
+    if DanTraits_InfectionFever then parts.fever = MIG_FEVER * strength("DanTraits_InfectionFever", player) end
     parts.light = MIG_SLEEP_LIGHT * sleepLit(player) + (inBrightLight(player) and MIG_LIGHT or 0)
     parts.heat = MIG_HEAT * heatOf(player)
     if DanTraits_CorpsesNearby then parts.corpses = MIG_CORPSE * math.min(MIG_CORPSE_MAX, DanTraits_CorpsesNearby(player, MIG_CORPSE_TILES)) end
