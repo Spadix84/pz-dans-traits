@@ -24,7 +24,7 @@
 -- slowly, and you are told when they wear off. A new character starts on
 -- them, fully built up, with two bottles.
 --
--- Mod data: hcCovered (the beta blockers were in the system, for the
+-- Mod data:  (the beta blockers were in the system, for the
 -- wearing-off notice), hcAnginaMin (minutes of chest pain left), hcPushing
 -- (pushing on this minute), hcEndPrev (endurance a minute ago), hcWeakH (hours
 -- of weak recovery left), hcAttacks, hcEpisodes.
@@ -142,20 +142,13 @@ local function exertion(player, d)
     return pushing, resting
 end
 
--- the wearing-off notice, once each time the level drops under protection
-local function betaNotice(player, d)
-    local covered = DanTraits_MedCovered and DanTraits_MedCovered(player, "beta") or false
-    if d.hcCovered and not covered and hasTrait(player, "heart") then notify(player, "UI_DanTraits_HeartBetaLapse") end
-    d.hcCovered = covered or nil
-end
-
+-- (the wearing-off notice is the medication system's: beta's lapse in DanTraits_Meds.lua)
 local function updateHeartMinute(player, d)
     if (d.hcWeakH or 0) > 0 then d.hcWeakH = math.max(0, d.hcWeakH - 1 / 60) end
     if not hasTrait(player, "heart") then
-        d.hcAnginaMin, d.hcPushing, d.hcEndPrev, d.hcCovered = nil, nil, nil, nil
+        d.hcAnginaMin, d.hcPushing, d.hcEndPrev = nil, nil, nil
         return
     end
-    betaNotice(player, d)
     local pushing, resting = exertion(player, d)
     d.hcPushing = nil
     if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return end
@@ -191,8 +184,6 @@ DanTraits_AddHook("enduranceRegen", function(delta, player, d)
 end)
 
 local function betaTaken(player)
-    local d = DanTraits_Data(player)
-    d.hcCovered = DanTraits_MedCovered(player, "beta") or nil
     if hasTrait(player, "heart") then DanTraits_NotifyGood(player, "UI_DanTraits_HeartBeta") end
 end
 

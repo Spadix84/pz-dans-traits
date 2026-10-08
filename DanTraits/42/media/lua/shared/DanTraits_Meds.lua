@@ -29,8 +29,7 @@
 -- A drug can also do something every minute it is in the system, for anyone
 -- who takes it (taking: prednisone's hunger, baclofen's drowsiness while
 -- awake, amantadine's dry mouth), and say when it wears off (lapse, for those
--- with the trait in lapseTrait, or any of them when it is a list; Heart
--- Condition and Epilepsy say their own).
+-- with the trait in lapseTrait, or any of them when it is a list).
 --
 -- Effects are a small vocabulary, applied every minute while they run:
 --   fatigue  tiredness added a minute      stress   stress added a minute
@@ -66,12 +65,14 @@ DanTraits_Drugs = {
         halfH = 24, onAt = 0.5, overAt = 3, buildDays = 3, fadeDays = 3,   -- once a day, like metformin
         side = { regen = 0.8 }, sideH = 8,
         over = { fatigue = 0.0005, faint = 0.002 },
+        lapse = "UI_DanTraits_HeartBetaLapse", lapseTrait = "heart",
     },
     anticonvulsant = {
         items = { "anticonvulsants" }, treats = { "epilepsy" }, kind = "daily",
         halfH = 12, onAt = 0.5, overAt = 3, buildDays = 5, fadeDays = 3,
         side = { fatigue = 0.0003 }, sideH = 8,
         over = { fatigue = 0.0012, regen = 0.7 },
+        lapse = "UI_DanTraits_EpilepsyMedsLapse", lapseTrait = "epilepsy",
     },
     metformin = {
         items = { "metformin" }, treats = { "diabetes2" }, kind = "daily",

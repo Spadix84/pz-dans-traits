@@ -24,7 +24,7 @@
 -- night scores worse. One that comes while you are already out cold (a faint,
 -- a knockout) is only the aftermath.
 --
--- Mod data: epCovered (the anticonvulsants were in the system, for the
+-- Mod data:  (the anticonvulsants were in the system, for the
 -- wearing-off notice), epAuraMin (minutes to the seizure), epAuraMs (the real-time
 -- floor on that warning), epAfterMin (minutes
 -- of the aftermath), epSeizures, epNight (a seizure broke this sleep).
@@ -133,19 +133,12 @@ local function seize(player, d)
     end
 end
 
--- the wearing-off notice, once each time the level drops under protection
-local function medsNotice(player, d)
-    local covered = DanTraits_MedCovered and DanTraits_MedCovered(player, "anticonvulsant") or false
-    if d.epCovered and not covered and hasTrait(player, "epilepsy") then notify(player, "UI_DanTraits_EpilepsyMedsLapse") end
-    d.epCovered = covered or nil
-end
-
+-- (the wearing-off notice is the medication system's: anticonvulsant's lapse in DanTraits_Meds.lua)
 local function updateEpilepsyMinute(player, d)
     if not hasTrait(player, "epilepsy") then
-        d.epAuraMin, d.epAuraMs, d.epAfterMin, d.epNight, d.epCovered = nil, nil, nil, nil, nil
+        d.epAuraMin, d.epAuraMs, d.epAfterMin, d.epNight = nil, nil, nil, nil
         return
     end
-    medsNotice(player, d)
     if (d.epAfterMin or 0) > 0 then
         d.epAfterMin = d.epAfterMin - 1
         local left = clamp01(d.epAfterMin / EP_AFTER_MIN)
@@ -165,9 +158,7 @@ end
 
 -- a dose by hand (the console); a swallowed pill reaches the medication system itself
 function DanTraits_TakeAnticonvulsant(player, amount)
-    local level = DanTraits_MedTake(player, "anticonvulsant", amount or 1)
-    DanTraits_Data(player).epCovered = DanTraits_MedCovered(player, "anticonvulsant") or nil
-    return level
+    return DanTraits_MedTake(player, "anticonvulsant", amount or 1)
 end
 
 -- a seizure in the night: the sleep it broke scores worse (the flag is spent
@@ -179,14 +170,6 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
 end)
 
 function DanTraits_IsAnticonvulsants(item) return DanTraits_IsItem(item, EP_MEDS_ITEM) end
-
--- after the medication system has taken the dose (it loads first)
-DanTraits_AddHook("pill", function(_, player, kind)
-    if DanTraits_DrugOfItem(kind) == "anticonvulsant" then
-        DanTraits_Data(player).epCovered = DanTraits_MedCovered(player, "anticonvulsant") or nil
-    end
-    return nil
-end)
 
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.epilepsy = function(player, args)
