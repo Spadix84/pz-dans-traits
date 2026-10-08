@@ -188,19 +188,9 @@ function DanTraits_SwingDropChance(player)
 end
 
 -- drop whatever is in the primary hand at the character's feet; true if something dropped
-local function dropWeapon(player)
-    local item = player:getPrimaryHandItem()
-    local square = player:getCurrentSquare()
-    if not item or not square then return false end
-
-    player:removeFromHands(item)
-    player:getInventory():Remove(item)
-    square:AddWorldInventoryItem(item, 0.0, 0.0, 0.0)
-    -- the text key keeps its old Fumbler name so existing translations still match
-    notify(player, "UI_DanTraits_FumblerDrop")
-    return true
-end
-DanTraits_FumbleDrop = dropWeapon
+-- (the text key keeps its old Fumbler name so existing translations still match)
+local function dropWeapon(player) return DanTraits_DropHeld(player, false, "UI_DanTraits_FumblerDrop") end
+DanTraits_FumbleDrop = dropWeapon   -- Epilepsy, Dependent and the console drop the weapon through this
 
 -- a slipped swing: the weapon's damage is cut until the attack finishes. The
 -- game reads it at the hit point, after OnWeaponSwing. The originals ride on

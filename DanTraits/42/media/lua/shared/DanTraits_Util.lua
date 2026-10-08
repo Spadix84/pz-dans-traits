@@ -62,6 +62,11 @@
 --                                          (and ISSplint.new, which sets its own time)
 --                                          to multiply the time by factor when
 --                                          applies(character) is true
+--   DanTraits_DropHeld(player, bothHands, textKey)
+--                                          drop what the primary hand holds (or both
+--                                          hands) at the character's feet, every call
+--                                          guarded; the notice textKey if anything
+--                                          dropped. Returns whether anything did
 --   DanTraits_HeadPainAtLeast(player, value)
 --                                          raise the head's additional pain to value
 --                                          (never lower it)
@@ -491,6 +496,35 @@ end
 function DanTraits_DeltaRemember(d, name, value)
     d.deltaLast = d.deltaLast or {}
     d.deltaLast[name] = value
+end
+
+-- Dropping what is held (a fumbled swing, hands that give out, a seizure, the
+-- shakes): the item leaves the hands and the inventory and lands on the
+-- square. A two-handed weapon is in both hands and is dropped once.
+function DanTraits_DropHeld(player, bothHands, textKey)
+    if not player then return false end
+    local square = nil
+    pcall(function() square = player:getCurrentSquare() end)
+    if not square then return false end
+    local held = {}
+    pcall(function() held[#held + 1] = player:getPrimaryHandItem() end)
+    if bothHands then
+        pcall(function()
+            local second = player:getSecondaryHandItem()
+            if second and second ~= held[1] then held[#held + 1] = second end
+        end)
+    end
+    local dropped = false
+    for _, item in ipairs(held) do
+        pcall(function()
+            player:removeFromHands(item)
+            player:getInventory():Remove(item)
+            square:AddWorldInventoryItem(item, 0.0, 0.0, 0.0)
+            dropped = true
+        end)
+    end
+    if dropped and textKey and DanTraits_Notify then DanTraits_Notify(player, textKey) end
+    return dropped
 end
 
 -- Pain floors ---------------------------------------------------------------------

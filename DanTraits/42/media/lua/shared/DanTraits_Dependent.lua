@@ -97,7 +97,7 @@ end
 -- down on the floor (the shared fall in DanTraits_Faint.lua), whatever was in
 -- hand dropped, hurt, scared and wiped out; a fit on a hard floor can concuss
 local function seize(player, stats)
-    if DanTraits_FumbleDrop then pcall(DanTraits_FumbleDrop, player) end
+    if DanTraits_FumbleDrop then DanTraits_FumbleDrop(player) end
     if DanTraits_Collapse then DanTraits_Collapse(player) end
     if DanTraits_KnockHead then DanTraits_KnockHead(player, ALC_SEIZE_KNOCK, ALC_SEIZE_SCORE) end
     if DanTraits_PainBurst then DanTraits_PainBurst(player, ALC_SEIZE_PAIN) end

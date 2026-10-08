@@ -170,28 +170,7 @@ end
 DanTraits_MSHeatTarget = heatTarget
 
 -- drop whatever is in either hand at the character's feet
-local function handsGiveOut(player)
-    local square = player:getCurrentSquare()
-    if not square then return false end
-    local dropped, held = false, {}
-    pcall(function() held[#held + 1] = player:getPrimaryHandItem() end)
-    pcall(function()
-        local second = player:getSecondaryHandItem()
-        if second ~= held[1] then held[#held + 1] = second end   -- a two-handed weapon is in both
-    end)
-    for _, item in ipairs(held) do
-        if item then
-            pcall(function()
-                player:removeFromHands(item)
-                player:getInventory():Remove(item)
-                square:AddWorldInventoryItem(item, 0.0, 0.0, 0.0)
-                dropped = true
-            end)
-        end
-    end
-    if dropped then notify(player, "UI_DanTraits_MSHandsGiveOut") end
-    return dropped
-end
+local function handsGiveOut(player) return DanTraits_DropHeld(player, true, "UI_DanTraits_MSHandsGiveOut") end
 
 -- not while out cold or asleep, nor in a vehicle (what the hands drop would
 -- be left on the road behind)
