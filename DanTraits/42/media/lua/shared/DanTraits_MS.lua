@@ -445,17 +445,6 @@ end
 
 -- start on baclofen and amantadine, fully built up, and with a bottle of each
 -- unless the Starting Medication sandbox option is off
-local function onMSCreatePlayer(playerNum, player)
-    if not player or not hasTrait(player, "ms") then return end
-    local d = DanTraits_Data(player)
-    if d.msKitGiven or player:getHoursSurvived() > 0 then return end
-    d.msKitGiven = true
-    for _, id in ipairs(MS_START) do DanTraits_MedStart(player, id) end
-    if not DanTraits_SandboxOn("StartingMedication") then return end
-    for _, item in ipairs(MS_KIT) do
-        pcall(function() player:getInventory():AddItem(item) end)
-    end
-end
+DanTraits_StartingKit({ trait = "ms", flag = "msKitGiven", meds = MS_START, items = MS_KIT })
 
 DanTraits_Every("minute", "MS", updateMSMinute, 40)
-Events.OnCreatePlayer.Add(onMSCreatePlayer)

@@ -7,7 +7,8 @@
 -- DanTraits_Wrap (the one way any file wraps a game method, so several files
 -- can layer on the same method), the cached vanilla trait lookup
 -- (DanTraits_HasVanillaTrait, DanTraits_TraitsChanged), the one way a file adds or takes off a
--- trait at runtime (DanTraits_SetTrait), the eat and pill action hooks that several
+-- trait at runtime (DanTraits_SetTrait), the starting kits a new character with a
+-- trait begins with (DanTraits_StartingKit), the eat and pill action hooks that several
 -- traits share, the one-time rename of old mod-data keys (DanTraits_MigrateModData),
 -- and the save mod-list fix. Each trait bails out immediately
 -- unless the player actually has it, so an unaffected character costs a
@@ -230,6 +231,74 @@ function DanTraits_RetireTraits(player)
 end
 Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_RetireTraits(player) end)
 Events.OnGameStart.Add(function() DanTraits_RetireTraits(getSpecificPlayer(0)) end)
+
+-- Starting kits: what a new character with a trait begins with (a bottle of
+-- beta blockers, an inhaler, the glucose meter). Each file registers a spec:
+--
+--   DanTraits_StartingKit(spec)
+--     spec.trait    a mod key ("heart"), or fn(player) -> bool (Diabetes: either type)
+--     spec.flag     mod-data key set once the kit was dealt with ("hcKitGiven"),
+--                   whether or not the sandbox let it give anything
+--     spec.setup    fn(player, d), optional: anything to roll first (Migraine's triggers)
+--     spec.meds     drug ids the character starts built up on (DanTraits_MedStart),
+--                   a list or fn(player) -> list
+--     spec.always   item types given whatever the sandbox says (the meter and strips),
+--                   a list or fn(player) -> list
+--     spec.items    item types given only with the Starting Medication option on
+--     spec.prepare  fn(item), optional: run on every item given (a full bottle, the
+--                   part-used pack)
+--
+-- Core's one OnCreatePlayer handler (registered here, after the mod-data
+-- migration and the retired traits) runs every kit in registration order
+-- for a character who has the trait, has not survived an hour yet and has
+-- not had the kit. Each kit runs under DanTraits_Guard.
+local kits = {}
+function DanTraits_StartingKit(spec)
+    kits[#kits + 1] = spec
+    return spec
+end
+
+local function kitList(x, player)
+    if type(x) == "function" then x = x(player) end
+    return x or {}
+end
+
+local function giveKit(player, spec)
+    local has = spec.trait
+    if type(has) == "function" then has = has(player) == true else has = hasTrait(player, has) end
+    if not has then return false end
+    local hours = 0
+    pcall(function() hours = player:getHoursSurvived() or 0 end)
+    if hours > 0 then return false end
+    local d = traitData(player)
+    if spec.flag then
+        if d[spec.flag] then return false end
+        d[spec.flag] = true
+    end
+    if spec.setup then spec.setup(player, d) end
+    if DanTraits_MedStart then
+        for _, id in ipairs(kitList(spec.meds, player)) do DanTraits_MedStart(player, id) end
+    end
+    local function give(list)
+        for _, fullType in ipairs(list) do
+            pcall(function()
+                local item = player:getInventory():AddItem(fullType)
+                if item and spec.prepare then spec.prepare(item) end
+            end)
+        end
+    end
+    give(kitList(spec.always, player))
+    if DanTraits_SandboxOn("StartingMedication") then give(kitList(spec.items, player)) end
+    return true
+end
+DanTraits_GiveStartingKit = giveKit   -- tests
+
+Events.OnCreatePlayer.Add(function(playerNum, player)
+    if not player then return end
+    for _, spec in ipairs(kits) do
+        DanTraits_Guard("kit:" .. tostring(spec.flag or spec.trait), giveKit, player, spec)
+    end
+end)
 
 -- vanilla traits by id, as the game names them (lowercase "base:needslesssleep").
 -- Walking getKnownTraits is a Java list walk with a tostring and a lowercase

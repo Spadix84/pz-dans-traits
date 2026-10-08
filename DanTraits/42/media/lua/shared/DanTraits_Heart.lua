@@ -220,17 +220,8 @@ end
 
 -- start on beta blockers, fully built up, with two bottles (none if the
 -- Starting Medication sandbox option is off)
-local function onHeartCreatePlayer(playerNum, player)
-    if not player or not hasTrait(player, "heart") then return end
-    local d = DanTraits_Data(player)
-    if d.hcKitGiven or player:getHoursSurvived() > 0 then return end
-    d.hcKitGiven = true
-    DanTraits_MedStart(player, "beta")
-    if not DanTraits_SandboxOn("StartingMedication") then return end
-    for _ = 1, HC_KIT_BOTTLES do
-        pcall(function() player:getInventory():AddItem("Base.PillsBeta") end)
-    end
-end
+local HC_KIT = {}
+for _ = 1, HC_KIT_BOTTLES do HC_KIT[#HC_KIT + 1] = "Base.PillsBeta" end
+DanTraits_StartingKit({ trait = "heart", flag = "hcKitGiven", meds = { "beta" }, items = HC_KIT })
 
 DanTraits_Every("minute", "Heart", updateHeartMinute, 40)
-Events.OnCreatePlayer.Add(onHeartCreatePlayer)

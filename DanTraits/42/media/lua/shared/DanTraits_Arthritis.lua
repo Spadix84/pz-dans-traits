@@ -290,20 +290,8 @@ DanTraits_Every("frame", "Arthritis", updateArthritisFrame, 40)
 
 -- a new character has lived with it: a bottle of painkillers at the start
 -- (the Starting Medication option), once
-local function onArthritisCreate(playerNum, player)
-    if not player or not hasTrait(player, "arthritis") then return end
-    local hours = 0
-    pcall(function() hours = player:getHoursSurvived() or 0 end)
-    if hours > 0 then return end
-    local d = DanTraits_Data(player)
-    if d.artKitGiven then return end
-    d.artKitGiven = true
-    if not DanTraits_SandboxOn("StartingMedication") then return end
-    pcall(function()
-        local bottle = player:getInventory():AddItem(ART_START_PILLS)
-        if bottle then bottle:getModData().DanTraitsFilled = true end   -- a full bottle, not the random spawn fill
-    end)
-end
-
-Events.OnCreatePlayer.Add(onArthritisCreate)
+DanTraits_StartingKit({
+    trait = "arthritis", flag = "artKitGiven", items = { ART_START_PILLS },
+    prepare = function(bottle) bottle:getModData().DanTraitsFilled = true end,   -- a full bottle, not the random spawn fill
+})
 

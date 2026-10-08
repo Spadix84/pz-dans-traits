@@ -527,20 +527,15 @@ DanTraits_AddHook("sleepWake", function(m, player, d)
 end)
 
 -- a new character: their triggers drawn, and the end of a pack of sumatriptan
-local function onMigraineCreatePlayer(playerNum, player)
-    if not player or not hasTrait(player, "migraine") then return end
-    local d = migData(player)
-    if d.migKitGiven or player:getHoursSurvived() > 0 then return end
-    d.migKitGiven = true
-    rollTriggers(d)
-    if not DanTraits_SandboxOn("StartingMedication") then return end
-    pcall(function()
-        local pack = player:getInventory():AddItem(MIG_TRIP_ITEM)
-        if not pack then return end
+DanTraits_StartingKit({
+    trait = "migraine", flag = "migKitGiven",
+    setup = function(player) rollTriggers(migData(player)) end,
+    items = { MIG_TRIP_ITEM },
+    prepare = function(pack)
         pack:getModData().DanTraitsFilled = true   -- not the random spawn fill
         pack:setUsedDelta(MIG_TRIP_START)
-    end)
-end
+    end,
+})
 
 -- console: migraine | migraine start | migraine triggers
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
@@ -570,4 +565,3 @@ end
 DanTraits_Every("minute", "Migraine", updateMigraineMinute, 40)
 DanTraits_Every("minute", "Triptan", updateTriptanMinute, 40)
 DanTraits_Every("ten", "Migraine", updateMigraineTen, 40)
-Events.OnCreatePlayer.Add(onMigraineCreatePlayer)

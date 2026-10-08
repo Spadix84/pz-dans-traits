@@ -199,15 +199,6 @@ end
 
 -- start on anticonvulsants, fully built up, with a bottle (none if the
 -- Starting Medication sandbox option is off)
-local function onEpilepsyCreatePlayer(playerNum, player)
-    if not player or not hasTrait(player, "epilepsy") then return end
-    local d = DanTraits_Data(player)
-    if d.epKitGiven or player:getHoursSurvived() > 0 then return end
-    d.epKitGiven = true
-    DanTraits_MedStart(player, "anticonvulsant")
-    if not DanTraits_SandboxOn("StartingMedication") then return end
-    pcall(function() player:getInventory():AddItem(EP_MEDS_ITEM) end)
-end
+DanTraits_StartingKit({ trait = "epilepsy", flag = "epKitGiven", meds = { "anticonvulsant" }, items = { EP_MEDS_ITEM } })
 
 DanTraits_Every("minute", "Epilepsy", updateEpilepsyMinute, 40)
-Events.OnCreatePlayer.Add(onEpilepsyCreatePlayer)

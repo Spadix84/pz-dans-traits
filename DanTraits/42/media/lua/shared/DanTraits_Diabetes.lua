@@ -572,30 +572,20 @@ function DanTraits_IsMeter(item) return DanTraits_IsItem(item, METER_ITEM) end
 function DanTraits_IsStrips(item) return DanTraits_IsItem(item, STRIPS_ITEM) end
 function DanTraits_IsMetformin(item) return DanTraits_IsItem(item, METFORMIN_ITEM) end
 
--- Type 1 starts with a meter, strips and three pens; Type 2 with a meter, strips and metformin.
--- With the Starting Medication sandbox option off, only the meter and strips.
-local function onDiabetesCreatePlayer(playerNum, player)
-    if not player or not diaHas(player) then return end
-    local d = diaData(player)
-    if d.diaKitGiven or player:getHoursSurvived() > 0 then return end
-    d.diaKitGiven = true
-    pcall(function()
-        local inv = player:getInventory()
-        inv:AddItem(METER_ITEM)
-        inv:AddItem(STRIPS_ITEM)
-        if DanTraits_SandboxOn("StartingMedication") then
-            if hasTrait(player, "diabetes1") then
-                for _ = 1, 3 do inv:AddItem(INSULIN_ITEM) end
-            else
-                inv:AddItem(METFORMIN_ITEM)
-            end
-        end
-    end)
-    if hasTrait(player, "diabetes2") and DanTraits_MedStart then DanTraits_MedStart(player, "metformin") end
-end
+-- Type 1 starts with a meter, strips and three pens; Type 2 with a meter, strips and metformin,
+-- built up. With the Starting Medication sandbox option off, only the meter and strips.
+DanTraits_StartingKit({
+    trait = diaHas, flag = "diaKitGiven",
+    setup = function(player) diaData(player) end,   -- the starting sugar
+    always = { METER_ITEM, STRIPS_ITEM },
+    items = function(player)
+        if hasTrait(player, "diabetes1") then return { INSULIN_ITEM, INSULIN_ITEM, INSULIN_ITEM } end
+        return { METFORMIN_ITEM }
+    end,
+    meds = function(player) if hasTrait(player, "diabetes2") then return { "metformin" } end end,
+})
 
 DanTraits_Every("minute", "Diabetes", updateDiabetesMinute, 40)
-Events.OnCreatePlayer.Add(onDiabetesCreatePlayer)
 
 -- Drinks are fluid containers, not food: hook the drink action and read the
 -- carbohydrates of the fluid times the litres that actually went down. The

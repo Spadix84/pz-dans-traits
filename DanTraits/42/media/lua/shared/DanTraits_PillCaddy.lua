@@ -47,13 +47,10 @@ local function hasMedicalTrait(player)
     return false
 end
 
-local function onCaddyCreatePlayer(playerNum, player)
-    if not player or player:getHoursSurvived() > 0 then return end
-    local d = DanTraits_Data(player)
-    if d.caddyRolled then return end
-    d.caddyRolled = true
-    if not hasMedicalTrait(player) or ZombRand(100) >= CADDY_START_PCT then return end
-    pcall(function() player:getInventory():AddItem(CADDY_ITEM) end)
-end
-
-Events.OnCreatePlayer.Add(onCaddyCreatePlayer)
+-- a new character with a medical trait may start with one (CADDY_START_PCT), rolled once for everyone
+DanTraits_StartingKit({
+    trait = function() return true end, flag = "caddyRolled",
+    always = function(player)
+        if hasMedicalTrait(player) and ZombRand(100) < CADDY_START_PCT then return { CADDY_ITEM } end
+    end,
+})
