@@ -136,16 +136,7 @@ local clamp01 = DanTraits_Clamp01
 local function isSmoker(player) return hasVanillaTrait(player, "base:smoker") end
 DanTraits_IsSmoker = isSmoker
 
-local function setSmoker(player, on)
-    local trait = CharacterTrait and CharacterTrait.SMOKER
-    if not trait then return false end
-    local ok = pcall(function()
-        local traits = player:getCharacterTraits()
-        if on then traits:add(trait) else traits:remove(trait) end
-    end)
-    DanTraits_TraitsChanged(player)
-    return ok and isSmoker(player) == on
-end
+local function setSmoker(player, on) return DanTraits_SetTrait(player, "base:SMOKER", on) end
 
 local statMax = DanTraits_StatMax
 

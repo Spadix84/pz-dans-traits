@@ -271,25 +271,26 @@ DanTraits_WearingShades = wearingShades
 local function updateBlur(player, d, want)
     local trait = CharacterTrait and CharacterTrait.SHORT_SIGHTED
     if not trait then return end
+    local have, glasses = nil, false
     pcall(function()
-        local traits = player:getCharacterTraits()
-        local have = traits:get(trait) == true
-        local target = have
-        if want then
-            local glasses = player:isWearingGlasses() == true
-            if have == glasses then
-                if d.migBlur == nil then d.migBlur = have end
-                target = not have
-            end
-        elseif d.migBlur ~= nil then
-            target = d.migBlur
-            d.migBlur = nil
-        end
-        if target == have then return end
-        if target then traits:add(trait) else traits:remove(trait) end
-        DanTraits_TraitsChanged(player)
-        player:updateVisionEffects()
+        have = player:getCharacterTraits():get(trait) == true
+        glasses = player:isWearingGlasses() == true
     end)
+    if have == nil then return end
+    local target = have
+    if want then
+        if have == glasses then
+            if d.migBlur == nil then d.migBlur = have end
+            target = not have
+        end
+    elseif d.migBlur ~= nil then
+        target = d.migBlur
+        d.migBlur = nil
+    end
+    if target == have then return end
+    if DanTraits_SetTrait(player, "base:SHORT_SIGHTED", target) then
+        pcall(function() player:updateVisionEffects() end)
+    end
 end
 
 -- 0..1 how lit the room is, while asleep (the sleep system's reading)

@@ -33,19 +33,8 @@ local TN_DEAF_PER      = 10      -- ...plus this a point of load past it
 local TN_DEAF_MAX      = 240     -- at most this long
 local TN_WAKE          = 1.5     -- light wakes you x this while ringing
 
-local function traitConst(name) return CharacterTrait and CharacterTrait[name] end
-
-local function setTrait(player, name, on)
-    local trait = traitConst(name)
-    if not trait then return false end
-    local ok = pcall(function()
-        local traits = player:getCharacterTraits()
-        if on and not traits:get(trait) then traits:add(trait) end
-        if not on and traits:get(trait) then traits:remove(trait) end
-    end)
-    DanTraits_TraitsChanged(player)
-    return ok
-end
+-- name is the CharacterTrait constant's name ("HARD_OF_HEARING")
+local function setTrait(player, name, on) return DanTraits_SetTrait(player, "base:" .. name, on) end
 
 local function goDeaf(player, d)
     if not d.tnRinging then

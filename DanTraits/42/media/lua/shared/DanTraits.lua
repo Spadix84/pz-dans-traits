@@ -6,7 +6,8 @@
 -- ten-minute / frame drivers (DanTraits_Every), the frame scheduler,
 -- DanTraits_Wrap (the one way any file wraps a game method, so several files
 -- can layer on the same method), the cached vanilla trait lookup
--- (DanTraits_HasVanillaTrait, DanTraits_TraitsChanged), the eat and pill action hooks that several
+-- (DanTraits_HasVanillaTrait, DanTraits_TraitsChanged), the one way a file adds or takes off a
+-- trait at runtime (DanTraits_SetTrait), the eat and pill action hooks that several
 -- traits share, the one-time rename of old mod-data keys (DanTraits_MigrateModData),
 -- and the save mod-list fix. Each trait bails out immediately
 -- unless the player actually has it, so an unaffected character costs a
@@ -173,6 +174,37 @@ end
 Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_MigrateModData(player) end)
 Events.OnGameStart.Add(function() DanTraits_MigrateModData(getSpecificPlayer(0)) end)
 
+-- A trait reference, as every runtime add or remove names one: a mod key
+-- ("dependent", the registry entry) or "base:" and a CharacterTrait
+-- constant's name ("base:SMOKER"). nil when it names nothing.
+local function traitEntry(ref)
+    if type(ref) ~= "string" then return nil end
+    if string.sub(ref, 1, 5) == "base:" then return CharacterTrait and CharacterTrait[string.sub(ref, 6)] end
+    return DanTraitsRegistry and DanTraitsRegistry[ref]
+end
+
+-- The one way a file gives or takes a trait at runtime (an Alcoholic's
+-- relapse, the smoker's cure, tinnitus deafness, a migraine's blur, the
+-- retired traits, the console). on = true adds it, false takes it off; a
+-- trait already as asked is left alone. The game call is guarded and the
+-- vanilla trait cache is refreshed either way. Returns true when the
+-- character has the trait as asked afterwards (false for an unknown ref or
+-- a game call that failed).
+function DanTraits_SetTrait(player, ref, on)
+    if not player then return false end
+    local entry = traitEntry(ref)
+    if not entry then return false end
+    on = on == true
+    local ok, have = pcall(function()
+        local traits = player:getCharacterTraits()
+        local have = traits:get(entry) == true
+        if on and not have then traits:add(entry) elseif have and not on then traits:remove(entry) end
+        return traits:get(entry) == true
+    end)
+    DanTraits_TraitsChanged(player)
+    return ok and have == on
+end
+
 -- Retired traits (2026-10-07): still registered and defined, so a save that
 -- has one loads, and hidden at creation (DanTraits_Client.lua). A loaded
 -- character has it taken off and, where one took its place, gets that
@@ -187,23 +219,13 @@ function DanTraits_RetireTraits(player)
     if not player or not DanTraitsRegistry then return 0 end
     local n = 0
     for key, into in pairs(DanTraits_RETIRED) do
-        local entry = DanTraitsRegistry[key]
-        if entry and hasTrait(player, key) then
-            pcall(function()
-                local traits = player:getCharacterTraits()
-                traits:remove(entry)
-                local new = nil
-                if into and string.sub(into, 1, 5) == "base:" then new = CharacterTrait[string.sub(into, 6)]
-                elseif into then new = DanTraitsRegistry[into] end
-                if new and not traits:get(new) then traits:add(new) end
-            end)
+        if hasTrait(player, key) then
+            DanTraits_SetTrait(player, key, false)
+            if into then DanTraits_SetTrait(player, into, true) end
             n = n + 1
         end
     end
-    if n > 0 then
-        DanTraits_TraitsChanged(player)
-        print("[DanTraits] retired " .. n .. " trait(s) swapped out")
-    end
+    if n > 0 then print("[DanTraits] retired " .. n .. " trait(s) swapped out") end
     return n
 end
 Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_RetireTraits(player) end)

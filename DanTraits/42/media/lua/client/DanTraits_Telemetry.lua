@@ -342,12 +342,12 @@ end
 function commands.trait(player, args)
     local op, key = string.lower(args[1] or ""), args[2]
     if (op ~= "add" and op ~= "remove") or not key then return "trait: add|remove <key>" end
-    local entry = DanTraitsRegistry and DanTraitsRegistry[string.lower(key)]
-    if not entry and CharacterTrait then entry = CharacterTrait[string.upper(key)] end
+    local ref = string.lower(key)
+    local entry = DanTraitsRegistry and DanTraitsRegistry[ref]
+    if not entry and CharacterTrait then ref = "base:" .. string.upper(key); entry = CharacterTrait[string.upper(key)] end
     if not entry then return "trait: unknown " .. key end
-    local traits = player:getCharacterTraits()
-    if op == "add" then traits:add(entry) else traits:remove(entry) end
-    if DanTraits_TraitsChanged then DanTraits_TraitsChanged(player) end
+    if not DanTraits_SetTrait then return "trait: core not loaded" end
+    if not DanTraits_SetTrait(player, ref, op == "add") then return "trait: " .. op .. " " .. tostring(entry) .. " failed" end
     return "trait " .. op .. " " .. tostring(entry)
 end
 

@@ -114,12 +114,7 @@ end
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.fearofblood = function(player, args)
     local on = args[1] ~= "off"
-    pcall(function()
-        local traits = player:getCharacterTraits()
-        if on and not traits:get(CharacterTrait.HEMOPHOBIC) then traits:add(CharacterTrait.HEMOPHOBIC) end
-        if not on and traits:get(CharacterTrait.HEMOPHOBIC) then traits:remove(CharacterTrait.HEMOPHOBIC) end
-    end)
-    DanTraits_TraitsChanged(player)
+    DanTraits_SetTrait(player, "base:HEMOPHOBIC", on)
     return "fear of blood: " .. tostring(afraid(player))
 end
 

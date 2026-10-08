@@ -531,13 +531,8 @@ function DanTraits_GrantFoldIn(player, trait, constName, flag)
     if not player or not DanTraits_HasTrait or not DanTraits_HasTrait(player, trait) then return false end
     local d = DanTraits_Data(player)
     if d[flag] then return true end
-    local vanilla = CharacterTrait and CharacterTrait[constName]
-    if not vanilla then return false end
-    local ok = pcall(function()
-        local traits = player:getCharacterTraits()
-        if not traits:get(vanilla) then traits:add(vanilla) end
-    end)
-    if DanTraits_TraitsChanged then DanTraits_TraitsChanged(player) end
+    if not DanTraits_SetTrait then return false end
+    local ok = DanTraits_SetTrait(player, "base:" .. tostring(constName), true)
     if ok then d[flag] = true end
     return ok
 end

@@ -278,11 +278,7 @@ local function grantAgeTrait(player, band)
     for _, b in ipairs(AGE_BANDS) do
         if hasTrait(player, AGE_TRAIT[b]) then return false end
     end
-    local entry = DanTraitsRegistry and DanTraitsRegistry[AGE_TRAIT[band]]
-    if not entry then return false end
-    local ok = pcall(function() player:getCharacterTraits():add(entry) end)
-    DanTraits_TraitsChanged(player)
-    return ok
+    return DanTraits_SetTrait(player, AGE_TRAIT[band], true)
 end
 
 local function onAgeCreate(player)
