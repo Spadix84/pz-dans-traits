@@ -112,7 +112,6 @@ local COUGH_EXERT       = 4       -- x this exerted (running, or endurance under
 local COUGH_EXERT_ENDURANCE = 0.5
 local COUGH_MORNING     = 5       -- x this in the first COUGH_MORNING_MIN after waking
 local COUGH_MORNING_MIN = 60
-local COUGH_RADIUS      = 35      -- only if the game's own cough is unavailable (it is 35)
 -- wounds
 local NIC_INF_GROWTH   = 0.2     -- wound infection climb x (1 + this x meter), Smokers only
 local NIC_WOUND_HEAL   = 0.2     -- an unstitched deep wound heals x (1 - this x meter), Smokers only
@@ -391,7 +390,7 @@ end
 
 -- the shared cough keeps the gap between coughs (Asthma's included)
 local function cough(player, d)
-    if DanTraits_Cough(player, COUGH_RADIUS, "smoker") then d.nicCoughs = (d.nicCoughs or 0) + 1 end
+    if DanTraits_Cough(player, nil, "smoker") then d.nicCoughs = (d.nicCoughs or 0) + 1 end   -- the game's own cough, at its radius
 end
 
 local function exerted(player, stats)

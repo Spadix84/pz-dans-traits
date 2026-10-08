@@ -25,7 +25,7 @@ local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 local fraction = DanTraits_StatFraction
 
-local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- buzz: load builds above it; sober: below it a session ends
+local DRINK = DanTraits_DRINK   -- buzz: load builds above it; sober: below it a session ends (DanTraits_Util.lua)
 local HO_LOAD_MIN       = 0.5     -- drunk-hours needed for any hangover at all
 local HO_LOAD_FULL      = 2.0     -- drunk-hours for a full-severity one
 local HO_SEV_MIN        = 0.4

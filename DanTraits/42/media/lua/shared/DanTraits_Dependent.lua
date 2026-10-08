@@ -24,7 +24,7 @@ local fraction = DanTraits_StatFraction
 -- moodle level 2) at a full meter. A month without any
 -- alcohol cures the trait. After that the character is never quite free: the
 -- first drink of any drinking session is a coin flip to relapse.
-local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- DRINK.any: had any alcohol
+local DRINK = DanTraits_DRINK   -- DRINK.any: had any alcohol (DanTraits_Util.lua)
 local ALC_BUILD_H       = 10    -- intoxication-hours (1.0 intoxication for 1 h) to fill the meter...
 local ALC_DAY_CAP       = 0.08  -- ...but it fills at most this much a day
 local ALC_DECAY_H       = 720   -- sober hours to drain a full meter (30 days)
@@ -40,9 +40,9 @@ local ALC_DT_METER      = 0.6   -- delirium needs at least this meter
 local ALC_PEAK_H        = 120   -- dry hours the acute phase holds full strength
 local ALC_FADE_H        = 120   -- then fades over this many hours...
 local ALC_LINGER        = 0.2   -- ...to this share of it
-local DEP_SATED_MIN     = 0.10  -- intoxication that counts as a drink: Tipsy (Drunk level 1)...
-local DEP_SATED_FROM    = 0.5   -- ...up to this meter...
-local DEP_SATED_MAX     = 0.30  -- ...rising to Drunk level 2 at a full meter
+local DEP_SATED_MIN     = DanTraits_DRUNK_LEVELS[1]  -- intoxication that counts as a drink: Tipsy (Drunk level 1)...
+local DEP_SATED_FROM    = 0.5                        -- ...up to this meter...
+local DEP_SATED_MAX     = DanTraits_DRUNK_LEVELS[2]  -- ...rising to Drunk level 2 at a full meter
 local DEP_TOL_ONSET_CUT = 0.5   -- withdrawal starts this much sooner at a full meter
 -- strength w = meter x fade (0..1); the rates below are per ten minutes at w = 1
 local DEP_STRESS_RATE   = 0.02  -- stress (0..1)

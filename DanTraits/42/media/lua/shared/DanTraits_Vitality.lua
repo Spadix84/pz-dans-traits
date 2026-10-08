@@ -55,14 +55,14 @@ local VIT_SLEEP_LESS_HOURS  = 5       -- ...with Needs Less Sleep
 local VIT_SLEEP_MORE_HOURS  = 9       -- ...with Needs More Sleep
 local VIT_SLEEP_W           = 0.35    -- how much one night moves the sleep score
 local VIT_SLEEP_REST_WEIGHT = 0.5     -- share of a night's quality that is "woke up rested" (the rest is hours)
-local VIT_NIGHT_GAP_MIN     = 60      -- awake this long and the night is over; shorter and the next sleep is the same night
+local VIT_NIGHT_GAP_MIN     = DanTraits_NIGHT.gapMin   -- awake this long and the night is over; shorter and the next sleep is the same night
 local VIT_NIGHT_WAKE_COST   = 0.05    -- quality lost per interruption (night terrors, getting up to check a noise)
 local VIT_NIGHT_WAKE_MAX    = 0.2
 -- last night, felt today: a bad night sets a "sleep debt" (0..1) that wears
 -- off over the day and is eased by a nap
 local VIT_DEBT_HOURS        = 14      -- awake hours for a full debt to clear
 local VIT_DEBT_NAP_HOURS    = 2       -- a nap this long halves the debt
-local VIT_DEBT_NAP_MAX      = 3       -- sleeps shorter than this count as naps, not nights
+local VIT_DEBT_NAP_MAX      = DanTraits_NIGHT.napMaxHours   -- sleeps shorter than this count as naps, not nights
 local VIT_DEBT_MOOD_FLOOR   = 25      -- unhappiness floor at a full debt
 local VIT_DEBT_STRESS       = 0.0008  -- stress per minute at a full debt
 local VIT_DEBT_FATIGUE      = 0.0006  -- fatigue per minute at a full debt (you tire earlier)

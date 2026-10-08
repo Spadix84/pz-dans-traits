@@ -42,12 +42,12 @@ local notify = DanTraits_Notify
 local traitData = DanTraits_Data
 local fraction = DanTraits_StatFraction
 
-local SL_DARK           = 0.25    -- light level at or below this: fully dark
-local SL_BRIGHT         = 0.60    -- at or above this: fully lit (the midpoint, 0.425, is about vanilla's reading threshold)
+local SL_DARK           = DanTraits_NIGHT.dark    -- light level at or below this: fully dark
+local SL_BRIGHT         = DanTraits_NIGHT.bright  -- at or above this: fully lit (the midpoint, 0.425, is about vanilla's reading threshold)
 local SL_REST_DARK      = 0.15    -- tiredness drains this much faster, fully dark...
 local SL_REST_BRIGHT    = 0.15    -- ...and this much slower, fully lit
-local SL_QUALITY_DARK   = 0.10    -- added to the night's score after a dark night...
-local SL_QUALITY_BRIGHT = 0.15    -- ...taken off after a lit one
+local SL_QUALITY_DARK   = DanTraits_NIGHT.qualityDark    -- added to the night's score after a dark night...
+local SL_QUALITY_BRIGHT = DanTraits_NIGHT.qualityBright  -- ...taken off after a lit one
 local SL_WAKE_HOUR      = 0.5     -- chance per hour of waking, fully lit
 local SL_WAKE_SETTLE    = 30      -- minutes asleep before light (or a nightmare) can wake you
 local SL_WAKE_TIRED     = 0.7     -- wake chance x (1 - this x fatigue): the exhausted sleep through it

@@ -280,17 +280,6 @@ DanTraits_Notify = notify
 DanTraits_NotifyGood = notifyGood
 DanTraits_Data = traitData
 
--- 0..1 fraction of a stat's range, for the ones the game keeps on other
--- scales (intoxication is 0..100)
-function DanTraits_StatFraction(stats, stat)
-    local value, max = 0, 1
-    pcall(function() value = stats:get(stat) or 0 end)
-    pcall(function() max = stat:getMaximumValue() or 1 end)
-    if not max or max <= 0 then max = 1 end
-    if max == 1 and value > 1 then max = 100 end
-    return math.max(0, math.min(1, value / max))
-end
-
 -- Value hooks: a system (Vitality, mostly) offers a value, every file that
 -- registered for that name gets to adjust it, in load order. A hook returns
 -- the new value or nil to leave it. A hook that errors is logged once

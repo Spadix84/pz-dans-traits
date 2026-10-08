@@ -9,8 +9,19 @@
 -- and this file keeps well under the 60-upvalue one: everything is a global
 -- prefixed DanTraits_, and nothing here touches a game object outside pcall.
 --
+--   DanTraits_DRINK                        named intoxication thresholds, 0..1 (any, tipsy,
+--                                          buzz, sober): the one definition of "drunk"
+--   DanTraits_DRUNK_LEVELS                 intoxication (0..1) above which Drunk levels 1..4 start
+--   DanTraits_NIGHT                        the numbers a night is judged by, shared by Sleep,
+--                                          Vitality, Spoons and Migraine: dark / bright (light
+--                                          levels), qualityDark / qualityBright (the score
+--                                          bonus and penalty), napMaxHours (shorter is a nap),
+--                                          gapMin (awake this long ends the night)
 --   DanTraits_Clamp01(x)                   x limited to 0..1
 --   DanTraits_StatMax(stat)                the stat's maximum (1 when unknown)
+--   DanTraits_StatFraction(stats, stat)    0..1 fraction of the stat's range (intoxication
+--                                          is 0..100), 0 on failure
+--   DanTraits_Intoxication(player)         intoxication as 0..1, 0 on failure
 --   DanTraits_FloorUp(stats, stat, floor, ramp)
 --                                          raise the stat toward floor by at
 --                                          most ramp; never above floor or the
@@ -90,6 +101,27 @@
 --                                          on the bad side, -1..-4 on the good
 --                                          side, 0 for none (DanTraits_Moodles.lua)
 
+-- Shared constants: numbers more than one file judges by, so they are written
+-- once. Files load alphabetically, so a reader cannot take them from the
+-- file that owns the system (Dependent loads before Alcohol has run; Spoons
+-- before Vitality); they live here, where every file can read them at load.
+-- Named intoxication thresholds, 0..1. any: had a drink at all; tipsy: the
+-- liver is busy and mood lifts; buzz: hangover load starts to build; sober:
+-- below this a drinking session is over. Dependent reads any, Hangover buzz
+-- and sober, MDD and Diabetes tipsy.
+DanTraits_DRINK = { any = 0.01, tipsy = 0.05, buzz = 0.20, sober = 0.05 }
+-- intoxication (0..1) above which each Drunk moodle level starts (the game's
+-- own lines, used when the moodle cannot be read; Dependent's "a drink" is
+-- level 1 rising to level 2)
+DanTraits_DRUNK_LEVELS = { 0.10, 0.30, 0.50, 0.70 }
+-- the night: Sleep reads the light (dark and bright are light levels; the
+-- midpoint, 0.425, is about vanilla's reading threshold) and scores it
+-- (qualityDark added after a dark night, qualityBright taken off after a lit
+-- one); Vitality decides what a night is (a sleep shorter than napMaxHours is
+-- a nap; awake gapMin minutes and the night is over, less and the next sleep
+-- is the same night); Spoons and Migraine read the same numbers
+DanTraits_NIGHT = { dark = 0.25, bright = 0.60, qualityDark = 0.10, qualityBright = 0.15, napMaxHours = 3, gapMin = 60 }
+
 function DanTraits_Clamp01(x) return math.max(0, math.min(1, x)) end
 
 function DanTraits_StatMax(stat)
@@ -97,6 +129,24 @@ function DanTraits_StatMax(stat)
     pcall(function() max = stat:getMaximumValue() or 1 end)
     if not max or max <= 0 then max = 1 end
     return max
+end
+
+-- 0..1 fraction of a stat's range, for the ones the game keeps on other
+-- scales (intoxication is 0..100)
+function DanTraits_StatFraction(stats, stat)
+    local value, max = 0, 1
+    pcall(function() value = stats:get(stat) or 0 end)
+    pcall(function() max = stat:getMaximumValue() or 1 end)
+    if not max or max <= 0 then max = 1 end
+    if max == 1 and value > 1 then max = 100 end
+    return math.max(0, math.min(1, value / max))
+end
+
+-- intoxication as a 0..1 fraction of its range
+function DanTraits_Intoxication(player)
+    local value = 0
+    pcall(function() value = DanTraits_StatFraction(player:getStats(), CharacterStat.INTOXICATION) end)
+    return value
 end
 
 -- stat object -> name of the delta hook registered for it (DanTraits_DeltaHook)

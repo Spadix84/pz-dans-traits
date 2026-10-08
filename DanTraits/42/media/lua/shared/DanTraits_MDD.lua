@@ -4,12 +4,8 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
-local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- see DanTraits_Alcohol.lua
--- 0..1 intoxication (the raw stat is 0..100); Alcohol.lua's reader, or core's fraction before it loads
-local function intoxOf(player)
-    if DanTraits_Intoxication then return DanTraits_Intoxication(player) end
-    return DanTraits_StatFraction(player:getStats(), CharacterStat.INTOXICATION)
-end
+local DRINK = DanTraits_DRINK           -- the named thresholds (DanTraits_Util.lua)
+local intoxOf = DanTraits_Intoxication  -- 0..1 intoxication (the raw stat is 0..100)
 
 -- Major Depressive Disorder (trait id "spiraling") ---------------------------
 -- Two things run all the time: pain and stress drag mood down. On top of

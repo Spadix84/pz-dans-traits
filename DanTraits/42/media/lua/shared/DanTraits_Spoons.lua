@@ -49,7 +49,7 @@ local fraction = DanTraits_StatFraction
 
 local SP_CAP          = 12       -- spoons on a normal day (a trait's "spoonCap" hook can change it)
 local SP_FLOOR        = 1 / 3    -- the worst night still refills this share of the cap
-local SP_NIGHT_H      = 3        -- a sleep this long is a night; shorter is a nap (Vitality's rule)
+local SP_NIGHT_H      = DanTraits_NIGHT.napMaxHours   -- a sleep this long is a night; shorter is a nap (Vitality's rule)
 local SP_NAP_MAX      = 4        -- the most naps give back in a day...
 local SP_NAP_FULL_H   = 3        -- ...a nap this long in the dark would give all of it
 local SP_REST_MIN     = 0.01     -- a minute of true rest gives this back (half a spoon an hour)...
@@ -74,10 +74,10 @@ local SP_WALL_FATIGUE = 0.0010   -- ...and at the wall
 local SP_LOW_REGEN    = 0.7      -- endurance recovery x this running on empty...
 local SP_WALL_REGEN   = 0.4      -- ...and at the wall
 local SP_BAD_NIGHT    = 0.6      -- a night under this quality is "a bad night" in the morning notice
-local SP_DARK_GOOD    = 0.10     -- the Sleep file's score bonus for a dark night...
-local SP_DARK_BAD     = 0.15     -- ...and penalty for a lit one (the provisional score)
+local SP_DARK_GOOD    = DanTraits_NIGHT.qualityDark    -- the Sleep file's score bonus for a dark night...
+local SP_DARK_BAD     = DanTraits_NIGHT.qualityBright  -- ...and penalty for a lit one (the provisional score)
 
-local SP_NIGHT_GAP_MIN = 60     -- awake this long after a night: the next sleep is a new one (Vitality's gap)
+local SP_NIGHT_GAP_MIN = DanTraits_NIGHT.gapMin   -- awake this long after a night: the next sleep is a new one (Vitality's gap)
 
 local KEYS = { "spPool", "spCap", "spDebt", "spRest", "spNap", "spWallMin", "spMask", "spSpent", "spTier", "spFelt",
                "spAsleep", "spSleepStart", "spHalfTold", "spDebtPaid", "spLastQuality", "spNightOpen", "spAwakeMin" }

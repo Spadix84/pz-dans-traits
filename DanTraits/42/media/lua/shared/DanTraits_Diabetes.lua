@@ -9,12 +9,8 @@ local traitData = DanTraits_Data
 local floorUp = DanTraits_FloorUp
 local statAdd = DanTraits_StatAdd
 local foodTags = DanTraits_FoodTags
-local DRINK = DanTraits_DRINK or { any = 0.01, tipsy = 0.05, buzz = 0.2, sober = 0.05 }  -- see DanTraits_Alcohol.lua
--- 0..1 intoxication (the raw stat is 0..100); Alcohol.lua's reader, or core's fraction before it loads
-local function intoxOf(player)
-    if DanTraits_Intoxication then return DanTraits_Intoxication(player) end
-    return DanTraits_StatFraction(player:getStats(), CharacterStat.INTOXICATION)
-end
+local DRINK = DanTraits_DRINK           -- the named thresholds (DanTraits_Util.lua)
+local intoxOf = DanTraits_Intoxication  -- 0..1 intoxication (the raw stat is 0..100)
 
 -- Diabetes (Type 1 "diabetes1", Type 2 "diabetes2") -------------------------
 -- A hidden blood sugar value (mg/dL) lives in mod data. Carbohydrates in

@@ -28,12 +28,12 @@
 -- reason to get properly drunk, and the hangover is the price. A floor another
 -- system holds (a depressive episode) runs after this and takes back its own.
 --
--- This file is also the one definition of "drunk" for the rest of the mod:
--- DanTraits_DRINK holds the named intoxication thresholds (0..1) that
--- Dependent (any), Hangover (buzz, sober), MDD and Diabetes (tipsy) read, and
--- DanTraits_Intoxication(player) reads the stat as 0..1. Smoker uses the
--- Drunk moodle level (DanTraits_DrunkLevel) instead. Readers copy the table
--- at load with a fallback of the same numbers, so load order does not matter.
+-- The one definition of "drunk" for the rest of the mod lives in
+-- DanTraits_Util.lua, where every file can read it at load: DanTraits_DRINK
+-- (the named thresholds Dependent, Hangover, MDD and Diabetes read),
+-- DanTraits_DRUNK_LEVELS (where the Drunk moodle's levels start) and
+-- DanTraits_Intoxication(player). This file reads the moodle level
+-- (DanTraits_DrunkLevel), which Smoker uses too.
 --
 -- ISDrinkFluidAction.updateEat is wrapped through DanTraits_Wrap with the tag
 -- "alcohol-relief"; DanTraits_Diabetes.lua adds its own layer ("drink-intake")
@@ -47,7 +47,8 @@ local ALC_PANIC_RATE = 0.6                   -- vanilla beta blocker: panic per 
 local ALC_MOOD       = { 0.05, 0.12, 0.3, 0.5 }           -- unhappiness (0..100) off per minute awake, by Drunk level
 local ALC_STRESS     = { 0.0005, 0.001, 0.0025, 0.004 }   -- stress (0..1) off per minute awake
 local ALC_BOREDOM    = { 0.1, 0.2, 0.4, 0.6 }             -- boredom (0..100) off per minute awake
-local ALC_LEVELS     = { 10, 30, 50, 70 }    -- intoxication (0..100) above which each Drunk level starts (fallback)
+local ALC_LEVELS     = {}                     -- intoxication (0..100) above which each Drunk level starts (fallback)
+for i, v in ipairs(DanTraits_DRUNK_LEVELS) do ALC_LEVELS[i] = v * 100 end
 
 -- Drunk moodle level 0..4; from intoxication if the moodle cannot be read
 local function drunkLevel(player)
@@ -62,18 +63,6 @@ local function drunkLevel(player)
     return level
 end
 DanTraits_DrunkLevel = drunkLevel
-
--- Named intoxication thresholds, 0..1. any: had a drink at all; tipsy: the
--- liver is busy and mood lifts; buzz: hangover load starts to build; sober:
--- below this a drinking session is over.
-DanTraits_DRINK = { any = 0.01, tipsy = 0.05, buzz = 0.20, sober = 0.05 }
-
--- intoxication as a 0..1 fraction of its range
-function DanTraits_Intoxication(player)
-    local value = 0
-    pcall(function() value = fraction(player:getStats(), CharacterStat.INTOXICATION) end)
-    return value
-end
 
 -- Undo the vanilla dose ------------------------------------------------------
 local function snapshotMeds(player)
