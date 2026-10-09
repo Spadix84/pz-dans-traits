@@ -32,11 +32,18 @@
 --                  crash's own scale (BaseVehicle.addRandomDamageFromCrash:
 --                  up to 40 one body part hurt for 5 up to the amount; 40+ a
 --                  chance of a deep wound, 50+ a break; over 70 two or three
---                  parts). A crash in a car is judged by the car's top speed in
---                  the second before (CC_CRASH_KMH): the game's amount levels
---                  off, 42 at 49 km/h and 47 at 71 (measured in play), so it
---                  cannot tell a hard crash from a very hard one. Being hit
---                  by a car on foot has no speed to read and uses the amount.
+--                  parts). A crash in a car is judged by the speed the car
+--                  lost (CC_CRASH_KMH): its top speed in the second before,
+--                  less the lowest it reads in the moment after (the report
+--                  comes mid-impact, so the knock waits CC_SPEED_AFTER_MS for
+--                  that). The game's amount levels off, 42 at 49 km/h and 47
+--                  at 71 (measured in play), so it cannot tell a hard crash
+--                  from a very hard one; and it reports a zombie run down at
+--                  60 km/h, or a worn suspension clipping a corpse, as a
+--                  crash too, though the car barely slows. If the speed after
+--                  cannot be read (thrown clear, the car gone) the top speed
+--                  alone decides. Being hit by a car on foot has no speed to
+--                  read and uses the amount.
 --   WEAPONHIT      a weapon hit (other players, or mods that add them) that
 --                  took health off the head
 -- A helmet (the head's clothing defense, CC_HELMET or more) makes a
@@ -57,9 +64,11 @@ local CC_FALL          = { 3, 15, 0.04 }   -- in play a second-floor drop costs 
                                            -- one about 7: the rest of a fall goes to the legs
 local CC_CRASH         = { 25, 70, 0.012 } -- a bump into a sign ~20: nothing; 40 (a wounding crash)
                                            -- a third of a chance, moderate; 70 certain, severe
-local CC_CRASH_KMH     = { 25, 70, 0.01 }  -- in a car, by top speed: under 25 km/h nothing; 50 about half
+local CC_CRASH_KMH     = { 25, 70, 0.01 }  -- in a car, by speed lost: under 25 km/h nothing; 50 about half
                                            -- a chance, moderate; 70 certain, severe
 local CC_SPEED_WINDOW_MS = 1000  -- the top speed is taken over this much of the drive before the crash
+local CC_SPEED_AFTER_MS  = 250   -- ...and the speed after over this much (or CC_SPEED_AFTER_FRAMES frames) following it
+local CC_SPEED_AFTER_FRAMES = 30
 local CC_BASE          = 0.25    -- how bad at the least, plus the scale's per point
 local CC_HEAD_SURE     = 20      -- a weapon taking this much off the head: certain
 local CC_HEAD_PER      = 0.025   -- how bad per point off the head, over CC_BASE
@@ -152,18 +161,43 @@ local function impactKnock(player, amount, scale)
     return DanTraits_KnockHead(player, chance, score)
 end
 
+local function nowMs() return getTimestampMs and getTimestampMs() or 0 end
+
 -- the car's top speed over about the last second (the crash itself slows it)
 local speedTop, speedTopMs = 0, 0
+-- a crash waiting on the speed after it: { top, note, at, frames, low = the lowest read since }
+local crash = nil
+
+-- the crash's knock, once the window after it closes: by the speed lost, or
+-- by the top speed alone if nothing could be read after
+local function judgeCrash(player)
+    local c = crash
+    crash = nil
+    local d = traitData(player)
+    if c.low then
+        local lost = math.max(0, c.top - c.low)
+        d.ccLastImpact = c.note .. " at " .. tostring(math.floor(c.top + 0.5)) .. " km/h, lost " .. tostring(math.floor(lost + 0.5))
+        impactKnock(player, lost, CC_CRASH_KMH)
+    else
+        d.ccLastImpact = c.note .. " at " .. tostring(math.floor(c.top + 0.5)) .. " km/h"
+        impactKnock(player, c.top, CC_CRASH_KMH)
+    end
+end
+
 local function trackSpeed(player)
     local kmh = nil
     pcall(function() local v = player:getVehicle(); if v then kmh = math.abs(v:getCurrentSpeedKmHour() or 0) end end)
+    local now = nowMs()
+    if crash then
+        if kmh then crash.low = math.min(crash.low or kmh, kmh) end
+        crash.frames = crash.frames + 1
+        if now - crash.at >= CC_SPEED_AFTER_MS or crash.frames >= CC_SPEED_AFTER_FRAMES then judgeCrash(player) end
+    end
     if not kmh then return end   -- on foot: nothing to track
-    local now = getTimestampMs and getTimestampMs() or 0
     if kmh >= speedTop or now - speedTopMs > CC_SPEED_WINDOW_MS then speedTop, speedTopMs = kmh, now end
 end
 local function recentTopSpeed()
-    local now = getTimestampMs and getTimestampMs() or 0
-    if speedTopMs <= 0 or now - speedTopMs > CC_SPEED_WINDOW_MS * 1.5 then return nil end
+    if speedTopMs <= 0 or nowMs() - speedTopMs > CC_SPEED_WINDOW_MS * 1.5 then return nil end
     return speedTop
 end
 
@@ -175,10 +209,11 @@ local function onConcussionDamage(character, damageType, amount)
     amount = tonumber(amount) or 0
     if damageType == "FALLDOWN" or damageType == "CARCRASHDAMAGE" or damageType == "CARHITDAMAGE" then
         local note = damageType .. " " .. tostring(DanTraits_Round(amount))
-        local kmh = damageType == "CARCRASHDAMAGE" and recentTopSpeed() or nil
-        if kmh then
-            traitData(player).ccLastImpact = note .. " at " .. tostring(math.floor(kmh + 0.5)) .. " km/h"
-            impactKnock(player, kmh, CC_CRASH_KMH)
+        local top = damageType == "CARCRASHDAMAGE" and recentTopSpeed() or nil
+        if top then
+            -- judged once the speed after it is read (trackSpeed); a second report in that window joins the first
+            if crash then crash.top = math.max(crash.top, top)
+            else crash = { top = top, note = note, at = nowMs(), frames = 0 } end
         else
             traitData(player).ccLastImpact = note
             impactKnock(player, amount, damageType == "FALLDOWN" and CC_FALL or CC_CRASH)
@@ -274,7 +309,7 @@ end
 -- score and the headache to come are kept and it all resumes if it is
 -- switched back on.
 local function standDown(player, d)
-    ran, fought = false, false
+    ran, fought, crash = false, false, nil
     if d and (d.ccTier or 0) > 0 then d.ccTier = 0 end
     if moodleShown then updateMoodle(player, 0) end
 end

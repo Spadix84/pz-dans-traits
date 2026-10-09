@@ -67,6 +67,23 @@ local function onFillInventoryObjectContextMenu(playerNum, context, items)
     if usesOf(inhaler) <= 0 then greyOut(option, "Tooltip_DanTraits_InhalerEmpty") end
 end
 
+-- the options called `name`, and any called "name (...)": I Don't Need A
+-- Lighter replaces Smoke with "Smoke (Stove)" or "Smoke (Lighter)"
+local function optionsNamed(context, name)
+    local found = {}
+    for _, option in ipairs(context.options or {}) do
+        local n = option.name
+        if n == name or (type(n) == "string" and string.find(n, name .. " ", 1, true) == 1) then
+            found[#found + 1] = option
+        end
+    end
+    if #found == 0 then
+        local option = context:getOptionFromName(name)
+        if option then found[1] = option end
+    end
+    return found
+end
+
 -- Vegetarian and Straight Edge: grey out Eat (or the item's own verb, Smoke)
 -- on what they refuse, with the reason
 local function greyOutMeat(playerNum, context, items)
@@ -82,10 +99,31 @@ local function greyOutMeat(playerNum, context, items)
     pcall(function() local custom = meat:getCustomMenuOption(); if custom then table.insert(names, custom) end end)
     local tooltip = (string.gsub(reason, "^UI_", "Tooltip_"))
     for _, name in ipairs(names) do
-        local option = context:getOptionFromName(name)
-        if option then greyOut(option, tooltip) end
+        for _, option in ipairs(optionsNamed(context, name)) do greyOut(option, tooltip) end
     end
 end
+
+-- Straight Edge on the world menu: I Don't Need A Lighter offers Smoke on a
+-- lit stove, fire or barbecue, one option per smokable ("Smoke  Cigar", the
+-- item a parameter) or a bare Smoke heading over a submenu of them. Both are
+-- greyed out; another mod's "Smoke ..." option with no tobacco on it is left alone.
+local function greyOutWorldSmoke(playerNum, context, worldObjects, test)
+    if test then return end
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_StraightEdgeRefuses or not context or not context.options then return end
+    local smokeText = getText("ContextMenu_Smoke")
+    for _, option in ipairs(context.options) do
+        local name = option.name
+        if type(name) == "string" and (name == smokeText or string.find(name, smokeText .. " ", 1, true) == 1) then
+            local reason = DanTraits_StraightEdgeRefuses(playerObj, option.param2) or DanTraits_StraightEdgeRefuses(playerObj, option.param1)
+            if not reason and name == smokeText and DanTraits_HasTrait and DanTraits_HasTrait(playerObj, "straightedge") then
+                reason = "UI_DanTraits_StraightEdgeRefuse"
+            end
+            if reason then greyOut(option, (string.gsub(reason, "^UI_", "Tooltip_"))) end
+        end
+    end
+end
+Events.OnFillWorldObjectContextMenu.Add(greyOutWorldSmoke)
 
 -- Diabetes items ---------------------------------------------------------------
 local function queue(playerObj, item, kind, doses, strips)

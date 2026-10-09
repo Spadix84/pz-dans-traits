@@ -66,19 +66,48 @@ p = newPlayer(); H.current = p; H.rollf = 0.99
 damage(p, "CARHITDAMAGE", 70); near(D(p).ccScore, 0.25 + 0.012 * 45, 1e-9, "hit by a car at 70: certain, 0.79")
 assert(out(p), "severe: knocked out"); wake(20)
 assert(string.find(DanTraits_ExtraCommands.concussion(newPlayer(), { "crash", "10" }), "a crash of 10: concussion 0", 1, true), "crash command")
--- 1c. in a car the top speed in the second before decides (the game's amount levels off: measured 42 at 49 km/h, 47 at 71)
+-- 1c. in a car the speed lost decides: the top speed in the second before, less the lowest read in the
+-- quarter second after (the game's amount levels off: measured 42 at 49 km/h, 47 at 71)
 local function drive(p, kmh) p.getVehicle = function() return { getCurrentSpeedKmHour = function() return kmh end } end; H.frame(p) end
+-- the car after the crash, read for a quarter second, then the window closes
+local function slowTo(p, kmh) H.now = H.now + 100; drive(p, kmh); H.now = H.now + 160; drive(p, kmh) end
 p = newPlayer(); H.current = p; H.now = 500000; H.rollf = 0
 drive(p, 11); H.now = H.now + 200; drive(p, 3)   -- the crash slows the car; the top speed stands
-damage(p, "CARCRASHDAMAGE", 41.5)
-assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 41.5 at 11 km/h", "11 km/h: nothing, whatever the amount says: " .. tostring(D(p).ccLastImpact))
-H.now = H.now + 5000; drive(p, 49); H.rollf = 0.5; damage(p, "CARCRASHDAMAGE", 42.3)
-near(D(p).ccScore, 0.25 + 0.01 * 24, 1e-9, "49 km/h: about half a chance (roll 0.5 takes), moderate 0.49")
+damage(p, "CARCRASHDAMAGE", 41.5); slowTo(p, 0)
+assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 41.5 at 11 km/h, lost 11", "11 km/h: nothing, whatever the amount says: " .. tostring(D(p).ccLastImpact))
+-- a zombie run down at 60 (kiiri's report): the car barely slows, so nothing
+H.now = H.now + 5000; drive(p, 60); H.rollf = 0; damage(p, "CARCRASHDAMAGE", 44.6)
+assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 41.5 at 11 km/h, lost 11", "the knock waits for the speed after")
+H.now = H.now + 100; drive(p, 57); slowTo(p, 55)
+assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 44.6 at 60 km/h, lost 5", "a zombie at 60 km/h, 5 lost: nothing: " .. tostring(D(p).ccLastImpact))
+-- a fence at 50, stopped dead: as it was by top speed, about half a chance and moderate
+H.now = H.now + 5000; drive(p, 50); H.rollf = 0.5; damage(p, "CARCRASHDAMAGE", 42.3); slowTo(p, 0)
+near(D(p).ccScore, 0.25 + 0.01 * 25, 1e-9, "50 km/h to 0: about half a chance (roll 0.5 takes), moderate 0.5")
+assert(D(p).ccLastImpact == "CARCRASHDAMAGE 42.3 at 50 km/h, lost 50", tostring(D(p).ccLastImpact))
 if out(p) then wake(5) end
+-- the same crash reported twice as the car bounces: one knock
+p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0.5
+drive(p, 50); damage(p, "CARCRASHDAMAGE", 42.3); H.now = H.now + 50; drive(p, 20); damage(p, "CARCRASHDAMAGE", 30); slowTo(p, 0)
+near(D(p).ccScore, 0.25 + 0.01 * 25, 1e-9, "two reports in the window: one knock, 0.5, no stacking")
+if out(p) then wake(5) end
+-- a wall at 71: certain and severe
 p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0.99
-drive(p, 71); damage(p, "CARCRASHDAMAGE", 46.7)
-assert((D(p).ccScore or 0) >= 0.7 and out(p), "71 km/h: certain and severe, knocked out, though the amount was only 46.7")
+drive(p, 71); damage(p, "CARCRASHDAMAGE", 46.7); slowTo(p, 0)
+assert((D(p).ccScore or 0) >= 0.7 and out(p), "71 km/h to 0: certain and severe, knocked out, though the amount was only 46.7")
 wake(20)
+-- thrown clear (no speed to read after): the old rule, by top speed alone
+p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0.5
+drive(p, 49); damage(p, "CARCRASHDAMAGE", 42.3); p.getVehicle = nil
+H.now = H.now + 100; H.frame(p); assert(D(p).ccScore == nil, "still waiting"); H.now = H.now + 160; H.frame(p)
+near(D(p).ccScore, 0.25 + 0.01 * 24, 1e-9, "49 km/h, nothing read after: by top speed, 0.49")
+assert(D(p).ccLastImpact == "CARCRASHDAMAGE 42.3 at 49 km/h", tostring(D(p).ccLastImpact))
+if out(p) then wake(5) end
+-- no clock (or a hitch): the window closes after 30 frames
+p = newPlayer(); H.current = p; H.rollf = 0.5
+drive(p, 50); damage(p, "CARCRASHDAMAGE", 42.3)
+for _ = 1, 29 do drive(p, 0) end; assert(D(p).ccScore == nil, "29 frames: still waiting")
+drive(p, 0); near(D(p).ccScore, 0.25 + 0.01 * 25, 1e-9, "the 30th frame closes the window: 0.5")
+if out(p) then wake(5) end
 p.getVehicle = nil
 
 -- 2. mild: a notice, no blackout

@@ -12,6 +12,13 @@
 --
 -- Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day (which starts
 -- the character blind drunk).
+--
+-- Other mods light a smoke without the eat action. I Don't Need A Lighter
+-- lights one off a stove, a fire or the car's lighter through timed actions
+-- of its own (and takes a cigarette out of a pack with another), TrueSmoking
+-- through LightSmoke. Each of those is refused the same way when it is
+-- loaded, and its Smoke options on the stove and in the inventory are greyed
+-- out by DanTraits_Client.lua.
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -63,12 +70,27 @@ local function refuseAction(class, tag, test)
     end
 end
 
+-- other mods' smoke actions, by global name: the smokable is action.item,
+-- or action.pack for I Don't Need A Lighter's take-a-cigarette action.
+-- Looked up again at game start, since those files may load after this one.
+local OTHER_SMOKE_ACTIONS = { "IsStoveLighting", "IsStoveSmoking", "IsCarLighting", "IsCarSmoking",
+    "IDNALTakeCigarette", "LightSmoke" }
+
+local function smokingTobacco(action)
+    local item = action.item or action.pack
+    return item ~= nil and tobacco(item)
+end
+
 local function wrapStraightEdge()
     if ISDrinkFluidAction then
         refuseAction(ISDrinkFluidAction, "straightedge-drink", function(action) return alcoholicContainer(action.fluidContainer) end)
     end
     if ISTakePillAction then
-        refuseAction(ISTakePillAction, "straightedge-pill", function(action) return action.item ~= nil and tobacco(action.item) end)
+        refuseAction(ISTakePillAction, "straightedge-pill", smokingTobacco)
+    end
+    for _, name in ipairs(OTHER_SMOKE_ACTIONS) do
+        local class = _G[name]
+        if type(class) == "table" then refuseAction(class, "straightedge-" .. name, smokingTobacco) end
     end
 end
 wrapStraightEdge()

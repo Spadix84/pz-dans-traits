@@ -247,7 +247,7 @@ Attacks that cost you hours.
 
 #### Straight Edge (-1)
 
-- Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief.
+- Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief. Covers I Don't Need A Lighter's stove, fire and car-lighter smoking too.
 - Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day.
 
 ### Positive traits
@@ -445,7 +445,7 @@ The health panel's wound list is written for the examiner's First Aid level: you
 
 ### Concussion
 
-- **Causes:** a hard landing (from about the second floor up), a car crash (by speed: nothing under about 25 km/h, a good chance at 50, certain and severe from 70), being hit by a car, or a weapon hit that takes health off the head. A helmet makes it less likely and less bad.
+- **Causes:** a hard landing (from about the second floor up), a car crash (by the speed the car loses: nothing under about 25 km/h lost, so running down a zombie at speed is nothing; a wall at 50 a good chance; certain and severe from 70), being hit by a car, or a weapon hit that takes health off the head. A helmet makes it less likely and less bad.
 - **Dazed:** a headache, drowsy.
 - **Concussed:** sick to the stomach too, bright daylight makes the headache worse, slower to get your breath back, and running or fighting can bring on a dizzy fall; a quarter of the time it knocks you out briefly.
 - **Badly concussed:** knocked out on the spot for 5 to 15 game minutes.

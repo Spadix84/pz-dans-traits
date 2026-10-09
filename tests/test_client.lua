@@ -87,9 +87,13 @@ DanTraits_RefuseReason = function(_, item)
   if item._kind == "meat" then return "UI_DanTraits_VegetarianRefuse" end
   if item._kind == "cigs" then return "UI_DanTraits_StraightEdgeRefuse" end
 end
+DanTraits_StraightEdgeRefuses = function(p, item)
+  if p:hasTrait("straightedge") and type(item) == "table" and item._kind == "cigs" then return "UI_DanTraits_StraightEdgeRefuse" end
+end
+DanTraits_HasTrait = function(p, key) return p:hasTrait(key) end
 
 H.load("client/DanTraits_Client.lua")
-H.expectHooks("OnFillInventoryObjectContextMenu", "OnGameBoot", "OnMainMenuEnter")
+H.expectHooks("OnFillInventoryObjectContextMenu", "OnFillWorldObjectContextMenu", "OnGameBoot", "OnMainMenuEnter")
 assert(#created == 11 and created[1] == "AirwayIrritation" and created[9] == "BloodSugar" and created[10] == "ChestPain" and created[11] == "Sunburn",
   "the eight older moodles and Blood Sugar, then the listed ones")
 MF = nil
@@ -109,7 +113,7 @@ local function menu(preset)
   local m = { options = {}, removed = {} }
   for _, name in ipairs(preset or {}) do m.options[#m.options + 1] = { name = name } end
   function m:addOption(name, target, fn, ...)
-    local o = { name = name, target = target, fn = fn, params = { ... } }
+    local o = { name = name, target = target, fn = fn, params = { ... }, param1 = (...), param2 = (select(2, ...)) }
     self.options[#self.options + 1] = o
     return o
   end
@@ -213,6 +217,37 @@ assert(smoke.options[2].notAvailable and tip(smoke.options[2]) == "Tooltip_DanTr
 local noEat = menu({})
 H.fire("OnFillInventoryObjectContextMenu", 0, noEat, { meat })   -- no Eat option on the menu: no error
 assert(#noEat.options == 0, "no Eat option: nothing to grey")
+-- I Don't Need A Lighter renames the option "Smoke (Stove)"; a "Smoked Ham" option is not it
+local cigs = item("cigs", 1, { getCustomMenuOption = function() return "Smoke" end })
+local renamed = menu({ "ContextMenu_Eat", "Smoke (Stove)", "Smoked Ham" })
+H.fire("OnFillInventoryObjectContextMenu", 0, renamed, { cigs })
+assert(renamed.options[2].notAvailable and tip(renamed.options[2]) == "Tooltip_DanTraits_StraightEdgeRefuse", "renamed Smoke greyed")
+assert(not renamed.options[3].notAvailable, "an option that merely starts with Smoke is left alone")
+
+-- 5b. the world menu: I Don't Need A Lighter's Smoke on a lit stove, per smokable or a bare heading
+local se = H.player({ traits = { "straightedge" } })
+local smokeText = getText("ContextMenu_Smoke")
+local function worldMenu(p)
+  local m = menu({ smokeText .. " Meat" })
+  m:addOption(smokeText .. "  Cigar", p, function() end, { stove = true }, cigs)
+  m:addOption(smokeText, { stove = true }, nil)
+  return m
+end
+H.current = se
+local world = worldMenu(se)
+H.fire("OnFillWorldObjectContextMenu", 0, world, {}, false)
+assert(world.options[2].notAvailable and tip(world.options[2]) == "Tooltip_DanTraits_StraightEdgeRefuse", "Smoke a cigar off the stove greyed")
+assert(world.options[3].notAvailable, "the bare Smoke heading greyed")
+assert(not world.options[1].notAvailable, "Smoke Meat (no tobacco on it) left alone")
+H.current = player
+local others = worldMenu(player)
+H.fire("OnFillWorldObjectContextMenu", 0, others, {}, false)
+assert(not others.options[2].notAvailable and not others.options[3].notAvailable, "others smoke off the stove")
+H.current = se
+local testOnly = worldMenu(se)
+H.fire("OnFillWorldObjectContextMenu", 0, testOnly, {}, true)
+assert(not testOnly.options[2].notAvailable, "the test pass changes nothing")
+H.current = player
 
 -- 6. iron pills and nicotine gum: the vanilla pill option goes; empty greys
 m = open({ item("iron", 3) }, { "ContextMenu_Take_pills" })

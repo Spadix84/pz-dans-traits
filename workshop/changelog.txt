@@ -1,6 +1,7 @@
-[h1]Next update (not uploaded yet)[/h1]
+[h1]1.2.0 (2026-10-10): Age, a balance pass and clotting powder[/h1]
 [h2]New[/h2]
 [list]
+[*][b]Dan's Vanilla Fixes: Collection checklist.[/b] A new sidebar button opens a checklist of skill books, recipe magazines, VHS tapes, CDs, key rings, mementos and tools. Tick what your character owns (or right-click it: [i]Add to collection[/i]); the item's tooltip then says it's in your collection, and every copy is set Unwanted so it greys out and Take All skips it. Tapes and CDs are tracked by title. One list per character.
 [*][b]Grit (+8)[/b] (new trait): you feel pain a third less. Painkillers work as before.
 [*][b]Resilient can beat the Knox virus.[/b] A 25% chance (sandbox [i]Resilient: Knox Survival Chance[/i]): you get sick like anyone else, and if you're lucky the fever breaks partway through. Every infection rolls again. Resilient now costs 10.
 [*][b]Knowing your insulin.[/b] With Type 1 diabetes, First Aid now tells you how much insulin a food takes: from level 3 a food's or a sugary drink's tooltip says whether its sugar hits fast or slowly and gives a rough range of doses, from 6 a closer range (and the glucose meter says how much insulin is still working), from 9 the exact number (and the meter says what it takes to get back to normal). New magazine [b]Living With Type 1[/b] teaches the exact dosing at any level: hospitals, medical offices, pharmacies, bookstores and libraries. The insulin pen can now give 3 doses at once. A food that would spike you past 350 even with its insulin tells you to eat it in parts. The glucose meter's tooltip remembers its last reading.
@@ -34,6 +35,9 @@
 [*]In Their 20s did not hide Arthritis or Handy if the age was picked first. Exclusions now work in either order, for every trait.
 [*]A drink no longer shows the Antidepressants moodle on a character without Major Depressive Disorder (the game gives a hidden antidepressant dose with every sip; the mod now undoes it like the beta-blocker and painkiller ones).
 [*]Turning Concussion or Wound Care off mid-save now stands them down (the moodle, the tier, rough stitches) instead of leaving stale effects on, as Blood Loss and Infection already did.
+[*]Car crashes concussed far too easily: running down a single zombie at 60 km/h, or a worn suspension clipping a corpse, gave a severe concussion and a blackout, because a crash was judged by the car's top speed over the last second. It is now judged by the speed the car lost: a zombie hit that barely slows you gives nothing, a fence or wall at 50 km/h concusses as before (reported by kiiri).
+[*]With Straight Edge, right-clicking in the inventory logged a Lua error for every non-food item it checked for tobacco (in debug mode, each one froze the game until you pressed continue).
+[*]Straight Edge could still smoke off a stove, a fire or the car's lighter with I Don't Need A Lighter (its own smoke actions skipped the game's). They are refused now, and its Smoke options are greyed out.
 [*]In-game text that had drifted from what the code does: the Thriving moodle (Fitness and Strength train half as fast again, not twice), Hemophilia (stitches stop a deep wound too), Gym Regular (more in the 20s), Set in Their Ways (Fitness and Strength exempt), and the Starting Medication tooltip (now lists Multiple Sclerosis and Arthritis).
 [/list]
 

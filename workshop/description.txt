@@ -1,87 +1,54 @@
 [h1]Vitality Project[/h1]
-Realistic, balanced traits, mostly negative, that add complications to work around, plus a Vitality system and a health overhaul for every character. Build 42, singleplayer only.
+Realistic traits, mostly negative, that add complications to work around, plus Vitality, Age and a health overhaul for everyone. Build 42, singleplayer only.
 
 [h2]For everyone[/h2]
 [list]
-[*][b]Vitality:[/b] diet, exercise and sleep in one slow score. Good food, training and good nights lift endurance recovery, mood, healing and infection resistance; junk and neglect drag them.
-[*][b]Sleep and light:[/b] the light on your square sets how deep you sleep. Dark nights score better; a lit room rests you less and can wake you.
-[*][b]Blood:[/b] bleeding drains blood, not health. Pale at 15% lost, light-headed at 30%, shock at 40%, dead at half. Volume returns in a day, red cells in a week.
-[*][b]Wound infection:[/b] an hourly roll per wound by depth, dressing and dirt. Incubates unseen, climbs, stops healing, brings fever, then sepsis. Antibiotics are a course, not one pill.
-[*][b]Wound care:[/b] bandages wear out, unstitched deep wounds heal slowly and reopen, stitches tear under strain. Stitching and splinting are First Aid rolls.
-[*][b]What First Aid tells you:[/b] the health panel is written for the examiner's level: plain words at 0 to 2, detail from 3, hidden infections at 9.
-[*][b]Concussion and passing out:[/b] falls, crashes and head hits concuss; a headache can return days later. Shock, a knockout or Fear of Blood puts you on the floor in real time.
-[*][b]Sunburn and dehydration:[/b] bare skin burns in about three hours of midday sun and hurts for a day; sun block keeps it off. Hours of thirst bring a headache and tiredness.
-[*][b]Hangovers and drink relief:[/b] drink past a buzz and a hangover waits for you to sober up or wake. Alcohol dulls pain and panic by how drunk you are.
-[*][b]Medication:[/b] every pill has a level in the blood, a build-up for the daily ones, a wearing-off notice, side effects now and then, and an overdose. Diazepam (new) for panic; a Pill Caddy (new) for the belt.
-[*][b]Age:[/b] 20s to 50s. The young recover, heal and train faster; the old know more.
+[*][b]Vitality:[/b] diet, exercise and sleep in one slow score that lifts or drags endurance, mood, healing and infection resistance.
+[*][b]Sleep and light:[/b] the light on your square sets how deep you sleep: dark nights rest you more, a lit room less.
+[*][b]Blood:[/b] bleeding drains blood, not health: pale, light-headed, shock, dead at half. Back in a day, red cells in a week.
+[*][b]Wound infection:[/b] rolled hourly by depth, dressing and dirt; unseen until fever, then sepsis. Antibiotics are a course.
+[*][b]Wound care:[/b] bandages wear out, unstitched deep wounds reopen, stitches tear, and stitching is a First Aid roll. Clotting Powder (new) stops a scratch or cut and slows a deep wound to a quarter.
+[*][b]What First Aid tells you:[/b] the health panel speaks at the examiner's level: plain words to 2, hidden infections at 9.
+[*][b]Concussion and passing out:[/b] falls, crashes and head hits concuss; shock and knockouts floor you in real time.
+[*][b]Sunburn and dehydration:[/b] bare skin burns in three hours of midday sun; hours of thirst bring a headache.
+[*][b]Hangovers and drink relief:[/b] drink past a buzz and a hangover waits; drink dulls pain and panic.
+[*][b]Medication:[/b] every pill builds up, wears off, has side effects and an overdose. Diazepam for panic, a Pill Caddy for the belt.
 [/list]
-Most systems have a switch on the Vitality Project sandbox page. Every lasting effect has a moodle.
+Most systems have a sandbox switch.
+
+[h2]Age[/h2]
+Every character picks a decade first: the young recover, heal and train faster, the old start with more profession levels. The 30s are free and vanilla.
+[list]
+[*][b]In Their 20s (+6):[/b] endurance, Fitness, Strength, healing and stiffness all faster, new skills too. No extra level.
+[*][b]In Their 40s (-2):[/b] two levels in the profession's main skill, one in its others; a bit slower.
+[*][b]In Their 50s (-6):[/b] three and two; slower still, and bleeds, concussions and hangovers hit harder.
+[*][b]Age pricing:[/b] Strong, Athletic, Stout, Fit, Fast Learner, Slow Learner and Hearty Appetite are priced by decade.
+[*][b]Age-only traits.[/b] 20s: Green (-4), Quick Study (+4), Bottomless Pit (-6). 40s: Pace Yourself (+2), Settled (-4). 40s and 50s: Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4), Delicate Stomach (-2). 50s: Old Injury (-3), Set in Their Ways (-2), Seen It All (+3), Cast Iron (+2), Old Bones Know Rain (+1).
+[/list]
 
 [h2]Negative traits[/h2]
 [list]
-[*][b]Multiple Sclerosis (-15)[/b]
-[list]
-[*]Heat is the enemy. Warm tires you; hot stiffens the hands and slips the weapon; overheated makes them give out. Cool off and it clears.
-[*]Flares about monthly: stiff legs, weak hands, exhaustion for days.
-[*]Spoons: a day's energy after a good night, fewer after a bad one. Everything spends them, faster in heat or a flare. Run out and you hit the wall; push on and you borrow from tomorrow. Rest gives a little back.
-[*]Prednisone shortens a flare, baclofen eases the stiffness, amantadine adds spoons. -1 Fitness and Strength; not with Athletic or Strong.
-[/list]
-[*][b]A Really Bad Day (-12):[/b] drunk, sick, a shard wound, no clothes, house on fire. Stitch the wound: a needle and thread wait in a house nearby.
-[*][b]Arthritis (-10)[/b]
-[list]
-[*]Stiff joints, slower swings, flares in the cold and damp.
-[*]A grip that slips into a weak swing; in a bad flare it can drop the weapon (sandbox option).
-[/list]
-[*][b]Diabetes Type 1 (-10) and Type 2 (-5)[/b]
-[list]
-[*]A hidden blood sugar model. The moodle says out of range; the meter says which way.
-[*]Type 1: insulin pen and strips. Type 2: metformin and weight.
-[*]A bad low puts you on the floor; high sugar feeds infections.
-[/list]
-[*][b]Heart Condition (-10)[/b]
-[list]
-[*]Chest pain while the Endurance moodle shows. Push through it and a heart attack puts you down.
-[*]Beta blockers, built up over days, cut both.
-[/list]
+[*][b]Multiple Sclerosis (-15):[/b] heat is the enemy, flares monthly, and spoons: a day's energy, spent faster in heat or a flare; run out and you hit the wall. Three pills help. -1 Fitness and Strength; not with Athletic or Strong.
+[*][b]Arthritis (-10):[/b] stiff joints, slower swings, flares in the cold and damp, eased by warm clothes and pills; a slipping grip can drop the weapon.
+[*][b]Diabetes Type 1 (-10) and Type 2 (-5):[/b] a hidden blood sugar model; the meter says which way. Type 1: an insulin pen, and First Aid says the dose. Type 2: metformin and weight. A low floors you.
+[*][b]Heart Condition (-10):[/b] chest pain when winded; push on and a heart attack puts you down. Beta blockers cut both.
+[*][b]Hemophilia (-10):[/b] bleeds never stop on their own; a bandage slows one to a quarter, stitches stop a deep wound.
+[*][b]Migraines (-10):[/b] attacks from bad sleep, thirst, stress, fever, heat and storms, three personal triggers worst. Sumatriptan halves or ends one.
+[*][b]Asthma (-10):[/b] cold air, corpses, exertion, panic and smoke irritate the airways; an attack drains you and coughs loud enough for zombies until the inhaler.
+[*][b]A Really Bad Day (-8):[/b] drunk, sick, an infected cut on the forearm, no clothes, house on fire. Disinfectant and a bandage wait next door.
 [*][b]Brittle (-8):[/b] solid hits can fracture a limb.
-[*][b]Brittle Asthma (-8)[/b]
-[list]
-[*]Cold air, corpses, exertion, panic and smoke irritate the airways through four tiers.
-[*]An attack drains you and coughs loud enough for zombies. The inhaler ends it.
-[/list]
-[*][b]Hemophilia (-10):[/b] bleeds never stop on their own and reopen until bandaged. A bandage only slows one to a quarter; stitches stop it.
-[*][b]Major Depressive Disorder (-8):[/b] episodes hold mood down for days. Drink, comfort food, exercise, the outdoors and a real antidepressant regimen all matter.
-[*][b]Migraines (-10)[/b]
-[list]
-[*]Attacks from bad sleep, thirst, stress, hangovers, caffeine withdrawal, fever, heat, corpses, storms and daylight: hours of pain and nausea.
-[*]Three personal triggers hit twice as hard.
-[*]Painkillers barely help. Sumatriptan (uncommon) halves an attack in the aura or ends it within two hours.
-[/list]
-[*][b]Epilepsy (-6)[/b]
-[list]
-[*]Seizures, likelier tired, hungover, feverish, concussed, dehydrated or in a diabetic low. An aura, then down for minutes.
-[*]Anticonvulsants, built up over five days, cut them to a tenth.
-[/list]
-[*][b]Fear of Blood (-6, reworked):[/b] first aid takes longer. Stitching, pulling glass or bullets, or dressing a bleeder can make you faint; so can bleeding fast.
-[*][b]Anaemic (-4):[/b] needs meat, fish, greens, eggs or iron pills; short of iron you tire, chill and rebuild blood slowly.
-[*][b]Gluten Intolerance (-4):[/b] wheat brings cramps, nausea and low mood.
-[*][b]Jinxed (-4):[/b] containers near you sometimes lose an item.
-[*][b]Smoker (-4, reworked)[/b]
-[list]
-[*]Cravings by habit, withdrawal that irritates and starves, lungs that cough and recover slowly.
-[*]Anyone who smokes enough gains it; three clean weeks lose it.
-[/list]
+[*][b]Major Depressive Disorder (-8):[/b] episodes hold mood down for days; comfort food, exercise, the outdoors and antidepressants matter.
+[*][b]Epilepsy (-6):[/b] seizures, likelier tired, hungover or feverish; anticonvulsants cut them to a tenth.
+[*][b]Fear of Blood (-6, reworked):[/b] first aid takes longer; stitching, pulling glass or a fast bleed can make you faint.
+[*][b]Anaemic (-4):[/b] needs iron from food or pills, or you tire, chill and rebuild blood slowly.
+[*][b]Alcoholic (-4):[/b] a day dry brings craving, poor sleep, pain and shakes. Drinking too often gains it, a sober month loses it.
+[*][b]Germaphobe (-4):[/b] dirty skin and clothes build stress; wounds infect a fifth less.
+[*][b]Gluten Intolerance (-4):[/b] wheat brings cramps and nausea.
+[*][b]Smoker (-4, reworked):[/b] cravings, withdrawal, a cough. Smoking enough gains it; three clean weeks lose it.
 [*][b]Vegetarian (-4):[/b] refuses meat, fish and anything cooked with them.
-[*][b]Germaphobe (-3):[/b] dirty skin and clothes build stress; getting clean is a relief. Wounds infect a fifth less.
-[*][b]Alcoholic (-2)[/b]
-[list]
-[*]A day dry brings craving, poor sleep, pain and shakes; heavy habits get hallucinations and seizures.
-[*]Anyone who drinks too often gains it; a sober month loses it.
-[/list]
-[*][b]Caffeine Dependent (-2):[/b] half a day without coffee or tea brings a headache and low mood; cola and chocolate only put it off.
-[*][b]Hallucinations (-2):[/b] phantom zombies, sounds, whispers and panic, worse tired, stressed, feverish, concussed or in withdrawal.
-[*][b]Tinnitus (-2):[/b] your own gunfire brings on Hard of Hearing for a while and lightens sleep.
-[*][b]In Their 40s (-2), 50s (-4):[/b] more profession levels; slower to recover, heal and train.
+[*][b]Caffeine Dependent (-2):[/b] half a day without coffee brings a headache and low mood; cola only puts it off.
+[*][b]Hallucinations (-2):[/b] phantom zombies, sounds and whispers, worse tired, stressed or feverish.
+[*][b]Tinnitus (-2):[/b] your own gunfire deafens you for a while.
 [*][b]Lactose Intolerance (-1):[/b] dairy brings a mild gut flare.
 [*][b]Straight Edge (-1):[/b] refuses alcohol and tobacco, and their relief.
 [/list]
@@ -89,19 +56,31 @@ Most systems have a switch on the Vitality Project sandbox page. Every lasting e
 [h2]Positive traits[/h2]
 [list]
 [*][b]Renaissance Faire Geek (+10):[/b] +1 Spear, Long Blade, Axe and Blacksmithing.
-[*][b]Fast Recovery (+8):[/b] Fast Healer folded in; blood comes back half as fast again.
-[*][b]Deep Sleeper (+6):[/b] Wakeful folded in; light rarely wakes you and the dark does more good.
-[*][b]Steady Hands (+5):[/b] Dexterous folded in; stitches and splints go wrong half as often; stitching, reloading and the belt a quarter quicker. Not while your hands shake.
+[*][b]Resilient (10, reworked):[/b] as vanilla, plus a 25% chance to beat the Knox virus.
+[*][b]Grit (+8):[/b] you feel pain a third less. Painkillers work as before.
+[*][b]Fast Recovery (+6):[/b] Fast Healer folded in; blood comes back half as fast again.
+[*][b]Deep Sleeper (+6):[/b] Wakeful folded in; light rarely wakes you.
+[*][b]Steady Hands (+5):[/b] Dexterous folded in; stitches and splints go wrong half as often, stitching and reloading a quarter quicker.
+[*][b]Iron Gut (4, reworked):[/b] as vanilla, and rotten or burnt food does half the harm.
+[*][b]Keen Cook (4, reworked):[/b] as vanilla, plus +1 Short Blade.
 [*][b]Good Clotter (+3):[/b] bleeds run down twice as fast and lose a quarter less blood.
-[*][b]Thick Skull (+2):[/b] concussed half as often, less badly, heals faster.
+[*][b]Thick Skull (+2):[/b] concussed half as often and less badly; knockouts and faints half as long.
 [*][b]Outdoorsman (2, reworked):[/b] as vanilla, and burns half as fast.
 [*][b]Cat's Eyes (1, re-costed):[/b] as vanilla; light wakes you more easily.
-[*][b]In Their 20s (+6):[/b] recovers, heals and trains faster; no extra profession level.
-[*][b]Early Riser, Meal Prepper, Gym Regular, Iron Stomach, Night Shift, Hollow Legs (+1 each):[/b] a head start on sleep, diet or exercise; rotten food does half the harm; daylight hardly wakes you; drink hits less and hangovers are milder.
+[*][b]Early Riser, Meal Prepper, Gym Regular, Night Shift, Hollow Legs (+1 each):[/b] a head start on sleep, diet, exercise, daylight or drink.
+[/list]
+
+[h2]FAQ[/h2]
+[list]
+[*][b]Mid-save:[/b] safe to add. An existing character is put In Their 30s with no starting kit.
+[*][b]Point signs:[/b] minus is a flaw, plus a perk. The game's creation screen shows the sign its own way, and it is right.
+[*][b]Dynamic Traits and Expanded Moodles (DTEM):[/b] loads alongside, no known errors, but it is a poor fit. DTEM redefines the vanilla trait list at boot and re-prices Cook, Iron Gut, Resilient (it makes Resilient a free trait handed out in play), Hemophobic, Smoker and Night Vision, so which price and description you see depends on load order; it adds its own Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees next to this mod's Alcoholic, Caffeine Dependent, Asthma and Bad Knees, so you get two of each on the creation screen and two withdrawal systems if you take both. Pick one mod for addictions.
+[*][b]Other mods:[/b] Evolving Traits World, SOTO and Wounds Overhaul are untested.
 [/list]
 
 [h2]How it fits together[/h2]
+Field guide: https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/docs/field-guide.html
 [img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img]
 [img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png[/img]
 
-Build 42. Moodle Framework is optional. Source, the full detail on every trait, changelog and bug reports: https://github.com/Spadix84/pz-dans-traits
+Build 42. Moodle Framework optional. Source, full detail and bug reports: https://github.com/Spadix84/pz-dans-traits

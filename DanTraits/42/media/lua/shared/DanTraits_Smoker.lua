@@ -159,7 +159,10 @@ local function nicotineOf(kind, item)
     local entry = NIC_ITEMS[string.lower(tostring(kind or ""))]
     if entry then return entry[1], entry[2] end
     local onEat = ""
-    pcall(function() onEat = string.lower(tostring(item:getOnEat() or "")) end)
+    -- only food has getOnEat; calling a missing method trips debug mode's Break On Error even in a pcall
+    if item and item.getOnEat then
+        pcall(function() onEat = string.lower(tostring(item:getOnEat() or "")) end)
+    end
     if string.find(onEat, "nicotine", 1, true) then return 1, true end
     return nil
 end

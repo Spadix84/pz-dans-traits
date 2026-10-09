@@ -3,7 +3,26 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
-## Unreleased
+## 1.2.0 - 2026-10-10
+
+### Dan's Vanilla Fixes: a collection checklist (2026-10-09)
+
+Nobody remembers which Carpentry volume is already on the shelf at base. Each character now
+keeps a checklist of what they own (design: `plans/collection-checklist.md`).
+
+- **A Collection button** (a clipboard) under the sidebar's buttons opens a window with a tab
+  each for Skill Books (a row per skill, a box per volume), Magazines (the ones that teach
+  recipes; no seed packets), VHS, Home VHS and CD (by title), Key Rings, Mementos and Tools
+  (hand tools, hammers, axes, wrenches and garden tools: about 135), with a search box, a Hide
+  collected tick and a count. Items from other mods are listed too.
+- **Tick what you have**, in the window or with right-click > Add to collection (Remove from
+  collection takes it off). Nothing is ticked for you.
+- **Ticking sets the game's Unwanted** on that item for this character: every copy goes grey
+  and Take All passes it by. Unticking clears it again, unless it was Unwanted before you
+  ticked it. Tapes and CDs are never set Unwanted (it would grey out every tape).
+- **The tooltip** of anything on the list says "In your collection" (green) or "Not in your
+  collection yet" (grey).
+- One checklist per character; a new character starts empty.
 
 ### Age, reworked: four decades, felt every day
 
@@ -132,6 +151,39 @@ Ways left out that Fitness and Strength are exempt, and the Starting Medication 
 out Multiple Sclerosis (baclofen, amantadine) and Arthritis (painkillers). The field guide,
 README and docs/age.md got the same pass; docs/age.md wrongly said the band's learning
 factors multiply with Quick Study, Old Hand and Set in Their Ways: they add.
+
+### Fixed: car crashes concussed far too easily (2026-10-09)
+
+The game reports a crash (CARCRASHDAMAGE) for running down a zombie or a corpse at speed,
+not just for hitting a wall, and the mod judged every such report by the car's top speed over
+the last second. So a single zombie at 60 km/h, or a car at 20% condition whose suspension
+clipped a corpse, gave a severe concussion and a blackout though the car barely slowed
+(reported by kiiri on Steam). A crash is now judged by the speed the car lost: its top speed
+in the second before, less the lowest speed read in the quarter second after. The report
+comes mid-impact, so the knock waits that quarter second for the reading. A zombie hit that
+loses under 25 km/h gives nothing; a fence or wall at 50 km/h, stopped dead, concusses about
+as it did (half a chance, moderate), and 70 to 0 is still certain and severe. If no speed can
+be read after (thrown clear, the car gone) the top speed alone decides, as before.
+
+### Fixed: Straight Edge smoked off a stove with I Don't Need A Lighter (2026-10-09)
+
+Straight Edge refuses tobacco through the game's eat action, which is how a cigarette is
+smoked with a lighter, a match, or (in B42) a lit stove or fire nearby. The mod I Don't Need
+A Lighter lights one off a stove, a fire or the car's lighter with timed actions of its own,
+and takes a cigarette out of a pack with another, so none of them went through the eat
+action and a Straight Edge character could smoke a cigar off the oven. Those actions (and
+TrueSmoking's) are now refused the same way when the mod is loaded, with the same notice,
+and their Smoke options on the stove and in the inventory ("Smoke (Stove)") are greyed out
+with the reason.
+
+### Fixed: Straight Edge's tobacco check errored on non-food items (2026-10-09)
+
+Straight Edge asks of every item whether it holds nicotine, and the inventory's right-click
+menu asks that of the items there. For anything not tobacco by name it then read the item's
+OnEat, which only food has: on a shirt or a hammer the call was to nil. A pcall caught it, so
+the answer was right, but the game logged an error each time, and in debug mode (Break On
+Error) each one froze the game. `DanTraits_NicotineOf` now reads OnEat only when the item has
+it.
 
 ### Fixed: the pause menu was hidden while passed out
 

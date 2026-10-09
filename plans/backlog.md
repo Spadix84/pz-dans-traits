@@ -25,6 +25,7 @@ doc first). Risk: how likely it is to break something already working.
 
 | Item | Where | Notes |
 |---|---|---|
+| Collection checklist: a sidebar window per character to tick off the skill books, magazines, VHS tapes, CDs, key rings, mementos and tools you own; ticking sets vanilla Unwanted | Dan's Vanilla Fixes (`DansVanillaFixes_Collection.lua`, `client/DansVanillaFixes_CollectionUI.lua`, `client/DansVanillaFixes_CollectionClient.lua`) | 2026-10-09. Design `collection-checklist.md`. Tests `test_collection.lua`. Checklist `dvf-col-*` (section 18). Deployed, uncommitted |
 | Hand washing has floors: blood and dirt only come down to 40% without soap, 20% with; washers and combo washer/dryers still clean fully | Dan's Vanilla Fixes (`DansVanillaFixes_Washing.lua`, `DansVanillaFixes_WashingClient.lua`) | 2026-10-03. Sandbox WashFloorNoSoap/WashFloorSoap. Tests `test_washing.lua`. Checklist `dvf-wash-*` (section 18). Deployed, uncommitted |
 
 ## Parked
