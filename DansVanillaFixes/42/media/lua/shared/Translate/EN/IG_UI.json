@@ -4,5 +4,15 @@
     "IGUI_DVF_PackCool": "Cool",
     "IGUI_DVF_CoolerCold": "Cold, %1 h",
     "IGUI_DVF_WashNeedsSoap": "Won't get cleaner without soap",
-    "IGUI_DVF_WashNeedsMachine": "Needs a washing machine to get cleaner"
+    "IGUI_DVF_WashNeedsMachine": "Needs a washing machine to get cleaner",
+    "IGUI_DVF_Collection_Title": "Collection",
+    "IGUI_DVF_Collection_SkillBooks": "Skill Books",
+    "IGUI_DVF_Collection_Magazines": "Magazines",
+    "IGUI_DVF_Collection_KeyRings": "Key Rings",
+    "IGUI_DVF_Collection_Mementos": "Mementos",
+    "IGUI_DVF_Collection_Tools": "Tools",
+    "IGUI_DVF_Collection_Count": "%1 of %2",
+    "IGUI_DVF_Collection_HideOwned": "Hide collected",
+    "IGUI_DVF_Collection_Have": "In your collection",
+    "IGUI_DVF_Collection_Missing": "Not in your collection yet"
 }
