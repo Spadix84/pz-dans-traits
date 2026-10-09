@@ -145,6 +145,10 @@ assert(D(p).bloodTier == 2 and p._st.panic >= 20, "light-headed: panic floor 20"
 p._st.endurance = 0.5; frame(p); p._st.endurance = 0.6; frame(p)
 near(p._st.endurance, 0.55, 1e-9, "tier 2: half the endurance recovery")
 assert(p._sprint == false and p._cantSprint == true, "no sprinting")
+p._cantSprint = false; frame(p)
+assert(p._cantSprint == false, "the moodle only on an attempt to sprint (no blinking icon)")
+p._sprint = true; frame(p)
+assert(p._sprint == false and p._cantSprint == true, "and again on the next attempt")
 D(p).bloodVol = 0.58; minute(); p._st.endurance = 1; frame(p)
 near(p._st.endurance, 0.3, 1e-9, "shock: endurance ceiling 0.3")
 p._st.endurance = 0.2; p._asleep = true; p._st.panic = 0; minute(); p._asleep = false
@@ -170,13 +174,13 @@ p._st.hunger = 0; p._st.endurance = 0.5; frame(p); p._st.endurance = 0.6; frame(
 near(p._st.endurance, 0.5 + 0.1 * (1 - 0.5 * D(p).bloodWeak), 1e-9, "weak: slower endurance recovery")
 D(p).bloodCells = 0.95; minute(); assert(D(p).bloodWeak == 0, "95%: not weak")
 
--- 9. Hemophilia: open bleeds x1.5, a bandage only slows to two fifths; no extra health loss on top
+-- 9. Hemophilia: open bleeds x1.5, a bandage only slows to a quarter; no extra health loss on top
 p = newPlayer({ "hemophilia" }); H.current = p
 arm = part(p, "ForeArm_L"); arm._bleeding, arm._time = true, 10
 h = p.overall(); minute()
 near(D(p).bloodLossMin, 0.012, 1e-12, "hemophilia open: x1.5")
 near(p.overall(), h, 1e-9, "no flat health loss with the blood system on")
-arm._bandaged, arm._bleeding = true, false; minute(); near(D(p).bloodLossMin, 0.0032, 1e-12, "hemophilia bandaged: 0.8% x 0.4")
+arm._bandaged, arm._bleeding = true, false; minute(); near(D(p).bloodLossMin, 0.002, 1e-12, "hemophilia bandaged: 0.8% x 0.25")
 
 -- 10. Anaemic: rebuilds at half speed, less short of iron, and spends iron doing it
 p = newPlayer({ "anemia" }); H.current = p

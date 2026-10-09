@@ -10,17 +10,17 @@ H.load("Meds", "Moodles")
 H.expectEvery("minute", "Moodles")
 
 local near = H.near
-local EVERY = { "heart", "epilepsy", "gluten", "lactose", "germaphobe", "caffeine", "dependent", "spiraling", "anemia", "arthritis" }
+local EVERY = { "heart", "epilepsy", "gluten", "lactose", "germaphobe", "caffeine", "dependent", "spiraling", "anemia", "arthritis", "migraine" }
 local p = H.player({ traits = EVERY }); H.current = p
 local d = DanTraits_Data(p)
 local function level(name, who, data) return DanTraits_MoodleLevels(who or p, data or d)[name] end
 
 -- 0. the list the client creates them from
-assert(#DanTraits_MoodleNames == 16, "sixteen moodles")
+assert(#DanTraits_MoodleNames == 19, "nineteen moodles")
 local listed = {}
 for _, name in ipairs(DanTraits_MoodleNames) do listed[name] = true end
 for _, name in ipairs({ "ChestPain", "Seizure", "Tinnitus", "GutFlare", "Filthy", "Sunburn", "Dehydration",
-                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons" }) do
+                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons", "LightTooBright", "TriptanAfter", "Antidepressants" }) do
   assert(listed[name], name .. " is listed")
 end
 for name, l in pairs(DanTraits_MoodleLevels(p, d)) do assert(l == 0, name .. ": nothing to show on a well character") end
@@ -104,12 +104,33 @@ d.anDeficit = 0.95; assert(level("LowIron") == 3, "light-headed")
 d.artJoint = 0.3; assert(level("StiffJoints") == 1, "stiff")
 d.artJoint = 0.6; assert(level("StiffJoints") == 2, "a flare")
 d.artJoint = 0.9; assert(level("StiffJoints") == 3, "a bad flare")
+-- Migraines: the light's pain against full sun (a lit room 0.67, in sunglasses 0.33; the sun 1, in sunglasses 0.5)
+d.migGlare = 0.33; assert(level("LightTooBright") == 1, "too bright")
+d.migGlare = 0.5; assert(level("LightTooBright") == 2, "the sun through sunglasses: the light hurts")
+d.migGlare = 0.67; assert(level("LightTooBright") == 2, "a lit room: the light hurts")
+d.migGlare = 1; assert(level("LightTooBright") == 3, "the sun: blinding")
+d.migGlare = nil; assert(level("LightTooBright") == 0, "no light adding pain")
+-- the day after sumatriptan, for anyone
+d.tripAfterMin = 600; assert(level("TriptanAfter") == 1, "heavy-limbed")
+d.tripAfterMin = nil; assert(level("TriptanAfter") == 0, "worn off")
+-- antidepressants: Depression's regimen, paler until the two weeks are up; through an episode too
+DanTraits_MddBenefit = function() return (d.mddMedStreak or 0) >= 14 and 1 or 0.5 end
+d.mddMedDays, d.mddMedStreak = 0.5, 1; assert(level("Antidepressants") == -1, "a pill's coverage running: building up")
+d.mddEpisode, d.mddSeverity = true, 0.7; assert(level("Antidepressants") == -1 and level("Depression") == 2, "shows through an episode")
+d.mddEpisode = false
+d.mddMedStreak = 14; assert(level("Antidepressants") == -2, "two weeks unbroken: working")
+d.mddMedDays = 0; assert(level("Antidepressants") == 0, "coverage run out: the icon goes")
+p._depress = 500; assert(level("Antidepressants") == 0, "Depression goes by its regimen, not the game's timer")
+p._depress = 0
 
 -- 7. the same mod data on a character without the traits: nothing (only the
---    sun and thirst are everyone's)
-pd.gluten, pd.lacFlare, pd.gmGrime, pd.cafWithdraw, pd.anDeficit, pd.artJoint = 1, 1, 1, 1, 1, 1
+--    sun, thirst and the day after sumatriptan are everyone's)
+pd.gluten, pd.lacFlare, pd.gmGrime, pd.cafWithdraw, pd.anDeficit, pd.artJoint, pd.migGlare = 1, 1, 1, 1, 1, 1, 1
 pd.mddEpisode, pd.mddSeverity, pd.alcWithdrawing, pd.alcStage, pd.epAuraMin, pd.meds = true, 1, true, 3, 3, { beta = { lvl = 1, built = 1 } }
 for name, l in pairs(DanTraits_MoodleLevels(plain, pd)) do assert(l == 0, name .. ": not without the trait") end
+pd.mddMedDays = 1; assert(level("Antidepressants", plain, pd) == 0, "the regimen is Depression's"); pd.mddMedDays = nil
+plain._depress = 500; assert(level("Antidepressants", plain, pd) == -2, "anyone else: while the game's own effect runs"); plain._depress = 0
+pd.tripAfterMin = 60; assert(level("TriptanAfter", plain, pd) == 1, "sumatriptan's day after shows without Migraines too"); pd.tripAfterMin = nil
 
 -- 8. without Moodle Framework the minute does nothing, and does not fail
 H.current = p
@@ -129,7 +150,7 @@ d.gluten = 1                 -- bad 3
 H.minute()
 local n = 0
 for _ in pairs(set) do n = n + 1 end
-assert(n == 16, "all sixteen set")
+assert(n == 19, "all nineteen set")
 near(set.ChestPain.value, 0.65, 1e-9, "good 1 sits between 0.6 and 0.7")
 near(set.Seizure.value, 0.25, 1e-9, "bad 2 sits between 0.2 and 0.3")
 near(set.GutFlare.value, 0.15, 1e-9, "bad 3")

@@ -48,7 +48,9 @@ H.load("shared/TimedActions/ISDiabetesAction.lua", "shared/TimedActions/ISUseInh
 local function item(kind, uses)
   local it = { _type = kind, _uses = uses, _used = 0, _jobDelta = -1, _name = nil }
   function it:getType() return self._type end
-  function it:getCurrentUsesFloat() return self._uses end
+  -- as the game: a count of uses, and separately how full it is (0 to 1)
+  function it:getCurrentUses() return math.floor(self._uses) end
+  function it:getCurrentUsesFloat() return self._uses > 0 and math.min(1, self._uses / 40) or 0 end
   function it:Use() self._uses = self._uses - 1; self._used = self._used + 1 end
   function it:setJobDelta(d) self._jobDelta = d end
   function it:setJobType(t) self._job = t end

@@ -33,6 +33,7 @@ local newPlayer = H.factory({ moodles = {} }, function(p)
     if alcohol > 0 then
       self._beta, self._betaD = 6600, self._betaD + 0.2 * alcohol
       self._painFx, self._painD = 5400, self._painD + 0.2 * alcohol
+      self._depress, self._depressD = 6600, (self._depressD or 0) + 0.4 * alcohol
     end
   end
 end)
@@ -55,6 +56,7 @@ local p = newPlayer(); H.current = p; p._moodles.drunk = 0
 drink(p, 0.004)
 assert(p._beta == 0 and p._betaD == 0, "beta-blocker timer put back")
 assert(p._painFx == 0 and p._painD == 0, "painkiller timer put back")
+assert(p._depress == 0 and p._depressD == 0, "antidepressant timer put back (found in game: the Antidepressants moodle after a drink)")
 
 -- 1a. the last sip, which empties the container: an empty container reports no
 -- alcohol, so the check must be made before the sip (found in game)
@@ -63,7 +65,7 @@ local shot = { _amount = 0.1, getAmount = function(self) return self._amount end
                getProperties = function(self) return { getAlcohol = function() return self._amount > 1e-9 and 0.4 or 0 end, getCarbohydrates = function() return 0 end } end }
 ISDrinkFluidAction.updateEat({ character = last, fluidContainer = shot }, 1)
 assert(shot._amount <= 1e-9, "the shot is gone")
-assert(last._beta == 0 and last._painFx == 0, "the emptying sip's timers are put back too")
+assert(last._beta == 0 and last._painFx == 0 and last._depress == 0, "the emptying sip's timers are put back too")
 H.current = p
 for i = #drinkHook, 1, -1 do if drinkHook[i].player == last then table.remove(drinkHook, i) end end
 
@@ -74,9 +76,9 @@ assert(#drinkHook == 1 and drinkHook[1].player == p and drinkHook[1].fluid == la
 p._st.intox = 40; near(DanTraits_Intoxication(p), 0.4, 1e-9, "intoxication read as 0..1"); p._st.intox = 0
 
 -- 2. pills taken earlier keep working
-p._beta, p._betaD, p._painFx, p._painD = 3000, 1, 2000, 1
+p._beta, p._betaD, p._painFx, p._painD, p._depress, p._depressD = 3000, 1, 2000, 1, 4000, 0.3
 drink(p, 0.4)
-assert(p._beta == 3000 and p._betaD == 1 and p._painFx == 2000 and p._painD == 1, "earlier pills untouched")
+assert(p._beta == 3000 and p._betaD == 1 and p._painFx == 2000 and p._painD == 1 and p._depress == 4000 and p._depressD == 0.3, "earlier pills untouched")
 
 -- 3. a soft drink is left alone (the wrapper only steps in for alcohol)
 local soft = newPlayer(); H.current = soft; soft._moodles.drunk = 0
@@ -117,5 +119,21 @@ local r = newPlayer(); H.current = r
 r._st.intox = 90; r._st.panic = 50; r._moodles.drunk = 4; minute(); frame(r)
 assert(r._pr == 0 and r._st.panic == 50, "off: no pain floor, no panic decay")
 SandboxVars = nil
+
+-- the mood lift: unhappiness, stress and boredom drain by Drunk level, awake only
+local m = newPlayer({ unhappy = 90, stress = 0.8, boredom = 50 }); H.current = m
+m._moodles.drunk = 0; minute()
+assert(m._st.unhappy == 90 and m._st.stress == 0.8 and m._st.boredom == 50, "sober: nothing")
+m._moodles.drunk = 1; minute()
+near(m._st.unhappy, 89.95, 1e-9, "tipsy: the edge off")
+m._moodles.drunk = 4; m._st.unhappy = 90; m._st.stress = 0.8; m._st.boredom = 50; minute()
+near(m._st.unhappy, 89.5, 1e-9, "blind drunk: half a point a minute")
+near(m._st.stress, 0.796, 1e-9, "stress eases"); near(m._st.boredom, 49.4, 1e-9, "boredom eases")
+for _ = 1, 179 do minute() end
+near(m._st.unhappy, 0, 1e-6, "three hours blind drunk clears a severe mood"); assert(m._st.stress >= 0, "never under 0")
+m._st.unhappy = 90; m._asleep = true; minute()
+assert(m._st.unhappy == 90, "not asleep"); m._asleep = false
+SandboxVars = { DanTraits = { DrinkReliefEnabled = false } }; minute()
+assert(m._st.unhappy == 90, "option off: no lift"); SandboxVars = nil
 
 H.pass()

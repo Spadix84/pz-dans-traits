@@ -3,7 +3,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Meds", "Diabetes", "Alcohol")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Meds", "Diabetes", "Alcohol")
 H.expectHooks("OnCreatePlayer")
 H.expectEvery("minute", "Diabetes")
 local drinkWraps = ISDrinkFluidAction.DanTraitsWraps
@@ -86,10 +86,23 @@ for _ = 1, 30 do minute() end
 assert(hiMdd._st.unhappy >= 22.5, "in a depressive episode the mood floor is x1.5 (22.5), got " .. hiMdd._st.unhappy)
 local hi3 = newPlayer({ health = 30 }); H.current = hi3
 hi3._md.DanTraits = { glucose = 500 }
+-- since 2026-10-08 the first two hours up there cost no health: a spike after a meal is not ketoacidosis
+for _ = 1, 119 do minute() end
+assert(hi3._health == 30, "over 350 for under two hours: no health lost, got " .. hi3._health)
+assert(hi3._st.foodsick > 40, "over 350: nauseous all the same")
 for _ = 1, 60 do minute() end
-assert(hi3._health == 15, "over 350: health drains to the floor, got " .. hi3._health)
-assert(hi3._st.foodsick > 40, "over 350: nauseous")
+assert(hi3._health == 15, "past two hours: health drains to the floor, got " .. hi3._health)
+-- coming down and going straight back up counts the time already spent (it ebbs at the same pace)
+local spike = newPlayer({ health = 30 }); H.current = spike
+spike._md.DanTraits = { glucose = 500 }
+for _ = 1, 90 do minute() end
+spike._md.DanTraits.glucose = 200; for _ = 1, 30 do minute() end
+spike._md.DanTraits.glucose = 500; for _ = 1, 59 do minute() end
+assert(spike._health == 30, "90 up, 30 down, 59 up: still under two hours net, got " .. spike._health)
+for _ = 1, 10 do minute() end
+assert(spike._health < 30, "and then it starts")
 -- a day above 350 and the floor is gone
+H.current = hi3
 hi3._md.DanTraits.diaKetoHours = 24; hi3._md.DanTraits.glucose = 500
 for _ = 1, 10 do minute() end
 assert(hi3._health < 15 and hi3._health > 11, "after a day of ketoacidosis health keeps falling, got " .. hi3._health)
@@ -263,6 +276,99 @@ minute(); allNil("infectionHazard", hd, {}); allNil("infectionGrowth", hd)
 hd._md.DanTraits.glucose = 350
 near(DanTraits_RunHooks("infectionHazard", 0.04, hd, {}), 0.08, 1e-12, "diabetic at 350: hazard x2")
 near(DanTraits_RunHooks("infectionGrowth", 1, hd), 1.5, 1e-12, "diabetic at 350: growth x1.5")
+
+-- knowing your insulin: First Aid 3 / 6 / 9 or the magazine, Type 1 only
+local realInstanceof = instanceof
+instanceof = function(obj, cls) if cls == "Food" then return type(obj) == "table" and obj.isFood == true end return realInstanceof(obj, cls) end
+local function food(name, carbs) local f = item(name, carbs); f.isFood = true; return f end
+local function knower(fa, recipe, traits)
+  local p = newPlayer({ traits = traits }); H.current = p
+  p.getPerkLevel = function(_, perk) return perk == Perks.Doctor and fa or 0 end
+  p.isRecipeActuallyKnown = function(_, r) return recipe == true and r == "DanTraitsInsulinDosing" end
+  return p
+end
+local bread, choc = food("Bread", 99), food("Chocolate", 50)
+for fa, want in pairs({ [0] = 0, [2] = 0, [3] = 1, [5] = 1, [6] = 2, [8] = 2, [9] = 3, [10] = 3 }) do
+  assert(DanTraits_DiaKnowledge(knower(fa)) == want, "First Aid " .. fa .. " gives knowledge " .. want)
+end
+assert(DanTraits_DiaKnowledge(knower(0, true)) == 3, "the magazine: exact at any First Aid")
+assert(DanTraits_DiaKnowledge(knower(10, true, { "diabetes2" })) == 0, "Type 2 is never told doses")
+assert(DanTraits_DiaKnowledge(knower(10, true, {})) == 0, "nor anyone without diabetes")
+assert(DanTraits_DiaFoodLines(knower(2), bread) == nil, "First Aid 2: nothing on the tooltip")
+near(DanTraits_DiaFoodDoses(knower(0), bread), 99 * 4 / 50, 1e-9, "a dose covers 12.5 g")
+local l1 = DanTraits_DiaFoodLines(knower(3), bread)
+assert(l1[1] == "Tooltip_DanTraits_DiaSlow" and l1[2] == "Tooltip_DanTraits_DiaRange:4", "level 1: slow, a wide range from 4 (7.9 x 0.6)")
+local l2 = DanTraits_DiaFoodLines(knower(6), bread)
+assert(l2[2] == "Tooltip_DanTraits_DiaRange:6", "level 2: a narrow range from 6 (7.9 x 0.8)")
+local l3 = DanTraits_DiaFoodLines(knower(0, true), bread)
+assert(l3[2] == "Tooltip_DanTraits_DiaExact:7.9", "level 3: exact, to a tenth: " .. tostring(l3[2]))
+assert(DanTraits_DiaFoodLines(knower(9), choc)[1] == "Tooltip_DanTraits_DiaFast", "chocolate hits fast")
+local none = DanTraits_DiaFoodLines(knower(9), food("Steak", 0))
+assert(#none == 1 and none[1] == "Tooltip_DanTraits_DiaNone", "no carbohydrates: no insulin")
+assert(DanTraits_DiaFoodLines(knower(9), item("Bread", 99)) == nil, "not a food item: nothing")
+-- drinks: a fluid container counts by everything in it, all fast; water and fuel are not asked about
+local function bottle(carbs, empty)
+  return { getFluidContainer = function() return { isEmpty = function() return empty == true end,
+    getProperties = function() return { getCarbohydrates = function() return carbs end } end } end }
+end
+local pop = DanTraits_DiaFoodLines(knower(9), bottle(50))
+assert(pop[1] == "Tooltip_DanTraits_DiaFast" and pop[2] == "Tooltip_DanTraits_DiaExact:4.0", "a bottle of pop, 50 g: fast, 4 doses")
+assert(DanTraits_DiaFoodLines(knower(3), bottle(50))[2] == "Tooltip_DanTraits_DiaRange:2", "level 1 on a drink: a range from 2 (4 x 0.6)")
+assert(DanTraits_DiaFoodLines(knower(9), bottle(0)) == nil, "water: nothing")
+assert(DanTraits_DiaFoodLines(knower(9), bottle(50, true)) == nil, "an empty bottle: nothing")
+assert(DanTraits_DiaFoodLines(knower(2), bottle(50)) == nil, "First Aid 2: nothing on a drink either")
+-- too much sugar at once: the exact tier says how to split it (a dosed chocolate bar peaked at 505 in play)
+local splitter = knower(9); minute(); splitter._md.DanTraits.glucose = 125
+local cl = DanTraits_DiaFoodLines(splitter, food("Chocolate", 110))
+assert(cl[3] == "Tooltip_DanTraits_DiaParts2", "a whole 110 g bar from 125: eat half at a time, got " .. tostring(cl[3]))
+assert(DanTraits_DiaFoodLines(splitter, bread)[3] == nil, "a loaf of bread is slow enough to eat whole")
+assert(DanTraits_DiaFoodLines(splitter, bottle(31))[3] == nil, "a can of pop is fine")
+assert(DanTraits_DiaFoodLines(knower(6), food("Chocolate", 110))[3] == nil, "only the exact tier warns")
+splitter._md.DanTraits.glucose = 300
+assert(DanTraits_DiaParts(splitter, food("Chocolate", 110)) == 5, "already at 300: a little at a time")
+splitter._md.DanTraits.glucose = 125; splitter._md.DanTraits.diaFast = 60
+assert(DanTraits_DiaParts(splitter, food("Chocolate", 50)) ~= nil, "sugar still going in counts")
+-- the meter: level 2 adds the insulin still working, level 3 what to do
+local m1 = knower(3); minute()
+assert(#DanTraits_DiaMeterAdvice(m1, 250) == 0, "level 1: the meter says no more")
+local m2 = knower(6); DanTraits_DiaInject(m2, 2)
+near(DanTraits_DiaInsulinLeft(m2), 2, 0.01, "freshly injected: both doses still to come")
+for _ = 1, 75 do minute() end
+local left = DanTraits_DiaInsulinLeft(m2)
+assert(left > 1 and left < 1.8, "75 minutes in, past the peak: some of it spent, " .. left)
+local a2 = DanTraits_DiaMeterAdvice(m2, 200)
+assert(#a2 == 1 and a2[1][1] == "UI_DanTraits_DiaOnBoard", "level 2: insulin still working only")
+local m3 = knower(0, true); minute()
+local hi = DanTraits_DiaMeterAdvice(m3, 250)
+assert(hi[2][1] == "UI_DanTraits_DiaCorrect" and hi[2][2] == 3, "250, nothing on board: 3 doses to 110 (2.8)")
+DanTraits_DiaInject(m3, 2)
+assert(DanTraits_DiaMeterAdvice(m3, 250)[2][2] == 1, "with 2 doses already working: 1 more")
+local lo = knower(0, true); minute()
+local low = DanTraits_DiaMeterAdvice(lo, 60)
+assert(low[2][1] == "UI_DanTraits_DiaEat" and low[2][2] == 15, "60: eat about 15 g (12.5, to the nearest 5)")
+lo._md.DanTraits.diaFast = 10
+assert(DanTraits_DiaMeterAdvice(lo, 60)[2][1] == "UI_DanTraits_DiaSteady", "60 with 10 g of sugar still going in: on course (heading for 100)")
+assert(DanTraits_DiaMeterAdvice(knower(0, true), 120)[2][3] == true, "120: on course, said in green")
+instanceof = realInstanceof
+-- the meter's tooltip: its last reading, how long ago, and the advice it gave then
+local meterMd = {}
+local meterItem = { getFullType = function() return "DanTraits.GlucoseMeter" end, getModData = function() return meterMd end }
+assert(DanTraits_DiaMeterLines(meterItem) == nil, "a meter never used: no strip")
+assert(DanTraits_DiaMeterLines(bread) == nil, "not a meter: nothing")
+H.hours = 100
+DanTraits_DiaMeterRecord(meterItem, 250, { { "UI_DanTraits_DiaOnBoard", "0.0" }, { "UI_DanTraits_DiaCorrect", 3 } })
+H.hours = 100.4
+local ml = DanTraits_DiaMeterLines(meterItem)
+assert(ml[1] == "Tooltip_DanTraits_MeterLastMin:250" and ml[2] == "UI_DanTraits_DiaOnBoard:0.0" and ml[3] == "UI_DanTraits_DiaCorrect:3", "250, 24 min ago, with the advice")
+H.hours = 105
+assert(DanTraits_DiaMeterLines(meterItem)[1] == "Tooltip_DanTraits_MeterLastHours:250", "hours later")
+H.hours = 200
+assert(DanTraits_DiaMeterLines(meterItem)[1] == "Tooltip_DanTraits_MeterLastDays:250", "days later")
+DanTraits_DiaMeterRecord(meterItem, 120, { { "UI_DanTraits_DiaSteady", nil, true } })
+ml = DanTraits_DiaMeterLines(meterItem)
+assert(#ml == 2 and ml[2] == "UI_DanTraits_DiaSteady", "a new reading replaces the old; a line with no number")
+DanTraits_DiaMeterRecord(meterItem, 90, {})
+assert(#DanTraits_DiaMeterLines(meterItem) == 1, "low First Aid: the reading only")
 
 -- the diaResistance hook (Age) is added before the clamp, for Type 2 only
 DanTraits_AddHook("diaResistance", function(res) return res + 0.1 end)

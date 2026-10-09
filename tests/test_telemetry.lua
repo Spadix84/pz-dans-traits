@@ -24,14 +24,14 @@ local printed = {}
 local realPrint = print
 print = function(s) printed[#printed + 1] = tostring(s) end
 
-H.load("client/DanTraits_Telemetry.lua")
+H.load("DanTraits", "client/DanTraits_Telemetry.lua")   -- core: the trait command goes through DanTraits_SetTrait
 print = realPrint
 -- 0. off for an ordinary player: no file written, no command run
 SandboxVars = { DanTraits = {} }
 function isClient() return false end
 function isServer() return false end
 function isDebugEnabled() return false end
-local tickName = H.handlers.OnTick and "OnTick" or "OnTickEvenPaused"
+local tickName = H.handlers.OnTickEvenPaused and "OnTickEvenPaused" or "OnTick"   -- the one Telemetry registered on (core has an OnTick of its own)
 local tick = H.on(tickName)
 H.expectHooks(tickName, "OnGameStart")
 

@@ -6,7 +6,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 UIManager = { FadeOut = function() end, FadeIn = function() end }
-H.load("Faint", "Meds", "Heart")
+H.load("Faint", "Meds", "Heart", "Age")
 H.expectEvery("minute", "Heart")
 H.expectHooks("OnCreatePlayer")
 
@@ -24,6 +24,10 @@ p._st.panic = 80; near(DanTraits_HeartEpisodeChance(p, d), 0.0075, 1e-12, "panic
 p._st.panic = 0
 local old = H.player({ traits = { "heart", "age40s" }, endurance = 0.4 })
 near(DanTraits_HeartEpisodeChance(old, DanTraits_Data(old)), 0.00625, 1e-12, "40s x1.25")
+local older = H.player({ traits = { "heart", "age50s" }, endurance = 0.4 })
+near(DanTraits_HeartEpisodeChance(older, DanTraits_Data(older)), 0.0075, 1e-12, "50s x1.5")
+local young = H.player({ traits = { "heart", "age20s" }, endurance = 0.4 })
+near(DanTraits_HeartEpisodeChance(young, DanTraits_Data(young)), 0.004, 1e-12, "20s x0.8")
 
 -- 2. beta blockers (the shared medication system): a pill is a level of 1, but
 --    protection comes with the build-up; fully built up the chance is a quarter

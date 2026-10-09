@@ -13,7 +13,7 @@ ISEatFoodAction = {
   complete = function(self) eaten[#eaten+1] = self.item.name; return true end,
   eat = function(self, food, pct) eaten[#eaten+1] = self.item.name .. "@" .. pct end }
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
 
 local halo = H.halo
 local function list(t) return { size = function() return #t end, get = function(_, i) return t[i + 1] end } end

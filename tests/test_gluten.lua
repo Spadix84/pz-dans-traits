@@ -11,7 +11,7 @@ local eaten = {}
 ISEatFoodAction = { complete = function(self) eaten[#eaten+1] = { "complete", self.item.name }; return true end,
                     eat = function(self, food, pct) eaten[#eaten+1] = { "eat", self.item.name, pct } end }
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
 H.expectEvery("minute", "Gluten")
 assert(ISEatFoodAction.DanTraitsWraps and ISEatFoodAction.DanTraitsWraps["complete:core-eat"], "hooks in place")
 

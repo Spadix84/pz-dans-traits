@@ -63,19 +63,19 @@ local r = H.player(); H.current = r
 for _ = 1, 40 do smoke(r, nil, vanillaNonSmoker); mins(1440) end
 assert(not r._traits["base:smoker"] and md(r).nicMeter < 0.03, "one a day: no trait")
 
--- 4. taken at creation: a half-full meter and years on the lungs; the craving builds at vanilla's pace
+-- 4. taken at creation: a half-full meter and years on the lungs; the craving builds at half vanilla's pace
 local s = H.player({ traits = { "base:smoker" } }); H.current = s
 minute()
 near(md(s).nicMeter, 0.5, 1e-3, "starts at 0.5")
 near(md(s).nicLungs, 0.35, 1e-3, "starts with damaged lungs")
 s._st.nw = s._st.nw + 0.001; minute()
-near(s._st.nw, 0.001, 1e-6, "meter 0.5: vanilla pace")
+near(s._st.nw, 0.0005, 1e-6, "meter 0.5: half vanilla's pace")
 md(s).nicMeter = 1
 s._st.nw = s._st.nw + 0.001; minute()
-near(s._st.nw, 0.001 + 0.001 * 1.75, 1e-5, "meter 1: 1.75x")
+near(s._st.nw, 0.0005 + 0.001 * 0.875, 1e-5, "meter 1: 0.875x")
 drunk = 2; local before = s._st.nw
 s._st.nw = s._st.nw + 0.001; minute()
-near(s._st.nw - before, 0.001 * 1.75 * 1.5, 1e-5, "drunk: faster still")
+near(s._st.nw - before, 0.001 * 0.875 * 1.5, 1e-5, "drunk: faster still")
 drunk = 0
 
 -- 5. withdrawal: irritability up to Angry, hungrier, sleeping badly

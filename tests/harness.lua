@@ -21,7 +21,10 @@
 --                      frame systems run on it, like a frame of the game).
 --   H.expectEvery(cadence, label)  assert the loaded file registered that system
 --                      with DanTraits_Every ("minute" | "ten" | "frame").
---   H.stubs()          the common game stubs (see the list in the function).
+--   H.stubs()          the common game stubs (see the list in the function), and
+--                      DanTraits_STRICT = true, so an error inside any guarded call
+--                      (a clock system, a value hook, a Later job, an eat reader, a
+--                      moodle spec) fails the test instead of being logged once.
 --                      Knobs: H.halo (every notice; good ones are "+" prefixed;
 --                      H.clearHalo() empties it in place), H.rng (a queue of
 --                      ZombRand results, used first), H.roll (ZombRand once the
@@ -46,7 +49,9 @@
 --                      painReduction (the body's pain reduction, default 0).
 --                      Fields for assertions: _st (stats by short name), _md,
 --                      _traits, _health, _pr, _painFx, _asleep, _inv, _dropped,
---                      _coughs, _woke, _bump, _vars, _carry, _catch, _adds.
+--                      _coughs, _woke, _bump, _vars, _carry, _catch, _adds,
+--                      _glasses (isWearingGlasses), _vision (updateVisionEffects
+--                      calls), _worn (worn items, getWornItems).
 --   H.factory(defaults, decorate)  a player constructor with defaults merged
 --                      under the caller's opts, and decorate(p, opts) to add
 --                      what only one test needs.
@@ -156,6 +161,7 @@ local STATS = {
   { "HUNGER", "hunger", 1 }, { "BOREDOM", "boredom", 100 }, { "ANGER", "anger", 1 },
   { "NICOTINE_WITHDRAWAL", "nw", 0.51 }, { "WETNESS", "wetness", 100 },
   { "SICKNESS", "sickness", 1 }, { "TEMPERATURE", "temperature", 1 }, { "DISCOMFORT", "discomfort", 1 },
+  { "ZOMBIE_INFECTION", "zinf", 100 }, { "ZOMBIE_FEVER", "zfever", 100 },
 }
 
 function H.clearHalo()
@@ -166,6 +172,7 @@ local function loudList() return { size = function() return 0 end } end
 
 function H.stubs()
   require = function() end
+  DanTraits_STRICT = true   -- DanTraits_Guard raises instead of logging: a broken hook fails the test
   SandboxVars = nil
   MF = nil
   RenderEffectType = nil
@@ -182,7 +189,8 @@ function H.stubs()
   function getSpecificPlayer() return H.current end
   function getTimestampMs() return H.now end
   function getGameTime()
-    return { getHour = function() return 12 end, getWorldAgeHours = function() return H.hours end }
+    return { getHour = function() return 12 end, getTimeOfDay = function() return H.timeOfDay or 12 end,
+      getWorldAgeHours = function() return H.hours end }
   end
   GameTime = { getInstance = function()
     return { getWorldAgeHours = function() return H.hours end, getThirtyFPSMultiplier = function() return 1 end }
@@ -193,8 +201,8 @@ function H.stubs()
     local max = s[3]
     CharacterStat[s[1]] = { name = s[2], getMaximumValue = function() return max end }
   end
-  CharacterTrait = { SMOKER = "base:smoker", NEEDS_LESS_SLEEP = "base:needslesssleep" }
-  MoodleType = { DRUNK = "drunk" }
+  CharacterTrait = { SMOKER = "base:smoker", NEEDS_LESS_SLEEP = "base:needslesssleep", SHORT_SIGHTED = "base:shortsighted", IRON_GUT = "base:irongut" }
+  MoodleType = { DRUNK = "drunk", HUNGRY = "hungry" }
   ItemBodyLocation = { MASK = "mask", MASK_EYES = "maskeyes", MASK_FULL = "maskfull" }
   BodyPartType = { Head = "Head" }
   for _, n in ipairs({ "Groin", "Head", "Neck", "Torso_Upper", "Hand_L", "Hand_R", "ForeArm_L", "ForeArm_R",
@@ -210,7 +218,8 @@ function H.stubs()
 
   ArrayList = { new = function() return { add = function() end } end }
   IsoFireManager = { explode = function() end }
-  function instanceof() return false end
+  -- stand-in containers are tables with getItems or AddItem; nothing else is an instance of anything
+  function instanceof(obj, cls) return cls == "ItemContainer" and type(obj) == "table" and (obj.getItems or obj.AddItem) ~= nil end
   function getTexture() return "TEX" end
   function isNight() return false end
   function addSound(_, _, _, _, radius) H.sounds[#H.sounds + 1] = radius end
@@ -229,13 +238,19 @@ function H.stubs()
       getAirTemperatureForCharacter = function() return c.temp end, getRainIntensity = function() return c.rain end,
       getHumidity = function() return c.humidity end, getNightStrength = function() return c.night end,
       getCloudIntensity = function() return c.cloud end,
-      -- the forecast: c.forecast = { today, tomorrow }, each nil, "storm", "tropical", "rain" or "blizzard"
+      -- the forecast: c.forecast = { today, tomorrow }, each nil or { kind, start hour, carried over? },
+      -- kind "storm", "tropical", "rain" or "blizzard"
       getClimateForecaster = function()
         return { getForecast = function(_, offset)
-          local kind = (c.forecast or {})[(offset or 0) + 1]
+          local entry = (c.forecast or {})[(offset or 0) + 1] or {}
+          local kind = entry[1]
           return {
-            hasStorm = function() return kind == "storm" end, hasTropicalStorm = function() return kind == "tropical" end,
-            hasHeavyRain = function() return kind == "rain" end, hasBlizzard = function() return kind == "blizzard" end,
+            isWeatherStarts = function() return kind ~= nil and not entry[3] end,
+            getWeatherStartTime = function() return entry[2] or 0 end,
+            isHasStorm = function() return kind == "storm" end, isHasTropicalStorm = function() return kind == "tropical" end,
+            isHasHeavyRain = function() return kind == "rain" end, isHasBlizzard = function() return kind == "blizzard" end,
+            -- entry[4]: the day's lowest temperature (15 when unset)
+            getTemperature = function() return { getTotalMin = function() return entry[4] or 15 end } end,
           }
         end }
       end,
@@ -320,7 +335,7 @@ function H.player(o)
     _st = st, _md = md, _traits = traits, _o = o, _parts = parts, _inv = inv, _dropped = dropped, _vars = {},
     _asleep = o.asleep == true, _outside = o.outside == true, _sprint = o.sprint == true, _run = o.run == true,
     _moving = false, _health = o.health or 100, _hours = o.hours or 0, _carry = 8, _catch = 0, _pr = o.painReduction or 0,
-    _painFx = 0, _painD = 0, _beta = 0, _betaD = 0, _depress = 0, _since = 10, _cs = 1.0, _light = 0,
+    _painFx = 0, _painD = 0, _beta = 0, _betaD = 0, _depress = 0, _depressD = 0, _since = 10, _cs = 1.0, _light = 0,
     _tablets = 0, _coughs = 0, _woke = 0, _adds = 0, _cantSprint = false,
     _weight = o.weight or 80, _regularity = o.regularity or {},
   }
@@ -328,6 +343,8 @@ function H.player(o)
   p.isAsleep = function() return p._asleep end
   p.isOutside = function() return p._outside end
   p.isSprinting = function() return p._sprint end
+  p.isAttacking = function() return p._attacking end
+  p.getBed = function() return p._bed end
   p.setSprinting = function(_, b) p._sprint = b end
   p.isRunning = function() return p._run end
   p.isPlayerMoving = function() return p._moving end
@@ -347,6 +364,16 @@ function H.player(o)
   function p._head:setAdditionalPain(v) self._pain = v end
 
   p.hasTrait = function(_, t) return traits[t] == true end
+  p._glasses, p._vision, p._worn = false, 0, {}
+  p.isWearingGlasses = function() return p._glasses end
+  p.updateVisionEffects = function() p._vision = p._vision + 1 end
+  -- worn items: entries are { type = "Base.X", name = "Display Name" }
+  p.getWornItems = function()
+    return { size = function() return #p._worn end, getItemByIndex = function(_, i)
+      local w = p._worn[i + 1]
+      return w and { getFullType = function() return w.type end, getDisplayName = function() return w.name end }
+    end }
+  end
   p.getCharacterTraits = function()
     return {
       add = function(_, t)
@@ -400,6 +427,8 @@ function H.player(o)
   p.setBetaDelta = function(_, v) p._betaD = v end
   p.getDepressEffect = function() return p._depress end
   p.setDepressEffect = function(_, v) p._depress = v end
+  p.getDepressDelta = function() return p._depressD end
+  p.setDepressDelta = function(_, v) p._depressD = v end
   p.getSleepingTabletEffect = function() return p._tablets end
 
   p.getTimeSinceLastSmoke = function() return p._since end
@@ -409,6 +438,7 @@ function H.player(o)
   p.forceAwake = function() p._asleep = false; p._woke = p._woke + 1 end
   p.setBumpType = function(_, t) p._bump = t end
   p.setVariable = function(_, k, v) p._vars[k] = v end
+  p.getVariableFloat = function(_, k, default) local v = p._vars[k]; return type(v) == "number" and v or default end
 
   p.getNutrition = function()
     return { getWeight = function() return p._weight end, setWeight = function(_, w) p._weight = w end,

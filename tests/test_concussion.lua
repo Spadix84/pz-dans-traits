@@ -10,7 +10,9 @@ H.stubs()
 H.rollf = 0.5
 BodyPartType = { Head = "Head", ToIndex = function(t) return 0 end }
 local faded = nil
-UIManager = { FadeOut = function() faded = true end, FadeIn = function() faded = false end }
+local fadeBeforeUI = nil
+UIManager = { FadeOut = function() faded = true end, FadeIn = function() faded = false end,
+              setFadeBeforeUI = function(num, before) fadeBeforeUI = before end }
 
 H.load("Faint", "Concussion")
 H.expectHooks("OnPlayerGetDamage", "OnWeaponSwing")
@@ -89,6 +91,7 @@ assert(D(p).ccScore == 0.3 and halo[1] == "UI_DanTraits_ConcussionMild" and not 
 p = newPlayer(); H.current = p; H.clearHalo()
 DanTraits_KnockHead(p, 1, 0.85)
 assert(out(p) and p._bump == "stagger" and p._vars.BumpFall == true and p._blocked and faded, "out: fallen, blocked, black")
+assert(fadeBeforeUI == true, "the fade draws before the UI, so the pause menu shows over the black")
 H.now = H.now + 1000; tick(); assert(not p._sitting, "the fall plays out first")
 H.now = H.now + 1000; tick(); assert(p._sitting, "then sat on the floor")
 H.hours = H.hours + 9.9 / 60; H.now = H.now + 60000; tick(); assert(out(p), "0.85: ten game minutes, not yet")
@@ -165,6 +168,24 @@ SandboxVars = { DanTraits = { ConcussionEnabled = false } }
 p = newPlayer(); H.current = p; H.rollf = 0; damage(p, "FALLDOWN", 14)
 assert(D(p) == nil or D(p).ccScore == nil, "off: no concussion")
 SandboxVars = nil
+-- switched off mid-concussion: the tier, the moodle and what the other systems read stand down; the score is kept
+local moodleValue = nil
+MF = { getMoodle = function() return { setThresholds = function() end, setValue = function(_, v) moodleValue = v end } end }
+p = newPlayer(); H.current = p; H.rollf = 0.99
+DanTraits_KnockHead(p, 1, 0.5); swing(p); minute()
+assert(D(p).ccTier == 2 and moodleValue < 0.5 and DanTraits_ConcussionStrength(p) > 0.49, "running: tier 2, moodle on, read by others")
+SandboxVars = { DanTraits = { ConcussionEnabled = false } }
+assert(DanTraits_ConcussionStrength(p) == 0, "off: the strength reads 0 at once (Migraines, Epilepsy)")
+near(DanTraits_RunHooks("sleepWake", 1, p, D(p)), 1, 1e-9, "off: light wakes as usual")
+local score = D(p).ccScore; moodleValue = nil
+minute()
+assert(D(p).ccTier == 0 and moodleValue == 0.5, "off: tier and moodle stand down")
+assert(D(p).ccScore == score, "the score itself is kept")
+moodleValue = nil; swing(p); minute(); assert(moodleValue == nil and D(p).ccScore == score, "off: nothing more happens, and the swing is not remembered")
+SandboxVars = nil
+minute(); assert(D(p).ccTier == 2 and moodleValue < 0.5 and DanTraits_ConcussionStrength(p) > 0, "back on: it resumes")
+near(D(p).ccScore, score - 0.25 / 1440, 1e-9, "resting (the swing while off did not count as strain)")
+MF = nil
 p = newPlayer(); H.current = p; H.rollf = 0.99
 assert(DanTraits_ExtraCommands.concussion(p, { "0.3" }) == "concussion 0.3", "set")
 assert(DanTraits_ExtraCommands.concussion(p, { "clear" }) == "concussion cleared" and D(p).ccScore == nil, "clear")

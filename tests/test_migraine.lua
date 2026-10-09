@@ -11,7 +11,8 @@ H.load("Migraine")
 H.expectEvery("minute", "Migraine")
 H.expectEvery("ten", "Migraine")
 
-local newPlayer = H.factory({ traits = { "migraine" } })
+-- a dim room (between the dark and lit readings) unless a test says otherwise
+local newPlayer = H.factory({ traits = { "migraine" } }, function(p) p._light = 0.425 end)
 local halo, near = H.halo, H.near
 local minute, ten = H.minute, H.ten
 local function M(p) return p._md.DanTraits end
@@ -59,10 +60,16 @@ H.corpses = 2; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "two corpses +
 H.corpses = 9; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "a pile counts as three: +1.5")
 H.corpses = 0
 
--- 1f. a storm on the way: in today's or tomorrow's forecast and not raining yet, +1.5
-H.climate.forecast = { "storm" }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "storm today +1.5")
-H.climate.forecast = { nil, "blizzard" }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "blizzard tomorrow +1.5")
-H.climate.forecast = { "rain", "tropical" }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "two in a row count once")
+-- 1f. a storm on the way: forecast to start within twelve hours and not raining yet, +1.5 (it is noon)
+H.climate.forecast = { { "storm", 20 } }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "storm tonight +1.5")
+H.climate.forecast = { nil, { "blizzard", 0 } }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "blizzard at midnight +1.5")
+H.climate.forecast = { { "rain", 23 }, { "tropical", 6 } }; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "two in a row count once")
+H.climate.forecast = { nil, { "storm", 6 } }; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "eighteen hours off: not yet")
+H.climate.forecast = { { "storm", 9 } }; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "started this morning: arrived")
+H.climate.forecast = { { "storm", 0, true } }; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "carried over from yesterday: arrived")
+H.climate.forecast = { { "storm", 20 } }; H.timeOfDay = 8; near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "at eight, twelve hours ahead: counts")
+H.timeOfDay = 7; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "at seven, thirteen hours ahead: not yet")
+H.timeOfDay = nil
 H.climate.rain = 0.5; near(DanTraits_MigraineChance(p), 0.3, 1e-9, "once the rain has started: nothing")
 H.climate.rain = 0; H.climate.forecast = nil
 near(DanTraits_MigraineChance(p), 0.3, 1e-9, "clear forecast: nothing")
@@ -85,7 +92,7 @@ assert(M(q).migActive and halo[#halo] == "UI_DanTraits_MigraineStart", "attack s
 near(M(q).migHoursLeft, 6, 1e-9, "six hours")
 for _ = 1, 40 do minute() end
 near(H.pain(q), 40, 1.0, "pain ramping toward 60 at 1 a minute (40 minutes in)")
-near(q._st.foodsick, 30, 1.0, "nausea floor 30"); near(q._st.unhappy, 15, 1.0, "mood floor 15")
+near(q._st.foodsick, 40, 1.0, "nausea ramping toward 50 (40 minutes in)"); near(q._st.unhappy, 15, 1.0, "mood floor 15")
 assert(q._st.stress > 0, "stress creeps")
 near(M(q).migHoursLeft, 6 - 40 / 60, 1e-9, "clock at full rate")
 
@@ -95,6 +102,7 @@ local before = M(q).migHoursLeft
 H.setPain(q, 0); for _ = 1, 10 do minute() end
 near(M(q).migHoursLeft, before - 5 / 60, 1e-9, "half rate in the glare")
 assert(H.pain(q) == 10, "pain climbing toward 75 (60 + 15 glare)")
+assert(M(q).migGlare == 1, "full sun: the moodle at its worst")
 q._outside = false; H.climate.night = 1
 before = M(q).migHoursLeft
 q._painFx = 1; H.setPain(q, 0); minute()
@@ -106,6 +114,56 @@ assert(H.pain(q) == 30, "a pain reduction of 30 lowers the floor 60 to 30, not t
 q._pr = 70; H.setPain(q, 0); minute(); assert(H.pain(q) == 0, "a reduction above the floor does nothing"); q._pr = 0
 before = M(q).migHoursLeft; minute(); near(M(q).migHoursLeft, before - 1 / 60, 1e-9, "the cut happens once")
 q._painFx = 0
+
+-- 4b. awake out of the sun, the room's light: lit adds 10 pain and slows the clock to 0.75, dark speeds it to 1.25
+local kept = M(q).migHoursLeft
+q._light = 0.8; before = M(q).migHoursLeft
+H.setPain(q, 0); for _ = 1, 80 do minute() end
+near(M(q).migHoursLeft, before - 80 * 0.75 / 60, 1e-9, "three-quarter rate in a lit room")
+assert(H.pain(q) == 70, "lit room: floor 60 + 10: " .. H.pain(q))
+q._light = 0.1; before = M(q).migHoursLeft
+H.setPain(q, 0); for _ = 1, 80 do minute() end
+near(M(q).migHoursLeft, before - 80 * 1.25 / 60, 1e-9, "a quarter faster in the dark")
+assert(H.pain(q) == 60, "dark room: the plain floor: " .. H.pain(q))
+assert(M(q).migGlare == nil, "dark room: the light adds nothing, no moodle")
+q._light = 0.5125; before = M(q).migHoursLeft; minute()
+near(M(q).migHoursLeft, before - (1 - 0.25 * 0.5) / 60, 1e-9, "half-lit: halfway")
+q._light = 0.425; M(q).migHoursLeft = kept
+
+-- 4c. sunglasses halve the light's extra pain: listed ones, or anything named sunglasses or shades
+kept = M(q).migHoursLeft
+q._light = 0.8
+q._worn = { { type = "Base.Glasses_Sun", name = "Sunglasses" } }
+H.setPain(q, 0); for _ = 1, 80 do minute() end
+assert(H.pain(q) == 65, "lit room in sunglasses: 60 + 10 x 0.5: " .. H.pain(q))
+near(M(q).migGlare, 5 / 15, 1e-9, "the Light Too Bright moodle reads the light's 5 against the sun's 15")
+q._worn = { { type = "OtherMod.CoolShades", name = "Cool Shades" } }
+H.setPain(q, 0); for _ = 1, 80 do minute() end
+assert(H.pain(q) == 65, "another mod's shades count by name: " .. H.pain(q))
+q._worn = { { type = "Base.Glasses_Normal", name = "Prescription Glasses" } }
+H.setPain(q, 0); for _ = 1, 80 do minute() end
+assert(H.pain(q) == 70, "clear glasses do nothing: " .. H.pain(q))
+near(M(q).migGlare, 10 / 15, 1e-9, "a lit room: 10 of the sun's 15")
+q._worn = {}; q._light = 0.425; M(q).migHoursLeft = kept
+
+-- 4d. the attack blurs: Short Sighted is flipped while it and wearing glasses agree, and put back after
+local SS = CharacterTrait.SHORT_SIGHTED
+assert(q._traits[SS] and M(q).migBlur == false and q._vision > 0, "no glasses, not short-sighted: flipped on for the blur")
+q._glasses = true; minute()
+assert(not q._traits[SS] and M(q).migBlur == false, "glasses put on: flipped off, so the two still disagree")
+q._glasses = false; minute(); assert(q._traits[SS], "glasses off again: back on")
+kept = M(q).migHoursLeft; M(q).migHoursLeft = 1 / 60; minute()
+assert(not M(q).migActive and not q._traits[SS] and M(q).migBlur == nil, "attack over: the character's own state is back")
+M(q).migActive, M(q).migHoursLeft, M(q).migSinceEnd = true, kept, 0
+local ss = newPlayer({ traits = { "migraine" }, vanilla = { SS } }); H.current = ss
+ss._md.DanTraits = { migActive = true, migHoursLeft = 3, migSeverity = 0.5, migSinceEnd = 0, migStrong = { "sleep", "thirst", "stress" } }
+local before = ss._vision; minute()
+assert(ss._traits[SS] and M(ss).migBlur == nil and ss._vision == before, "short-sighted without glasses: blurred already, nothing flipped")
+ss._glasses = true; minute()
+assert(not ss._traits[SS] and M(ss).migBlur == true, "short-sighted in glasses: flipped off for the attack")
+ss._traits["migraine"] = nil; minute()
+assert(ss._traits[SS] and M(ss).migBlur == nil, "the Migraines trait gone mid-attack: Short Sighted given back")
+H.current = q
 
 -- 5. sleeping it off runs the clock at double speed; it ends, refractory starts, moodle cleared
 q._asleep = true; H.setPain(q, 0)
@@ -166,6 +224,13 @@ near(M(s1).migSeverity, 0.5, 1e-9, "taken in the aura: halved"); assert(halo[#ha
 for _ = 1, 20 do minute() end
 assert(M(s1).migActive, "the attack still comes")
 near(M(s1).migHoursLeft, 3 + 3 * 0.5 - 1 / 60, 1e-6, "no second use in the attack")
+local moodleValue
+MF = { getMoodle = function() return { setThresholds = function() end, setValue = function(_, v) moodleValue = v end } end }
+H.setPain(s1, 0); for _ = 1, 60 do minute() end
+assert(H.pain(s1) == 30, "taken in the aura: pain floor 60 x 0.5 severity, not halved again: " .. H.pain(s1))
+M(s1).migSeverity = 0.3; minute()
+assert(moodleValue <= 0.5 * (1 - 0.5), "a halved attack still shows as Migraine, not Aura: " .. tostring(moodleValue))
+MF = nil
 covered = false
 local s2 = newPlayer(); H.current = s2
 s2._md.DanTraits = { migSinceEnd = 99, migStrong = { "sleep", "thirst", "stress" } }
@@ -175,7 +240,7 @@ covered = true; minute()
 near(M(s2).migHoursLeft, 2 - 1 / 60, 1e-9, "in the attack: two hours left")
 H.setPain(s2, 0); for _ = 1, 60 do minute() end
 assert(H.pain(s2) == 30, "pain floor halved to 30: " .. H.pain(s2))
-near(s2._st.foodsick, 15, 1.0, "nausea halved to 15")
+near(s2._st.foodsick, 25, 1.0, "nausea halved to 25")
 covered = false
 DanTraits_MedCovered = nil
 

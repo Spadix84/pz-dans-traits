@@ -8,7 +8,7 @@ H.stubs()
 local moodleValues = {}
 MF = { getMoodle = function(name, num) return { setThresholds = function() end, setValue = function(_, v) moodleValues[#moodleValues+1] = v end } end }
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes")
 H.expectHooks("OnCreatePlayer")
 H.expectEvery("minute", "Asthma")
 H.expectEvery("frame", "Delta:enduranceRegen")   -- Asthma subscribes to the pipeline
@@ -101,7 +101,7 @@ SandboxVars = { DanTraits = { StartingMedication = false } }
 local nwo = newPlayer({}); H.fire("OnCreatePlayer", 0, nwo)
 assert(#nwo._inv == 0, "Starting Medication off: no inhaler")
 SandboxVars = nil
-assert(#(H.handlers.OnFillContainer or {}) == 2, "no inhaler container conversion hook: only Jinxed and Bad Day's sewing kit register OnFillContainer")
+assert(#(H.handlers.OnFillContainer or {}) == 1, "no inhaler container conversion hook: only Bad Day's kit registers OnFillContainer")
 print("new character gets 1 " .. nw._inv[1]._type)
 -- 10. panic: nothing under 20, linear to 0.008/min at 100, and a gas mask does not help
 local pn = newPlayer({}); H.current = pn

@@ -6,7 +6,7 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Arthritis")
-H.expectHooks("OnWeaponSwing", "OnPlayerAttackFinished")
+H.expectHooks("OnWeaponSwing", "OnPlayerAttackFinished", "OnCreatePlayer")
 H.expectEvery("minute", "Arthritis")
 H.expectEvery("frame", "Arthritis")
 
@@ -30,6 +30,23 @@ p._outside = true; near(DanTraits_ArthritisJoint(p), 0.7, 1e-9, "rain outdoors: 
 p._st.wetness = 100; near(DanTraits_ArthritisJoint(p), 0.7, 1e-9, "soaked: 0.7"); p._st.wetness = 0
 H.climate.humidity = 0.9; near(DanTraits_ArthritisJoint(p), 0.35, 1e-9, "humid: 0.35"); H.climate.humidity = 0.5
 
+-- 1b. warm clothes: the cold is read from the joints' skin (the game's thermoregulator, which clothing feeds); the air only without a reading
+local JOINT_NAMES = { "Hand_L", "Hand_R", "ForeArm_L", "ForeArm_R", "UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R" }
+for _, name in ipairs(JOINT_NAMES) do p._parts[name].getSkinTemperature = function(self) return self._skin or 0 end end
+local function skin(t) for _, name in ipairs(JOINT_NAMES) do p._parts[name]._skin = t end end
+DanTraits_Data(p)
+H.climate.temp = -5
+skin(33); near(DanTraits_ArthritisJoint(p), 0, 1e-9, "freezing air, joints warm under good clothes: no cold at all")
+near(p._md.DanTraits.artSkin, 33, 1e-9, "the mean skin temperature is kept for tuning")
+skin(28); near(DanTraits_ArthritisJoint(p), 0.5, 1e-9, "skin 28: half")
+skin(23); near(DanTraits_ArthritisJoint(p), 1, 1e-9, "skin 23: everything")
+skin(28); p._parts.Hand_L._skin = 23; p._parts.Hand_R._skin = 23
+near(DanTraits_ArthritisJoint(p), (6 * 0.5 + 2 * 1) / 8, 1e-9, "the joints average: bare hands count against warm legs")
+p._parts.Head._skin = 10; near(DanTraits_ArthritisJoint(p), (6 * 0.5 + 2 * 1) / 8, 1e-9, "a cold head is not a joint")
+skin(0); near(DanTraits_ArthritisJoint(p), 1, 1e-9, "no skin reading: the air decides, as before")
+near(p._md.DanTraits.artSkin, 0, 1e-9, "and no mean is reported")
+H.climate.temp = 20
+
 -- 2. the stiffness floor: 12 on the eight joint parts warm and dry, 45 in a full flare; a higher value is left; the head is untouched
 minute()
 assert(p._parts.Hand_L._stiff == 12 and p._parts.LowerLeg_R._stiff == 12 and p._parts.Head._stiff == 0, "floor 12 on joints only")
@@ -39,6 +56,27 @@ assert(p._parts.Hand_L._stiff == 45 and p._parts.UpperLeg_L._stiff == 45, "full 
 assert(halo[#halo] == "UI_DanTraits_ArthritisFlare", "flare notice on crossing 0.5")
 local n = #halo; minute(); assert(#halo == n, "notice once per flare")
 H.climate.temp = 20; minute(); assert(p._md.DanTraits.artJoint == 0, "factor tracked")
+
+-- 2b. relief: painkillers halve the weather's share while in the system, prednisone cuts it to a third; the stronger counts
+local eff = {}
+DanTraits_MedEffect = function(who, id) return eff[id] or 0 end
+near(DanTraits_ArthritisRelief(p), 1, 1e-9, "nothing in the system: x1")
+H.climate.temp = -5
+local function floors() for _, part in pairs(p._parts) do part._stiff = 0 end end
+eff.painkillers = 1; floors(); minute()
+near(p._md.DanTraits.artJoint, 0.5, 1e-9, "painkillers: a full flare felt as half")
+near(p._md.DanTraits.artWeather, 1, 1e-9, "the weather itself unchanged")
+near(p._md.DanTraits.artRelief, 0.5, 1e-9, "and the factor recorded")
+near(p._parts.Hand_L._stiff, 12 + 33 * 0.5, 1e-9, "stiffness floor 28.5, not 45")
+eff.prednisone = 1; floors(); minute()
+near(p._md.DanTraits.artJoint, 0.35, 1e-9, "prednisone as well: a third (the stronger counts, no stacking)")
+near(p._parts.Hand_L._stiff, 12 + 33 * 0.35, 1e-9, "floor 23.55")
+eff.painkillers = 0; floors(); minute()
+near(p._md.DanTraits.artJoint, 0.35, 1e-9, "prednisone alone: still a third")
+eff = {}; floors(); minute()
+near(p._md.DanTraits.artJoint, 1, 1e-9, "worn off: the full flare")
+DanTraits_MedEffect = nil
+H.climate.temp = 20; minute()
 
 -- 3. combat speed: scaled once per new value, 15% slower warm, 30% in a full flare
 p._cs = 1.0; frame(p); near(p._cs, 0.85, 1e-9, "x 0.85")
@@ -116,5 +154,30 @@ near(DanTraits_SwingDropChance(none), 3, 1e-9, "other traits' shakiness still ap
 H.rng = { 29 }; swing(none, weapon(1, 2)); assert(#none._dropped == 1, "29 < 30: thrown by the shakes")
 DanTraits_ExtraFumble = nil
 minute(); assert(none._parts.Hand_L._stiff == 0, "no trait: no stiffness")
+
+-- 9. a new Arthritis character starts with a bottle of painkillers, once; not with Starting Medication off
+local function bottles(who)
+  local n = 0
+  local items = who:getInventory():getItems()
+  for i = 0, items:size() - 1 do if items:get(i):getFullType() == "Base.Pills" then n = n + 1 end end
+  return n
+end
+SandboxVars = SandboxVars or {}; SandboxVars.DanTraits = SandboxVars.DanTraits or {}
+local fresh = newPlayer({ hours = 0 })
+H.fire("OnCreatePlayer", 0, fresh)
+assert(bottles(fresh) == 1 and fresh._md.DanTraits.artKitGiven == true, "one bottle at the start")
+H.fire("OnCreatePlayer", 0, fresh)
+assert(bottles(fresh) == 1, "not again on a later load")
+local old = newPlayer({ hours = 40 })
+H.fire("OnCreatePlayer", 0, old)
+assert(bottles(old) == 0, "an existing character (an old save) gets nothing")
+SandboxVars.DanTraits.StartingMedication = false
+local none = newPlayer({ hours = 0 })
+H.fire("OnCreatePlayer", 0, none)
+assert(bottles(none) == 0 and none._md.DanTraits.artKitGiven == true, "Starting Medication off: no bottle")
+SandboxVars.DanTraits.StartingMedication = nil
+local plain = H.player({ hours = 0 })
+H.fire("OnCreatePlayer", 0, plain)
+assert(bottles(plain) == 0, "no trait: nothing")
 
 H.pass()

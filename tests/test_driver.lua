@@ -31,7 +31,7 @@ assert(DanTraits_Every("minute", "Blood", rec("blood"), 20))
 H.minute()
 assert(ran() == "sleep,blood,alpha,alpha2,zeta,vit,late", "minute order")
 -- the stat delta pipeline (order 0) is registered by core and runs first
-assert(table.concat(labels, ",") == "Delta:catchCold,Delta:foodSicknessRise,Sleep,Blood,Alpha,Alpha,Zeta,Vitality,PainFloor,Late", "run under own labels: " .. table.concat(labels, ","))
+assert(table.concat(labels, ",") == "Delta:catchCold,Delta:foodSicknessRise,Delta:hungerRise,Sleep,Blood,Alpha,Alpha,Zeta,Vitality,PainFloor,Late", "run under own labels: " .. table.concat(labels, ","))
 
 -- 2. the cadences are separate lists
 DanTraits_Every("ten", "MDD", rec("mdd"), 40)
@@ -46,17 +46,24 @@ assert(ran() == "fblood,fvit", "frame order")
 H.expectEvery("minute", "Sleep"); H.expectEvery("ten", "MDD"); H.expectEvery("frame", "Blood")
 assert(not pcall(H.expectEvery, "frame", "Sleep"), "expectEvery notices a missing system")
 
--- 3. a system that throws does not stop the next, and keeps being called
+-- 3. a system that throws does not stop the next, and keeps being called (in the game;
+-- the tests run with DanTraits_STRICT, where the same error fails the test instead)
 local lines = {}
 local realPrint = print
 print = function(...) lines[#lines + 1] = table.concat({ ... }, " ") end
 DanTraits_Every("minute", "Broken", function() log[#log + 1] = "broken"; error("boom") end, 30)
+DanTraits_STRICT = false
 H.minute()
 assert(ran() == "sleep,blood,broken,alpha,alpha2,zeta,vit,late", "a throwing system does not stop the rest")
 H.minute()
 print = realPrint
 assert(ran() == "sleep,blood,broken,alpha,alpha2,zeta,vit,late", "and is still called next minute")
-assert(#lines == 1 and lines[1]:find("Broken") and lines[1]:find("boom"), "the error is logged once: " .. table.concat(lines, "|"))
+assert(#lines == 1 and lines[1]:find("Broken (minute)", 1, true) and lines[1]:find("boom"), "the error is logged once: " .. table.concat(lines, "|"))
+DanTraits_STRICT = true
+local ok, err = pcall(H.minute)
+assert(not ok and tostring(err):find("Broken (minute) failed", 1, true) and tostring(err):find("boom"), "STRICT: the same minute raises: " .. tostring(err))
+for _, e in ipairs(DanTraits_Drivers.minute) do if e.label == "Broken" then e.fn = function() log[#log + 1] = "broken" end end end   -- mended, for the sections below
+ran()
 
 -- 4. a dead player runs nothing, on every cadence
 local dead = H.player()
@@ -82,7 +89,7 @@ assert(ran() == "fblood,fvit", "the local player runs")
 -- 6. bad registrations are refused, not stored
 assert(DanTraits_Every("hourly", "X", rec("x")) == false, "unknown cadence")
 assert(DanTraits_Every("minute", "X", nil) == false, "no function")
-assert(#DanTraits_Drivers.minute == 11, "refused ones were not added")
+assert(#DanTraits_Drivers.minute == 12, "refused ones were not added")
 
 -- 7. without Attrib (no DanTraits_Track) the systems still run
 DanTraits_Track = nil

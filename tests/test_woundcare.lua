@@ -186,6 +186,22 @@ SandboxVars = { DanTraits = { WoundCareEnabled = false } }
 p = newPlayer(); H.current = p; arm = part(p, "ForeArm_L"); arm._bandaged, arm._life = true, 5
 minute(); assert(arm._life == 5, "off: nothing wears")
 SandboxVars = nil
+-- switched off mid-wound: the records stand down, so rough stitches stop being rough and
+-- vanilla's bandage drain is no longer put back; nothing on the body is changed
+p = newPlayer(); H.current = p; arm = part(p, "ForeArm_L"); arm._bandaged, arm._life = true, 5
+local rough = part(p, "ForeArm_R"); rough._stitch = 5
+DanTraits_ExtraCommands.roughstitch(p, { "forearm_r" })
+p._sprint = true; frame(p); p._sprint = false; minute()
+assert(DanTraits_PoorStitches(p, rough) and D(p).wcLife.ForeArm_L > 0 and D(p).wcMoved == "sprint", "running: rough stitches, a dressing watched, movement noted")
+SandboxVars = { DanTraits = { WoundCareEnabled = false } }
+assert(not DanTraits_PoorStitches(p, rough), "off: not rough to Infection at once")
+p._sprint = true; frame(p); p._sprint = false; minute()
+assert(D(p).wcParts == nil and D(p).wcLife == nil and D(p).wcSummary == nil and D(p).wcMoved == nil, "off: the records stand down")
+assert(rough._stitch == 5 and arm._life == 5 - 0.2 / 60, "nothing on the body is touched")
+arm._life = 1; minute(); assert(arm._life == 1, "off: vanilla's drain stands")
+SandboxVars = nil
+H.rollf = 0.99; minute(); near(arm._life, 1 - 0.2 / 60, 1e-9, "back on: the dressing wears from where it is")
+assert(not DanTraits_PoorStitches(p, rough) and D(p).wcMoved == nil, "the rough job and the sprint while off are forgotten")
 
 -- 9. commands
 p = newPlayer(); H.current = p

@@ -9,7 +9,7 @@ H.stubs()
 local pillsSwallowed = 0
 ISTakePillAction = { complete = function(self) pillsSwallowed = pillsSwallowed + 1; self.character._depress = 6600; return true end }
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Meds", "Diabetes")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Meds", "Diabetes")
 
 -- the trait under test is Spiraling unless a test asks for another
 local newPlayer = H.factory({ traits = { "spiraling" } })

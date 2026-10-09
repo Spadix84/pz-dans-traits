@@ -1,20 +1,22 @@
--- Offline test for DanTraits_Positives.lua: Iron Stomach's grade and food
+-- Offline test for DanTraits_Positives.lua: Iron Gut's grade and food
 -- sickness cuts, Early Riser's start and night bonus, Meal Prepper's start
 -- and longer variety window, Night Shift by day, Hollow Legs' hangovers and
--- drinks, and Fast Recovery's grant and blood.
+-- drinks, Fast Recovery's grant and blood, Thick Skull (with Bounces Back
+-- folded in) and Grit's share of pain reduction.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
 H.load("Positives")
 H.expectHooks("OnCreatePlayer", "OnGameStart")
 H.expectEvery("minute", "Delta:foodSicknessRise")
-H.expectEvery("minute", "GoodClotter")   -- Iron Stomach subscribes to the pipeline
+H.expectEvery("minute", "GoodClotter")   -- Iron Gut subscribes to the pipeline
+H.expectEvery("minute", "Grit")
 
 local near = H.near
 local minute = H.minute
 
--- 1. Iron Stomach: rotten food's grade penalty halved (0.0 -> 0.25); burnt likewise; fresh untouched; without the trait untouched
-local iron = H.player({ traits = { "ironstomach" } }); H.current = iron
+-- 1. Iron Gut (vanilla, Iron Stomach folded in): rotten food's grade penalty halved (0.0 -> 0.25); burnt likewise; fresh untouched; without the trait untouched
+local iron = H.player({ vanilla = { "base:irongut" } }); H.current = iron
 near(DanTraits_RunHooks("foodGrade", 0.0, iron, {}, "rotten"), 0.25, 1e-9, "rotten: half the penalty")
 near(DanTraits_RunHooks("foodGrade", 0.2, iron, {}, "burnt"), 0.35, 1e-9, "burnt: half the penalty")
 near(DanTraits_RunHooks("foodGrade", 0.8, iron, {}, "fresh"), 0.8, 1e-9, "fresh: untouched")
@@ -114,5 +116,27 @@ near(DanTraits_RunHooks("concussionChance", 0.6, ts), 0.3, 1e-9, "half the chanc
 near(DanTraits_RunHooks("concussionScore", 0.8, ts), 0.6, 1e-9, "a quarter less bad")
 near(DanTraits_RunHooks("concussionHeal", 0.001, ts, {}), 0.0015, 1e-9, "heals x1.5")
 near(DanTraits_RunHooks("concussionChance", 0.6, plain), 0.6, 1e-9, "no trait: as is")
+-- Bounces Back folded in: knockouts and faints half as long, the sumatriptan day-after too
+near(DanTraits_RunHooks("passOutMinutes", 10, ts), 5, 1e-9, "out half as long")
+near(DanTraits_RunHooks("passOutMinutes", 10, plain), 10, 1e-9, "no trait: out as long")
+near(DanTraits_RunHooks("tripAfterMinutes", 1440, ts), 720, 1e-9, "the sumatriptan day-after half a day")
+
+-- 9. Grit: its own share of painReduction is 35% of the pain felt without it; others' share is kept
+local gr = H.player({ traits = { "grit" } }); H.current = gr
+local red = 0
+gr.getBodyDamage = function() return {
+  getPainReduction = function() return red end,
+  setPainReduction = function(_, v) red = v end,
+} end
+gr._st.pain = 40; minute()
+near(red, 14, 1e-9, "35% of 40")
+-- the game now feels 40 - 14 = 26: the share stays at 35% of the pain without Grit
+gr._st.pain = 26; minute(); near(red, 14, 1e-9, "steady: still 14")
+-- a drink adds 10 of its own: kept, Grit's share follows the felt pain
+red = red + 10; gr._st.pain = 16; minute(); near(red, 10 + 0.35 * 30, 1e-9, "the drink's share kept")
+-- trait gone: only Grit's share comes off
+gr._traits.grit = nil; minute(); near(red, 10, 1e-9, "Grit's share removed")
+assert(gr._md.DanTraits.gritCut == nil, "forgotten")
+minute(); near(red, 10, 1e-9, "nothing more")
 
 H.pass()

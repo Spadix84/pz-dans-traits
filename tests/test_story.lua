@@ -39,10 +39,13 @@ assert(halo[2] == "+text:UI_DanTraits_MddEnd" and seen[2].ev.kind == "MddEnd" an
 DanTraits_Story(player, "DiaReading", "Blood sugar 62", "bad")
 assert(seen[3].ev.kind == "DiaReading" and seen[3].ev.text == "Blood sugar 62", "direct story")
 
--- 5. a listener that throws does not take the notice down with it
+-- 5. a listener that throws does not take the notice down with it (in the game; the
+-- tests run with DanTraits_STRICT, where a guarded error raises instead)
 Events.OnStoryEvent.Add(function() error("boom") end)
+DanTraits_STRICT = false
 DanTraits_Notify(player, "UI_DanTraits_BrittleSnap")
 assert(halo[3] == "text:UI_DanTraits_BrittleSnap" and seen[4].ev.kind == "BrittleSnap", "survives a broken listener")
+DanTraits_STRICT = true
 
 -- 6. no event system (older build, tests elsewhere): notices still work, nothing published
 triggerEvent = nil

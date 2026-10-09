@@ -29,7 +29,7 @@ assert(not DanTraits_IsCaddyMed(nil), "nothing is not medication")
 assert(DanTraits_IsPillCaddy(item("DanTraits.PillCaddy")) and not DanTraits_IsPillCaddy(item("Base.KeyRing")), "the caddy is recognised")
 
 -- 2. the start: 1% (ZombRand(100) == 0) for a new character with a medical trait, rolled once
-local create = H.handlers.OnCreatePlayer[#H.handlers.OnCreatePlayer]   -- the caddy's, loaded last
+local function create(n, p) H.fire("OnCreatePlayer", n, p) end   -- core's one handler runs every registered kit
 local function caddies(p)
   local n = 0
   local items = p:getInventory():getItems()
@@ -47,7 +47,7 @@ p = H.player({ traits = { "ms" }, hours = 0 })
 H.rng = { 1 }
 create(0, p)
 assert(caddies(p) == 0, "any other roll: none")
-p = H.player({ traits = { "jinxed" }, hours = 0 })
+p = H.player({ traits = { "vegetarian" }, hours = 0 })
 H.rng = { 0 }
 H.rolls = 0
 create(0, p)
@@ -61,15 +61,17 @@ H.rng = {}
 -- 3. the tab: every caddy loose in the main inventory, after vanilla's buttons
 local refresh = H.only("OnRefreshInventoryWindowContainers")
 p = H.player({ hours = 10 }); H.current = p
-local function decorate(it, name)
-  local inv = { name = name }
+local function decorate(it, name, parent)
+  local inv = { name = name, _parent = parent }
+  function inv:getParent() return self._parent end
+  function inv:setParent(who) self._parent = who end
   it.getInventory = function() return inv end
   it.getTex = function() return "tex" end
   it.getName = function() return name end
   return it
 end
-local caddy = decorate(p:getInventory():AddItem("DanTraits.PillCaddy"), "Pill Caddy")
-decorate(p:getInventory():AddItem("Base.Bag_FannyPackFront"), "Fanny Pack")
+local caddy = decorate(p:getInventory():AddItem("DanTraits.PillCaddy"), "Pill Caddy", p)   -- on the belt: the game parented it to the character
+local pack = decorate(p:getInventory():AddItem("Base.Bag_FannyPackFront"), "Fanny Pack", p)
 local function page(onCharacter, existing)
   local pg = { player = 0, onCharacter = onCharacter, backpacks = {}, added = {} }
   for _, inv in ipairs(existing or {}) do pg.backpacks[#pg.backpacks + 1] = { inventory = inv } end
@@ -84,6 +86,15 @@ refresh(pg, "begin")
 assert(#pg.added == 0, "nothing before vanilla's buttons")
 refresh(pg, "buttonsAdded")
 assert(#pg.added == 1 and pg.added[1] == "Pill Caddy", "the caddy gets a tab, the unworn fanny pack does not")
+assert(caddy:getInventory():getParent() == nil, "the belt's parenting is undone before the tab is made (it was reading the whole carried weight)")
+assert(pack:getInventory():getParent() == p, "other containers are left alone")
+caddy:getInventory():setParent(p)
+refresh(page(true, { caddy:getInventory() }), "buttonsAdded")
+assert(caddy:getInventory():getParent() == nil, "undone again on every refresh, tab or no tab")
+caddy:getInventory():setParent("a shelf")
+refresh(page(true), "buttonsAdded")
+assert(caddy:getInventory():getParent() == "a shelf", "only the character as parent is cleared")
+caddy:getInventory():setParent(nil)
 pg = page(true, { caddy:getInventory() })
 refresh(pg, "buttonsAdded")
 assert(#pg.added == 0, "held in the hands it already has one: no second tab")

@@ -1,5 +1,5 @@
--- Offline test for DanTraits_BadDay.lua: the opening applies once (drunk, a cold, a shard in the
--- groin, no clothes, soaked), is idempotent when the character is created again (a reload), does
+-- Offline test for DanTraits_BadDay.lua: the opening applies once (drunk, a cold, an infected
+-- laceration on the left forearm, no clothes, soaked), is idempotent when the character is created again (a reload), does
 -- nothing after the first hour or without the trait; the fire starts once, only indoors; and the
 -- console replay (`badday`, DanTraits_BadDayReplay) clears the flags and applies again.
 -- No balance dial is tested here: they wait for a play test (README, Status and known issues).
@@ -14,18 +14,20 @@ IsoFireManager = { explode = function(_, square, power) exploded[#exploded + 1] 
 function getCell() return "cell" end
 ArrayList = { new = function() local l = { _n = {} }; function l:add(x) self._n[#self._n + 1] = x end; return l end }
 
-local function groinPart()
-  local g = { _name = "Groin", _shards = 0, _wet = nil }
+local function armPart()
+  local g = { _name = "ForeArm_L", _cuts = 0, _wet = nil, _inf = false, _infL = 0 }
   function g:getType() return self._name end
-  function g:generateDeepShardWound() self._shards = self._shards + 1 end
+  function g:setCut(b) if b then self._cuts = self._cuts + 1 end end
+  function g:setInfectedWound(b) self._inf = b end
+  function g:setWoundInfectionLevel(v) self._infL = v end
   function g:setWetness(w) self._wet = w end
   return g
 end
 
--- a character of the opening: a groin, the cold setters, a worn shirt, and a room (or none)
+-- a character of the opening: a forearm, the cold setters, a worn shirt, and a room (or none)
 local function newPlayer(o)
   o = o or {}
-  local groin = groinPart()
+  local groin = armPart()
   local p = H.player({ traits = o.trait == false and {} or { "badday" }, hours = o.hours or 0, parts = { groin } })
   p._groin, p._cold = groin, { strength = nil, has = nil, catch = nil }
   local base = p.getBodyDamage
@@ -62,7 +64,8 @@ local p = newPlayer({ room = true }); H.current = p
 H.fire("OnCreatePlayer", 0, p)
 assert(p._st.intox == 100, "intoxication 100")
 assert(p._cold.has == true and p._cold.strength == 50.0, "a cold at strength 50")
-assert(p._groin._shards == 1, "one shard in the groin")
+assert(p._groin._cuts == 1, "one laceration on the forearm")
+assert(p._groin._inf == true and p._groin._infL == 2, "already infected, at level 2 (wound infection not loaded: the game's own)")
 assert(p._cleared and p._removedWorn == 2, "no clothes left")
 assert(p._st.wetness == 100 and p._groin._wet == 100, "soaked: stat and body parts")
 assert(p._md.DanTraits.badDayApplied == true, "marked applied")
@@ -70,18 +73,18 @@ assert(p._md.DanTraits.badDayApplied == true, "marked applied")
 -- 2. created again (a reload, a respawn on the same character): nothing is applied twice
 p._st.intox = 40; p._cold.strength = 20; p._removedWorn = nil
 H.fire("OnCreatePlayer", 0, p)
-assert(p._groin._shards == 1 and p._st.intox == 40 and p._cold.strength == 20 and p._removedWorn == nil, "idempotent")
+assert(p._groin._cuts == 1 and p._st.intox == 40 and p._cold.strength == 20 and p._removedWorn == nil, "idempotent")
 
 -- 3. past the first hour: not a fresh character, nothing happens
 local old = newPlayer({ hours = 3 }); H.current = old
 H.fire("OnCreatePlayer", 0, old)
-assert(old._groin._shards == 0 and old._st.intox == 0, "after the first hour: nothing")
+assert(old._groin._cuts == 0 and old._st.intox == 0, "after the first hour: nothing")
 assert(old._md.DanTraits == nil or not old._md.DanTraits.badDayApplied, "and not marked applied")
 
 -- 4. without the trait: nothing
 local plain = newPlayer({ trait = false }); H.current = plain
 H.fire("OnCreatePlayer", 0, plain)
-assert(plain._groin._shards == 0 and plain._st.intox == 0, "no trait: nothing")
+assert(plain._groin._cuts == 0 and plain._st.intox == 0, "no trait: nothing")
 
 -- 5. the fire: once, from a room far enough away, with a notice; not again on the next start
 p = newPlayer({ room = true }); H.current = p
@@ -98,10 +101,10 @@ p = newPlayer({ room = true, hours = 50 }); H.current = p
 p._md.DanTraits = { badDayApplied = true, badDayFireDone = true }
 local text = DanTraits_BadDayReplay(p)
 assert(text == "badday: opening replayed", text)
-assert(p._groin._shards == 1 and p._st.intox == 100 and p._cold.strength == 50.0 and p._cleared, "replayed on a character past the first hour")
+assert(p._groin._cuts == 1 and p._st.intox == 100 and p._cold.strength == 50.0 and p._cleared, "replayed on a character past the first hour")
 assert(p._md.DanTraits.badDayApplied == true and p._md.DanTraits.badDayFireDone == nil, "applied flag set, fire flag cleared")
 assert(#exploded == 1, "no fire without the argument")
-DanTraits_BadDayReplay(p); assert(p._groin._shards == 2, "each replay applies again (the console is for balancing)")
+DanTraits_BadDayReplay(p); assert(p._groin._cuts == 2, "each replay applies again (the console is for balancing)")
 text = DanTraits_BadDayReplay(p, true)
 assert(#exploded == 2 and text:find("fire started", 1, true), "badday fire lights it: " .. text)
 local indoorsless = newPlayer({ hours = 50 })
@@ -114,8 +117,8 @@ H.load("client/DanTraits_Telemetry.lua")
 local reply = DanTraits_RunCommand(newPlayer({ hours = 9 }), "badday")
 assert(reply == "badday: opening replayed", "the badday console command: " .. tostring(reply))
 
--- 8. the sewing kit: a needle and thread in another house 15 to 40 tiles away, once, safe from
--- Jinxed, put back if the game fills that container afterwards
+-- 8. the kit: disinfectant and a bandage in another house 15 to 40 tiles away, once, put back if
+-- the game fills that container afterwards
 local noRoom = function() return nil end
 local own, other, farHouse = { getRandomRoomExcluding = noRoom }, { getRandomRoomExcluding = noRoom }, { getRandomRoomExcluding = noRoom }
 local function container(kind, x, y)
@@ -152,9 +155,8 @@ p = newPlayer(); H.current = p
 p.getX = function() return 100 end; p.getY = function() return 100 end
 p.getCurrentSquare = function() return squares["100,100"] end
 H.fire("OnGameStart")
-assert(#drawer._items == 2 and drawer._items[1]._type == "Needle" and drawer._items[2]._type == "Thread", "needle and thread in the dresser next door")
+assert(#drawer._items == 2 and drawer._items[1]._type == "Disinfectant" and drawer._items[2]._type == "Bandage", "disinfectant and a bandage in the dresser next door")
 assert(#fridge._items == 0 and #ownDrawer._items == 0 and #distant._items == 0 and #tooClose._items == 0, "nowhere else")
-assert(drawer._items[1]:getModData().DanTraitsKeep == true, "marked to keep")
 local spot = p._md.DanTraits.badDayKit
 assert(spot and spot.x == 125 and spot.kind == "dresser", "the spot is remembered")
 H.fire("OnGameStart"); assert(#drawer._items == 2, "placed once")
@@ -172,16 +174,13 @@ assert(DanTraits_BadDayPlaceKit(p2).x == 108, "own house far room as the last re
 squares["108,100"] = nil
 assert(DanTraits_BadDayPlaceKit(p2) == nil, "no container at all: no kit")
 
--- 9. Jinxed never takes the kit
-H.load("Jinxed")
-local jp = newPlayer(); jp.getX = p.getX; H.current = jp
-DanTraits_HasTrait = function(_, k) return k == "jinxed" end
-local jc = container("dresser", 1, 1); jc:AddItem("Base.Needle"):getModData().DanTraitsKeep = true
-jc.getItems = function(self) local items = self._items; return { size = function() return #items end, get = function(_, i) return items[i + 1] end } end
-jc.Remove = function(self, it) for i, x in ipairs(self._items) do if x == it then table.remove(self._items, i) end end end
-local realRand = ZombRand; ZombRand = function() return 0 end
-H.fire("OnFillContainer", "bedroom", "dresser", jc)
-ZombRand = realRand
-assert(#jc._items == 1, "Jinxed leaves the kit")
+-- 9. with wound infection loaded, the laceration goes through DanTraits_InfectWound at level 2
+local calls = {}
+DanTraits_InfectWound = function(player, part, level) calls[#calls + 1] = { part = part, level = level } end
+local ip = newPlayer({ hours = 50 }); H.current = ip
+DanTraits_BadDayReplay(ip)
+assert(#calls == 1 and calls[1].part == ip._groin and calls[1].level == 2, "the infection system takes it")
+assert(ip._groin._inf == false, "and the game's flag is left to it")
+DanTraits_InfectWound = nil
 
 H.pass()

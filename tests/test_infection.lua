@@ -4,7 +4,8 @@
 -- level only, and held healing; the whole-body score, fever (SICKNESS),
 -- sepsis health loss; antibiotics (vanilla's pill, level and half-life,
 -- missed doses, unfinished course and relapse); vanilla's own infection
--- and one-shot antibiotic undone; the sandbox switch; the commands.
+-- and one-shot antibiotic undone; the sandbox switch; the commands;
+-- DanTraits_InfectWound.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -212,6 +213,18 @@ p = newPlayer(); H.current = p
 assert(string.find(DanTraits_ExtraCommands.contaminate(p, { "forearm_l", "5" }), "shows in 5 min", 1, true), "contaminate")
 assert(DanTraits_ExtraCommands.infect(p, { "tail" }) == "infect <part> [level 0..10]", "usage")
 assert(DanTraits_ExtraCommands.infection(p, { "clear" }) == "infection cleared" and D(p).infS == 0, "clear")
+
+-- 12b. DanTraits_InfectWound (A Really Bad Day): straight to the local stage, shown on the part;
+-- with wound infection off, only the game's own flag and level
+p = newPlayer(); H.current = p; a = arm(p); a._t.cut = 5
+DanTraits_InfectWound(p, a, 2)
+assert(D(p).infParts.ForeArm_L and D(p).infParts.ForeArm_L.L == 2 and a._infected and a._level == 2, "local at 2, shown")
+minute(); assert(D(p).infParts.ForeArm_L.L > 2, "and it grows like any other")
+SandboxVars = { DanTraits = { InfectionEnabled = false } }
+p = newPlayer(); H.current = p; a = arm(p); a._t.cut = 5
+DanTraits_InfectWound(p, a, 2)
+assert(a._infected and a._level == 2 and (D(p) == nil or D(p).infParts == nil or D(p).infParts.ForeArm_L == nil), "off: the game's own")
+SandboxVars = nil
 
 -- 13. the hook subscribers: hazard and growth move by the stated factor, and
 -- say nothing without their trait. Loaded only now: Vitality runs for

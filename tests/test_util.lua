@@ -10,6 +10,69 @@ H.stubs()
 H.load("Util", "DanTraits")   -- core too: the pain-floor applier is a system it registers
 local near = H.near
 
+-- the shared constants are Util's, so a file that loads before the system that owns them still reads them
+assert(DanTraits_DRINK.any == 0.01 and DanTraits_DRINK.tipsy == 0.05 and DanTraits_DRINK.buzz == 0.20 and DanTraits_DRINK.sober == 0.05, "DRINK")
+assert(#DanTraits_DRUNK_LEVELS == 4 and DanTraits_DRUNK_LEVELS[1] == 0.10 and DanTraits_DRUNK_LEVELS[4] == 0.70, "DRUNK_LEVELS")
+assert(DanTraits_NIGHT.dark == 0.25 and DanTraits_NIGHT.bright == 0.60 and DanTraits_NIGHT.qualityDark == 0.10
+  and DanTraits_NIGHT.qualityBright == 0.15 and DanTraits_NIGHT.napMaxHours == 3 and DanTraits_NIGHT.gapMin == 60, "NIGHT")
+
+-- StatFraction / Intoxication: 0..1 of the stat's range, the 0..100 stats included; 0 on failure
+do
+  local p = H.player({ intox = 25, stress = 0.4 })
+  assert(DanTraits_StatFraction(p:getStats(), CharacterStat.INTOXICATION) == 0.25, "intoxication 25 of 100")
+  assert(DanTraits_StatFraction(p:getStats(), CharacterStat.STRESS) == 0.4, "stress 0.4 of 1")
+  p._st.intox = 250; assert(DanTraits_StatFraction(p:getStats(), CharacterStat.INTOXICATION) == 1, "clamped")
+  assert(DanTraits_StatFraction(p:getStats(), { getMaximumValue = function() return 1 end }) == 0, "an unknown stat reads 0")
+  assert(DanTraits_StatFraction({ get = function() return 50 end }, { name = "x" }) == 0.5, "no maximum and a value over 1: the 0..100 scale")
+  assert(DanTraits_StatFraction(nil, CharacterStat.STRESS) == 0, "no stats: 0, no error")
+  p._st.intox = 60; assert(DanTraits_Intoxication(p) == 0.6, "Intoxication")
+  assert(DanTraits_Intoxication(nil) == 0, "no player: 0")
+end
+
+-- Strength: another system's 0..1 by the name of its getter, 0 when that system is not loaded,
+-- clamped, and a getter that throws reads 0 (logged once; raised under STRICT like any guarded call)
+do
+  assert(DanTraits_Strength("DanTraits_NoSuchGetter", nil) == 0, "not loaded: 0")
+  DanTraits_TestStrength = function(player) return player.v end
+  assert(DanTraits_Strength("DanTraits_TestStrength", { v = 0.4 }) == 0.4, "read")
+  assert(DanTraits_Strength("DanTraits_TestStrength", { v = 3 }) == 1 and DanTraits_Strength("DanTraits_TestStrength", { v = -1 }) == 0, "clamped")
+  assert(DanTraits_Strength("DanTraits_TestStrength", { v = "x" }) == 0 and DanTraits_Strength("DanTraits_TestStrength", {}) == 0, "not a number: 0")
+  DanTraits_TestStrength = function() error("broken getter") end
+  local realPrint, lines = print, {}
+  print = function(...) lines[#lines + 1] = table.concat({ ... }, " ") end
+  DanTraits_STRICT = false
+  assert(DanTraits_Strength("DanTraits_TestStrength", {}) == 0 and DanTraits_Strength("DanTraits_TestStrength", {}) == 0, "in the game: 0")
+  assert(#lines == 1 and lines[1]:find("strength:DanTraits_TestStrength", 1, true), "and logged once: " .. table.concat(lines, "|"))
+  DanTraits_STRICT = true
+  assert(not pcall(DanTraits_Strength, "DanTraits_TestStrength", {}), "STRICT (the tests): a throwing getter raises")
+  print = realPrint
+  assert(#lines == 1, "already logged: no new line")
+  DanTraits_TestStrength = nil
+end
+
+-- DropHeld: the primary hand, or both; a two-handed weapon once; nothing held or nowhere to drop: false; the notice
+do
+  local bat, torch = { name = "bat" }, { name = "torch" }
+  local p = H.player(); H.current = p
+  p.getPrimaryHandItem = function() return bat end
+  p.getSecondaryHandItem = function() return torch end
+  H.clearHalo()
+  assert(DanTraits_DropHeld(p, false, "UI_DanTraits_FumblerDrop") == true and #p._dropped == 1 and p._dropped[1] == bat, "the primary hand")
+  assert(H.halo[#H.halo] == "UI_DanTraits_FumblerDrop", "with the notice")
+  assert(DanTraits_DropHeld(p, true) == true and #p._dropped == 3 and p._dropped[3] == torch, "both hands, no notice asked")
+  assert(#H.halo == 1, "none given")
+  p.getSecondaryHandItem = function() return bat end
+  assert(DanTraits_DropHeld(p, true) == true and #p._dropped == 4, "a two-handed weapon is in both hands and drops once")
+  p.getPrimaryHandItem = function() return nil end
+  p.getSecondaryHandItem = function() return nil end
+  assert(DanTraits_DropHeld(p, true, "UI_DanTraits_FumblerDrop") == false and #p._dropped == 4 and #H.halo == 1, "empty hands: nothing, no notice")
+  p.getPrimaryHandItem = function() return bat end
+  p.getCurrentSquare = function() return nil end
+  assert(DanTraits_DropHeld(p, false) == false, "nowhere to drop: false")
+  p.getCurrentSquare = function() error("no square") end
+  assert(DanTraits_DropHeld(p, false) == false and DanTraits_DropHeld(nil) == false, "fails soft")
+end
+
 -- Clamp01 / StatMax
 assert(DanTraits_Clamp01(-3) == 0 and DanTraits_Clamp01(0.4) == 0.4 and DanTraits_Clamp01(7) == 1, "clamp01")
 assert(DanTraits_StatMax(CharacterStat.PAIN) == 100 and DanTraits_StatMax(CharacterStat.STRESS) == 1, "stat max")
@@ -32,6 +95,12 @@ assert(p._st.pain == 70, "above the floor: never lowered")
 p._st.stress = 0.9
 DanTraits_FloorUp(stats, STRESS, 250, 500)
 assert(p._st.stress == 1, "never above the stat's maximum")
+-- a stat that cannot be read: nothing happens, nothing thrown (the callers no longer wrap it)
+local broken = { get = function() error("no such stat") end, set = function() error("never reached") end }
+assert(pcall(DanTraits_FloorUp, broken, PAIN, 40, 5), "an unreadable stat fails soft")
+local wrote = false
+local halfBroken = { get = function() return 10 end, set = function() wrote = true; error("write refused") end }
+assert(pcall(DanTraits_FloorUp, halfBroken, PAIN, 40, 5) and wrote, "a refused write fails soft")
 
 -- PainFloor: the largest source wins, once a minute, on the head; the game takes the pain reduction off (H.pain models it)
 do
@@ -127,6 +196,56 @@ assert(DanTraits_PartNum(part, "odd") == 0 and DanTraits_PartNum(part, "missing"
 -- asleep
 assert(DanTraits_Asleep(H.player({ asleep = true })) == true and DanTraits_Asleep(H.player()) == false, "asleep")
 assert(DanTraits_Asleep({}) == false and DanTraits_Asleep(nil) == false, "asleep fails soft")
+
+-- SandboxNum: the option as a number, else the default
+SandboxVars = nil
+assert(DanTraits_SandboxNum("KnoxSurviveChance", 25) == 25 and DanTraits_SandboxNum("KnoxSurviveChance") == nil, "no table: default")
+SandboxVars = { DanTraits = { KnoxSurviveChance = "40", MSSpoons = "lots" } }
+assert(DanTraits_SandboxNum("KnoxSurviveChance", 25) == 40, "a number (even as text)")
+assert(DanTraits_SandboxNum("MSSpoons", 12) == 12 and DanTraits_SandboxNum("Missing", 7) == 7, "not a number, or absent: default")
+SandboxVars = { DanTraits = { KnoxSurviveChance = 0 } }
+assert(DanTraits_SandboxNum("KnoxSurviveChance", 25) == 0, "zero is a value")
+SandboxVars = nil
+
+-- MoodleLevel: the vanilla moodle when it can be read, else the stat tiered
+do
+  local tiers = { 0.1, 0.3, 0.5, 0.7 }
+  local p = H.player({ intox = 35 })
+  assert(DanTraits_MoodleLevel(p, "DRUNK", CharacterStat.INTOXICATION, tiers) == 2, "no moodle API: intoxication 35% is level 2")
+  p._st.intox = 5; assert(DanTraits_MoodleLevel(p, "DRUNK", CharacterStat.INTOXICATION, tiers) == 0, "under the first tier: 0")
+  p._st.intox = 30; assert(DanTraits_MoodleLevel(p, "DRUNK", CharacterStat.INTOXICATION, tiers) == 2, "at a tier: reached")
+  local m = H.player({ intox = 5, moodles = { drunk = 3 } })
+  assert(DanTraits_MoodleLevel(m, "DRUNK", CharacterStat.INTOXICATION, tiers) == 3, "the moodle wins when it reads")
+  assert(DanTraits_MoodleLevel(m, "THIRST", CharacterStat.THIRST, tiers) == 0, "a moodle type the game lacks: the stat")
+  assert(DanTraits_MoodleLevel(nil, "DRUNK", CharacterStat.INTOXICATION, tiers) == 0, "no player: 0, no error")
+end
+
+-- PartLodged / EachPart: glass or a bullet; every part in turn, each guarded on its own
+do
+  local function part(name, glass, bullet)
+    return { getType = function() return name end, haveGlass = function() return glass end, haveBullet = function() return bullet end }
+  end
+  assert(DanTraits_PartLodged(part("Hand_L", true, false)) and DanTraits_PartLodged(part("Hand_L", false, true)), "glass or a bullet")
+  assert(not DanTraits_PartLodged(part("Hand_L", false, false)) and not DanTraits_PartLodged({}) and not DanTraits_PartLodged(nil), "neither, or nothing to ask")
+  local parts = { part("Hand_L"), part("Hand_R"), part("Head") }
+  local p = H.player({ parts = parts })
+  local seen = {}
+  assert(DanTraits_EachPart(p, function(pt, name, i, n) seen[#seen + 1] = name .. i .. "/" .. n end, "test") == 3, "three parts")
+  assert(table.concat(seen, ",") == "Hand_L0/3,Hand_R1/3,Head2/3", "part, name, index and count: " .. table.concat(seen, ","))
+  assert(DanTraits_EachPart(H.player({ parts = {} }), function() error("never") end, "test") == 0, "no parts: 0")
+  local noBody = H.player(); noBody.getBodyDamage = function() error("no body") end
+  assert(DanTraits_EachPart(noBody, function() error("never") end, "test") == 0, "no body: 0, no error")
+  -- a part that cannot be read is the only one skipped (in the game, logged once by tag; the tests raise)
+  DanTraits_STRICT = false
+  local realPrint, lines = print, {}
+  print = function(...) lines[#lines + 1] = table.concat({ ... }, " ") end
+  local counted = 0
+  DanTraits_EachPart(p, function(pt, name) if name == "Hand_R" then error("bad part") end counted = counted + 1 end, "Test")
+  print = realPrint
+  DanTraits_STRICT = true
+  assert(counted == 2 and #lines == 1 and lines[1]:find("part:Test failed", 1, true), "the other two still ran, logged once: " .. table.concat(lines, "|"))
+  assert(not pcall(DanTraits_EachPart, p, function() error("bad part") end, "Test2"), "STRICT: a bad part raises")
+end
 
 -- sandbox
 SandboxVars = nil

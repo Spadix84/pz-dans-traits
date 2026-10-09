@@ -189,4 +189,26 @@ near(DanTraits_MedState(ins, "insulin"), 3, 1e-9, "three doses on board")
 -- prednisone's side effect is strong enough to beat the game easing stress
 near(DanTraits_Drugs.prednisone.side.stress, 0.001, 1e-12, "prednisone side: 0.001 stress a minute")
 
+-- 12. hooks for Age and Cast Iron: medHalfLife (daily and course drugs only), medSideChance, medOverAt
+local slow = H.player(); H.current = slow
+local slowMe = slow
+DanTraits_AddHook("medHalfLife", function(h, player) if player == slowMe then return h * 2 end end)
+DanTraits_MedTake(slow, "anticonvulsant", 1); DanTraits_MedTake(slow, "diazepam", 1)
+H.mins(180)
+near(DanTraits_MedState(slow, "anticonvulsant"), 0.5 ^ (3 / 24), 1e-3, "a daily drug's half-life doubled: 3 hours leaves 0.917, not 0.841")
+near(DanTraits_MedState(slow, "diazepam"), 0.5 ^ (3 / 1.5), 1e-3, "a rescue drug: its own half-life, hook or no hook")
+local hardy = H.player(); H.current = hardy
+local hardyMe = hardy
+DanTraits_AddHook("medSideChance", function(c, player) if player == hardyMe then return 0 end end)
+SandboxVars = SandboxVars or {}; SandboxVars.DanTraits = SandboxVars.DanTraits or {}
+SandboxVars.DanTraits.MedSideEffectChance = 100
+DanTraits_MedTake(hardy, "beta", 1)
+assert(DanTraits_Data(hardy).meds.beta.sideMin == nil, "a side chance of 0 from the hook: no side effect even at 100%")
+SandboxVars.DanTraits.MedSideEffectChance = nil
+DanTraits_AddHook("medOverAt", function(at, player) if player == hardyMe then return at + 1 end end)
+DanTraits_Data(hardy).meds.beta.lvl = 3.5; H.mins(1)
+assert(not DanTraits_Data(hardy).meds.beta.over, "3.5 beta blockers with the line at 4: not over")
+DanTraits_Data(hardy).meds.beta.lvl = 4.5; H.mins(1)
+assert(DanTraits_Data(hardy).meds.beta.over, "4.5: over")
+
 H.pass()

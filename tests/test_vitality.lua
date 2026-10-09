@@ -4,7 +4,7 @@ H.events()
 H.stubs()
 Perks = { Fitness = 'fitness', Strength = 'strength', Woodwork = 'woodwork' }
 
-H.load("Dependent", "MDD", "Brittle", "Arthritis", "Jinxed", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes", "Vitality")
+H.load("Dependent", "MDD", "Brittle", "Arthritis", "BadDay", "Hallucinations", "Asthma", "Gluten", "Vegetarian", "Diabetes", "Vitality")
 H.expectEvery("minute", "Vitality")
 H.expectEvery("frame", "Delta:enduranceRegen"); H.expectEvery("minute", "Delta:catchCold")   -- Vitality subscribes to the pipeline
 
@@ -211,8 +211,9 @@ V(drift).vitality = 1; minute(); assert(drift._carry == 9)
 drift._carry = 8; minute(); assert(drift._carry == 9 and V(drift).vitCarryBase == 8, "reload: re-applied on the fresh base once, got " .. drift._carry)
 -- another mod moved the base: adopt it
 drift._carry = 12; minute(); assert(drift._carry == 13 and V(drift).vitCarryBase == 12, "external base change adopted, got " .. drift._carry)
--- old saves carry the float delta field: cleared
-V(drift).vitCarryDelta = -0.0047; minute(); assert(V(drift).vitCarryDelta == nil, "legacy delta dropped")
+-- old saves carry the float delta field: cleared once when the save loads (core's mod-data cleanup), not every minute
+V(drift).vitCarryDelta = -0.0047; minute(); assert(V(drift).vitCarryDelta == -0.0047, "the minute leaves it alone")
+H.fire("OnGameStart"); assert(V(drift).vitCarryDelta == nil, "legacy delta dropped on load")
 -- endurance regen per frame
 local fr = newPlayer({ endurance = 0.5 }); H.current = fr; minute()
 V(fr).vitality = 1; DanTraits_DeltaRemember(V(fr), "enduranceRegen", 0.5)
