@@ -9,7 +9,7 @@
 --
 -- Experience: a new character gets extra levels in their profession's main
 -- skill (the one the profession boosts most; every one of them on a tie):
--- 0 / 1 / 2 / 3 by default. Every other skill the profession boosts gets
+-- 0 / 0 / 2 / 3 by default (the 30s had 1 until 2026-10-09). Every other skill the profession boosts gets
 -- one level in the 40s and two in the 50s: years on the job teach the whole
 -- trade. Fitness and Strength never get age's levels: age is years of
 -- practice, not a better body (a Fitness Instructor's main skill is
@@ -76,7 +76,7 @@ local AGE = {
     [20] = { levels = 0, endurance = 1.25, xp = 1.5, heal = 1.5, stiff = 1.5, wakes = 0.8,
              cells = 1.15, concussion = 1.2, hangover = 0.85, dia = -0.05, heart = 0.8, gym = 65,
              learn3 = 1.2, hunger = 1.15, clear = 1.2 },
-    [30] = { levels = 1 },
+    [30] = { levels = 0 },
     [40] = { levels = 2, side = 1, endurance = 0.92, xp = 0.9, heal = 0.9, stiff = 0.85, wakes = 1.15,
              cells = 0.8, concussion = 0.75, hangover = 1.25, dia = 0.1, heart = 1.25,
              brittle = 1.25, arthritis = 1.3, handy = 1,

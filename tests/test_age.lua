@@ -92,16 +92,21 @@ assert(DanTraits_AgeBand(newPlayer()) == 50, "default 58 rounds to 50s")
 SandboxVars.DanTraits.AgeDefault = nil
 assert(DanTraits_AgeRoundBand(50) == 50 and DanTraits_AgeRoundBand(49) == 40 and DanTraits_AgeRoundBand(nil) == 30, "rounding")
 
--- 2. 30s carpenter: +1 Woodwork (main skill only), XP set to the new level, once only;
---    and the 30s trait is granted
+-- 2. 30s carpenter: no levels at all (the game as it is; the 30s gave +1 until 2026-10-09),
+--    marked applied once, and the 30s trait is granted
 local p = create(newPlayer())
-assert(p._levels.Woodwork == 5, "carpenter 4 -> 5, got " .. p._levels.Woodwork)
+assert(p._levels.Woodwork == 4, "carpenter stays at 4, got " .. p._levels.Woodwork)
 assert(p._levels.Carving == 1 and p._levels.Masonry == 1, "side skills untouched")
-assert(p._xp.Woodwork == 5, "xp set to level 5")
+assert(p._xp.Woodwork == nil, "xp never set")
 assert(p._md.DanTraits.ageApplied and p._md.DanTraits.ageBand == 30, "marked applied, band 30")
 assert(p._traits.age30s == true and p._adds == 1, "In Their 30s granted")
 create(p)
-assert(p._levels.Woodwork == 5 and p._adds == 1, "not applied or granted twice")
+assert(p._levels.Woodwork == 4 and p._adds == 1, "not applied or granted twice")
+-- the sandbox can still give the 30s a level
+SandboxVars.DanTraits.AgeBonus30s = 1
+local p1 = create(newPlayer())
+assert(p1._levels.Woodwork == 5 and p1._xp.Woodwork == 5 and p1._levels.Carving == 1, "sandbox 30s bonus 1: +1 main skill, XP set to the new level, side skills untouched")
+SandboxVars.DanTraits.AgeBonus30s = nil
 
 -- 3. the other bands: 0 / 2 / 3 levels; a picked trait is kept and nothing else granted
 local young = create(aged("age20s"))
@@ -117,7 +122,7 @@ local handy = create(newPlayer({ traits = { "age40s" }, vanilla = { "base:handy"
 assert(handy._levels.Woodwork == 7, "40s Handy carpenter: +2 +1, got " .. handy._levels.Woodwork)
 local handyChef = create(newPlayer({ traits = { "age50s" }, vanilla = { "base:handy" }, prof = "chef" }))
 assert(handyChef._levels.Cooking == 7 and handyChef._levels.Butchering == 4 and handyChef._levels.Woodwork == 1, "50s Handy chef: +3 Cooking, +2 Butchering, +1 Carpentry")
-assert(create(newPlayer({ vanilla = { "base:handy" } }))._levels.Woodwork == 5, "30s Handy: no extra")
+assert(create(newPlayer({ vanilla = { "base:handy" } }))._levels.Woodwork == 4, "30s Handy: no extra")
 
 -- 5. ties all get the levels; Fitness and Strength are never the main skill;
 --    the Unemployed get Maintenance; capped at 10
@@ -126,7 +131,7 @@ assert(tie._levels.Cooking == 5 and tie._levels.Carving == 5 and tie._levels.Mas
 local coach = create(newPlayer({ prof = "instructor", traits = { "age40s" } }))
 assert(coach._levels.Fitness == 3 and coach._levels.Strength == 1 and coach._levels.Sprinting == 4, "instructor: Sprinting, never Fitness or Strength (not as side skills either)")
 local jobless = create(newPlayer({ prof = "unemployed" }))
-assert(jobless._levels.Maintenance == 1, "unemployed 30s: +1 Maintenance")
+assert(jobless._levels.Maintenance == nil, "unemployed 30s: nothing")
 assert(create(newPlayer({ prof = "unemployed", traits = { "age50s" } }))._levels.Maintenance == 3, "unemployed 50s: +3 Maintenance")
 local joblessYoung = create(newPlayer({ prof = "unemployed", traits = { "age20s" } }))
 assert(joblessYoung._levels.Maintenance == nil, "unemployed 20s: nothing")
@@ -161,15 +166,17 @@ local function count(t) local n = 0; for _ in pairs(t) do n = n + 1 end return n
 local lv = DanTraits_AgeLevels({ Woodwork = integer(4), Carving = integer(1) }, 40, false)
 assert(lv.Woodwork == 2 and lv.Carving == 1 and count(lv) == 2, "40s carpenter: Woodwork 2, Carving 1")
 lv = DanTraits_AgeLevels({ Woodwork = integer(4), Carving = integer(1) }, 30, false)
-assert(lv.Woodwork == 1 and count(lv) == 1, "30s carpenter: the main skill only")
+assert(count(lv) == 0, "30s carpenter: nothing")
+lv = DanTraits_AgeLevels({ Woodwork = integer(4), Carving = integer(1) }, 30, false, 1)
+assert(lv.Woodwork == 1 and count(lv) == 1, "30s with a bonus of 1 from the sandbox: the main skill only")
 lv = DanTraits_AgeLevels({ Woodwork = integer(4) }, 50, true)
 assert(lv.Woodwork == 4, "50s Handy carpenter: 3 + 1 on the same skill")
 lv = DanTraits_AgeLevels({ Cooking = 4, Woodwork = 1 }, 50, true)
 assert(lv.Cooking == 3 and lv.Woodwork == 3, "Handy's Carpentry on top of the side levels")
 lv = DanTraits_AgeLevels({ Sprinting = 2, Fitness = 3, Strength = 1, Lightfoot = 1 }, 50, false)
 assert(lv.Sprinting == 3 and lv.Lightfoot == 2 and count(lv) == 2, "Fitness and Strength get nothing, main or side")
-lv = DanTraits_AgeLevels({ Cooking = 2, Carving = 2 }, 30, true)
-assert(lv.Cooking == 1 and lv.Carving == 1 and count(lv) == 2, "30s tie, plain numbers, Handy adds nothing")
+lv = DanTraits_AgeLevels({ Cooking = 2, Carving = 2 }, 30, true, 1)
+assert(lv.Cooking == 1 and lv.Carving == 1 and count(lv) == 2, "30s tie with a sandbox level, plain numbers, Handy adds nothing")
 lv = DanTraits_AgeLevels(nil, 50, false)
 assert(lv.Maintenance == 3 and count(lv) == 1, "no boosts: Maintenance")
 lv = DanTraits_AgeLevels({ Fitness = 1, Strength = 1 }, 40, false)

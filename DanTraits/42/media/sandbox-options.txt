@@ -10,7 +10,7 @@ option DanTraits.AgeBonus20s
 {type = integer, min = 0, max = 5, default = 0, page = DanTraits, translation = DanTraitsAgeBonus20s,}
 
 option DanTraits.AgeBonus30s
-{type = integer, min = 0, max = 5, default = 1, page = DanTraits, translation = DanTraitsAgeBonus30s,}
+{type = integer, min = 0, max = 5, default = 0, page = DanTraits, translation = DanTraitsAgeBonus30s,}
 
 option DanTraits.AgeBonus40s
 {type = integer, min = 0, max = 5, default = 2, page = DanTraits, translation = DanTraitsAgeBonus40s,}

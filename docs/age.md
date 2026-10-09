@@ -14,7 +14,7 @@ train faster; older characters start with more skill and recover slower. The
 |---|---|---|---|---|
 | Points | costs 6 | free | gives 2 | gives 6 |
 | Where it shows at creation | positive traits | positive traits (0 points) | negative traits | negative traits |
-| Main skill | +0 | +1 | +2 | +3 |
+| Main skill | +0 | +0 | +2 | +3 |
 | Each other profession skill | +0 | +0 | +1 | +2 |
 
 Points are fixed by the trait script (`Cost = 6 / 0 / -2 / -6`; the 50s gave 4 until 2026-10-07). With one
@@ -49,10 +49,10 @@ whole trade, not only the speciality.
 
 | Example | 30s | 40s | 50s |
 |---|---|---|---|
-| Carpenter | Carpentry +1 | Carpentry +2; Carving, Short Blunt, Masonry, Maintenance +1 | Carpentry +3; the other four +2 |
-| Doctor | First Aid +1 | First Aid +2; Short Blade +1 | First Aid +3; Short Blade +2 |
-| Electrician | Electrical +1 | Electrical +2 | Electrical +3 |
-| Veteran | Aiming, Reloading +1 | both +2 | both +3 |
+| Carpenter | nothing | Carpentry +2; Carving, Short Blunt, Masonry, Maintenance +1 | Carpentry +3; the other four +2 |
+| Doctor | nothing | First Aid +2; Short Blade +1 | First Aid +3; Short Blade +2 |
+| Electrician | nothing | Electrical +2 | Electrical +3 |
+| Veteran | nothing | both +2 | both +3 |
 
 - **Ties.** If several skills share the top boost, each one gets the full
   levels. A 50s Veteran starts with +3 Aiming and +3 Reloading. The widest
@@ -232,7 +232,7 @@ Notes on the less obvious rows:
 |---|---|---|
 | Age | on | Off: the Age traits are hidden at creation, nothing is granted, and every character counts as in their 30s |
 | Default Age | 30 | The age given to a character who has no Age trait at spawn: an old save, or one made without the creation screen (20 to 59) |
-| Profession Levels (20s / 30s / 40s / 50s) | 0 / 1 / 2 / 3 | The main-skill levels per band, 0 to 5. At 0 the band gets no levels at all, the other skills included |
+| Profession Levels (20s / 30s / 40s / 50s) | 0 / 0 / 2 / 3 | The main-skill levels per band, 0 to 5. At 0 the band gets no levels at all, the other skills included |
 
 There is no separate switch for the everyday effects.
 

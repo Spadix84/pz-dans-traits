@@ -349,7 +349,7 @@ Attacks that cost you hours.
 
 Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Younger bodies recover and train faster; older characters start with more skill. The 30s are the game as it is. The creation screen asks for the age first: until one of the four is chosen nothing else is offered and Next is greyed. In Their 30s costs nothing, the 20s cost 6 points, the 40s give 2 and the 50s 6. The whole system, with every number, is in [docs/age.md](docs/age.md).
 
-- **Profession:** extra levels in the profession's main skill at the start: 0 / 1 / 2 / 3. Every skill tied for the top boost gets them. Each other skill the profession boosts gets +1 in the 40s and +2 in the 50s. Fitness and Strength never get any; the Unemployed get Maintenance. The creation screen shows them in blue in the Major Skills list.
+- **Profession:** extra levels in the profession's main skill at the start: 0 / 0 / 2 / 3 (the 30s get none: they are the game as it is). Every skill tied for the top boost gets them. Each other skill the profession boosts gets +1 in the 40s and +2 in the 50s. Fitness and Strength never get any; the Unemployed get Maintenance. The creation screen shows them in blue in the Major Skills list.
 - **Every day (20s / 40s / 50s against the 30s):**
   - Endurance recovery x1.25 / x0.92 / x0.85.
   - Fitness and Strength experience x1.5 / x0.9 / x0.8.
