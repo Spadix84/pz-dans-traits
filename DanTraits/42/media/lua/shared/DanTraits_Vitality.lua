@@ -364,7 +364,6 @@ local function updateVitalityMinute(player, d)
         -- fractional writes were truncated and the reconstruction then
         -- ratcheted the base down a kilo at a time. If the current value is
         -- not what was last set (reload, another mod), adopt it as the base.
-        d.vitCarryDelta = nil
         local current = player:getMaxWeightBase()
         local applied = d.vitCarryKg or 0
         local base = d.vitCarryBase

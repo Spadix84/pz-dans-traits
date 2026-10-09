@@ -146,8 +146,10 @@ end
 -- for that (old -> new) are moved once per save, when the player loads
 -- (OnCreatePlayer runs before the trait files' own starts read the new
 -- names, OnGameStart covers the rest): copied only if the new key is not
--- already set, then the old one is cleared. One log line with the count.
--- Add a pair here whenever a saved key is renamed.
+-- already set, then the old one is cleared. Keys no system reads any more
+-- (MODDATA_DROPPED) are cleared the same way. One log line with the count.
+-- Add a pair here whenever a saved key is renamed, a name whenever one is
+-- retired.
 local MODDATA_RENAMES = {
     withdrawing        = "alcWithdrawing",
     dryHours           = "alcDryHours",
@@ -156,6 +158,10 @@ local MODDATA_RENAMES = {
     mealPrepperApplied = "posMealPrepper",
     gymRegularApplied  = "gymApplied",
     deepSleeperWakeful = "slWakefulGranted",
+}
+local MODDATA_DROPPED = {
+    "hcCovered", "epCovered",   -- the wearing-off notices moved to the drug registry (2026-10-08)
+    "vitCarryDelta",            -- Vitality's carry weight is applied against a remembered base now
 }
 function DanTraits_MigrateModData(player)
     if not player then return 0 end
@@ -169,7 +175,13 @@ function DanTraits_MigrateModData(player)
             n = n + 1
         end
     end
-    if n > 0 then print("[DanTraits] mod data: renamed " .. n .. " old key(s)") end
+    for _, old in ipairs(MODDATA_DROPPED) do
+        if d[old] ~= nil then
+            d[old] = nil
+            n = n + 1
+        end
+    end
+    if n > 0 then print("[DanTraits] mod data: renamed or dropped " .. n .. " old key(s)") end
     return n
 end
 Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_MigrateModData(player) end)
