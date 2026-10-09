@@ -97,8 +97,10 @@ A multiplier above 1 on a recovery row means faster.
 The last four are the mind and the metabolism (2026-10-07): in your 20s you
 are learning and the brain is a sponge, the body burns through everything
 fast; in your 50s the trade you know keeps coming, new skills do not, and
-everything lingers, good and bad. The learning factors multiply with each
-other and with Quick Study, Old Hand and Set in Their Ways. The clearance
+everything lingers, good and bad. The band's learning factors multiply with
+each other; Quick Study, Old Hand and Set in Their Ways run in a handler of
+their own, so their factor adds to the band's rather than multiplying (20s
+and Quick Study on a skill under 3: x1.2 + x1.4 - 1 = x1.6). The clearance
 factor divides a hangover's hours and a daily or course drug's half-life (a
 dose holds a fifth longer in the 50s; rescue drugs such as diazepam and
 painkillers keep their own), scales caffeine's decay, and stretches or
@@ -170,7 +172,7 @@ its points. With the Age option off none of them is offered.
 | Set in Their Ways | 50s | gives 2 | Skills the occupation does not boost gain experience x0.85. Fitness and Strength are left to age |
 | Bottomless Pit | 20s | gives 6 | Hunger builds x1.3 on top of the band's x1.15; from the Hungry moodle's second level, 0.1 unhappiness a minute awake (0.2 at the third). Not with Light Eater |
 | Pace Yourself | 40s | costs 2 | A tenth of the endurance a swing or a sprint spends comes straight back |
-| Settled | 40s | gives 2 | A night anywhere but a bed in a house (a bed object on a square with a room) scores 0.2 worse, and so does the first night in any new bed |
+| Settled | 40s | gives 4 | A night anywhere but a bed in a house (a bed object on a square with a room) scores 0.2 worse, and so does the first night in any new bed |
 | Delicate Stomach | 40s, 50s | gives 2 | A junk meal (the Vitality grade) brings 15 food sickness for a whole portion; a drink with hunger over half brings 10. Not with Iron Gut |
 | Seen It All | 50s | costs 3 | Panic builds x0.6 (the game's own rise, through the stat delta pipeline); Fear of Blood faints half as often; Germaphobe's filth stress half. Not with Cowardly |
 | Cast Iron | 50s | costs 2 | Medication side effects half as often; every drug's overdose line one pill higher |
@@ -255,7 +257,7 @@ There is no separate switch for the everyday effects.
 ## For modders
 
 - `DanTraits_AgeBand(player)` returns 20, 30, 40 or 50 (30 with age off).
-- `DanTraits_AgeLevels(boosts, band, handy, bonus)` returns `{ perk = levels }`.
+- `DanTraits_AgeLevels(boosts, band, handy, bonus, green)` returns `{ perk = levels }`.
 - `DanTraits_AgeSurcharge(band, traitType)` returns the extra points a trait
   costs in that band. The creation screen applies it by wrapping vanilla's
   `CharacterCreationProfession:PointToSpend`, which is worked out on demand.

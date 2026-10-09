@@ -10,7 +10,7 @@ local traitData = DanTraits_Data
 -- corpses, exertion and a wound infection's fever (no mask helps), falls when resting in clean warm air, and drives
 -- four tiers: warning, halved endurance recovery (the enduranceRegen hook of
 -- the stat delta pipeline) with the odd quiet cough, no recovery and coughing
--- more, and a full attack that drains endurance and health (to a 20% floor)
+-- more, and a full attack that drains endurance (to empty) and health (to a 15% floor)
 -- while the player coughs loudly enough to pull zombies. The inhaler item
 -- takes ASTHMA_INHALER_RELIEF off it. Coughs are real world sounds: zombies hear them. They go
 -- through the one shared cough (DanTraits_Cough in DanTraits_Util.lua, one gap

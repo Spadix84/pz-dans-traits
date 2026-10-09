@@ -35,7 +35,7 @@
     "Sandbox_DanTraitsMedSideEffectChance": "Medication Side Effect Chance",
     "Sandbox_DanTraitsMedSideEffectChance_tooltip": "The chance in percent, on each day a medication is taken, that its mild side effect shows up for a few hours. Taking too many at once is always harmful.<br>0: no side effects.",
     "Sandbox_DanTraitsStartingMedication": "Starting Medication",
-    "Sandbox_DanTraitsStartingMedication_tooltip": "Characters with a medical trait start with its medication: beta blockers (Heart Condition), anticonvulsants (Epilepsy), insulin pens or metformin (Diabetes) and an inhaler (Asthma), and the last two tablets of a pack of sumatriptan (Migraines).<br>Off: they start with none and have to find it. Daily pills taken that morning still wear off over a few days.",
+    "Sandbox_DanTraitsStartingMedication_tooltip": "Characters with a medical trait start with its medication: beta blockers (Heart Condition), anticonvulsants (Epilepsy), insulin pens or metformin (Diabetes), an inhaler (Asthma), baclofen and amantadine (Multiple Sclerosis), painkillers (Arthritis), and the last two tablets of a pack of sumatriptan (Migraines).<br>Off: they start with none and have to find it. Daily pills taken that morning still wear off over a few days.",
     "Sandbox_DanTraitsArthritisWeaponDrop": "Arthritis Drops Weapons",
     "Sandbox_DanTraitsArthritisWeaponDrop_tooltip": "An arthritic grip that slips makes the swing land weak. In a bad flare (cold and damp), one slip in three throws the weapon to the ground.<br>Off: a slip only ever weakens the swing.",
     "Sandbox_DanTraitsMSSpoons": "MS Spoons a Day",

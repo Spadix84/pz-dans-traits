@@ -28,7 +28,7 @@
 --     as often, Germaphobe's filth stress half. Not with Cowardly.
 --   Pace Yourself (40s, costs 2): a tenth of the endurance a swing or a
 --     sprint spends is given back.
---   Settled (40s, gives 2): a night anywhere but a bed in a house scores 0.2
+--   Settled (40s, gives 4 since 2026-10-08, was 2): a night anywhere but a bed in a house scores 0.2
 --     worse, and so does the first night in a new bed.
 --   Old Bones Know Rain (50s, costs 1): once a day, tomorrow's storm, heavy
 --     rain, blizzard or a night below freezing is felt in the joints today.

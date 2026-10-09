@@ -89,7 +89,7 @@ Stiff joints and an unreliable grip.
 
 - Slower to move and swing. A Stiff Joints moodle shows how much the weather is in the joints.
 - Flares in the cold and damp (humidity, rain outdoors). The cold is read from the joints' own skin temperature, the game's thermoregulator, which clothing, wind and wet feed: gloves and a coat keep a flare off. Only with no reading does the air decide.
-- Relief: painkillers halve the weather's share of a flare while they are in your system (about two hours a pill); prednisone cuts it to a third while you take it. The stronger counts, they do not stack, and neither touches the everyday stiffness. A new character starts with a bottle of painkillers (Starting Medication).
+- Relief: painkillers halve the weather's share of a flare while they are in your system (about two hours a pill); prednisone cuts it to about a third (x0.35) while you take it. The stronger counts, they do not stack, and neither touches the everyday stiffness. A new character starts with a bottle of painkillers (Starting Medication).
 - A swing can slip: 1% calm, more when panicked, hurt, tired or flaring. A slipped swing lands at a third of the weapon's damage.
 - Past half a flare one slip in three throws the weapon to the ground instead (a dosed full flare sits exactly at half, and is safe). The sandbox option Arthritis Drops Weapons turns that off.
 - Cannot be taken in the 20s; flares sooner in the 40s.
@@ -98,13 +98,13 @@ Stiff joints and an unreliable grip.
 
 A hidden blood sugar model. You read it with a meter, not a number on screen.
 
-- **Sugar** rises with the carbohydrates you eat and drink, and falls with insulin, exercise and time. Alcohol lowers it.
+- **Sugar** rises with the carbohydrates you eat and drink, and for Type 1 about 10 an hour with nothing on board. Insulin, exercise, alcohol, sleep and (above 180) the kidneys bring it down; insulin is the only treatment that does.
 - **The moodle** (Blood Sugar) says the sugar is out of range, not which way. The glucose meter and a test strip say which.
 - **Low:** shaky, tired, anxious, and a bad low puts you on the floor. Steady Hands stops working; Epilepsy seizures are likelier.
 - **High:** thirst, and wound infections are likelier and climb faster. Over 350: nausea, and after two hours up there, health drains (a spike after a meal costs nothing; hours of it do).
-- **Type 1:** no insulin of your own. An insulin pen (any number of doses) is the only way down. Starts with a pen, a meter and strips.
+- **Type 1:** no insulin of your own. Insulin pens (40 doses each) are the treatment. Starts with three pens, a meter and strips (the meter and strips even with Starting Medication off).
 - **Knowing your doses (Type 1):** one dose covers about 12.5 g of carbohydrate. With First Aid 3 a food's tooltip (or a sugary drink's, for the whole bottle or mug) says whether its sugar hits fast or slowly and gives a wide range of doses; First Aid 6 narrows the range, and the meter adds how much insulin is still working; First Aid 9 gives the exact doses for your body, and the meter says what it takes to get back to 110 (more doses, or grams of fast sugar), and a food that would spike you past 350 even with its doses says to eat it half, a third or a quarter at a time. The meter's tooltip keeps its last reading and advice. The magazine **Living With Type 1** (new item: hospital magazine racks, medical offices, pharmacies, bookstore and library medical shelves) teaches the First Aid 9 knowledge at any level.
-- **Type 2:** the body's own insulin, limited by weight (and by age: more resistance in the 40s, a little less in the 20s). Metformin builds up over two days. Starts on it with a bottle.
+- **Type 2:** the body's own insulin, limited by weight (and by age: more resistance in the 40s, a little less in the 20s). Metformin builds up over two days. Starts on it with a bottle, a meter and strips.
 
 #### Heart Condition (-10)
 
@@ -126,8 +126,8 @@ Chest pain when you are winded, and a heart attack if you push through it.
 Airway irritation that builds through four tiers to an attack.
 
 - **What irritates:** cold air, corpses nearby, exertion (spending endurance when it is already low), panic, smoke, and a wound infection's fever. A mask halves the environmental share.
-- **Tier 1:** a warning. **Tier 2:** endurance recovers at half speed, the odd quiet cough. **Tier 3:** no recovery and coughing. **Tier 4, the attack:** endurance and health drain to a 20% floor, you cough loud enough to pull zombies, and an attack that empties you can black you out.
-- At rest an attack eases over about four hours. The rescue inhaler (new item) ends it at once. Inhalers turn up half as often again as they used to; the sandbox option Inhaler Loot sets the rate.
+- **Tier 1:** a warning. **Tier 2:** endurance recovers at half speed, the odd quiet cough. **Tier 3:** no recovery and coughing. **Tier 4, the attack:** endurance drains to empty and health to a 15% floor, you cough loud enough to pull zombies, and an attack that empties you can black you out.
+- At rest, irritation eases over about four hours (twice as fast asleep) once the attack has ended; during one it barely eases on its own. The rescue inhaler (new item) ends it at once. Inhalers turn up half as often again as they used to; the sandbox option Inhaler Loot sets the rate.
 - Smoking, and a smoker's lungs, make it worse.
 - Moodle: Airway Irritation.
 
@@ -361,7 +361,7 @@ Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Youn
 - **Age pricing:** a trait can cost more or fewer points in a band, shown beside its cost on the creation screen (red dearer, green cheaper). Strong and Athletic +2 / +4 in the 40s / 50s, Stout +1 / +2, Fit -1 in the 20s then +1 / +2; Fast Learner -1 in the 20s and +1 in the 50s; Slow Learner gives a point fewer in the 20s and the 50s; Hearty Appetite gives a point fewer in the 20s and one more in the 50s.
 - **Traits only one age can take:**
   - 20s: **Green (-4)**, every occupation skill starts a level lower; **Quick Study (+4)**, skills under level 5 gain experience x1.4; **Bottomless Pit (-6)**, hunger a third faster again and going hungry drags the mood down.
-  - 40s: **Pace Yourself (+2)**, a tenth of the stamina a swing or sprint spends comes back; **Settled (-2)**, sleeps badly off a house bed and the first night in any new one.
+  - 40s: **Pace Yourself (+2)**, a tenth of the stamina a swing or sprint spends comes back; **Settled (-4)**, sleeps badly off a house bed and the first night in any new one.
   - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-4)**, a heavy load builds back pain; **Bad Knees (-3)**, running, sprinting and climbing build knee pain; **Old Hand (+4)**, every skill the occupation boosts gains experience x1.25; **Delicate Stomach (-2)**, junk food and a drink on an empty stomach bring a queasy stomach.
   - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-2)**, skills outside the occupation gain experience x0.85; **Seen It All (+3)**, panic builds at six tenths the pace, Fear of Blood faints and filth stress halved; **Cast Iron (+2)**, medication side effects half as often and the overdose line a pill higher; **Old Bones Know Rain (+1)**, tomorrow's storm or freezing night announced the morning before.
 - **Green** takes the levels away only; it does not change how fast anything trains.
@@ -378,8 +378,8 @@ Diet, exercise and sleep roll into one slow score.
 - **Diet:** fresh, varied food lifts it; junk and neglect drag it. Variety counts over three days.
 - **Exercise:** training (the fitness regularity the exercise menu builds) or a day of hard activity (running, fighting, chopping, heavy work, read from the body's metabolic rate). Activity alone keeps you at neutral; training takes you higher.
 - **Sleep:** the night's score, below.
-- **Fit and Thriving:** faster endurance recovery, mood and stress relief, slower healing of nothing (healing is faster), cold resistance, resistance to wound infection. Thriving adds a kilo of base carry weight and 1.5x Fitness and Strength experience.
-- **Run Down and Sluggish:** the reverse.
+- **Fit and Thriving:** faster endurance recovery, mood and stress relief, faster healing, cold resistance, resistance to wound infection. Thriving alone adds a kilo of base carry weight and 1.5x Fitness and Strength experience.
+- **Run Down and Sluggish:** the reverse, except that health is never drained; Run Down alone loses the kilo.
 - The conditions above read it too, and so does how fast the body clears an infection, a concussion, an unstitched wound and a smoker's lungs.
 - A bad night sets a same-day Slept Badly moodle. A new character starts neutral and cannot fall below it for the first day.
 - Moodle: Vitality.
@@ -416,7 +416,7 @@ Replaces vanilla's one-roll infection.
 - Prone to Illness and Resilient count, and so do Diabetes (high sugar), Vitality, iron and smoking.
 - **Incubation:** 8 to 16 hours unseen. Cleaning the wound then ends it.
 - **Growth:** the wound's infection level (the health panel, the pain) climbs about 2 a day, and the wound stops healing. Disinfectant and garlic still push it back.
-- **Level 5, spread:** fever (temperature, the Sick moodle, tiredness, thirst) and only antibiotics work. Past that, sepsis drains health, faster the worse it gets. Untreated it kills in a couple of days.
+- **Level 5, spread:** disinfectant and garlic stop working and only antibiotics do. The fever (temperature, the Sick moodle, tiredness, thirst) follows hours to a day or two later. Past that, sepsis drains health, faster the worse it gets. Untreated it kills in a couple of days.
 - **Antibiotics** are the game's own pills, one a dose. Each tops up a level in the blood that halves every six hours; while it is high enough the infection falls back. A dose every eight hours keeps it there; ten doses finish a course (a box holds 12). Stop early once it is gone and it has a coin flip to come back. Vanilla's one-pill cure is gone.
 - A fever makes for a bad night, brings on migraines, raises blood sugar and irritates asthma. Sepsis brings delirium.
 - Zombie infection is untouched, except for [Resilient](#resilient-10-vanilla-reworked)'s chance to beat it.
@@ -516,7 +516,7 @@ One list of drugs that every trait reads (`DanTraits_Meds.lua`).
 - **Starting Medication** (sandbox option, on): a character who starts with a condition starts on its drug, built up, with the medication. Off, they find their own.
 - **Diazepam** (new item): the panic drop vanilla beta blockers used to give, for about an hour and a half. Beta blockers now only do what Heart Condition needs.
 - **Pill Caddy** (new item, uncommon): a belt-worn weekly organiser that holds medication only. Capacity 1 (Organized makes it 2). Found in medicine cabinets, bedside drawers, handbags, on pharmacy shelves and on the odd zombie, and a found one often has a bottle or two in it. A new character with a medical trait has a 1% chance to start with one.
-- Daily drug bottles hold 30 pills, the mod's bottles spawn partly used, and part bottles merge like vanilla's. Every tooltip says what the drug treats, how to take it and its side effects. Antidepressants keep Depression's own two-week regimen, with a moodle of their own: paler green while a pill's coverage runs, full green once the two weeks are up, gone when a day is missed.
+- Daily drug bottles hold 30 pills, most of the mod's bottles spawn partly used (Prednisone, Baclofen and Amantadine full), and part bottles merge like vanilla's. Every tooltip says what the drug treats, how to take it and its side effects. Antidepressants keep Depression's own two-week regimen, with a moodle of their own: paler green while a pill's coverage runs, full green once the two weeks are up, gone when a day is missed.
 
 ### Moodles
 

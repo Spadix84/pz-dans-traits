@@ -454,7 +454,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:settled,
-        Cost = -2,
+        Cost = -4,
         UIName = UI_trait_DanSettled,
         UIDescription = UI_trait_DanSettleddesc,
     }

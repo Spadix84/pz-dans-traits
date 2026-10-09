@@ -38,7 +38,7 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
   characters are not affected.
 - **Fifteen traits only one age can take.** 20s: Green (-4, the levels only: it does not
   slow experience), Quick Study (+4, now x1.4 under level 5), Bottomless Pit (-6). 40s: Pace Yourself (+2), Settled
-  (-2). 40s and 50s: Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4),
+  (-4). 40s and 50s: Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4),
   Delicate Stomach (-2). 50s: Old Injury (-3), Set in Their Ways (-2), Seen It All (+3),
   Cast Iron (+2), Old Bones Know Rain (+1). Every band has a perk and a flaw of its own. The
   creation screen offers each only to its age and takes it back off if the age changes.
@@ -121,6 +121,17 @@ weapon. Three ways to ease it, none of which touches the everyday stiffness:
   character on painkillers never throws the weapon. `artWeather` and `artRelief` in the mod
   data show the flare before relief and the factor applied.
 - A new Arthritis character starts with a bottle of painkillers under Starting Medication.
+
+### Fixed: in-game text that said something the code does not
+
+A fact-check of the field guide against the code (plans/field-guide-review-2026-10-08.md)
+found the game's own text wrong in places. The Thriving moodle said Fitness and Strength
+train twice as fast (x1.5). Hemophilia said only bandages slow a bleed (stitches stop a deep
+wound, clotting powder halves one). Gym Regular left out the 20s' head start, Set in Their
+Ways left out that Fitness and Strength are exempt, and the Starting Medication tooltip left
+out Multiple Sclerosis (baclofen, amantadine) and Arthritis (painkillers). The field guide,
+README and docs/age.md got the same pass; docs/age.md wrongly said the band's learning
+factors multiply with Quick Study, Old Hand and Set in Their Ways: they add.
 
 ### Fixed: the pause menu was hidden while passed out
 
@@ -237,6 +248,7 @@ Costs below use the script's sign: positive costs points, negative gives them.
 
 - **Old Hand** (still 4, 40s and 50s) now speeds up every skill the occupation boosts by
   x1.25, not just the main skill.
+- **Settled gives 4** (was 2, 2026-10-08).
 - **In Their 50s gives 6** (was 4). **Bottomless Pit gives 6** (was 3). **Alcoholic gives
   4** (was 2). **Germaphobe gives 4** (was 3). **Fast Recovery costs 6** (was 8, now the same
   as the Fast Healer it contains).

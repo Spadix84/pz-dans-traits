@@ -4,8 +4,8 @@
 -- Weights are relative to the other entries in the same list (for scale:
 -- beta blockers are 1 in a bathroom cabinet, 20 in a doctor's bag, 0.1 on a
 -- zombie). Insulin also turns up in fridges, where people keep it. Sun block
--- is not medicine: it is as common as toothpaste (10 in a bathroom cabinet,
--- 20 on a toiletry shelf), and turns up in lockers, camping gear and glove boxes.
+-- is not medicine: it is nearly as common as toothpaste (8 in a bathroom cabinet,
+-- 15 on a toiletry shelf), and turns up in lockers, camping gear and glove boxes.
 -- The Pill Caddy is uncommon (0.5 in a bathroom cabinet) and a found one may
 -- have medication in it (CADDY_CONTENTS, registered as the container's own
 -- distribution).
@@ -298,7 +298,8 @@ local ITEMS = {
 -- rolls at these odds: most caddies have a bottle or two, some are empty, a
 -- shop one is usually empty (it is new stock, so the pharmacy shelf list
 -- is not the one this reads; the game rolls contents by the item, not the
--- shelf). Bottles come part-used as any looted bottle does.
+-- shelf). Most bottles come part-used as looted bottles do (SPAWN_TYPES in
+-- DanTraits_Meds.lua); the three MS bottles come full.
 local CADDY_CONTENTS = {
     rolls = 2,
     items = {
