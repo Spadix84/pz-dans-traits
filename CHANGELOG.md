@@ -141,6 +141,21 @@ weapon. Three ways to ease it, none of which touches the everyday stiffness:
   data show the flare before relief and the factor applied.
 - A new Arthritis character starts with a bottle of painkillers under Starting Medication.
 
+### Brittle: a bump is not a break
+
+A Brittle character fractured an arm in a crash too small to leave a scratch. The game
+reports an 11 km/h bump as 2-3 damage, which cleared Brittle's flat "2 damage or more"
+gate, so a tap at a fence rolled the same 20% as a real hit.
+
+- Falls, car crashes and being hit by a car no longer roll on the raw damage. They go out on
+  Concussion's new `impact` hook with the concussion chance its scale gives them (crashes by
+  the speed the car lost), and Brittle rolls 20% x 2 x that chance: nothing under the floor
+  (25 km/h lost, a fall under 3), about 22% for a fence at 50 km/h, 40% for a wall at 70, about
+  7% for a second-floor drop. Weapon and zombie hits keep the flat 20% at 2 damage or more.
+- The impact judgement runs with Concussion switched off too; only the concussion itself is
+  gated. Mod authors: `DanTraits_AddHook("impact", function(_, player, chance, amount, kind))`,
+  kind is "fall", "crash" or "hit".
+
 ### Fixed: in-game text that said something the code does not
 
 A fact-check of the field guide against the code (plans/field-guide-review-2026-10-08.md)

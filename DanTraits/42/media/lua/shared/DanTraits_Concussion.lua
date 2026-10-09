@@ -52,7 +52,10 @@
 -- Hooks offered: concussionHeal (the score healed a minute, player, d);
 -- Vitality speeds it up or slows it. concussionChance and concussionScore
 -- (a knock's chance and how bad, player), before a helmet's cut; Thick
--- Skull lowers both.
+-- Skull lowers both. impact (nil, player, chance 0..1, amount, kind): every
+-- fall, crash and car hit, with the chance this scale gives it of a
+-- concussion, before any roll, Concussion on or off; Brittle rolls a
+-- fracture on it.
 require "DanTraits"
 
 local notify = DanTraits_Notify
@@ -152,11 +155,17 @@ function DanTraits_KnockHead(player, chance, score)
     return new
 end
 
--- a fall or crash of this amount, on its scale (CC_FALL, CC_CRASH)
-local function impactKnock(player, amount, scale)
+-- a fall or crash of this amount, on its scale (CC_FALL, CC_CRASH, CC_CRASH_KMH).
+-- Every impact first goes out on the "impact" hook (nil, player, chance 0..1,
+-- amount, kind "fall" | "crash" | "hit") so other systems can judge the same
+-- knock by the same scale: Brittle rolls a fracture on it. That runs with
+-- Concussion off too; only the concussion itself is gated.
+local function impactKnock(player, amount, scale, kind)
     scale = scale or CC_FALL
-    if amount < scale[1] or amount >= 1000 then return 0 end
-    local chance = clamp01((amount - scale[1]) / (scale[2] - scale[1]))
+    if amount >= 1000 then return 0 end   -- a lethal fall is the game's business
+    local chance = amount < scale[1] and 0 or clamp01((amount - scale[1]) / (scale[2] - scale[1]))
+    DanTraits_RunHooks("impact", nil, player, chance, amount, kind or "fall")
+    if chance <= 0 then return 0 end
     local score = clamp01(CC_BASE + scale[3] * (amount - scale[1]))
     return DanTraits_KnockHead(player, chance, score)
 end
@@ -177,10 +186,10 @@ local function judgeCrash(player)
     if c.low then
         local lost = math.max(0, c.top - c.low)
         d.ccLastImpact = c.note .. " at " .. tostring(math.floor(c.top + 0.5)) .. " km/h, lost " .. tostring(math.floor(lost + 0.5))
-        impactKnock(player, lost, CC_CRASH_KMH)
+        impactKnock(player, lost, CC_CRASH_KMH, "crash")
     else
         d.ccLastImpact = c.note .. " at " .. tostring(math.floor(c.top + 0.5)) .. " km/h"
-        impactKnock(player, c.top, CC_CRASH_KMH)
+        impactKnock(player, c.top, CC_CRASH_KMH, "crash")
     end
 end
 
@@ -203,7 +212,7 @@ end
 
 local headWas = nil   -- the head's health last frame, for weapon hits
 local function onConcussionDamage(character, damageType, amount)
-    if not sandboxOn() then return end
+    if not sandboxOn() and damageType == "WEAPONHIT" then return end   -- falls and crashes are still judged for the impact hook
     local player = getSpecificPlayer(0)
     if not player or character ~= player then return end
     amount = tonumber(amount) or 0
@@ -216,7 +225,8 @@ local function onConcussionDamage(character, damageType, amount)
             else crash = { top = top, note = note, at = nowMs(), frames = 0 } end
         else
             traitData(player).ccLastImpact = note
-            impactKnock(player, amount, damageType == "FALLDOWN" and CC_FALL or CC_CRASH)
+            if damageType == "FALLDOWN" then impactKnock(player, amount, CC_FALL, "fall")
+            else impactKnock(player, amount, CC_CRASH, damageType == "CARHITDAMAGE" and "hit" or "crash") end
         end
     elseif damageType == "WEAPONHIT" then
         local head = headPart(player)
@@ -391,6 +401,7 @@ end
 Events.OnPlayerGetDamage.Add(onConcussionDamage)
 DanTraits_Every("minute", "Concussion", updateConcussionMinute, 24)
 DanTraits_Every("frame", "Concussion", function(player)
-    if sandboxOn() then trackSpeed(player); updateConcussionFrame(player) end
+    trackSpeed(player)   -- the crash speeds feed the impact hook even with Concussion off
+    if sandboxOn() then updateConcussionFrame(player) end
 end, 24)
 Events.OnWeaponSwing.Add(onConcussionSwing)

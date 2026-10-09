@@ -118,7 +118,10 @@ Chest pain when you are winded, and a heart attack if you push through it.
 
 #### Brittle (-8)
 
-- A solid hit (2 damage or more) has a 20% chance to fracture one of six limbs.
+- A solid hit (a weapon or a zombie, 2 damage or more) has a 20% chance to fracture one of six limbs.
+- Falls and car crashes are judged the way Concussion judges them: nothing under its floor (a hop
+  off a fence, a bump at 11 km/h), rising to 40% in a crash certain to concuss (a wall at 70 km/h
+  is 40%, a fence at 50 about 22%, a second-floor drop about 7%).
 - Likelier in the 40s.
 
 #### Asthma (-10)

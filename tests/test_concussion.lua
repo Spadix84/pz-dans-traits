@@ -45,11 +45,18 @@ local function out(p) return DanTraits_IsPassedOut(p) end
 local function wake(minutes) H.hours = H.hours + minutes / 60; H.now = H.now + 60000; tick() end
 local function D(p) return p._md.DanTraits end
 
+-- every fall and crash goes out on the impact hook with its chance, before any roll
+local impacts = {}
+DanTraits_AddHook("impact", function(_, player, chance, amount, kind) impacts[#impacts + 1] = { chance, amount, kind } end)
+local function lastImpact() return impacts[#impacts] end
+
 -- 1. falls: under 3 nothing; the chance climbs to certain at 15; how bad from 0.25 up
 local p = newPlayer(); H.current = p
 H.rollf = 0
 damage(p, "FALLDOWN", 2.5); assert(D(p).ccScore == nil and D(p).ccLastImpact == "FALLDOWN 2.5", "a light fall: nothing, but noted")
+assert(lastImpact()[1] == 0 and lastImpact()[2] == 2.5 and lastImpact()[3] == "fall", "the impact hook heard it, chance 0")
 H.rollf = 0.49; damage(p, "FALLDOWN", 9); near(D(p).ccScore, 0.25 + 0.04 * 6, 1e-9, "fall of 9 (a high drop): 50% chance, roll 0.49 takes; 0.49")
+near(lastImpact()[1], 0.5, 1e-9, "impact hook: a fall of 9 is chance 0.5")
 assert(halo[#halo] == "UI_DanTraits_ConcussionModerate" and not out(p), "moderate: ears ringing; this roll (0.49) misses the 25% blackout")
 p = newPlayer(); H.current = p; H.rollf = 0.51
 damage(p, "FALLDOWN", 9); assert(D(p).ccScore == nil, "roll 0.51: missed")
@@ -80,10 +87,12 @@ H.now = H.now + 5000; drive(p, 60); H.rollf = 0; damage(p, "CARCRASHDAMAGE", 44.
 assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 41.5 at 11 km/h, lost 11", "the knock waits for the speed after")
 H.now = H.now + 100; drive(p, 57); slowTo(p, 55)
 assert(D(p).ccScore == nil and D(p).ccLastImpact == "CARCRASHDAMAGE 44.6 at 60 km/h, lost 5", "a zombie at 60 km/h, 5 lost: nothing: " .. tostring(D(p).ccLastImpact))
+assert(lastImpact()[1] == 0 and lastImpact()[2] == 5 and lastImpact()[3] == "crash", "impact hook: the crash by speed lost, chance 0")
 -- a fence at 50, stopped dead: as it was by top speed, about half a chance and moderate
 H.now = H.now + 5000; drive(p, 50); H.rollf = 0.5; damage(p, "CARCRASHDAMAGE", 42.3); slowTo(p, 0)
 near(D(p).ccScore, 0.25 + 0.01 * 25, 1e-9, "50 km/h to 0: about half a chance (roll 0.5 takes), moderate 0.5")
 assert(D(p).ccLastImpact == "CARCRASHDAMAGE 42.3 at 50 km/h, lost 50", tostring(D(p).ccLastImpact))
+near(lastImpact()[1], 25 / 45, 1e-9, "impact hook: 50 km/h lost is chance 0.56")
 if out(p) then wake(5) end
 -- the same crash reported twice as the car bounces: one knock
 p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0.5
@@ -196,6 +205,11 @@ near(DanTraits_RunHooks("sleepWake", 1, p, D(p)), 1.5, 1e-9, "sleep: light wakes
 SandboxVars = { DanTraits = { ConcussionEnabled = false } }
 p = newPlayer(); H.current = p; H.rollf = 0; damage(p, "FALLDOWN", 14)
 assert(D(p) == nil or D(p).ccScore == nil, "off: no concussion")
+near(lastImpact()[1], 11 / 12, 1e-9, "off: the fall still goes out on the impact hook (Brittle)")
+local n = #impacts
+H.now = H.now + 5000; drive(p, 50); damage(p, "CARCRASHDAMAGE", 42.3); slowTo(p, 0)
+assert(#impacts == n + 1 and lastImpact()[2] == 50 and lastImpact()[3] == "crash", "off: a crash is still judged by speed lost for the hook")
+assert(D(p) == nil or D(p).ccScore == nil, "off: and still no concussion")
 SandboxVars = nil
 -- switched off mid-concussion: the tier, the moodle and what the other systems read stand down; the score is kept
 local moodleValue = nil

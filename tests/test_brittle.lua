@@ -1,6 +1,7 @@
 -- Offline test for DanTraits_Brittle.lua: a hit under 2 damage never fractures; a roll under 20
 -- fractures one of the six limbs (fracture time 40..79) with a notice; a limb that is already
--- fractured is skipped; no trait, no effect.
+-- fractured is skipped; no trait, no effect; falls and crashes roll on Concussion's impact
+-- hook by its chance, never on the raw damage event.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -79,5 +80,31 @@ local other = newPlayer({ traits = {}, parts = plain }); H.current = other
 H.rolls = 0; hit(other, "BLUNT", 30)
 assert(H.rolls == 0, "no trait: no roll")
 for _, x in ipairs(plain) do assert(x._fracture == 0, "no trait: nothing fractures") end
+
+-- 7. falls, crashes and being hit by a car never roll on the damage event (the game reports an
+-- 11 km/h bump as 2-3 damage); they come through Concussion's impact hook with its chance
+local ps7 = limbs(); local s = newPlayer({ parts = ps7 }); H.current = s; H.clearHalo()
+H.rolls = 0; H.rng = { 0, 0, 0 }
+hit(s, "FALLDOWN", 2.3); hit(s, "CARCRASHDAMAGE", 2.3); hit(s, "CARHITDAMAGE", 30)
+assert(H.rolls == 0, "an impact on the damage event: no roll")
+for _, x in ipairs(ps7) do assert(x._fracture == 0, "nothing fractured by the event") end
+local impact = function(p, chance) return DanTraits_RunHooks("impact", nil, p, chance, 0, "crash") end
+H.rolls = 0; H.rng = {}; impact(s, 0); impact(s, nil)
+assert(H.rolls == 0, "under the scale's floor (chance 0): no roll")
+-- a crash with half a chance of a concussion: 20 x 2 x 0.5 = 20%
+H.rng = { 20 }; impact(s, 0.5)
+for _, x in ipairs(ps7) do assert(x._fracture == 0, "chance 0.5, roll 20: safe") end
+H.rng = { 19, 2, 10 }; impact(s, 0.5)
+assert(ps7[3]._fracture == 50 and #halo == 1 and halo[1] == "UI_DanTraits_BrittleSnap", "chance 0.5, roll 19: a limb snaps")
+-- a crash certain to concuss: 40%
+local ps7b = limbs(); local t = newPlayer({ parts = ps7b }); H.current = t; H.clearHalo()
+H.rng = { 40 }; impact(t, 1)
+for _, x in ipairs(ps7b) do assert(x._fracture == 0, "chance 1, roll 40: safe") end
+H.rng = { 39, 0, 0 }; impact(t, 1)
+assert(ps7b[1]._fracture == 40, "chance 1, roll 39: snaps")
+-- no trait: the hook does nothing
+local ps7c = limbs(); local u = newPlayer({ traits = {}, parts = ps7c }); H.current = u
+H.rolls = 0; H.rng = {}; impact(u, 1)
+assert(H.rolls == 0, "no trait: the impact hook does not roll")
 
 H.pass()
