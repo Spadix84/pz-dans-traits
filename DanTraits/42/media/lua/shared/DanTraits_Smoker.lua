@@ -149,8 +149,7 @@ local roll = DanTraits_RollPercent
 
 local function drunkLevel(player)
     if not DanTraits_DrunkLevel then return 0 end
-    local ok, level = pcall(DanTraits_DrunkLevel, player)
-    return (ok and level) or 0
+    return tonumber(DanTraits_DrunkLevel(player)) or 0
 end
 
 local function withdrawalStat() return CharacterStat and CharacterStat.NICOTINE_WITHDRAWAL end

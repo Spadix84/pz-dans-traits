@@ -42,10 +42,7 @@ local function shaking(player)
         local d = player:getModData().DanTraits
         if d and (d.alcShakes or 0) > 0 then shakes = true end
     end)
-    if not shakes and DanTraits_DiaLow then
-        local ok, low = pcall(DanTraits_DiaLow, player)
-        shakes = ok and (tonumber(low) or 0) > 0
-    end
+    if not shakes then shakes = DanTraits_Strength("DanTraits_DiaLow", player) > 0 end   -- a diabetic low, 0 without Diabetes
     return shakes
 end
 

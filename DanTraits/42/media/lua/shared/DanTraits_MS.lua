@@ -376,7 +376,7 @@ local function wrapWorldDrink()
             if not self.item then litres = math.min(tonumber(amount) or 0, self.waterObject:getFluidAmount() or 0) end
         end)
         local result = original(self, amount, ...)
-        if litres > 0 then pcall(DanTraits_MSDrinkCool, self.character, litres) end
+        if litres > 0 then DanTraits_MSDrinkCool(self.character, litres) end
         return result
     end)
 end

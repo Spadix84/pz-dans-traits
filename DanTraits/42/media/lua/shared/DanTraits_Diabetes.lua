@@ -607,13 +607,14 @@ local function wrapDrinkAction()
         -- subscribers, Caffeine and Lactose, are handed the name and its share)
         local name, ratio = DanTraits_FluidName(self.fluidContainer), DanTraits_FluidRatio(self.fluidContainer)
         local result = original(self, ...)
-        pcall(function()
-            local after = self.fluidContainer:getAmount() or before
-            local litres = before - after
-            if litres > 0 and perLitre > 0 then DanTraits_DiaOnDrink(self.character, litres * perLitre) end
-            if litres > 0 and DanTraits_VitalityOnDrink then DanTraits_VitalityOnDrink(self.character, litres, perLitre, kcalPerLitre) end
-            if litres > 0 then DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, litres, name, ratio) end
-        end)
+        local after = before
+        pcall(function() after = self.fluidContainer:getAmount() or before end)
+        local litres = before - after
+        if litres > 0 then
+            if perLitre > 0 then DanTraits_DiaOnDrink(self.character, litres * perLitre) end
+            if DanTraits_VitalityOnDrink then DanTraits_VitalityOnDrink(self.character, litres, perLitre, kcalPerLitre) end
+            DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, litres, name, ratio)
+        end
         return result
     end)
 end

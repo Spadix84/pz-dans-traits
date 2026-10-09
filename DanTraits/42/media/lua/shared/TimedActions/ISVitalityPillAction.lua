@@ -33,9 +33,9 @@ function ISVitalityPillAction:perform()
     local kind = ""
     pcall(function() kind = tostring(self.item:getType()) end)
     -- the same two hooks as the vanilla pill action gets (DanTraits.lua): before the dose, then after
-    if DanTraits_RunHooks then pcall(function() DanTraits_RunHooks("prePill", nil, self.character, kind, self.item) end) end
+    if DanTraits_RunHooks then DanTraits_RunHooks("prePill", nil, self.character, kind, self.item) end
     self.item:Use()
-    if DanTraits_RunHooks then pcall(function() DanTraits_RunHooks("pill", nil, self.character, kind) end) end
+    if DanTraits_RunHooks then DanTraits_RunHooks("pill", nil, self.character, kind) end
     ISBaseTimedAction.perform(self)
 end
 

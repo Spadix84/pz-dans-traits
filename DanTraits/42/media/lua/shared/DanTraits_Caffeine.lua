@@ -56,8 +56,8 @@ end
 local function dose(player, amount, what)
     if not player or not amount or amount <= 0 then return false end
     -- anyone's sleep feels it (DanTraits_Sleep.lua); the habit is the trait's
-    if DanTraits_SleepOnCaffeine then pcall(DanTraits_SleepOnCaffeine, player, amount) end
-    if DanTraits_SpoonMask then pcall(DanTraits_SpoonMask, player, amount) end   -- the spoon budget: a coffee hides the wall for an hour
+    if DanTraits_SleepOnCaffeine then DanTraits_SleepOnCaffeine(player, amount) end
+    if DanTraits_SpoonMask then DanTraits_SpoonMask(player, amount) end   -- the spoon budget: a coffee hides the wall for an hour
     if not hasTrait(player, "caffeine") then return false end
     local d = cafData(player)
     d.cafLevel = d.cafLevel + amount

@@ -122,7 +122,7 @@ local function seize(player, d)
         return
     end
     if DanTraits_FumbleDrop then DanTraits_FumbleDrop(player) end
-    if DanTraits_KnockHead then pcall(DanTraits_KnockHead, player, EP_KNOCK, EP_KNOCK_SCORE) end
+    if DanTraits_KnockHead then DanTraits_KnockHead(player, EP_KNOCK, EP_KNOCK_SCORE) end
     if DanTraits_PainBurst then DanTraits_PainBurst(player, EP_PAIN_BURST) end
     DanTraits_StatAdd(stats, CharacterStat.FATIGUE, EP_FATIGUE)
     notify(player, "UI_DanTraits_EpilepsySeizure")

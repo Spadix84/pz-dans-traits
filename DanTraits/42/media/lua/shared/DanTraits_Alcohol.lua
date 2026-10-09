@@ -94,7 +94,7 @@ local function wrapDrinkAction()
         local alcoholic = snap and isAlcoholic(self.fluidContainer)
         local result = original(self, ...)
         if alcoholic and DanTraits_SandboxOn("DrinkReliefEnabled") then restoreMeds(self.character, snap) end
-        if alcoholic then pcall(DanTraits_RunHooks, "alcoholDrunk", nil, self.character, self.fluidContainer) end   -- Delicate Stomach
+        if alcoholic then DanTraits_RunHooks("alcoholDrunk", nil, self.character, self.fluidContainer) end   -- Delicate Stomach
         return result
     end)
 end

@@ -110,10 +110,10 @@ DanTraits_ArthritisJoint = jointFactor
 local function reliefScale(player)
     local scale = 1
     if not DanTraits_MedEffect then return scale end
-    local ok, e = pcall(DanTraits_MedEffect, player, "painkillers")
-    if ok and (tonumber(e) or 0) > 0 then scale = math.min(scale, 1 - (1 - ART_MED_PAINKILLER) * e) end
-    ok, e = pcall(DanTraits_MedEffect, player, "prednisone")
-    if ok and (tonumber(e) or 0) > 0 then scale = math.min(scale, 1 - (1 - ART_MED_PREDNISONE) * e) end
+    local e = tonumber(DanTraits_MedEffect(player, "painkillers")) or 0
+    if e > 0 then scale = math.min(scale, 1 - (1 - ART_MED_PAINKILLER) * e) end
+    e = tonumber(DanTraits_MedEffect(player, "prednisone")) or 0
+    if e > 0 then scale = math.min(scale, 1 - (1 - ART_MED_PREDNISONE) * e) end
     return scale
 end
 DanTraits_ArthritisRelief = reliefScale
@@ -179,11 +179,8 @@ end
 -- (a diabetic low, alcohol withdrawal, MS heat), Arthritis or not. An
 -- arthritic slip is separate (DanTraits_GripSlipChance).
 function DanTraits_SwingDropChance(player)
-    local chance = 0
-    if DanTraits_ExtraFumble then
-        local ok, extra = pcall(DanTraits_ExtraFumble, player)
-        if ok and extra then chance = chance + extra end
-    end
+    -- a diabetic low's fumbling, in percent (so not DanTraits_Strength); 0 without Diabetes
+    local chance = DanTraits_ExtraFumble and (tonumber(DanTraits_ExtraFumble(player)) or 0) or 0
     return DanTraits_RunHooks("swingDrop", chance, player)
 end
 

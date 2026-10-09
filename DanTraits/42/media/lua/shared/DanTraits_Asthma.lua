@@ -270,7 +270,7 @@ function DanTraits_UseInhaler(player)
     if d.asthma < ASTHMA_TIER[3] then
         DanTraits_NotifyGood(player, "UI_DanTraits_AsthmaRelief")
     end
-    if DanTraits_DiaOnInhaler then pcall(DanTraits_DiaOnInhaler, player) end
+    if DanTraits_DiaOnInhaler then DanTraits_DiaOnInhaler(player) end
     return true
 end
 
