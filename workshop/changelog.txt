@@ -47,6 +47,10 @@
 [*]In-game text that had drifted from what the code does: the Thriving moodle (Fitness and Strength train half as fast again, not twice), Hemophilia (stitches stop a deep wound too), Gym Regular (more in the 20s), Set in Their Ways (Fitness and Strength exempt), and the Starting Medication tooltip (now lists Multiple Sclerosis and Arthritis).
 [/list]
 
+Safe to update mid-save: an existing character gets In Their 30s and keeps their skills, a retired trait is swapped for its new home on the first load, and the starting kits are not handed out again. Full detail in CHANGELOG.md on GitHub.
+
+Thanks to kiiri for the crash report and the push for a way to stop bleeding (clotting powder), Amplify for spotting that Iron Stomach and Iron Gut were the same trait, chuchu for the Dynamic Traits report, TheLurkiest, joesii and showmethecoin for asking for a proper page and an FAQ, SpartanXIII and Cat_Security (Type 1 themselves) whose thread shaped the insulin dosing, and k3b4b for the Russian translation. The heart was rebuilt because it had never once mattered in play; say so when something else never does.
+
 [h1]1.1.0: Multiple Sclerosis, medication, and the Reddit round[/h1]
 Thanks to everyone who left ideas on r/projectzomboid. Safe to update mid-save. Full detail in CHANGELOG.md on GitHub: https://github.com/Spadix84/pz-dans-traits
 

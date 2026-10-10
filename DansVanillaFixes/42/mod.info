@@ -1,6 +1,6 @@
 name=Dan's Vanilla Fixes
 id=DansVanillaFixes
 url=https://github.com/Spadix84/pz-dans-traits
-modversion=1.0.0
+modversion=1.1.0
 versionMin=42.0.0
 description=Small fixes and finishing touches for vanilla. Cold packs and coolers work: chill a cold pack in a fridge (half way) or a freezer (fully), or leave it out below freezing, then put it in a cooler. The cooler keeps food as cold as a fridge does, about 6 hours for each frozen pack (a sandbox setting), and the packs and the cooler show how cold they are in their names. Washing clothes by hand no longer gets them spotless: without soap blood and dirt only come down to 40%, with soap to 20%, and only a washing machine gets them fully clean (both floors are sandbox settings). A Collection button on the sidebar opens a checklist for each character of the skill books, recipe magazines, VHS tapes, CDs, key rings, mementos and tools they own: tick what you have, and those items say so in their tooltip and are set Unwanted, so they grey out and Take All leaves them. Right-click a washing machine to put every dirty or bloody garment you carry into it in one go. Also, when Item Rarity UI is active, modded items get a rarity colour worked out from the loot lists the same way Item Rarity UI does it for vanilla. Singleplayer only for now.
