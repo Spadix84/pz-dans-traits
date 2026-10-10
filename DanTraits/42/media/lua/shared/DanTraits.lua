@@ -406,7 +406,13 @@ Events.OnTick.Add(laterOnTick)
 -- safe. `fn(original, self, ...)` must call original and return its result.
 -- (The tag table is read with rawget: a class that derives from another
 -- must not see its parent's tags and skip its own wrap.)
+-- Never a timed action's new(): in multiplayer the game reads new()'s own
+-- parameter names to know which fields to send, then rebuilds the action on
+-- the server by calling new() with them. A (self, ...) wrapper has none, so
+-- the server's new() gets no character and every such action fails. Hook
+-- getDuration, adjustMaxTime or start instead.
 function DanTraits_Wrap(class, method, tag, fn)
+    if method == "new" then return false end
     if not class or type(class[method]) ~= "function" then return false end
     local wraps = rawget(class, "DanTraitsWraps")
     if not wraps then

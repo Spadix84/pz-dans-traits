@@ -551,6 +551,28 @@ local function wrapTraitList()
         end
         return original(self, trait, ...)
     end)
+    -- changing occupation, vanilla takes the old one's free trait off and puts
+    -- back every trait it excluded straight into the lists, never asking
+    -- isTraitEnabled (found in play 2026-10-10: Blacksmith Knowledge and
+    -- Inventive got past the age gate after clicking through Blacksmith and
+    -- Repairman): whatever it put back is checked here, and the ones the screen
+    -- would not offer are taken out again (the gate, retired traits, ages)
+    DanTraits_Wrap(CharacterCreationProfession, "doTestForMutuallyExclusiveTraits", "creation-readd", function(original, self, trait, isRemovingTrait, ...)
+        local result = original(self, trait, isRemovingTrait, ...)
+        if not isRemovingTrait then return result end
+        pcall(function()
+            local excluded = trait:getMutuallyExclusiveTraits()
+            for i = 0, excluded:size() - 1 do
+                local def = CharacterTraitDefinition.getCharacterTraitDefinition(excluded:get(i))
+                if def and not def:isFree() and not self:isTraitEnabled(def) then
+                    local label = def:getLabel()
+                    if self.listboxTrait then self.listboxTrait:removeMatchingItems(label) end
+                    if self.listboxBadTrait then self.listboxBadTrait:removeMatchingItems(label) end
+                end
+            end
+        end)
+        return result
+    end)
     -- In Their 30s costs nothing, and vanilla's lists take only a cost above or
     -- below zero: it goes into the positive list by hand, where it is allowed
     DanTraits_Wrap(CharacterCreationProfession, "populateTraitList", "creation-age30s", function(original, self, list, ...)

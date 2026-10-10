@@ -15,7 +15,8 @@
 --     every reload action and read by the reload animations as their speed;
 --     an ammo strap's x1.15 stacks), and a weapon goes to and from the belt a
 --     quarter faster (the hotbar's AttachItemSpeed, the animSpeed each hotbar
---     action computes in new(); equipping from the inventory is untouched)
+--     action computes in new() from adjustMaxTime; equipping from the
+--     inventory is untouched)
 -- Hands that shake are not steady: while alcohol withdrawal has the shakes on
 -- (DanTraits_Dependent.lua) or a diabetic low does (DanTraits_Diabetes.lua),
 -- the work done then gets none of it (the splint and the speed; stitches
@@ -93,18 +94,18 @@ local function wrapReload()
     end)
 end
 
--- quicker to the belt and back: each hotbar action sets its animation speed
--- (and sometimes its time) in new(); ISDetachItemHotbar is client-only, so
--- it is only there to wrap once the game has started
+-- quicker to the belt and back: each hotbar action's new() works out its
+-- animation speed as maxTime / adjustMaxTime(maxTime), and create() takes
+-- adjustMaxTime(maxTime) as its time, so a shorter adjustMaxTime from the
+-- hotbar does both (new() itself is never wrapped: see DanTraits_Wrap).
+-- ISDetachItemHotbar is client-only, so it is only there to wrap once the
+-- game has started
 local function wrapHolster()
     for _, name in ipairs(SH_HOLSTER_ACTIONS) do
-        DanTraits_Wrap(_G[name], "new", "steady-holster", function(original, self, character, ...)
-            local o = original(self, character, ...)
-            if type(o) == "table" and o.fromHotbar and steady(character) then
-                if type(o.animSpeed) == "number" and o.animSpeed > 0 then o.animSpeed = o.animSpeed * SH_HOLSTER end
-                if type(o.maxTime) == "number" and o.maxTime > 1 then o.maxTime = o.maxTime / SH_HOLSTER end
-            end
-            return o
+        DanTraits_Wrap(_G[name], "adjustMaxTime", "steady-holster", function(original, self, ...)
+            local t = original(self, ...)
+            if type(t) == "number" and t > 1 and self.fromHotbar and steady(self.character) then t = t / SH_HOLSTER end
+            return t
         end)
     end
 end

@@ -3,6 +3,22 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## 1.2.1 - 2026-10-10
+
+### Fixed
+
+- **No weapon or tool could be equipped in multiplayer** (reported on the Workshop page the day
+  1.2.0 went out: the item appears for a frame and is gone, error at ISEquipWeaponAction.lua:297
+  from DanTraits_SteadyHands.lua:102). Steady Hands' quicker draw wrapped the equip actions'
+  `new()`, and in multiplayer the game reads `new()`'s own parameter names to know what to send,
+  then rebuilds the action on the server with them. The wrapper's `(self, ...)` has no names, so
+  the server got no character and every equip, unequip and belt action failed, for everyone
+  with the mod, trait or not. The quicker draw now shortens `adjustMaxTime` instead (the game
+  works the animation speed out from it), and splints are slowed and sped through
+  `getDuration`, so no timed action's `new()` is touched any more. `DanTraits_Wrap` refuses
+  `new` from now on.
+- Changing occupation cannot slip a trait past the age gate (see 1.2.0, Age).
+
 ## 1.2.0 - 2026-10-10
 
 ### Dan's Vanilla Fixes: load the washer in one click (2026-10-09)
@@ -96,6 +112,9 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
   and on the screen. Random picks an age first. A preset loads as it was and is gated
   after (found in play: loaded onto an empty screen, a preset kept only its age and what
   came after it in the save, because the game read its traits out of the gated lists).
+  Changing occupation cannot slip a trait past the gate either (found in play: clicking
+  through Blacksmith and Repairman left Blacksmith Knowledge and Inventive on offer, because
+  the game puts an old occupation's excluded traits straight back into the lists).
   Age off in the sandbox: no gate and no Age traits. The four exclude each other.
   Default Age now only applies to a character who reaches the world with no Age trait (an
   old save), since nobody picks none any more.

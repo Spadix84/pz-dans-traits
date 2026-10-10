@@ -298,20 +298,18 @@ function DanTraits_PanicDecay(stats, perTick)
     stats:set(CharacterStat.PANIC, math.max(0, panic - perTick * mult))
 end
 
+-- the splint is always among them: its getDuration() returns the time its
+-- new() set
 function DanTraits_ScaleActionTime(classes, tag, applies, factor)
-    for _, class in ipairs(classes) do
+    local all = { ISSplint }
+    for _, class in ipairs(classes) do all[#all + 1] = class end
+    for _, class in ipairs(all) do
         DanTraits_Wrap(class, "getDuration", tag, function(original, self, ...)
             local t = original(self, ...)
             if type(t) == "number" and t > 1 and applies(self.character) then t = t * factor end
             return t
         end)
     end
-    -- the splint sets its time in new(), not getDuration()
-    DanTraits_Wrap(ISSplint, "new", tag .. "-splint", function(original, self, character, ...)
-        local o = original(self, character, ...)
-        pcall(function() if o.maxTime and o.maxTime > 1 and applies(character) then o.maxTime = o.maxTime * factor end end)
-        return o
-    end)
 end
 
 DanTraits_PartNames = {
