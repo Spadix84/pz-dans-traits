@@ -1,4 +1,7 @@
 {
     "ContextMenu_DVF_CollectionAdd": "Add to collection",
-    "ContextMenu_DVF_CollectionRemove": "Remove from collection"
+    "ContextMenu_DVF_CollectionRemove": "Remove from collection",
+    "ContextMenu_DVF_WasherLoad": "Put dirty clothes in the washer (%1)",
+    "ContextMenu_DVF_WasherNone": "No dirty or bloody clothes carried (what you wear stays on).",
+    "ContextMenu_DVF_WasherRunning": "The washer is running."
 }

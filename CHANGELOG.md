@@ -5,6 +5,14 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ## 1.2.0 - 2026-10-10
 
+### Dan's Vanilla Fixes: load the washer in one click (2026-10-09)
+
+- Right-click a washing machine (or a combo washer/dryer set to wash, or a stacked pair's
+  washer): **Put dirty clothes in the washer (N)** walks you over and moves every garment you
+  carry that the game calls Dirty or Bloody, bags included, into it with the game's own
+  transfer actions. What you are wearing stays on. Greyed with the reason when nothing you
+  carry needs it or the machine is running.
+
 ### Dan's Vanilla Fixes: a collection checklist (2026-10-09)
 
 Nobody remembers which Carpentry volume is already on the shelf at base. Each character now

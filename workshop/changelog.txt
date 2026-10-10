@@ -1,6 +1,7 @@
 [h1]1.2.0 (2026-10-10): Age, a balance pass and clotting powder[/h1]
 [h2]New[/h2]
 [list]
+[*][b]Dan's Vanilla Fixes: load the washer in one click.[/b] Right-click a washing machine: "Put dirty clothes in the washer" moves every dirty or bloody garment you carry (bags included, not what you wear) into it.
 [*][b]Dan's Vanilla Fixes: Collection checklist.[/b] A new sidebar button opens a checklist of skill books, recipe magazines, VHS tapes, CDs, key rings, mementos and tools. Tick what your character owns (or right-click it: [i]Add to collection[/i]); the item's tooltip then says it's in your collection, and every copy is set Unwanted so it greys out and Take All skips it. Tapes and CDs are tracked by title. One list per character.
 [*][b]Grit (+8)[/b] (new trait): you feel pain a third less. Painkillers work as before.
 [*][b]Resilient can beat the Knox virus.[/b] A 25% chance (sandbox [i]Resilient: Knox Survival Chance[/i]): you get sick like anyone else, and if you're lucky the fever breaks partway through. Every infection rolls again. Resilient now costs 10.
