@@ -142,6 +142,40 @@ weapon. Three ways to ease it, none of which touches the everyday stiffness:
   data show the flare before relief and the factor applied.
 - A new Arthritis character starts with a bottle of painkillers under Starting Medication.
 
+### Heart Condition, rebuilt: strain, not a dice roll
+
+In play it never fired: nothing could happen until the Endurance moodle showed, beta
+blockers started fully built at a quarter, and a heart attack needed you to keep pushing
+through the pain. Ten points for nothing. It is now a strain meter, like Asthma's
+irritation, and the trait costs 12 (was 10).
+
+- **Strain** builds every minute from endurance spent, sprinting and running, the Endurance
+  moodle's depth, panic from half way up, carrying over capacity and cold air; it drains at
+  rest. Age, a smoking habit, caffeine, a Run Down body, a stimulant overdose and every
+  heart attack survived (a fifth each, for good) make it build faster; beta blockers make it
+  build half as fast. The Chest Pain moodle shows it from 0.4 (Heart Working Hard) and 0.75
+  (Heart Pounding); at 1 it is chest pain. `hcStrain` in the mod data; `heart` on the console.
+- **Chest pain does something:** no running or sprinting (the game's Restricted Movement
+  moodle on an attempt) and swings cost half as much again, on top of the pain floor and the
+  endurance recovery at a third. Strain falls back to 0.8, not zero.
+- **Pushing on** now includes trying to run or sprint and swinging, not only spending at a
+  deep moodle. The heart attack chance a minute is unchanged (8%).
+- **A week to recover**, in three stages (the new Weak Heart moodle): endurance recovery
+  x0.5 / x0.65 / x0.8, effort (swings, sprinting, running) x1.5 / x1.3 / x1.15, melee damage
+  x0.5 / x0.65 / x0.8 (through Arthritis's weaken-and-restore, now shared as
+  `DanTraits_WeakenWeapon`). It was a day at x0.6 recovery.
+- **Scars:** each attack makes strain build a fifth faster for good; a second attack within
+  a day drops health to the floor (10) instead of taking 15.
+- **Beta blockers halve, not quarter**, and a new character starts on them built up half way
+  with one bottle (was fully built, two bottles). While built up, endurance comes back a tenth
+  slower, for anyone on them.
+- **Nitroglycerin** (new item, 25 tablets): the rescue drug, on the medication system. One
+  under the tongue ends chest pain within a minute and halves the strain, then half an hour of
+  headache. Two within an hour: the blood pressure drops, faints. Where prescriptions are
+  (0.9 of an ordinary one's rate), in a found Pill Caddy, and a new Heart Condition character
+  starts with a bottle.
+- The strain feeds nothing else yet; `DanTraits_HeartStrain(player)` reads it.
+
 ### Brittle: a bump is not a break
 
 A Brittle character fractured an arm in a crash too small to leave a scratch. The game

@@ -602,7 +602,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:heart,
-        Cost = -10,
+        Cost = -12,
         UIName = UI_trait_DanHeart,
         UIDescription = UI_trait_DanHeartdesc,
     }
@@ -941,6 +941,22 @@ module DanTraits {
         Medical = true,
         Tooltip = Tooltip_DanTraits_Sumatriptan,
         UseDelta = 0.1666,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+        Tags = base:consumable,
+    }
+
+    item Nitroglycerin
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Nitroglycerin,
+        Weight = 0.1,
+        Icon = Nitroglycerin,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Nitroglycerin,
+        UseDelta = 0.04,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,

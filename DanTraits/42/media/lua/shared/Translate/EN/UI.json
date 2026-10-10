@@ -247,7 +247,7 @@
     "UI_trait_HemophobicDesc": "Panics when bleeding.<br>Can faint while treating wounds or losing blood.<br>Cannot give first aid to others.",
     "UI_DanTraits_FaintBlood": "You come round, pale and shaking",
     "UI_trait_DanHeart": "Heart Condition",
-    "UI_trait_DanHeartdesc": "Chest pain when exhausted. Pushing on risks a heart attack.<br>Beta blockers lower the risk. Starts with two bottles.",
+    "UI_trait_DanHeartdesc": "Strain builds into chest pain; push through it and your heart gives out.<br>Beta blockers halve the risk, nitroglycerin ends the pain.<br>Starts with a bottle of each.",
     "UI_trait_DanEpilepsy": "Epilepsy",
     "UI_trait_DanEpilepsydesc": "Tiredness, stress, illness and drink can bring on seizures.<br>Anticonvulsants make them rarer. Starts with a bottle.",
     "UI_trait_DanTinnitus": "Tinnitus",
@@ -280,6 +280,10 @@
     "UI_DanTraits_HeartAttack": "Your heart gives out",
     "UI_DanTraits_HeartComeRound": "You come round, grey and weak",
     "UI_DanTraits_HeartBeta": "Your heart settles",
+    "UI_DanTraits_HeartAttackAgain": "Your heart gives out again",
+    "UI_DanTraits_HeartNitro": "The nitroglycerin opens your chest",
+    "UI_DanTraits_HeartStronger": "Your heart feels a little stronger",
+    "UI_DanTraits_HeartRecovered": "Your heart has recovered",
     "UI_DanTraits_EpilepsyAura": "A strange feeling rising. A seizure is coming",
     "UI_DanTraits_EpilepsySeizure": "Seizure",
     "UI_DanTraits_EpilepsyComeRound": "You come round, confused and aching",
@@ -348,6 +352,7 @@
     "UI_DanTraits_MedOver_nicotinegum": "Too much nicotine gum: you feel sick and dizzy",
     "UI_DanTraits_MedOver_painkillers": "Too many painkillers: you feel very sick",
     "UI_DanTraits_MedOver_sumatriptan": "Too much sumatriptan: your chest feels tight",
+    "UI_DanTraits_MedOver_nitroglycerin": "Too much nitroglycerin: the room swims",
     "UI_DanTraits_MedOver_sleepingtablets": "Too many sleeping tablets: you can barely stay awake",
     "UI_DanTraits_MedOver_caffeinepills": "Too many caffeine pills: you are jittery and your heart pounds"
 }

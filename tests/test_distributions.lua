@@ -54,6 +54,7 @@ assert(weightOf(SuburbsDistributions.all.inventoryfemale.items, "DanTraits.PillC
 assert(SuburbsDistributions.PillCaddy and SuburbsDistributions.PillCaddy.rolls == 2, "a found caddy rolls its contents twice")
 assert(weightOf(SuburbsDistributions.PillCaddy.items, "Base.Pills") == 10, "painkillers likeliest")
 assert(weightOf(SuburbsDistributions.PillCaddy.items, "DanTraits.Sumatriptan") == 2, "sumatriptan as likely as diazepam")
+assert(weightOf(SuburbsDistributions.PillCaddy.items, "DanTraits.Nitroglycerin") == 2, "nitroglycerin as likely as diazepam")
 assert(weightOf(SuburbsDistributions.PillCaddy.items, "DanTraits.Prednisone") == 1, "the MS pills rarest")
 for i = 1, #SuburbsDistributions.PillCaddy.items, 2 do
   assert(type(SuburbsDistributions.PillCaddy.items[i]) == "string" and type(SuburbsDistributions.PillCaddy.items[i + 1]) == "number", "name, weight pairs")

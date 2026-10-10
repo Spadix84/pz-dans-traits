@@ -198,7 +198,7 @@ Notes:
 | Handy (vanilla) | cannot be taken | +1 Carpentry at the start | +1 Carpentry at the start |
 | Arthritis | cannot be taken | the cold and damp reach the joints x1.3 as fast, so flares come sooner | x1.6 |
 | Brittle | no change | fracture chance x1.25 | x1.5 |
-| Heart Condition | chest pain chance x0.8 | x1.25 | x1.5 |
+| Heart Condition | strain builds x0.8 | x1.25 | x1.5 |
 | Diabetes Type 2 | insulin resistance -0.05 | +0.10 | +0.20 |
 | Gym Regular | regularity starts at 65, not 50 | no change | no change |
 | Alcoholic, Hollow Legs, anyone who drinks | hangovers x0.85 | x1.25 | x1.5 |

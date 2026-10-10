@@ -13,9 +13,11 @@
 -- moodle is the paler -1 while it builds up and the full -2 once it has
 -- (DanTraits_MedMoodle, the same rule for every drug).
 --
---   ChestPain          Heart Condition: a day of weak recovery, chest pain,
---                      pushing on through it; good: beta blockers building
---                      up, then working
+--   ChestPain          Heart Condition: the heart working hard, pounding,
+--                      chest pain, pushing on through it; good: beta blockers
+--                      building up, then working
+--   WeakHeart          Heart Condition: the week after a heart attack, worst
+--                      first
 --   Seizure            Epilepsy: the hour after, the aura before; good:
 --                      anticonvulsants building up, then working
 --   Tinnitus           ears ringing (Hard of Hearing for now)
@@ -91,10 +93,19 @@ end
 
 local SPECS = {
     { name = "ChestPain", level = function(player, d)
-        if (d.hcAnginaMin or 0) > 0 then return d.hcPushing and 3 or 2 end
-        if (d.hcWeakH or 0) > 0 then return 1 end
-        if hasTrait(player, "heart") then return medGood(player, "beta") end
-        return 0
+        if not hasTrait(player, "heart") then return 0 end
+        if (d.hcAnginaMin or 0) > 0 then return d.hcPushing and 4 or 3 end
+        local strain = d.hcStrain or 0
+        if strain >= 0.75 then return 2 end
+        if strain >= 0.4 then return 1 end
+        return medGood(player, "beta")
+    end },
+    { name = "WeakHeart", level = function(player, d)
+        -- the week after a heart attack, in three stages (DanTraits_Heart.lua: 168 hours in thirds)
+        local h = d.hcWeakH or 0
+        if h <= 0 then return 0 end
+        if h > 112 then return 3 elseif h > 56 then return 2 end
+        return 1
     end },
     { name = "Seizure", level = function(player, d)
         if not hasTrait(player, "epilepsy") then return 0 end

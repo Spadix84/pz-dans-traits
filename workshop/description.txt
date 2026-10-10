@@ -31,7 +31,7 @@ Every character picks a decade first: the young recover, heal and train faster, 
 [*][b]Multiple Sclerosis (-15):[/b] heat is the enemy, flares monthly, and spoons: a day's energy, spent faster in heat or a flare; run out and you hit the wall. Three pills help. -1 Fitness and Strength; not with Athletic or Strong.
 [*][b]Arthritis (-10):[/b] stiff joints, slower swings, flares in the cold and damp, eased by warm clothes and pills; a slipping grip can drop the weapon.
 [*][b]Diabetes Type 1 (-10) and Type 2 (-5):[/b] a hidden blood sugar model; the meter says which way. Type 1: an insulin pen, and First Aid says the dose. Type 2: metformin and weight. A low floors you.
-[*][b]Heart Condition (-10):[/b] chest pain when winded; push on and a heart attack puts you down. Beta blockers cut both.
+[*][b]Heart Condition (-12):[/b] strain builds to chest pain; push on and it gives out, a week to mend. Nitroglycerin helps.
 [*][b]Hemophilia (-10):[/b] bleeds never stop on their own; a bandage slows one to a quarter, stitches stop a deep wound.
 [*][b]Migraines (-10):[/b] attacks from bad sleep, thirst, stress, fever, heat and storms, three personal triggers worst. Sumatriptan halves or ends one.
 [*][b]Asthma (-10):[/b] cold air, corpses, exertion, panic and smoke irritate the airways; an attack drains you and coughs loud enough for zombies until the inhaler.

@@ -151,6 +151,7 @@ local ITEMS = {
     prescription("DanTraits.Baclofen", 1),          -- MS
     prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
     prescription("DanTraits.Sumatriptan", 0.8),     -- Migraines: new in the early 90s, a little rarer
+    prescription("DanTraits.Nitroglycerin", 0.9),   -- Heart Condition: an old, common heart tablet
     {
         -- anti-anxiety pills: the vanilla beta blocker's old job, found where
         -- prescriptions are, a little more often in a drug shack
@@ -315,6 +316,7 @@ local CADDY_CONTENTS = {
         "DanTraits.Diazepam", 2,
         "DanTraits.NicotineGum", 2,
         "DanTraits.Sumatriptan", 2,
+        "DanTraits.Nitroglycerin", 2,
         "DanTraits.Prednisone", 1,
         "DanTraits.Baclofen", 1,
         "DanTraits.Amantadine", 1,

@@ -16,25 +16,31 @@ local d = DanTraits_Data(p)
 local function level(name, who, data) return DanTraits_MoodleLevels(who or p, data or d)[name] end
 
 -- 0. the list the client creates them from
-assert(#DanTraits_MoodleNames == 19, "nineteen moodles")
+assert(#DanTraits_MoodleNames == 20, "twenty moodles")
 local listed = {}
 for _, name in ipairs(DanTraits_MoodleNames) do listed[name] = true end
 for _, name in ipairs({ "ChestPain", "Seizure", "Tinnitus", "GutFlare", "Filthy", "Sunburn", "Dehydration",
-                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons", "LightTooBright", "TriptanAfter", "Antidepressants" }) do
+                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons", "LightTooBright", "TriptanAfter", "Antidepressants", "WeakHeart" }) do
   assert(listed[name], name .. " is listed")
 end
 for name, l in pairs(DanTraits_MoodleLevels(p, d)) do assert(l == 0, name .. ": nothing to show on a well character") end
 
--- 1. Heart: beta blockers working, a weak day, chest pain, pushing on
+-- 1. Heart: beta blockers working, the strain, chest pain, pushing on; the week after an attack
 d.meds = { beta = { lvl = 1, built = 0 } }; assert(level("ChestPain") == -1, "beta blockers building up: the paler green")
 d.meds.beta.built = 0.999; assert(level("ChestPain") == -1, "still building up just short of full")
 d.meds.beta.built = 1; assert(level("ChestPain") == -2, "fully built up: the full green")
 d.meds.beta.lvl = 0.4; assert(level("ChestPain") == 0, "worn off")
-d.hcWeakH = 10; assert(level("ChestPain") == 1, "the day after")
-d.hcAnginaMin = 12; assert(level("ChestPain") == 2, "chest pain")
-d.meds.beta.lvl = 1; assert(level("ChestPain") == 2, "chest pain shows over the medication")
-d.hcPushing = true; assert(level("ChestPain") == 3, "pushing on")
-d.hcAnginaMin, d.hcPushing, d.hcWeakH, d.meds = nil, nil, nil, nil
+d.hcStrain = 0.39; assert(level("ChestPain") == 0, "a little strain: nothing yet")
+d.hcStrain = 0.5; assert(level("ChestPain") == 1, "working hard")
+d.hcStrain = 0.8; assert(level("ChestPain") == 2, "pounding")
+d.hcAnginaMin = 12; assert(level("ChestPain") == 3, "chest pain")
+d.meds.beta.lvl = 1; assert(level("ChestPain") == 3, "chest pain shows over the medication")
+d.hcPushing = true; assert(level("ChestPain") == 4, "pushing on")
+assert(level("WeakHeart") == 0, "no attack: nothing")
+d.hcWeakH = 150; assert(level("WeakHeart") == 3, "the first days after an attack")
+d.hcWeakH = 100; assert(level("WeakHeart") == 2, "the middle")
+d.hcWeakH = 10; assert(level("WeakHeart") == 1, "on the mend")
+d.hcAnginaMin, d.hcPushing, d.hcWeakH, d.hcStrain, d.meds = nil, nil, nil, nil, nil
 
 -- 2. Epilepsy: medication, the hour after, the aura
 d.meds = { anticonvulsant = { lvl = 0.6, built = 0 } }; assert(level("Seizure") == -1, "anticonvulsants building up")
@@ -150,7 +156,7 @@ d.gluten = 1                 -- bad 3
 H.minute()
 local n = 0
 for _ in pairs(set) do n = n + 1 end
-assert(n == 19, "all nineteen set")
+assert(n == 20, "all twenty set")
 near(set.ChestPain.value, 0.65, 1e-9, "good 1 sits between 0.6 and 0.7")
 near(set.Seizure.value, 0.25, 1e-9, "bad 2 sits between 0.2 and 0.3")
 near(set.GutFlare.value, 0.15, 1e-9, "bad 3")

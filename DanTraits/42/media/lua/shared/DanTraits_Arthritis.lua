@@ -217,20 +217,30 @@ local function restoreWeapon(weapon)
     end
 end
 
-local function weakenSwing(player, weapon)
+-- weaken this swing to scale x its damage; put back on OnPlayerAttackFinished
+-- or after SLIP_RESTORE_MS. A weapon already weakened keeps the first scale.
+local function weakenWeapon(weapon, scale)
     pcall(function()
         local md = weapon:getModData()
         if not md.DanTraitsSlip then
             local min, max = weapon:getMinDamage(), weapon:getMaxDamage()
             md.DanTraitsSlip = { min = min, max = max }
-            weapon:setMinDamage(min * SLIP_DAMAGE)
-            weapon:setMaxDamage(max * SLIP_DAMAGE)
+            weapon:setMinDamage(min * scale)
+            weapon:setMaxDamage(max * scale)
         end
     end)
     for i = #pending, 1, -1 do
         if pending[i].weapon == weapon then table.remove(pending, i) end
     end
     pending[#pending + 1] = { weapon = weapon, at = now() + SLIP_RESTORE_MS }
+end
+-- other systems weaken a swing the same way (Heart Condition: the week after an attack)
+function DanTraits_WeakenWeapon(player, weapon, scale)
+    if weapon and scale and scale < 1 then weakenWeapon(weapon, scale) end
+end
+
+local function weakenSwing(player, weapon)
+    weakenWeapon(weapon, SLIP_DAMAGE)
     notify(player, "UI_DanTraits_GripSlip")
 end
 

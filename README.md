@@ -12,7 +12,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Arthritis](#arthritis--10) | -10 | Stiff joints, flares in the cold and damp, a grip that slips. |
 | [Asthma](#asthma--10) | -10 | Irritated airways that build to an attack zombies can hear. |
 | [Diabetes Type 1](#diabetes-type-1--10-and-type-2--5) | -10 | A hidden blood sugar model with an insulin pen and a meter. |
-| [Heart Condition](#heart-condition--10) | -10 | Chest pain when winded; push on and it is a heart attack. |
+| [Heart Condition](#heart-condition--12) | -12 | Strain builds into chest pain; push through it and your heart gives out. |
 | [Hemophilia](#hemophilia--10) | -10 | Bleeds never stop on their own; stitches are what stop them. |
 | [Migraines](#migraines--10) | -10 | Hours of pain and nausea from personal triggers. |
 | [Brittle](#brittle--8) | -8 | Solid hits can fracture a limb. |
@@ -106,15 +106,17 @@ A hidden blood sugar model. You read it with a meter, not a number on screen.
 - **Knowing your doses (Type 1):** one dose covers about 12.5 g of carbohydrate. With First Aid 3 a food's tooltip (or a sugary drink's, for the whole bottle or mug) says whether its sugar hits fast or slowly and gives a wide range of doses; First Aid 6 narrows the range, and the meter adds how much insulin is still working; First Aid 9 gives the exact doses for your body, and the meter says what it takes to get back to 110 (more doses, or grams of fast sugar), and a food that would spike you past 350 even with its doses says to eat it half, a third or a quarter at a time. The meter's tooltip keeps its last reading and advice. The magazine **Living With Type 1** (new item: hospital magazine racks, medical offices, pharmacies, bookstore and library medical shelves) teaches the First Aid 9 knowledge at any level.
 - **Type 2:** the body's own insulin, limited by weight (and by age: more resistance in the 40s, a little less in the 20s). Metformin builds up over two days. Starts on it with a bottle, a meter and strips.
 
-#### Heart Condition (-10)
+#### Heart Condition (-12)
 
-Chest pain when you are winded, and a heart attack if you push through it.
+A weak heart that is pushed too hard. Strain builds, chest pain follows, and a heart attack if you push through it.
 
-- Only while the Endurance moodle shows. The chance rises with the moodle's depth, panic, the 40s, a smoking habit, caffeine and a Run Down body.
-- Chest pain holds pain and slows endurance recovery for 15 to 30 minutes, twice as fast to pass at rest.
-- Pushing on through it (sprinting, or still spending endurance at Endurance moodle 2 or worse) can bring a heart attack: down for 5 to 15 minutes, health lost, a day of weak recovery. Standing still worn out counts as rest.
-- Beta blockers (vanilla's pills, on the [medication system](#medication)), one a day, build up over three days to cut both to a quarter. You are told when they wear off. Starts on them, built up, with two bottles.
-- Moodle: Chest Pain, with a good side while beta blockers work.
+- **Strain** (0 to 1) builds every minute from endurance spent, sprinting and running, how winded you are, panic from half way up, carrying more than you can and cold air; it drains at rest (from full to nothing in about 12 minutes standing still). Age (x0.8 / x1.25 / x1.5), a smoking habit, caffeine, a Run Down body, a stimulant overdose and every heart attack survived (+20% each, for good) make it build faster. Shown on the Chest Pain moodle from 0.4 (Heart Working Hard) and 0.75 (Heart Pounding).
+- **Chest pain** at full strain: 15 to 30 minutes of pain, endurance recovery at a third, no running or sprinting (the Restricted Movement moodle on an attempt), swings cost half as much again. Twice as fast to pass at rest. Strain falls back to 0.8, so a second bout needs more pushing, not a fresh start.
+- **Pushing on through it** (spending endurance at Endurance moodle 2 or worse, trying to run or sprint, or swinging) risks a heart attack each minute (8%, 4% on beta blockers): down for 5 to 15 minutes, 15 health lost, endurance emptied. A second attack within a day drops health to the floor.
+- **The week after**, in three stages (Weak Heart moodle): endurance comes back at x0.5 / x0.65 / x0.8, swings, sprinting and running spend x1.5 / x1.3 / x1.15, melee weapons do x0.5 / x0.65 / x0.8 damage. You are told as each stage passes.
+- **Beta blockers** (vanilla's pills, on the [medication system](#medication)), one a day, build up over three days to halve the strain build and the heart attack chance; while built up, endurance comes back a tenth slower (anyone on them). You are told when they wear off. Starts on them built up half way, with one bottle.
+- **Nitroglycerin** (new item, 25 tablets, where prescriptions are and in a found Pill Caddy): one under the tongue ends chest pain within a minute and halves the strain, then half an hour of headache. Two within an hour drops your blood pressure: faints. Starts with a bottle.
+- Moodles: Chest Pain (strain, pain, pushing; green while beta blockers work) and Weak Heart (the week after). Console: `heart`, `heart strain <0..1>`, `heart angina`, `heart attack`, `heart nitro`.
 
 #### Brittle (-8)
 
