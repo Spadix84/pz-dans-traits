@@ -116,6 +116,7 @@ A weak heart that is pushed too hard. Strain builds, chest pain follows, and a h
 - **The week after**, in three stages (Weak Heart moodle): endurance comes back at x0.5 / x0.65 / x0.8, swings, sprinting and running spend x1.5 / x1.3 / x1.15, melee weapons do x0.5 / x0.65 / x0.8 damage. You are told as each stage passes.
 - **Beta blockers** (vanilla's pills, on the [medication system](#medication)), one a day, build up over three days to halve the strain build and the heart attack chance; while built up, endurance comes back a tenth slower (anyone on them). You are told when they wear off. Starts on them built up half way, with one bottle.
 - **Nitroglycerin** (new item, 25 tablets, where prescriptions are and in a found Pill Caddy): one under the tongue ends chest pain within a minute and halves the strain, then half an hour of headache. Two within an hour drops your blood pressure: faints. Starts with a bottle.
+- Not with Athletic (Fit is allowed).
 - Moodles: Chest Pain (strain, pain, pushing; green while beta blockers work) and Weak Heart (the week after). Console: `heart`, `heart strain <0..1>`, `heart angina`, `heart attack`, `heart nitro`.
 
 #### Brittle (-8)

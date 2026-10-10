@@ -605,6 +605,7 @@ module DanTraits {
         Cost = -12,
         UIName = UI_trait_DanHeart,
         UIDescription = UI_trait_DanHeartdesc,
+        MutuallyExclusiveTraits = base:athletic,
     }
 
     /* Seizures brought on by tiredness, withdrawal, fever, concussion and

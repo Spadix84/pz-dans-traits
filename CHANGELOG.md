@@ -174,6 +174,8 @@ irritation, and the trait costs 12 (was 10).
   headache. Two within an hour: the blood pressure drops, faints. Where prescriptions are
   (0.9 of an ordinary one's rate), in a found Pill Caddy, and a new Heart Condition character
   starts with a bottle.
+- **Not with Athletic** any more (Fit is still allowed): the endurance pool made the strain too
+  easy to stay under.
 - The strain feeds nothing else yet; `DanTraits_HeartStrain(player)` reads it.
 
 ### Bad Knees: rest is posture
