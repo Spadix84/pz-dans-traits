@@ -608,9 +608,21 @@ local function wrapTraitList()
         pcall(setAgeDraws, self)
         return result
     end)
+    -- vanilla's loader resets, then picks the build's traits out of the lists as
+    -- they stand; its reset refills them only when it took traits off, so on an
+    -- empty screen they were still the gated lists (the four ages) and every
+    -- trait saved before the age was skipped. The lists are refilled after the
+    -- reset, with the gate down.
     DanTraits_Wrap(CharacterCreationProfession, "loadBuild", "creation-age-only", function(original, self, ...)
         self.danTraitsLoadingBuild = true
+        local reset = self.resetBuild
+        self.resetBuild = function(screen, ...)
+            local r = reset(screen, ...)
+            pcall(screen.repopulateTraitLists, screen)
+            return r
+        end
         local ok, result = pcall(original, self, ...)
+        self.resetBuild = nil
         self.danTraitsLoadingBuild = nil
         pcall(function()
             self:repopulateTraitLists()

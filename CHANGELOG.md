@@ -91,7 +91,9 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
   nothing but the four Age traits until one is chosen (In Their 30s at 0 points among
   them); then the rest appears. Next is greyed until then, with the reason as its tooltip
   and on the screen. Random picks an age first. A preset loads as it was and is gated
-  after. Age off in the sandbox: no gate and no Age traits. The four exclude each other.
+  after (found in play: loaded onto an empty screen, a preset kept only its age and what
+  came after it in the save, because the game read its traits out of the gated lists).
+  Age off in the sandbox: no gate and no Age traits. The four exclude each other.
   Default Age now only applies to a character who reaches the world with no Age trait (an
   old save), since nobody picks none any more.
 - **The creation screen shows age's levels:** in the Major Skills list, "(+N age)" after
