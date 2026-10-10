@@ -211,4 +211,40 @@ do
   assert(W.report(p) == "nothing dirty carried", "report: nothing")
 end
 
+-- 9. Take A Bath And Shower: the clothes washed in the bath are floored too
+--    (DansVanillaFixes_Bathing.lua wraps TABAS_BathingUtils.cleaningWornItems at game start)
+dofile(ROOT .. "shared/DansVanillaFixes_Bathing.lua")
+local soaps = { uses = 0 }
+local bather = { getInventory = function() return { getSoapList = function() return soaps end } end }
+local shirt = garment("Clothing", { Torso_Upper = { 1, 1 }, Torso_Lower = { 0.1, 0.3 } })
+local worn = list({ { getItem = function() return shirt end } })
+local called = 0
+TABAS_BathingUtils = { cleaningWornItems = function(character, wornItems, pct, factor)
+  called = called + 1
+  for i = 0, wornItems:size() - 1 do
+    local it = wornItems:get(i):getItem()
+    for _, name in ipairs(it.names) do it:setBlood(name, 0); it:setDirt(name, 0) end
+  end
+  return 1, true, 0.5, 0.5
+end }
+DVF_BathingInstall(); DVF_BathingInstall()
+local a, b = TABAS_BathingUtils.cleaningWornItems(bather, worn, 0.1, 1)
+assert(called == 1 and a == 1 and b == true, "the original ran once and its answer came back")
+H.near(shirt.blood.Torso_Upper, 0.4, 1e-9, "no soap: blood floored at 40%")
+H.near(shirt.dirt.Torso_Upper, 0.4, 1e-9, "no soap: dirt floored at 40%")
+H.near(shirt.blood.Torso_Lower, 0.1, 1e-9, "a patch already under the floor stays where it was")
+H.near(shirt.dirt.Torso_Lower, 0.3, 1e-9, "and so does a 30% one")
+soaps.uses = 3
+shirt.blood.Torso_Upper, shirt.dirt.Torso_Upper = 1, 1
+TABAS_BathingUtils.cleaningWornItems(bather, worn, 0.1, 1)
+H.near(shirt.blood.Torso_Upper, 0.2, 1e-9, "soap to hand: 20%")
+TABAS_BathingUtils.cleaningWornItems(bather, worn, 0.1, 1)
+H.near(shirt.blood.Torso_Upper, 0.2, 1e-9, "a second pass holds the floor")
+soaps.uses = 0
+TABAS_TakeShower = { getSoaps = function() return {}, 2 end }
+shirt.blood.Torso_Upper = 1
+TABAS_BathingUtils.cleaningWornItems(bather, worn, 0.1, 1)
+H.near(shirt.blood.Torso_Upper, 0.2, 1e-9, "the shower's own soap counts")
+TABAS_TakeShower = nil
+
 H.pass("washing")

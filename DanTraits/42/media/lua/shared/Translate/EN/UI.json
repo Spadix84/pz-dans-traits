@@ -308,6 +308,7 @@
     "UI_DanTraits_EpilepsyNight": "A seizure in your sleep. You wake aching and worn out",
     "UI_DanTraits_SunblockOn": "Sun block on",
     "UI_DanTraits_SunblockOff": "Your sun block has worn off",
+    "UI_DanTraits_SunblockWashed": "The bath washed your sun block off",
     "UI_DanTraits_ClotStopped": "%1: the powder stops the bleeding",
     "UI_DanTraits_ClotSlowed": "%1: the powder slows the bleeding",
     "UI_trait_DanMS": "Multiple Sclerosis",

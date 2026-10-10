@@ -185,6 +185,21 @@ irritation, and the trait costs 12 (was 10).
   would also let you sleep on (a sofa, an armchair) three times as fast.
 - Stomping counts: 0.02 of load per stomp, on top of running, sprinting and climbing.
 
+### Take A Bath And Shower: supported
+
+Read against its 42.20 files. Its body wash is the same per-part visual Germaphobe reads
+(so the relief comes on its own), its wetness cools Multiple Sclerosis as rain does, its
+water temperature moves body heat (a hot bath warms an MS character: intended both sides),
+and its bath salts are its own features (a calming salt gives the game's beta-blocker
+effect, a happy one the antidepressant effect; MDD's regimen zeroes that one each minute).
+Two things needed code, both inert without the mod:
+
+- `DanTraits_Bathing.lua`: a bath or shower washes sun block off (its OnBathingEnd event).
+- Dan's Vanilla Fixes, `DansVanillaFixes_Bathing.lua`: the hand-wash floors apply to the
+  clothes you bathe in (it washed them to spotless, a little each tick): the soap floor
+  with soap or shampoo to hand, the no-soap floor without. Only a washing machine gets a
+  garment fully clean.
+
 ### Germaphobe: bloody clothes and a bloody weapon count
 
 - Clothes count when bloody, not only when dirty (the game keeps the two flags apart; only
