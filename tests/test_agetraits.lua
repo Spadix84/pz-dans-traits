@@ -177,7 +177,7 @@ H.mins(63); assert(b._md.DanTraits.bbLoad == nil and H.halo[#H.halo] == "+UI_Dan
 local plain = body({}, { moodles = { heavy = 4 } }); H.mins(60)
 assert(plain._md.DanTraits.bbLoad == nil, "no trait: nothing")
 
--- 6. Bad Knees: running, sprinting and each climb
+-- 6. Bad Knees: running, sprinting, each climb and each stomp; rest by posture
 local k, legs = body({ "badknees" })
 k._run = true; H.mins(10); H.near(k._md.DanTraits.bkLoad, 0.1, 1e-9, "running: 0.01 a minute")
 k._run = false; k._sprint = true; H.clearHalo(); H.mins(5)
@@ -190,9 +190,30 @@ H.near(k._md.DanTraits.bkLoad, 0.38, 1e-9, "a climb counts once, however many fr
 k._state = nil; H.frame(k); k._state = window; H.frame(k)
 H.near(k._md.DanTraits.bkLoad, 0.46, 1e-9, "the next climb counts again")
 k._state = nil; H.frame(k)
-H.mins(92); assert(k._md.DanTraits.bkLoad == nil and H.halo[#H.halo] == "+UI_DanTraits_KneesEased", "eases 0.005 a minute, then settles")
+-- a stomp counts once too
+k.isPerformingStompAnimation = function() return true end
+H.frame(k); H.frame(k)
+H.near(k._md.DanTraits.bkLoad, 0.48, 1e-9, "a stomp: 0.02, once")
+k.isPerformingStompAnimation = function() return false end; H.frame(k)
+-- walking is no rest; standing still eases 0.005; sitting twice that; a comfy chair three times
+k._moving = true; H.mins(10)
+H.near(k._md.DanTraits.bkLoad, 0.48, 1e-9, "walking: the load holds")
+k._moving = false; H.mins(10)
+H.near(k._md.DanTraits.bkLoad, 0.43, 1e-9, "standing still: 0.005 a minute")
+k.isSitOnGround = function() return true end; H.mins(10)
+H.near(k._md.DanTraits.bkLoad, 0.33, 1e-9, "sitting on the ground: 0.01 a minute")
+k.isSitOnGround = function() return false end
+k.isSittingOnFurniture = function() return true end
+k.getSitOnFurnitureObject = function() return { getProperties = function() return { get = function() return nil end, Is = function() return false end } end } end
+H.mins(10); H.near(k._md.DanTraits.bkLoad, 0.23, 1e-9, "a plain chair: 0.01 a minute")
+k.getSitOnFurnitureObject = function() return { getProperties = function() return { get = function(_, n) if n == "BedType" then return "badBed" end end, Is = function() return false end } end } end
+H.mins(10); H.near(k._md.DanTraits.bkLoad, 0.08, 1e-9, "a sofa or armchair: 0.015 a minute")
+k.isSittingOnFurniture = function() return false end
+H.mins(16); assert(k._md.DanTraits.bkLoad == nil and H.halo[#H.halo] == "+UI_DanTraits_KneesEased", "then settles with a good notice")
 local still = body({}); still._state = fence; H.frame(still)
 assert(still._md.DanTraits.bkLoad == nil, "no trait: a climb is just a climb")
+still.isPerformingStompAnimation = function() return true end; H.frame(still)
+assert(still._md.DanTraits.bkLoad == nil, "no trait: a stomp is just a stomp")
 
 -- 7. Old Injury: one limb, told once; a floor of stiffness, more and sore in the cold
 H.climate.temp = 20

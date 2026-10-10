@@ -10,7 +10,9 @@
 --   40s 50s  Reading Glasses (-2) starts with a pair; without glasses on, reading
 --                                 takes x1.5 as long and needs a properly lit room
 --            Bad Back (-4)        a heavy load builds lower-back pain; rest eases it
---            Bad Knees (-3)       running, sprinting and climbing build knee pain
+--            Bad Knees (-3)       running, sprinting, climbing and stomping build knee
+--                                 pain; walking never rests them, sitting rests them
+--                                 faster, a comfy chair faster still
 --            Old Hand (+4)        every skill the occupation boosts gains experience
 --                                 x1.25 (the main skill only until 2026-10-07)
 --   50s      Old Injury (-3)      one limb is always a little stiff, and stiffer and
@@ -36,7 +38,7 @@
 --     overdose line a pill higher.
 --   Delicate Stomach (40s and 50s, gives 2): a junk meal brings food
 --     sickness, so does a drink on an empty stomach. Not with Iron Gut.
--- Mod data: rgGiven; bbLoad; bkLoad, bkClimbing; oiPart, oiFlare; pyEnd;
+-- Mod data: rgGiven; bbLoad; bkLoad, bkClimbing, bkStomping; oiPart, oiFlare; pyEnd;
 -- stChecked, stInHouse, stNewBed, stLastBed; obDay.
 require "DanTraits"
 require "DanTraits_Age"
@@ -103,7 +105,10 @@ local BB_PAIN        = 45      -- lower-back pain at a full load
 local BK_RUN         = 0.01    -- load per minute running
 local BK_SPRINT      = 0.04    -- per minute sprinting
 local BK_CLIMB       = 0.08    -- per fence, wall or window climbed
-local BK_EASE        = 0.005   -- off per minute otherwise
+local BK_STOMP       = 0.02    -- per stomp
+local BK_EASE        = 0.005   -- off per minute standing still (walking holds the load where it is)
+local BK_EASE_SIT    = 2       -- x sitting (on the ground or a seat) or lying asleep...
+local BK_EASE_COMFY  = 3       -- ...x in a comfy chair: a seat the game would also let you sleep on (a sofa, an armchair)
 local BK_PAIN        = 35      -- pain in each lower leg at a full load
 -- both
 local ACHE_NOTICE    = 0.3     -- load crossing this upward: a notice...
@@ -260,9 +265,25 @@ local function updateBadBack(player, d)
     hurtPart(player, "Torso_Lower", BB_PAIN * now)
 end
 
+-- how the knees are resting: 0 walking (no rest), 1 standing still, BK_EASE_SIT
+-- sitting or asleep, BK_EASE_COMFY in a seat you could sleep on
+local function kneeRest(player)
+    local sitting, comfy, moving = false, false, false
+    pcall(function() sitting = player:isSitOnGround() == true end)
+    pcall(function() if player:isSittingOnFurniture() then
+        sitting = true
+        local props = player:getSitOnFurnitureObject():getProperties()
+        comfy = props:get("BedType") ~= nil or (IsoFlagType and props:Is(IsoFlagType.bed) == true)
+    end end)
+    if comfy then return BK_EASE_COMFY end
+    if sitting or DanTraits_Asleep(player) then return BK_EASE_SIT end
+    pcall(function() moving = player:isPlayerMoving() == true end)
+    return moving and 0 or 1
+end
+
 local function updateBadKnees(player, d)
     if not hasTrait(player, "badknees") then
-        d.bkLoad, d.bkClimbing = nil, nil
+        d.bkLoad, d.bkClimbing, d.bkStomping = nil, nil, nil
         return
     end
     local before = d.bkLoad or 0
@@ -272,7 +293,7 @@ local function updateBadKnees(player, d)
     local now = before
     if sprinting then now = before + BK_SPRINT
     elseif running then now = before + BK_RUN
-    else now = before - BK_EASE end
+    else now = before - BK_EASE * kneeRest(player) end
     now = ache(player, before, now, "UI_DanTraits_KneesAche", "UI_DanTraits_KneesBad", "UI_DanTraits_KneesEased")
     d.bkLoad = now > 0 and now or nil
     hurtPart(player, "LowerLeg_L", BK_PAIN * now)
@@ -292,6 +313,13 @@ local function isClimbing(player)
     return climbing
 end
 
+local function isStomping(player)
+    local stomping = false
+    pcall(function() stomping = player:isPerformingStompAnimation() == true end)
+    return stomping
+end
+
+-- per frame: each climb and each stomp counts once, when it starts
 local function updateBadKneesFrame(player, d)
     if not hasTrait(player, "badknees") then return end
     local climbing = isClimbing(player)
@@ -300,6 +328,12 @@ local function updateBadKneesFrame(player, d)
         d.bkLoad = ache(player, before, before + BK_CLIMB, "UI_DanTraits_KneesAche", "UI_DanTraits_KneesBad", "UI_DanTraits_KneesEased")
     end
     d.bkClimbing = climbing or nil
+    local stomping = isStomping(player)
+    if stomping and not d.bkStomping then
+        local before = d.bkLoad or 0
+        d.bkLoad = ache(player, before, before + BK_STOMP, "UI_DanTraits_KneesAche", "UI_DanTraits_KneesBad", "UI_DanTraits_KneesEased")
+    end
+    d.bkStomping = stomping or nil
 end
 
 -- Old Injury ---------------------------------------------------------------------

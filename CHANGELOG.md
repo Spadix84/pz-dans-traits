@@ -176,6 +176,13 @@ irritation, and the trait costs 12 (was 10).
   starts with a bottle.
 - The strain feeds nothing else yet; `DanTraits_HeartStrain(player)` reads it.
 
+### Bad Knees: rest is posture
+
+- Walking never rests the knees: the load holds. Standing still eases it as before (0.005 a
+  minute), sitting on the ground or a chair, or sleeping, twice as fast, and a seat the game
+  would also let you sleep on (a sofa, an armchair) three times as fast.
+- Stomping counts: 0.02 of load per stomp, on top of running, sprinting and climbing.
+
 ### Brittle: a bump is not a break
 
 A Brittle character fractured an arm in a crash too small to leave a scratch. The game

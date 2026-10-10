@@ -166,7 +166,7 @@ its points. With the Age option off none of them is offered.
 | Quick Study | 20s | costs 4 | Any skill below level 5 gains experience x1.4 (on top of the band's x1.2 under level 3) |
 | Reading Glasses | 40s, 50s | gives 2 | Starts with a pair of reading glasses. Without reading or prescription glasses on, reading takes x1.5 as long and needs a properly lit room (sunglasses do not count) |
 | Bad Back | 40s, 50s | gives 4 | The Heavy Load moodle builds lower-back pain, faster the heavier the load (about two hours at the second level to the worst of it). It eases over about four hours with the load off, twice as fast asleep. Not with Strong |
-| Bad Knees | 40s, 50s | gives 3 | Running, sprinting (four times as fast) and each fence, wall or window climbed build pain in both lower legs. It eases over about three hours of walking or rest |
+| Bad Knees | 40s, 50s | gives 3 | Running, sprinting (four times as fast), each fence, wall or window climbed (0.08) and each stomp (0.02) build pain in both lower legs. Walking never rests them; standing still eases the load over about three hours, sitting (or sleeping) twice as fast, a seat you could sleep on (a sofa, an armchair) three times. |
 | Old Hand | 40s, 50s | costs 4 | Every skill the occupation boosts gains experience x1.25 (Maintenance for the Unemployed); until 2026-10-07 only the main skill |
 | Old Injury | 50s | gives 3 | One arm or leg, picked at the start and announced once, always carries a little stiffness; in the cold and damp it stiffens further and hurts. Not with Arthritis |
 | Set in Their Ways | 50s | gives 2 | Skills the occupation does not boost gain experience x0.85. Fitness and Strength are left to age |

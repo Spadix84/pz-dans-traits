@@ -149,7 +149,7 @@
     "UI_trait_DanBadBack": "Bad Back",
     "UI_trait_DanBadBackdesc": "Heavy loads build back pain.<br>40s and 50s only.",
     "UI_trait_DanBadKnees": "Bad Knees",
-    "UI_trait_DanBadKneesdesc": "Running and climbing build knee pain.<br>40s and 50s only.",
+    "UI_trait_DanBadKneesdesc": "Running, climbing and stomping build knee pain.<br>Walking never rests them; a chair does, a sofa faster.<br>40s and 50s only.",
     "UI_trait_DanOldHand": "Old Hand",
     "UI_trait_DanOldHanddesc": "Faster XP gain for the occupation's skills.<br>40s and 50s only.",
     "UI_trait_DanOldInjury": "Old Injury",
