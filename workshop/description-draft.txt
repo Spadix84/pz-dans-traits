@@ -1,0 +1,63 @@
+[h1]Vitality Project[/h1]
+[b]Your survivor brings their body with them.[/b] Their age, their health, their habits and how well they look after themselves all shape how they get through the apocalypse. Build 42, singleplayer.
+
+[h2]How it fits together[/h2]
+[list]
+[*][b]Age[/b] is the frame you pick first.
+[*][b]Vitality[/b] is how well you are keeping that body up.
+[*][b]Traits[/b] are what you brought into the apocalypse.
+[*][b]The health systems[/b] are what the world does to you: blood that runs out, wounds that go bad, concussions, medicine you have to find.
+[/list]
+They read each other. A bad night drags Vitality down and can set off a migraine. A fever pushes a diabetic's sugar up. A fifty-year-old bleeds harder and heals slower than a twenty-year-old.
+
+[h2]Vitality: look after yourself and it pays[/h2]
+Diet, exercise and sleep roll into one slow score that takes about three days to move a tier. Fresh, varied food, regular training or a hard day's work, and a dark, unbroken night lift it. Junk food, idleness and bad nights drag it down.
+[list]
+[*][b]Fit and Thriving:[/b] faster stamina recovery, better mood, a little health back, faster healing, and resistance to colds and wound infection.
+[*][b]Thriving adds[/b] a kilo of carry weight and half as much again Fitness and Strength experience.
+[*][b]Sluggish and Run Down:[/b] the reverse. It never drains health, but everything is harder.
+[/list]
+
+[h2]Age: pick a decade first[/h2]
+[list]
+[*][b]20s (+6):[/b] stamina, healing and training all come faster. No bonus level.
+[*][b]30s (0):[/b] the game as it is.
+[*][b]40s (-2) and 50s (-6):[/b] more levels in your trade (two and one, or three and two), but a slower body, harder hangovers and bleeds, and pills that last longer.
+[/list]
+Each decade has traits of its own: Bottomless Pit in your 20s, Bad Knees and Reading Glasses later on, Old Hand for the veteran of a trade. Strong, Athletic and Fit cost more as you get older.
+[img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-age.png[/img]
+
+[h2]Traits that change how you play[/h2]
+[list]
+[*][b]Multiple Sclerosis (-15):[/b] you get a day's energy in spoons, set by last night's sleep and spent faster in the heat. Run out and you hit the wall; push on and you borrow from tomorrow. Monthly flares, and three 1993 medicines.
+[*][b]Type 1 Diabetes (-10):[/b] a hidden blood sugar, a meter and insulin pens. Your First Aid level tells you what a meal will take: a rough guess at 3, the exact dose at 9. A low knocks you out.
+[*][b]Heart Condition (-12):[/b] effort, panic, a heavy pack and the cold all strain the heart. Chest pain stops you running; push on and it gives out, and the recovery takes a week. Beta blockers and nitroglycerin help.
+[*][b]Hemophilia (-10):[/b] bleeds never stop on their own. Bandage everything, stitch the deep ones, carry clotting powder. A scratch costs you a day on the sofa.
+[*][b]Migraines (-10):[/b] each character has three personal triggers, worked out as you play. Sumatriptan cuts an attack short.
+[*][b]A Really Bad Day (-8):[/b] you wake up drunk and sick, with an infected cut and no clothes, and the house is on fire.
+[/list]
+
+[h2]Everything else[/h2]
+[b]Negative:[/b] Arthritis, Asthma, Type 2 Diabetes, Brittle, Major Depressive Disorder, Epilepsy, Fear of Blood, Anaemic, Alcoholic, Germaphobe, Smoker, Gluten and Lactose Intolerance, Vegetarian, Caffeine Dependent, Hallucinations, Tinnitus, Straight Edge.
+[b]Positive:[/b] Renaissance Faire Geek, Resilient (can beat the Knox virus), Grit, Fast Recovery, Deep Sleeper, Steady Hands, Iron Gut, Keen Cook, Good Clotter, Thick Skull, Outdoorsman, Cat's Eyes, Early Riser, Meal Prepper, Gym Regular, Night Shift, Hollow Legs.
+[b]Age-only:[/b] Green, Quick Study, Bottomless Pit, Pace Yourself, Settled, Reading Glasses, Bad Back, Bad Knees, Old Hand, Delicate Stomach, Old Injury, Set in Their Ways, Seen It All, Cast Iron, Old Bones Know Rain.
+Every one is explained in the field guide.
+[img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-conditions.png[/img]
+[img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-perks.png[/img]
+[img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-moodles.png[/img]
+[img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-items.png[/img]
+
+[h2]FAQ[/h2]
+[list]
+[*][b]Mid-save?[/b] Safe to add. An existing character is put in their 30s and keeps their skills.
+[*][b]Point signs?[/b] Minus means a flaw and plus a perk, as on this page. The creation screen shows the sign the other way round.
+[*][b]Too hard?[/b] Most systems have a switch on the sandbox page.
+[*][b]Other mods?[/b] Take A Bath And Shower and Project A-Life are supported. Dynamic Traits and Expanded Moodles loads, but it doubles up on addictions, so pick one of the two.
+[*][b]Bugs?[/b] Leave a comment, or open an issue on GitHub. Your console.txt helps.
+[/list]
+
+[url=https://spadix84.github.io/pz-dans-traits/field-guide.html]Field guide: every trait, system and number[/url]
+[url=https://github.com/Spadix84/pz-dans-traits]Source and full changelog on GitHub[/url]
+[img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img]
+[img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png[/img]
+Moodle Framework optional.

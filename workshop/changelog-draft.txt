@@ -1,0 +1,49 @@
+[h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]
+The biggest update so far. Safe mid-save: an existing character becomes In Their 30s and keeps their skills, retired traits are swapped for their new homes, and starting kits are not handed out again. Every detail is in CHANGELOG.md on GitHub.
+
+[h2]Headlines[/h2]
+[list]
+[*][b]Age, reworked.[/b] Four decades, picked first on the creation screen. [b]20s (+6)[/b]: endurance back a quarter faster, Fitness, Strength, healing and new skills faster, no bonus level. [b]30s (0)[/b]: the game as it is. [b]40s (-2)[/b]: two levels in the job's main skill and one in its others, a body a little slower. [b]50s (-6, new)[/b]: three and two, slower still, and bleeds, concussions and hangovers hit harder. Strong, Athletic, Stout, Fit, Fast and Slow Learner and Hearty Appetite are priced by decade.
+[*][b]15 age-only traits.[/b] 20s: Green (-4), Quick Study (+4), Bottomless Pit (-6). 40s: Pace Yourself (+2), Settled (-4). 40s and 50s: Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4), Delicate Stomach (-2). 50s: Old Injury (-3), Set in Their Ways (-2), Seen It All (+3), Cast Iron (+2), Old Bones Know Rain (+1). Each has its own icon.
+[*][b]Heart Condition, rebuilt (-12).[/b] It never mattered in play. Now effort, panic, a heavy load and the cold build strain, and the Chest Pain moodle shows it coming. Chest pain means no running and dearer swings; push on and the heart gives out, which costs a week and leaves it weaker. A heart still mending gives out sooner, and a second attack within a day is nearly fatal. New [b]Nitroglycerin[/b] ends chest pain in a minute. Not with Athletic any more.
+[*][b]Clotting Powder[/b] (new item): right-click a bleeding part in the health panel. A scratch or cut stops; a deep wound bleeds at a quarter for 12 hours (still stitch it). Found in medicine cabinets, first aid kits, pet shops and salons.
+[*][b]Knowing your insulin.[/b] With Type 1, First Aid tells you what a food will do: a rough dose at 3, closer at 6, exact at 9. The new magazine [b]Living With Type 1[/b] teaches it at any level. The pen gives up to 3 doses at once.
+[/list]
+
+[h2]New[/h2]
+[list]
+[*][b]Grit (+8):[/b] you feel pain a third less.
+[*][b]Resilient (10)[/b] gets a 25% chance to beat the Knox virus: the fever breaks partway through. Sandbox setting.
+[/list]
+
+[h2]Changed[/h2]
+[list]
+[*][b]Shorter trait tooltips[/b] in vanilla's style.
+[*][b]Hemophilia, survivable.[/b] A bandage slows a bleed to a quarter, a soaked one is never worse than an open wound, and a fresh bandage carries on where the old one got to. A covered scratch can finally stop.
+[*][b]Arthritis:[/b] the cold is read from the joints' skin, so gloves and a coat help. Painkillers halve a flare, prednisone cuts it to a third. New characters start with painkillers.
+[*][b]Brittle:[/b] a bump is not a break. Falls and crashes use the concussion scale, so a fence tap never snaps anything; a hard crash has up to a 40% chance.
+[*][b]Bad Knees:[/b] stomping hurts, walking never rests them, a chair rests them twice as fast and a sofa three times.
+[*][b]Germaphobe[/b] minds bloody clothes and the blood on your weapon.
+[*][b]Steady Hands[/b] reloads and draws from the belt a quarter faster.
+[*][b]Folded together:[/b] Iron Gut takes in Iron Stomach, Thick Skull takes in Bounces Back, Keen Cook adds +1 Short Blade. [b]Jinxed[/b] is gone. Old characters get the new traits.
+[*][b]Prices:[/b] Alcoholic -4, Germaphobe -4, Settled -4, Asthma -10 (renamed from Brittle Asthma), A Really Bad Day -8 (the glass shard is now an infected cut), Keen Cook 4, Resilient 10. [b]Fast Recovery[/b] is not taken with Hemophilia.
+[*][b]Loot:[/b] Pill Caddy uncommon and often stocked, Sumatriptan twice as common, inhalers half as common again.
+[*][b]Take A Bath And Shower supported:[/b] a bath washes off sun block.
+[/list]
+
+[h2]Fixed[/h2]
+[list]
+[*]Car crashes concussed far too easily: one zombie at 60 km/h gave a blackout. Crashes are judged by the speed the car loses now (reported by kiiri).
+[*]Knocked out, the black screen hid the pause menu, and the game would not fast-forward. Now the menu shows, time runs fast until you come round, and you come round sitting on the floor.
+[*]The insulin pen only ever gave one dose.
+[*]High blood sugar after a meal drained health at once; now only after two hours over 350.
+[*]A drink showed the Antidepressants moodle on characters without depression.
+[*]The Pill Caddy showed your whole carried weight on the belt, and Organized did not help it.
+[*]In Their 20s did not hide Arthritis or Handy if picked first. Exclusions now work in either order.
+[*]Turning Concussion or Wound Care off mid-save left stale effects on.
+[*]Straight Edge: right-clicking logged Lua errors, and I Don't Need A Lighter let you smoke off a stove.
+[*]In-game text that had drifted from the code (Thriving, Hemophilia, Gym Regular, Set in Their Ways, Starting Medication).
+[/list]
+
+[h2]Thank you[/h2]
+kiiri for the crash report and the push for a way to stop bleeding, Amplify for spotting that Iron Stomach and Iron Gut were the same trait, chuchu for the Dynamic Traits report, TheLurkiest, joesii and showmethecoin for asking for a proper page and an FAQ, SpartanXIII and Cat_Security (Type 1 themselves) whose thread shaped the insulin dosing, and k3b4b for the Russian translation. The heart was rebuilt because it never once mattered in play: tell me when something else doesn't.

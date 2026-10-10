@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Age</title>
+<style>
+  html, body { margin: 0; background: #1b2838; color: #e6edf3; font-family: "Segoe UI", Arial, sans-serif; }
+  body { width: 1920px; height: 1080px; overflow: hidden; position: relative; }
+  .wrap { padding: 34px 56px 0 56px; }
+  h1 { margin: 0; font-size: 40px; font-weight: 600; }
+  h1 span { color: #66c0f4; }
+  .sub { margin: 6px 0 22px 0; font-size: 19px; color: #8fa3b7; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 28px; }
+  .cell { display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: center;
+          background: #223a50; border-radius: 6px; padding: 10px 14px; min-height: 64px; }
+  .ic { width: 64px; height: 64px; display: grid; place-items: center; background: #16202d; border-radius: 4px; }
+  .ic img { width: 54px; height: 54px; image-rendering: pixelated; }
+  .nm { font-size: 21px; font-weight: 600; color: #fff; line-height: 1.15; }
+  .nm small { font-size: 17px; font-weight: 600; margin-left: 8px; }
+  .neg { color: #ef8c78; } .pos { color: #8fc98a; } .zero { color: #8fa3b7; }
+  .band { font-size: 14px; color: #66c0f4; text-transform: uppercase; letter-spacing: 1.2px; margin-left: 8px; }
+  .ds { font-size: 15px; color: #c6d4df; line-height: 1.3; margin-top: 3px; }
+  .head { grid-column: 1 / -1; font-size: 15px; color: #8fc9f0; text-transform: uppercase; letter-spacing: 1.6px; margin-top: 6px; }
+  .foot { position: absolute; left: 56px; right: 56px; bottom: 24px; font-size: 16px; color: #8fa3b7; display: flex; justify-content: space-between; }
+</style></head>
+<body><div class="wrap">
+<h1>Age: <span>the young recover, the old know their trade</span></h1>
+<div class="sub">Every character carries an Age. It changes how the body heals, trains and handles drink and pills, and what other traits cost.</div>
+<div class="grid">
+<div class="head">Pick a decade first</div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_age20s.png"></div><div><div class="nm">In Their 20s<small class="pos">+6</small></div><div class="ds">Faster endurance recovery, healing and Fitness and Strength gain.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_age30s.png"></div><div><div class="nm">In Their 30s<small class="zero">0</small></div><div class="ds">The game as it is: no bonus, no penalty.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_age40s.png"></div><div><div class="nm">In Their 40s<small class="neg">-2</small></div><div class="ds">+2 levels in the occupation's main skill, +1 in its others.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_age50s.png"></div><div><div class="nm">In Their 50s<small class="neg">-6</small></div><div class="ds">+3 levels in the occupation's main skill, +2 in its others.</div></div></div>
+<div class="head">Then the traits only that age can take</div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_green.png"></div><div><div class="nm">Green<small class="neg">-4</small><span class="band">20s</span></div><div class="ds">Occupation skills start one level lower.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_quickstudy.png"></div><div><div class="nm">Quick Study<small class="pos">+4</small><span class="band">20s</span></div><div class="ds">Faster XP gain for skills under level 5.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_bottomlesspit.png"></div><div><div class="nm">Bottomless Pit<small class="neg">-6</small><span class="band">20s</span></div><div class="ds">Gets hungry faster.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_paceyourself.png"></div><div><div class="nm">Pace Yourself<small class="pos">+2</small><span class="band">40s</span></div><div class="ds">Swings and sprints cost less endurance.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_settled.png"></div><div><div class="nm">Settled<small class="neg">-4</small><span class="band">40s</span></div><div class="ds">Sleeps badly away from a bed indoors, or in a new bed.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_readingglasses.png"></div><div><div class="nm">Reading Glasses<small class="neg">-2</small><span class="band">40s, 50s</span></div><div class="ds">Reads slower without glasses, and not in dim light.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_badback.png"></div><div><div class="nm">Bad Back<small class="neg">-4</small><span class="band">40s, 50s</span></div><div class="ds">Heavy loads build back pain.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_badknees.png"></div><div><div class="nm">Bad Knees<small class="neg">-3</small><span class="band">40s, 50s</span></div><div class="ds">Running, climbing and stomping build knee pain.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_oldhand.png"></div><div><div class="nm">Old Hand<small class="pos">+4</small><span class="band">40s, 50s</span></div><div class="ds">Faster XP gain for the occupation's skills.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_delicatestomach.png"></div><div><div class="nm">Delicate Stomach<small class="neg">-2</small><span class="band">40s, 50s</span></div><div class="ds">Junk food, or a drink on an empty stomach, brings nausea.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_oldinjury.png"></div><div><div class="nm">Old Injury<small class="neg">-3</small><span class="band">50s</span></div><div class="ds">One limb is always stiff, worse in cold and damp.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_setinways.png"></div><div><div class="nm">Set in Their Ways<small class="neg">-2</small><span class="band">50s</span></div><div class="ds">Slower XP gain for skills the occupation doesn't boost, except Fitness and Strength.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_seenitall.png"></div><div><div class="nm">Seen It All<small class="pos">+3</small><span class="band">50s</span></div><div class="ds">Panics less.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_castiron.png"></div><div><div class="nm">Cast Iron<small class="pos">+2</small><span class="band">50s</span></div><div class="ds">Fewer medication side effects.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/ui/Traits/trait_oldbones.png"></div><div><div class="nm">Old Bones Know Rain<small class="pos">+1</small><span class="band">50s</span></div><div class="ds">Each morning, warns of bad weather coming tomorrow.</div></div></div>
+</div></div>
+<div class="foot"><span>Strong, Athletic, Stout, Fit, Fast and Slow Learner and Hearty Appetite are priced by age.</span><span>Vitality Project 1.2.0 &middot; Project Zomboid Build 42</span></div>
+</body></html>

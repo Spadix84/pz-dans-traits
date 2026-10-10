@@ -175,7 +175,9 @@ irritation, and the trait costs 12 (was 10).
   x0.5 / x0.65 / x0.8 (through Arthritis's weaken-and-restore, now shared as
   `DanTraits_WeakenWeapon`). It was a day at x0.6 recovery.
 - **Scars:** each attack makes strain build a fifth faster for good; a second attack within
-  a day drops health to the floor (10) instead of taking 15.
+  a day drops health to the floor (10) instead of taking 15. Through the week after, pushing
+  on through chest pain is x2 / x1.5 / x1.25 as likely to bring another attack, stage by
+  stage (found in play: a second attack was slow to come for a heart that had just failed).
 - **Beta blockers halve, not quarter**, and a new character starts on them built up half way
   with one bottle (was fully built, two bottles). While built up, endurance comes back a tenth
   slower, for anyone on them.
@@ -284,6 +286,20 @@ sleep does. The mod's blackouts (concussion knockout, shock, seizures, a diabeti
 Fear of Blood) did not, so the black covered the pause menu as well and Escape did nothing
 you could see. The fade is now drawn before the UI, as in sleep: the menu, the inventory
 and the moodles show over the black.
+
+### Fixed: time could not be sped up while passed out
+
+The game drops back to normal speed every frame a player is falling or has just moved, so
+the fast-forward buttons would not stay on during a blackout, and a fifteen-minute heart
+attack had to be sat through in real time. Now time runs fast on its own once the first
+eight real seconds are over (the speed controls' third step), as it does asleep, and goes
+back to normal when you come round. A paused game stays paused. Single player.
+
+### Fixed: coming round standing up
+
+After a heart attack the character came round on their feet. You now come round sitting on
+the floor where you fell (sat down again a few frames on, in case letting go of the movement
+block stood you up) and get up yourself with a movement key. In a vehicle you stay in the seat.
 
 ### Fixed: Concussion and Wound Care did not stand down when switched off mid-save
 
@@ -394,8 +410,8 @@ Costs below use the script's sign: positive costs points, negative gives them.
   x1.25, not just the main skill.
 - **Settled gives 4** (was 2, 2026-10-08).
 - **In Their 50s gives 6** (was 4). **Bottomless Pit gives 6** (was 3). **Alcoholic gives
-  4** (was 2). **Germaphobe gives 4** (was 3). **Fast Recovery costs 6** (was 8, now the same
-  as the Fast Healer it contains).
+  4** (was 2). **Germaphobe gives 4** (was 3). **Fast Recovery** stays at 8 (it was
+  briefly 6) and is not taken with Hemophilia.
 - **Asthma** (was Brittle Asthma) **gives 10** (was 8). Inhalers turn up half as often
   again, and the new sandbox option Inhaler Loot (percent, default 100) sets the rate on top.
 - **Iron Gut costs 4** (vanilla 2) and takes in Iron Stomach: on top of vanilla's lower food

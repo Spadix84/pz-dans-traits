@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Items</title>
+<style>
+  html, body { margin: 0; background: #1b2838; color: #e6edf3; font-family: "Segoe UI", Arial, sans-serif; }
+  body { width: 1920px; height: 1080px; overflow: hidden; position: relative; }
+  .wrap { padding: 34px 56px 0 56px; }
+  h1 { margin: 0; font-size: 40px; font-weight: 600; }
+  h1 span { color: #66c0f4; }
+  .sub { margin: 6px 0 22px 0; font-size: 19px; color: #8fa3b7; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px 28px; }
+  .cell { display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: center;
+          background: #223a50; border-radius: 6px; padding: 10px 14px; min-height: 64px; }
+  .ic { width: 64px; height: 64px; display: grid; place-items: center; background: #16202d; border-radius: 4px; }
+  .ic img { width: 54px; height: 54px; image-rendering: pixelated; }
+  .nm { font-size: 21px; font-weight: 600; color: #fff; line-height: 1.15; }
+  .nm small { font-size: 17px; font-weight: 600; margin-left: 8px; }
+  .neg { color: #ef8c78; } .pos { color: #8fc98a; } .zero { color: #8fa3b7; }
+  .band { font-size: 14px; color: #66c0f4; text-transform: uppercase; letter-spacing: 1.2px; margin-left: 8px; }
+  .ds { font-size: 16px; color: #c6d4df; line-height: 1.3; margin-top: 3px; }
+  .head { grid-column: 1 / -1; font-size: 15px; color: #8fc9f0; text-transform: uppercase; letter-spacing: 1.6px; margin-top: 6px; }
+  .foot { position: absolute; left: 56px; right: 56px; bottom: 24px; font-size: 16px; color: #8fa3b7; display: flex; justify-content: space-between; }
+</style></head>
+<body><div class="wrap">
+<h1>The pharmacy <span>and what to carry it in</span></h1>
+<div class="sub">Medicine you have to find, ration and keep on you. Found in pharmacies, cabinets, hospitals and bathrooms.</div>
+<div class="grid">
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Amantadine.png"></div><div><div class="nm">Amantadine</div><div class="ds">MS fatigue pill. Treats: multiple sclerosis fatigue.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Anticonvulsants.png"></div><div><div class="nm">Anticonvulsants</div><div class="ds">Daily epilepsy pill. Treats: epilepsy.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Baclofen.png"></div><div><div class="nm">Baclofen</div><div class="ds">Muscle relaxant. Treats: muscle stiffness and spasms from multiple sclerosis, including stiffness brought on by heat.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_ClottingPowder.png"></div><div><div class="nm">Clotting Powder</div><div class="ds">Styptic powder for a bleeding wound. Use: right-click the bleeding part in the health panel, dressing off.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Diazepam.png"></div><div><div class="nm">Diazepam</div><div class="ds">Anti-anxiety pill. Treats: panic and anxiety.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_GlucoseMeter.png"></div><div><div class="nm">Glucose Meter</div><div class="ds">Reads blood sugar from a drop of blood. Needs test strips.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Inhaler.png"></div><div><div class="nm">Rescue Inhaler</div><div class="ds">Rescue inhaler. Treats: asthma attacks and airway irritation.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_InsulinMag.png"></div><div><div class="nm">Living With Type 1</div><div class="ds">Health magazine. Teaches the exact insulin dose for any food, at any First Aid level.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_InsulinPen.png"></div><div><div class="nm">Insulin Pen</div><div class="ds">Rapid-acting insulin. Treats: diabetes (Type 1 needs it).</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_IronPills.png"></div><div><div class="nm">Iron Pills</div><div class="ds">Iron supplement. Treats: anaemia.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Metformin.png"></div><div><div class="nm">Metformin</div><div class="ds">Daily diabetes pill. Treats: Type 2 diabetes.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_NicotineGum.png"></div><div><div class="nm">Nicotine Gum</div><div class="ds">Nicotine gum. Treats: cigarette cravings (Smoker).</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Nitroglycerin.png"></div><div><div class="nm">Nitroglycerin</div><div class="ds">Heart rescue tablet. Treats: chest pain (angina).</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_PillCaddy.png"></div><div><div class="nm">Pill Caddy</div><div class="ds">Weekly pill organiser. Holds medication only.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Prednisone.png"></div><div><div class="nm">Prednisone</div><div class="ds">Steroid for flares. Treats: multiple sclerosis flares, arthritis flares.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Sumatriptan.png"></div><div><div class="nm">Sumatriptan</div><div class="ds">Migraine pill. Treats: migraine attacks (ordinary painkillers barely touch them).</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_Sunblock.png"></div><div><div class="nm">Sun Block</div><div class="ds">Rub it in and the sun can't burn bare skin for 8 hours. Does nothing for a burn you already have. 8 coats.</div></div></div>
+<div class="cell"><div class="ic"><img src="../../DanTraits/42/media/textures/Item_TestStrips.png"></div><div><div class="nm">Test Strips</div><div class="ds">For a glucose meter. One strip per reading. 25 strips.</div></div></div>
+</div></div>
+<div class="foot"><span>Every vanilla medicine works through the same system: build-up, wearing off, side effects and overdoses.</span><span>Vitality Project 1.2.0 &middot; Project Zomboid Build 42</span></div>
+</body></html>

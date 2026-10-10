@@ -707,17 +707,17 @@ module DanTraits {
     }
 
     /* Fast Healer folded in (granted with it), and blood comes back faster
-       after a bleed. Priced the same as vanilla Fast Healer (6), which it
-       contains. DanTraits_Positives.lua. */
+       after a bleed. Costs 8, two over the vanilla Fast Healer it contains.
+       Not with Hemophilia. DanTraits_Positives.lua. */
     character_trait_definition DanTraits:fastrecovery
     {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:fastrecovery,
-        Cost = 6,
+        Cost = 8,
         UIName = UI_trait_DanFastRecovery,
         UIDescription = UI_trait_DanFastRecoverydesc,
-        MutuallyExclusiveTraits = base:fasthealer;base:slowhealer,
+        MutuallyExclusiveTraits = base:fasthealer;base:slowhealer;DanTraits:hemophilia,
     }
 
     /* Blood clots quickly: bleeds run down twice as fast and lose a quarter

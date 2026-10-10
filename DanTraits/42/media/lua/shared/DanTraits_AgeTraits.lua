@@ -26,7 +26,7 @@
 -- DanTraits_Positives.lua):
 --   Bottomless Pit (20s, gives 6): hunger x1.3 on top of the band, and the
 --     Hungry moodle costs mood from Hungry up.
---   Seen It All (50s, costs 3): panic builds x0.6, Fear of Blood faints half
+--   Seen It All (50s, costs 3): panic builds x0.8, Fear of Blood faints half
 --     as often, Germaphobe's filth stress half. Not with Cowardly.
 --   Pace Yourself (40s, costs 2): a tenth of the endurance a swing or a
 --     sprint spends is given back.
@@ -73,7 +73,7 @@ local QS_XP          = 1.4     -- ...gain experience x this (on top of the 20s b
 local BP_HUNGER      = 1.3     -- hunger builds x this (on top of the 20s band's x1.15)
 local BP_UNHAPPY     = { 0, 0, 0.1, 0.2, 0.2 }   -- unhappiness a minute awake by the Hungry moodle's level
 -- Seen It All
-local SI_PANIC       = 0.6     -- panic builds x this
+local SI_PANIC       = 0.8     -- panic builds x this (0.6 until 2026-10-09: with Brave it was near-immunity)
 local SI_FAINT       = 0.5     -- Fear of Blood faints x this
 local SI_FILTH       = 0.5     -- Germaphobe's filth stress x this
 -- Pace Yourself

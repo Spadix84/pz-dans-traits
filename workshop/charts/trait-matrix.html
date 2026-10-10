@@ -12,7 +12,7 @@
   table { border-collapse: collapse; width: 1520px; table-layout: fixed; }
   th, td { border-bottom: 1px solid #2a475e; padding: 0 6px; height: 30px; font-size: 14px; }
   th { color: #66c0f4; font-weight: 600; font-size: 13px; line-height: 1.15; vertical-align: bottom; padding-bottom: 6px; text-align: center; }
-  th.trait { text-align: left; width: 250px; }
+  th.trait { text-align: left; width: 300px; }
   td.trait { text-align: left; white-space: nowrap; color: #ffffff; }
   td.trait small { color: #8fa3b7; font-weight: normal; margin-left: 6px; }
   td.c { text-align: center; font-size: 20px; line-height: 1; }
@@ -28,54 +28,66 @@
 <div class="sub">The systems run for every character. A trait either changes how one works, or is set off by it, or both.</div>
 <div class="legend"><span class="on">&#9679;</span> the trait changes the system &nbsp;&nbsp; <span class="by">&#9675;</span> the system acts on the trait &nbsp;&nbsp; <span class="on">&#9673;</span> both</div>
 <table id="m"></table>
-<div class="foot">Jinxed and Renaissance Faire Geek stand alone (loot and skills). Vitality Project 1.1.0 for Project Zomboid Build 42.</div>
+<div class="foot">Renaissance Faire Geek, Keen Cook, Green, Quick Study, Old Hand and Set in Their Ways change skills and experience only, so they have no row. Vitality Project 1.2.0 for Project Zomboid Build 42.</div>
 </div>
 <script>
 const cols = ["Food and drink","Effort","Sleep and light","Vitality","Blood","Infection","Wound care, First Aid","Concussion, passing out","Pain","Medication","Alcohol, hangover","Caffeine","Weather, sun, heat","Spoons"];
 // X = changes it, o = acted on by it, B = both, . = nothing
 const rows = [
   ["group","Negative traits"],
-  ["Multiple Sclerosis","-15","o.oo.o..XXoBBX"],
-  ["A Really Bad Day","-12","....XoX..oX..."],
-  ["Arthritis","-10",".X......X...o."],
-  ["Diabetes Type 1 / 2","-10 / -5","ooo..X.X.Xo..."],
-  ["Heart Condition","-10",".o.o....XX.o.."],
-  ["Brittle","-8","......X......."],
-  ["Brittle Asthma","-8",".oX..o...X..o."],
-  ["Hemophilia","-8","....Xoo......."],
-  ["Major Depressive Disorder","-8","o.oo....oXo..."],
-  ["Migraines","-8","..o..oooXXooo."],
-  ["Epilepsy","-6","..B..o.BXXo.o."],
-  ["Fear of Blood","-6","....oBX......."],
-  ["Anaemic","-4","o...XX........"],
-  ["Gluten Intolerance","-4","o.......X....."],
-  ["Jinxed","-4",".............."],
-  ["Smoker","-4","oXX..XX..XoX.."],
+  ["Multiple Sclerosis","-15","oX...o..Xo..oB"],
+  ["Heart Condition","-12",".Boo...XXB.oo."],
+  ["Arthritis","-10","........Bo..o."],
+  ["Asthma","-10",".BBo.o.X.o..o."],
+  ["Diabetes Type 1 / 2","-10 / -5","BBoo.BoX.oo..."],
+  ["Hemophilia","-10","....X.B......."],
+  ["Migraines","-10","B.B..o.oXBooo."],
+  ["A Really Bad Day","-8","....XX....X..."],
+  ["Brittle","-8","......Xo......"],
+  ["Major Depressive Disorder","-8","ooBo....oBo..."],
+  ["Epilepsy","-6","o.B..o.BXoo.o."],
+  ["Fear of Blood","-6","....o.BX......"],
+  ["Alcoholic","-4","X.X....XX.B..."],
+  ["Anaemic","-4","oX..BX...o...."],
+  ["Germaphobe","-4",".....X........"],
+  ["Gluten Intolerance","-4","B.o.....X....."],
+  ["Smoker","-4","XBBo.XX..ooX.."],
   ["Vegetarian","-4","X............."],
-  ["Germaphobe","-3","....oX........"],
-  ["Alcoholic","-2","o.X....XX.X..."],
-  ["Caffeine Dependent","-2","o.o.....X..Xo."],
+  ["Caffeine Dependent","-2","o.......Xo.B.."],
   ["Hallucinations","-2","..o..o.o..o..."],
   ["Tinnitus","-2","..X..........."],
-  ["Lactose Intolerance","-1","o.......X....."],
+  ["Lactose Intolerance","-1","B.o.....X....."],
   ["Straight Edge","-1","X.........X..."],
   ["group","Positive traits"],
-  ["Renaissance Faire Geek","+10",".............."],
-  ["Fast Recovery","+8","....X.X......."],
-  ["Deep Sleeper","+6","..X..........."],
+  ["Resilient","+10",".....X........"],
+  ["Grit","+8","........X....."],
+  ["Fast Recovery","+8","....X........."],
+  ["Deep Sleeper","+6","..XX.........."],
   ["Steady Hands","+5","......X...o..."],
-  ["Good Clotter","+3","....Xoo......."],
-  ["Thick Skull","+2",".......X......"],
-  ["Outdoorsman","2","............X."],
-  ["Cat's Eyes","1","..X..........."],
+  ["Iron Gut","+4","X..X.........."],
+  ["Good Clotter","+3","....X........."],
+  ["Thick Skull","+2",".......X.X...."],
+  ["Outdoorsman","+2","............X."],
+  ["Cat's Eyes","+1","..X..........."],
   ["Early Riser","+1","..XX.........."],
-  ["Meal Prepper","+1","X..X.........."],
+  ["Meal Prepper","+1","...X.........."],
   ["Gym Regular","+1",".X.X.........."],
-  ["Iron Stomach","+1","X............."],
   ["Night Shift","+1","..X..........."],
-  ["Hollow Legs","+1","........o.X..."],
+  ["Hollow Legs","+1","..........X..."],
   ["group","Age"],
-  ["In Their 20s / 40s / 50s","+6 / -2 / -4",".XX.X.XX..X..."],
+  ["In Their 20s / 40s / 50s","+6 / -2 / -6","XXX.X.XX.XXX.."],
+  ["group","Age-only traits"],
+  ["Bottomless Pit (20s)","-6","B............."],
+  ["Settled (40s)","-4","..X..........."],
+  ["Pace Yourself (40s)","+2",".X............"],
+  ["Bad Back (40s, 50s)","-4","..o.....X....."],
+  ["Bad Knees (40s, 50s)","-3",".oo.....X....."],
+  ["Reading Glasses (40s, 50s)","-2","..o..........."],
+  ["Delicate Stomach (40s, 50s)","-2","B.........o..."],
+  ["Old Injury (50s)","-3","........X...o."],
+  ["Seen It All (50s)","+3",".......X......"],
+  ["Cast Iron (50s)","+2",".........X...."],
+  ["Old Bones Know Rain (50s)","+1","............o."],
 ];
 const t = document.getElementById("m");
 let h = "<tr><th class='trait'>Trait<small></small></th>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";

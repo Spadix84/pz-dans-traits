@@ -97,10 +97,10 @@ local HC_SECOND_H      = 24
 local HC_ATTACK_SAD    = 30      -- unhappiness added
 local HC_ATTACK_STRAIN = 0.5     -- strain after an attack
 local HC_WEAK_H        = 168     -- a week of recovery, in three stages of HC_WEAK_H / 3
-local HC_WEAK          = {       -- by stage (1 the first days): endurance recovery x, spending x, melee damage x
-    { regen = 0.5, spend = 1.5, damage = 0.5 },
-    { regen = 0.65, spend = 1.3, damage = 0.65 },
-    { regen = 0.8, spend = 1.15, damage = 0.8 },
+local HC_WEAK          = {       -- by stage (1 the first days): endurance recovery x, spending x, melee damage x,
+    { regen = 0.5, spend = 1.5, damage = 0.5, attack = 2 },        -- and the chance of another attack through chest pain x
+    { regen = 0.65, spend = 1.3, damage = 0.65, attack = 1.5 },    -- (2026-10-09: in play a second attack was slow to come
+    { regen = 0.8, spend = 1.15, damage = 0.8, attack = 1.25 },    -- for a heart that had just failed)
 }
 -- nitroglycerin
 local HC_NITRO_STRAIN  = 0.5     -- strain x this
@@ -272,7 +272,8 @@ local function updateHeartMinute(player, d)
         DanTraits_PainFloor(player, d, "heart", HC_PAIN, HC_PAIN_RAMP)
         if pushing then
             d.hcPushing = true
-            if DanTraits_Roll(HC_ATTACK_MIN * betaCut(player)) then
+            local stage = weak(player, d)
+            if DanTraits_Roll(HC_ATTACK_MIN * betaCut(player) * (stage and stage.attack or 1)) then
                 heartAttack(player, d)
                 return
             end

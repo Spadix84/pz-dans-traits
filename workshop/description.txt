@@ -58,7 +58,7 @@ Every character picks a decade first: the young recover, heal and train faster, 
 [*][b]Renaissance Faire Geek (+10):[/b] +1 Spear, Long Blade, Axe and Blacksmithing.
 [*][b]Resilient (10, reworked):[/b] as vanilla, plus a 25% chance to beat the Knox virus.
 [*][b]Grit (+8):[/b] you feel pain a third less. Painkillers work as before.
-[*][b]Fast Recovery (+6):[/b] Fast Healer folded in; blood comes back half as fast again.
+[*][b]Fast Recovery (+8):[/b] Fast Healer folded in; blood comes back half as fast again.
 [*][b]Deep Sleeper (+6):[/b] Wakeful folded in; light rarely wakes you.
 [*][b]Steady Hands (+5):[/b] Dexterous folded in; stitches and splints go wrong half as often, stitching and reloading a quarter quicker.
 [*][b]Iron Gut (4, reworked):[/b] as vanilla, and rotten or burnt food does half the harm.

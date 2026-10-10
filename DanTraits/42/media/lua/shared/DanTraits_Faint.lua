@@ -41,6 +41,23 @@ local notify = DanTraits_Notify
 local FT_MIN_REAL_S   = 8       -- never out for less than this, in real seconds
 local FT_SETTLE_MS    = 1500    -- let the fall play out before sitting down
 local FT_FALL_WOUND_MS = 4000   -- a scratch from the fall itself does not wake you (found in game: every diabetic blackout ended at once)
+-- Time runs fast while you are out, as it does asleep, once the real-seconds
+-- floor has passed, and back to normal speed when you come round. Found in
+-- play 2026-10-09: the speed buttons do not stay on while you are down (the
+-- game drops back to normal speed every frame a player is falling or has just
+-- moved), so a fifteen-minute heart attack had to be sat through. Single
+-- player only; a paused game is left paused.
+local FT_FAST_SPEED   = 3       -- the speed controls' third step (the faster fast-forward)
+
+local function gameSpeed()
+    local speed = nil
+    if getGameSpeed then pcall(function() speed = getGameSpeed() end) end
+    return speed
+end
+
+local function setSpeed(speed)
+    if setGameSpeed then pcall(setGameSpeed, speed) end
+end
 
 function DanTraits_Collapse(player)
     if not player or player:isDead() then return false end
@@ -98,23 +115,45 @@ local function fade(player, out)
     end)
 end
 
+local function vehicleOf(player)
+    local v = nil
+    pcall(function() v = player:getVehicle() end)
+    return v
+end
+
+local function sittingDown(player)
+    local sitting = false
+    pcall(function() sitting = player:isSitOnGround() end)
+    return sitting
+end
+
+local function sitDown(player)
+    if player:isDead() or vehicleOf(player) or sittingDown(player) then return end
+    pcall(function() player:reportEvent("EventSitOnGround") end)
+end
+
+-- you come round where you fell: on the floor, and you get up yourself (a
+-- movement key, as from any sit). Found in play 2026-10-09: after a heart
+-- attack the character came round standing. Sat down again now and a few
+-- frames on, in case letting go of the movement block stood them up.
 local function comeRound(say)
     if not hold then return end
     local player, key = hold.player, hold.textKey
     setBlocked(player, false)
     fade(player, false)
+    if hold.sped and (gameSpeed() or 0) > 1 then setSpeed(1) end
     hold = nil
-    if say and not player:isDead() then notify(player, key) end
+    if player:isDead() then return end
+    sitDown(player)
+    if DanTraits_Later then
+        DanTraits_Later(2, function() sitDown(player) end, "faint:sit")
+        DanTraits_Later(10, function() sitDown(player) end, "faint:sit")
+    end
+    if say then notify(player, key) end
 end
 
 function DanTraits_IsPassedOut(player)
     return hold ~= nil and hold.player == player
-end
-
-local function vehicleOf(player)
-    local v = nil
-    pcall(function() v = player:getVehicle() end)
-    return v
 end
 
 -- the driver goes out: cut the engine (the game's own shut-off command,
@@ -151,6 +190,13 @@ local function onFaintTick()
         return
     end
     hold.ticks = hold.ticks + 1
+    if now >= hold.untilMs and not (isClient and isClient()) then
+        local speed = gameSpeed()
+        if speed and speed > 0 and speed < FT_FAST_SPEED then   -- 0 is paused: leave it
+            setSpeed(FT_FAST_SPEED)
+            hold.sped = true
+        end
+    end
     if not hold.deep and hold.ticks % FT_CHECK_TICKS == 0 then
         local n = woundCount(player)
         if now - hold.startMs < FT_FALL_WOUND_MS then
@@ -164,11 +210,7 @@ local function onFaintTick()
     end
     setBlocked(player, true)
     if vehicleOf(player) then return end   -- the seat holds you
-    if now - hold.startMs >= FT_SETTLE_MS then
-        local sitting = false
-        pcall(function() sitting = player:isSitOnGround() end)
-        if not sitting then pcall(function() player:reportEvent("EventSitOnGround") end) end
-    end
+    if now - hold.startMs >= FT_SETTLE_MS then sitDown(player) end
 end
 DanTraits_FaintTick = onFaintTick
 

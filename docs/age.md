@@ -174,7 +174,7 @@ its points. With the Age option off none of them is offered.
 | Pace Yourself | 40s | costs 2 | A tenth of the endurance a swing or a sprint spends comes straight back |
 | Settled | 40s | gives 4 | A night anywhere but a bed in a house (a bed object on a square with a room) scores 0.2 worse, and so does the first night in any new bed |
 | Delicate Stomach | 40s, 50s | gives 2 | A junk meal (the Vitality grade) brings 15 food sickness for a whole portion; a drink with hunger over half brings 10. Not with Iron Gut |
-| Seen It All | 50s | costs 3 | Panic builds x0.6 (the game's own rise, through the stat delta pipeline); Fear of Blood faints half as often; Germaphobe's filth stress half. Not with Cowardly |
+| Seen It All | 50s | costs 3 | Panic builds x0.8 (the game's own rise, through the stat delta pipeline); Fear of Blood faints half as often; Germaphobe's filth stress half. Not with Cowardly |
 | Cast Iron | 50s | costs 2 | Medication side effects half as often; every drug's overdose line one pill higher |
 | Old Bones Know Rain | 50s | costs 1 | Once a day from 6 AM: a storm, tropical storm, heavy rain or blizzard tomorrow, or a night below freezing, is announced today |
 

@@ -48,7 +48,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
 | [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
 | [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | +6 | No bonus profession level; recovers, heals and trains faster. |
-| [Fast Recovery](#fast-recovery-6) | +6 | Fast Healer folded in; blood comes back faster. |
+| [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
 | [Grit](#grit-8) | +8 | Feels pain a third less. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
 | [Resilient](#resilient-10-vanilla-reworked) | 10 | Vanilla's disease resistance, plus a 25% chance to beat the Knox infection. |
@@ -113,7 +113,7 @@ A weak heart that is pushed too hard. Strain builds, chest pain follows, and a h
 - **Strain** (0 to 1) builds every minute from endurance spent, sprinting and running, how winded you are, panic from half way up, carrying more than you can and cold air; it drains at rest (from full to nothing in about 12 minutes standing still). Age (x0.8 / x1.25 / x1.5), a smoking habit, caffeine, a Run Down body, a stimulant overdose and every heart attack survived (+20% each, for good) make it build faster. Shown on the Chest Pain moodle from 0.4 (Heart Working Hard) and 0.75 (Heart Pounding).
 - **Chest pain** at full strain: 15 to 30 minutes of pain, endurance recovery at a third, no running or sprinting (the Restricted Movement moodle on an attempt), swings cost half as much again. Twice as fast to pass at rest. Strain falls back to 0.8, so a second bout needs more pushing, not a fresh start.
 - **Pushing on through it** (spending endurance at Endurance moodle 2 or worse, trying to run or sprint, or swinging) risks a heart attack each minute (8%, 4% on beta blockers): down for 5 to 15 minutes, 15 health lost, endurance emptied. A second attack within a day drops health to the floor.
-- **The week after**, in three stages (Weak Heart moodle): endurance comes back at x0.5 / x0.65 / x0.8, swings, sprinting and running spend x1.5 / x1.3 / x1.15, melee weapons do x0.5 / x0.65 / x0.8 damage. You are told as each stage passes.
+- **The week after**, in three stages (Weak Heart moodle): endurance comes back at x0.5 / x0.65 / x0.8, swings, sprinting and running spend x1.5 / x1.3 / x1.15, melee weapons do x0.5 / x0.65 / x0.8 damage, and pushing on through chest pain is x2 / x1.5 / x1.25 as likely to bring another attack. You are told as each stage passes.
 - **Beta blockers** (vanilla's pills, on the [medication system](#medication)), one a day, build up over three days to halve the strain build and the heart attack chance; while built up, endurance comes back a tenth slower (anyone on them). You are told when they wear off. Starts on them built up half way, with one bottle.
 - **Nitroglycerin** (new item, 25 tablets, where prescriptions are and in a found Pill Caddy): one under the tongue ends chest pain within a minute and halves the strain, then half an hour of headache. Two within an hour drops your blood pressure: faints. Starts with a bottle.
 - Not with Athletic (Fit is allowed).
@@ -142,7 +142,7 @@ Airway irritation that builds through four tiers to an attack.
 - Bleeds never run down on their own while unbandaged: the bleeding clock is held where it is. A bandage runs it down as usual, and the clock is remembered under the dressing, so changing a bandage carries on from where the old one got to instead of starting the bleed over. Open wounds bleed again until bandaged, unless a bandage already ran their clock to nothing.
 - With [Blood](#blood) on: bleeds lose half as much again, and a bandage only slows one to a quarter. A soaked bandage, or one over a shard, is never worse than anyone else's open wound, so change it. Stitches stop a deep wound; a scratch stops only under a bandage.
 - With Blood off: every unbandaged bleed costs extra health instead.
-- Not with Good Clotter or A Really Bad Day.
+- Not with Good Clotter, Fast Recovery or A Really Bad Day.
 
 #### Major Depressive Disorder (-8)
 
@@ -271,10 +271,11 @@ Attacks that cost you hours.
 
 - Pain is felt a third less: the moodle and everything pain drives (aim, mood, sleep). Painkillers still work as vanilla.
 
-#### Fast Recovery (+6)
+#### Fast Recovery (+8)
 
 - Fast Healer folded in (granted; not with Fast Healer or Slow Healer).
 - After a bleed, blood volume and red cells come back half as fast again.
+- Not with Hemophilia.
 
 #### Deep Sleeper (+6)
 
@@ -369,7 +370,7 @@ Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Youn
   - 20s: **Green (-4)**, every occupation skill starts a level lower; **Quick Study (+4)**, skills under level 5 gain experience x1.4; **Bottomless Pit (-6)**, hunger a third faster again and going hungry drags the mood down.
   - 40s: **Pace Yourself (+2)**, a tenth of the stamina a swing or sprint spends comes back; **Settled (-4)**, sleeps badly off a house bed and the first night in any new one.
   - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-4)**, a heavy load builds back pain; **Bad Knees (-3)**, running, sprinting, climbing and stomping build knee pain, walking never rests it, sitting rests it twice as fast and a sofa or armchair three times; **Old Hand (+4)**, every skill the occupation boosts gains experience x1.25; **Delicate Stomach (-2)**, junk food and a drink on an empty stomach bring a queasy stomach.
-  - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-2)**, skills outside the occupation gain experience x0.85; **Seen It All (+3)**, panic builds at six tenths the pace, Fear of Blood faints and filth stress halved; **Cast Iron (+2)**, medication side effects half as often and the overdose line a pill higher; **Old Bones Know Rain (+1)**, tomorrow's storm or freezing night announced the morning before.
+  - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-2)**, skills outside the occupation gain experience x0.85; **Seen It All (+3)**, panic builds a fifth slower, Fear of Blood faints and filth stress halved; **Cast Iron (+2)**, medication side effects half as often and the overdose line a pill higher; **Old Bones Know Rain (+1)**, tomorrow's storm or freezing night announced the morning before.
 - **Green** takes the levels away only; it does not change how fast anything trains.
 - **Sandbox:** turn age off, set the default decade, set the profession levels per decade.
 
@@ -464,7 +465,7 @@ The health panel's wound list is written for the examiner's First Aid level: you
 
 Shock, a concussion and Fear of Blood can all put you on the floor.
 
-- You fall, end up sitting, the screen goes black, and you can do nothing until you come round. In real time, no time skip, for game minutes but never under eight real seconds. Zombies can still get to you.
+- You fall, end up sitting, the screen goes black, and you can do nothing until you come round, for game minutes but never under eight real seconds. After those eight seconds time runs fast, as it does asleep, and goes back to normal when you come round (a paused game stays paused). You come round sitting on the floor and get up yourself. Zombies can still get to you.
 - In a vehicle there is no fall: you slump in the seat, and a driver's engine cuts out so the car rolls to a stop.
 - A faint is shallow: anything wounding you jolts you awake. A concussion knockout is not.
 
