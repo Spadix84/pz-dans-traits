@@ -509,6 +509,95 @@ Everything in the two sections above, with these decisions and deviations:
   fall in Age's minute step; a fall to nothing still lingers for the old; the
   food sickness pipeline is told the new value.
 
+## The 20s, the other side (2026-10-10, DESIGN ONLY)
+
+The user, after play: a 20s character can be loaded with negatives and
+positives and the negatives don't hurt enough. Two causes. First, the band's
+recovery factors (endurance x1.25, healing x1.5, red cells x1.15, heart
+strain x0.8, Type 2 resistance -0.05, hangovers x0.85, clearance x1.2) quietly
+discount most of the big physical negatives, and the band's flat 6 points
+buys more the more of them you stack. Second, youth had no downside of its
+own. The first was fixed the same day by pricing (BUILT: MS and Heart
+Condition give 3 fewer in the 20s, Asthma and Hemophilia 2, Type 2, Anaemic,
+Smoker and Alcoholic 1; `AGE_PRICE`, docs/age.md). This section is the
+second: what is genuinely worse at 25.
+
+The frame: **the body forgives, the head doesn't.** The young body bounces
+back; the young mind gets hooked, swings and panics. Every row below makes a
+negative bite harder in the 20s or puts a cost on the band itself, so a
+loaded 20s build pays for itself in play rather than at creation.
+
+### Hooked fast (habits)
+
+The fast metabolism already burns through a drink, a smoke or a coffee x1.2.
+The other half: the craving comes back sooner, and a habit takes hold faster.
+
+| Effect | 20s | Where |
+|---|---|---|
+| Smoking and drinking habit meters build (anyone) | x1.3 | Smoker `NIC_GAIN` meter rise, Dependent `ALC_GAIN` meter rise |
+| Smoker: withdrawal builds | x1.25 | `NIC_RATE_BASE` / `NIC_RATE_METER` multiplier |
+| Alcoholic: dry hours to craving, shakes, delirium | x0.8 (24/48/72 -> 19/38/58) | `DRY_HOURS_*` |
+| Caffeine Dependent: dry hours to withdrawal | x0.75 (12 -> 9) | `CAF_ONSET_H` |
+
+A new hook pair, `habitGain` (meter rise) and `cravingOnset` (hours divided,
+build rate multiplied), read by the three systems; Age answers in the 20s.
+**Pricing:** with cravings harsher, Smoker's and Alcoholic's 20s +1 (from the
+softened lungs and hangovers) no longer describes the net. Recommended: take
+both rows out, so those two are full price and harder young.
+
+### A volatile mind
+
+Late teens to late twenties are when depression and schizophrenia most often
+first show, and when tempers run hottest.
+
+| Effect | 20s | Where |
+|---|---|---|
+| Spiraling: episode chance | x1.3 | `MDD_EPISODE_BASE` via a new `mddEpisode` hook |
+| Schizophrenia: episode chance | x1.25 | `SCHIZO_BASE_CHANCE` via a new `schizoChance` hook |
+| Anger builds (anyone) | x1.25 | a new `angerRise` delta pipeline on CharacterStat.ANGER, like `panicRise` |
+
+Anger already has teeth (weapon wear, dearer swings, curses that turn
+zombies, sloppy fine work, slow reading), and a smoker's withdrawal is what
+raises it, so this stacks with Hooked fast on purpose.
+
+### Inexperience
+
+| Effect | 20s | Where |
+|---|---|---|
+| Panic builds (anyone) | x1.15 | the existing `panicRise` pipeline (Seen It All's 50s x0.8 is the mirror) |
+
+Lands hardest on Cowardly and Agoraphobic, and on a fight gone wrong. Cheapest
+row to build: one number in `AGE[20]`.
+
+### Optional, if the above is not enough
+
+- **Epilepsy: sleep debt and hangovers count x1.3** as seizure triggers
+  (juvenile myoclonic epilepsy is a young person's, triggered by exactly
+  those). Hook into the trigger sum in DanTraits_Epilepsy.lua.
+- **Type 1: carbs land x1.15 faster** (fits the metabolism; a young Type 1
+  swings harder and is harder to dose). Hook into Diabetes' absorption.
+
+### Point math
+
+Nothing here changes a creation price except the two rows taken out above.
+The band itself gets two everyday costs (anger, panic) and so is a little
+worse for everyone; the 20s stay at 6. A plain 20s character barely notices;
+a 20s Smoker, Alcoholic, Spiraling, Cowardly build feels every row.
+
+### Build order, when it is wanted
+
+1. Panic x1.15 (one number). 2. `habitGain` / `cravingOnset` and the three
+readers, and drop the Smoker and Alcoholic price rows. 3. `angerRise`
+pipeline. 4. `mddEpisode`, `schizoChance`. 5. The optional two. Tests per
+row in test_age.lua plus the reading system's own test; docs/age.md table
+rows; checklist section 24.
+
+### Open
+
+- Whether anger x1.25 is too much on top of a smoker's withdrawal anger.
+- Whether the habit meters should also build x0.8 in the 50s (set in their
+  ways, slower to pick up a new habit), or stay a 20s-only row.
+
 ## Considered and left out
 
 - **Continuous ages (exact years).** Bands are easier to price and explain;

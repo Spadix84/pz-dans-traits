@@ -36,13 +36,18 @@ local function fracture(player)
 end
 DanTraits_BrittleFracture = fracture
 
-local function onPlayerGetDamage(player, damageType, damage)
+-- a solid hit; also how another mod's NPC hit arrives (DanTraits_OtherHit)
+function DanTraits_BrittleHit(player, damage)
     if not player or player ~= getSpecificPlayer(0) then return end   -- the local player only (zombies come through here too)
-    if IMPACT_TYPES[damageType] then return end   -- judged on the impact hook below
     if not hasTrait(player, "brittle") then return end
     if not damage or damage < 2 then return end
     if ZombRand(100) >= DanTraits_RunHooks("brittleChance", FRACTURE_CHANCE, player) then return end   -- Age: likelier in the 40s
     fracture(player)
+end
+
+local function onPlayerGetDamage(player, damageType, damage)
+    if IMPACT_TYPES[damageType] then return end   -- judged on the impact hook below
+    DanTraits_BrittleHit(player, damage)
 end
 
 -- a fall or crash, with the chance Concussion gives it (0 under its scale's floor)

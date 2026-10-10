@@ -98,6 +98,18 @@ local AGE_PRICE = {
     ["base:fastlearner"]    = { [20] = -1, [50] = 1 },
     ["base:slowlearner"]    = { [20] = 1, [50] = 1 },      -- gives a point fewer, young or old
     ["base:heartyappetite"] = { [20] = 1, [50] = -1 },     -- gives a point fewer young, one more old
+    -- the conditions the 20s band itself softens give fewer points young
+    -- (2026-10-10): the band's endurance, healing, blood, strain, resistance
+    -- and clearance factors already take part of the sting out, so a stack of
+    -- them must not come at full price
+    ["dantraits:ms"]         = { [20] = 3 },   -- endurance, stiffness
+    ["dantraits:heart"]      = { [20] = 3 },   -- strain x0.8, endurance
+    ["dantraits:asthma"]     = { [20] = 2 },   -- endurance x1.25 on the halved tier
+    ["dantraits:hemophilia"] = { [20] = 2 },   -- wounds close x1.5, red cells x1.15
+    ["dantraits:diabetes2"]  = { [20] = 1 },   -- resistance -0.05
+    ["dantraits:anemia"]     = { [20] = 1 },   -- red cells x1.15, endurance
+    ["base:smoker"]          = { [20] = 1 },   -- endurance on the lungs
+    ["dantraits:dependent"]  = { [20] = 1 },   -- hangovers x0.85, drink clears x1.2
 }
 local AGE_LEARN_BELOW = 3      -- learn3: skills under this level
 local AGE_TRAIT = { [20] = "age20s", [30] = "age30s", [40] = "age40s", [50] = "age50s" }

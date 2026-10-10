@@ -134,7 +134,10 @@ A trait can cost more or fewer points in a band. The trait itself is
 unchanged; the difference shows beside its cost on the creation screen (red
 for dearer, green for cheaper) and comes off Points to Spend. The body costs
 more to keep with age; learning is cheap young and dear old; a hearty
-appetite is natural young. (Light Eater had a row until 2026-10-07; it was
+appetite is natural young. The conditions the 20s band itself softens
+(through its endurance, healing, blood, strain, resistance and clearance
+factors) give fewer points young (2026-10-10), so a 20s character cannot
+stack them at full price while the band quietly takes the sting out. (Light Eater had a row until 2026-10-07; it was
 taken out as not worth the attention.) A positive number on
 a trait that gives points means it gives that many fewer.
 
@@ -146,6 +149,9 @@ a trait that gives points means it gives that many fewer.
 | Fast Learner | -1 | 0 | 0 | +1 |
 | Slow Learner (gives) | +1 | 0 | 0 | +1 |
 | Hearty Appetite (gives) | +1 | 0 | 0 | -1 |
+| Multiple Sclerosis, Heart Condition (give) | +3 | 0 | 0 | 0 |
+| Asthma, Hemophilia (give) | +2 | 0 | 0 | 0 |
+| Type 2, Anaemic, Smoker, Alcoholic (give) | +1 | 0 | 0 | 0 |
 
 Existing characters are not affected; the table is read on the creation
 screen only (`DanTraits_AgeSurcharge`, `DanTraits_AgePrices`).

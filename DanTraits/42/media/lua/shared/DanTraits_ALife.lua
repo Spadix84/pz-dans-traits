@@ -17,6 +17,15 @@ require "DanTraits"
 -- These are looked up through A-Life's tables on every call, so replacing the
 -- field is enough. (Its OnZombieUpdate handler itself is registered by
 -- reference; wrapping that one would do nothing.)
+--
+-- Hits. A-Life's NPCs hurt the player with BodyDamage.DamageFromWeapon, which
+-- fires no OnPlayerGetDamage, so Brittle and Concussion never heard of them.
+-- The three ways in are wrapped to measure what each took off the player and
+-- report it as one hit (DanTraits_MeasureHit, DanTraits_Util.lua):
+--   Combat.resolveAttack        an NPC's melee blow or shot (target 3rd)
+--   ModuleGunner.grazePlayer    suppression fire clipping the player (body 3rd)
+--   Executor.woundPlayer        a hit relayed through its executor (victim 1st)
+-- An attack aimed at anything but the local player passes straight through.
 local installed = false
 
 local function isPhantom(body)
@@ -28,6 +37,17 @@ local function wrap(owner, name, guard)
     if type(owner) ~= "table" or type(owner[name]) ~= "function" then return false end
     owner[name] = guard(owner[name])
     return true
+end
+
+-- wrap owner[name] so a call aimed at the local player (argument victimAt) is measured as a hit
+local function wrapHit(owner, name, victimAt)
+    return wrap(owner, name, function(original)
+        return function(...)
+            local victim = select(victimAt, ...)
+            if victim == nil or victim ~= getSpecificPlayer(0) then return original(...) end
+            return DanTraits_MeasureHit(victim, original, ...)
+        end
+    end)
 end
 
 -- A-Life's client and server files load after this one: run at game start.
@@ -52,8 +72,12 @@ local function install()
             return original(actor, shell, candidate, ...)
         end
     end)
+    local hits = 0
+    if wrapHit(ProjectALife.Combat, "resolveAttack", 3) then hits = hits + 1 end
+    if wrapHit(ProjectALife.ModuleGunner, "grazePlayer", 3) then hits = hits + 1 end
+    if wrapHit(ProjectALife.Executor, "woundPlayer", 1) then hits = hits + 1 end
     print("[DanTraits] Project A-Life found, phantom guard: horde " .. tostring(horde)
-        .. ", target " .. tostring(target) .. ", sight " .. tostring(sight))
+        .. ", target " .. tostring(target) .. ", sight " .. tostring(sight) .. "; hits " .. hits .. "/3")
 end
 DanTraits_ALifeInstall = install
 

@@ -45,7 +45,10 @@
 --                  alone decides. Being hit by a car on foot has no speed to
 --                  read and uses the amount.
 --   WEAPONHIT      a weapon hit (other players, or mods that add them) that
---                  took health off the head
+--                  took health off the head. The game sends it only from
+--                  IsoGameCharacter.Hit; NPC mods that hurt the player
+--                  another way report through DanTraits_OtherHit instead
+--                  (DanTraits_ALife.lua, DanTraits_Bandits.lua).
 -- A helmet (the head's clothing defense, CC_HELMET or more) makes a
 -- concussion less likely and less bad.
 --
@@ -155,6 +158,15 @@ function DanTraits_KnockHead(player, chance, score)
     return new
 end
 
+-- a weapon took this much off the head (CC_HEAD_SURE: certain); also how
+-- another mod's NPC hit arrives (DanTraits_OtherHit)
+function DanTraits_HeadHit(player, lost)
+    if not player or player ~= getSpecificPlayer(0) then return 0 end
+    lost = tonumber(lost) or 0
+    if lost <= 0 then return 0 end
+    return DanTraits_KnockHead(player, clamp01(lost / CC_HEAD_SURE), clamp01(CC_BASE + CC_HEAD_PER * lost))
+end
+
 -- a fall or crash of this amount, on its scale (CC_FALL, CC_CRASH, CC_CRASH_KMH).
 -- Every impact first goes out on the "impact" hook (nil, player, chance 0..1,
 -- amount, kind "fall" | "crash" | "hit") so other systems can judge the same
@@ -232,10 +244,7 @@ local function onConcussionDamage(character, damageType, amount)
         local head = headPart(player)
         local now = nil
         pcall(function() now = head:getHealth() end)
-        if now and headWas and now < headWas then
-            local lost = headWas - now
-            DanTraits_KnockHead(player, clamp01(lost / CC_HEAD_SURE), clamp01(CC_BASE + CC_HEAD_PER * lost))
-        end
+        if now and headWas and now < headWas then DanTraits_HeadHit(player, headWas - now) end
     end
 end
 

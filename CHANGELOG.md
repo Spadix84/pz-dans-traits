@@ -62,8 +62,11 @@ It now sits on the everyday systems. The whole system is written up in `docs/age
   (red dearer, green cheaper) and taken off Points to Spend. Strong and Athletic +2 / +4 in
   the 40s / 50s, Stout +1 / +2, Fit -1 in the 20s then +1 / +2; Fast Learner -1 in the 20s
   and +1 in the 50s; Slow Learner gives a point fewer young or old; Hearty Appetite gives a
-  point fewer in the 20s and one more in the 50s. The traits are unchanged and existing
-  characters are not affected.
+  point fewer in the 20s and one more in the 50s. The conditions the 20s band itself softens
+  give fewer points young (2026-10-10), so a stack of negatives no longer comes at full price
+  while the young body takes the sting out: Multiple Sclerosis and Heart Condition 3 fewer,
+  Asthma and Hemophilia 2, Type 2, Anaemic, Smoker and Alcoholic 1. The traits are unchanged
+  and existing characters are not affected.
 - **Fifteen traits only one age can take.** 20s: Green (-4, the levels only: it does not
   slow experience), Quick Study (+4, now x1.4 under level 5), Bottomless Pit (-6). 40s: Pace Yourself (+2), Settled
   (-4). 40s and 50s: Reading Glasses (-2), Bad Back (-4), Bad Knees (-3), Old Hand (+4),
@@ -211,6 +214,27 @@ Two things needed code, both inert without the mod:
   clothes you bathe in (it washed them to spotless, a little each tick): the soap floor
   with soap or shampoo to hand, the no-soap floor without. Only a washing machine gets a
   garment fully clean.
+
+### Bandits supported, NPC hits count (2026-10-10)
+
+Read against Bandits (`Bandits2`, 42.21) and its add-ons (Bandits Creator, Uncensored Bandit
+Lines, Improved AI & Radio Expansion; nothing in those touches us), and Project A-Life 1.3.15.
+Both new pieces do nothing without the mod they are for.
+
+- **Bandits and the Hallucinations phantom** (`DanTraits_Bandits.lua`): bandits are zombie
+  bodies, and Bandits lists every other zombie for its bandits to target and shoot, and wakes
+  every plain zombie it updates. The phantom is taken back out of its lists and parked again
+  on every update, so no bandit, hostile or friendly, opens fire at something only you can
+  see.
+- **NPC hits now count for Brittle and Concussion.** The game reports a weapon hit only from
+  its own hit code (checked in the game's classes); Bandits and A-Life hurt the player another
+  way, which reported nothing, so neither a bandit's bullet to the head nor an A-Life blow
+  could concuss you or snap a Brittle limb. Now a bandit hit is reported by its own damage
+  (all of it on the head for a head hit), and each A-Life attack, graze or relayed wound by
+  what it took off you. Same scales as any weapon hit: 20 off the head is a certain
+  concussion. A helmet still helps, except against a bandit head shot, which knocks it off
+  first. New shared helpers `DanTraits_OtherHit` / `DanTraits_MeasureHit` (Util),
+  `DanTraits_HeadHit` (Concussion) and `DanTraits_BrittleHit` (Brittle).
 
 ### Germaphobe: bloody clothes and a bloody weapon count
 

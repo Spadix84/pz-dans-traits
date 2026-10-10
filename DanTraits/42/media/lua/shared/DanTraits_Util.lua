@@ -695,3 +695,47 @@ function DanTraits_GrantFoldIn(player, trait, constName, flag)
     if ok then d[flag] = true end
     return ok
 end
+
+-- Hits from other mods ------------------------------------------------------------
+-- The game reports a weapon hit (OnPlayerGetDamage "WEAPONHIT") only from
+-- IsoGameCharacter.Hit. NPC mods hurt the player other ways (Project A-Life:
+-- BodyDamage.DamageFromWeapon; Bandits: ReduceGeneralHealth and wounds set by
+-- hand), which fire nothing, so Brittle and Concussion would never hear of
+-- them. Their adapters (DanTraits_ALife.lua, DanTraits_Bandits.lua) report the
+-- hit here: damage is the health it cost, headLost how much came off the head.
+function DanTraits_OtherHit(player, damage, headLost)
+    if not player or player ~= getSpecificPlayer(0) then return end
+    if DanTraits_HeadHit and (tonumber(headLost) or 0) > 0 then DanTraits_HeadHit(player, tonumber(headLost)) end
+    if DanTraits_BrittleHit then DanTraits_BrittleHit(player, tonumber(damage) or 0) end
+end
+
+-- fn(...) for an NPC mod's attack on player, reported as one hit by what it
+-- took off the body parts. Not reported: a hit the game reported itself
+-- meanwhile (a later version of that mod going through Hit), and a call made
+-- inside another measured one (A-Life's attack can end in its wound function:
+-- one hit, not two). Errors pass on to the caller as they would have.
+local measuring, gameReported = 0, false
+local function bodyHealth(player)
+    local total = 0
+    DanTraits_EachPart(player, function(part) total = total + DanTraits_PartNum(part, "getHealth") end, "MeasureHit")
+    return total, DanTraits_PartNum(DanTraits_PartOf(player, "head"), "getHealth")
+end
+local function packed(...) return { n = select("#", ...), ... } end
+function DanTraits_MeasureHit(player, fn, ...)
+    if measuring > 0 or not player or player ~= getSpecificPlayer(0) then return fn(...) end
+    local total, head = bodyHealth(player)
+    measuring, gameReported = measuring + 1, false
+    local results = packed(pcall(fn, ...))
+    measuring = measuring - 1
+    if not results[1] then error(results[2], 0) end
+    if not gameReported then
+        local totalAfter, headAfter = bodyHealth(player)
+        if totalAfter < total then DanTraits_OtherHit(player, total - totalAfter, math.max(0, head - headAfter)) end
+    end
+    return unpack(results, 2, results.n)
+end
+if Events and Events.OnPlayerGetDamage then
+    Events.OnPlayerGetDamage.Add(function(_, damageType)
+        if measuring > 0 and damageType == "WEAPONHIT" then gameReported = true end
+    end)
+end
