@@ -211,7 +211,7 @@ Attacks that cost you hours.
 
 #### Germaphobe (-4)
 
-- Dirty or bloody skin (the four worst parts count, not the average) and dirty clothes build stress and hold mood down.
+- Dirty or bloody skin (the four worst parts count, not the average), dirty or bloody clothes, and the blood on the weapon in your hands (a dripping one reads 0.5 on its own) build stress and hold mood down.
 - Getting clean is a real relief.
 - Wounds are a fifth less likely to take an infection.
 - Moodle: Filthy.

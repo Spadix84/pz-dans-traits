@@ -1,4 +1,4 @@
--- Offline test for DanTraits_Germaphobe.lua: grime from dirty clothes,
+-- Offline test for DanTraits_Germaphobe.lua: grime from dirty or bloody clothes and a bloody weapon,
 -- stress and low mood while filthy, relief when clean, the infection
 -- hazard cut, and nothing without the trait.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
@@ -8,8 +8,9 @@ H.load("Germaphobe")
 H.expectEvery("minute", "Germaphobe")
 
 local near = H.near
-local function part(name, dirty)
-  return { _dirty = dirty, getType = function() return name end, hasDirtyClothing = function(self) return self._dirty end }
+local function part(name, dirty, bloody)
+  return { _dirty = dirty, _bloody = bloody == true, getType = function() return name end,
+           hasDirtyClothing = function(self) return self._dirty end, hasBloodyClothing = function(self) return self._bloody end }
 end
 local parts = { part("Torso_Upper", true), part("Torso_Lower", true), part("Hand_L", false), part("Hand_R", false) }
 
@@ -38,6 +39,20 @@ assert(H.halo[#H.halo] == "+UI_DanTraits_GermClean", "clean at last")
 
 -- 3. the infection hazard: a fifth lower
 near(DanTraits_RunHooks("infectionHazard", 1, p, parts[1]), 0.8, 1e-9, "hazard x0.8")
+
+-- 3b. bloody clothes count like dirty ones; the blood on a held weapon counts too
+local bl = { part("Torso_Upper", false, true), part("Torso_Lower", false), part("Hand_L", false), part("Hand_R", false) }
+local b = H.player({ traits = { "germaphobe" }, parts = bl }); H.current = b
+near(DanTraits_GermGrime(b, DanTraits_Data(b)), 0.375, 1e-9, "one part in four under a bloody shirt: 0.375")
+bl[1]._bloody = false
+b.getPrimaryHandItem = function() return { getBloodLevel = function() return 100 end } end
+near(DanTraits_GermGrime(b, DanTraits_Data(b)), 0.5, 1e-9, "a dripping weapon: 0.5")
+b.getPrimaryHandItem = function() return { getBloodLevel = function() return 40 end } end
+near(DanTraits_GermGrime(b, DanTraits_Data(b)), 0.2, 1e-9, "a spattered one: 0.2")
+b.getPrimaryHandItem = function() return { name = "clean bat" } end
+near(DanTraits_GermGrime(b, DanTraits_Data(b)), 0, 1e-9, "an item with no blood level: nothing")
+b.getSecondaryHandItem = function() return { getBloodLevel = function() return 60 end } end
+near(DanTraits_GermGrime(b, DanTraits_Data(b)), 0.3, 1e-9, "the off hand counts too")
 
 -- 4. without the trait: nothing
 local plain = H.player({ parts = { part("Torso_Upper", true) } }); H.current = plain

@@ -185,6 +185,14 @@ irritation, and the trait costs 12 (was 10).
   would also let you sleep on (a sofa, an armchair) three times as fast.
 - Stomping counts: 0.02 of load per stomp, on top of running, sprinting and climbing.
 
+### Germaphobe: bloody clothes and a bloody weapon count
+
+- Clothes count when bloody, not only when dirty (the game keeps the two flags apart; only
+  the dirt one was read).
+- The blood on the weapon in either hand counts: the game's 0 to 100 blood level, worth up
+  to 0.5 of grime, so a dripping axe alone keeps a Germaphobe over the stress line until it
+  is washed.
+
 ### Brittle: a bump is not a break
 
 A Brittle character fractured an arm in a crash too small to leave a scratch. The game

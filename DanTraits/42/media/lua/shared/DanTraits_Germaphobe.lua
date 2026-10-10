@@ -1,11 +1,13 @@
 -- Project Zomboid Vitality Project: Germaphobe.
 --
--- Dirt gets under your skin. How grimy you are (0..1) is the larger of the
+-- Dirt gets under your skin. How grimy you are (0..1) is the largest of the
 -- blood and dirt on your body (the game's own per-part visual: the mean of
 -- the four worst parts, so bloody hands and a spattered chest count in full
--- however clean the rest of you is) and the share of your body under dirty
--- clothes (each part's hasDirtyClothing, half as much again: a filthy shirt
--- and trousers are most of the way there).
+-- however clean the rest of you is), the share of your body under dirty or
+-- bloody clothes (each part's hasDirtyClothing / hasBloodyClothing, half as
+-- much again: a filthy shirt and trousers are most of the way there), and
+-- the blood on the weapon in your hands (its blood level, 0..100, worth up
+-- to GM_WEAPON: a dripping axe is a steady half).
 -- Past a little grime, stress builds and your mood is held down, both scaling
 -- with it; wash up and change, and the relief is real: stress and misery
 -- drop the moment you are clean again. The upside of all that scrubbing: a
@@ -24,7 +26,8 @@ local clamp01 = DanTraits_Clamp01
 local GM_FROM          = 0.15    -- grime under this is fine
 local GM_CLEAN         = 0.05    -- under this after being filthy: relief
 local GM_WORST         = 4       -- body grime is the mean of this many of the worst parts
-local GM_CLOTHES       = 1.5     -- share of the body under dirty clothes x this
+local GM_CLOTHES       = 1.5     -- share of the body under dirty or bloody clothes x this
+local GM_WEAPON        = 0.5     -- a held weapon at full blood reads this
 local GM_STRESS_MIN    = 0.002   -- stress a minute at full grime (0..1 scale)
 local GM_UNHAPPY       = 35      -- unhappiness floor at full grime
 local GM_UNHAPPY_RAMP  = 1
@@ -56,19 +59,34 @@ local function bodyGrime(player)
     return worstMean(values)
 end
 
--- 0..1 share of the body parts under dirty clothes
+-- 0..1 share of the body parts under dirty or bloody clothes
 local function clothesGrime(player)
     local dirty = 0
     local n = DanTraits_EachPart(player, function(part)
-        if DanTraits_PartIs(part, "hasDirtyClothing") then dirty = dirty + 1 end
+        if DanTraits_PartIs(part, "hasDirtyClothing") or DanTraits_PartIs(part, "hasBloodyClothing") then dirty = dirty + 1 end
     end, "Germaphobe")
     if n == 0 then return 0 end
     return math.min(1, dirty / n * GM_CLOTHES)
 end
 
+-- 0..GM_WEAPON: the blood on what the hands hold (the game's 0..100 blood level)
+local function weaponGrime(player)
+    local worst = 0
+    for _, method in ipairs({ "getPrimaryHandItem", "getSecondaryHandItem" }) do
+        pcall(function()
+            local item = player[method](player)
+            if item and item.getBloodLevel then
+                local blood = tonumber(item:getBloodLevel()) or 0
+                if blood > worst then worst = blood end
+            end
+        end)
+    end
+    return clamp01(worst / 100) * GM_WEAPON
+end
+
 local function grimeOf(player, d)
     if d.gmHold and (d.gmHoldMin or 0) > 0 then return d.gmHold end
-    return clamp01(math.max(bodyGrime(player), clothesGrime(player)))
+    return clamp01(math.max(bodyGrime(player), clothesGrime(player), weaponGrime(player)))
 end
 DanTraits_GermGrime = grimeOf
 
