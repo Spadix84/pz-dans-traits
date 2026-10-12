@@ -118,9 +118,24 @@ assert(H.halo[#H.halo] == "UI_DanTraits_HeartAttack", "the notice")
 assert(DanTraits_HeartWeakStage(q, qd) == 1, "stage 1")
 near(DanTraits_RunHooks("enduranceRegen", 1, q, qd), 0.5, 1e-9, "stage 1: recovery x0.5")
 H.rollf = 0.99
+local speed = 1
+getGameSpeed = function() return speed end
+setGameSpeed = function(v) speed = v end
+DanTraits_FaintTick()
+assert(speed == 1, "out cold: normal speed for the first real seconds")
 H.now = H.now + 60000; DanTraits_FaintTick()   -- q comes round
+assert(speed == 3 and DanTraits_IsPassedOut(q), "still out after the real-seconds floor: time runs fast")
+local sitEvents = {}
+q.isSitOnGround = function() return false end
+q.reportEvent = function(self, e) sitEvents[#sitEvents + 1] = e end
 H.hours = H.hours + 1; DanTraits_FaintTick()
 assert(not DanTraits_IsPassedOut(q), "up again")
+assert(speed == 1, "come round: back to normal speed")
+assert(sitEvents[1] == "EventSitOnGround", "come round sitting on the floor, not standing")
+for _ = 1, 10 do H.fire("OnTick") end
+assert(#sitEvents == 3, "and sat down again a few frames on if stood up, got " .. #sitEvents)
+q.isSitOnGround, q.reportEvent = nil, nil
+getGameSpeed, setGameSpeed = nil, nil
 q._st.endurance = 1; DanTraits_DeltaRemember(qd, "enduranceRegen", 1); H.frame(q)
 q._run = true; q._st.endurance = 0.9; H.frame(q)
 near(q._st.endurance, 0.85, 1e-9, "stage 1: running that spent 0.1 spends 0.15")
@@ -166,6 +181,22 @@ D(s3).hcAttacks, D(s3).hcLastAttackH = 1, H.hours - 30
 D(s3).hcAnginaMin = 20
 H.minute(); s3._st.endurance = 0.4; H.rollf = 0; H.minute(); H.rollf = 0.99
 assert(s3._health == 85, "a day or more later: the usual 15")
+-- a heart still mending gives out sooner: the attack chance x2 / x1.5 / x1.25 by stage
+local wk = H.player({ traits = { "heart" }, endurance = 0.45 }); H.current = wk
+local wkd = D(wk)
+wkd.hcAnginaMin = 20
+H.rollf = 0.99; H.minute(); wk._st.endurance = 0.4
+H.rollf = 0.12; H.minute()
+assert((wkd.hcAttacks or 0) == 0, "a sound heart: 0.12 is over the 8% chance")
+wkd.hcWeakH, wkd.hcAnginaMin = 168, 20
+wk._st.endurance = 0.35; H.minute()
+assert(wkd.hcAttacks == 1, "stage 1 of the week: 16%, so 0.12 is an attack")
+local wk3 = H.player({ traits = { "heart" }, endurance = 0.45 }); H.current = wk3
+D(wk3).hcAnginaMin, D(wk3).hcWeakH = 20, 10
+H.rollf = 0.99; H.minute(); wk3._st.endurance = 0.4
+H.rollf = 0.099; H.minute()
+assert(D(wk3).hcAttacks == 1, "stage 3: x1.25, so 10% and 0.099 is an attack")
+H.rollf = 0.99
 
 -- 9. nitroglycerin: chest pain gone within a minute, half the strain off, then a headache; two in an hour is too many
 local n = H.player({ traits = { "heart" } }); H.current = n

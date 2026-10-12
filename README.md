@@ -24,13 +24,14 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
 | [Alcoholic](#alcoholic--4) | -4 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
-| [Germaphobe](#germaphobe--4) | -4 | Dirty skin and clothes build stress; clean is a relief. |
+| [Germaphobe](#germaphobe--8) | -8 | Dirty skin and clothes build stress; clean is a relief. |
 | [Gluten Intolerance](#gluten-intolerance--4) | -4 | Wheat brings a gut flare. |
 | [Smoker](#smoker--4-vanilla-reworked) | -4 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
 | [Vegetarian](#vegetarian--4) | -4 | Refuses meat, fish and anything cooked with them. |
 | [Caffeine Dependent](#caffeine-dependent--2) | -2 | Half a day without coffee or tea brings a headache. |
 | [Hallucinations](#hallucinations--2) | -2 | Phantom zombies, sounds, whispers and panic. |
 | [Tinnitus](#tinnitus--2) | -2 | Your own gunfire deafens you for a while. |
+| [Homebody](#homebody--2) | -2 | Home does twice the good; a day away is missed, badly. |
 | [In Their 40s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -2 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
 | [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
 | [Straight Edge](#straight-edge--1) | -1 | Refuses alcohol and tobacco. |
@@ -43,6 +44,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
 | [Thick Skull](#thick-skull-2) | +2 | Concussed half as often and less badly; knockouts and faints half as long. |
 | [Good Clotter](#good-clotter-3) | +3 | Bleeds run down twice as fast and lose less blood. |
+| [Nomad](#nomad-3) | +3 | No home, nothing missed; sleeps as well under the sky. |
 | [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
 | [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
@@ -209,7 +211,7 @@ Attacks that cost you hours.
 - Meat, fish, insects and anything cooked with them are refused: the eat action will not start.
 - Judged by food type, by name and by a dish's ingredients.
 
-#### Germaphobe (-4)
+#### Germaphobe (-8)
 
 - Dirty or bloody skin (the four worst parts count, not the average), dirty or bloody clothes, and the blood on the weapon in your hands (a dripping one reads 0.5 on its own) build stress and hold mood down.
 - Getting clean is a real relief.
@@ -245,6 +247,13 @@ Attacks that cost you hours.
 - The ringing makes light sleep lighter.
 - Not with Hard of Hearing or Deaf.
 - Moodle: Tinnitus.
+
+#### Homebody (-2)
+
+- Home does twice the good: at home boredom, stress and low moods ease twice as fast, a night slept there scores +0.1 and books go a fifth faster.
+- A day away and you miss it: over the next day the unhappiness floor climbs to 30, stress climbs with it, and a night slept away scores -0.1. Walking back in lifts it at once.
+- Not with Nomad.
+- Moodle: Home.
 
 #### Lactose Intolerance (-1)
 
@@ -346,6 +355,12 @@ Attacks that cost you hours.
 
 #### Night Shift (+1)
 
+#### Nomad (+3)
+
+- No place is home and none is missed: the Home system does nothing for you.
+- A night slept with no building around (outdoors, a tent, a car) scores +0.1.
+- Not with Homebody or Settled.
+
 - Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest.
 - Not with Early Riser.
 
@@ -401,6 +416,16 @@ The light on your square while asleep sets how deep the sleep is.
 - Light wakes some people more easily: Restless Sleeper, Night Owl, Cat's Eyes, anyone within six hours of a coffee, and during a depressive episode or a migraine. Restless Sleeper's two halves of a night, up to three hours apart, score as one.
 - Desensitized characters have nightmares.
 - A bad night makes a depressive episode likelier; sleeping with the light on makes a migraine likelier and stops sleep shortening an attack as much.
+
+### Home
+
+Where you sleep most nights becomes home, and home does you good. Vanilla gives you no reason to be at your base; this is one.
+
+- Each night (not a nap, not in a car) is filed where you fell asleep: the building, or the spot in the open. Three of the last seven nights in one place make it home, with a notice. Sleep more of them somewhere new and home moves there (ties go to the newer place); nothing has to be claimed. A night away neither adds to it nor undoes it.
+- **At home** (the building plus four tiles, or twenty tiles of a camp), awake: boredom (0.3 a minute), unhappiness (0.08) and stress (0.0004) ease, a night slept there scores up to +0.05, and books read up to a tenth faster. Half strength at three nights, full at seven.
+- **Away** two days and you miss it: over the next day the Missing Home, then Homesick, moodle rises and an unhappiness floor of 15 comes up with it. Walking back in lifts it at once, with 15 unhappiness and a tenth of stress off, and a notice.
+- Homebody doubles the good and misses home after a day, harder; Nomad has none of it. Sandbox option Home turns it all off.
+- Moodle: Home (Settling In, At Home; Missing Home, Homesick).
 
 ### Blood
 
@@ -525,6 +550,22 @@ One list of drugs that every trait reads (`DanTraits_Meds.lua`).
 - **Pill Caddy** (new item, uncommon): a belt-worn weekly organiser that holds medication only. Capacity 1 (Organized makes it 2). Found in medicine cabinets, bedside drawers, handbags, on pharmacy shelves and on the odd zombie, and a found one often has a bottle or two in it. A new character with a medical trait has a 1% chance to start with one.
 - Daily drug bottles hold 30 pills, most of the mod's bottles spawn partly used (Prednisone, Baclofen and Amantadine full), and part bottles merge like vanilla's. Every tooltip says what the drug treats, how to take it and its side effects. Antidepressants keep Depression's own two-week regimen, with a moodle of their own: paler green while a pill's coverage runs, full green once the two weeks are up, gone when a day is missed.
 
+### Laundry
+
+Washing and drying clothes take some care (`DanTraits_Laundry*.lua`; design in [plans/laundry.md](plans/laundry.md)). It has its own sandbox page, Vitality: Laundry, and one switch turns it all off. Moved here from Dan's Vanilla Fixes, which no longer touches washing.
+
+- **Hand washing has floors.** Without soap, blood and dirt only come down to 40% per patch; with soap or cleaning liquid, to 20%. Carry a **washboard** (new item: laundry rooms and cleaning shelves, or made from a plank with sheet metal and nails, or carved with Carving 2) and it is 25% and 10%, at half as long again. Only a washing machine gets clothes fully clean. A garment with nothing to gain is not washed, and the character says why. Take A Bath And Shower's bath wash keeps the same floors.
+- **Wringing leaves clothes damp** (50%, shoes 70%), so it saves time but not the drying.
+- **Damp clothes go musty.** A garment that stays 30% wet or more for 6 hours turns musty; worn, the hours count half as fast again. Worn clothes dry at a quarter of the game's own pace (sandbox Drying on the Body; the game dries a soaked shirt on you in about 20 minutes), and every hour worn damp adds odour, so clothes straight out of the washer are best dried first. Musty clothes stay musty until washed. Ways to dry: a dryer, body heat, any container (the game's own, 20 points an hour), **by the fire** (right-click a lit campfire, fireplace, barbecue or stove, or a damp garment near one), or a **clothesline**.
+- **Sweat makes clothes stale.** Worn clothes build up odour: slowly just worn, faster with hard work and heat. Underwear, shirts, trousers and socks go fastest, jackets and hats at half the rate, jewellery and bags not at all. A soapless hand wash takes odour down to 30, anything else all of it. Clean but stale clothes can be washed from a water source's menu: Freshen up clothes.
+- **Fresh Clothes.** When everything you wear (shoes aside) is clean, dry and fresh, the good side of the moodle shows: unhappiness eases half a point an hour and stress a little. **Line-Dried** (half or more of it dried on a clothesline in daylight since its last wash) doubles that. Germaphobe gets twice the benefit.
+- **Moodle: Stale Clothes, then Musty Clothes**, from the worst garment worn. Each lifts unhappiness a little, stopping at 20 (30 for musty); Germaphobe feels it twice as much, and stale clothes count as dirty for Germaphobe's clothing share. A musty garment over a wound counts as dirty clothing for infection.
+- **Blood sets in.** Blood left 3 days on a garment leaves a stain (half of it, at most 20%) that no wash gets under, washing machine included. **Bleach** gets it out: Bleach stains out at a water source, 0.1 L a garment. Hard on fabric.
+- **Washing wears fabric.** Each wash has a small chance to take a condition point off: 1% by hand, 3% on a washboard, 4% in a machine, 25% with bleach. Never a hole, never under 1.
+- **Clotheslines.** The pulley clotheslines in yards each hold 15, and you can put one up yourself: right-click the ground with two long sticks, planks or saplings and two lengths of rope, twine, sheet strips, denim strips or wire carried (Put up a clothesline, east-west or north-south); one you put up can be taken down again. Clothes on a line dry with the weather: fast in sun, wind and warmth, slowly at night or in the cold, and rain soaks them again; under a roof, at a steady pace. Daylight also airs out a little staleness (never under 30).
+- **Keeping clothes clean.** A worn **poncho** takes the blood and dirt for the parts it covers. The garbage bag poncho tears as it is used and falls apart at nothing; besides the game's recipe there is a rough one (one bag and a knife or scissors, no skill). **Fabric protector** (new item, with cleaning supplies and in shoe shops) and **fabric wax** (made from two candles and an empty tin) treat a garment so only half the blood and dirt that lands on it stays, for about three washes.
+- Garment tooltips show the state: damp and how long before musty, stale or musty, a set-in stain, fabric protector left, washes so far.
+
 ### Moodles
 
 Every effect that lasts has one. All of them need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
@@ -532,6 +573,8 @@ Every effect that lasts has one. All of them need [Moodle Framework](https://ste
 - The older systems feed their own: Airway Irritation, Vitality, Slept Badly, Hangover, Migraine, Blood Loss, Infection, Concussion, Blood Sugar.
 - The rest are fed from one place (`DanTraits_Moodles.lua`): Chest Pain, Seizure, Tinnitus, Gut Flare, Filthy, Sunburn, Dehydration, Caffeine Withdrawal, Alcohol Withdrawal, Nicotine Craving, Depression, Low Iron, Stiff Joints, MS Heat, MS Flare, Spoons.
 - Three have a good side: beta blockers working, anticonvulsants working, and sun block on. The icon going out is the reminder to take the next one.
+- Home has both sides: Settling In and At Home while you are there, Missing Home and Homesick while you are not.
+- Stale Clothes and Musty Clothes come from [laundry](#laundry).
 - Blood Sugar says the sugar is out of range but not which way; the meter is how you find out. Hallucinations has none; it would give the episodes away.
 
 ## Layout
@@ -569,9 +612,10 @@ Version 1.2.1, Build 42, singleplayer only (multiplayer is untested and not supp
 - **A Really Bad Day** is not balanced yet. Its glass shard killed even a character with no other traits, so for now the wound is an infected cut and the trait gives 8 points instead of 12, until a proper balance is found.
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
-- **Take A Bath And Shower** is supported: a bath or shower washes sun block off (`DanTraits_Bathing.lua`), and in Dan's Vanilla Fixes the hand-wash floors apply to the clothes you bathe in (`DansVanillaFixes_Bathing.lua`); both do nothing when it is not loaded. Its gradual body wash is what Germaphobe reads anyway, a wet body cools Multiple Sclerosis as it should, a hot bath warms an MS character (by design on both sides), and its bath salts keep their effects (a calming salt is the game's beta-blocker effect, a happy one its antidepressant effect, which an MDD character's own regimen overrides).
+- **Take A Bath And Shower** is supported: a bath or shower washes sun block off (`DanTraits_Bathing.lua`), and laundry's hand-wash floors apply to the clothes you bathe in (the same file); both do nothing when it is not loaded. Its gradual body wash is what Germaphobe reads anyway, a wet body cools Multiple Sclerosis as it should, a hot bath warms an MS character (by design on both sides), and its bath salts keep their effects (a calming salt is the game's beta-blocker effect, a happy one its antidepressant effect, which an MDD character's own regimen overrides).
 - **Project A-Life** (NPCs on zombie bodies) is supported: its NPCs and its zombie steering leave a Hallucinations phantom alone (`DanTraits_ALife.lua`, which does nothing when A-Life is not loaded). NPC wounds are ordinary wounds, so blood, infection and wound care apply to them, and an NPC's blow, shot or graze counts as a weapon hit for Concussion and Brittle (the game itself does not report those).
 - **Bandits** (and its add-ons) is supported: bandits, hostile or friendly, leave a Hallucinations phantom alone, and a bandit's hit counts as a weapon hit for Concussion (all of its damage on the head for a head hit) and Brittle (`DanTraits_Bandits.lua`, which does nothing when Bandits is not loaded). A bandit's head shot knocks a helmet off before the concussion roll, so the helmet does not help against that one.
+- **This Is Your Life** (the in-world character creator) is supported: its Personnel Assessment folder offers In Their 30s, shows only the ages until one is picked, hides the traits the chosen age cannot take, writes the age's extra cost under a trait's own, and holds Approve and Continue until an age is chosen, like the vanilla screen (`DanTraits_TIYL.lua`, which does nothing when This Is Your Life is not loaded). Its Quick Start and poster stories skip the trait screen, so those characters get the Default Age sandbox setting. Turning off its "Enable Custom Profession Screens" option brings back the vanilla trait screen, which works as normal.
 
 ## Requests
 

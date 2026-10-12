@@ -291,6 +291,29 @@ local ITEMS = {
         bags = {},
         clutter = {},
     },
+    -- laundry (DanTraits_Laundry*.lua): the washboard where cleaning things are kept
+    -- (bleach is 10 in a laundry room, for scale), fabric protector a little rarer
+    -- than bleach in the same places, and in shoe shops
+    {
+        name = "DanTraits.Washboard",
+        procedural = {
+            LaundryCleaning = 4, GigamartHousewares = 1, GigamartCleaning = 0.5, JanitorCleaning = 0.5,
+            StoreCounterCleaning = 0.3, StoreKitchenCleaning = 0.3, KitchenRandom = 0.05,
+        },
+        suburbs = {},
+        bags = {},
+        clutter = {},
+    },
+    {
+        name = "DanTraits.FabricProtector",
+        procedural = {
+            LaundryCleaning = 4, GigamartCleaning = 4, JanitorCleaning = 2, StoreCounterCleaning = 1,
+            StoreKitchenCleaning = 1, ClothingStoresShoes = 2, CampingStoreGear = 1, KitchenRandom = 0.1,
+        },
+        suburbs = {},
+        bags = {},
+        clutter = {},
+    },
 }
 
 -- What a found Pill Caddy holds. The game rolls a container item's contents

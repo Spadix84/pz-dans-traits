@@ -47,5 +47,17 @@
     "Tooltip_DanTraits_Painkillers": "Painkillers.<br>Treats: pain, including headaches and gut flares.<br>Arthritis: a flare is halved while they work.<br>Only dull a hangover (half as long). Barely touch a migraine.<br>Dose: one or two pills. Work for a few hours.<br>Side effects: now and then, an upset stomach.<br>Four or more at once: strong nausea.",
     "Tooltip_DanTraits_SleepingTablets": "Sleeping tablets.<br>Treats: trouble sleeping.<br>Dose: one at bedtime helps you fall asleep<br>and sleep through light that would wake you.<br>Side effects: drowsiness, and now and then groggy the next day.<br>Too many at once: very deep sleep, and you may black out.",
     "Tooltip_DanTraits_Vitamins": "Caffeine pills.<br>Treats: tiredness.<br>Dose: one gives a burst of energy.<br>Counts as caffeine, so it eases caffeine withdrawal.<br>Side effects: a little stress,<br>and light wakes you more easily for a few hours.<br>Too many at once: jitters and stress, hard on a weak heart.",
-    "Tooltip_DanTraits_PillCaddy": "Weekly pill organiser.<br>Holds medication only.<br>Hangs on the belt like a canteen.<br>Holds more if you are Organized."
+    "Tooltip_DanTraits_PillCaddy": "Weekly pill organiser.<br>Holds medication only.<br>Hangs on the belt like a canteen.<br>Holds more if you are Organized.",
+    "Tooltip_DanTraits_Washboard": "Carry it and hand washing gets clothes cleaner, at the cost of a longer scrub.",
+    "Tooltip_DanTraits_FabricProtector": "Spray a garment and it keeps only half of the blood and dirt that lands on it, for about three washes. 5 garments.",
+    "Tooltip_DanTraits_FabricWax": "Rub it into a garment and it keeps only half of the blood and dirt that lands on it, for about three washes. 4 garments.",
+    "Tooltip_DanTraits_ClotheslineBuild": "A pulley clothesline five squares long from here: a post, three squares of line, a post. Uses two long sticks, planks or saplings and two rope, twine, sheet strips, denim strips or wire. Each post holds 15. Damp clothes dry fast in sun, wind and warmth, slowly at night or in the cold, and the rain soaks them again. Daylight airs out a little staleness.",
+    "Tooltip_DanTraits_NeedBleach": "Needs bleach (0.1 L a garment).",
+    "Tooltip_DanTraits_Stale": "Stale: needs a wash",
+    "Tooltip_DanTraits_Musty": "Musty: stayed damp too long, needs a wash",
+    "Tooltip_DanTraits_DampHours": "Damp: musty in about %1 h unless dried",
+    "Tooltip_DanTraits_Stain": "Set-in stain: only bleach gets it out",
+    "Tooltip_DanTraits_ProtectorLeft": "Fabric protector: %1%%",
+    "Tooltip_DanTraits_Washes": "Washed %1 times",
+    "Tooltip_DanTraits_LineBlocked": "Needs five clear squares of floor in a row."
 }

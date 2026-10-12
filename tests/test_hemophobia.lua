@@ -14,7 +14,9 @@ local function action(name, duration)
 end
 ISApplyBandage, ISStitch, ISRemoveGlass, ISRemoveBullet, ISCleanBurn, ISDisinfect = action("bandage"), action("stitch"), action("glass"), action("bullet"), action("burn"), action("disinfect")
 ISPlantainCataplasm, ISComfreyCataplasm, ISGarlicCataplasm = action("plantain"), action("comfrey"), action("garlic")
-ISSplint = { new = function(self, character) return { maxTime = 140, character = character } end }
+ISSplint = { new = function(self, character) return setmetatable({ maxTime = 140, character = character }, { __index = self }) end,
+             getDuration = function(self) return self.maxTime end }
+local splintNew = ISSplint.new
 
 H.load("Hemophobia")
 
@@ -48,7 +50,8 @@ assert(ISStitch.getDuration({ character = calm }) == 100, "not afraid: normal sp
 -- 5. slower first aid, and the splint
 p = newPlayer(true)
 assert(ISStitch.getDuration({ character = p }) == 125 and ISDisinfect.getDuration({ character = p }) == 125, "a quarter longer")
-assert(ISSplint:new(p).maxTime == 175 and ISSplint:new(calm).maxTime == 140, "splint: longer for the afraid only")
+assert(ISSplint:new(p):getDuration() == 175 and ISSplint:new(calm):getDuration() == 140, "splint: longer for the afraid only")
+assert(ISSplint.new == splintNew, "the splint's new() left alone (multiplayer reads its parameter names)")
 
 -- 6. losing blood fast: 3% a minute from 0.3% a minute
 p = newPlayer(true); H.current = p; p._md.DanTraits = { bloodLossMin = 0.002 }

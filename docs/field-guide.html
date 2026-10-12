@@ -111,12 +111,12 @@ a { color: var(--ink) }
   <h1>Vitality Project Field Guide</h1>
   <p class="lede">Every trait, system, drug, item, moodle and sandbox switch in the mod, on one page. Points follow the game's sign: a positive number costs you, a negative one pays you.</p>
   <div class="counts">
-    <div class="count"><b>45</b><span>Traits</span></div>
+    <div class="count"><b>47</b><span>Traits</span></div>
     <div class="count"><b>15</b><span>Age-only</span></div>
-    <div class="count"><b>14</b><span>Systems</span></div>
+    <div class="count"><b>16</b><span>Systems</span></div>
     <div class="count"><b>17</b><span>Drugs</span></div>
-    <div class="count"><b>18</b><span>New items</span></div>
-    <div class="count"><b>29</b><span>Moodles</span></div>
+    <div class="count"><b>21</b><span>New items</span></div>
+    <div class="count"><b>31</b><span>Moodles</span></div>
   </div>
 </header>
 
@@ -231,8 +231,8 @@ a { color: var(--ink) }
   <article class="card" data-k="neg"><div class="top"><h3>Vegetarian</h3><span class="pts neg">-4</span></div><p class="lead">Refuses meat, fish and anything cooked with them.</p><ul>
     <li>Judged by food type, by name and by a dish's ingredients. The eat action will not start.</li></ul></article>
 
-  <article class="card" data-k="neg"><div class="top"><h3>Germaphobe</h3><span class="pts neg">-4</span></div><p class="lead">Dirty skin, dirty or bloody clothes and a bloody weapon build stress; clean is a relief.</p><ul>
-    <li>The four worst body parts count, not the average; so does a bloody shirt, and the weapon in your hands (a dripping one reads 0.5 by itself). Getting clean is a real relief. Wounds are a fifth less likely to take an infection. Moodle: Filthy.</li></ul></article>
+  <article class="card" data-k="neg"><div class="top"><h3>Germaphobe</h3><span class="pts neg">-8</span></div><p class="lead">Dirty skin, dirty or bloody clothes and a bloody weapon build stress; clean is a relief.</p><ul>
+    <li>The four worst body parts count, not the average; so does a bloody shirt, and the weapon in your hands (a dripping one reads 0.5 by itself). Getting clean is a real relief. Wounds are a fifth less likely to take an infection. Stale or musty clothes count as dirty ones, their mood cost is doubled, and so is Fresh Clothes' lift (see Laundry). Moodle: Filthy.</li></ul></article>
 
   <article class="card" data-k="neg"><div class="top"><h3>Alcoholic</h3><span class="pts neg">-4</span></div><p class="lead">Withdrawal after a day dry; gained by drinking, lost by a sober month.</p><ul>
     <li>Craving, low mood and poor sleep, then pain, nausea and the shakes; heavy drinkers get hallucinations and seizures.</li>
@@ -246,6 +246,10 @@ a { color: var(--ink) }
 
   <article class="card" data-k="neg"><div class="top"><h3>Tinnitus</h3><span class="pts neg">-2</span></div><p class="lead">Your own gunfire deafens you for a while.</p><ul>
     <li>Half a dozen pistol shots or three from a shotgun put Hard of Hearing on for half an hour or more. The ringing makes light sleep lighter. Not with Hard of Hearing or Deaf. Moodle: Tinnitus.</li></ul></article>
+  <article class="card" data-k="neg"><div class="top"><h3>Homebody</h3><span class="pts neg">-2</span></div><p class="lead">Home does twice the good, and a day away is missed, badly.</p><ul>
+      <li>At home, boredom, stress and low moods ease twice as fast as for anyone else, nights slept there score +0.1 and books go a fifth faster.</li>
+      <li>A day away and you miss it: the unhappiness floor climbs to 30 over the next day, stress climbs with it, and nights slept away score -0.1. Walking back in lifts it at once.</li>
+      <li>Not with Nomad. Moodle: Home.</li></ul></article>
 
   <article class="card" data-k="neg"><div class="top"><h3>Lactose Intolerance</h3><span class="pts neg">-1</span></div><p class="lead">Dairy brings a mild gut flare.</p><ul>
     <li>Cramps, queasiness and low mood, gone in about six hours. Moodle: Gut Flare, topping out at the second level.</li></ul></article>
@@ -296,6 +300,7 @@ a { color: var(--ink) }
   <article class="card" data-k="pos"><div class="top"><h3>Meal Prepper</h3><span class="pts pos">+1</span></div><p class="lead">Starts on a good diet; variety counts over five days instead of three.</p></article>
 
   <article class="card" data-k="pos"><div class="top"><h3>Night Shift</h3><span class="pts pos">+1</span></div><p class="lead">Between 6 AM and 8 PM, light wakes you a quarter as easily and costs a quarter of the rest. Not with Early Riser.</p></article>
+  <article class="card" data-k="pos"><div class="top"><h3>Nomad</h3><span class="pts pos">+3</span></div><p class="lead">No place is home and none is missed; the Home system does nothing for you. A night slept with no building around (outdoors, a tent, a car) scores +0.1. Not with Homebody or Settled.</p></article>
 
   <article class="card" data-k="age"><div class="top"><h3>In Their 20s</h3><span class="pts age">+6</span></div><p class="lead">Young, and the body shows it; the brain is a sponge; the metabolism runs high.</p><ul>
     <li>Endurance back a quarter faster; Fitness and Strength train x1.5; wounds heal and stiffness fades x1.5; night wakes count less against the sleep score. No extra profession level.</li>
@@ -388,7 +393,7 @@ a { color: var(--ink) }
 
 <section id="systems">
   <h2>04 &nbsp;For everyone</h2>
-  <p class="sec-intro">These run for every character, trait or not. Most have a switch on the Vitality Project sandbox page.</p>
+  <p class="sec-intro">These run for every character, trait or not. Most have a switch on one of the four Vitality sandbox pages (General, Health, Daily Life, Laundry).</p>
   <div class="sys">
     <article class="card"><h3>Vitality</h3><p class="lead">Diet, exercise and sleep roll into one slow score.</p><ul>
       <li>Fresh, varied food lifts it; junk and neglect drag it. Training, or a day of hard activity read from the body's metabolic rate, lifts it. The night's score feeds it.</li>
@@ -399,6 +404,17 @@ a { color: var(--ink) }
       <li>Dark: tiredness drains faster, the night scores better. Lit: slower, worse, and anything brighter than reading light can wake you. Close the curtains.</li>
       <li>Exhaustion, drink and sleeping pills sleep through it. Light wakes Restless Sleepers, Night Owls, Cat's Eyes, anyone within six hours of a coffee, the depressed or migrainous, the concussed (up to x2), the feverish, anyone in nicotine or alcohol withdrawal, and Tinnitus more easily. Desensitized characters have nightmares.</li>
       <li>A sunburnt or hungover night scores worse.</li></ul></article>
+    <article class="card"><h3>Home</h3><p class="lead">Where you sleep most nights becomes home, and home does you good.</p><ul>
+      <li>Each night (not a nap, not in a car) is filed where you fell asleep: the building, or the spot in the open. Three of the last seven nights in one place make it home; sleep more of them somewhere new and home moves there (ties go to the newer place). A night away neither adds nor undoes.</li>
+      <li>At home (the building plus four tiles, or twenty tiles of a camp), awake: boredom, unhappiness and stress ease each minute, nights slept there score up to +0.05, books go up to a tenth faster. Half strength at three nights, full at seven.</li>
+      <li>Two days away and you miss it: over the next day the Missing Home, then Homesick, moodle rises with an unhappiness floor of 15. Walking back in lifts it at once. Homebody doubles the good and misses home after a day, harder; Nomad has none of it. Moodle: Home, both sides.</li></ul></article>
+    <article class="card"><h3>Laundry</h3><p class="lead">Washing and drying take some care, and clean clothes feel good.</p><ul>
+      <li>Hand washing gets each patch of blood and dirt down to 40% without soap, 20% with soap or cleaning liquid; a carried washboard makes it 25% and 10% for a longer scrub. Only a washing machine gets clothes fully clean. A wash with nothing to gain is refused, with the reason. Stale clothes with no visible dirt get Freshen up clothes at a water source.</li>
+      <li>Wringing stops at 50% wet (shoes 70%). Worn clothes dry at a quarter of the game's pace and every hour worn damp adds odour, so dry them first: a dryer, any bag or container (20 points an hour), by a lit fire (Dry by the fire), or a clothesline. A garment damp (30% or more) for 6 hours turns musty, worn hours counting 1.5x; only a wash clears it.</li>
+      <li>Worn clothes build odour from wear, hard work and heat; underwear, shirts, trousers and socks fastest, jackets and hats at half, jewellery and bags never. Stale Clothes (odour 50) adds half a point of unhappiness an hour, to 20; Musty Clothes (musty or 80) a point an hour, to 30. A musty garment over a wound counts as dirty clothing for infection.</li>
+      <li>Fresh Clothes: everything worn (shoes aside) clean, dry and under odour 15 eases unhappiness half a point an hour and stress a little; Line-Dried (half or more of it dried on a line in daylight since its last wash) twice that.</li>
+      <li>Blood left 3 days sets in: half of it, at most 20%, stays through any wash until Bleach stains out (0.1 L a garment). Every wash may cost a condition point (hand 1%, washboard 3%, machine 4%, bleach 25%); never a hole, never under 1.</li>
+      <li>The yard clotheslines hold 15 a post; put one up yourself with two long sticks, planks or saplings and two rope, twine, strips or wire (five squares, post to post). Sun, wind and warmth dry fast, night and cold slowly, rain soaks again; daylight airs odour down to 30. A worn poncho keeps the clothes under it clean (the garbage bag one tears as it goes; a rough one needs only a bag and a knife). Fabric protector and fabric wax halve the blood and dirt a garment takes, for about three washes. Moodle: Stale Clothes, both sides.</li></ul></article>
     <article class="card"><h3>Blood</h3><p class="lead">Bleeding drains blood instead of health.</p><ul>
       <li>How fast: the game's bleeding clock, the part (neck x3; head, thigh and groin x1.5), and the dressing (a bandage a tenth, a shard through it, stitches stop it). Clotting powder packed into a bare wound from the health panel stops a scratch or cut, and holds a deep wound to a quarter for 12 hours (still stitch it); with glass or a bullet still in it only cuts the bleed to x0.6, and a hemophiliac's to half.</li>
       <li>15% lost: Pale. 30%: Light-headed, no sprinting. 40%: Shock, health draining, fainting. 45%: Bleeding Out. Half your blood is death.</li>
@@ -483,18 +499,18 @@ a { color: var(--ink) }
 <section id="items">
   <h2>06 &nbsp;Items</h2>
   <div class="pills">
-    <span class="pill">Rescue Inhaler</span><span class="pill">Insulin Pen</span><span class="pill">Glucose Meter</span><span class="pill">Test Strips</span><span class="pill">Iron Pills</span><span class="pill">Metformin</span><span class="pill">Nicotine Gum</span><span class="pill">Anticonvulsants</span><span class="pill">Diazepam</span><span class="pill">Sumatriptan</span><span class="pill">Sun Block</span><span class="pill">Prednisone</span><span class="pill">Baclofen</span><span class="pill">Amantadine</span><span class="pill">Pill Caddy</span><span class="pill">Clotting Powder</span><span class="pill">Living With Type 1</span><span class="pill">Nitroglycerin</span>
+    <span class="pill">Rescue Inhaler</span><span class="pill">Insulin Pen</span><span class="pill">Glucose Meter</span><span class="pill">Test Strips</span><span class="pill">Iron Pills</span><span class="pill">Metformin</span><span class="pill">Nicotine Gum</span><span class="pill">Anticonvulsants</span><span class="pill">Diazepam</span><span class="pill">Sumatriptan</span><span class="pill">Sun Block</span><span class="pill">Prednisone</span><span class="pill">Baclofen</span><span class="pill">Amantadine</span><span class="pill">Pill Caddy</span><span class="pill">Clotting Powder</span><span class="pill">Living With Type 1</span><span class="pill">Nitroglycerin</span><span class="pill">Washboard</span><span class="pill">Fabric Protector</span><span class="pill">Fabric Wax</span>
   </div>
-  <p class="note">The Pill Caddy is a belt-worn weekly organiser that holds medication only: capacity 1, or 2 for the Organized. Uncommon in medicine cabinets, bedside drawers, handbags, pharmacy shelves and on the odd zombie, and a found one often has a bottle or two in it. A new character with a medical trait has a 1% chance to start with one. Clotting powder (5 uses) is a little rarer than bandages where they are kept, and turns up in first aid kits, medical bags, pet shops and salons. Living With Type 1 is among the health magazines: hospital magazine racks, medical offices, waiting rooms, pharmacies, bookstore and library medical shelves. Sun block is nearly as common as toothpaste; the prescription bottles turn up where vanilla's do (which ones come partly used is under Medication).</p>
+  <p class="note">The Pill Caddy is a belt-worn weekly organiser that holds medication only: capacity 1, or 2 for the Organized. Uncommon in medicine cabinets, bedside drawers, handbags, pharmacy shelves and on the odd zombie, and a found one often has a bottle or two in it. A new character with a medical trait has a 1% chance to start with one. Clotting powder (5 uses) is a little rarer than bandages where they are kept, and turns up in first aid kits, medical bags, pet shops and salons. Living With Type 1 is among the health magazines: hospital magazine racks, medical offices, waiting rooms, pharmacies, bookstore and library medical shelves. The washboard turns up in laundry rooms and with cleaning supplies (or build one: a plank, sheet metal, nails, a hammer; or carve one at Carving 2); fabric protector with cleaning supplies and in shoe shops; fabric wax is made from two candles and an empty tin. Sun block is nearly as common as toothpaste; the prescription bottles turn up where vanilla's do (which ones come partly used is under Medication).</p>
 </section>
 
 <section id="moodles">
   <h2>07 &nbsp;Moodles</h2>
-  <p class="sec-intro">Every lasting effect has one. The older systems feed their own; the rest come from one place. Four have a good side (Chest Pain, Seizure, Sunburn and Vitality at Fit or Thriving) and Antidepressants has only one, so five can show green; the icon going out is the reminder to take the next pill.</p>
+  <p class="sec-intro">Every lasting effect has one. The older systems feed their own; the rest come from one place. Six have a good side (Chest Pain, Seizure, Sunburn, Vitality at Fit or Thriving, Home, and Stale Clothes as Fresh Clothes or Line-Dried) and Antidepressants has only one, so seven can show green; the icon going out is the reminder to take the next pill.</p>
   <div class="pills">
     <span class="pill">Vitality</span><span class="pill">Slept Badly</span><span class="pill">Blood Loss</span><span class="pill">Infection</span><span class="pill">Concussion</span><span class="pill">Hangover</span><span class="pill">Migraine</span><span class="pill">Blood Sugar</span><span class="pill">Airway Irritation</span>
-    <span class="pill">Chest Pain</span><span class="pill">Seizure</span><span class="pill">Tinnitus</span><span class="pill">Gut Flare</span><span class="pill">Filthy</span><span class="pill">Sunburn</span><span class="pill">Dehydration</span><span class="pill">Caffeine Withdrawal</span><span class="pill">Alcohol Withdrawal</span><span class="pill">Nicotine Craving</span><span class="pill">Depression</span><span class="pill">Low Iron</span><span class="pill">Stiff Joints</span><span class="pill">MS Heat</span><span class="pill">MS Flare</span><span class="pill">Spoons</span><span class="pill">Light Too Bright</span><span class="pill">Heavy-Limbed</span><span class="pill">Weak Heart</span>
-    <span class="pill good">Beta Blockers Working</span><span class="pill good">Anticonvulsants Working</span><span class="pill good">Sun Block On</span><span class="pill good">Antidepressants</span>
+    <span class="pill">Chest Pain</span><span class="pill">Seizure</span><span class="pill">Tinnitus</span><span class="pill">Gut Flare</span><span class="pill">Filthy</span><span class="pill">Sunburn</span><span class="pill">Dehydration</span><span class="pill">Caffeine Withdrawal</span><span class="pill">Alcohol Withdrawal</span><span class="pill">Nicotine Craving</span><span class="pill">Depression</span><span class="pill">Low Iron</span><span class="pill">Stiff Joints</span><span class="pill">MS Heat</span><span class="pill">MS Flare</span><span class="pill">Spoons</span><span class="pill">Light Too Bright</span><span class="pill">Heavy-Limbed</span><span class="pill">Weak Heart</span><span class="pill">Missing Home</span><span class="pill">Homesick</span><span class="pill">Stale Clothes</span><span class="pill">Musty Clothes</span>
+    <span class="pill good">Beta Blockers Working</span><span class="pill good">Anticonvulsants Working</span><span class="pill good">Sun Block On</span><span class="pill good">Antidepressants</span><span class="pill good">Settling In</span><span class="pill good">At Home</span><span class="pill good">Fresh Clothes</span><span class="pill good">Line-Dried</span>
   </div>
   <p class="note">Blood Sugar says the sugar is out of range but not which way; the meter is how you find out. Hallucinations has no moodle, on purpose.</p>
 </section>
@@ -513,6 +529,20 @@ a { color: var(--ink) }
       <tr><td>Concussion</td><td>on</td><td>Off: no concussions from falls, crashes or hits.</td></tr>
       <tr><td>Vitality</td><td>on</td><td>Off: every reader of the score goes neutral.</td></tr>
       <tr><td>Sleep and Light</td><td>on</td><td>Off: light does not score or wake.</td></tr>
+      <tr><td>Home</td><td>on</td><td>Off: no home is tracked; Homebody and Nomad do nothing.</td></tr>
+      <tr><td>Laundry</td><td>on</td><td>Off: vanilla washing, wringing and drying; nothing on the Laundry page applies.</td></tr>
+      <tr><td>Hand Wash Floor, No Soap / Soap (%)</td><td>40 / 20</td><td>How clean a hand wash gets each patch; 0 is vanilla.</td></tr>
+      <tr><td>Washboard Floor, No Soap / Soap (%)</td><td>25 / 10</td><td>The same with a washboard carried.</td></tr>
+      <tr><td>Wringing Leaves Clothes At (% wet)</td><td>50</td><td>10 is vanilla.</td></tr>
+      <tr><td>Hours Damp Before Musty</td><td>6</td><td>Worn hours count 1.5x.</td></tr>
+      <tr><td>Drying on the Body (%)</td><td>25</td><td>Of the game's own drying speed for worn clothes; 100 is vanilla.</td></tr>
+      <tr><td>Sweat Rate (%)</td><td>100</td><td>How fast worn clothes go stale; 0 never.</td></tr>
+      <tr><td>Clothes and Mood (%)</td><td>100</td><td>Scales both the stale and musty mood cost and the fresh lift; 0 shows the moodle only.</td></tr>
+      <tr><td>Days Before Blood Sets</td><td>3</td><td>0: no stains.</td></tr>
+      <tr><td>Washing Wears Fabric</td><td>Normal</td><td>Off, Gentle (half), Normal, Harsh (double).</td></tr>
+      <tr><td>Clotheslines</td><td>on</td><td>Off: clotheslines are scenery again.</td></tr>
+      <tr><td>Clothesline Drying Speed (%)</td><td>100</td><td>How fast a line dries.</td></tr>
+      <tr><td>Garbage Bag Poncho and Fabric Protector</td><td>on</td><td>Off: ponchos and protector do not shield clothes.</td></tr>
       <tr><td>Hangovers</td><td>on</td><td>Off: no hangovers.</td></tr>
       <tr><td>Drink Relief</td><td>on</td><td>Off: vanilla's full-dose sip stays.</td></tr>
       <tr><td>Sunburn</td><td>on</td><td>Off: no exposure, no burns, sun block does nothing.</td></tr>
@@ -528,7 +558,7 @@ a { color: var(--ink) }
     </tbody></table></div>
 </section>
 
-<footer>Checked claim by claim against the code on 2026-10-08, and brought up to the 1.2.0 release on 2026-10-09 (Heart Condition rebuilt, Brittle, Bad Knees, Germaphobe, the 30s, nitroglycerin). The age rework, the heart rebuild and several newer systems are not yet play-tested, so some numbers will move; what changed when is in CHANGELOG.md.</footer>
+<footer>Checked claim by claim against the code on 2026-10-08, and brought up to the 1.2.0 release on 2026-10-09 (Heart Condition rebuilt, Brittle, Bad Knees, Germaphobe, the 30s, nitroglycerin); Home, Homebody and Nomad added on 2026-10-10, and laundry (from Dan's Vanilla Fixes' hand-wash floors, play-tested in part), Fresh Clothes and Germaphobe at -8 on 2026-10-11. The age rework, the heart rebuild and several newer systems are not yet play-tested, so some numbers will move; what changed when is in CHANGELOG.md.</footer>
 </main>
 </div>
 

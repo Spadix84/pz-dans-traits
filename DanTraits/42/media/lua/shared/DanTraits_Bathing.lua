@@ -13,12 +13,22 @@ require "DanTraits"
 -- character zeroes the game's antidepressant timer every minute anyway, so a
 -- happy salt does nothing for them.
 --
--- The one thing this file does: a bath or a shower washes sun block off.
--- Take A Bath fires OnBathingEnd(character) when either ends (its client
--- files load after this one, so the event is looked up at game start).
+-- Two things this file does:
 --
--- Dan's Vanilla Fixes has its own file for the clothes washed in the bath
--- (its hand-wash floors apply there too).
+-- A bath or a shower washes sun block off. Take A Bath fires
+-- OnBathingEnd(character) when either ends (its client files load after this
+-- one, so the event is looked up at game start).
+--
+-- Laundry's hand-wash floors (DanTraits_Laundry.lua; moved here from Dan's
+-- Vanilla Fixes 2026-10-11) apply to the clothes you bathe or shower in. That
+-- mod washes them a little each tick, all the way to spotless
+-- (TABAS_BathingUtils.cleaningWornItems): here a patch of blood or dirt never
+-- goes under the soap floor with soap or shampoo to hand (a bar in the
+-- inventory, or the shower's own soap list), nor under the no-soap floor
+-- without (a washboard's floors with one carried), nor under a set-in stain;
+-- a patch already under its floor is left where it was. Only a washing
+-- machine gets a garment fully clean, bath or no bath. Its own objects (the
+-- tub's water, the towel) and the body are untouched.
 local installed = false
 
 local function onBathingEnd(player)
@@ -32,7 +42,53 @@ local function onBathingEnd(player)
 end
 DanTraits_BathingEnded = onBathingEnd   -- tests
 
+-- soap or shampoo to hand: the game's soap list, or the shower's
+local function soapToHand(character)
+    local any = false
+    pcall(function()
+        local list = character:getInventory():getSoapList(nil, false)
+        if list and ISWashClothing and ISWashClothing.GetSoapRemaining and ISWashClothing.GetSoapRemaining(list) > 0 then any = true end
+    end)
+    if not any and TABAS_TakeShower and TABAS_TakeShower.getSoaps then
+        pcall(function()
+            local _, total = TABAS_TakeShower.getSoaps(character)
+            if (tonumber(total) or 0) > 0 then any = true end
+        end)
+    end
+    return any
+end
+
+local clothesInstalled = false
+local function installClothes()
+    if clothesInstalled then return end
+    local U = TABAS_BathingUtils
+    if type(U) ~= "table" or type(U.cleaningWornItems) ~= "function" then return end
+    clothesInstalled = true
+    local original = U.cleaningWornItems
+    U.cleaningWornItems = function(character, wornItems, pct, factor, ...)
+        local L = DanTraits_Laundry
+        if not L or not L.on() then return original(character, wornItems, pct, factor, ...) end
+        local snaps = {}
+        pcall(function()
+            local worn = wornItems or character:getWornItems()
+            for i = 0, worn:size() - 1 do
+                local item = worn:get(i):getItem()
+                if item and L.handles(item) then snaps[#snaps + 1] = { item = item, snap = L.snapshot(item) } end
+            end
+        end)
+        local a, b, c, d = original(character, wornItems, pct, factor, ...)
+        if #snaps > 0 then
+            local soap, method = soapToHand(character), L.methodFor(character)
+            for _, e in ipairs(snaps) do pcall(function() L.applyFloors(e.item, e.snap, method, soap) end) end
+        end
+        return a, b, c, d
+    end
+    print("[DanTraits] Take A Bath And Shower found: laundry's hand-wash floors apply to clothes washed in the bath")
+end
+DanTraits_BathingInstallClothes = installClothes   -- tests
+
 local function install()
+    installClothes()
     if installed then return end
     local ev = Events and Events.OnBathingEnd
     if type(ev) ~= "table" or type(ev.Add) ~= "function" then return end

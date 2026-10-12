@@ -197,6 +197,12 @@ assert(DanTraits_AgeSurcharge(20, "base:fastlearner") == -1 and DanTraits_AgeSur
 assert(DanTraits_AgeSurcharge(20, "base:slowlearner") == 1 and DanTraits_AgeSurcharge(50, "base:slowlearner") == 1, "Slow Learner gives a point fewer, young or old")
 assert(DanTraits_AgeSurcharge(20, "base:heartyappetite") == 1 and DanTraits_AgeSurcharge(50, "base:heartyappetite") == -1, "Hearty Appetite: a point fewer young, one more old")
 assert(DanTraits_AgeSurcharge(20, "base:lighteater") == 0 and DanTraits_AgeSurcharge(50, "base:lighteater") == 0, "Light Eater: no age price (taken out 2026-10-07)")
+for kind, extra in pairs({ ["DanTraits:ms"] = 3, ["DanTraits:heart"] = 3, ["DanTraits:asthma"] = 2, ["DanTraits:hemophilia"] = 2,
+                           ["DanTraits:diabetes2"] = 1, ["DanTraits:anemia"] = 1, ["base:smoker"] = 1, ["DanTraits:dependent"] = 1 }) do
+  assert(DanTraits_AgeSurcharge(20, kind) == extra, kind .. ": gives " .. extra .. " fewer in the 20s")
+  assert(DanTraits_AgeSurcharge(30, kind) == 0 and DanTraits_AgeSurcharge(40, kind) == 0 and DanTraits_AgeSurcharge(50, kind) == 0, kind .. ": full price from the 30s")
+end
+assert(DanTraits_AgeSurcharge(20, "DanTraits:migraine") == 0 and DanTraits_AgeSurcharge(20, "DanTraits:brittle") == 0, "negatives the 20s do not soften: full price")
 assert(DanTraits_AgeSurcharge(50, "base:brave") == 0 and DanTraits_AgeSurcharge(50, "age50s") == 0, "other traits: nothing")
 assert(DanTraits_AgeSurcharge(nil, "base:strong") == 0 and DanTraits_AgeSurcharge(30, "base:fit") == 0, "no band, or the 30s: nothing")
 assert(DanTraits_AgePrices()["base:fit"][20] == -1, "the table is readable")

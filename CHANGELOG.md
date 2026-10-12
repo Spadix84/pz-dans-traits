@@ -3,6 +3,81 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Unreleased
+
+### New
+
+- **Home**, for everyone (sandbox option Home, `DanTraits_Home.lua`, minute order 11): where you
+  sleep most nights becomes home. Each night Vitality scores (not a nap, not in a vehicle) is filed
+  where the character fell asleep, the building's footprint (`IsoGridSquare.getBuildingDef`) or
+  the spot in the open; three of the last seven nights in one place make it home, with a notice,
+  and when more of them are somewhere new home moves there (ties go to the newer place). Nights at
+  home count up (half strength at three, full at seven; a night away does not take them down).
+  At home (the footprint plus four tiles, or twenty tiles of a camp), awake: boredom, unhappiness
+  and stress ease each minute, a night slept there scores up to +0.05 (the `nightQuality` hook),
+  and `ISReadABook` runs up to a tenth faster. Two days away and you miss it: over the next day the
+  strength climbs with an unhappiness floor of 15; walking back in takes 15 unhappiness and a
+  tenth of stress off at once, with a notice. New moodle **Home** (Settling In / At Home on the
+  good side, Missing Home / Homesick on the bad), the 21st fed from `DanTraits_Moodles.lua`.
+- **Homebody (-2)**, new trait: home does twice the good (the drains, the night bonus at +0.1,
+  reading a fifth faster); misses it after a day away, with a floor of 30, stress on top and
+  nights slept away at -0.1. Not with Nomad.
+- **Nomad (+3)**, new trait: no home, nothing missed, nothing tracked; a night slept with no
+  building around (outdoors, a tent, a car) scores +0.1. Not with Homebody or Settled.
+
+- **Laundry**, for everyone (its own sandbox page, Vitality: Laundry; master switch LaundryEnabled;
+  `DanTraits_Laundry*.lua`, design and as-built notes in `plans/laundry.md`). Each garment keeps a
+  little state in its mod data (`DTL`), made the first time it is seen.
+  - Hand washing has floors, moved here from Dan's Vanilla Fixes: each patch of blood and dirt only
+    comes down to 40% without soap, 20% with soap or cleaning liquid; a carried **washboard** (new
+    item; loot, a carpentry recipe or a Carving 2 recipe) makes it 25% / 10% for a scrub half as
+    long again. A wash with nothing to gain is refused with the reason. Only a washing machine gets
+    clothes fully clean. Take A Bath And Shower's bath wash keeps the same floors.
+  - Wringing stops at 50% wet (shoes 70%). Worn clothes keep 25% of the game's drying each minute
+    (sandbox Drying on the Body; the game dries a soaked shirt on the body in about 20 minutes,
+    measured in play) and every hour worn damp adds 25 odour. A garment 30% wet or more for 6 hours
+    (worn hours x1.5) turns musty until washed.
+  - Odour from wear, hard work and heat, by layer (against the skin full, outer layers half,
+    accessories none). Moodle **Stale Clothes** (odour 50: +0.5 unhappiness an hour, to 20) and
+    **Musty Clothes** (musty or 80: +1 an hour, to 30); on its good side **Fresh Clothes** when
+    everything worn (shoes aside) is clean, dry and under odour 15 (-0.5 unhappiness and -0.01
+    stress an hour) and **Line-Dried** when half of it dried on a clothesline in daylight since its
+    last wash (twice that). Germaphobe x2 both ways, and stale clothes count as dirty for its
+    clothing share. A musty garment over a wound counts as dirty clothing for infection. Freshen up
+    clothes at a water source for clean but stale garments.
+  - Blood left 3 days sets into a stain (half of it, at most 20%: under the game's bloody line)
+    that no wash, machine included, gets under; **Bleach stains out** at a water source (0.1 L a
+    garment). Each wash may take a condition point (hand 1%, washboard 3%, machine 4%, bleach 25%;
+    never a hole, never under 1). Washing machines are watched while they run near you.
+  - Dry by the fire at a lit campfire, fireplace, barbecue or stove. Clotheslines: the pulley
+    posts in yards each get a container of 15, and **Put up a clothesline** (two long sticks,
+    planks or saplings and two rope, twine, strips or wire) places a five-tile line like the map's;
+    lines dry by the weather and air odour down to 30 in daylight; rain soaks them.
+  - A worn poncho takes the blood and dirt for the parts it covers; the garbage bag poncho tears
+    as it is used (a rough no-skill recipe added). **Fabric protector** (new item) and **fabric
+    wax** (two candles and a tin) halve what a garment takes, for about three washes.
+  - Tooltip lines on garments; a debug-only `laundry` dashboard command for play-testing.
+- **Sandbox pages**: the options are split into Vitality: General, Health, Daily Life and Laundry.
+  Option names are unchanged, so saved settings keep their values.
+
+### Changed
+
+- **Germaphobe** gives 8 points (was 4).
+
+### Other mods
+
+- **This Is Your Life** (Workshop 3773911887): the age traits work in its Personnel Assessment
+  folder (reported on the Workshop page). The folder lists every trait with a cost above or
+  below zero straight from the game's definitions and greys the ones the vanilla screen would
+  not offer, so In Their 30s (cost 0) never appeared, every other trait sat greyed as
+  "unavailable with the current game settings" until an age was picked, and Approve and Continue
+  only checked the points. `DanTraits_TIYL.lua` now takes the rows the vanilla screen would hide
+  out of the folder (the gate, the other ages' traits, retired traits), puts In Their 30s at the
+  top of the positive list, writes the age surcharge under a trait's cost, and holds Continue
+  (and a controller's A) until an age is chosen. Everything else (points, Major Skills, Random,
+  saved builds) already went through the hidden vanilla screen. The hide rules moved into one
+  function in `DanTraits_Client.lua` (`DanTraits_Creation.hides`) that both screens use.
+
 ## 1.2.1 - 2026-10-10
 
 ### Fixed

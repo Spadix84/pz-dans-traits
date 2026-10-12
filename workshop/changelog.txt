@@ -1,3 +1,14 @@
+[h1]Next update (in progress)[/h1]
+[h2]New[/h2]
+[list]
+[*][b]Home.[/b] Where you sleep most nights becomes home: three of the last seven nights in one place and it is yours, sleep somewhere new more often and home moves there, no claiming needed. At home, boredom, stress and low moods ease, nights slept there score better and books go faster (half as much at three nights, fully at seven). Two days away and you miss it, until you walk back in. New moodle: Home, with Settling In / At Home on the good side and Missing Home / Homesick on the bad. A sandbox option turns it off.
+[*][b]Homebody (-2)[/b] (new trait): home does you twice the good, and a day away is missed, badly.
+[*][b]Nomad (+3)[/b] (new trait): no place is home and none is missed; a night under the sky scores better.
+[*][b]Laundry.[/b] Washing and drying take some care, on a sandbox page of its own (one switch turns it off). Hand washing gets clothes only so clean (40% without soap, 20% with); a new [b]washboard[/b] gets them cleaner and only a washing machine gets them spotless. Wrung clothes stay damp, and clothes left damp too long (worn damp, sooner) go musty. Worn clothes go stale with sweat, faster with hard work and heat. New moodle: Stale Clothes / Musty Clothes, a small dip in mood, and on its good side Fresh Clothes / Line-Dried when everything you wear is clean, dry and fresh (a small lift; twice that for clothes dried on a line in the sun). Wet clothes dry slower on your back and leave them a little stale, so it pays to dry them first. Old blood sets into a stain only bleach gets out, and washing slowly wears fabric. Dry clothes by the fire or on a [b]clothesline[/b] (the ones in yards work, and you can put one up with two sticks and two lengths of rope): sun, wind and warmth dry them fast, rain soaks them again. A worn poncho keeps the clothes under it clean (the garbage bag one tears as you go, and there is a rough no-skill recipe for it), and new [b]fabric protector[/b] and [b]fabric wax[/b] halve the blood and dirt a garment takes. Moved from Dan's Vanilla Fixes, which no longer touches washing.
+[*][b]Germaphobe -8[/b] (was -4): hard to live with, now paid for.
+[*][b]Sandbox pages:[/b] the options are split into Vitality: General, Health, Daily Life and Laundry. Saved settings carry over.
+[/list]
+
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]
 The biggest update so far. Safe mid-save: an existing character becomes In Their 30s and keeps their skills, retired traits are swapped for their new homes, and starting kits are not handed out again. Every detail is in CHANGELOG.md on GitHub.
 

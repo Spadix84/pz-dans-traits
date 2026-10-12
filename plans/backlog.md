@@ -20,13 +20,14 @@ doc first). Risk: how likely it is to break something already working.
 | Diabetes and Vitality minute handlers: a constants table before they hit Kahlua's 60-upvalue cap (~50 and ~46 now) | Review 2026-10-02 | M | Low | They break the moment they grow |
 | Age v2: everyday effects, a 50s band, re-pricing, visible age, creation-screen levels (see `age-v2.md`) | User | L | Medium | Age is a real choice and felt every day |
 | Multiplayer: server-run systems, a sync layer, client state and effect messages (see `multiplayer.md`; spike first) | User | L | High | Singleplayer only today; split-screen co-op is fixed on the way |
+| Mod pack: pick a solid set of mods the user plays with, publish a Steam Workshop Collection crediting and linking every author, plus Vitality, Dan's Vanilla Fixes and one patches mod that requires the others and loads after them. Others' files are never re-uploaded (that needs each author's written permission). Candidates for the patches mod: the compat files that fix other mods (This Is Your Life, Bandits, A-Life, Take A Bath And Shower stay in Vitality/DVF where they hook our own systems), Bravo Item Details' bare `%` tooltip, and This Is Your Life's MP spawn cleanup deleting A-Life NPCs. First step: the mod list and a compat pass over it | User 2026-10-11 | L | Medium | One tested setup to play and share, with fixes kept on our side |
 
 ## Built, waiting for a play test
 
 | Item | Where | Notes |
 |---|---|---|
 | Collection checklist: a sidebar window per character to tick off the skill books, magazines, VHS tapes, CDs, key rings, mementos and tools you own; ticking sets vanilla Unwanted | Dan's Vanilla Fixes (`DansVanillaFixes_Collection.lua`, `client/DansVanillaFixes_CollectionUI.lua`, `client/DansVanillaFixes_CollectionClient.lua`) | 2026-10-09. Design `collection-checklist.md`. Tests `test_collection.lua`. Checklist `dvf-col-*` (section 18). Deployed, uncommitted |
-| Hand washing has floors: blood and dirt only come down to 40% without soap, 20% with; washers and combo washer/dryers still clean fully | Dan's Vanilla Fixes (`DansVanillaFixes_Washing.lua`, `DansVanillaFixes_WashingClient.lua`) | 2026-10-03. Sandbox WashFloorNoSoap/WashFloorSoap. Tests `test_washing.lua`. Checklist `dvf-wash-*` (section 18). Deployed, uncommitted |
+| Laundry: hand-wash and washboard floors (moved from Dan's Vanilla Fixes), wringing leaves clothes damp, musty and stale clothes (moodle), set-in stains and bleach, fabric wear, dry by the fire, clotheslines (map and built), ponchos and fabric protector shield clothes; sandbox split into four Vitality pages | Vitality (`DanTraits_Laundry*.lua`, `ISLaundryAction.lua`, `client/DanTraits_LaundryClient.lua`, `server/DanTraits_LaundryMap.lua`) | 2026-10-11. Design and as-built notes `laundry.md`. Tests `test_laundry.lua`. Checklist `ln-*` (section 19). Deployed, uncommitted |
 
 ## Parked
 

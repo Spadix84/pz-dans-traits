@@ -11,5 +11,15 @@
     "ContextMenu_DanTraits_PackClot": "Pack with clotting powder",
     "ContextMenu_DanTraits_TakePrednisone": "Take prednisone",
     "ContextMenu_DanTraits_TakeBaclofen": "Take baclofen",
-    "ContextMenu_DanTraits_TakeAmantadine": "Take amantadine"
+    "ContextMenu_DanTraits_TakeAmantadine": "Take amantadine",
+    "ContextMenu_DanTraits_Freshen": "Freshen up clothes (%1)",
+    "ContextMenu_DanTraits_BleachStains": "Bleach stains",
+    "ContextMenu_DanTraits_BleachStainsN": "Bleach stains out (%1)",
+    "ContextMenu_DanTraits_DryByFire": "Dry by the fire",
+    "ContextMenu_DanTraits_DryByFireN": "Dry clothes by the fire (%1)",
+    "ContextMenu_DanTraits_ProtectFabric": "Protect fabric",
+    "ContextMenu_DanTraits_PutUpLine": "Put up a clothesline",
+    "ContextMenu_DanTraits_Line_ew": "Running east-west",
+    "ContextMenu_DanTraits_Line_ns": "Running north-south",
+    "ContextMenu_DanTraits_TakeDownLine": "Take down clothesline"
 }

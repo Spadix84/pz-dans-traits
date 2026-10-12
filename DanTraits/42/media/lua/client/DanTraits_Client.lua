@@ -513,27 +513,51 @@ local function watchAgeSettings(screen)
     screen:checkXPBoost()
 end
 
+-- The traits this mod keeps off the creation screen, whoever draws the
+-- screen: true when the trait is not offered. The vanilla screen asks through
+-- isTraitEnabled below; This Is Your Life's trait folder lists every trait
+-- and greys the ones isTraitEnabled turns down, so DanTraits_TIYL.lua asks
+-- here to take these out of it instead.
+local function creationHides(screen, trait)
+    local kind = nil
+    pcall(function() kind = trait:getType() end)
+    if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return true end
+    -- retired traits (DanTraits_RETIRED in DanTraits.lua) are never offered
+    if kind ~= nil and DanTraits_RETIRED and DanTraitsRegistry then
+        for key in pairs(DanTraits_RETIRED) do
+            if kind == DanTraitsRegistry[key] then return true end
+        end
+    end
+    local ageKey = ageKeyOf(kind)
+    if ageKey and ageOffAtCreation() then return true end
+    -- the gate: until an age is chosen, only the ages
+    if not ageKey and ageGateOn(screen) then return true end
+    -- a saved build lists its traits in no useful order: while one loads, every
+    -- age-only trait is offered, and the ones the build's age cannot have are dropped after
+    if not screen.danTraitsLoadingBuild then
+        local ok, allowed = pcall(ageAllows, screen, kind)
+        if ok and allowed == false then return true end
+    end
+    if kind ~= nil and DanTraitsRegistry and kind == DanTraitsRegistry.deepsleeper and isMultiplayer() then
+        local ok, allowed = pcall(function()
+            return getServerOptions():getBoolean("SleepAllowed") and getServerOptions():getBoolean("SleepNeeded")
+        end)
+        if ok and not allowed then return true end
+    end
+    return false
+end
+
+-- for the other creation screens (DanTraits_TIYL.lua)
+DanTraits_Creation = {
+    hides = creationHides,
+    gateOn = ageGateOn,
+    band = creationAgeBand,
+    ageOff = ageOffAtCreation,
+}
+
 local function wrapTraitList()
     DanTraits_Wrap(CharacterCreationProfession, "isTraitEnabled", "creation-hide-traits", function(original, self, trait, ...)
-        local kind = nil
-        pcall(function() kind = trait:getType() end)
-        if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return false end
-        -- retired traits (DanTraits_RETIRED in DanTraits.lua) are never offered
-        if kind ~= nil and DanTraits_RETIRED and DanTraitsRegistry then
-            for key in pairs(DanTraits_RETIRED) do
-                if kind == DanTraitsRegistry[key] then return false end
-            end
-        end
-        local ageKey = ageKeyOf(kind)
-        if ageKey and ageOffAtCreation() then return false end
-        -- the gate: until an age is chosen, only the ages
-        if not ageKey and ageGateOn(self) then return false end
-        -- a saved build lists its traits in no useful order: while one loads, every
-        -- age-only trait is offered, and the ones the build's age cannot have are dropped after
-        if not self.danTraitsLoadingBuild then
-            local ok, allowed = pcall(ageAllows, self, kind)
-            if ok and allowed == false then return false end
-        end
+        if creationHides(self, trait) then return false end
         -- the game only asks whether the trait in the list excludes a chosen one (so
         -- In Their 20s, chosen first, did not hide Arthritis or Handy): ask the other way too
         local chosen = self.listboxTraitSelected and self.listboxTraitSelected.items
@@ -542,12 +566,6 @@ local function wrapTraitList()
                 local ok, excluded = pcall(function() return row.item ~= trait and row.item:isMutuallyExclusive(trait) end)
                 if ok and excluded == true then return false end
             end
-        end
-        if kind ~= nil and DanTraitsRegistry and kind == DanTraitsRegistry.deepsleeper and isMultiplayer() then
-            local ok, allowed = pcall(function()
-                return getServerOptions():getBoolean("SleepAllowed") and getServerOptions():getBoolean("SleepNeeded")
-            end)
-            if ok and not allowed then return false end
         end
         return original(self, trait, ...)
     end)

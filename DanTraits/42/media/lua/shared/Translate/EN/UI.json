@@ -355,5 +355,17 @@
     "UI_DanTraits_MedOver_sumatriptan": "Too much sumatriptan: your chest feels tight",
     "UI_DanTraits_MedOver_nitroglycerin": "Too much nitroglycerin: the room swims",
     "UI_DanTraits_MedOver_sleepingtablets": "Too many sleeping tablets: you can barely stay awake",
-    "UI_DanTraits_MedOver_caffeinepills": "Too many caffeine pills: you are jittery and your heart pounds"
+    "UI_DanTraits_MedOver_caffeinepills": "Too many caffeine pills: you are jittery and your heart pounds",
+    "UI_trait_DanHomebody": "Homebody",
+    "UI_trait_DanHomebodydesc": "Home does you twice the good.<br>A day away and you miss it, badly.",
+    "UI_trait_DanNomad": "Nomad",
+    "UI_trait_DanNomaddesc": "No place is home and none is missed.<br>Sleeps as well under the sky as in a bed.",
+    "UI_DanTraits_HomeFound": "This place is starting to feel like home",
+    "UI_DanTraits_HomeMoved": "A new place to call home",
+    "UI_DanTraits_Homesick": "You miss home",
+    "UI_DanTraits_HomeReturn": "Good to be home",
+    "UI_DanTraits_Bleached": "Stains bleached out",
+    "UI_DanTraits_Protected": "Fabric protected",
+    "UI_DanTraits_PonchoTore": "Your poncho tore apart",
+    "UI_DanTraits_LineUp": "Clothesline up"
 }

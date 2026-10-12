@@ -651,7 +651,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:germaphobe,
-        Cost = -4,
+        Cost = -8,
         UIName = UI_trait_DanGermaphobe,
         UIDescription = UI_trait_DanGermaphobedesc,
     }
@@ -762,6 +762,33 @@ module DanTraits {
        and no pill helps with that; flares about once a month; prednisone,
        baclofen and amantadine (new items). -1 Fitness and -1 Strength,
        and not with Athletic or Strong. DanTraits_MS.lua. */
+    /* Homebody (-2) and Nomad (+3): how the Home system treats you
+       (media/lua/shared/DanTraits_Home.lua). Homebody: home does twice the
+       good, and a day away is missed, badly. Nomad: no home, nothing missed,
+       sleeps as well under the sky. Nomad is not with Settled (the 40s trait
+       that sleeps badly in a new bed). */
+    character_trait_definition DanTraits:homebody
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:homebody,
+        Cost = -2,
+        UIName = UI_trait_DanHomebody,
+        UIDescription = UI_trait_DanHomebodydesc,
+        MutuallyExclusiveTraits = DanTraits:nomad,
+    }
+
+    character_trait_definition DanTraits:nomad
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:nomad,
+        Cost = 3,
+        UIName = UI_trait_DanNomad,
+        UIDescription = UI_trait_DanNomaddesc,
+        MutuallyExclusiveTraits = DanTraits:homebody;DanTraits:settled,
+    }
+
     character_trait_definition DanTraits:ms
     {
         IsProfessionTrait = false,
@@ -1098,6 +1125,139 @@ module DanTraits {
         StaticModel = Magazine,
         WorldStaticModel = MagazineGround,
         Tags = base:magazine,
+    }
+
+    /* Laundry (media/lua/shared/DanTraits_Laundry*.lua; plans/laundry.md). */
+
+    /* Washboard: carried, a hand wash gets clothes cleaner (25% without
+       soap, 10% with; sandbox LaundryBoard*) and takes half as long again.
+       Laundry rooms, cleaning shelves, farmhouses; or made: carpentry (a
+       plank, sheet metal, nails, a hammer) or carved (a plank, a knife,
+       Carving 2). The wooden cutting board stands in for its model. */
+    item Washboard
+    {
+        DisplayCategory = Household,
+        ItemType = base:normal,
+        DisplayName = Washboard,
+        Weight = 1.0,
+        Icon = Washboard,
+        Tooltip = Tooltip_DanTraits_Washboard,
+        WorldStaticModel = CuttingBoard_Wood_Ground,
+        Tags = base:isfirefuel,
+    }
+
+    /* Fabric protector: a spray can, 5 garments. Treated, a garment keeps
+       only half of the blood and dirt that lands on it, for about three
+       washes (DanTraits_LaundryGear.lua). Cleaning shelves, laundry rooms,
+       shoe and clothing stores. The spray paint model stands in. */
+    item FabricProtector
+    {
+        DisplayCategory = Household,
+        ItemType = base:drainable,
+        DisplayName = Fabric Protector,
+        Weight = 0.4,
+        Icon = FabricProtector,
+        Tooltip = Tooltip_DanTraits_FabricProtector,
+        UseDelta = 0.2,
+        UseWhileEquipped = false,
+        StaticModel = SprayPaint,
+        WorldStaticModel = SprayPaint,
+    }
+
+    /* Fabric wax: candle wax in a tin, 4 garments; the same treatment as
+       fabric protector. Made from two candles and an empty tin. */
+    item FabricWax
+    {
+        DisplayCategory = Household,
+        ItemType = base:drainable,
+        DisplayName = Fabric Wax,
+        Weight = 0.3,
+        Icon = FabricWax,
+        Tooltip = Tooltip_DanTraits_FabricWax,
+        UseDelta = 0.25,
+        UseWhileEquipped = false,
+        WorldStaticModel = TinCanEmpty,
+    }
+
+    craftRecipe DanTraitsMakeWashboard
+    {
+        timedAction = BuildWallHammer,
+        time = 150,
+        Tags = AnySurfaceCraft,
+        category = Carpentry,
+        SkillRequired = Woodwork:1,
+        xpAward = Woodwork:10,
+        NeedToBeLearn = false,
+        inputs
+        {
+            item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeVeryLight],
+            item 1 [Base.Plank],
+            item 1 [Base.SmallSheetMetal;Base.SheetMetal],
+            item 4 [Base.Nails],
+        }
+        outputs
+        {
+            item 1 DanTraits.Washboard,
+        }
+    }
+
+    craftRecipe DanTraitsCarveWashboard
+    {
+        timedAction = SharpenStakeWood,
+        time = 300,
+        Tags = AnySurfaceCraft,
+        category = Carving,
+        SkillRequired = Carving:2,
+        xpAward = Carving:15,
+        NeedToBeLearn = false,
+        inputs
+        {
+            item 1 tags[base:sharpknife;base:meatcleaver] mode:keep flags[MayDegradeLight;Prop1;IsNotDull],
+            item 1 [Base.Plank],
+        }
+        outputs
+        {
+            item 1 DanTraits.Washboard,
+        }
+    }
+
+    craftRecipe DanTraitsMakeFabricWax
+    {
+        timedAction = Making,
+        time = 100,
+        Tags = AnySurfaceCraft,
+        category = Tailoring,
+        NeedToBeLearn = false,
+        inputs
+        {
+            item 2 [Base.Candle],
+            item 1 [Base.TinCanEmpty],
+        }
+        outputs
+        {
+            item 1 DanTraits.FabricWax,
+        }
+    }
+
+    /* A rough garbage bag poncho: holes cut in one bag, no skill (the game's
+       own needs Tailoring 1, two bags and duct tape). The same poncho, and
+       it tears the same way (DanTraits_LaundryGear.lua). */
+    craftRecipe DanTraitsCutGarbageBagPoncho
+    {
+        timedAction = SewingCloth,
+        time = 60,
+        Tags = InHandCraft,
+        category = Tailoring,
+        NeedToBeLearn = false,
+        inputs
+        {
+            item 1 tags[base:garbagebag] flags[Prop2;IsEmpty],
+            item 1 tags[base:sharpknife;base:scissors] mode:keep flags[SharpnessCheck;IsNotDull],
+        }
+        outputs
+        {
+            item 1 Base.PonchoGarbageBag,
+        }
     }
 
 }

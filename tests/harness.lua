@@ -187,6 +187,7 @@ function H.stubs()
   function ZombRand() H.rolls = H.rolls + 1; if #H.rng > 0 then return table.remove(H.rng, 1) end return H.roll end
   function ZombRandFloat(lo, hi) if lo == 0 and hi == 1 then return H.rollf end return (lo + hi) / 2 end
   function getSpecificPlayer() return H.current end
+  unpack = unpack or table.unpack   -- the game's Lua (5.1) has the global; fengari (5.3) only table.unpack
   function getTimestampMs() return H.now end
   function getGameTime()
     return { getHour = function() return 12 end, getTimeOfDay = function() return H.timeOfDay or 12 end,

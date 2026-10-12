@@ -31,7 +31,7 @@ SandboxOptionsScreen = { setSandboxVars = function() end }
 MainScreen = { instance = {} }
 local drawn = {}
 CharacterCreationProfession = { isTraitEnabled = function() return true end, setVisible = function(self, v) self._shown = v end,
-  repopulateTraitLists = function(self) self._repopulated = (self._repopulated or 0) + 1 end,
+  repopulateTraitLists = function(self) self._repopulated = (self._repopulated or 0) + 1; self._refilledLoading = self.danTraitsLoadingBuild end,
   -- vanilla's list: the profession's and the chosen traits' boosts, Fitness and Strength at 5
   checkXPBoost = function(self)
     local list = self.listboxXpBoost
@@ -42,8 +42,12 @@ CharacterCreationProfession = { isTraitEnabled = function() return true end, set
   PointToSpend = function(self) return self._points or 0 end,
   prerender = function(self) self._prerendered = (self._prerendered or 0) + 1 end,
   removeTrait = function(self, i) self._removed = (self._removed or 0) + 1; table.remove(self.listboxTraitSelected.items, i) end,
-  -- a saved build: its traits are looked up in the lists (isTraitEnabled) and added one by one
+  -- a saved build: vanilla resets (refilling the lists only when it took traits off), then
+  -- looks its traits up in the lists (isTraitEnabled) and adds them one by one
   loadBuild = function(self, box)
+    self._refilledLoading = nil
+    self:resetBuild()
+    self._refilledAfterReset = self._refilledLoading
     self._offeredWhileLoading = {}
     for _, kind in ipairs(box.build) do
       self._offeredWhileLoading[kind] = self:isTraitEnabled({ getType = function() return kind end })
@@ -57,6 +61,15 @@ CharacterCreationProfession = { isTraitEnabled = function() return true end, set
   render = function(self) self.playButton:setEnable(true); self.playButton:setTooltip(nil) end,
   populateTraitList = function(self, list) list:clear() end,
   isTraitExcluded = function(self, def) return false end,
+  -- vanilla, changing occupation: the old free trait's exclusions go straight back into the lists
+  doTestForMutuallyExclusiveTraits = function(self, trait, isRemovingTrait)
+    if not isRemovingTrait then return end
+    for _, kind in ipairs(trait._excludes or {}) do
+      local def = CharacterTraitDefinition.getCharacterTraitDefinition(kind)
+      local box = def:getCost() > 0 and self.listboxTrait or self.listboxBadTrait
+      box._items[#box._items + 1] = def:getLabel()
+    end
+  end,
   resetBuild = function(self) self._reset = (self._reset or 0) + 1; self.listboxTraitSelected.items = {} end,
   -- vanilla's random: reset, roll, and (here) its balancing has taken everything back off again
   randomizeTraits = function(self) self:resetBuild(); self._randomized = true; self.listboxTraitSelected.items = {} end,
@@ -444,7 +457,9 @@ sc.listboxTrait = {}; sc.listboxBadTrait = {}
 local result = sc:loadBuild({ build = { "oldhand", "green", "age50s" } })
 assert(result == "loaded" and sc._offeredWhileLoading.oldhand == true, "while loading: offered before the age is in")
 assert(chosen(sc) == "oldhand,age50s" and sc._removed == 1, "after loading: what the build's age cannot have is dropped, the rest kept")
-assert(sc.danTraitsLoadingBuild == nil and sc._repopulated == 1, "the flag is cleared and the lists refilled")
+assert(sc._refilledAfterReset == true, "the lists are refilled after the reset, with the gate down (they were the four ages)")
+assert(sc.danTraitsLoadingBuild == nil and sc._repopulated == 2 and sc.resetBuild == CharacterCreationProfession.resetBuild,
+  "the flag is cleared, the lists refilled again and the reset given back")
 -- the preset box is pointed at the wrapped loader
 sc = creation({}); sc.savedBuilds = { onChange = function() end }; sc:checkXPBoost()
 assert(sc.savedBuilds.onChange == CharacterCreationProfession.loadBuild, "the preset box loads through the wrap")
@@ -489,6 +504,31 @@ opts["DanTraits.AgeEnabled"] = true
 sc = creation({}); sc.listboxTrait = {}; sc.listboxBadTrait = {}
 sc:loadBuild({ build = { "base:brave", "age40s" } })
 assert(sc._offeredWhileLoading["base:brave"] == true, "a preset's traits load before its age: not gated while loading")
+-- changing occupation: what vanilla puts back past the filter is filtered after all
+do
+  local function box()
+    return { _items = {}, removeMatchingItems = function(self, label)
+      for i = #self._items, 1, -1 do if self._items[i] == label then table.remove(self._items, i) end end
+    end }
+  end
+  local function def(kind, cost)
+    return { getType = function() return kind end, getLabel = function() return "label:" .. kind end,
+             getCost = function() return cost end, isFree = function() return false end }
+  end
+  local defsByKind = { ["base:blacksmith"] = def("base:blacksmith", 6), ["base:inventive"] = def("base:inventive", 2) }
+  local saved = CharacterTraitDefinition
+  CharacterTraitDefinition = { getCharacterTraitDefinition = function(kind) return defsByKind[kind] end }
+  local freeTrait = { _excludes = { "base:blacksmith" }, getMutuallyExclusiveTraits = function()
+    return { size = function() return 1 end, get = function(_, i) return "base:blacksmith" end }
+  end }
+  local s = creation({}); s.listboxTrait = box(); s.listboxBadTrait = box()
+  s:doTestForMutuallyExclusiveTraits(freeTrait, true)
+  assert(#s.listboxTrait._items == 0, "no age chosen: Blacksmith Knowledge is not put back past the gate")
+  s = creation({ "age30s" }); s.listboxTrait = box(); s.listboxBadTrait = box()
+  s:doTestForMutuallyExclusiveTraits(freeTrait, true)
+  assert(s.listboxTrait._items[1] == "label:base:blacksmith", "an age chosen: it comes back as vanilla means it to")
+  CharacterTraitDefinition = saved
+end
 -- In Their 30s (0 points) goes into the positive list by hand, once, and not with Age off
 local defs = { age30s = { getLabel = function() return "In Their 30s" end, getDescription = function() return "d" end, getType = function() return "age30s" end, isFree = function() return false end, getCost = function() return 0 end } }
 CharacterTraitDefinition = { getCharacterTraitDefinition = function(kind) return defs[kind] end }

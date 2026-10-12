@@ -6,7 +6,11 @@ local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 -- refuse a live Schizophrenia phantom and pass every other zombie through
 -- untouched, a missing gate is skipped, and a second install does not wrap
 -- twice. Also here: a phantom another mod un-parks is parked again on the
--- next tick (DanTraits_Hallucinations.lua).
+-- next tick (DanTraits_Hallucinations.lua). And NPC hits: A-Life's three ways
+-- of hurting the player are measured and reported as one hit each
+-- (DanTraits_MeasureHit -> DanTraits_OtherHit -> Concussion's head scale and
+-- Brittle's roll), never twice when nested, not at all when the game reported
+-- the hit itself, and an attack on anyone else passes straight through.
 H.events()
 H.stubs()
 function ZombRand(a, b) return 0 end
@@ -84,4 +88,76 @@ tick(); assert(phantom.useless == true and phantom.removed == 0, "parked again, 
 for i = 1, 240 do tick() end
 assert(phantom.removed == 2 and not DanTraits_IsPhantom(phantom), "released")
 assert(ProjectALife.HordeRelations.steersHere(phantom) == true, "a released body is steered again")
+
+-- 6. hits: the three ways in, measured by what they take off the body
+local heads, limbs = {}, {}
+DanTraits_HeadHit = function(p, lost) heads[#heads + 1] = lost end
+DanTraits_BrittleHit = function(p, damage) limbs[#limbs + 1] = damage end
+local function part(name)
+  local x = { _name = name, _health = 100 }
+  function x:getType() return self._name end
+  function x:getHealth() return self._health end
+  return x
+end
+local head, chest = part("Head"), part("Torso_Upper")
+local victim = H.player({ parts = { head, chest } }); H.current = victim
+local someone = H.player({})
+
+local strikes = 0
+ProjectALife = {
+  Combat = { resolveAttack = function(actor, shell, target, shove, reaction)
+    strikes = strikes + 1
+    if target == victim then head._health = head._health - 12; chest._health = chest._health - 3 end
+    return true, reaction
+  end },
+  ModuleGunner = { grazePlayer = function(shell, weapon, body)
+    if body == victim then chest._health = chest._health - 5 end
+    return true
+  end },
+  Executor = { woundPlayer = function(victimArg, weaponType, weapon, part)
+    if victimArg == victim then chest._health = chest._health - 4 end
+    return true
+  end },
+}
+DanTraits_ALifeInstall = nil
+H.load("ALife")
+DanTraits_ALifeInstall()
+
+local ok2, reaction = ProjectALife.Combat.resolveAttack({}, {}, victim, false, "Shot")
+assert(ok2 == true and reaction == "Shot" and strikes == 1, "the attack runs, results intact")
+assert(#heads == 1 and heads[1] == 12 and #limbs == 1 and limbs[1] == 15, "a blow to the head: 12 off the head, 15 in all")
+assert(ProjectALife.ModuleGunner.grazePlayer({}, {}, victim) == true, "graze runs")
+assert(#heads == 1 and limbs[2] == 5, "a graze on the chest: Brittle hears 5, the head nothing")
+ProjectALife.Executor.woundPlayer(victim, "Base.Pistol", nil, 4)
+assert(limbs[3] == 4, "a relayed wound: 4")
+
+-- an attack on an NPC or a zombie, or on another player, passes through unmeasured
+ProjectALife.Combat.resolveAttack({}, {}, someone, false)
+ProjectALife.Combat.resolveAttack({}, {}, {}, false)
+assert(strikes == 3 and #limbs == 3 and #heads == 1, "other targets: no hit reported")
+
+-- nothing taken off (a miss, a shove): no hit
+local before = #limbs
+assert(DanTraits_MeasureHit(victim, function() return "missed" end) == "missed", "result passed back")
+assert(#limbs == before and #heads == 1, "no damage: nothing reported")
+
+-- nested: an attack that ends in the wound function is one hit, not two
+local inner = ProjectALife.Executor.woundPlayer
+local outerOriginal = function(actor, shell, target) chest._health = chest._health - 2; inner(target, "Base.Bat", nil, -1); return true end
+local outer = function(...) return DanTraits_MeasureHit(victim, outerOriginal, ...) end
+outer({}, {}, victim)
+assert(#limbs == before + 1 and limbs[#limbs] == 6, "nested calls: one hit of 2 + 4")
+
+-- the game reported the hit itself (Hit fires WEAPONHIT): not counted again
+DanTraits_MeasureHit(victim, function() chest._health = chest._health - 7; H.fire("OnPlayerGetDamage", victim, "WEAPONHIT", 7) end)
+assert(#limbs == before + 1, "a hit the game reported: not doubled")
+-- ...but a bleeding tick meanwhile does not count as that
+DanTraits_MeasureHit(victim, function() chest._health = chest._health - 3; H.fire("OnPlayerGetDamage", victim, "BLEEDING", 0.1) end)
+assert(limbs[#limbs] == 3, "a bleeding report meanwhile: still measured")
+
+-- an error in A-Life's function reaches its caller, and the next hit is still measured
+local okE, err = pcall(DanTraits_MeasureHit, victim, function() error("boom") end)
+assert(not okE and tostring(err):find("boom"), "the error passes on")
+ProjectALife.ModuleGunner.grazePlayer({}, {}, victim)
+assert(limbs[#limbs] == 5, "measuring again after an error")
 H.pass()

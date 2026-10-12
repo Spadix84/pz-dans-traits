@@ -18,56 +18,104 @@ option DanTraits.AgeBonus40s
 option DanTraits.AgeBonus50s
 {type = integer, min = 0, max = 5, default = 3, page = DanTraits, translation = DanTraitsAgeBonus50s,}
 
-option DanTraits.BloodEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsBloodEnabled,}
-
-option DanTraits.InfectionEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsInfectionEnabled,}
-
-option DanTraits.WoundCareEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsWoundCareEnabled,}
-
-option DanTraits.ConcussionEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsConcussionEnabled,}
-
-option DanTraits.VitalityEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsVitalityEnabled,}
-
-option DanTraits.SleepLightEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsSleepLightEnabled,}
-
-option DanTraits.HangoverEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsHangoverEnabled,}
-
-option DanTraits.DrinkReliefEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsDrinkReliefEnabled,}
-
-option DanTraits.SunburnEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsSunburnEnabled,}
-
-option DanTraits.DehydrationEnabled
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsDehydrationEnabled,}
-
-option DanTraits.MedSideEffectChance
-{type = integer, min = 0, max = 100, default = 3, page = DanTraits, translation = DanTraitsMedSideEffectChance,}
-
 option DanTraits.StartingMedication
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsStartingMedication,}
 
-option DanTraits.ArthritisWeaponDrop
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsArthritisWeaponDrop,}
-
-option DanTraits.AngerEffects
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsAngerEffects,}
-
-option DanTraits.SmokerCravingMoodle
-{type = boolean, default = true, page = DanTraits, translation = DanTraitsSmokerCravingMoodle,}
-
-option DanTraits.MSSpoons
-{type = integer, min = 0, max = 24, default = 12, page = DanTraits, translation = DanTraitsMSSpoons,}
-
-option DanTraits.InhalerLoot
-{type = integer, min = 0, max = 500, default = 100, page = DanTraits, translation = DanTraitsInhalerLoot,}
-
 option DanTraits.KnoxSurviveChance
 {type = integer, min = 0, max = 100, default = 25, page = DanTraits, translation = DanTraitsKnoxSurviveChance,}
+
+option DanTraits.BloodEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsBloodEnabled,}
+
+option DanTraits.InfectionEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsInfectionEnabled,}
+
+option DanTraits.WoundCareEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsWoundCareEnabled,}
+
+option DanTraits.ConcussionEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsConcussionEnabled,}
+
+option DanTraits.VitalityEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsVitalityEnabled,}
+
+option DanTraits.SunburnEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsSunburnEnabled,}
+
+option DanTraits.DehydrationEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsDehydrationEnabled,}
+
+option DanTraits.MedSideEffectChance
+{type = integer, min = 0, max = 100, default = 3, page = DanTraitsHealth, translation = DanTraitsMedSideEffectChance,}
+
+option DanTraits.MSSpoons
+{type = integer, min = 0, max = 24, default = 12, page = DanTraitsHealth, translation = DanTraitsMSSpoons,}
+
+option DanTraits.InhalerLoot
+{type = integer, min = 0, max = 500, default = 100, page = DanTraitsHealth, translation = DanTraitsInhalerLoot,}
+
+option DanTraits.ArthritisWeaponDrop
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsArthritisWeaponDrop,}
+
+option DanTraits.SleepLightEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsSleepLightEnabled,}
+
+option DanTraits.HomeEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsHomeEnabled,}
+
+option DanTraits.HangoverEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsHangoverEnabled,}
+
+option DanTraits.DrinkReliefEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsDrinkReliefEnabled,}
+
+option DanTraits.AngerEffects
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsAngerEffects,}
+
+option DanTraits.SmokerCravingMoodle
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsSmokerCravingMoodle,}
+
+option DanTraits.LaundryEnabled
+{type = boolean, default = true, page = DanTraitsLaundry, translation = DanTraitsLaundryEnabled,}
+
+option DanTraits.LaundryHandFloor
+{type = integer, min = 0, max = 100, default = 40, page = DanTraitsLaundry, translation = DanTraitsLaundryHandFloor,}
+
+option DanTraits.LaundryHandSoapFloor
+{type = integer, min = 0, max = 100, default = 20, page = DanTraitsLaundry, translation = DanTraitsLaundryHandSoapFloor,}
+
+option DanTraits.LaundryBoardFloor
+{type = integer, min = 0, max = 100, default = 25, page = DanTraitsLaundry, translation = DanTraitsLaundryBoardFloor,}
+
+option DanTraits.LaundryBoardSoapFloor
+{type = integer, min = 0, max = 100, default = 10, page = DanTraitsLaundry, translation = DanTraitsLaundryBoardSoapFloor,}
+
+option DanTraits.LaundryWringLeaves
+{type = integer, min = 0, max = 100, default = 50, page = DanTraitsLaundry, translation = DanTraitsLaundryWringLeaves,}
+
+option DanTraits.LaundryDampHours
+{type = integer, min = 1, max = 48, default = 6, page = DanTraitsLaundry, translation = DanTraitsLaundryDampHours,}
+
+option DanTraits.LaundryBodyDryRate
+{type = integer, min = 5, max = 100, default = 25, page = DanTraitsLaundry, translation = DanTraitsLaundryBodyDryRate,}
+
+option DanTraits.LaundryOdourRate
+{type = integer, min = 0, max = 300, default = 100, page = DanTraitsLaundry, translation = DanTraitsLaundryOdourRate,}
+
+option DanTraits.LaundryMood
+{type = integer, min = 0, max = 200, default = 100, page = DanTraitsLaundry, translation = DanTraitsLaundryMood,}
+
+option DanTraits.LaundryStainDays
+{type = integer, min = 0, max = 30, default = 3, page = DanTraitsLaundry, translation = DanTraitsLaundryStainDays,}
+
+option DanTraits.LaundryWear
+{type = enum, numValues = 4, default = 3, page = DanTraitsLaundry, translation = DanTraitsLaundryWear,}
+
+option DanTraits.LaundryClotheslines
+{type = boolean, default = true, page = DanTraitsLaundry, translation = DanTraitsLaundryClotheslines,}
+
+option DanTraits.LaundryLineDryRate
+{type = integer, min = 25, max = 300, default = 100, page = DanTraitsLaundry, translation = DanTraitsLaundryLineDryRate,}
+
+option DanTraits.LaundryPoncho
+{type = boolean, default = true, page = DanTraitsLaundry, translation = DanTraitsLaundryPoncho,}

@@ -246,7 +246,7 @@ bp._moodles[MoodleType.HUNGRY] = 3; H.minute(); H.near(bp._st.unhappy, 0.3, 1e-9
 bp._asleep = true; H.minute(); H.near(bp._st.unhappy, 0.3, 1e-9, "asleep: nothing"); bp._asleep = false
 -- Seen It All: panic, Fear of Blood faints and filth stress
 local si = newPlayer({ traits = { "seenitall" } })
-H.near(DanTraits_RunHooks("panicRise", 10, si), 6, 1e-9, "panic builds x0.6")
+H.near(DanTraits_RunHooks("panicRise", 10, si), 8, 1e-9, "panic builds x0.8")
 H.near(DanTraits_RunHooks("fearFaint", 0.2, si), 0.1, 1e-9, "faints half as often")
 H.near(DanTraits_RunHooks("filthStress", 0.002, si), 0.001, 1e-12, "filth weighs half")
 H.near(DanTraits_RunHooks("panicRise", 10, plain9), 10, 1e-9, "others as is")

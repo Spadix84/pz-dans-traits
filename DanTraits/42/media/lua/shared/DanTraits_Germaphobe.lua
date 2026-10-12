@@ -59,11 +59,14 @@ local function bodyGrime(player)
     return worstMean(values)
 end
 
--- 0..1 share of the body parts under dirty or bloody clothes
+-- 0..1 share of the body parts under dirty or bloody clothes (or stale or
+-- musty ones: DanTraits_Laundry.lua, by part name)
 local function clothesGrime(player)
     local dirty = 0
+    local stale = DanTraits_LaundryStaleParts and DanTraits_LaundryStaleParts(player) or {}
     local n = DanTraits_EachPart(player, function(part)
-        if DanTraits_PartIs(part, "hasDirtyClothing") or DanTraits_PartIs(part, "hasBloodyClothing") then dirty = dirty + 1 end
+        if DanTraits_PartIs(part, "hasDirtyClothing") or DanTraits_PartIs(part, "hasBloodyClothing")
+            or stale[tostring(part:getType())] then dirty = dirty + 1 end
     end, "Germaphobe")
     if n == 0 then return 0 end
     return math.min(1, dirty / n * GM_CLOTHES)

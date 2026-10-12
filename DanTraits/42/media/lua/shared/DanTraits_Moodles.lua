@@ -47,6 +47,12 @@
 --                      regimen is at full benefit (its own moodle, so it shows
 --                      through an episode). Anyone else: the game's own
 --                      antidepressant effect is running
+--   Home               anyone (DanTraits_Home.lua): good side Settling In, then
+--                      At Home while at a place slept in three nights or more;
+--                      bad side Missing Home, then Homesick, away from it
+--   StaleClothes       anyone (DanTraits_Laundry.lua): Stale Clothes, then Musty
+--                      Clothes, from the worst garment worn; good side Fresh
+--                      Clothes, then Line-Dried, when everything worn is fresh
 --
 -- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
 -- range, not which way; the meter is how you find out. Hallucinations has
@@ -188,6 +194,10 @@ local SPECS = {
         end
         return (player:getDepressEffect() or 0) > 0 and -2 or 0
     end },
+    -- home (DanTraits_Home.lua keeps hmMoodle: -1 / -2 at home, 1 / 2 away and missing it)
+    { name = "Home", level = function(player, d) return d.hmMoodle or 0 end },
+    -- laundry (DanTraits_Laundry.lua keeps lnMoodle: 1 stale, 2 musty; -1 fresh, -2 line-dried)
+    { name = "StaleClothes", level = function(player, d) return d.lnMoodle or 0 end },
 }
 
 DanTraits_MoodleNames = {}

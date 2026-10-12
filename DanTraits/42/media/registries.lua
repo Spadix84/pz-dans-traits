@@ -60,3 +60,5 @@ DanTraitsRegistry.goodclotter  = CharacterTrait.register("DanTraits:goodclotter"
 DanTraitsRegistry.thickskull   = CharacterTrait.register("DanTraits:thickskull")
 DanTraitsRegistry.ms           = CharacterTrait.register("DanTraits:ms")
 DanTraitsRegistry.grit         = CharacterTrait.register("DanTraits:grit")
+DanTraitsRegistry.homebody     = CharacterTrait.register("DanTraits:homebody")
+DanTraitsRegistry.nomad        = CharacterTrait.register("DanTraits:nomad")
