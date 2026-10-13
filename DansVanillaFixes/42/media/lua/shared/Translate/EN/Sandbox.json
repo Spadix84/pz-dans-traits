@@ -1,5 +1,18 @@
 {
     "Sandbox_DansVanillaFixes": "Dan's Vanilla Fixes",
     "Sandbox_DansVanillaFixesColdPackHours": "Cold Pack Hours",
-    "Sandbox_DansVanillaFixesColdPackHours_tooltip": "How long one fully frozen cold pack keeps a cooler cold, in game hours. Packs in the same cooler add up: three frozen packs last three times as long.<br>A fridge chills a pack half way, a freezer fully."
+    "Sandbox_DansVanillaFixesColdPackHours_tooltip": "How long one fully frozen cold pack keeps a cooler cold, in game hours. Packs in the same cooler add up: three frozen packs last three times as long.<br>A fridge chills a pack half way, a freezer fully.",
+    "Sandbox_DansVanillaFixesReading": "Dan's Vanilla Fixes: Reading",
+    "Sandbox_DansVanillaFixesReadingEnabled": "Reading overhaul",
+    "Sandbox_DansVanillaFixesReadingEnabled_tooltip": "Novels, comics, magazines and newspapers have a genre, a page count and a hidden quality. A read takes real time and its relief arrives per page; books are bookmarked by title. Each character likes one genre and dislikes another, found out by reading. Finishing a book gives the Good Read moodle with a small buff matched to the genre.<br>Off: reading works as in vanilla. Skill books and recipe magazines are vanilla either way.",
+    "Sandbox_DansVanillaFixesReadingPageScale": "Page Time Scale",
+    "Sandbox_DansVanillaFixesReadingPageScale_tooltip": "Multiplies the time a page takes. At 1 a novel is 1.5 minutes a page and a comic or magazine half a minute, on top of the game's own Minutes Per Page option (2.0 is the default; a server that changes it changes this too). A 350-page novel is then about 9 hours, 6 with Fast Reader.",
+    "Sandbox_DansVanillaFixesReadingRealBookChance": "Real Book Chance",
+    "Sandbox_DansVanillaFixesReadingRealBookChance_tooltip": "The chance, in percent, that a novel found in loot is a real book from before July 1993 (title and author only) instead of one of the game's own, from the same genre. 0 turns real books off.",
+    "Sandbox_DansVanillaFixesReadingTasteStrength": "Taste Strength",
+    "Sandbox_DansVanillaFixesReadingTasteStrength_tooltip": "How much a character's liked and disliked genres matter. At 1 a liked book does 25%% more and a disliked one half as much, both in the relief while reading and in the finishing moodle. 0 makes every genre the same; 2 doubles the difference.",
+    "Sandbox_DansVanillaFixesReadingMoodleScale": "Good Read Duration",
+    "Sandbox_DansVanillaFixesReadingMoodleScale_tooltip": "Multiplies how long the Good Read moodle lasts after finishing a book: at 1, a day for an ordinary novel and two for an excellent one, half a day for a comic or magazine.",
+    "Sandbox_DansVanillaFixesReadingRereadComfort": "Re-read Comfort",
+    "Sandbox_DansVanillaFixesReadingRereadComfort_tooltip": "A book you have finished still gives a fifth of its relief when it is in your liked genre: comfort reading. Off: a finished book gives nothing, as in vanilla. Other genres give nothing either way."
 }

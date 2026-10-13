@@ -8,6 +8,7 @@
 [*][b]Five laundry traits.[/b] [b]Sweaty (-2)[/b]: clothes go stale nearly twice as fast. [b]Cool Customer (+3)[/b]: clothes stay fresh twice as long. [b]Slob (+2)[/b]: stale clothes are no bother, fresh ones no joy. [b]Homemaker (+4)[/b]: washes cleaner by hand with half the wear, and loves line-dried clothes. [b]Sensitive Skin (-2)[/b]: damp, musty or never-washed clothes itch.
 [*][b]Laundry and your other traits:[/b] Nomad minds stale clothes half as much, a Homebody loves clothes dried at home, bleaching indoors sets off Asthma, washing bloody clothes stresses Fear of Blood, and a washboard is hard on a Bad Back.
 [*][b]Germaphobe -8[/b] (was -4): hard to live with, now paid for.
+[*][b]Reading.[/b] With Dan's Vanilla Fixes (its new reading overhaul: every novel has a genre, real pages and a hidden quality, reads take hours with the relief page by page, each character likes one genre and dislikes another, and finishing a book gives the Good Read moodle), Vitality joins in: books do more good at home (twice that for a Homebody), half as much and slower when concussed, a Bad Day's first day takes comfort from any book, and over 40 without reading glasses a page takes a little longer.
 [*][b]Sandbox pages:[/b] the options are split into Vitality: General, Health, Daily Life and Laundry. Saved settings carry over.
 [/list]
 [h2]Changed[/h2]

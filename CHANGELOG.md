@@ -121,6 +121,60 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `new` from now on.
 - Changing occupation cannot slip a trait past the age gate (see 1.2.0, Age).
 
+### Dan's Vanilla Fixes: reading for pleasure (2026-10-12)
+
+Reading was a vending machine: ten minutes, a fixed drop in boredom, stress and unhappiness at the
+end, once per title. Now it is something to carry on a run (design and as-built notes:
+`plans/reading.md`; its own sandbox page, Dan's Vanilla Fixes: Reading, with a master switch).
+
+- **Every vanilla title is tagged**: 1,177 books, 224 comics and 167 magazines get a genre family
+  (18 of them, folded from the game's 55 book subjects and 24 magazine subjects; comics by the
+  words in their titles), a page count (softcovers 180-380, hardcovers 250-500, serious reading
+  300-650, kids' books 24-64, comics 24-48, magazines 60-140, newspapers 12-40, each title its own)
+  and a hidden quality of one to five stars, most at two or three. The table is generated from the
+  game jar by `DansVanillaFixes/tools/gen_reading_data.py` (a bytecode walk of the `Book`,
+  `ComicBook` and `Magazine` registries), with hand fixes in `DansVanillaFixes_ReadingBooks.lua`.
+- **Long reads.** A novel is 1.5 minutes a page, picture media half a minute, scaled by the server's
+  own Minutes Per Page; Fast Reader, Slow Reader, reading glasses, sitting and other mods' wraps
+  carry over, because the time is scaled from vanilla's own answer. A 350-page novel is about nine
+  hours, six with Fast Reader. The relief arrives **per page** (a novel's vanilla totals spread
+  over 300 pages, so a long book gives more; comics, magazines and newspapers keep their totals)
+  and vanilla's lump at the end is cancelled. Stats stop at zero, as before.
+- **Bookmarks.** Progress is kept per character per title and on the copy; a read that stops
+  resumes where it was, on any copy. Right-click **Read a chapter (~30 min)** reads a chapter's
+  worth and stops, without the title being marked read.
+- **Taste.** Each character likes one family and dislikes another (never Kids or Humor), hidden
+  until about 30 pages in a family bring a notice: "You're really into this.", "Not your kind of
+  book." or "It's fine." A liked book does x1.25, a disliked one x0.5 and adds a little boredom
+  every twenty minutes. The tooltip shows the genre, the verdict once known, the pages read of the
+  total, and your verdict after finishing.
+- **Good Read**, a new moodle (Moodle Framework), on finishing a book: Good Read, Great Read
+  (four or five stars, or a liked genre) or Loved It (both, with a quarter more strength). It
+  lasts 12 to 48 hours by quality (12 for a comic or magazine, never above Good Read; nothing for a
+  newspaper), a quarter longer for Classics. While it runs, boredom and unhappiness ease a little
+  each minute, plus the genre's bonus: Horror eases panic, Thrillers and True Stories ease stress,
+  Romance unhappiness, Sci-Fi boredom, Westerns endurance, Faith stress and unhappiness, Sports
+  +5% Fitness and Strength XP, Science & Nature +5% Foraging XP, Self-Help +5% XP to seven
+  practical skills (the XP ones only when no skill book's multiplier is running). A stronger finish
+  replaces the moodle; a weaker one only refreshes it if it would last longer.
+- **Re-reads** give a fifth of the drip in the liked family only (sandbox switch), and no moodle.
+- **Real books**: about 200 titles from before July 1993, title and author only, with their real
+  page counts and a quality by hand. A novel in loot has an 8% chance (sandbox) of being one from
+  the same genre; it is named like a vanilla book and read-tracking works on it unchanged.
+- **This Is Your Life**: books you finish and tastes you find out go in its survivor journal, as
+  dated lines ("July 12, 1993 - Finished "Jurassic Park". Loved it.").
+- Books from other mods get a neutral fallback (Popular Fiction, 120 pages, three stars, no moodle).
+  Skill books, recipe magazines, fliers, brochures and the old newspapers are untouched.
+- Multiplayer: the stat changes run on the client that owns the character, as vanilla's do; the
+  mod is still singleplayer-only in practice.
+
+### Vitality: hooks into the reading overhaul (2026-10-12)
+
+- `DanTraits_Reading.lua`: with Dan's Vanilla Fixes' reading on, a page does 15% more good at
+  home by the home's strength (30% for a Homebody), half as much when concussed (and takes a
+  quarter longer), and a Really Bad Day's first day gets a quarter more comfort from any book.
+  In their 40s a reader without reading glasses takes a tenth longer per page, in their 50s 15%.
+
 ## 1.2.0 - 2026-10-10
 
 ### Dan's Vanilla Fixes: load the washer in one click (2026-10-09)
