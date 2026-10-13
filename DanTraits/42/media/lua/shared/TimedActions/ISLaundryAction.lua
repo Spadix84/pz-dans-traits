@@ -80,8 +80,10 @@ function ISLaundryAction:perform()
     if self.kind == "bleach" then
         L().useBleach(self.bleach)
         pcall(function() self.source:useFluid(self.water or 0) end)
-        L().bleach(self.item, L().methodFor(self.character))
+        local bloody = L().wasBloody(self.item)
+        L().bleach(self.item, L().methodFor(self.character), L().skilled(self.character))
         DanTraits_NotifyGood(self.character, "UI_DanTraits_Bleached")
+        DanTraits_RunHooks("laundryWashed", nil, self.character, self.item, "bleach", bloody)
     elseif self.kind == "fire" then
         L().dry(self.item, 100)
     elseif self.kind == "protect" then

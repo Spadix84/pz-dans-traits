@@ -654,6 +654,7 @@ module DanTraits {
         Cost = -8,
         UIName = UI_trait_DanGermaphobe,
         UIDescription = UI_trait_DanGermaphobedesc,
+        MutuallyExclusiveTraits = DanTraits:slob,
     }
 
     /* Refuses alcohol and tobacco. DanTraits_StraightEdge.lua. */
@@ -787,6 +788,66 @@ module DanTraits {
         UIName = UI_trait_DanNomad,
         UIDescription = UI_trait_DanNomaddesc,
         MutuallyExclusiveTraits = DanTraits:homebody;DanTraits:settled,
+    }
+
+    /* Laundry traits (media/lua/shared/DanTraits_LaundryTraits.lua; they do
+       nothing with the sandbox option LaundryEnabled off). Sweaty (-2) and
+       Cool Customer (+3): clothes go stale x1.75 / x0.5. Slob (+2): no mood
+       from stale, musty or fresh clothes. Homemaker (+4): hand washes one
+       floor better, half the fabric wear, Line-Dried x1.5. Sensitive Skin
+       (-2): damp, musty or never-washed clothes itch (discomfort). */
+    character_trait_definition DanTraits:sweaty
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:sweaty,
+        Cost = -2,
+        UIName = UI_trait_DanSweaty,
+        UIDescription = UI_trait_DanSweatydesc,
+        MutuallyExclusiveTraits = DanTraits:coolcustomer,
+    }
+
+    character_trait_definition DanTraits:coolcustomer
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:coolcustomer,
+        Cost = 3,
+        UIName = UI_trait_DanCoolCustomer,
+        UIDescription = UI_trait_DanCoolCustomerdesc,
+        MutuallyExclusiveTraits = DanTraits:sweaty,
+    }
+
+    character_trait_definition DanTraits:slob
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:slob,
+        Cost = 2,
+        UIName = UI_trait_DanSlob,
+        UIDescription = UI_trait_DanSlobdesc,
+        MutuallyExclusiveTraits = DanTraits:germaphobe;DanTraits:homemaker,
+    }
+
+    character_trait_definition DanTraits:homemaker
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:homemaker,
+        Cost = 4,
+        UIName = UI_trait_DanHomemaker,
+        UIDescription = UI_trait_DanHomemakerdesc,
+        MutuallyExclusiveTraits = DanTraits:slob,
+    }
+
+    character_trait_definition DanTraits:sensitiveskin
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:sensitiveskin,
+        Cost = -2,
+        UIName = UI_trait_DanSensitiveSkin,
+        UIDescription = UI_trait_DanSensitiveSkindesc,
     }
 
     character_trait_definition DanTraits:ms

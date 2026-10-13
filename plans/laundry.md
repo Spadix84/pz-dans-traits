@@ -424,8 +424,8 @@ waits on its spikes.
 
 ## Later ideas (not in this plan)
 
-- Traits: **Fastidious** (fresher sooner, mood penalty doubled) and **Slob**
-  (no stale-clothes mood).
+- Traits: built 2026-10-11, see "Traits" below. Fastidious was dropped (Germaphobe
+  already covers it).
 - A rope line between two trees for wilderness camps.
 - Bleach fading a garment's colour.
 - Lifting the module out into a standalone laundry mod, with Vitality and DVF
@@ -490,3 +490,24 @@ What changed from the design, from what the game files showed:
   LaundryMood scales it.
 - Spikes S1 to S6 could not run without the game; each is now a field-test
   check (section 19 of the checklist).
+
+## Traits (built 2026-10-11)
+
+Chosen by the user from a shortlist; names and prices are theirs. All in
+`DanTraits_LaundryTraits.lua`, through hooks laundry runs (`laundryOdour`,
+`laundryMood`, `laundryFresh`, `laundryMoodle`, `laundrySkilled`, `laundryAtHome`,
+`laundryWashed`, `laundryTooltip`), so the laundry module stays liftable.
+
+| Trait | Cost | Effect |
+|---|---|---|
+| Sweaty | -2 | sweat odour x1.75 (worn-damp odour unchanged). Not with Cool Customer |
+| Cool Customer | +3 | sweat odour x0.5. Not with Sweaty |
+| Slob | +2 | no laundry moodle, so no mood either way; infection unchanged. Not with Germaphobe, Homemaker |
+| Homemaker | +4 | hand wash at washboard floors, washboard floors halved, odour out without soap; wear x0.5; Line-Dried x1.5. Not with Slob |
+| Sensitive Skin | -2 | damp, musty (x2) or never-washed worn garments hold discomfort 20 +10 each, cap 50; start outfit counts washed |
+
+Hooks into other traits: Nomad (Stale/Musty mood x0.5), Homebody (Line-Dried
+x2 when most of it dried on a line at home), Asthma (0.08 irritation a garment
+bleached indoors), Fear of Blood (0.05 stress a bloody garment washed), Bad
+Back (0.06 load a garment on a washboard; the user picked Bad Back over
+Arthritis).

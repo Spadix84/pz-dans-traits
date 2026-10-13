@@ -54,9 +54,10 @@ ISWorldObjectContextMenu.onWashClothing = function(playerObj, sink, soapList, wa
     local soap = false
     pcall(function() soap = soapList ~= nil and ISWashClothing.GetSoapRemaining(soapList) > 0 end)
     local method = L.methodFor(playerObj)
+    local skilled = L.skilled(playerObj)
     local keep = {}
     for _, item in ipairs(washList or { singleClothing }) do
-        if L.canGain(item, method, soap) then keep[#keep + 1] = item end
+        if L.canGain(item, method, soap, skilled) then keep[#keep + 1] = item end
     end
     if #keep == 0 then
         L.message(playerObj, method, soap)
@@ -296,6 +297,7 @@ function L.tooltipLines(item)
     local pr = (s and s.pr) or 0
     if pr > 0 then lines[#lines + 1] = { getText("Tooltip_DanTraits_ProtectorLeft", math.floor(pr * 100 + 0.5)), false } end
     if s and (s.n or 0) > 0 then lines[#lines + 1] = { getText("Tooltip_DanTraits_Washes", s.n), false } end
+    lines = DanTraits_RunHooks("laundryTooltip", lines, item) or lines
     if #lines == 0 then return nil end
     return lines
 end

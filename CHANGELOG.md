@@ -57,12 +57,39 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
     as it is used (a rough no-skill recipe added). **Fabric protector** (new item) and **fabric
     wax** (two candles and a tin) halve what a garment takes, for about three washes.
   - Tooltip lines on garments; a debug-only `laundry` dashboard command for play-testing.
+- **Laundry traits** (`DanTraits_LaundryTraits.lua`, through laundry's hooks, so they do nothing
+  with laundry off; each has its own icon):
+  - **Sweaty (-2)**: sweat odour x1.75. **Cool Customer (+3)**: x0.5 (odour from wearing clothes
+    damp is not sweat and is not changed). Not with each other.
+  - **Slob (+2)**: the laundry moodle is not shown, so neither Stale/Musty nor Fresh/Line-Dried
+    touches mood; musty clothes still count for infection. Not with Germaphobe or Homemaker.
+  - **Homemaker (+4)**: a hand wash uses the washboard's floors and takes odour out without soap;
+    a washboard's floors are halved; every wash's fabric wear chance halved (machine and bleach
+    too); Line-Dried x1.5. Not with Slob.
+  - **Sensitive Skin (-2)**: each worn garment against the skin (shoes aside) that is damp (30%+),
+    musty (counts 2) or never washed holds discomfort at 20, +10 for each more, up to 50, awake,
+    with a notice. The starting outfit is marked washed (`ok` in the garment's state, a starting
+    kit); a tooltip line names a never-washed garment.
+  - Other traits: Nomad x0.5 on Stale/Musty mood (rate and cap); Homebody x2 on Line-Dried when
+    most of it dried on a clothesline at home (`sh`); Asthma +0.08 airway irritation a garment
+    bleached indoors (`DanTraits_AsthmaFumes`: dust mask halves, gas mask stops); Fear of Blood
+    +0.05 stress a bloody garment washed or bleached; Bad Back +0.06 load a garment scrubbed on a
+    washboard (`DanTraits_BadBackStrain`, the same load and notices as a heavy pack).
+  - Laundry's hooks: `laundryOdour`, `laundryMood`, `laundryFresh`, `laundryMoodle`,
+    `laundrySkilled`, `laundryAtHome`, `laundryWashed`, `laundryTooltip`.
 - **Sandbox pages**: the options are split into Vitality: General, Health, Daily Life and Laundry.
   Option names are unchanged, so saved settings keep their values.
 
 ### Changed
 
 - **Germaphobe** gives 8 points (was 4).
+- **Rough Night less often.** A night's hours half was hours slept over 7 (5 or 9 with the sleep
+  traits), but the game wakes you when tiredness runs out, so a half-tired character slept about
+  four hours, woke rested and still scored under 0.8; a lit room or one wake then tipped it into
+  Rough Night (any score under 0.75). The hours half now takes the larger of that and the share of
+  bedtime fatigue cleared by morning (`vitNightBedFatigue`, the highest at the start of any sleep
+  that night), when bedtime fatigue was at least 0.1. Four hours from half tired to rested is a
+  full night; an alarm at 0.4 after going to bed at 0.8 still counts by the hours.
 
 ### Other mods
 

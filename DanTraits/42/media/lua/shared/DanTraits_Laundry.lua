@@ -18,6 +18,8 @@
 --   pr   fabric protector left (0..1; DanTraits_LaundryGear.lua)
 --   pb   { part = { blood, dirt } } the protected garment's last reading
 --   sun  dried on a clothesline in daylight since its last wash
+--   sh   ...on a clothesline at home (laundryAtHome)
+--   ok   known clean though never washed here (a starting outfit)
 --
 -- Worn clothes dry on the body much faster in the game than anywhere else
 -- (measured 2026-10-11 at 26 C: a soaked tee in about 20 game minutes, 300
@@ -44,7 +46,19 @@
 --
 -- Mod data on the player (ln prefix): lnEx, lnHeat, lnMins (this ten
 -- minutes' exertion and heat), lnMoodle (the level DanTraits_Moodles.lua
--- shows), lnWashers ({ "x,y,z" = true }: washers seen running).
+-- shows), lnHomeLine (Line-Dried, on a line at home), lnWashers
+-- ({ "x,y,z" = true }: washers seen running).
+--
+-- Traits reach in only through hooks (DanTraits_RunHooks), so this module
+-- names none of them but Germaphobe; DanTraits_LaundryTraits.lua has them:
+--   laundryOdour (1, player)                 sweat odour multiplier
+--   laundryMood (1, player, level)           Stale/Musty mood multiplier
+--   laundryFresh (1, player, level, d)       Fresh/Line-Dried multiplier
+--   laundryMoodle (level, player)            the level shown (0 hides it)
+--   laundrySkilled (false, player)           washes one floor better, half the wear
+--   laundryAtHome (false, player, x, y, z)   a clothesline at home (the garment's sh)
+--   laundryWashed (nil, player, item, method, wasBloody)   after each garment's wash or bleach
+--   laundryTooltip (lines, item)             extra garment tooltip lines
 require "DanTraits"
 
 DanTraits_Laundry = DanTraits_Laundry or {}
@@ -235,8 +249,9 @@ local function stainOn(s, key, blood, t)
     s.bs[key] = nil
 end
 
--- worn: the damp hours count LN.WORN_DAMP x. t: the game hour (now() when nil)
-function L.sight(item, worn, t)
+-- worn: the damp hours count LN.WORN_DAMP x. t: the game hour (now() when nil).
+-- skilled: the one who sees it (a machine wash it went through wears it less)
+function L.sight(item, worn, t, skilled)
     if not L.isClothing(item) then return nil end
     t = t or now()
     local s = L.state(item, true)
@@ -260,7 +275,7 @@ function L.sight(item, worn, t)
     if num("LaundryStainDays", LN.STAIN_DAYS) > 0 then
         for _, p in ipairs(L.snapshot(item)) do stainOn(s, p.key, p.blood, t) end
     end
-    if s.mw then L.machineWashed(item) end
+    if s.mw then L.machineWashed(item, skilled) end
     return s
 end
 
@@ -309,8 +324,18 @@ end
 
 -- washing ------------------------------------------------------------------------------
 
--- method: "hand" | "board"; the floor as a share (0..1)
-function L.floor(method, soap)
+-- does this character wash like a pro (laundrySkilled)
+function L.skilled(character)
+    return character ~= nil and DanTraits_RunHooks("laundrySkilled", false, character) == true
+end
+
+-- method: "hand" | "board"; the floor as a share (0..1). Skilled: a hand wash
+-- gets the washboard's floor, a washboard half of it
+function L.floor(method, soap, skilled)
+    if skilled then
+        if method == "board" then return L.floor("board", soap) / 2 end
+        method = "board"
+    end
     local key, default
     if method == "board" then
         key, default = soap and "LaundryBoardSoapFloor" or "LaundryBoardFloor", soap and 10 or 25
@@ -328,30 +353,32 @@ local function after(p, floor, s)
 end
 
 -- the odour a wash leaves
-local function odourAfter(s, method, soap)
+local function odourAfter(s, method, soap, skilled)
     local o = (s and s.o) or 0
-    if method == "hand" and not soap then return math.min(o, LN.NO_SOAP_ODOUR) end
+    if method == "hand" and not soap and not skilled then return math.min(o, LN.NO_SOAP_ODOUR) end
     return 0
 end
 
 -- would this wash do anything: blood or dirt to come off, or odour or must to wash out
-function L.canGain(item, method, soap)
+function L.canGain(item, method, soap, skilled)
     if not L.handles(item) then return true end
     local s = L.state(item, false)
-    local floor = L.floor(method, soap)
+    local floor = L.floor(method, soap, skilled)
     for _, p in ipairs(L.snapshot(item)) do
         local b, d = after(p, floor, s)
         if p.blood > b + LN.EPS or p.dirt > d + LN.EPS then return true end
     end
-    if s and (s.m or (s.o or 0) > odourAfter(s, method, soap) + 0.5) then return true end
+    if s and (s.m or (s.o or 0) > odourAfter(s, method, soap, skilled) + 0.5) then return true end
     return false
 end
 
--- a chance per wash at a condition point off; never under 1, never a hole
-function L.wear(item, method)
+-- a chance per wash at a condition point off; never under 1, never a hole.
+-- skilled: half the chance
+L.SKILLED_WEAR = 0.5
+function L.wear(item, method, skilled)
     local mode = math.floor(num("LaundryWear", 3))
     local k = WEAR_MODE[mode] or 1
-    local chance = (WEAR[method] or 0) * k
+    local chance = (WEAR[method] or 0) * k * (skilled and L.SKILLED_WEAR or 1)
     if chance <= 0 or not L.isClothing(item) then return false end
     if not DanTraits_Roll(chance) then return false end
     local worn = false
@@ -371,16 +398,16 @@ local function washed(item, s)
     s.mw = nil
     s.ls = now()
     s.n = (s.n or 0) + 1
-    s.sun = nil
+    s.sun, s.sh = nil, nil
     if s.pr then s.pr = math.max(0, s.pr - (L.PROTECT_PER_WASH or 0.34)); if s.pr <= 0 then s.pr = nil end end
     s.pb = nil
 end
 
 -- after vanilla's hand wash (every part scrubbed to nothing, soaked): each
 -- part back up to the floor (or its stain), or to what it was if that was less
-function L.applyFloors(item, snap, method, soap)
+function L.applyFloors(item, snap, method, soap, skilled)
     local s = L.state(item, false)
-    local floor = L.floor(method, soap)
+    local floor = L.floor(method, soap, skilled)
     for _, p in ipairs(snap) do
         local b, d = after(p, floor, s)
         pcall(function()
@@ -391,17 +418,25 @@ function L.applyFloors(item, snap, method, soap)
     L.recount(item, snap)
 end
 
-function L.afterHandWash(item, snap, method, soap)
-    L.applyFloors(item, snap, method, soap)
+function L.afterHandWash(item, snap, method, soap, skilled)
+    L.applyFloors(item, snap, method, soap, skilled)
     local s = L.state(item, L.isClothing(item))
     if not s then return end
-    s.o = odourAfter(s, method, soap)
+    s.o = odourAfter(s, method, soap, skilled)
     washed(item, s)
-    L.wear(item, method)
+    L.wear(item, method, skilled)
 end
 
--- a washing machine ran with it inside: blood back up to any stain, fresh
-function L.machineWashed(item)
+-- bloody by the game's own line (for laundryWashed)
+function L.wasBloody(item)
+    local bloody = false
+    pcall(function() bloody = item:isBloody() == true end)
+    return bloody
+end
+
+-- a washing machine ran with it inside: blood back up to any stain, fresh.
+-- skilled: the one who next sees it (half the wear)
+function L.machineWashed(item, skilled)
     local s = L.state(item, true)
     if not s then return end
     if s.st then
@@ -414,13 +449,13 @@ function L.machineWashed(item)
     end
     s.o = 0
     washed(item, s)
-    L.wear(item, "machine")
+    L.wear(item, "machine", skilled)
 end
 
 -- bleach: every stain and all the blood out, dirt to the soap floor, soaked
-function L.bleach(item, method)
+function L.bleach(item, method, skilled)
     local snap = L.snapshot(item)
-    local floor = L.floor(method or "hand", true)
+    local floor = L.floor(method or "hand", true, skilled)
     for _, p in ipairs(snap) do
         pcall(function()
             item:setBlood(p.part, 0)
@@ -433,7 +468,7 @@ function L.bleach(item, method)
         s.st, s.bs = nil, nil
         s.o = 0
         washed(item, s)
-        L.wear(item, "bleach")
+        L.wear(item, "bleach", skilled)
     end
     setWetness(item, 100)
 end
@@ -513,9 +548,9 @@ end
 
 -- the worst level among worn garments that sweat: 1 stale, 2 musty; when
 -- there is none and every one of them (shoes aside) is fresh, the good side: -1 Fresh
--- Clothes, -2 Line-Dried
+-- Clothes, -2 Line-Dried. Second value: Line-Dried on a line at home
 function L.wornLevel(player)
-    local level, count, fresh, sunny = 0, 0, true, 0
+    local level, count, fresh, sunny, home = 0, 0, true, 0, 0
     for _, item in ipairs(L.worn(player)) do
         if L.layer(item) > 0 then
             local s = L.state(item, false)
@@ -525,12 +560,16 @@ function L.wornLevel(player)
             if L.location(item) ~= "shoes" then
                 count = count + 1
                 if not L.isFresh(item) then fresh = false
-                elseif s and s.sun then sunny = sunny + 1 end
+                elseif s and s.sun then
+                    sunny = sunny + 1
+                    if s.sh then home = home + 1 end
+                end
             end
         end
     end
-    if level > 0 or count == 0 or not fresh then return level end
-    return sunny >= count * LN.LINE_SHARE and -2 or -1
+    if level > 0 or count == 0 or not fresh then return level, false end
+    if sunny >= count * LN.LINE_SHARE then return -2, home >= count * LN.LINE_SHARE end
+    return -1, false
 end
 
 -- Germaphobe: the body parts (by name) under stale or musty worn clothes
@@ -692,6 +731,7 @@ local function moodMinute(player, d)
     if level < 0 then
         -- fresh clothes: a little off unhappiness and stress
         local germ = DanTraits_HasTrait(player, "germaphobe") and LN.GERM_MULT or 1
+        germ = germ * math.max(0, tonumber(DanTraits_RunHooks("laundryFresh", 1, player, level, d)) or 1)
         local unhappy = level <= -2 and LN.FRESH2_UNHAPPY or LN.FRESH1_UNHAPPY
         local stress = level <= -2 and LN.FRESH2_STRESS or LN.FRESH1_STRESS
         local stats = player:getStats()
@@ -704,12 +744,15 @@ local function moodMinute(player, d)
     if DanTraits_HasTrait(player, "germaphobe") then
         rate, cap = rate * LN.GERM_MULT, cap + LN.GERM_CAP
     end
+    local tk = math.max(0, tonumber(DanTraits_RunHooks("laundryMood", 1, player, level)) or 1)
+    if tk <= 0 then return end
+    rate, cap = rate * tk, cap * math.min(1, tk)
     DanTraits_FloorUp(player:getStats(), CharacterStat.UNHAPPINESS, cap * math.min(1, k), rate * k / 60)
 end
 
 local function updateLaundryMinute(player, d)
     if not L.on() then
-        d.lnMoodle, d.lnEx, d.lnHeat, d.lnMins = nil, nil, nil, nil
+        d.lnMoodle, d.lnEx, d.lnHeat, d.lnMins, d.lnHomeLine = nil, nil, nil, nil, nil
         return
     end
     sampleMinute(player, d)
@@ -727,7 +770,9 @@ local function updateLaundryTen(player, d)
     if not L.on() then return end
     local mins = math.max(1, d.lnMins or 10)
     local rate = L.rate((d.lnEx or 0) / mins, (d.lnHeat or 0) / mins)
+    local sweatRate = rate * math.max(0, tonumber(DanTraits_RunHooks("laundryOdour", 1, player)) or 1)
     local hours = mins / 60
+    local skilled = L.skilled(player)
     d.lnEx, d.lnHeat, d.lnMins = 0, 0, 0
     local t = now()
 
@@ -736,14 +781,16 @@ local function updateLaundryTen(player, d)
     for _, item in ipairs(L.carried(player)) do
         if L.isClothing(item) then
             local worn = wornSet[item] == true
-            L.sight(item, worn, t)
-            if worn then L.sweat(item, rate, hours) end
+            L.sight(item, worn, t, skilled)
+            if worn then L.sweat(item, sweatRate, hours) end
         end
     end
     if L.wearPonchos then L.wearPonchos(player, (d.lnEx or 0) > 0 or rate > L.rate(0, 0)) end
     watchWashers(player, d)
     if L.watchLines then L.watchLines(player, d) end
-    d.lnMoodle = L.wornLevel(player)
+    local level, atHome = L.wornLevel(player)
+    d.lnHomeLine = atHome or nil
+    d.lnMoodle = tonumber(DanTraits_RunHooks("laundryMoodle", level, player)) or level
 end
 
 L.tenNow = updateLaundryTen   -- the laundry debug command runs a tick on demand

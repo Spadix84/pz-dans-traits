@@ -265,6 +265,17 @@ local function updateBadBack(player, d)
     hurtPart(player, "Torso_Lower", BB_PAIN * now)
 end
 
+-- strain from work other than carrying (laundry's washboard,
+-- DanTraits_LaundryTraits.lua): the same load, so it eases the same way
+function DanTraits_BadBackStrain(player, amount)
+    if not player or not hasTrait(player, "badback") then return false end
+    local d = DanTraits_Data(player)
+    local before = d.bbLoad or 0
+    local now = ache(player, before, before + (tonumber(amount) or 0), "UI_DanTraits_BackAche", "UI_DanTraits_BackBad", "UI_DanTraits_BackEased")
+    d.bbLoad = now > 0 and now or nil
+    return true
+end
+
 -- how the knees are resting: 0 walking (no rest), 1 standing still, BK_EASE_SIT
 -- sitting or asleep, BK_EASE_COMFY in a seat you could sleep on
 local function kneeRest(player)

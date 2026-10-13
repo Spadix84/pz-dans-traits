@@ -115,17 +115,20 @@ local function wrapWashing()
         if not L.on() or not L.handles(item) then return original(self, ...) end
         local soap = self.noSoap == false
         local method = L.methodFor(self.character)
-        if not L.canGain(item, method, soap) then
+        local skilled = L.skilled(self.character)
+        if not L.canGain(item, method, soap, skilled) then
             L.message(self.character, method, soap)
             return true
         end
         local snap = L.snapshot(item)
+        local bloody = L.wasBloody(item)
         local result = original(self, ...)
-        L.afterHandWash(item, snap, method, soap)
+        L.afterHandWash(item, snap, method, soap, skilled)
         pcall(function()
             syncItemFields(self.character, item)
             syncVisuals(self.character)
         end)
+        DanTraits_RunHooks("laundryWashed", nil, self.character, item, method, bloody)
         return result
     end)
 

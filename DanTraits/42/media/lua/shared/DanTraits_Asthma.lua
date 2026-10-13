@@ -260,6 +260,17 @@ function DanTraits_AsthmaSmoked(player, dose)
     return true
 end
 
+-- Called by laundry (DanTraits_LaundryTraits.lua): bleach fumes in a closed
+-- room. A dust mask halves them, a gas mask stops them.
+function DanTraits_AsthmaFumes(player, amount)
+    if not player or not hasTrait(player, "asthma") then return false end
+    local mask = asthmaMaskLevel(player)
+    if mask >= 2 then return false end
+    local d = asthmaData(player)
+    asthmaSetIrritation(player, d, d.asthma + (tonumber(amount) or 0) * (mask == 1 and 0.5 or 1))
+    return true
+end
+
 -- Called by the inhaler action.
 function DanTraits_UseInhaler(player)
     if not player then return false end

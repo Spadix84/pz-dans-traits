@@ -55,6 +55,11 @@ local VIT_SLEEP_LESS_HOURS  = 5       -- ...with Needs Less Sleep
 local VIT_SLEEP_MORE_HOURS  = 9       -- ...with Needs More Sleep
 local VIT_SLEEP_W           = 0.35    -- how much one night moves the sleep score
 local VIT_SLEEP_REST_WEIGHT = 0.5     -- share of a night's quality that is "woke up rested" (the rest is hours)
+-- the hours half also counts as full for a short sleep that cleared the
+-- tiredness it started with (the game wakes you when fatigue runs out, so a
+-- half-tired character sleeps four hours): credit is the share of bedtime
+-- fatigue gone by morning, when bedtime fatigue was at least this
+local VIT_SLEEP_TIRED_MIN   = 0.1
 local VIT_NIGHT_GAP_MIN     = DanTraits_NIGHT.gapMin   -- awake this long and the night is over; shorter and the next sleep is the same night
 local VIT_NIGHT_WAKE_COST   = 0.05    -- quality lost per interruption (night terrors, getting up to check a noise)
 local VIT_NIGHT_WAKE_MAX    = 0.2
@@ -292,7 +297,10 @@ local function updateVitalityMinute(player, d)
     -- sleep: segments accumulate into a night; the night is scored once the
     -- character has been up for an hour. Long stretches awake wear the score down.
     if asleep then
-        if not d.vitAsleep then d.vitAsleep = true; d.vitSleepStart = hour end
+        if not d.vitAsleep then
+            d.vitAsleep = true; d.vitSleepStart = hour
+            d.vitNightBedFatigue = math.max(d.vitNightBedFatigue or 0, fatigue)
+        end
         d.vitAwakeMin = 0
     else
         if d.vitAsleep then
@@ -306,7 +314,10 @@ local function updateVitalityMinute(player, d)
         -- the gap and the wake count are offered to the traits (Restless Sleeper sleeps in two halves)
         if (d.vitNightHours or 0) > 0 and d.vitAwakeMin >= DanTraits_RunHooks("nightGap", VIT_NIGHT_GAP_MIN, player) then
             local need = sleepNeed(player)
-            local quality = clamp01(d.vitNightHours / need) * (1 - VIT_SLEEP_REST_WEIGHT) + (1 - (d.vitNightFatigue or 0)) * VIT_SLEEP_REST_WEIGHT
+            local woke, bed = d.vitNightFatigue or 0, d.vitNightBedFatigue or 0
+            local slept = clamp01(d.vitNightHours / need)
+            if bed >= VIT_SLEEP_TIRED_MIN then slept = math.max(slept, clamp01((bed - woke) / bed)) end
+            local quality = slept * (1 - VIT_SLEEP_REST_WEIGHT) + (1 - woke) * VIT_SLEEP_REST_WEIGHT
             local wakes = DanTraits_RunHooks("nightWakes", d.vitNightWakes or 1, player)
             quality = quality - math.min(VIT_NIGHT_WAKE_MAX, math.max(0, wakes - 1) * VIT_NIGHT_WAKE_COST)
             quality = clamp01(DanTraits_RunHooks("nightQuality", quality, player, d, d.vitNightHours))
@@ -323,7 +334,7 @@ local function updateVitalityMinute(player, d)
             end
             -- the scored night, for anything that refills on it (the spoon budget, DanTraits_Spoons.lua)
             DanTraits_RunHooks("nightScored", nil, player, d, quality, d.vitNightHours, wakes, d.vitNightHours < VIT_DEBT_NAP_MAX)
-            d.vitNightHours, d.vitNightWakes, d.vitNightFatigue = 0, 0, nil
+            d.vitNightHours, d.vitNightWakes, d.vitNightFatigue, d.vitNightBedFatigue = 0, 0, nil, nil
         end
         if d.vitAwakeMin > VIT_AWAKE_TIRED_HOURS * 60 then d.vitSleep = clamp01(d.vitSleep - VIT_AWAKE_RATE) end
         if (d.vitSleepDebt or 0) > 0 then d.vitSleepDebt = math.max(0, d.vitSleepDebt - 1 / (VIT_DEBT_HOURS * 60)) end

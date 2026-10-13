@@ -32,6 +32,8 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Hallucinations](#hallucinations--2) | -2 | Phantom zombies, sounds, whispers and panic. |
 | [Tinnitus](#tinnitus--2) | -2 | Your own gunfire deafens you for a while. |
 | [Homebody](#homebody--2) | -2 | Home does twice the good; a day away is missed, badly. |
+| [Sensitive Skin](#sensitive-skin--2) | -2 | Damp, musty or never-washed clothes itch. |
+| [Sweaty](#sweaty--2) | -2 | Clothes go stale nearly twice as fast. |
 | [In Their 40s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -2 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
 | [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
 | [Straight Edge](#straight-edge--1) | -1 | Refuses alcohol and tobacco. |
@@ -42,9 +44,12 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Meal Prepper](#meal-prepper-1) | +1 | Starts on a good diet; variety counts over five days. |
 | [Night Shift](#night-shift-1) | +1 | Daylight hardly wakes you. |
 | [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
+| [Slob](#slob-2) | +2 | Stale or musty clothes are no bother, and fresh ones no joy. |
 | [Thick Skull](#thick-skull-2) | +2 | Concussed half as often and less badly; knockouts and faints half as long. |
 | [Good Clotter](#good-clotter-3) | +3 | Bleeds run down twice as fast and lose less blood. |
+| [Cool Customer](#cool-customer-3) | +3 | Clothes stay fresh twice as long. |
 | [Nomad](#nomad-3) | +3 | No home, nothing missed; sleeps as well under the sky. |
+| [Homemaker](#homemaker-4) | +4 | Washes cleaner by hand with half the wear; loves line-dried clothes. |
 | [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
 | [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
@@ -137,6 +142,7 @@ Airway irritation that builds through four tiers to an attack.
 - **Tier 1:** a warning. **Tier 2:** endurance recovers at half speed, the odd quiet cough. **Tier 3:** no recovery and coughing. **Tier 4, the attack:** endurance drains to empty and health to a 15% floor, you cough loud enough to pull zombies, and an attack that empties you can black you out.
 - At rest, irritation eases over about four hours (twice as fast asleep) once the attack has ended; during one it barely eases on its own. The rescue inhaler (new item) ends it at once. Inhalers turn up half as often again as they used to; the sandbox option Inhaler Loot sets the rate.
 - Smoking, and a smoker's lungs, make it worse.
+- Bleaching clothes indoors irritates the airway too (0.08 a garment; a dust mask halves it, a gas mask stops it).
 - Moodle: Airway Irritation.
 
 #### Hemophilia (-10)
@@ -181,6 +187,7 @@ Attacks that cost you hours.
 - Treating a wound takes a quarter longer.
 - Stitching (25%), pulling out a bullet (35%) or glass (20%), or dressing a bleeding wound (10%) can make you faint: about eight seconds, woken by anything that wounds you. So can losing blood fast.
 - Still cannot perform first aid on others.
+- Washing or bleaching a bloody garment is stressful (+5% stress each).
 
 #### Anaemic (-4)
 
@@ -253,7 +260,19 @@ Attacks that cost you hours.
 - Home does twice the good: at home boredom, stress and low moods ease twice as fast, a night slept there scores +0.1 and books go a fifth faster.
 - A day away and you miss it: over the next day the unhappiness floor climbs to 30, stress climbs with it, and a night slept away scores -0.1. Walking back in lifts it at once.
 - Not with Nomad.
+- Clothes line-dried at home: Line-Dried lifts twice as much.
 - Moodle: Home.
+
+#### Sensitive Skin (-2)
+
+- Clothes against the skin (shoes aside) itch when they are damp, musty or have never been washed: discomfort to 20 with one, 10 more with each other (a musty one counts twice), up to 50.
+- The clothes you start in count as washed; anything found does not until it has been through a wash. Its tooltip says so.
+- Needs laundry on.
+
+#### Sweaty (-2)
+
+- Clothes go stale from wear, work and heat x1.75 as fast: stale in about three quiet days, a day and a half of summer looting.
+- Not with Cool Customer. Needs laundry on.
 
 #### Lactose Intolerance (-1)
 
@@ -310,6 +329,18 @@ Attacks that cost you hours.
 
 - Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade (knife work). Re-costed from 3 to 4.
 
+#### Homemaker (+4)
+
+- A hand wash gets clothes as clean as a washboard would (25%, 10% with soap) and takes the odour out without soap; a washboard gets them twice as clean (12.5%, 5%).
+- Washing wears fabric half as much, a machine or bleach included.
+- Line-Dried lifts half as much again.
+- Not with Slob. Needs laundry on.
+
+#### Cool Customer (+3)
+
+- Clothes go stale from wear, work and heat at half the rate: fresh about twice as long. Clothes worn damp still sour.
+- Not with Sweaty. Needs laundry on.
+
 #### Good Clotter (+3)
 
 - Bleeds run down on their own twice as fast (not while glass or a bullet is still in).
@@ -321,6 +352,11 @@ Attacks that cost you hours.
 - A knock to the head concusses half as often and a quarter less badly, on top of a helmet.
 - Concussions heal half as fast again.
 - Faints, knockouts and shock last half as long, and so does the day after a sumatriptan (the old Bounces Back, folded in; any age).
+
+#### Slob (+2)
+
+- Stale and musty clothes cost no mood, and fresh ones give none: the laundry moodle is not shown. Musty clothes over a wound still count for infection.
+- Not with Germaphobe or Homemaker. Needs laundry on.
 
 #### Outdoorsman (2, vanilla reworked)
 
@@ -355,14 +391,15 @@ Attacks that cost you hours.
 
 #### Night Shift (+1)
 
+- Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest.
+- Not with Early Riser.
+
 #### Nomad (+3)
 
 - No place is home and none is missed: the Home system does nothing for you.
 - A night slept with no building around (outdoors, a tent, a car) scores +0.1.
+- Stale and musty clothes bother you half as much.
 - Not with Homebody or Settled.
-
-- Between 6 AM and 8 PM light wakes you a quarter as easily and costs a quarter of the rest.
-- Not with Early Riser.
 
 ### Age: In Their 20s (+6), 30s, 40s (-2) and 50s (-6)
 
@@ -403,6 +440,7 @@ Diet, exercise and sleep roll into one slow score.
 - **Fit and Thriving:** faster endurance recovery, mood and stress relief, faster healing, cold resistance, resistance to wound infection. Thriving alone adds a kilo of base carry weight and 1.5x Fitness and Strength experience.
 - **Run Down and Sluggish:** the reverse, except that health is never drained; Run Down alone loses the kilo.
 - The conditions above read it too, and so does how fast the body clears an infection, a concussion, an unstitched wound and a smoker's lungs.
+- A night scores on hours slept (7 is full) and how rested you woke, less for waking in the night. A shorter sleep that cleared the tiredness you went to bed with counts as full hours.
 - A bad night sets a same-day Slept Badly moodle. A new character starts neutral and cannot fall below it for the first day.
 - Moodle: Vitality.
 
@@ -565,6 +603,7 @@ Washing and drying clothes take some care (`DanTraits_Laundry*.lua`; design in [
 - **Clotheslines.** The pulley clotheslines in yards each hold 15, and you can put one up yourself: right-click the ground with two long sticks, planks or saplings and two lengths of rope, twine, sheet strips, denim strips or wire carried (Put up a clothesline, east-west or north-south); one you put up can be taken down again. Clothes on a line dry with the weather: fast in sun, wind and warmth, slowly at night or in the cold, and rain soaks them again; under a roof, at a steady pace. Daylight also airs out a little staleness (never under 30).
 - **Keeping clothes clean.** A worn **poncho** takes the blood and dirt for the parts it covers. The garbage bag poncho tears as it is used and falls apart at nothing; besides the game's recipe there is a rough one (one bag and a knife or scissors, no skill). **Fabric protector** (new item, with cleaning supplies and in shoe shops) and **fabric wax** (made from two candles and an empty tin) treat a garment so only half the blood and dirt that lands on it stays, for about three washes.
 - Garment tooltips show the state: damp and how long before musty, stale or musty, a set-in stain, fabric protector left, washes so far.
+- **Traits.** Sweaty (-2) and Cool Customer (+3) change how fast clothes go stale, Slob (+2) is not bothered either way, Homemaker (+4) washes better, and Sensitive Skin (-2) itches in damp, musty or unwashed clothes. Laundry reaches into other traits too: Nomad minds stale clothes half as much, a Homebody's clothes line-dried at home lift twice as much, bleaching indoors irritates Asthma, washing bloody clothes stresses Fear of Blood, and every garment scrubbed on a washboard strains a Bad Back. With laundry off, none of it does anything.
 
 ### Moodles
 

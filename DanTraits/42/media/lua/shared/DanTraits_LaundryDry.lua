@@ -380,8 +380,9 @@ function L.lineWeather(outside)
     return w
 end
 
--- one garment on a line for this many hours of this weather
-function L.lineItem(item, w, hours)
+-- one garment on a line for this many hours of this weather; atHome: the
+-- line is at the character's home (laundryAtHome)
+function L.lineItem(item, w, hours, atHome)
     if w.rain > 0 then
         L.setWetness(item, L.wetness(item) + w.rain * hours)
     else
@@ -390,13 +391,16 @@ function L.lineItem(item, w, hours)
             L.air(item, L.AIR_RATE * hours)
             -- dried in the sun: counts toward Line-Dried until the next wash
             local s = L.state(item, true)
-            if s and hours > 0 then s.sun = true end
+            if s and hours > 0 then
+                s.sun = true
+                if atHome then s.sh = true end
+            end
         end
     end
 end
 
 -- a post's load, since it was last done (capped)
-function L.tendLine(obj, t)
+function L.tendLine(obj, t, atHome)
     local container = L.ensureLine(obj)
     if not container then return 0 end
     local md = nil
@@ -415,7 +419,7 @@ function L.tendLine(obj, t)
             local item = items:get(i)
             if L.isClothing(item) then
                 n = n + 1
-                if hours > 0 then L.lineItem(item, w, hours) end
+                if hours > 0 then L.lineItem(item, w, hours, atHome) end
                 L.sight(item, false, t)
             end
         end
@@ -449,7 +453,8 @@ function L.watchLines(player, d)
         local sq = x and squareAt(tonumber(x), tonumber(y), tonumber(z))
         if sq then
             local n = 0
-            postsOn(sq, function(obj) n = n + L.tendLine(obj, t) end)
+            local atHome = DanTraits_RunHooks("laundryAtHome", false, player, tonumber(x), tonumber(y), tonumber(z)) == true
+            postsOn(sq, function(obj) n = n + L.tendLine(obj, t, atHome) end)
             local near = math.abs(tonumber(x) - px) <= r and math.abs(tonumber(y) - py) <= r
             if n == 0 and not near then d.lnLines[key] = nil end
         end

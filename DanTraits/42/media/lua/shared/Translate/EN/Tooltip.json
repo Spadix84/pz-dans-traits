@@ -59,5 +59,6 @@
     "Tooltip_DanTraits_Stain": "Set-in stain: only bleach gets it out",
     "Tooltip_DanTraits_ProtectorLeft": "Fabric protector: %1%%",
     "Tooltip_DanTraits_Washes": "Washed %1 times",
+    "Tooltip_DanTraits_NeverWashed": "Never washed: it itches",
     "Tooltip_DanTraits_LineBlocked": "Needs five clear squares of floor in a row."
 }

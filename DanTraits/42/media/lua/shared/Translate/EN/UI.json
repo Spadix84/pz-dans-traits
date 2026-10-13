@@ -367,5 +367,16 @@
     "UI_DanTraits_Bleached": "Stains bleached out",
     "UI_DanTraits_Protected": "Fabric protected",
     "UI_DanTraits_PonchoTore": "Your poncho tore apart",
-    "UI_DanTraits_LineUp": "Clothesline up"
+    "UI_DanTraits_LineUp": "Clothesline up",
+    "UI_DanTraits_SkinItch": "Your clothes itch",
+    "UI_trait_DanSweaty": "Sweaty",
+    "UI_trait_DanSweatydesc": "Clothes go stale nearly twice as fast.",
+    "UI_trait_DanCoolCustomer": "Cool Customer",
+    "UI_trait_DanCoolCustomerdesc": "Barely breaks a sweat.<br>Clothes stay fresh twice as long.",
+    "UI_trait_DanSlob": "Slob",
+    "UI_trait_DanSlobdesc": "Stale or musty clothes are no bother.<br>Fresh ones are no joy either.",
+    "UI_trait_DanHomemaker": "Homemaker",
+    "UI_trait_DanHomemakerdesc": "Washes clothes cleaner by hand, wearing them less.<br>Loves clothes dried on the line.",
+    "UI_trait_DanSensitiveSkin": "Sensitive Skin",
+    "UI_trait_DanSensitiveSkindesc": "Damp, musty or unwashed clothes itch."
 }
