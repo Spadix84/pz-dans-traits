@@ -54,7 +54,8 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
     planks or saplings and two rope, twine, strips or wire) places a five-tile line like the map's;
     lines dry by the weather and air odour down to 30 in daylight; rain soaks them.
   - A worn poncho takes the blood and dirt for the parts it covers; the garbage bag poncho tears
-    as it is used (a rough no-skill recipe added). **Fabric protector** (new item) and **fabric
+    as it is used: 20% for a condition point each minute blood or dirt lands on it (or on the
+    clothes under it), 10% each ten minutes of hard work or heat (a rough no-skill recipe added). **Fabric protector** (new item) and **fabric
     wax** (two candles and a tin) halve what a garment takes, for about three washes.
   - Tooltip lines on garments; a debug-only `laundry` dashboard command for play-testing.
 - **Laundry traits** (`DanTraits_LaundryTraits.lua`, through laundry's hooks, so they do nothing
@@ -104,6 +105,23 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   (and a controller's A) until an age is chosen. Everything else (points, Major Skills, Random,
   saved builds) already went through the hidden vanilla screen. The hide rules moved into one
   function in `DanTraits_Client.lua` (`DanTraits_Creation.hides`) that both screens use.
+- **Project A-Life**: a ringing house alarm filled the error log, two errors a tick for as long
+  as it rang (`ALifeInvestigation.lua:89-92`). A-Life's `OnWorldSound` handler asks the sound's
+  source `isOutside()` and `getModData()`, and an alarm's source is the game's `zombie.iso.Alarm`,
+  which is not an IsoObject and has neither; its `pcall` caught them but B42 logs them anyway.
+  The handler is registered by reference, so `DanTraits_ALife.lua` takes it off the event and
+  adds it back behind a wrapper that passes a source that is not an IsoObject as nil. Its NPCs
+  still hear the alarm. The load line now reads `..., sound true; hits 3/3`.
+
+### Dan's Vanilla Fixes: shop cigarettes come full (2026-10-12)
+
+- A cigarette pack is tagged `lessfull`, so the loot roll (`ItemPickerJava.randomizeUses`) leaves
+  every one it spawns part-smoked, gas station shelves included. `DansVanillaFixes_StoreStock.lua`
+  fills packs back up on `OnFillContainer` in the rooms vanilla stocks from its retail cigarette
+  tables (StoreCounterTobacco, GasStoreSpecial, TobaccoStoreCigarettes): conveniencestore,
+  cornerstore, cornerstorecounter, fossoil, gas2go, gasstore, generalstore, liquorstore,
+  tobaccostorage, tobaccostore, zippeestore. Packs anywhere else keep vanilla's roll. Only newly
+  filled containers; shelves already looted or seen keep what they had.
 
 ## 1.2.1 - 2026-10-10
 

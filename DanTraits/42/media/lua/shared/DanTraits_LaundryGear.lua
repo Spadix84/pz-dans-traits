@@ -8,7 +8,10 @@
 -- the parts it covers: whatever lands on the clothes under it there is taken
 -- back off each minute. The garbage bag poncho tears as it is used: a chance
 -- at a condition point each time it takes a hit (L.TEAR_HIT) and each ten
--- minutes of hard work in it (L.TEAR_WORK); at nothing it falls apart.
+-- minutes of hard work or heat in it (L.TEAR_WORK); at nothing it falls
+-- apart. The game puts most blood and dirt on the outermost layer only, the
+-- poncho itself, so a rise on the poncho counts as a hit as well as one on
+-- the clothes under it.
 --
 -- Fabric protector (a spray, found with cleaning supplies) and fabric wax
 -- (made from candles) treat one garment per use: while it holds, only
@@ -79,18 +82,32 @@ local function tear(player, poncho)
 end
 L.tear = tear
 
+-- did blood or dirt land on the garbage bag poncho itself since the last reading
+local function bagHit(poncho)
+    local s = L.state(poncho, true)
+    if not s then return false end
+    local readings, hit = {}, false
+    for _, p in ipairs(L.snapshot(poncho)) do
+        local last = s.pb and s.pb[p.key]
+        if last and (p.blood - last[1] > L.HIT_EPS or p.dirt - last[2] > L.HIT_EPS) then hit = true end
+        readings[p.key] = { p.blood, p.dirt }
+    end
+    s.pb = readings
+    return hit
+end
+
 -- each minute: what landed on the clothes under a poncho or a protector comes back off
 function L.shield(player, d)
     if not gearOn() then return end
     local worn = L.worn(player)
-    local cover, any = {}, false
+    local cover, any, hitBag = {}, false, nil
     for _, item in ipairs(worn) do
         if L.isPoncho(item) then
             for _, p in ipairs(L.snapshot(item)) do cover[p.key] = item end
             any = true
+            if L.isBagPoncho(item) and bagHit(item) then hitBag = item end
         end
     end
-    local hitBag = nil
     for _, item in ipairs(worn) do
         if L.isClothing(item) and not L.isPoncho(item) then
             local s = L.state(item, false)

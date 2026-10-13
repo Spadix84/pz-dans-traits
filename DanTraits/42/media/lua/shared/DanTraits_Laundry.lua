@@ -773,6 +773,7 @@ local function updateLaundryTen(player, d)
     local sweatRate = rate * math.max(0, tonumber(DanTraits_RunHooks("laundryOdour", 1, player)) or 1)
     local hours = mins / 60
     local skilled = L.skilled(player)
+    local working = (d.lnEx or 0) > 0 or (d.lnHeat or 0) > 0
     d.lnEx, d.lnHeat, d.lnMins = 0, 0, 0
     local t = now()
 
@@ -785,7 +786,7 @@ local function updateLaundryTen(player, d)
             if worn then L.sweat(item, sweatRate, hours) end
         end
     end
-    if L.wearPonchos then L.wearPonchos(player, (d.lnEx or 0) > 0 or rate > L.rate(0, 0)) end
+    if L.wearPonchos then L.wearPonchos(player, working) end
     watchWashers(player, d)
     if L.watchLines then L.watchLines(player, d) end
     local level, atHome = L.wornLevel(player)

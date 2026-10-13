@@ -26,6 +26,14 @@ require "DanTraits"
 --   ModuleGunner.grazePlayer    suppression fire clipping the player (body 3rd)
 --   Executor.woundPlayer        a hit relayed through its executor (victim 1st)
 -- An attack aimed at anything but the local player passes straight through.
+--
+-- Alarm noise. A-Life's OnWorldSound handler (Investigation.onWorldSound)
+-- asks the sound's source isOutside() and getModData(). A house alarm's
+-- source is the game's Alarm, which is not an IsoObject and has neither, so
+-- every tick of a ringing alarm logged two errors (caught by its pcall, but
+-- B42 logs them anyway). Its handler is registered by reference, so it is
+-- taken off the event and put back behind a wrapper that drops a source that
+-- is not an IsoObject. The sound itself still reaches its NPCs.
 local installed = false
 
 local function isPhantom(body)
@@ -72,12 +80,25 @@ local function install()
             return original(actor, shell, candidate, ...)
         end
     end)
+    local investigation = ProjectALife.Investigation
+    local sound = false
+    if type(investigation) == "table" and type(investigation.onWorldSound) == "function"
+            and Events.OnWorldSound ~= nil then
+        local original = investigation.onWorldSound
+        Events.OnWorldSound.Remove(original)
+        Events.OnWorldSound.Add(function(x, y, z, radius, volume, source, ...)
+            if source ~= nil and not instanceof(source, "IsoObject") then source = nil end
+            return original(x, y, z, radius, volume, source, ...)
+        end)
+        sound = true
+    end
     local hits = 0
     if wrapHit(ProjectALife.Combat, "resolveAttack", 3) then hits = hits + 1 end
     if wrapHit(ProjectALife.ModuleGunner, "grazePlayer", 3) then hits = hits + 1 end
     if wrapHit(ProjectALife.Executor, "woundPlayer", 1) then hits = hits + 1 end
     print("[DanTraits] Project A-Life found, phantom guard: horde " .. tostring(horde)
-        .. ", target " .. tostring(target) .. ", sight " .. tostring(sight) .. "; hits " .. hits .. "/3")
+        .. ", target " .. tostring(target) .. ", sight " .. tostring(sight)
+        .. ", sound " .. tostring(sound) .. "; hits " .. hits .. "/3")
 end
 DanTraits_ALifeInstall = install
 
