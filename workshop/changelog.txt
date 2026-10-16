@@ -35,6 +35,7 @@
 [*]Sunburn: a long drive at noon burnt your head and hands through the roof. A seat in a car is shade now.
 [*]Brittle: fire, a wound infection, hunger and thirst could each snap a limb as if they were a blow. Only a real hit rolls for a fracture now.
 [*]MS (spoons): a nap soon after getting up could refill the whole day's spoons a second time (and a Restless Sleeper's nap inside their long night window always did). A nap only tops up now.
+[*]Small sums: a Restless Sleeper in their 50s paid for the free wake and every older character paid a little for the morning wake itself; a smoker's withdrawal hunger was scaled twice by age and Bottomless Pit; a nap moved the sleep score though only nights are meant to; and a painkiller taken hours before a migraine counted as the attack's first dose. All put right.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]

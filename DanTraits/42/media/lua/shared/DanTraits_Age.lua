@@ -24,7 +24,8 @@
 --   heal        scratches and cuts close (their clocks, each minute) and an
 --               unstitched deep wound heals (woundHeal, WoundCare)
 --   stiff       stiffness after exertion fades (each part, each minute)
---   wakes       night wakes counted in the sleep score (nightWakes, Vitality)
+--   wakes       the interruptions counted in the sleep score (nightWakes,
+--               Vitality: the wakes over the one every night has)
 --   cells       red cells rebuild after blood loss (bloodCellRebuild, Blood)
 --   concussion  a concussion heals (concussionHeal)
 --   hangover    hangover severity (hangoverSeverity)
@@ -322,7 +323,13 @@ end
 
 DanTraits_AddHook("enduranceRegen", scales("endurance"))
 DanTraits_AddHook("woundHeal", scales("heal"))
-DanTraits_AddHook("nightWakes", scales("wakes"))
+-- the morning wake is everyone's: only the wakes over it are scaled (x1.3 on
+-- an unbroken night charged the 50s 0.3 of a wake for nothing)
+DanTraits_AddHook("nightWakes", function(wakes, player)
+    local k = ageValue(player, "wakes")
+    if not k then return nil end
+    return 1 + (wakes - 1) * k
+end)
 DanTraits_AddHook("bloodCellRebuild", scales("cells"))
 DanTraits_AddHook("concussionHeal", scales("concussion"))
 DanTraits_AddHook("hangoverSeverity", scales("hangover"))

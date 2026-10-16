@@ -11,6 +11,10 @@ H.stubs()
 local woken = {}
 function getSleepingEvent() return { wakeUp = function(_, p) woken[#woken + 1] = p; p._asleep = false end } end
 
+-- a stand-in for Age's wake scaling (the 50s: x1.3 on the wakes over the morning one), registered
+-- before Sleep loads as the game loads them, so by load order it would run before the free wake
+H.load("DanTraits")
+DanTraits_AddHook("nightWakes", function(wakes, player) if not (player and player._fifties) then return nil end; return 1 + (wakes - 1) * 1.3 end)
 H.load("Caffeine", "Sleep")
 H.expectHooks("OnCreatePlayer", "OnGameStart")
 H.expectEvery("minute", "Sleep")
@@ -141,6 +145,11 @@ near(DanTraits_RunHooks("nightWakes", 2, rs), 1, 0, "the planned wake is free")
 near(DanTraits_RunHooks("nightWakes", 3, rs), 2, 0, "later ones still count")
 near(DanTraits_RunHooks("nightWakes", 1, rs), 1, 0, "never below one")
 near(DanTraits_RunHooks("nightWakes", 2, plain), 2, 0, "others: every wake counts")
+-- the free wake comes off before the age scaling registered above (Sleep's hook at order 10): a
+-- Restless Sleeper in their 50s with the planned wake pays nothing, with one more pays 1.3 of it
+rs._fifties = true
+near(DanTraits_RunHooks("nightWakes", 2, rs), 1, 1e-9, "50s Restless Sleeper, the planned wake: free, not 0.6 of a wake")
+near(DanTraits_RunHooks("nightWakes", 3, rs), 1 + 1.3, 1e-9, "...and one more: that one scaled")
 
 -- a fever is a bad night: the score x (1 - 0.3 fever), light wakes you x (1 + 0.5 fever)
 local feverish = newPlayer({ light = 0.9 }); H.current = feverish

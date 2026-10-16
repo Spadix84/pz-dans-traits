@@ -216,7 +216,9 @@ DanTraits_AddHook("sleepWake", function(m, player)
     return m * (1 + SL_FEVER_WAKE * fever)
 end)
 
--- Restless Sleeper: two halves are one night, and the wake between them is free
+-- Restless Sleeper: two halves are one night, and the wake between them is
+-- free (order 10: it comes off before Age scales the rest; by load order Age
+-- would run first and a 50s Restless Sleeper paid 0.6 of the free wake)
 DanTraits_AddHook("nightGap", function(minutes, player)
     if not hasVanillaTrait(player, "base:insomniac") then return nil end
     return math.max(minutes, RS_NIGHT_GAP_MIN)
@@ -224,7 +226,7 @@ end)
 DanTraits_AddHook("nightWakes", function(wakes, player)
     if not hasVanillaTrait(player, "base:insomniac") then return nil end
     return math.max(1, wakes - 1)
-end)
+end, 10)
 
 -- Deep Sleeper carries Wakeful with it: granted once, whenever the trait is
 -- first seen (new character, or added later)

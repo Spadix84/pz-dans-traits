@@ -472,6 +472,9 @@ local function updateSmokerMinute(player, d)
         if not asleep and (d.nicWithdraw or 0) > 0 then
             angerFloor = NIC_ANGER * d.nicWithdraw
             addFrac(stats, CharacterStat.HUNGER, NIC_HUNGER * d.nicWithdraw)
+            -- told to the stat delta pipeline, or next minute it reads the rise as the
+            -- game's and Age and Bottomless Pit scale it again (the shape Pace Yourself uses)
+            pcall(function() DanTraits_DeltaRemember(d, "hungerRise", stats:get(CharacterStat.HUNGER)) end)
         end
     else
         d.nicWithdraw = 0

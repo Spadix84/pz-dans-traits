@@ -226,7 +226,7 @@ end
 local HOOKS = {
   { "enduranceRegen", 0.01, 0.0125, 0.0092, 0.0085 },
   { "woundHeal", 0.35, 0.525, 0.315, 0.28 },
-  { "nightWakes", 4, 3.2, 4.6, 5.2 },
+  { "nightWakes", 4, 1 + 3 * 0.8, 1 + 3 * 1.15, 1 + 3 * 1.3 },   -- the wakes over the morning one
   { "bloodCellRebuild", 0.02, 0.023, 0.016, 0.013 },
   { "concussionHeal", 0.001, 0.0012, 0.00075, 0.0006 },
   { "hangoverSeverity", 0.6, 0.51, 0.75, 0.9 },
@@ -250,6 +250,7 @@ for _, row in ipairs(HOOKS) do
   for i, player in ipairs(bands) do silent(name, value, player, "age off, band " .. i) end
   SandboxVars.DanTraits.AgeEnabled = nil
 end
+H.near(DanTraits_RunHooks("nightWakes", 1, bands[3]), 1, 1e-9, "an unbroken night: the morning wake is nobody's fault, not scaled")
 SandboxVars.DanTraits.AgeDefault = 47
 H.near(DanTraits_RunHooks("hangoverSeverity", 0.6, newPlayer()), 0.75, 1e-9, "sandbox default age 47 counts as the 40s")
 SandboxVars.DanTraits.AgeDefault = nil

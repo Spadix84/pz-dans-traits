@@ -14,6 +14,8 @@
 -- character with its trait begins with, run once by core's create handler.
 -- And DanTraits_Every's trait and clear options: the system runs only while
 -- the trait holds, and its clear runs once when that stops.
+-- And DanTraits_AddHook's order: lower runs first, default 100, equal orders
+-- in load order, and the list stays a plain list of functions.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -253,6 +255,20 @@ do
   DanTraits_Every("minute", "EveryTest2", function() fnRuns = fnRuns + 1 end, 40, { trait = function() return on end })
   H.minute(); assert(fnRuns == 0, "a function test that says no: not run")
   on = true; H.minute(); assert(fnRuns == 1, "...and yes: run")
+end
+
+-- 13. DanTraits_AddHook with an order: lower first, default 100, equal orders in load order
+do
+  local ran = {}
+  DanTraits_AddHook("orderTest", function(v) ran[#ran + 1] = "a100"; return v + 1 end)
+  DanTraits_AddHook("orderTest", function(v) ran[#ran + 1] = "b10"; return v * 10 end, 10)
+  DanTraits_AddHook("orderTest", function(v) ran[#ran + 1] = "c100"; return v + 2 end)
+  DanTraits_AddHook("orderTest", function(v) ran[#ran + 1] = "d50"; return v - 3 end, 50)
+  local got = DanTraits_RunHooks("orderTest", 1)
+  assert(table.concat(ran, ",") == "b10,d50,a100,c100", "by order, then load order: " .. table.concat(ran, ","))
+  assert(got == ((1 * 10) - 3) + 1 + 2, "the value runs through in that order, got " .. tostring(got))
+  assert(#DanTraits_Hooks.orderTest == 4 and type(DanTraits_Hooks.orderTest[1]) == "function", "the list is still a plain list of functions")
+  DanTraits_Hooks.orderTest = nil
 end
 
 H.pass()

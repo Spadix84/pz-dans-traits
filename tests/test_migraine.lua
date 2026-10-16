@@ -115,6 +115,21 @@ q._pr = 70; H.setPain(q, 0); minute(); assert(H.pain(q) == 0, "a reduction above
 before = M(q).migHoursLeft; minute(); near(M(q).migHoursLeft, before - 1 / 60, 1e-9, "the cut happens once")
 q._painFx = 0
 
+-- 4b. a painkiller taken before the attack is not the attack's first dose: only a pill taken in it cuts the time
+do
+  local pk0 = newPlayer(); H.current = pk0
+  pk0._md.DanTraits = { migAuraLeft = 1 / 60, migSeverity = 0.5, migSinceEnd = 0, migStrong = { "sleep", "thirst", "stress" } }
+  pk0._painFx = 1   -- a pill from hours ago, still working
+  minute()          -- the attack starts
+  assert(M(pk0).migActive and M(pk0).migMedsUsed == false, "attack on")
+  local left = M(pk0).migHoursLeft; minute()
+  near(M(pk0).migHoursLeft, left - 1 / 60, 1e-9, "the old pill does not count: no cut")
+  assert(M(pk0).migMedsUsed == false, "no dose used")
+  pk0._painFx = 2; minute()   -- a new pill: the pain effect rises
+  near(M(pk0).migHoursLeft, (left - 1 / 60) * 0.9 - 1 / 60, 1e-9, "a pill taken in the attack: the cut, once")
+  H.current = q
+end
+
 -- 4b. awake out of the sun, the room's light: lit adds 10 pain and slows the clock to 0.75, dark speeds it to 1.25
 local kept = M(q).migHoursLeft
 q._light = 0.8; before = M(q).migHoursLeft

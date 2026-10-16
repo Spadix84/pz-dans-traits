@@ -362,14 +362,22 @@ DanTraits_NotifyGood = notifyGood
 DanTraits_Data = traitData
 
 -- Value hooks: a system (Vitality, mostly) offers a value, every file that
--- registered for that name gets to adjust it, in load order. A hook returns
--- the new value or nil to leave it. A hook that errors is logged once
--- (DanTraits_Guard) and leaves the value alone.
+-- registered for that name gets to adjust it, in load order, or by order
+-- where one is given (DanTraits_AddHook(name, fn, order): lower runs first,
+-- default 100, equal orders in load order; Sleep's free wake at 10 comes off
+-- before Age scales the rest). A hook returns the new value or nil to leave
+-- it. A hook that errors is logged once (DanTraits_Guard) and leaves the
+-- value alone. DanTraits_Hooks[name] stays a plain list of the functions.
 DanTraits_Hooks = DanTraits_Hooks or {}
-function DanTraits_AddHook(name, fn)
+local hookOrder = {}   -- fn -> order
+function DanTraits_AddHook(name, fn, order)
     local list = DanTraits_Hooks[name] or {}
     DanTraits_Hooks[name] = list
-    list[#list + 1] = fn
+    order = order or 100
+    hookOrder[fn] = order
+    local at = #list
+    while at >= 1 and (hookOrder[list[at]] or 100) > order do at = at - 1 end
+    table.insert(list, at + 1, fn)
 end
 function DanTraits_RunHooks(name, value, ...)
     local list = DanTraits_Hooks[name]

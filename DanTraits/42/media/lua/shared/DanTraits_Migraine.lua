@@ -41,7 +41,9 @@
 -- (none with the Starting Medication sandbox option off).
 --
 -- Mod data: migSinceEnd, migAuraLeft, migSeverity, migActive, migHoursLeft,
--- migMedsUsed, migTripUsed ("aura" or "attack": when sumatriptan was
+-- migMedsUsed, migMedsSeen (the pain effect last seen in the attack: a rise
+-- is a new pill; one taken before the attack is not its dose), migTripUsed
+-- ("aura" or "attack": when sumatriptan was
 -- taken), migChance, migStrong (the character's three
 -- strong triggers), migCause (the trigger behind this attack), migSeen
 -- (attacks each trigger has brought on), migKnown (strong triggers worked
@@ -366,6 +368,9 @@ local function startAttack(player, d)
     d.migActive = true
     d.migHoursLeft = MIG_HOURS_BASE + MIG_HOURS_SEV * d.migSeverity
     d.migMedsUsed = false
+    -- a painkiller already in the system is not the attack's first dose: only one taken from here on counts
+    d.migMedsSeen = 0
+    pcall(function() d.migMedsSeen = player:getPainEffect() or 0 end)
     notify(player, "UI_DanTraits_MigraineStart")
 end
 
@@ -452,10 +457,12 @@ local function updateMigraineMinute(player, d)
     else rate = 1 - (1 - MIG_LIT_RATE) * lit + (MIG_DARK_RATE - 1) * dark end
     local meds = 0
     pcall(function() meds = player:getPainEffect() or 0 end)
-    if meds > 0 and not d.migMedsUsed then
+    -- a dose is the pain effect rising past what it was (a new pill; the effect only falls otherwise)
+    if meds > (d.migMedsSeen or 0) + 1e-6 and not d.migMedsUsed then
         d.migMedsUsed = true
         d.migHoursLeft = d.migHoursLeft * MIG_MEDS_CUT
     end
+    d.migMedsSeen = meds
     -- sumatriptan in an attack: over within two hours
     if not d.migTripUsed and triptanIn(player) then
         d.migTripUsed = "attack"

@@ -85,6 +85,12 @@ near(s._st.anger, 0.6, 0.003, "full withdrawal: irritability 0.6")
 s._st.anger = 0.55; DanTraits_updateSmokerFrame(s)   -- vanilla's drain between minutes
 assert(s._st.anger > 0.6, "held every frame: no dip under the level, no flicker")
 assert(s._st.hunger > 0.01, "hungrier")
+-- the withdrawal's hunger is told to the stat delta pipeline: a hungerRise hook (Age, Bottomless
+-- Pit) scales the game's rise, not the trait's add a second time the next minute
+DanTraits_AddHook("hungerRise", function(delta) return delta * 2 end)
+local h1 = s._st.hunger; mins(1)
+near(s._st.hunger - h1, 0.0002, 1e-9, "one minute of full withdrawal: 0.0002 hunger, not doubled by the pipeline")
+DanTraits_Hooks.hungerRise = nil
 near(DanTraits_NicotineWithdrawal(s), 1, 1e-9, "withdrawal read by others")
 near(DanTraits_RunHooks("sleepWake", 1, s, md(s)), 2, 1e-9, "light sleep")
 near(DanTraits_RunHooks("nightQuality", 1, s, md(s)), 0.8, 1e-9, "poor night")

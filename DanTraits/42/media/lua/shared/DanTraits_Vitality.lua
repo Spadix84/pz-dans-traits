@@ -9,7 +9,8 @@
 -- counts as junk, fresh or cooked is read from the tags of DanTraits_Food.lua). Exercise
 -- is the fitness system's regularity, or a day's activity (the metabolic rate
 -- above rest) up to neutral. Sleep is scored per night, not per
--- nap: segments broken by less than an hour awake (night terrors, a quick
+-- nap (a sleep under three hours eases last night's debt and leaves the
+-- score alone): segments broken by less than an hour awake (night terrors, a quick
 -- check outside; three hours for Restless Sleeper, who sleeps in two
 -- halves) count as one night, hours are summed against what the
 -- character needs (five for Needs Less Sleep, nine for Needs More Sleep,
@@ -327,11 +328,13 @@ local function updateVitalityMinute(player, d)
             local wakes = DanTraits_RunHooks("nightWakes", d.vitNightWakes or 1, player)
             quality = quality - math.min(VIT_NIGHT_WAKE_MAX, math.max(0, wakes - 1) * VIT_NIGHT_WAKE_COST)
             quality = clamp01(DanTraits_RunHooks("nightQuality", quality, player, d, d.vitNightHours))
-            d.vitSleep = clamp01(d.vitSleep + (quality - d.vitSleep) * VIT_SLEEP_W)
+            local isNap = d.vitNightHours < VIT_DEBT_NAP_MAX
+            -- a nap eases the debt below; it is not a night, so it does not move the score
+            if not isNap then d.vitSleep = clamp01(d.vitSleep + (quality - d.vitSleep) * VIT_SLEEP_W) end
             d.vitLastSleepHours = d.vitNightHours
             d.vitLastSleepWakes = d.vitNightWakes
             d.vitLastSleepQuality = quality
-            if d.vitNightHours < VIT_DEBT_NAP_MAX then
+            if isNap then
                 d.vitSleepDebt = (d.vitSleepDebt or 0) * (1 - 0.5 * math.min(1, d.vitNightHours / VIT_DEBT_NAP_HOURS))
             else
                 d.vitSleepDebt = 1 - quality
@@ -339,7 +342,7 @@ local function updateVitalityMinute(player, d)
                 if tier > 0 then notify(player, "UI_DanTraits_SleptBadly" .. tier) end
             end
             -- the scored night, for anything that refills on it (the spoon budget, DanTraits_Spoons.lua)
-            DanTraits_RunHooks("nightScored", nil, player, d, quality, d.vitNightHours, wakes, d.vitNightHours < VIT_DEBT_NAP_MAX)
+            DanTraits_RunHooks("nightScored", nil, player, d, quality, d.vitNightHours, wakes, isNap)
             d.vitNightHours, d.vitNightWakes, d.vitNightFatigue, d.vitNightBedFatigue = 0, 0, nil, nil
         end
         if d.vitAwakeMin > VIT_AWAKE_TIRED_HOURS * 60 then d.vitSleep = clamp01(d.vitSleep - VIT_AWAKE_RATE) end
