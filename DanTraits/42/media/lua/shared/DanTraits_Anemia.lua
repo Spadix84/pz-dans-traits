@@ -5,7 +5,9 @@
 -- recovers slower (through the enduranceRegen hook of the stat delta
 -- pipeline), tiredness comes sooner, colds catch easier (the catchCold
 -- hook). A
--- vegetarian lives on greens, eggs and pills. The eat hook reads the iron,
+-- vegetarian lives on greens, eggs and pills. Coffee or tea with the meal
+-- (or the pill) halves what is taken up, while Sleep's caffeine clock runs
+-- (DanTraits_Sleep.lua), so an anaemic times the pills. The eat hook reads the iron,
 -- egg and greens tags of DanTraits_Food.lua (the game's food type, then the
 -- name), so stews and dishes count by their main ingredient.
 -- After blood loss (DanTraits_Blood.lua) red cells rebuild at half speed,
@@ -52,9 +54,18 @@ function DanTraits_IronDeficit(player)
     return deficitOf(player:getModData().DanTraits)
 end
 
+-- coffee or tea with the meal (or the pill) halves what the body takes up:
+-- Sleep's caffeine clock, which runs for anyone who drank some
+local AN_CAFFEINE = 0.5
+local function caffeineCut(player)
+    local d = player:getModData().DanTraits
+    return (d and (d.slCaffeineHours or 0) > 0) and AN_CAFFEINE or 1
+end
+
 local function addIron(player, amount, what)
     if not player or amount <= 0 or not hasTrait(player, "anemia") then return false end
     local d = anData(player)
+    amount = amount * caffeineCut(player)
     d.anIron = clamp01(d.anIron + amount)
     d.anLastIron = what
     return true

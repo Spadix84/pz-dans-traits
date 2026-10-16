@@ -41,6 +41,15 @@ near(d._st.endurance, 0.5 + 0.1 * 0.8, 1e-9, "endurance gain x 0.8")
 d._catch = 10; minute(); near(d._catch, 10 * 1.25, 0.01, "cold catching x 1.25 (deficit drifts a hair during the minute)")
 d._md.DanTraits.anIron = 0.01; minute(); assert(halo[#halo] == "UI_DanTraits_Anemia2", "light-headed at deficit 0.9+")
 
+-- 3b. coffee or tea with the meal halves the iron taken up, for as long as Sleep's caffeine clock runs
+local c = newPlayer(); H.current = c; minute()
+local base = A(c).anIron
+A(c).slCaffeineHours = 3
+DanTraits_RunHooks("eat", nil, c, food("Steak", "Meat", 300), 1); near(A(c).anIron, base + 0.075, 1e-6, "steak with coffee: half")
+DanTraits_RunHooks("pill", nil, c, "IronPills"); local withPill = A(c).anIron
+A(c).slCaffeineHours = 0
+DanTraits_RunHooks("eat", nil, c, food("Steak", "Meat", 300), 1); near(A(c).anIron, withPill + 0.15, 1e-6, "steak once it has cleared: whole")
+
 -- 4. no trait: no drain, no effects, food ignored
 local n = newPlayer({ traits = {} }); H.current = n
 minute(); assert(n._md.DanTraits == nil or n._md.DanTraits.anIron == nil, "no trait: nothing tracked")
