@@ -28,6 +28,7 @@
 [*][b]A Really Bad Day, worse.[/b] You wake dehydrated, sunburnt in summer, and the clothes next door are somebody's unwashed ones.
 [*][b]Arthritis and Old Injury feel the weather coming.[/b] The joints flare in the twelve hours before a storm, before the first drop; Old Bones' forecast now tells you something your knees already know.
 [*][b]Bad nights.[/b] Asthma spoils a night's sleep in proportion to the airway; a diabetic low in the night wakes you drenched in sweat.
+[*][b]Intolerances and the diet.[/b] Bread for a Gluten Intolerant, or cheese for a Lactose Intolerant, counts as junk for Vitality's diet, not as a good meal.
 [/list]
 [h2]Fixed[/h2]
 [list]

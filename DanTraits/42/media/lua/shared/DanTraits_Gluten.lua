@@ -45,6 +45,13 @@ function DanTraits_IsWheat(item)
     return foodTags(item).wheat == true
 end
 
+-- to Vitality's diet score, wheat is junk for this character (the foodGrade hook, DanTraits_Vitality.lua)
+local GLU_GRADE = 0.15
+DanTraits_AddHook("foodGrade", function(grade, player, item)
+    if not hasTrait(player, "gluten") or not DanTraits_IsWheat(item) then return nil end
+    return math.min(grade, GLU_GRADE)
+end)
+
 -- carbs in the portion about to be eaten
 local function glutenDose(item, fraction)
     local carbs = 0

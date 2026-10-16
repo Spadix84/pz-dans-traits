@@ -23,6 +23,10 @@ for _, n in ipairs({ "PeanutButter", "Bread", "Steak", "CoconutMilk", "Butternut
   assert(not DanTraits_IsDairy(food(n)), n .. " is not")
 end
 assert(DanTraits_IsDairy(food("Stew", 0, { "Base.Potato", "Base.Cheese" })), "cheese in the stew")
+-- and to Vitality's diet score, dairy is junk for the intolerant
+near(DanTraits_RunHooks("foodGrade", 0.9, H.player({ traits = { "lactose" } }), food("Cheese")), 0.15, 1e-9, "cheese grades as junk with the trait")
+near(DanTraits_RunHooks("foodGrade", 0.9, H.player({ traits = { "lactose" } }), food("Bread")), 0.9, 1e-9, "bread as it was")
+near(DanTraits_RunHooks("foodGrade", 0.9, H.player(), food("Cheese")), 0.9, 1e-9, "without the trait: as it was")
 
 -- 2. a wedge of cheese: a full flare after the onset
 local p = H.player({ traits = { "lactose" } }); H.current = p

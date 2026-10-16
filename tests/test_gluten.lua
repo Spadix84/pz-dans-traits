@@ -28,6 +28,10 @@ local yes = { "Bread", "BreadSlices", "BagelPlain", "PastaBowl", "Ramen", "Noodl
 local no  = { "Rice", "Potato", "Corn", "Apple", "Steak", "WhiteCrappie", "Poppies", "GamePieceRed", "TortillaChips", "Oatmeal", "OatsRaw", "GranolaBar", "Cornflour2", "RiceCake" }
 for _, n in ipairs(yes) do assert(DanTraits_IsWheat(item(n, 10)), n .. " should be wheat") end
 for _, n in ipairs(no) do assert(not DanTraits_IsWheat(item(n, 10)), n .. " should be safe") end
+-- and to Vitality's diet score, wheat is junk for the intolerant
+H.near(DanTraits_RunHooks("foodGrade", 0.8, newPlayer(true), item("Bread", 10)), 0.15, 1e-9, "bread grades as junk with the trait")
+H.near(DanTraits_RunHooks("foodGrade", 0.8, newPlayer(true), item("Steak", 0)), 0.8, 1e-9, "steak as it was")
+H.near(DanTraits_RunHooks("foodGrade", 0.8, newPlayer(false), item("Bread", 10)), 0.8, 1e-9, "without the trait: as it was")
 print("wheat list: " .. #yes .. " wheat, " .. #no .. " safe")
 
 -- 2. eating: only the trait, only wheat, dose from carbs, fallback from hunger

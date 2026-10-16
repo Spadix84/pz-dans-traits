@@ -51,6 +51,13 @@ function DanTraits_IsDairy(item)
     return foodTags(item).dairy == true
 end
 
+-- to Vitality's diet score, dairy is junk for this character (the foodGrade hook, DanTraits_Vitality.lua)
+local LAC_GRADE = 0.15
+DanTraits_AddHook("foodGrade", function(grade, player, item)
+    if not hasTrait(player, "lactose") or not DanTraits_IsDairy(item) then return nil end
+    return math.min(grade, LAC_GRADE)
+end)
+
 -- a fluid's name (lowercase, as DanTraits_FluidName gives it) -> whether it is dairy
 local function dairyFluid(name)
     if type(name) ~= "string" then return false end
