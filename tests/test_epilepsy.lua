@@ -111,7 +111,9 @@ local sent = {}
 function sendClientCommand(_, module, command) sent[#sent + 1] = module .. " " .. command end
 local function inCar(driving)
   local c = H.player({ traits = { "epilepsy" } }); H.current = c
-  local car = { getDriver = function() return driving and c or nil end }
+  local car = { _on = true, getDriver = function() return driving and c or nil end }
+  car.shutOff = function() car._on = false end
+  c._car = car
   c.getVehicle = function() return car end
   c._events = 0
   c.reportEvent = function() c._events = c._events + 1 end
@@ -124,13 +126,14 @@ H.rollf = 0; H.minute(); H.rollf = 0.99
 H.mins(8); H.now = H.now + 30000; H.minute()
 assert(cd.epSeizures == 1 and DanTraits_IsPassedOut(c), "out cold at the wheel")
 assert(not c._bump, "no fall out of the seat")
-assert(#sent == 1 and sent[1] == "vehicle shutOff", "the engine cut out")
+assert(c._car._on == false, "the engine cut out (car:shutOff(); B42 has no shutOff client command)")
+assert(#sent == 0, "no client command sent")
 H.now = H.now + 5000; DanTraits_FaintTick(); DanTraits_FaintTick()
 assert(c._events == 0, "not made to sit on the floor")
 H.now = H.now + 600000; H.hours = H.hours + 10; DanTraits_FaintTick()
 local pas, pd = inCar(false)
 H.rollf = 0; H.minute(); H.rollf = 0.99
 H.mins(8); H.now = H.now + 30000; H.minute()
-assert(pd.epSeizures == 1 and #sent == 1 and not pas._bump, "a passenger: out, no fall, the driver's engine left alone")
+assert(pd.epSeizures == 1 and pas._car._on == true and not pas._bump, "a passenger: out, no fall, the driver's engine left alone")
 
 H.pass()

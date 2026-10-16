@@ -156,14 +156,15 @@ function DanTraits_IsPassedOut(player)
     return hold ~= nil and hold.player == player
 end
 
--- the driver goes out: cut the engine (the game's own shut-off command,
--- the direct call if that is not there)
+-- the driver goes out: cut the engine. The direct call, as vanilla's own
+-- ISShutOffVehicleEngine does; B42 has no "shutOff" client command (the
+-- sendClientCommand line in its ISExitVehicle is commented out), so sending
+-- one succeeds and does nothing.
 local function stopCar(player, car)
     local driving = false
     pcall(function() driving = car:getDriver() == player end)
     if not driving then return end
-    local ok = pcall(function() sendClientCommand(player, "vehicle", "shutOff", {}) end)
-    if not ok then pcall(function() car:shutOff() end) end
+    pcall(function() car:shutOff() end)
 end
 
 function DanTraits_PassOut(player, minutes, textKey, deep)

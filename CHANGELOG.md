@@ -95,6 +95,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 ### Fixed
 
 - **A drink counted once per tick, not once per drink** (`DanTraits_Diabetes.lua`): vanilla calls `ISDrinkFluidAction:updateEat` on every tick of the action and once more from `complete()`, and the `drink` and `alcoholDrunk` hooks fired on each call. Delicate Stomach got +10 food sickness per tick of a beer (Nauseous in ten ticks), Caffeine to Sleep saw a mug of coffee as a run of tiny doses (minutes of caffeine hours instead of six), Lactose Intolerant got a halo and a story line per sip, and Vitality logged a meal per sip. The wrap now sums the sips on the action and reports once, with the litres, when the drink completes, is stopped, or the fluid changes; `alcoholDrunk` carries the litres (Delicate Stomach doses pro rata to a 0.33 l bottle, capped at one); Lactose notifies only on the first dose of a brewing flare.
+- **A fainting driver's car never stopped** (`DanTraits_Faint.lua`): the engine was cut through the `vehicle shutOff` client command, which B42 does not handle (its own exit-vehicle code has that line commented out), with `car:shutOff()` only as a fallback for a thrown error. Now the direct call, as vanilla's shut-off action does. New `tests/test_faint.lua`.
 
 ### Other mods
 
