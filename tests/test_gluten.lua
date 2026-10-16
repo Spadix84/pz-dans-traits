@@ -49,6 +49,10 @@ q._md.DanTraits.glutenPending = 0
 act:eat(act.item, 0.5); assert(math.abs(q._md.DanTraits.glutenPending - 0.165) < 1e-9 and eaten[#eaten][3] == 0.5, "interrupted: 0.5 x 0.5 of a slice")
 q._md.DanTraits.glutenPending = 0
 act:eat(act.item, 0.97); assert(math.abs(q._md.DanTraits.glutenPending - 0.33) < 1e-9, "over 95% counts as all")
+-- vanilla's stop() calls eat(item, jobDelta) on every cancel: at 0 no reader hears of it (review 2026-10-16 A1.13)
+q._md.DanTraits.glutenPending = 0
+local before = #eaten
+act:eat(act.item, 0); assert(q._md.DanTraits.glutenPending == 0 and #eaten == before + 1, "cancelled at 0%: nothing counted, vanilla still called")
 
 -- 4. onset, ramp, tiers: nothing for 20 minutes, then a full flare 30 minutes later
 H.current = p; H.clearHalo()

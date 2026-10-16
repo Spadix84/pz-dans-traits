@@ -531,7 +531,7 @@ DanTraits_Every("minute", "PainFloor", DanTraits_ApplyPainFloors, 95)
 -- gluten result so the offline tests can see it.
 function DanTraits_OnEat(player, item, fraction)
     if not player or not item then return false end
-    if DanTraits_MddOnEat then DanTraits_Guard("eat:MDD", DanTraits_MddOnEat, player, item) end
+    if DanTraits_MddOnEat then DanTraits_Guard("eat:MDD", DanTraits_MddOnEat, player, item, fraction) end
     if DanTraits_DiaOnEat then DanTraits_Guard("eat:Diabetes", DanTraits_DiaOnEat, player, item, fraction) end
     if DanTraits_VitalityOnEat then DanTraits_Guard("eat:Vitality", DanTraits_VitalityOnEat, player, item, fraction) end
     DanTraits_RunHooks("eat", nil, player, item, fraction)
@@ -573,6 +573,8 @@ local function wrapEatAction()
         if refused(self) then return end
         local progress = tonumber(percentage) or 0
         if progress > 0.95 then progress = 1 end
+        -- vanilla's stop() calls eat(item, jobDelta) on every cancel: at 0 nothing went down
+        if progress <= 0 then return original(self, food, percentage, ...) end
         DanTraits_OnEat(self.character, self.item, (tonumber(self.percentage) or 1) * progress)
         return original(self, food, percentage, ...)
     end)

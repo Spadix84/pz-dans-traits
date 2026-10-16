@@ -143,12 +143,17 @@ function DanTraits_MddOnSmoke(player, dose, smoked)
     return true
 end
 
--- called from the eat hook: comfort food
-function DanTraits_MddOnEat(player, item)
+-- called from the eat hook: comfort food, the relief by the portion eaten
+-- (a meal started and cancelled used to be the whole three hours)
+function DanTraits_MddOnEat(player, item, fraction)
     if not hasTrait(player, "spiraling") then return end
     local unhappy = 0
     pcall(function() unhappy = item:getUnhappyChange() or 0 end)
-    if unhappy < 0 then mddData(player).mddFoodTimer = MDD_FOOD_MINUTES end
+    local f = math.max(0, math.min(1, tonumber(fraction) or 1))
+    if unhappy < 0 and f > 0 then
+        local d = mddData(player)
+        d.mddFoodTimer = math.max(d.mddFoodTimer or 0, MDD_FOOD_MINUTES * f)
+    end
 end
 
 local function updateMddMinute(player, d)

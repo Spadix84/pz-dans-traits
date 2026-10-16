@@ -48,6 +48,14 @@ DanTraits_MddOnEat(q, { getUnhappyChange = function() return -10 end })
 q._st.unhappy = 0; for _ = 1, 40 do minute() end; assert(q._st.unhappy == 65, "comfort food: 75-10")
 DanTraits_MddOnEat(q, { getUnhappyChange = function() return 5 end })
 assert(q._md.DanTraits.mddFoodTimer < 180, "a joyless meal does not refresh it")
+-- by the portion eaten (review 2026-10-16 A1.13: a meal started and cancelled gave the whole three hours)
+q._md.DanTraits.mddFoodTimer = 0
+local comfort = { getUnhappyChange = function() return -10 end }
+DanTraits_MddOnEat(q, comfort, 0.25); assert(q._md.DanTraits.mddFoodTimer == 45, "a quarter of a comfort meal: a quarter of the relief")
+DanTraits_MddOnEat(q, comfort, 0); assert(q._md.DanTraits.mddFoodTimer == 45, "cancelled at 0%: nothing")
+DanTraits_MddOnEat(q, comfort, 1); assert(q._md.DanTraits.mddFoodTimer == 180, "the whole meal: the full three hours")
+DanTraits_MddOnEat(q, comfort, 0.5); assert(q._md.DanTraits.mddFoodTimer == 180, "half a meal on top of three hours running: keeps the longer")
+DanTraits_MddOnEat(q, comfort); assert(q._md.DanTraits.mddFoodTimer == 180, "no fraction given: a whole meal")
 q._md.DanTraits.mddFoodTimer = 0
 q._regularity = { squats = 100, pushups = 100, situps = 100, burpees = 0 }
 assert(math.abs(DanTraits_MddRegularity(q) - 1) < 1e-9, "top three exercises count")
