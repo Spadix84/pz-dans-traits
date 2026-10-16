@@ -58,6 +58,7 @@ local SP_NAP_MAX      = 4        -- the most naps give back in a day...
 local SP_NAP_FULL_H   = 3        -- ...a nap this long in the dark would give all of it
 local SP_REST_MIN     = 0.01     -- a minute of true rest gives this back (half a spoon an hour)...
 local SP_REST_MAX     = 2        -- ...up to this a day
+local SP_HOME         = 0.5      -- rest at home gives x (1 + this x the home's strength) (DanTraits_Home.lua; Homebody doubles it)
 local SP_BASE_MIN     = 1 / 160  -- a minute awake costs this (an idle 16-hour day: 6)
 local SP_MET_REST     = 1.5      -- the metabolic rate at rest...
 local SP_MET_MIN      = 0.0075   -- ...and the cost per MET-minute above it (sprinting: about 3 an hour)
@@ -253,7 +254,11 @@ local function updateSpoonsMinute(player, d)
     if read then cost = cost * SP_READ_COST end
     local back = 0
     if resting(player, met, hungry, read) and (d.spRest or 0) < SP_REST_MAX then
-        back = math.min(SP_REST_MIN, SP_REST_MAX - (d.spRest or 0))
+        local home = 0   -- rest at home gives more (the day's cap stands)
+        if DanTraits_HomeAtPlace and DanTraits_HomeAtPlace(player) then
+            home = DanTraits_Strength("DanTraits_HomeStrength", player) * (DanTraits_HasTrait(player, "homebody") and 2 or 1)
+        end
+        back = math.min(SP_REST_MIN * (1 + SP_HOME * math.min(2, home)), SP_REST_MAX - (d.spRest or 0))
         d.spPool = math.min(cap, d.spPool + back)
         d.spRest = (d.spRest or 0) + back
     end

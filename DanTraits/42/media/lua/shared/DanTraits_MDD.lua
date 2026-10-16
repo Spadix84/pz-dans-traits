@@ -46,6 +46,7 @@ local MDD_RELIEF_FOOD       = 10      -- floor reduction after a comforting meal
 local MDD_FOOD_MINUTES      = 180
 local MDD_RELIEF_EXERCISE   = 15      -- floor reduction at full exercise regularity
 local MDD_RELIEF_OUTDOORS   = 15      -- floor reduction at four hours outside in the last day
+local MDD_RELIEF_HOME       = 10      -- floor reduction at home, at the home's full strength (DanTraits_Home.lua; Homebody doubles it)
 local MDD_OUTDOORS_FULL_MIN = 240
 local MDD_RECOVERY_BONUS    = 1.0     -- exercise and outdoors together shorten an episode by up to this (x2 speed)
 -- Antidepressants (Base.PillsAntiDep) are a regimen, not a dose. Each pill
@@ -110,6 +111,10 @@ local function mddRelief(player, d)
     relief = relief + regular * MDD_RELIEF_EXERCISE
     local outdoors = math.min(1, d.mddOutside / MDD_OUTDOORS_FULL_MIN)
     relief = relief + outdoors * MDD_RELIEF_OUTDOORS
+    -- home is a comfort too: the floor eases by the home's strength while you are there (not a habit: it does not shorten an episode)
+    if DanTraits_HomeAtPlace and DanTraits_HomeAtPlace(player) then
+        relief = relief + MDD_RELIEF_HOME * DanTraits_Strength("DanTraits_HomeStrength", player) * (hasTrait(player, "homebody") and 2 or 1)
+    end
     habits = (regular + outdoors) / 2
     return relief, habits
 end
