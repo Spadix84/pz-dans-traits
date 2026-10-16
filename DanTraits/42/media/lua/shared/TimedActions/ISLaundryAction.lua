@@ -14,6 +14,15 @@
 --               "ns"), with two posts and two ties carried
 --               (DanTraits_LaundryDry.lua). `item` is one of the posts.
 --   "takedown"  a clothesline put up that way (`source`, a post); no item.
+--
+-- Singleplayer shape: all the work is in perform(), there is no complete(),
+-- and isValid() is the only check. In B42 multiplayer the server rebuilds
+-- a timed action from new()'s parameters and runs complete() there, so on a
+-- server every one of these jobs would apply on the client only and the
+-- server would check nothing; a clothesline put up lands on the client's
+-- square alone (IsoObject has no transmit-to-server; take-down does transmit
+-- the removal). The port is a row in plans/multiplayer.md; until then the
+-- mod is singleplayer and split-screen only, as mod.info says.
 require "TimedActions/ISBaseTimedAction"
 
 ISLaundryAction = ISBaseTimedAction:derive("ISLaundryAction")

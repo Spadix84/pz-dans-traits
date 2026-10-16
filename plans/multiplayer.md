@@ -40,15 +40,21 @@ confirms it before anything is built on it.
 
 ## What breaks today
 
-1. **Everything runs for player 0 on the local machine.** The minute and
-   ten-minute clocks (`DanTraits.lua` `runClock`) run every system for
-   `getSpecificPlayer(0)`. On a dedicated server there is no player 0, so no
+1. **Everything runs on the local machine, for its local players.** The
+   minute and ten-minute clocks (`DanTraits.lua` `runClock`) run every
+   system for each local player (since 2026-10-16: every distinct
+   `getSpecificPlayer(0..3)`, so split-screen gets the clocks; before that,
+   player 0 only). On a dedicated server there is no local player, so no
    system runs there. On a client they run, but see 2.
-   Other `getSpecificPlayer(0)` call sites: core (4), Anger, Attrib, BadDay,
-   Blood, Brittle, Concussion, GymRegular, Positives, Sleep, SteadyHands,
-   Tinnitus, WoundCare, Telemetry, and `DanTraits_FloorUp` in Util (which
-   would write one player's floor flag into another's data on a server).
-   Split-screen co-op is broken by the same thing today.
+   Raw event handlers still compare against `getSpecificPlayer(0)`: core (2,
+   the migrate and retire on game start), Anger, Attrib, BadDay, Blood,
+   Brittle, Concussion, GymRegular, Positives, Sleep, SteadyHands, Tinnitus,
+   WoundCare, Telemetry; so split-screen player 1 gets the clocks but not
+   the damage, swing and creation events. `DanTraits_FloorUp` in Util books
+   its floor flag on `DanTraits_RunningFor` (the player the drivers are
+   running for, set by core) and only falls back to player 0 outside a
+   driver. Concussion's crash and head-reading state is per player object
+   (a weak table), so a respawn or a second player never inherits it.
 2. **Client writes to stats and body parts get overwritten.** Systems that
    set stats: core, Age, AgeTraits, Anger, Arthritis, Asthma, BadDay, Blood,
    Clotting, Epilepsy, Gluten, Heart, Infection, Knox, MDD, MS, Migraine,
@@ -73,8 +79,18 @@ confirms it before anything is built on it.
    send. Meds' `setUsedDelta` is loot fill (OnFillContainer), which already
    runs where loot is made.
 6. **Our own timed actions do their work in `perform()`.** ISDiabetesAction,
-   ISUseInhalerAction and ISVitalityPillAction have no `complete()`.
-   ISVitalityClotAction has one and already calls `syncBodyPart`.
+   ISUseInhalerAction, ISVitalityPillAction and ISLaundryAction (bleach, dry
+   by the fire, protect, put up and take down a clothesline) have no
+   `complete()`, so the server would validate nothing and apply nothing.
+   ISVitalityClotAction has one and already calls `syncBodyPart`. A
+   clothesline put up is `sq:AddTileObject` on the client; IsoObject has no
+   transmit-to-server (checked the jar 2026-10-16: only
+   `transmitCompleteItemToClients`), so placing it needs a client command
+   the server answers by building the pieces itself. Take-down already
+   transmits the removal. "Read a chapter" (Reading) sets a flag on the
+   action after `new()`, which the server's rebuild never sees, so the
+   client hides the option on a multiplayer client until the chapter rides
+   in a `new()` parameter or a command.
 7. **Some inputs are client-only events.** OnWeaponSwing (Anger, Arthritis,
    Concussion, Tinnitus, WoundCare), OnPlayerAttackFinished (Arthritis),
    OnWeaponHitXp (Anger), AddXP (Age, AgeTraits, Vitality), OnPlayerGetDamage
