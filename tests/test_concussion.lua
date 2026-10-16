@@ -98,6 +98,16 @@ if out(p) then wake(5) end
 p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0.5
 drive(p, 50); damage(p, "CARCRASHDAMAGE", 42.3); H.now = H.now + 50; drive(p, 20); damage(p, "CARCRASHDAMAGE", 30); slowTo(p, 0)
 near(D(p).ccScore, 0.25 + 0.01 * 25, 1e-9, "two reports in the window: one knock, 0.5, no stacking")
+-- the crash belongs to the character it happened to: a new character (a multiplayer
+-- respawn, a second split-screen player) in the window after it starts clean
+p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0
+drive(p, 50); damage(p, "CARCRASHDAMAGE", 42.3)   -- the knock is waiting on the speed after
+local q = newPlayer(); H.current = q
+drive(q, 0); H.now = H.now + 100; drive(q, 0); H.now = H.now + 160; drive(q, 0)
+assert(D(q).ccScore == nil and D(q).ccLastImpact == nil, "the new character is not judged for the old one's crash")
+H.current = p; slowTo(p, 0)
+assert(D(p).ccLastImpact == "CARCRASHDAMAGE 42.3 at 50 km/h, lost 50", "the old one's crash is still judged on them: " .. tostring(D(p).ccLastImpact))
+if out(p) then wake(5) end
 if out(p) then wake(5) end
 -- a wall at 71: certain and severe
 p = newPlayer(); H.current = p; H.now = H.now + 5000; H.rollf = 0.99

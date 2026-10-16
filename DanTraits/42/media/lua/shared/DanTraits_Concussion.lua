@@ -184,16 +184,31 @@ end
 
 local function nowMs() return getTimestampMs and getTimestampMs() or 0 end
 
--- the car's top speed over about the last second (the crash itself slows it)
-local speedTop, speedTopMs = 0, 0
--- a crash waiting on the speed after it: { top, note, at, frames, low = the lowest read since }
-local crash = nil
+-- What the frame and event handlers remember between calls, per player
+-- object (a weak-keyed table: a character that is gone takes its state with
+-- it, so a multiplayer respawn or a second split-screen player never inherits
+-- a crash or a head reading that was somebody else's):
+--   speedTop, speedTopMs  the car's top speed over about the last second (the crash itself slows it)
+--   crash                 a crash waiting on the speed after it: { top, note, at, frames, low = the lowest read since }
+--   headWas               the head's health last frame, for weapon hits
+--   ran, fought           moved hard or swung since the minute last ran (strain)
+--   moodleShown           whether the moodle was last set above nothing
+local states = setmetatable({}, { __mode = "k" })
+local function stateOf(player)
+    local st = states[player]
+    if not st then
+        st = { speedTop = 0, speedTopMs = 0, ran = false, fought = false, moodleShown = false }
+        states[player] = st
+    end
+    return st
+end
 
 -- the crash's knock, once the window after it closes: by the speed lost, or
 -- by the top speed alone if nothing could be read after
 local function judgeCrash(player)
-    local c = crash
-    crash = nil
+    local st = stateOf(player)
+    local c = st.crash
+    st.crash = nil
     local d = traitData(player)
     if c.low then
         local lost = math.max(0, c.top - c.low)
@@ -209,32 +224,35 @@ local function trackSpeed(player)
     local kmh = nil
     pcall(function() local v = player:getVehicle(); if v then kmh = math.abs(v:getCurrentSpeedKmHour() or 0) end end)
     local now = nowMs()
+    local st = stateOf(player)
+    local crash = st.crash
     if crash then
         if kmh then crash.low = math.min(crash.low or kmh, kmh) end
         crash.frames = crash.frames + 1
         if now - crash.at >= CC_SPEED_AFTER_MS or crash.frames >= CC_SPEED_AFTER_FRAMES then judgeCrash(player) end
     end
     if not kmh then return end   -- on foot: nothing to track
-    if kmh >= speedTop or now - speedTopMs > CC_SPEED_WINDOW_MS then speedTop, speedTopMs = kmh, now end
+    if kmh >= st.speedTop or now - st.speedTopMs > CC_SPEED_WINDOW_MS then st.speedTop, st.speedTopMs = kmh, now end
 end
-local function recentTopSpeed()
-    if speedTopMs <= 0 or nowMs() - speedTopMs > CC_SPEED_WINDOW_MS * 1.5 then return nil end
-    return speedTop
+local function recentTopSpeed(player)
+    local st = stateOf(player)
+    if st.speedTopMs <= 0 or nowMs() - st.speedTopMs > CC_SPEED_WINDOW_MS * 1.5 then return nil end
+    return st.speedTop
 end
 
-local headWas = nil   -- the head's health last frame, for weapon hits
 local function onConcussionDamage(character, damageType, amount)
     if not sandboxOn() and damageType == "WEAPONHIT" then return end   -- falls and crashes are still judged for the impact hook
     local player = getSpecificPlayer(0)
     if not player or character ~= player then return end
     amount = tonumber(amount) or 0
+    local st = stateOf(player)
     if damageType == "FALLDOWN" or damageType == "CARCRASHDAMAGE" or damageType == "CARHITDAMAGE" then
         local note = damageType .. " " .. tostring(DanTraits_Round(amount))
-        local top = damageType == "CARCRASHDAMAGE" and recentTopSpeed() or nil
+        local top = damageType == "CARCRASHDAMAGE" and recentTopSpeed(player) or nil
         if top then
             -- judged once the speed after it is read (trackSpeed); a second report in that window joins the first
-            if crash then crash.top = math.max(crash.top, top)
-            else crash = { top = top, note = note, at = nowMs(), frames = 0 } end
+            if st.crash then st.crash.top = math.max(st.crash.top, top)
+            else st.crash = { top = top, note = note, at = nowMs(), frames = 0 } end
         else
             traitData(player).ccLastImpact = note
             if damageType == "FALLDOWN" then impactKnock(player, amount, CC_FALL, "fall")
@@ -244,18 +262,18 @@ local function onConcussionDamage(character, damageType, amount)
         local head = headPart(player)
         local now = nil
         pcall(function() now = head:getHealth() end)
-        if now and headWas and now < headWas then DanTraits_HeadHit(player, headWas - now) end
+        if now and st.headWas and now < st.headWas then DanTraits_HeadHit(player, st.headWas - now) end
     end
 end
 
 -- per frame: the head's health (for the next weapon hit), whether the player ran
-local ran = false
 local function updateConcussionFrame(player)
+    local st = stateOf(player)
     local head = headPart(player)
-    if head then pcall(function() headWas = head:getHealth() end) end
+    if head then pcall(function() st.headWas = head:getHealth() end) end
     local okS, sprinting = pcall(function() return player:isSprinting() end)
     local okR, running = pcall(function() return player:isRunning() end)
-    if (okS and sprinting) or (okR and running) then ran = true end
+    if (okS and sprinting) or (okR and running) then st.ran = true end
 end
 
 -- slower endurance recovery, through the stat delta pipeline (DanTraits_Util.lua)
@@ -265,15 +283,13 @@ DanTraits_AddHook("enduranceRegen", function(delta, player, d)
     return delta * (1 - CC_ENDURANCE * s)
 end)
 
-local fought = false
 local function onConcussionSwing(character)
     local player = getSpecificPlayer(0)
-    if player and character == player then fought = true end
+    if player and character == player then stateOf(player).fought = true end
 end
 
-local moodleShown = false   -- whether the moodle was last set above nothing
 local function updateMoodle(player, s)
-    moodleShown = s > 0
+    stateOf(player).moodleShown = s > 0
     DanTraits_BadMoodle(player, "Concussion", s, CC_TIER)
 end
 
@@ -328,15 +344,17 @@ end
 -- score and the headache to come are kept and it all resumes if it is
 -- switched back on.
 local function standDown(player, d)
-    ran, fought, crash = false, false, nil
+    local st = stateOf(player)
+    st.ran, st.fought, st.crash = false, false, nil
     if d and (d.ccTier or 0) > 0 then d.ccTier = 0 end
-    if moodleShown then updateMoodle(player, 0) end
+    if st.moodleShown then updateMoodle(player, 0) end
 end
 
 local function updateConcussionMinute(player, d)
     if not sandboxOn() then standDown(player, d) return end
-    local strained = ran or fought
-    ran, fought = false, false
+    local st = stateOf(player)
+    local strained = st.ran or st.fought
+    st.ran, st.fought = false, false
     local lateNow = updateLate(player, d, DanTraits_Asleep(player))
     local s = d.ccScore or 0
     if s <= 0 then
