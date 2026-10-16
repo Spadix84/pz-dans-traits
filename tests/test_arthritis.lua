@@ -57,6 +57,24 @@ assert(halo[#halo] == "UI_DanTraits_ArthritisFlare", "flare notice on crossing 0
 local n = #halo; minute(); assert(#halo == n, "notice once per flare")
 H.climate.temp = 20; minute(); assert(p._md.DanTraits.artJoint == 0, "factor tracked")
 
+-- 2c. morning stiffness: getting up from a night adds 15 to the floor, fading over half an hour; a coffee halves what is left; a nap adds nothing
+H.climate.temp = 20
+local md = p._md.DanTraits
+DanTraits_RunHooks("nightScored", nil, p, md, 0.8, 7, 0, false)
+p._parts.Hand_L._stiff = 0; minute(); near(p._parts.Hand_L._stiff, 27, 1e-9, "just up: 12 + 15")
+for _ = 1, 14 do minute() end
+p._parts.Hand_L._stiff = 0; minute(); near(p._parts.Hand_L._stiff, 12 + 15 * 15 / 30, 1e-9, "a quarter hour on: half of it left")
+DanTraits_RunHooks("drink", nil, p, {}, 0.25, "coffee")
+p._parts.Hand_L._stiff = 0; minute(); near(p._parts.Hand_L._stiff, 12 + 15 * 7 / 30, 1e-9, "a coffee: what was left, halved")
+for _ = 1, 7 do minute() end
+p._parts.Hand_L._stiff = 0; minute(); near(p._parts.Hand_L._stiff, 12, 1e-9, "and gone")
+assert(md.artMorningMin == nil, "the clock is dropped")
+DanTraits_RunHooks("nightScored", nil, p, md, 0.5, 1, 0, true)
+p._parts.Hand_L._stiff = 0; minute(); near(p._parts.Hand_L._stiff, 12, 1e-9, "a nap: nothing")
+H.climate.temp = -5; DanTraits_RunHooks("nightScored", nil, p, md, 0.8, 7, 0, false)
+p._parts.Hand_L._stiff = 0; minute(); near(p._parts.Hand_L._stiff, 45, 1e-9, "in a full flare the floor stays at 45")
+md.artMorningMin = nil; H.climate.temp = 20; minute()
+
 -- 2b. the trait gone (the console, another mod): the floor comes off the joints at once,
 --     the exercise stiffness above it stays, and the flare is forgotten
 do
@@ -170,26 +188,31 @@ H.rng = { 29 }; swing(none, weapon(1, 2)); assert(#none._dropped == 1, "29 < 30:
 DanTraits_ExtraFumble = nil
 minute(); assert(none._parts.Hand_L._stiff == 0, "no trait: no stiffness")
 
--- 9. a new Arthritis character starts with a bottle of painkillers, once; not with Starting Medication off
-local function bottles(who)
-  local n = 0
+-- 9. a new Arthritis character starts with a bottle of painkillers and a quarter
+-- bottle of prednisone, once; not with Starting Medication off
+local function bottles(who, fullType)
+  local n, found = 0, nil
   local items = who:getInventory():getItems()
-  for i = 0, items:size() - 1 do if items:get(i):getFullType() == "Base.Pills" then n = n + 1 end end
-  return n
+  for i = 0, items:size() - 1 do
+    if items:get(i):getFullType() == (fullType or "Base.Pills") then n, found = n + 1, items:get(i) end
+  end
+  return n, found
 end
 SandboxVars = SandboxVars or {}; SandboxVars.DanTraits = SandboxVars.DanTraits or {}
 local fresh = newPlayer({ hours = 0 })
 H.fire("OnCreatePlayer", 0, fresh)
 assert(bottles(fresh) == 1 and fresh._md.DanTraits.artKitGiven == true, "one bottle at the start")
+local preds, pred = bottles(fresh, "DanTraits.Prednisone")
+assert(preds == 1 and pred._used == 0.25, "and a quarter bottle of prednisone")
 H.fire("OnCreatePlayer", 0, fresh)
-assert(bottles(fresh) == 1, "not again on a later load")
+assert(bottles(fresh) == 1 and bottles(fresh, "DanTraits.Prednisone") == 1, "not again on a later load")
 local old = newPlayer({ hours = 40 })
 H.fire("OnCreatePlayer", 0, old)
 assert(bottles(old) == 0, "an existing character (an old save) gets nothing")
 SandboxVars.DanTraits.StartingMedication = false
 local none = newPlayer({ hours = 0 })
 H.fire("OnCreatePlayer", 0, none)
-assert(bottles(none) == 0 and none._md.DanTraits.artKitGiven == true, "Starting Medication off: no bottle")
+assert(bottles(none) == 0 and bottles(none, "DanTraits.Prednisone") == 0 and none._md.DanTraits.artKitGiven == true, "Starting Medication off: no bottle")
 SandboxVars.DanTraits.StartingMedication = nil
 local plain = H.player({ hours = 0 })
 H.fire("OnCreatePlayer", 0, plain)

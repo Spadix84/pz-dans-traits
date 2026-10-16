@@ -10,8 +10,12 @@
 -- a pill) and prednisone cuts it to a third; the stronger counts, they do
 -- not stack, and neither touches the everyday stiffness. Stiffness is not
 -- the pain stat, so painkillers also ease the ache but not the slowness.
--- A new Arthritis character starts with a bottle of painkillers (Starting
--- Medication). Every attack is
+-- Mornings are the worst: getting up from a night's sleep (Vitality's
+-- nightScored hook; not a nap) adds 15 to the floor, fading over half an
+-- hour; a coffee or tea in that half hour halves what is left. The floor
+-- never goes past a full flare's 45.
+-- A new Arthritis character starts with a bottle of painkillers and a
+-- quarter bottle of prednisone (Starting Medication). Every attack is
 -- slower on top of that, more so in a flare. And the grip is unreliable: a
 -- swing can slip, worse when panicked, hurt or tired, and worse again when
 -- the joints are flaring. A slipped swing lands weak (the weapon's damage cut
@@ -21,7 +25,8 @@
 --
 -- Mod data: artJoint (the flare as felt), artWeather (before relief),
 -- artRelief (the x applied), artSkin (the joints' mean skin temperature, 0
--- with no reading), artStiffTarget, artCombatSet, artKitGiven; on the weapon,
+-- with no reading), artStiffTarget, artMorningMin (minutes of morning
+-- stiffness left), artCombatSet, artKitGiven; on the weapon,
 -- DanTraitsSlip = { min, max } while a slipped swing is weakened.
 require "DanTraits"
 
@@ -42,8 +47,14 @@ local ART_SKIN_COLD     = 23      -- ...and at which it is everything
 -- relief
 local ART_MED_PAINKILLER = 0.5    -- the weather's share of a flare x this while painkillers are in the system
 local ART_MED_PREDNISONE = 0.35   -- ...and x this on prednisone (the stronger counts; they do not stack)
-local ART_START_PILLS   = "Base.Pills"   -- a new character's bottle (Starting Medication)
+local ART_START_PILLS   = "Base.Pills"   -- a new character's bottle (Starting Medication)...
+local ART_START_PRED    = "DanTraits.Prednisone"   -- ...and the end of a prednisone course
+local ART_START_PRED_LEFT = 0.25                   -- a quarter bottle: 5 of its 20 pills
 -- combat
+local ART_MORNING       = 15      -- stiffness added to the floor on getting up from a night's sleep...
+local ART_MORNING_MIN   = 30      -- ...fading to nothing over this many minutes
+local ART_MORNING_DRINK = 0.5     -- a hot drink (coffee, tea) cuts what is left of it to this
+local ART_HOT_DRINKS    = { coffee = true, tea = true }
 local ART_COMBAT_SLOW   = 0.15    -- every attack this much slower...
 local ART_COMBAT_FLARE  = 0.15    -- ...and this much more at a full flare
 -- grip
@@ -132,7 +143,18 @@ local function clearArthritis(player, d)
             end
         end)
     end
-    d.artWeather, d.artRelief, d.artJoint, d.artStiffTarget, d.artCombatSet = nil, nil, nil, nil, nil
+    d.artWeather, d.artRelief, d.artJoint, d.artStiffTarget, d.artCombatSet, d.artMorningMin = nil, nil, nil, nil, nil, nil
+end
+
+-- the morning: the half hour after a night's sleep is the stiffest, fading
+-- as you move; a hot drink cuts what is left of it. 0 the rest of the day.
+local function morningStiffness(d)
+    local left = d.artMorningMin or 0
+    if left <= 0 then return 0 end
+    local extra = ART_MORNING * left / ART_MORNING_MIN
+    left = left - 1
+    d.artMorningMin = left > 0 and left or nil
+    return extra
 end
 
 local function updateArthritisMinute(player, d)
@@ -144,7 +166,7 @@ local function updateArthritisMinute(player, d)
     d.artRelief = relief
     d.artJoint = joint
     if joint >= ART_FLARE_NOTICE and before < ART_FLARE_NOTICE then notify(player, "UI_DanTraits_ArthritisFlare") end
-    local target = ART_STIFF_BASE + (ART_STIFF_FLARE - ART_STIFF_BASE) * joint
+    local target = math.min(ART_STIFF_FLARE, ART_STIFF_BASE + (ART_STIFF_FLARE - ART_STIFF_BASE) * joint + morningStiffness(d))
     d.artStiffTarget = target
     pcall(function()
         local bd = player:getBodyDamage()
@@ -297,13 +319,32 @@ end
 Events.OnWeaponSwing.Add(onWeaponSwing)
 Events.OnPlayerAttackFinished.Add(onAttackFinished)
 DanTraits_Every("frame", "ArthritisGrip", restoreDue, 40)
+-- getting up from a night's sleep (not a nap) starts the morning stiffness (Vitality scores the night)
+DanTraits_AddHook("nightScored", function(_, player, d, quality, hours, wakes, isNap)
+    if isNap or not d or not hasTrait(player, "arthritis") then return nil end
+    d.artMorningMin = ART_MORNING_MIN
+    return nil
+end)
+
+-- a hot drink in that half hour loosens the joints (the drink action names the fluid, DanTraits_Diabetes.lua)
+DanTraits_AddHook("drink", function(_, player, container, litres, name)
+    local d = player and player:getModData().DanTraits
+    if not d or (d.artMorningMin or 0) <= 0 then return nil end
+    name = name or DanTraits_FluidName(container)
+    if name and ART_HOT_DRINKS[string.lower(tostring(name))] then d.artMorningMin = d.artMorningMin * ART_MORNING_DRINK end
+    return nil
+end)
+
 DanTraits_Every("minute", "Arthritis", updateArthritisMinute, 40, { trait = "arthritis", clear = clearArthritis })
 DanTraits_Every("frame", "Arthritis", updateArthritisFrame, 40, { trait = "arthritis" })
 
--- a new character has lived with it: a bottle of painkillers at the start
--- (the Starting Medication option), once
+-- a new character has lived with it: a bottle of painkillers and what is
+-- left of a prednisone course at the start (the Starting Medication option), once
 DanTraits_StartingKit({
-    trait = "arthritis", flag = "artKitGiven", items = { ART_START_PILLS },
-    prepare = function(bottle) bottle:getModData().DanTraitsFilled = true end,   -- a full bottle, not the random spawn fill
+    trait = "arthritis", flag = "artKitGiven", items = { ART_START_PILLS, ART_START_PRED },
+    prepare = function(bottle)
+        bottle:getModData().DanTraitsFilled = true   -- not the random spawn fill
+        if bottle:getFullType() == ART_START_PRED then bottle:setUsedDelta(ART_START_PRED_LEFT) end
+    end,
 })
 
