@@ -107,6 +107,8 @@ H.mins(200)
 assert(not d.sbBurn, "toughened skin: three hours and a bit is not enough now")
 d.sbTan = 1
 near(DanTraits_SunBurnMinutes(d), 540, 1e-9, "a full tan: nine hours")
+near(DanTraits_SunBurnMinutes({}, H.player({ traits = { "sensitiveskin" } })), 180 * 0.7, 1e-9, "Sensitive Skin: burns in two hours")
+near(DanTraits_SunBurnMinutes({}, H.player({ traits = { "sensitiveskin" }, vanilla = { "base:outdoorsman" } })), 180 * 0.7 * 2, 1e-9, "...an Outdoorsman with it: both count")
 d.sbTan, d.sbExp = nil, nil
 
 -- 5b. a seat in a vehicle is shade: the game's isOutside for a seated character is the car's

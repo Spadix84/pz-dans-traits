@@ -14,7 +14,9 @@
 --                        much; Line-Dried lifts x1.5. Not with Slob.
 --   Sensitive Skin (-2)  damp, musty or never-washed clothes against the skin
 --                        itch: discomfort, more with each garment. The clothes
---                        you start in count as washed.
+--                        you start in count as washed. Bleaching stings the
+--                        hands (discomfort per garment), and the sun burns the
+--                        skin in two hours, not three (DanTraits_Sunburn.lua).
 -- Hooks into other traits:
 --   Nomad        stale and musty clothes bother you half as much
 --   Homebody     Line-Dried on a clothesline at home lifts x2
@@ -38,6 +40,7 @@ local LT = {
     SKIN_CAP      = 50,
     SKIN_RAMP     = 1,      -- discomfort per minute at most, rising
     BLEACH_FUMES  = 0.08,   -- airway irritation per garment bleached indoors
+    BLEACH_SKIN   = 15,     -- discomfort per garment bleached, Sensitive Skin
     BLOOD_STRESS  = 0.05,   -- stress per bloody garment washed (0..1)
     BOARD_STRAIN  = 0.06,   -- back load per garment scrubbed on a washboard
 }
@@ -96,6 +99,10 @@ DanTraits_AddHook("laundryWashed", function(_, player, item, method, bloody)
     if not player then return nil end
     if method == "bleach" and DanTraits_AsthmaFumes and not outside(player) then
         DanTraits_AsthmaFumes(player, LT.BLEACH_FUMES)
+    end
+    if method == "bleach" and hasTrait(player, "sensitiveskin") then
+        DanTraits_StatAdd(player:getStats(), CharacterStat.DISCOMFORT, LT.BLEACH_SKIN)
+        DanTraits_Notify(player, "UI_DanTraits_SkinBleach")
     end
     if bloody and DanTraits_HasVanillaTrait(player, "base:hemophobic") then
         DanTraits_StatAdd(player:getStats(), CharacterStat.STRESS, LT.BLOOD_STRESS)

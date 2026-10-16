@@ -69,6 +69,7 @@ local SB_BLOCK_MIN     = 480     -- minutes one application of sun block lasts
 local SB_BLOCK         = 0       -- exposure x this while it is on
 local SB_BLOCK_ITEM    = "DanTraits.Sunblock"
 local SB_OUTDOORSMAN   = 2       -- Outdoorsman: minutes to burn x this
+local SB_SENSITIVE     = 0.7     -- Sensitive Skin (DanTraits_LaundryTraits.lua): minutes to burn x this
 
 local PARTS = { "Head", "Neck", "Torso_Upper", "Torso_Lower", "Groin", "UpperArm_L", "UpperArm_R",
                 "ForeArm_L", "ForeArm_R", "Hand_L", "Hand_R", "UpperLeg_L", "UpperLeg_R",
@@ -118,10 +119,11 @@ end
 DanTraits_SunOn = sunOn
 
 -- minutes of full sun on bare skin to burn this character: longer with a
--- tan, and for an Outdoorsman
+-- tan, and for an Outdoorsman; shorter for Sensitive Skin
 local function burnMinutes(d, player)
     local m = SB_BURN_MIN * (1 + SB_TAN_MORE * clamp01(d.sbTan or 0))
     if player and DanTraits_HasVanillaTrait(player, "base:outdoorsman") then m = m * SB_OUTDOORSMAN end
+    if player and DanTraits_HasTrait(player, "sensitiveskin") then m = m * SB_SENSITIVE end
     return m
 end
 DanTraits_SunBurnMinutes = burnMinutes
