@@ -19,10 +19,12 @@
 -- whatever is in your hands and go down (the shared pass-out,
 -- DanTraits_Faint.lua, deep: nothing wakes you) for 2 to 5 game minutes, can
 -- knock your head (a concussion, DanTraits_Concussion.lua), and come round
--- confused and exhausted: an hour of headache and low mood. Asleep there is
+-- confused and exhausted: an hour of headache and low mood; no new aura
+-- comes in that hour. Asleep there is
 -- no warning and no fall: the seizure wakes you, aching and worn out, and the
--- night scores worse. One that comes while you are already out cold (a faint,
--- a knockout) is only the aftermath.
+-- night scores worse; woken inside the warning (an alarm, a gasp) you get the
+-- notice and the 30 real seconds then. One that comes while you are already
+-- out cold (a faint, a knockout) is only the aftermath.
 --
 -- Mod data:  (the anticonvulsants were in the system, for the
 -- wearing-off notice), epAuraMin (minutes to the seizure), epAuraMs (the real-time
@@ -146,6 +148,13 @@ local function updateEpilepsyMinute(player, d)
         pcall(function() DanTraits_FloorUp(player:getStats(), CharacterStat.UNHAPPINESS, EP_AFTER_SAD * left, 2) end)
     end
     if d.epAuraMin then
+        -- an aura that began asleep: the first awake minute gets the notice and the real-time floor
+        if not d.epAuraMs and not DanTraits_Asleep(player) then
+            local ms = 0
+            pcall(function() ms = getTimestampMs() + EP_AURA_REAL_S * 1000 end)
+            d.epAuraMs = ms
+            notify(player, "UI_DanTraits_EpilepsyAura")
+        end
         d.epAuraMin = math.max(0, d.epAuraMin - 1)
         local waited = true
         pcall(function() waited = getTimestampMs() >= (d.epAuraMs or 0) end)
@@ -153,6 +162,7 @@ local function updateEpilepsyMinute(player, d)
         return
     end
     if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return end
+    if (d.epAfterMin or 0) > 0 then return end   -- no new aura in the aftermath (a head knock there is x6 on the rate)
     if DanTraits_Roll(seizureRate(player, d) / 60) then aura(player, d) end
 end
 

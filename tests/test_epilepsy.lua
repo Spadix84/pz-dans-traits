@@ -69,6 +69,8 @@ near(p._st.fatigue, 0.3, 1e-9, "exhausted")
 H.minute()
 assert(H.pain(p) > 0 and p._st.unhappy > 0, "headache and low mood after")
 assert(d.epAfterMin == 59, "the hour runs down")
+H.rollf = 0; H.minute(); H.rollf = 0.99
+assert(not d.epAuraMin and d.epAfterMin == 58, "no new aura in the aftermath, even on a certain roll (review 2026-10-16 A1.8)")
 
 -- 4b. asleep: no warning, no fall, nothing dropped; it wakes you and the night scores worse
 H.now = H.now + 60000; DanTraits_FaintTick()
@@ -87,6 +89,27 @@ assert(dropped == 0 and not s._bump and not DanTraits_IsPassedOut(s), "no fall, 
 assert(s._woke == 1 and not s._asleep, "it wakes you")
 near(DanTraits_RunHooks("nightQuality", 1, s, sd), 0.7, 1e-9, "the night scores worse")
 near(DanTraits_RunHooks("nightQuality", 1, s, sd), 1, 1e-9, "once")
+
+-- 4c. woken inside the window (an alarm, a gasp): the notice and the 30 real seconds come then,
+-- and the seizure takes the awake path (it used to come with no warning at all; review 2026-10-16 A1.8)
+H.now = H.now + 60000; DanTraits_FaintTick()
+H.hours = H.hours + 1; DanTraits_FaintTick()
+local w = H.player({ traits = { "epilepsy" }, asleep = true }); H.current = w
+local wd = DanTraits_Data(w)
+H.clearHalo(); dropped = 0
+H.rollf = 0; H.minute(); H.rollf = 0.99
+assert(wd.epAuraMin == 8 and not wd.epAuraMs and #H.halo == 0, "asleep: the aura starts silently")
+H.mins(3)
+w._asleep = false; H.minute()
+assert(H.halo[#H.halo] == "UI_DanTraits_EpilepsyAura" and wd.epAuraMs, "awake: the warning, given now")
+assert(wd.epAuraMin == 4 and not wd.epSeizures, "still coming")
+H.mins(4)
+assert(wd.epAuraMin == 0 and not wd.epSeizures, "game minutes up, under 30 real seconds: still the warning")
+H.now = H.now + 30000; H.minute()
+assert(wd.epSeizures == 1 and H.halo[#H.halo] == "UI_DanTraits_EpilepsySeizure", "then the seizure, the awake way")
+assert(dropped == 1 and w._bump == "stagger" and DanTraits_IsPassedOut(w), "dropped, fell, out")
+H.now = H.now + 60000; DanTraits_FaintTick()
+H.hours = H.hours + 1; DanTraits_FaintTick()
 
 -- 5. without the trait nothing happens, but a pill still counts
 local plain = H.player(); H.current = plain
