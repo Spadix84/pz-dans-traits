@@ -209,6 +209,43 @@ act3:updateEat(1)
 near(sipper._md.DanTraits.diaFast, 31.2 + 10, 1e-9, "a beer with Alcohol also loaded: 0.25 l x 40 g/l of carbs")
 assert(#drinkHook == 1 and drinkHook[1].player == sipper and drinkHook[1].fluid == beer and math.abs(drinkHook[1].litres - 0.25) < 1e-9, "drink hook fired once with player, fluid and litres")
 
+-- 12c. one drink, one report: vanilla calls updateEat(jobDelta) every tick and updateEat(1) from
+-- complete(), so a can sipped over ten ticks must reach the readers once, with the whole can
+-- (found in review 2026-10-16: Delicate Stomach, Caffeine and Lactose were dosed per tick)
+local alcoholHook = {}
+DanTraits_AddHook("alcoholDrunk", function(_, player, fluid, litres) alcoholHook[#alcoholHook + 1] = { player = player, litres = litres } end)
+ISDrinkFluidAction.stop = function() end
+ISDrinkFluidAction.perform = function() end
+H.fire("OnGameStart")   -- the stop/perform wraps go on now that the methods exist (the game defines them before OnGameStart)
+assert(ISDrinkFluidAction.DanTraitsWraps["stop:drink-intake"] and ISDrinkFluidAction.DanTraitsWraps["perform:drink-intake"], "stop and perform wrapped")
+local ticks = newPlayer(); H.current = ticks
+local meals = {}
+DanTraits_VitalityOnDrink = function(player, litres, perLitre, kcalPerLitre) meals[#meals + 1] = { litres = litres, perLitre = perLitre, kcal = kcalPerLitre } end
+local cola = { _amount = 0.3, getAmount = function(self) return self._amount end,
+               getProperties = function(self) return { getCarbohydrates = function() return 104 * self._amount end, getCalories = function() return 400 * self._amount end, getAlcohol = function() return 0.05 end } end }
+local act5 = setmetatable({ character = ticks, fluidContainer = cola, sip = 0.02 }, { __index = ISDrinkFluidAction })
+drinkHook = {}
+for i = 1, 10 do act5:updateEat(i / 11) end
+assert(#drinkHook == 0 and #alcoholHook == 0 and #meals == 0, "ten ticks of sipping: nothing reported yet")
+assert(not (ticks._md.DanTraits and ticks._md.DanTraits.diaFast), "and no carbs booked yet")
+act5.sip = 0.1; act5:updateEat(1)
+assert(#drinkHook == 1 and math.abs(drinkHook[1].litres - 0.3) < 1e-9, "complete: the drink hook once, with the whole can")
+assert(#alcoholHook == 1 and math.abs(alcoholHook[1].litres - 0.3) < 1e-9, "alcoholDrunk once, with litres")
+assert(#meals == 1 and math.abs(meals[1].litres - 0.3) < 1e-9 and math.abs(meals[1].perLitre - 104) < 1e-9 and math.abs(meals[1].kcal - 400) < 1e-9, "Vitality: one meal, per-litre figures intact")
+near(ticks._md.DanTraits.diaFast, 31.2, 1e-9, "the whole can's carbs, once")
+assert(rawget(act5, "danDrink") == nil, "the running total is cleared")
+-- a drink stopped part way reports what went down
+local half = { _amount = 0.5, getAmount = function(self) return self._amount end,
+               getProperties = function(self) return { getCarbohydrates = function() return 40 * self._amount end, getCalories = function() return 0 end, getAlcohol = function() return 0 end } end }
+local act6 = setmetatable({ character = ticks, fluidContainer = half, sip = 0.05 }, { __index = ISDrinkFluidAction })
+for i = 1, 4 do act6:updateEat(i / 10) end
+assert(#drinkHook == 1, "still nothing while sipping")
+act6:stop()
+assert(#drinkHook == 2 and math.abs(drinkHook[2].litres - 0.2) < 1e-9 and #alcoholHook == 1, "stopped: the four sips reported once; a soft drink is not alcoholDrunk")
+act6:perform()
+assert(#drinkHook == 2, "perform after stop: nothing twice")
+DanTraits_VitalityOnDrink = nil
+
 -- 13. the meter reads the number and says whether it is out of range; non-diabetics read normal
 local reader = newPlayer(); H.current = reader; reader._md.DanTraits = { glucose = 143.4 }
 local v, bad = DanTraits_DiaRead(reader); assert(v == 143 and bad == false, "reading 143, in range")

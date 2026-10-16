@@ -90,6 +90,7 @@ local CI_OVER        = 1       -- the overdose line this many pills higher
 local DS_JUNK_SICK   = 15      -- food sickness from a whole junk meal
 local DS_DRINK_SICK  = 10      -- food sickness from a drink on an empty stomach...
 local DS_DRINK_HUNGER = 0.5    -- ...which is hunger over this
+local DS_DRINK_LITRES = 0.33   -- the drink that gives the whole DS_DRINK_SICK (a bottle of beer); less is pro rata
 local OH_XP          = 1.25    -- Old Hand: every skill the occupation boosts x this
 local SW_XP          = 0.85    -- Set in Their Ways: skills outside the occupation x this
 -- Reading Glasses
@@ -507,12 +508,14 @@ DanTraits_AddHook("eat", function(_, player, item, fraction)
     DanTraits_StatAdd(player:getStats(), CharacterStat.FOOD_SICKNESS, DS_JUNK_SICK * (tonumber(fraction) or 1))
     return nil
 end)
-DanTraits_AddHook("alcoholDrunk", function(_, player)
+-- once per drink (the Diabetes drink wrap sums the sips), with the litres swallowed
+DanTraits_AddHook("alcoholDrunk", function(_, player, _, litres)
     if not hasTrait(player, "delicatestomach") then return nil end
     local hunger = 0
     pcall(function() hunger = player:getStats():get(CharacterStat.HUNGER) or 0 end)
     if hunger <= DS_DRINK_HUNGER then return nil end
-    DanTraits_StatAdd(player:getStats(), CharacterStat.FOOD_SICKNESS, DS_DRINK_SICK)
+    local share = litres and math.min(1, litres / DS_DRINK_LITRES) or 1
+    DanTraits_StatAdd(player:getStats(), CharacterStat.FOOD_SICKNESS, DS_DRINK_SICK * share)
     return nil
 end)
 

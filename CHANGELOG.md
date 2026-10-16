@@ -92,6 +92,10 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   that night), when bedtime fatigue was at least 0.1. Four hours from half tired to rested is a
   full night; an alarm at 0.4 after going to bed at 0.8 still counts by the hours.
 
+### Fixed
+
+- **A drink counted once per tick, not once per drink** (`DanTraits_Diabetes.lua`): vanilla calls `ISDrinkFluidAction:updateEat` on every tick of the action and once more from `complete()`, and the `drink` and `alcoholDrunk` hooks fired on each call. Delicate Stomach got +10 food sickness per tick of a beer (Nauseous in ten ticks), Caffeine to Sleep saw a mug of coffee as a run of tiny doses (minutes of caffeine hours instead of six), Lactose Intolerant got a halo and a story line per sip, and Vitality logged a meal per sip. The wrap now sums the sips on the action and reports once, with the litres, when the drink completes, is stopped, or the fluid changes; `alcoholDrunk` carries the litres (Delicate Stomach doses pro rata to a 0.33 l bottle, capped at one); Lactose notifies only on the first dose of a brewing flare.
+
 ### Other mods
 
 - **This Is Your Life** (Workshop 3773911887): the age traits work in its Personnel Assessment

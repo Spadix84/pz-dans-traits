@@ -33,8 +33,9 @@ local intoxOf = DanTraits_Intoxication  -- 0..1 intoxication (the raw stat is 0.
 -- slows healing (the Infection file's hazard and growth hooks).
 -- Drinks reach the character through ISDrinkFluidAction.updateEat, wrapped
 -- here through DanTraits_Wrap with the tag "drink-intake" (carbohydrates, the
--- Vitality drink hook and the `drink` hook); Alcohol adds its own layer to the
--- same method and the two chain.
+-- Vitality drink hook, the `drink` hook and `alcoholDrunk`, each once per
+-- drink with the litres swallowed); Alcohol adds its own layer to the same
+-- method and the two chain.
 local DIA_START             = 110
 local DIA_MIN, DIA_MAX      = 20, 600
 local DIA_CARB_MGDL         = 4.0     -- mg/dL per gram of carbohydrate absorbed with nothing to meet it
@@ -592,31 +593,67 @@ DanTraits_Every("minute", "Diabetes", updateDiabetesMinute, 40)
 -- container's properties are totals for what is in it (measured in game: a
 -- mug of 0.2 l cola reports 20.8 g, 0.1 l reports 10.4 g), so divide by the
 -- amount for per litre.
+--
+-- One drink, one report. Vanilla calls updateEat(jobDelta) from update() on
+-- every tick of the action and updateEat(1) from complete() (B42
+-- ISDrinkFluidAction.lua), so every sip reaches this wrap. The sips are summed
+-- on the action object (danDrink) and handed on once: when the action
+-- completes (delta 1), when it is stopped or performed, or when the fluid
+-- changes under it. The readers (DiaOnDrink, the Vitality drink hook, the
+-- `drink` hook for Caffeine and Lactose, `alcoholDrunk` for Delicate Stomach)
+-- are therefore called once per drink with the whole amount, not once per tick.
+local function flushDrink(self)
+    local p = rawget(self, "danDrink")
+    if not p then return end
+    self.danDrink = nil
+    if p.litres <= 0 then return end
+    if p.carbs > 0 then DanTraits_DiaOnDrink(self.character, p.carbs) end
+    if DanTraits_VitalityOnDrink then
+        DanTraits_VitalityOnDrink(self.character, p.litres, p.carbs / p.litres, p.kcal / p.litres)
+    end
+    DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, p.litres, p.name, p.ratio)
+    if p.alcoholic then DanTraits_RunHooks("alcoholDrunk", nil, self.character, self.fluidContainer, p.litres) end
+end
+
 local function wrapDrinkAction()
-    DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "drink-intake", function(original, self, ...)
-        local before, perLitre, kcalPerLitre = 0, 0, 0
-        pcall(function()
-            before = self.fluidContainer:getAmount() or 0
-            if before > 0 then perLitre = (self.fluidContainer:getProperties():getCarbohydrates() or 0) / before end
-        end)
-        pcall(function()
-            if before > 0 then kcalPerLitre = (self.fluidContainer:getProperties():getCalories() or 0) / before end
-        end)
+    DanTraits_Wrap(ISDrinkFluidAction, "updateEat", "drink-intake", function(original, self, delta, ...)
+        local before, carbsTotal, kcalTotal, alcohol = 0, 0, 0, 0
+        pcall(function() before = self.fluidContainer:getAmount() or 0 end)
+        if before > 0 then
+            pcall(function() carbsTotal = self.fluidContainer:getProperties():getCarbohydrates() or 0 end)
+            pcall(function() kcalTotal = self.fluidContainer:getProperties():getCalories() or 0 end)
+            pcall(function() alcohol = self.fluidContainer:getProperties():getAlcohol() or 0 end)
+        end
         -- the fluid is read before the sip: the last one empties the container,
         -- and an empty container has no fluid to name (the "drink" hook's
         -- subscribers, Caffeine and Lactose, are handed the name and its share)
         local name, ratio = DanTraits_FluidName(self.fluidContainer), DanTraits_FluidRatio(self.fluidContainer)
-        local result = original(self, ...)
+        local result = original(self, delta, ...)
         local after = before
         pcall(function() after = self.fluidContainer:getAmount() or before end)
         local litres = before - after
+        local p = rawget(self, "danDrink")
+        if p and before > 0 and p.name ~= name then flushDrink(self); p = nil end
         if litres > 0 then
-            if perLitre > 0 then DanTraits_DiaOnDrink(self.character, litres * perLitre) end
-            if DanTraits_VitalityOnDrink then DanTraits_VitalityOnDrink(self.character, litres, perLitre, kcalPerLitre) end
-            DanTraits_RunHooks("drink", nil, self.character, self.fluidContainer, litres, name, ratio)
+            if not p then
+                p = { litres = 0, carbs = 0, kcal = 0, name = name, ratio = ratio, alcoholic = false }
+                self.danDrink = p
+            end
+            p.litres = p.litres + litres
+            p.carbs = p.carbs + litres * carbsTotal / before
+            p.kcal = p.kcal + litres * kcalTotal / before
+            if alcohol > 0 then p.alcoholic = true end
         end
+        if (tonumber(delta) or 0) >= 1 then flushDrink(self) end
         return result
     end)
+    -- a drink cancelled part way (stop) still went down; perform is the belt to complete's braces
+    for _, method in ipairs({ "stop", "perform" }) do
+        DanTraits_Wrap(ISDrinkFluidAction, method, "drink-intake", function(original, self, ...)
+            flushDrink(self)
+            return original(self, ...)
+        end)
+    end
 end
 wrapDrinkAction()
 Events.OnGameStart.Add(wrapDrinkAction)

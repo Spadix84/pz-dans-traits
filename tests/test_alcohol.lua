@@ -44,7 +44,7 @@ end
 local lastContainer
 local function drink(p, alcohol)
   lastContainer = container(alcohol)
-  ISDrinkFluidAction.updateEat({ character = p, fluidContainer = lastContainer }, 0.1)
+  ISDrinkFluidAction.updateEat({ character = p, fluidContainer = lastContainer }, 1)   -- one sip, and the drink completes
 end
 local drinkHook = {}
 DanTraits_AddHook("drink", function(_, player, fluid, litres) drinkHook[#drinkHook + 1] = { player = player, fluid = fluid, litres = litres } end)

@@ -64,13 +64,15 @@ local function dairyFluid(name)
 end
 DanTraits_IsDairyFluid = dairyFluid
 
--- a dose in full-flare units; the onset clock starts if nothing is brewing
+-- a dose in full-flare units; the onset clock starts if nothing is brewing.
+-- The notice is for the first dose of a brewing flare, not every top-up.
 local function addDose(player, units, now)
     if units <= 0 then return false end
     local d = lacData(player)
+    local first = d.lacPending <= 0
     d.lacPending = d.lacPending + units
     if now then d.lacOnset = 0 elseif (d.lacOnset or 0) <= 0 and d.lacFlare <= 0 then d.lacOnset = LAC_ONSET_MIN end
-    notify(player, "UI_DanTraits_LactoseAte")
+    if first then notify(player, "UI_DanTraits_LactoseAte") end
     return true
 end
 

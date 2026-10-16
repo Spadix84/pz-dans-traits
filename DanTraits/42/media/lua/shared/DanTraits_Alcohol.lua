@@ -94,7 +94,8 @@ local function wrapDrinkAction()
         local alcoholic = snap and isAlcoholic(self.fluidContainer)
         local result = original(self, ...)
         if alcoholic and DanTraits_SandboxOn("DrinkReliefEnabled") then restoreMeds(self.character, snap) end
-        if alcoholic then DanTraits_RunHooks("alcoholDrunk", nil, self.character, self.fluidContainer) end   -- Delicate Stomach
+        -- the `alcoholDrunk` hook (Delicate Stomach) is run once per drink by the
+        -- Diabetes layer, which sums the sips; from here it would be once per tick
         return result
     end)
 end
