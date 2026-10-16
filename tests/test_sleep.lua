@@ -163,4 +163,20 @@ near(off._st.fatigue, 0.4, 1e-9, "off: rest is the game's")
 for _ = 1, 60 do minute() end
 assert(#woken == wokenBefore and off._asleep, "off: bright light does not wake")
 SandboxVars = nil
+
+-- 10. with Vitality off nothing scores the night: the light tally is dropped on waking, not kept for ever
+-- (review 2026-10-16 A1.12); with Vitality on it waits for the scorer
+H.roll = 9999
+local unscored = newPlayer({ light = 0.1 }); H.current = unscored
+for _ = 1, 5 do minute() end
+assert(unscored._md.DanTraits.slNightMin == 5, "five minutes tallied")
+unscored._asleep = false
+SandboxVars = { DanTraits = { VitalityEnabled = false } }
+minute()
+assert(unscored._md.DanTraits.slNightMin == 0 and unscored._md.DanTraits.slNightDark == 0, "awake with Vitality off: dropped")
+SandboxVars = nil
+local scored = newPlayer({ light = 0.1 }); H.current = scored
+for _ = 1, 5 do minute() end
+scored._asleep = false; minute()
+assert(scored._md.DanTraits.slNightMin == 5, "awake with Vitality on: kept for the night's score")
 H.pass()

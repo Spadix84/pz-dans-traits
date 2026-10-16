@@ -28,6 +28,7 @@
 [*]Epilepsy: woken during a seizure's warning (an alarm, a gasp) you now get the warning; and no new seizure can start in the hour after one.
 [*]Laundry: clothes pulled out of a washer the moment it started counted as washed. They count once the cycle has finished with them. Stacked washer-dryers now wash with the laundry rules too.
 [*]Garment tooltips showed the laundry lines in a second box drawn over the item info one with Dan's Vanilla Fixes on. One strip now.
+[*]Turning Vitality off mid-save left a sleep debt that depression, hallucinations and migraines kept reading. Off is off now.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]

@@ -269,6 +269,12 @@ local function updateVitalityMinute(player, d)
             pcall(function() player:setMaxWeightBase(d.vitCarryBase or (player:getMaxWeightBase() - d.vitCarryKg)) end)
             d.vitCarryKg = 0
         end
+        if d and d.vitSleepDebt then
+            -- the debt would otherwise sit there for MDD, Hallucinations and Migraine
+            -- (DanTraits_SleepDebt) for the rest of the save; the night in progress goes too
+            d.vitSleepDebt, d.vitNightHours, d.vitNightWakes, d.vitNightFatigue, d.vitNightBedFatigue = nil, nil, nil, nil, nil
+            d.vitAsleep, d.vitSleepStart, d.vitAwakeMin = nil, nil, nil
+        end
         updateMoodle(player, 0.5)
         updateDebtMoodle(player, 0)
         return

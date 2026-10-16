@@ -295,6 +295,12 @@ for _, fn in ipairs(DanTraits_Hooks.enduranceRegen) do assert(fn(1, off, V(off))
 for _, fn in ipairs(DanTraits_Hooks.catchCold) do assert(fn(1, off, V(off)) == nil, "off: cold hook silent") end
 assert(not DanTraits_VitalityOnEat(off, food({ name = "Carrot", kcal = 100, foodType = "Vegetables" }), 1), "off: meals not scored")
 minute(); assert(V(off).vitality == 1.0 and off._st.unhappiness == 50, "off: nothing moves")
+-- switched off mid-save: the sleep debt and the night in progress go with it, or MDD, Hallucinations and
+-- Migraine read a stale debt for the rest of the save (review 2026-10-16 A1.12)
+V(off).vitSleepDebt, V(off).vitNightHours, V(off).vitNightWakes, V(off).vitAsleep = 0.6, 3, 2, true
+minute()
+assert(V(off).vitSleepDebt == nil and V(off).vitNightHours == nil and V(off).vitNightWakes == nil and V(off).vitAsleep == nil, "off: the sleep keys are cleared")
+assert(DanTraits_SleepDebt(off) == 0, "off: no debt to read")
 SandboxVars = nil
 near(DanTraits_VitalityEffect(off), 1, 1e-9, "on again (unset): the effect is back")
 

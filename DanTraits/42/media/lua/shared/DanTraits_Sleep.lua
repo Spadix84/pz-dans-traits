@@ -9,7 +9,8 @@
 -- reading light can wake you, more often the brighter it is. Exhaustion,
 -- drink and sleeping pills let you sleep through it. Each wake also counts
 -- as an interruption in Vitality's night score. Curtains and light
--- switches matter now.
+-- switches matter now. (With Vitality off nothing scores the night, so the
+-- night's light tally is dropped on waking instead of growing for ever.)
 --
 -- How easily light wakes you depends on who you are:
 --   Restless Sleeper, Night Owl, Cat's Eyes: x1.5 each. Restless Sleeper
@@ -153,6 +154,9 @@ local function updateSleepMinute(player, d)
     pcall(function() fatigue = stats:get(CharacterStat.FATIGUE) or 0 end)
     if not asleep then
         d.slAsleepMin, d.slLastFatigue = nil, nil
+        if (d.slNightMin or 0) > 0 and not DanTraits_SandboxOn("VitalityEnabled") then
+            d.slNightDark, d.slNightMin = 0, 0   -- no scorer to hand it to
+        end
         return
     end
     local light = lightLevel(player)
