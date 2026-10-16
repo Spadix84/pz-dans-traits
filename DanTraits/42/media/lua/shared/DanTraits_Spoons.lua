@@ -23,8 +23,12 @@
 -- the pool is corrected to it, less whatever was spent since getting up.
 --   refill = cap x (SP_FLOOR + (1 - SP_FLOOR) x quality) - debt + "spoonRefill"
 -- A nap (under three hours, Vitality's rule) adds up to SP_NAP_MAX a day
--- without resetting. The cap is SP_CAP unless a "spoonCap" hook says
--- otherwise (MS: the sandbox count, two thirds of it in a flare).
+-- without resetting anything, the count of what was spent since the
+-- morning included (the night's re-score takes it off). The night stays
+-- open as long as Vitality's does (the nightGap hook: an hour, three for
+-- Restless Sleeper), so a sleep inside that window re-scores the same night
+-- instead of refilling again. The cap is SP_CAP unless a "spoonCap" hook
+-- says otherwise (MS: the sandbox count, two thirds of it in a flare).
 --
 -- Tiers on the pool: 1 at or under half (moodle only; a notice once a day),
 -- 2 at SP_LOW or fewer (stamina x0.7, tiring), 3 at nothing (stamina x0.4,
@@ -37,7 +41,7 @@
 -- (since getting up), spTier, spFelt (the tier after the coffee mask; the
 -- moodle shows this), spAsleep, spSleepStart, spHalfTold, spDebtPaid,
 -- spLastQuality, spNightOpen (the morning refill has happened and Vitality
--- has not closed the night yet: a second sleep in that hour is the same
+-- has not closed the night yet: a second sleep in that window is the same
 -- night, not a new one), spAwakeMin (minutes up, closes the night without
 -- Vitality).
 require "DanTraits"
@@ -154,7 +158,8 @@ local function wake(player, d, cap, hours, fatigue)
         if first then morningNotice(player, d) end
         return
     end
-    d.spSpent = 0
+    -- a nap: what was spent since the morning stays counted (a night re-scored
+    -- after it takes the whole day's spending off the refill, not a part)
     local gain = SP_NAP_MAX * math.min(1, hours / SP_NAP_FULL_H) * (0.5 + 0.5 * math.max(0, darkSoFar(d)))
     gain = math.max(0, math.min(gain, SP_NAP_MAX - (d.spNap or 0)))
     d.spNap = (d.spNap or 0) + gain
@@ -230,10 +235,11 @@ local function updateSpoonsMinute(player, d)
         wake(player, d, cap, hours, fatigue)
         tier = tierOf(d.spPool, cap)
     end
-    -- up for the gap: the night is over whether or not Vitality scored it
+    -- up for the gap (Vitality's: the nightGap hook): the night is over whether or not Vitality scored it
     if d.spNightOpen then
         d.spAwakeMin = (d.spAwakeMin or 0) + 1
-        if d.spAwakeMin >= SP_NIGHT_GAP_MIN then d.spNightOpen, d.spAwakeMin = nil, nil end
+        local gap = tonumber(DanTraits_RunHooks("nightGap", SP_NIGHT_GAP_MIN, player)) or SP_NIGHT_GAP_MIN
+        if d.spAwakeMin >= gap then d.spNightOpen, d.spAwakeMin = nil, nil end
     end
 
     -- spend

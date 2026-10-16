@@ -162,6 +162,32 @@ local qr = 0.5 * (5.5 / 7) + 0.5 + 0.1   -- 2.5 + 3 hours, rested, dark
 assert(halo[#halo] == "+UI_DanTraits_SpoonsToday:12", "the second half makes it a night of 5.5 hours: a fresh refill, said in the morning")
 near(S(r).spPool, 12 * (1 / 3 + 2 / 3 * qr) + 0.01 - BASE, 1e-9, "...of 11.9")
 
+-- 6b. a nap keeps the count of what was spent since the morning (the night's re-score takes it
+--     off), and a Restless Sleeper's nap inside their three-hour night window re-scores the same
+--     night instead of refilling again (the pool jumped to a full 12 at the nap, and was then
+--     scored back down: a second morning for the price of a nap)
+do
+  local n = newPlayer({ hours = 700 }); H.current = n
+  minute(); n._light = 0
+  n._asleep = true; minute(); n._hours = 707; n._asleep = false; n._st.fatigue = 0; minute()
+  H.mins(61)   -- the night scored; a new day
+  local spentBefore = S(n).spSpent
+  n._hours = n._hours + 2; n._asleep = true; minute(); n._hours = n._hours + 1; n._asleep = false; minute()
+  near(S(n).spSpent, spentBefore + BASE - 0.01, 1e-9, "a day nap: the spending since the morning is still counted (plus the waking minute's)")
+  local rs = newPlayer({ hours = 800, vanilla = { "base:insomniac" } }); H.current = rs
+  minute(); rs._light = 0; rs._met = 3
+  rs._asleep = true; minute(); rs._hours = 807; rs._asleep = false; rs._st.fatigue = 0; minute()
+  H.mins(90)   -- Vitality holds a Restless Sleeper's night open for three hours
+  assert(S(rs).spNightOpen == true and S(rs).vitNightHours == 7, "90 minutes up: the night is still open for both")
+  local before, notices = S(rs).spPool, #halo
+  rs._hours = rs._hours + 0.5; rs._asleep = true; minute(); rs._hours = rs._hours + 0.5; rs._asleep = false; minute()
+  assert(S(rs).spPool < before + 0.1, "a half-hour nap inside the window: the same night re-scored, not a fresh 12; pool " .. S(rs).spPool)
+  assert(#halo == notices, "and no second morning notice")
+  H.mins(180)
+  assert(S(rs).vitNightHours == 0 and S(rs).spNightOpen == nil, "scored as one night of 7.5 hours")
+  rs._met = 1.5
+end
+
 -- 7. a coffee hides a tier for an hour (through the Caffeine file's dose, for anyone with a budget)
 local c = newPlayer(); H.current = c
 minute(); c._met = 3; DanTraits_SpoonsSet(c, 2); minute()
