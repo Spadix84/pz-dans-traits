@@ -282,6 +282,34 @@ function DanTraits_FluidRatio(container)
     return ratio
 end
 
+-- A storm, heavy rain or a blizzard forecast to start within the next
+-- aheadHours (today's or tomorrow's weather period) and not raining yet (under
+-- rainAt): the pressure dropping ahead of the front. Migraine's trigger and
+-- the joints of Arthritis and Old Injury read it. false when the forecast
+-- cannot be read.
+function DanTraits_StormComing(aheadHours, rainAt)
+    local coming = false
+    pcall(function()
+        local climate = getClimateManager()
+        if (climate:getRainIntensity() or 0) >= (rainAt or 0.1) then return end
+        local now = getGameTime():getTimeOfDay()
+        local forecaster = climate:getClimateForecaster()
+        local days = { forecaster:getForecast(), forecaster:getForecast(1) }
+        for i = 1, 2 do
+            local day = days[i]
+            if day then
+                pcall(function()
+                    if not day:isWeatherStarts() then return end   -- a period carried over from the day before has arrived already
+                    if not (day:isHasStorm() or day:isHasTropicalStorm() or day:isHasHeavyRain() or day:isHasBlizzard()) then return end
+                    local ahead = (i - 1) * 24 + day:getWeatherStartTime() - now
+                    if ahead > 0 and ahead <= (aheadHours or 12) then coming = true end
+                end)
+            end
+        end
+    end)
+    return coming
+end
+
 -- the installed game has getAirTemperatureForCharacter(character, boolean);
 -- older builds took the character alone, so both are tried
 function DanTraits_AirTemp(player)

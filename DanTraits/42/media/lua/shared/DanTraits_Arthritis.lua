@@ -2,7 +2,10 @@
 -- Stiff, painful joints. Hands, forearms and legs carry a floor of the
 -- game's own stiffness all the time (the fitness system's muscle
 -- stiffness, which the game turns into pain and slower movement), and the
--- floor rises in the cold and the damp: a flare. The cold is read from the
+-- floor rises in the cold and the damp, and ahead of a storm (a storm, heavy
+-- rain or a blizzard forecast to start within twelve hours and not raining
+-- yet, the same reading as Migraine's storm trigger: at least 0.4 of a
+-- flare; Old Injury feels it too, through the joint factor): a flare. The cold is read from the
 -- joints' own skin temperature (the game's thermoregulator, which clothing,
 -- wind and wet feed), so gloves and a coat keep it out; the air decides only
 -- when there is no reading. Relief: painkillers halve the weather's share of
@@ -41,6 +44,9 @@ local ART_COLD_FROM     = 15      -- degrees C: the cold factor climbs from here
 local ART_COLD_FULL     = 0       -- ...to full here
 local ART_DAMP_WEIGHT   = 0.7     -- how much damp counts against cold
 local ART_HUMID         = 0.8     -- humidity above this counts as half damp
+local ART_STORM         = 0.4     -- the joints feel a storm coming: at least this much of a flare...
+local ART_STORM_AHEAD_H = 12      -- ...while one is forecast to start within this many hours (DanTraits_StormComing)...
+local ART_STORM_RAIN    = 0.1     -- ...and it is not raining yet (rain intensity under this)
 local ART_FLARE_NOTICE  = 0.5     -- joint factor crossing this upward: a notice
 local ART_SKIN_WARM     = 33      -- a joint's skin temperature (C) at which the cold is nothing (the game's normal skin)...
 local ART_SKIN_COLD     = 23      -- ...and at which it is everything
@@ -112,7 +118,10 @@ local function jointFactor(player)
         if (climate:getHumidity() or 0) > ART_HUMID then damp = math.max(damp, 0.5) end
     end)
     pcall(function() damp = math.max(damp, fraction(player:getStats(), CharacterStat.WETNESS)) end)
-    return clamp01(math.max(cold, ART_DAMP_WEIGHT * damp))
+    local weather = math.max(cold, ART_DAMP_WEIGHT * damp)
+    -- the pressure dropping ahead of a front: you can feel it in your knees before the rain
+    if DanTraits_StormComing(ART_STORM_AHEAD_H, ART_STORM_RAIN) then weather = math.max(weather, ART_STORM) end
+    return clamp01(weather)
 end
 DanTraits_ArthritisJoint = jointFactor
 

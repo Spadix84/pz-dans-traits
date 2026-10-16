@@ -26,6 +26,7 @@
 [*][b]Brittle bones can be looked after.[/b] Dairy, greens, eggs and regular exercise strengthen them over weeks; neglect them and they get worse. The fracture chance follows.
 [*][b]Home helps more.[/b] Spiraling eases at home (twice as much for a Homebody), and an MS character resting at home gets spoons back faster.
 [*][b]A Really Bad Day, worse.[/b] You wake dehydrated, sunburnt in summer, and the clothes next door are somebody's unwashed ones.
+[*][b]Arthritis and Old Injury feel the weather coming.[/b] The joints flare in the twelve hours before a storm, before the first drop; Old Bones' forecast now tells you something your knees already know.
 [/list]
 [h2]Fixed[/h2]
 [list]

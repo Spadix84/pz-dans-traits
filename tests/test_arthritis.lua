@@ -28,6 +28,11 @@ H.climate.temp = -5; near(DanTraits_ArthritisJoint(p), 1, 1e-9, "freezing: full"
 H.climate.rain = 1; near(DanTraits_ArthritisJoint(p), 0, 1e-9, "rain, but indoors")
 p._outside = true; near(DanTraits_ArthritisJoint(p), 0.7, 1e-9, "rain outdoors: 0.7"); p._outside = false; H.climate.rain = 0
 p._st.wetness = 100; near(DanTraits_ArthritisJoint(p), 0.7, 1e-9, "soaked: 0.7"); p._st.wetness = 0
+-- a storm on the way (forecast within twelve hours, not raining yet): at least 0.4, the cold still wins
+H.climate.forecast = { { "storm", 20 } }; near(DanTraits_ArthritisJoint(p), 0.4, 1e-9, "a storm tonight: 0.4")
+H.climate.temp = -5; near(DanTraits_ArthritisJoint(p), 1, 1e-9, "freezing as well: the cold wins"); H.climate.temp = 20
+H.climate.forecast = { nil, { "storm", 6 } }; near(DanTraits_ArthritisJoint(p), 0, 1e-9, "eighteen hours off: nothing yet")
+H.climate.forecast = nil
 H.climate.humidity = 0.9; near(DanTraits_ArthritisJoint(p), 0.35, 1e-9, "humid: 0.35"); H.climate.humidity = 0.5
 
 -- 1b. warm clothes: the cold is read from the joints' skin (the game's thermoregulator, which clothing feeds); the air only without a reading

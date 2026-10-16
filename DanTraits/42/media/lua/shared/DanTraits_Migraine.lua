@@ -216,28 +216,7 @@ end
 -- hours (today's or tomorrow's weather period), and not raining yet: the
 -- pressure dropping ahead of the front. Once per storm, as the 24-hour
 -- refractory outlasts the window.
-local function stormComing()
-    local coming = false
-    pcall(function()
-        local climate = getClimateManager()
-        if (climate:getRainIntensity() or 0) >= MIG_STORM_RAIN then return end
-        local now = getGameTime():getTimeOfDay()
-        local forecaster = climate:getClimateForecaster()
-        local days = { forecaster:getForecast(), forecaster:getForecast(1) }
-        for i = 1, 2 do
-            local day = days[i]
-            if day then
-                pcall(function()
-                    if not day:isWeatherStarts() then return end   -- a period carried over from the day before has arrived already
-                    if not (day:isHasStorm() or day:isHasTropicalStorm() or day:isHasHeavyRain() or day:isHasBlizzard()) then return end
-                    local ahead = (i - 1) * 24 + day:getWeatherStartTime() - now
-                    if ahead > 0 and ahead <= MIG_STORM_AHEAD_H then coming = true end
-                end)
-            end
-        end
-    end)
-    return coming
-end
+local function stormComing() return DanTraits_StormComing(MIG_STORM_AHEAD_H, MIG_STORM_RAIN) end   -- the one reader, in Util (Arthritis and Old Injury share it)
 
 -- awake, out of the sun: how lit (0..1) and how dark (0..1) the square is;
 -- a dim room between the two readings is neither
