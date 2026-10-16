@@ -150,7 +150,15 @@ local function partRate(part, player)
     end
     return rate, name, bandaged, open
 end
-DanTraits_BloodPartRate = partRate
+-- the rate the mod bleeds a part at: the raw rate through the bloodBleed hooks
+-- (Hemophilia, Good Clotter). What WoundCare soaks a dressing by, so a
+-- hemophiliac's bandage goes faster and a Good Clotter's lasts longer.
+local function hookedPartRate(part, player)
+    local rate, name, bandaged, open = partRate(part, player)
+    if rate then rate = DanTraits_RunHooks("bloodBleed", rate, player, part, bandaged, open) end
+    return rate, name, bandaged, open
+end
+DanTraits_BloodPartRate = hookedPartRate
 
 local function round3(x) return DanTraits_Round(x, 3) end
 
@@ -158,9 +166,8 @@ local function round3(x) return DanTraits_Round(x, 3) end
 local function bleedMinute(player, d)
     local total, sources = 0, {}
     DanTraits_EachPart(player, function(part)
-        local rate, name, bandaged, open = partRate(part, player)
+        local rate, name, bandaged = hookedPartRate(part, player)
         if rate then
-            rate = DanTraits_RunHooks("bloodBleed", rate, player, part, bandaged, open)
             total = total + rate
             sources[#sources + 1] = name .. " " .. tostring(round3(rate * 100)) .. "%" .. (bandaged and " (bandaged)" or "")
         end

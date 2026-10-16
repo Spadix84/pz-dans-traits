@@ -181,6 +181,13 @@ h = p.overall(); minute()
 near(D(p).bloodLossMin, 0.012, 1e-12, "hemophilia open: x1.5")
 near(p.overall(), h, 1e-9, "no flat health loss with the blood system on")
 arm._bandaged, arm._bleeding = true, false; minute(); near(D(p).bloodLossMin, 0.002, 1e-12, "hemophilia bandaged: 0.8% x 0.25")
+-- 9b. the exported per-part rate (what WoundCare soaks a dressing by) carries the hook: it was
+-- the raw rate, so a hemophiliac's bandage soaked no faster than anyone's (review 2026-10-16 A1.4)
+near(DanTraits_BloodPartRate(arm, p), 0.002, 1e-12, "exported rate, hemophilia bandaged: the hooked 0.2%")
+local plain = newPlayer(); local plainArm = part(plain, "ForeArm_L"); plainArm._bandaged, plainArm._time = true, 10
+near(DanTraits_BloodPartRate(plainArm, plain), 0.0008, 1e-12, "the same dressing on anyone else: 0.08%, so the hemophiliac's soaks x2.5")
+arm._bandaged, arm._bleeding = false, true
+near(DanTraits_BloodPartRate(arm, p), 0.012, 1e-12, "exported rate, hemophilia open: x1.5")
 
 -- 10. Anaemic: rebuilds at half speed, less short of iron, and spends iron doing it
 p = newPlayer({ "anemia" }); H.current = p

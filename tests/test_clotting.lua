@@ -119,9 +119,8 @@ DanTraits_ApplyClot(p, h, 0)
 assert(h._time == 3 and h._bleeding, "hemophiliac's scratch: not stopped")
 near(DanTraits_ClotFactor(p, h), 0.5, 1e-12, "hemophilia: x0.5")
 local hemoRate = rate(h, p)
-near(hemoRate, 0.008 * 3 / 10 * 1 * 0.5, 1e-12, "the base rate, halved")
--- Hemophilia's own hook still adds its x1.5 on top
-near(DanTraits_RunHooks("bloodBleed", hemoRate, p, h, false, hemoRate), hemoRate * 1.5, 1e-12, "Hemophilia's x1.5 still applies")
+-- the exported rate is the hooked one (review 2026-10-16 A1.4): the clot's half, then Hemophilia's x1.5
+near(hemoRate, 0.008 * 3 / 10 * 1 * 0.5 * 1.5, 1e-12, "the base rate halved by the clot, x1.5 by Hemophilia")
 
 -- 7. the console
 p = newPlayer({ parts = {} }); H.current = p
