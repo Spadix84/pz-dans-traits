@@ -53,7 +53,7 @@ local DIA_T2_PILL_CUT       = 0.35    -- resistance removed by metformin, fully 
 local DIA_RENAL_ABOVE       = 180
 local DIA_RENAL_RATE        = 0.002   -- per minute x (glucose - 180)
 local DIA_EXERCISE_DROP     = 0.5     -- per minute while running, sprinting or exerted
-local DIA_EXERT_ENDURANCE   = 0.6     -- "exerted" means endurance under this
+local DIA_EXERT_ENDURANCE   = 0.6     -- "exerted" means endurance under this AND still being spent (Asthma's test)
 local DIA_SLEEP_DROP        = 0.05    -- per minute asleep
 local DIA_PANIC_MIN         = 30      -- panic below this (out of 100) does nothing
 local DIA_PANIC_RISE        = 0.15    -- per minute at full panic, scaling linearly from the minimum (was 0.4: too fast in play)
@@ -471,6 +471,10 @@ local function updateDiabetesMinute(player, d)
     pcall(function() moving = player:isSprinting() or player:isRunning() end)
     pcall(function() drunk = intoxOf(player) > DRINK.tipsy end)
     pcall(function() endurance = stats:get(CharacterStat.ENDURANCE) or 1 end)
+    -- low endurance alone is an asthma attack, angina's regen cut, blood loss or spoons
+    -- holding it down for hours; exercise is endurance going down this minute
+    local spending = endurance < (d.diaEndPrev or endurance) - 1e-6
+    d.diaEndPrev = endurance
     pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
     local res = diaResistance(player, d)
     local fitness = DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0
@@ -504,7 +508,7 @@ local function updateDiabetesMinute(player, d)
 
     -- everything else
     if g > DIA_RENAL_ABOVE then g = g - (g - DIA_RENAL_ABOVE) * DIA_RENAL_RATE end
-    if moving or endurance < DIA_EXERT_ENDURANCE then g = g - DIA_EXERCISE_DROP end
+    if moving or (spending and endurance < DIA_EXERT_ENDURANCE) then g = g - DIA_EXERCISE_DROP end
     if asleep then g = g - DIA_SLEEP_DROP end
     if drunk then g = g - DIA_ALCOHOL_DROP end
     if panic > DIA_PANIC_MIN then g = g + (panic - DIA_PANIC_MIN) / (100 - DIA_PANIC_MIN) * DIA_PANIC_RISE end

@@ -157,6 +157,14 @@ local half = newPlayer({ panic = 65 }); H.current = half; minute()
 near(g(half), 110 + 0.17 + 0.075, 1e-9, "panic 65: halfway between the minimum and full")
 local runner = newPlayer({ sprint = true }); H.current = runner; minute()
 near(g(runner), 110 + 0.17 - 0.5, 1e-9, "running: -0.5 a minute")
+-- 10b. low endurance alone is not exercise: it has to be going down this minute (an asthma attack,
+-- angina or blood loss hold it low for hours; review 2026-10-16 A1.6)
+local winded = newPlayer({ endurance = 0.3 }); H.current = winded; minute()
+near(g(winded), 110 + 0.17, 1e-9, "endurance low and steady: no exercise drop")
+winded._st.endurance = 0.25; minute()
+near(g(winded), 110 + 0.17 * 2 - 0.5, 1e-9, "spent this minute and under 0.6: the drop")
+minute()
+near(g(winded), 110 + 0.17 * 3 - 0.5, 1e-9, "steady again: no drop")
 
 -- 11. Type 2: resistance from weight, eased by exercise and metformin; the body pulls sugar back to a setpoint
 local heavy = newPlayer({ traits = { "diabetes2" }, weight = 110 }); H.current = heavy
