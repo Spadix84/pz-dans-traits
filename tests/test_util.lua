@@ -102,6 +102,18 @@ local wrote = false
 local halfBroken = { get = function() return 10 end, set = function() wrote = true; error("write refused") end }
 assert(pcall(DanTraits_FloorUp, halfBroken, PAIN, 40, 5) and wrote, "a refused write fails soft")
 
+-- the floor flag lands on the player the drivers are running for, else on player 0
+do
+  local other = H.player()
+  DanTraits_DeltaKeys[PAIN] = "painTest"
+  DanTraits_RunningFor = other
+  other._st.pain = 0; DanTraits_FloorUp(other:getStats(), PAIN, 10, 10)
+  DanTraits_RunningFor = nil
+  assert(other._md.DanTraits.floorsThisMinute.painTest == true, "flagged on the running player")
+  assert(not (p._md.DanTraits and p._md.DanTraits.floorsThisMinute and p._md.DanTraits.floorsThisMinute.painTest), "not on player 0")
+  DanTraits_DeltaKeys[PAIN] = nil
+end
+
 -- PainFloor: the largest source wins, once a minute, on the head; the game takes the pain reduction off (H.pain models it)
 do
   local q = H.player(); H.current = q

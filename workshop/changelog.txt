@@ -39,6 +39,7 @@
 [*]Under the hood: three deferred jobs shared one error-log slot (only the first failure was ever printed); the health panel could show every mod line twice after loading a second world with another health mod on; and Dan's Vanilla Fixes' coolers could throw an error every ten minutes on a vanished container. All guarded.
 [*]Laundry: "Wring" on a garment already wrung now says so instead of silently doing nothing; putting up a clothesline no longer cancels itself because you walked onto one of its squares; and a Homemaker's cleaner hand wash reaches the clothes you bathe in.
 [*]Concussion: a crash is judged on the character it happened to; a second split-screen player, or a character who takes over after a death on a server, no longer inherits it.
+[*]Split-screen: the minute systems, pain floors and moodles now run for every local player, not only the first.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]

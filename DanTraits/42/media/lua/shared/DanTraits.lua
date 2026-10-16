@@ -458,8 +458,8 @@ end
 --              Blood, Infection, Concussion and WoundCare stand down on their
 --              sandbox switch and hand-roll the same thing.
 --
--- Core registers the only three handlers. Each does the preamble once (the
--- local player, dead check; the frame one also skips non-local players), then
+-- Core registers the only three handlers. Each does the preamble once (every
+-- local player, the dead check; the frame one also skips non-local players), then
 -- runs every registration in order through DanTraits_Track(label, ...) inside
 -- DanTraits_Guard, so one system's error is logged once and never stops the next.
 -- Order decides which system sees which other system's floors and stat writes
@@ -540,15 +540,33 @@ local function runEntry(entry, track, player, d)
     end
 end
 
+-- The player the drivers are running for right now (nil between runs), so
+-- a helper called from inside a system can tell whose data to write without
+-- being handed the player (DanTraits_FloorUp's floor flag in Util reads it).
+DanTraits_RunningFor = nil
+
 local function runDrivers(list, player, d)
     local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
+    DanTraits_RunningFor = player
     for i = 1, #list do runEntry(list[i], track, player, d) end
+    DanTraits_RunningFor = nil
+end
+
+-- Every local player (singleplayer has one; split-screen up to four, each a
+-- distinct object: the same player reached through two indices counts once).
+local function eachLocalPlayer(fn)
+    local seen = {}
+    for i = 0, 3 do
+        local player = getSpecificPlayer(i)
+        if player and not seen[player] then
+            seen[player] = true
+            if not player:isDead() then fn(player) end
+        end
+    end
 end
 
 local function runClock(list)
-    local player = getSpecificPlayer(0)
-    if not player or player:isDead() then return end
-    runDrivers(list, player, traitData(player))
+    eachLocalPlayer(function(player) runDrivers(list, player, traitData(player)) end)
 end
 Events.EveryOneMinute.Add(function() runClock(drivers.minute) end)
 Events.EveryTenMinutes.Add(function() runClock(drivers.ten) end)

@@ -257,7 +257,21 @@ do
   on = true; H.minute(); assert(fnRuns == 1, "...and yes: run")
 end
 
--- 13. DanTraits_AddHook with an order: lower first, default 100, equal orders in load order
+-- 13. the clock runs every local player once (split-screen), whatever index reaches them
+do
+  local a, b = H.player({}), H.player({})
+  local ran = {}
+  DanTraits_Every("minute", "EveryTest3", function(player) ran[#ran + 1] = player end, 40)
+  local was = getSpecificPlayer
+  getSpecificPlayer = function(i) if i == 0 or i == 2 then return a elseif i == 1 then return b end end
+  H.minute()
+  getSpecificPlayer = was
+  assert(#ran == 2 and ran[1] == a and ran[2] == b, "two local players, each once: " .. #ran)
+  assert(DanTraits_RunningFor == nil, "nobody is running between minutes")
+  for i = #DanTraits_Drivers.minute, 1, -1 do if DanTraits_Drivers.minute[i].label == "EveryTest3" then table.remove(DanTraits_Drivers.minute, i) end end
+end
+
+-- 14. DanTraits_AddHook with an order: lower first, default 100, equal orders in load order
 do
   local ran = {}
   DanTraits_AddHook("orderTest", function(v) ran[#ran + 1] = "a100"; return v + 1 end)

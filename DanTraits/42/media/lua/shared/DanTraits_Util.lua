@@ -198,7 +198,8 @@ function DanTraits_FloorUp(stats, stat, floor, ramp)
         local key = okS and DanTraits_DeltaKeys[stat]
         if key then
             pcall(function()
-                local d = DanTraits_Data(getSpecificPlayer(0))
+                -- the player a driver is running for (core sets it); player 0 from anywhere else
+                local d = DanTraits_Data(DanTraits_RunningFor or getSpecificPlayer(0))
                 d.floorsThisMinute = d.floorsThisMinute or {}
                 d.floorsThisMinute[key] = true
             end)
