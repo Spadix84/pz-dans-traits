@@ -390,8 +390,11 @@ function DanTraits_RunHooks(name, value, ...)
 end
 
 -- Tiny frame scheduler shared by the traits: run fn after that many frames.
--- tag (optional) names the job in the log when it fails.
+-- tag names the job in the log when it fails; every job should give one, as
+-- untagged jobs share the one "later" slot and only the first failure of
+-- any of them is ever printed.
 local laterPending = {}
+DanTraits_LaterPending = laterPending   -- read-only view for the tests
 function DanTraits_Later(frames, fn, tag)
     laterPending[#laterPending + 1] = { frames = frames, fn = fn, tag = tag }
 end

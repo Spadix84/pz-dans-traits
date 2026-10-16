@@ -333,7 +333,7 @@ local function onTobacco(player, kind, item, portion)
     pcall(function() pre.sick = stats:get(CharacterStat.FOOD_SICKNESS) or 0 end)
     DanTraits_Later(1, function()
         if player and not player:isDead() then applyDose(player, dose, smoked, pre) end
-    end)
+    end, "smoker-dose")
     return true
 end
 

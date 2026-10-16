@@ -85,49 +85,65 @@ function C.state(item, now)
 end
 
 -- The square an item is on (for the air temperature), and the car it is in.
+-- These run every ten minutes and on every inventory refresh, so every game
+-- call is guarded: nil (no square) rather than an error a tick.
 function C.squareOf(item)
-    local w = item:getWorldItem()
-    if w then return w:getSquare() end
-    local c = item:getContainer()
-    while c do
-        local holder = c:getContainingItem()
-        if not holder then break end
-        w = holder:getWorldItem()
-        if w then return w:getSquare() end
-        c = holder:getContainer()
-    end
-    if not c then return nil end
-    local who = c:getCharacter()
-    if who then return who:getCurrentSquare(), who:getVehicle() end
-    local vehiclePart = c:getVehiclePart()
-    if vehiclePart and vehiclePart:getVehicle() then
-        local car = vehiclePart:getVehicle()
-        return car:getSquare(), car
-    end
-    local parent = c:getParent()
-    if parent then return parent:getSquare() end
-    return c:getSourceGrid()
+    local sq, car = nil, nil
+    pcall(function()
+        local w = item:getWorldItem()
+        if w then sq = w:getSquare() return end
+        local c = item:getContainer()
+        while c do
+            local holder = c:getContainingItem()
+            if not holder then break end
+            w = holder:getWorldItem()
+            if w then sq = w:getSquare() return end
+            c = holder:getContainer()
+        end
+        if not c then return end
+        local who = c:getCharacter()
+        if who then sq, car = who:getCurrentSquare(), who:getVehicle() return end
+        local vehiclePart = c:getVehiclePart()
+        if vehiclePart and vehiclePart:getVehicle() then
+            car = vehiclePart:getVehicle()
+            sq = car:getSquare()
+            return
+        end
+        local parent = c:getParent()
+        if parent then sq = parent:getSquare() return end
+        sq = c:getSourceGrid()
+    end)
+    return sq, car
 end
 
+-- the air at the item's square; 20 C when it cannot be read. The two-argument
+-- form (square, vehicle) is tried for an item in a car, the plain one otherwise
+-- or if that is not there.
 function C.airTemp(item)
     local sq, car = C.squareOf(item)
     if not sq then return 20 end
-    local climate = getClimateManager()
-    if car then return climate:getAirTemperatureForSquare(sq, car) end
-    return climate:getAirTemperatureForSquare(sq)
+    local temp = nil
+    if car then pcall(function() temp = getClimateManager():getAirTemperatureForSquare(sq, car) end) end
+    if temp == nil then pcall(function() temp = getClimateManager():getAirTemperatureForSquare(sq) end) end
+    return tonumber(temp) or 20
 end
 
 -- Where a pack is: "freezer" or "fridge" (outermost container, powered, as
 -- vanilla judges food), "cooler" (lying directly in one; the cooler is the
 -- second result), or "air".
 function C.place(item)
-    local outer = item:getOutermostContainer()
-    if outer and outer:isPowered() then
-        if outer:isFreezer() then return "freezer" end
-        if outer:isFridge() then return "fridge" end
-    end
-    local c = item:getContainer()
-    local holder = c and c:getContainingItem()
+    local freezer, fridge, holder = false, false, nil
+    pcall(function()
+        local outer = item:getOutermostContainer()
+        if outer and outer:isPowered() then
+            freezer = outer:isFreezer() == true
+            fridge = outer:isFridge() == true
+        end
+        local c = item:getContainer()
+        holder = c and c:getContainingItem() or nil
+    end)
+    if freezer then return "freezer" end
+    if fridge then return "fridge" end
     if C.isCooler(holder) then return "cooler", holder end
     return "air"
 end
@@ -171,25 +187,30 @@ end
 
 -- Take back what the food aged over the cold hours beyond the fridge rate.
 function C.coolFood(food, coldHours)
-    if coldHours <= 0 or food:isFrozen() then return end
-    if food:getOffAgeMax() >= 1000000000 then return end   -- never spoils
+    if coldHours <= 0 then return end
     local back = coldHours * (1 - C.fridgeFactor()) * C.rotSpeed() / 24
-    food:setAge(math.max(0, food:getAge() - back))
+    pcall(function()
+        if food:isFrozen() then return end
+        if food:getOffAgeMax() >= 1000000000 then return end   -- never spoils
+        food:setAge(math.max(0, food:getAge() - back))
+    end)
 end
 
 -- Name an item "<name> (<state>)", or just "<name>" when state is nil. Names
 -- the player gave it themselves are left alone.
 function C.label(item, state)
-    local script = item:getScriptItem()
-    local base = script and script:getDisplayName()
-    if not base then return end
-    local name = item:getName()
-    if name ~= base and string.sub(name, 1, string.len(base) + 2) ~= base .. " (" then return end
-    local want = state and (base .. " (" .. state .. ")") or base
-    if name ~= want then
-        item:setName(want)
-        item:setCustomName(state ~= nil)
-    end
+    pcall(function()
+        local script = item:getScriptItem()
+        local base = script and script:getDisplayName()
+        if not base then return end
+        local name = item:getName()
+        if name ~= base and string.sub(name, 1, string.len(base) + 2) ~= base .. " (" then return end
+        local want = state and (base .. " (" .. state .. ")") or base
+        if name ~= want then
+            item:setName(want)
+            item:setCustomName(state ~= nil)
+        end
+    end)
 end
 
 function C.packLabel(chill, max)

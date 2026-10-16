@@ -40,6 +40,8 @@ assert(moodleValues[#moodleValues] < 0.06, "moodle value maps to bad level 4")
 p._st.endurance = 1.0
 local hBefore = p._health
 minute()
+assert(#DanTraits_LaterPending >= 1, "the cough burst is scheduled")
+for _, job in ipairs(DanTraits_LaterPending) do assert(job.tag == "asthma-burst", "a Later job without its tag: " .. tostring(job.tag)) end   -- untagged jobs share one log slot
 assert(p._st.endurance == 0.85, "endurance drains 0.15 per minute in an attack")
 assert(p._health == hBefore - 0.75 and H.sounds[#H.sounds] == 30, "health drains 0.75, cough heard at 30 tiles")
 for _ = 1, 400 do minute() end

@@ -158,7 +158,10 @@ assert(halo[#halo] == "+UI_DanTraits_SmokerGum", "gum notice")
 
 -- 11. a pack through the pill action; chewing tobacco spares the lungs
 local lungs = md(s).nicLungs
-DanTraits_RunHooks("prePill", nil, s, "CigarettePack", item("CigarettePack")); vanillaSmoker(s._st); H.fire("OnTick")
+DanTraits_RunHooks("prePill", nil, s, "CigarettePack", item("CigarettePack")); vanillaSmoker(s._st)
+assert(#DanTraits_LaterPending == 1, "the dose is scheduled for the next frame")
+for _, job in ipairs(DanTraits_LaterPending) do assert(job.tag == "smoker-dose", "a Later job without its tag: " .. tostring(job.tag)) end   -- untagged jobs share one log slot
+H.fire("OnTick")
 near(md(s).nicLungs - lungs, 0.0004, 1e-9, "pack: a cigarette on the lungs")
 assert(md(s).nicDryHours == 0, "pack: resets the clock")
 lungs = md(s).nicLungs; md(s).nicDryHours = 5

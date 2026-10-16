@@ -228,7 +228,7 @@ local function updateAsthmaMinute(player, d)
             DanTraits_Later(n * (20 + ZombRand(40)), function()
                 -- a burst that lands after the attack ended (inhaler, or a pause) is dropped
                 if player and not player:isDead() and d.asthmaAttack then asthmaCough(player, ASTHMA_COUGH_RADIUS_T4, true) end
-            end)
+            end, "asthma-burst")
         end
         DanTraits_StatAdd(stats, CharacterStat.ENDURANCE, -ASTHMA_ATTACK_END_DRAIN)
         -- not being able to breathe is terrifying, and the panic feeds the attack

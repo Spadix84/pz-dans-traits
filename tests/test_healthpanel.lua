@@ -107,4 +107,18 @@ assert(panel.doctorLevel == 7 and seenText[2] == "- Deep Wound Severe", "live le
 local before = ISHealthBodyPartListBox.doDrawItem
 H.fire("OnGameStart"); assert(ISHealthBodyPartListBox.doDrawItem == before, "not wrapped twice")
 
+-- 10. another mod wraps after this one, then a second world re-wraps on OnGameStart: the inner
+--     layer finds itself inside the outer's call and passes through, so the mod's lines show once
+do
+  local other = ISHealthBodyPartListBox.doDrawItem
+  ISHealthBodyPartListBox.doDrawItem = function(self, ...) return other(self, ...) end
+  H.fire("OnGameStart")
+  assert(ISHealthBodyPartListBox.doDrawItem ~= other, "re-wrapped over the other mod's layer")
+  local d = draw(10, {}, makePart({ fracture = 60 }))
+  local bone = 0
+  for _, l in ipairs(d) do if l.s:find("BoneEarly", 1, true) then bone = bone + 1 end end
+  assert(bone == 1, "the bone line is drawn once, not per layer: " .. texts(d))
+  assert(#d == 2, "the part's name and the one line: " .. texts(d))
+end
+
 H.pass()

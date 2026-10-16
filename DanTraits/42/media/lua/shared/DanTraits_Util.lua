@@ -291,11 +291,12 @@ function DanTraits_AirTemp(player)
 end
 
 function DanTraits_PanicDecay(stats, perTick)
-    local panic = stats:get(CharacterStat.PANIC) or 0
+    local panic = 0
+    pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
     if panic <= 0 or perTick <= 0 then return end
     local mult = 1
     pcall(function() mult = GameTime.getInstance():getThirtyFPSMultiplier() or 1 end)
-    stats:set(CharacterStat.PANIC, math.max(0, panic - perTick * mult))
+    pcall(function() stats:set(CharacterStat.PANIC, math.max(0, panic - perTick * mult)) end)
 end
 
 -- the splint is always among them: its getDuration() returns the time its

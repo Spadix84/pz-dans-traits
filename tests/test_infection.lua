@@ -12,7 +12,8 @@ H.stubs()
 local later = {}
 
 H.load("Infection")
-function DanTraits_Later(_, fn) later[#later + 1] = fn end
+local laterTags = {}
+function DanTraits_Later(_, fn, tag) later[#later + 1] = fn; laterTags[#laterTags + 1] = tag end
 local function runLater() for _, fn in ipairs(later) do fn() end later = {} end
 H.expectEvery("minute", "Infection")
 
@@ -175,7 +176,9 @@ assert(D(p).infUnfinished, "three doses: unfinished course")
 a._t.deep = 0
 H.rollf = 0; mins(27 * 60); H.rollf = 0.99
 assert(D(p).infFocus and D(p).infFocus > 0 and halo[#halo] == "UI_DanTraits_InfectionRelapse", "relapse, inside")
-local F = D(p).infFocus; DanTraits_TakeAntibiotic(p, 1); mins(60); assert(D(p).infFocus < F, "antibiotics work on it")
+local F = D(p).infFocus; DanTraits_TakeAntibiotic(p, 1)
+assert(laterTags[#laterTags] == "infection-abx", "the undo of vanilla's one-shot effect carries its tag (untagged jobs share one log slot): " .. tostring(laterTags[#laterTags]))
+mins(60); assert(D(p).infFocus < F, "antibiotics work on it")
 
 -- 9. a finished course: no relapse
 p = newPlayer(); H.current = p; a = arm(p); a._t.deep = 10

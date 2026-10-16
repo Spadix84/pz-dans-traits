@@ -422,7 +422,7 @@ function DanTraits_TakeAntibiotic(player, amount)
     d.infDoses = (d.infDoses or 0) + amount
     -- vanilla's one-shot effect is set inside the eat; undo it once it has been
     if DanTraits_Later then
-        DanTraits_Later(2, function() pcall(function() player:setReduceInfectionPower(0) end) end)
+        DanTraits_Later(2, function() pcall(function() player:setReduceInfectionPower(0) end) end, "infection-abx")
     end
     return d.infAbx
 end

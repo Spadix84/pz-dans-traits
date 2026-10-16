@@ -140,6 +140,10 @@ local function wrapDrawItem()
     if ISHealthBodyPartListBox.doDrawItem == ISHealthBodyPartListBox.DanTraitsDrawItem then return end
     local original = ISHealthBodyPartListBox.doDrawItem
     local function drawItem(self, y, item, alt)
+        -- wrapped twice (another mod wrapped after this one, then a second world
+        -- re-wrapped on OnGameStart): the inner layer is already inside the outer's
+        -- call, so it passes through and the lines are drawn once
+        if self.danTraitsDrawing then return original(self, y, item, alt) end
         local panel = self.parent
         if not panel or ISHealthPanel.cheat or not item or not item.item or not item.item.bodyPart then
             return original(self, y, item, alt)
@@ -157,7 +161,9 @@ local function wrapDrawItem()
         self.drawText = function(_, str, x, ly, r, g, b, a, font)
             lines[#lines + 1] = { str = str, x = x, y = ly, r = r, g = g, b = b, a = a, font = font }
         end
+        self.danTraitsDrawing = true
         local ok, yEnd = pcall(original, self, y, item, alt)
+        self.danTraitsDrawing = nil
         self.drawText = draw
         if not ok then
             local bottom = y

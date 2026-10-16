@@ -250,4 +250,36 @@ assert(C.maxHours() == 12, "sandbox hours")
 SandboxVars.DansVanillaFixes = nil
 assert(C.maxHours() == 6, "default without the sandbox table")
 
+-- a game object that throws (a container gone, an item mid-removal) is not an error every ten
+-- minutes and on every inventory refresh: no square, the default air, "air", nothing renamed
+do
+  local broken = item("Base.Coldpack")
+  broken.getWorldItem = function() error("gone") end
+  broken.getOutermostContainer = function() error("gone") end
+  broken.getScriptItem = function() error("gone") end
+  local sq, car = C.squareOf(broken)
+  assert(sq == nil and car == nil, "no square")
+  assert(C.airTemp(broken) == 20, "the default air")
+  assert(C.place(broken) == "air", "nowhere in particular")
+  C.label(broken, "Cold")
+  assert(broken.name == "Cold Pack", "not renamed")
+  local food = item("Base.Milk", { age = 2 })
+  food.isFrozen = function() error("gone") end
+  C.coolFood(food, 3)
+  assert(food.age == 2, "left as it was")
+  -- the two-argument air read is tried for an item in a car and the plain one otherwise or on failure
+  local calls = {}
+  getClimateManager = function() return { getAirTemperatureForSquare = function(_, s, v)
+    calls[#calls + 1] = v and 2 or 1
+    if v then error("no such method") end
+    return 7
+  end } end
+  local inCar = item("Base.Coldpack")
+  inCar.getWorldItem = function() return nil end
+  inCar.getContainer = function() return { getContainingItem = function() return nil end, getCharacter = function() return nil end,
+    getVehiclePart = function() return { getVehicle = function() return { getSquare = function() return square end } end } end } end
+  assert(C.airTemp(inCar) == 7 and calls[1] == 2 and calls[2] == 1, "in a car: the two-argument read first, then the plain one")
+  getClimateManager = function() return { getAirTemperatureForSquare = function() return air end } end
+end
+
 H.pass("coolers")

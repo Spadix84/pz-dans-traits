@@ -306,4 +306,13 @@ do
   assert(DanTraits_Cough(bare, 35, "smoker") and H.sounds[#H.sounds] == 35, "no triggerCough: falls back to a sound at the radius")
 end
 
+-- DanTraits_PanicDecay: a stats object that throws is a game failure, not ours; nothing raised
+do
+  local broken = { get = function() error("no stats") end, set = function() error("no stats") end }
+  DanTraits_PanicDecay(broken, 0.1)
+  local st = { v = 10, get = function(self) return self.v end, set = function(self, _, v) self.v = v end }
+  DanTraits_PanicDecay(st, 0.5)
+  assert(st.v == 9.5, "a working one decays: " .. tostring(st.v))
+end
+
 H.pass()
