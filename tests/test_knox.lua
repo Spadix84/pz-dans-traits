@@ -1,9 +1,10 @@
 -- Offline test for DanTraits_Knox.lua: Resilient's hidden roll against the
--- Knox infection (sandbox KnoxSurviveChance, 25 by default), made once per
--- infection; a lucky one is cleared (parts, body, clock, infection and fever
--- stats) when the infection has run its break point, with a notice; an
--- unlucky one is left to vanilla; no roll without Resilient; a new infection
--- rolls again; the console command.
+-- Knox infection (sandbox KnoxSurviveChance, 10 by default and at most; a
+-- Run Down body has less), made once per infection; a lucky one is cleared
+-- (parts, body, clock, infection and fever stats) when the infection has run
+-- its break point, with a notice; an unlucky one is left to vanilla; no roll
+-- without Resilient; beaten once only, a second infection runs its course in
+-- six hours; the console command.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -54,6 +55,25 @@ assert(p._bd.time == -1 and p._bd.mort == -1, "the clock reset")
 assert(p._st.zinf == 0 and p._st.zfever == 0, "infection and fever stats at 0")
 assert(H.halo[1] == "+UI_DanTraits_KnoxBeaten", "a good notice")
 assert(D(p).knox == nil, "forgotten")
+
+-- 1b. once only: the next infection is not rolled, says so, and runs its course in six hours
+p._bd.infected = true; p._st.zinf = 10; H.rng = { 0 }; H.clearHalo(); rolls = H.rolls; minute()
+assert(D(p).knox.lucky == false and D(p).knox.second and H.rolls == rolls, "a second infection: no roll")
+assert(p._bd.mort == 6 and H.halo[1] == "UI_DanTraits_KnoxSecond", "six hours to live, and a notice")
+p._st.zinf = 99; minute(); assert(p._bd.infected, "and it is not beaten")
+assert(DanTraits_ExtraCommands.knox(p, {}):find("beaten once already", 1, true), "status says so")
+DanTraits_ExtraCommands.knox(p, { "again" }); p._bd.infected = false; minute()
+p._bd.infected = true; p._st.zinf = 10; H.rng = { 0 }; minute()
+assert(D(p).knox.lucky == true, "knox again: the next infection rolls")
+
+-- 1c. a Run Down body has less of a chance: down to half at the bottom of Vitality; a fit one the sandbox value, never more
+DanTraits_VitalityEffect = function() return -1 end
+assert(DanTraits_ExtraCommands.knox(p, {}):find("chance 5.0%", 1, true), "run down: 5%")
+DanTraits_VitalityEffect = function() return -0.5 end
+assert(DanTraits_ExtraCommands.knox(p, {}):find("chance 7.5%", 1, true), "half way down: 7.5%")
+DanTraits_VitalityEffect = function() return 1 end
+assert(DanTraits_ExtraCommands.knox(p, {}):find("chance 10.0%", 1, true), "thriving: the full 10%, no more")
+DanTraits_VitalityEffect = nil
 
 -- 2. unlucky: left to vanilla, right to the end
 local u = newPlayer({ vanilla = { "base:resilient" }, infected = true })

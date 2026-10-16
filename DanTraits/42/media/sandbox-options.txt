@@ -22,7 +22,7 @@ option DanTraits.StartingMedication
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsStartingMedication,}
 
 option DanTraits.KnoxSurviveChance
-{type = integer, min = 0, max = 100, default = 25, page = DanTraits, translation = DanTraitsKnoxSurviveChance,}
+{type = integer, min = 0, max = 10, default = 10, page = DanTraits, translation = DanTraitsKnoxSurviveChance,}
 
 option DanTraits.BloodEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsBloodEnabled,}
@@ -119,3 +119,21 @@ option DanTraits.LaundryLineDryRate
 
 option DanTraits.LaundryPoncho
 {type = boolean, default = true, page = DanTraitsLaundry, translation = DanTraitsLaundryPoncho,}
+
+option DanTraits.ReadingEnabled
+{type = boolean, default = true, page = DanTraitsReading, translation = DanTraitsReadingEnabled,}
+
+option DanTraits.ReadingPageScale
+{type = double, min = 0.1, max = 4.0, default = 1.0, page = DanTraitsReading, translation = DanTraitsReadingPageScale,}
+
+option DanTraits.ReadingRealBookChance
+{type = integer, min = 0, max = 100, default = 8, page = DanTraitsReading, translation = DanTraitsReadingRealBookChance,}
+
+option DanTraits.ReadingTasteStrength
+{type = double, min = 0.0, max = 2.0, default = 1.0, page = DanTraitsReading, translation = DanTraitsReadingTasteStrength,}
+
+option DanTraits.ReadingMoodleScale
+{type = double, min = 0.1, max = 4.0, default = 1.0, page = DanTraitsReading, translation = DanTraitsReadingMoodleScale,}
+
+option DanTraits.ReadingRereadComfort
+{type = boolean, default = true, page = DanTraitsReading, translation = DanTraitsReadingRereadComfort,}

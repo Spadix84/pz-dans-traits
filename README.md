@@ -58,7 +58,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
 | [Grit](#grit-8) | +8 | Feels pain a third less. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
-| [Resilient](#resilient-10-vanilla-reworked) | 10 | Vanilla's disease resistance, plus a 25% chance to beat the Knox infection. |
+| [Resilient](#resilient-10-vanilla-reworked) | 10 | Vanilla's disease resistance, plus a 10% chance (at most, and once) to beat the Knox infection. |
 
 ### Negative traits
 
@@ -293,7 +293,7 @@ Attacks that cost you hours.
 #### Resilient (10, vanilla reworked)
 
 - Less prone to disease and slower to turn, as vanilla. Re-costed from 4 to 10.
-- A 25% chance to beat the Knox infection (sandbox option Resilient: Knox Survival Chance). The roll is hidden: you get sick like anyone else, and if you are lucky the fever breaks partway through and the infection is gone. Every new infection rolls again.
+- A 10% chance to beat the Knox infection (sandbox option Resilient: Knox Survival Chance, 10 at most); a Run Down body (Vitality) has down to half of it. Once only: a second infection runs its course in six hours, with a notice. The roll is hidden: you get sick like anyone else, and if you are lucky the fever breaks partway through and the infection is gone. Every new infection rolls again.
 
 #### Grit (+8)
 
