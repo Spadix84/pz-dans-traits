@@ -8,7 +8,10 @@
 -- vanilla Hard of Hearing trait is put on for half an hour, and longer the
 -- louder it got; more shooting while it lasts adds to the time. Keen Hearing
 -- is taken off while it lasts and given back after. The ringing also makes
--- light sleep lighter (the sleepWake hook). Only your own shots count: the
+-- light sleep lighter (the sleepWake hook), scores a night slept through it
+-- lower (nightQuality), and is read by Migraine (a noise trigger) and by
+-- Hallucinations (whispers come easier) through DanTraits_TinnitusRinging.
+-- Only your own shots count: the
 -- game gives no event for someone else's, or for an explosion.
 --
 -- Not with Hard of Hearing or Deaf (Tinnitus would do nothing).
@@ -32,6 +35,7 @@ local TN_DEAF_MIN      = 30      -- minutes half deaf when they do...
 local TN_DEAF_PER      = 10      -- ...plus this a point of load past it
 local TN_DEAF_MAX      = 240     -- at most this long
 local TN_WAKE          = 1.5     -- light wakes you x this while ringing
+local TN_NIGHT         = 0.15    -- a night slept with the ears ringing scores x (1 - this)
 
 -- name is the CharacterTrait constant's name ("HARD_OF_HEARING")
 local function setTrait(player, name, on) return DanTraits_SetTrait(player, "base:" .. name, on) end
@@ -92,6 +96,19 @@ end
 DanTraits_AddHook("sleepWake", function(m, player, d)
     if not d or (d.tnDeafMin or 0) <= 0 then return nil end
     return m * TN_WAKE
+end)
+
+-- 0..1: whether the ears are ringing now (a strength for the other systems:
+-- Migraine's noise trigger, Hallucinations' whispers, the night's score)
+function DanTraits_TinnitusRinging(player)
+    local d = player and player:getModData().DanTraits
+    return (d and (d.tnDeafMin or 0) > 0) and 1 or 0
+end
+
+-- a night slept with the ears ringing is a worse night (Vitality scores it)
+DanTraits_AddHook("nightQuality", function(quality, player, d)
+    if not d or (d.tnDeafMin or 0) <= 0 then return nil end
+    return quality * (1 - TN_NIGHT)
 end)
 
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}

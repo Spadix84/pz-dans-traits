@@ -53,6 +53,11 @@ near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half the late headache +1")
 DanTraits_ConcussionLateStrength = nil
 near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Concussion loaded: nothing")
 
+-- 1c2b. ringing ears (Tinnitus) add 1.5
+DanTraits_TinnitusRinging = function() return 1 end
+near(DanTraits_MigraineChance(p), 0.3 + 1.5, 1e-9, "ears ringing +1.5")
+DanTraits_TinnitusRinging = nil
+
 -- 1c3. thirst is the moment's or the hours of it (the dehydration load), whichever is worse
 DanTraits_Dehydration = function() return 0.5 end
 near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half the dehydration load, no thirst now: +1")

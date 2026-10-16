@@ -39,12 +39,16 @@ local before = d.tnDeafMin
 swing(p, gun(200))
 assert(d.tnDeafMin > before and #H.halo == notices, "more shooting adds time, no second notice")
 near(DanTraits_RunHooks("sleepWake", 1, p, d), 1.5, 1e-9, "the ringing makes sleep lighter")
+near(DanTraits_RunHooks("nightQuality", 0.8, p, d), 0.8 * 0.85, 1e-9, "and a night slept through it scores lower")
+assert(DanTraits_TinnitusRinging(p) == 1, "ringing: 1 for the other systems")
 
 -- 3. the time runs out: hearing back as it was
 H.mins(math.ceil(d.tnDeafMin) + 1)
 assert(not p._traits["base:hardofhearing"] and p._traits["base:keenhearing"], "Hard of Hearing off, Keen Hearing back")
 assert(H.halo[#H.halo] == "+UI_DanTraits_TinnitusFaded", "faded notice")
 near(DanTraits_RunHooks("sleepWake", 1, p, d), 1, 1e-9, "sleep as before")
+near(DanTraits_RunHooks("nightQuality", 0.8, p, d), 0.8, 1e-9, "the night as before")
+assert(DanTraits_TinnitusRinging(p) == 0, "not ringing: 0")
 
 -- 4. without the trait gunfire does nothing
 local plain = H.player(); H.current = plain

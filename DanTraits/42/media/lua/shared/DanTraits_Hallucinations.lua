@@ -6,7 +6,8 @@ local hasTrait = DanTraits_HasTrait
 -- Schizophrenia -------------------------------------------------------------
 -- Episodes roll every ten minutes. The base chance never goes away; stress,
 -- unhappiness, tiredness, night and the mod's own signals (sleep debt, a
--- concussion, alcohol withdrawal, a wound infection's fever) all push it up. The episodes
+-- concussion and the headache after one, alcohol withdrawal, a wound
+-- infection's fever, ringing ears) all push it up. The episodes
 -- (DanTraits_Episodes, below): a phantom zombie sound nearby, a whisper, a door or
 -- window shaking as if thumped, breaking glass, footsteps, a sudden bout of panic
 -- with the startle sting, and the phantom charge (a harmless sprinter that fades).
@@ -20,6 +21,7 @@ local SCHIZO_FEVER_WEIGHT    = 0.30   -- times a wound infection's fever (0..1):
 local SCHIZO_SLEEP_DEBT_WEIGHT  = 0.25 -- times Vitality's sleep debt (0..1)
 local SCHIZO_CONCUSSION_WEIGHT  = 0.20 -- times the concussion's strength (0..1)
 local SCHIZO_WITHDRAWAL_WEIGHT  = 0.30 -- times Alcoholic's withdrawal strength (0..1)
+local SCHIZO_TINNITUS_WEIGHT    = 0.15 -- while the ears ring (Tinnitus): whispers come easier
 local SCHIZO_COOLDOWN_TICKS  = 0      -- ten-minute ticks to skip after an episode (0 = can fire every tick)
 local SCHIZO_SOUND_PANIC     = 8      -- panic added by a phantom sound or thump (0..100)
 local SCHIZO_BOUT_PANIC_MIN  = 35     -- panic bout adds this plus up to 20 more
@@ -436,6 +438,7 @@ local function schizoChance(player)
     chance = chance + SCHIZO_SLEEP_DEBT_WEIGHT * strength("DanTraits_SleepDebt", player)
     chance = chance + SCHIZO_CONCUSSION_WEIGHT * strength("DanTraits_ConcussionStrength", player)
     chance = chance + SCHIZO_WITHDRAWAL_WEIGHT * strength("DanTraits_AlcoholWithdrawal", player)
+    chance = chance + SCHIZO_TINNITUS_WEIGHT * strength("DanTraits_TinnitusRinging", player)
     return chance
 end
 DanTraits_SchizoChance = schizoChance

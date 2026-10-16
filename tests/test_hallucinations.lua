@@ -47,6 +47,9 @@ near(chance(p), 0.12 + 0.25 + 0.20 + 0.30 + 0.30, 1e-9, "all four together")
 DanTraits_InfectionFever = nil
 DanTraits_SleepDebt, DanTraits_ConcussionStrength, DanTraits_AlcoholWithdrawal = nil, nil, nil
 near(chance(p), 0.12, 1e-9, "none loaded: the base")
+DanTraits_TinnitusRinging = function() return 1 end
+near(chance(p), 0.12 + 0.15, 1e-9, "ears ringing +0.15")
+DanTraits_TinnitusRinging = nil
 
 -- 4. the panic bout is the harshest: roll < 15 is a bout, but not for a character already down (a concussion or a fever):
 -- that roll becomes a whisper (panic +8 rather than +35)

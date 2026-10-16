@@ -3,7 +3,7 @@
 -- bad night (Vitality's sleep debt), thirst (the hours of it, the dehydration
 -- load, or the moment's), stress, a hangover, nicotine withdrawal, caffeine
 -- withdrawal, a wound infection's fever, a concussion and the headache that
--- comes back after one, bright
+-- comes back after one, ringing ears (Tinnitus), bright
 -- daylight outdoors, sleeping with the light on, heat (hot air or an
 -- overheated body), the smell of corpses close by and a storm on the way (in
 -- the twelve hours before the forecast says it starts), and never
@@ -71,6 +71,7 @@ local MIG_HANGOVER      = 2.0     -- added at a full-strength hangover
 local MIG_NICOTINE      = 1.5     -- added at full nicotine withdrawal (Smoker)
 local MIG_CONCUSSION    = 3.0     -- added at the worst concussion
 local MIG_CONCUSSION_LATE = 2.0   -- added at the worst of the headache that comes back after one (DanTraits_Concussion.lua)
+local MIG_NOISE         = 1.5     -- added while the ears ring (Tinnitus)
 local MIG_FEVER         = 2.0     -- added at full fever (wound infection)
 local MIG_CAFFEINE      = 2.0     -- added at full caffeine withdrawal (Caffeine Dependent)
 local MIG_HEAT          = 2.0     -- added at full heat: the hotter of the air...
@@ -333,6 +334,7 @@ local function migraineParts(player)
     if DanTraits_NicotineWithdrawal then parts.nicotine = MIG_NICOTINE * strength("DanTraits_NicotineWithdrawal", player) end
     if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * strength("DanTraits_ConcussionStrength", player) end
     if DanTraits_ConcussionLateStrength then parts.concussionLate = MIG_CONCUSSION_LATE * strength("DanTraits_ConcussionLateStrength", player) end
+    if DanTraits_TinnitusRinging then parts.noise = MIG_NOISE * strength("DanTraits_TinnitusRinging", player) end
     if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * strength("DanTraits_CaffeineWithdrawalOf", player) end
     if DanTraits_InfectionFever then parts.fever = MIG_FEVER * strength("DanTraits_InfectionFever", player) end
     parts.light = MIG_SLEEP_LIGHT * sleepLit(player) + (inBrightLight(player) and MIG_LIGHT or 0)
