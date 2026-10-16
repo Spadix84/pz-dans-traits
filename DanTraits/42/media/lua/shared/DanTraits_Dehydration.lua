@@ -11,8 +11,13 @@
 -- no more than Slightly Thirsty. It brings a headache (a pain floor through
 -- DanTraits_PainFloor), tiredness, and slower endurance recovery (the
 -- enduranceRegen hook of the stat delta pipeline), all scaling with the load.
--- Thirst already brings on migraines (DanTraits_Migraine.lua) and blood lost
--- comes back only with water (DanTraits_Blood.lua).
+-- Thirst already brings on migraines (DanTraits_Migraine.lua, which reads
+-- this load as well as the moment's thirst) and blood lost comes back only
+-- with water (DanTraits_Blood.lua). A hangover and the load feed each other:
+-- a hangover builds the load at Thirsty's pace times its strength, whatever
+-- the moodle says, so only drinking water keeps a hungover body ahead of it;
+-- and a hangover that starts on a dehydrated body is up to half as bad again
+-- (the hangoverSeverity hook).
 --
 -- Mod data: dhLoad (0..1), dhTier (the last notice's tier).
 -- Console: dehydration <load 0..1>
@@ -30,6 +35,8 @@ local DH_PAIN_RAMP     = 2
 local DH_FATIGUE_MIN   = 0.0004  -- tiredness a minute at full load
 local DH_REGEN         = 0.4     -- endurance recovery x (1 - this x load)
 local DH_TIER          = { 0.3, 0.7 }   -- a thirst headache | dehydrated
+local DH_HANGOVER_BUILD = 1       -- a hangover builds the load at Thirsty's pace x this x its strength, whatever the moodle says
+local DH_HANGOVER      = 0.5     -- a hangover starting on a dehydrated body: severity x (1 + this x load)
 
 local function sandboxOn() return DanTraits_SandboxOn("DehydrationEnabled") end
 
@@ -46,10 +53,13 @@ local function updateDehydrationMinute(player, d)
     local level = thirstLevel(player)
     local load = d.dhLoad or 0
     local build = DH_BUILD_LEVEL[math.min(level, #DH_BUILD_LEVEL)] or 0
+    -- a hangover is a dry body whatever the moodle says: it builds the load on its own, and only
+    -- water drinking takes it off faster than the hangover puts it on
+    build = build + DH_HANGOVER_BUILD * DanTraits_Strength("DanTraits_HangoverStrength", player)
     if level >= 2 then
         load = math.min(1, load + DH_BUILD_MIN * build)
     elseif level <= 1 and load > 0 then
-        load = math.max(0, load - DH_DRAIN_MIN)
+        load = math.max(0, load - DH_DRAIN_MIN + DH_BUILD_MIN * build)   -- watered: the drain still wins
     end
     d.dhLoad = load > 0 and load or nil
     local tier = tierOf(load)
@@ -69,6 +79,13 @@ end
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)
     if not d or (d.dhLoad or 0) <= 0 then return nil end
     return delta * (1 - DH_REGEN * clamp01(d.dhLoad))
+end)
+
+-- a hangover that starts on a dehydrated body is worse (DanTraits_Hangover.lua)
+DanTraits_AddHook("hangoverSeverity", function(severity, player)
+    local load = DanTraits_Dehydration(player)
+    if load <= 0 then return nil end
+    return severity * (1 + DH_HANGOVER * clamp01(load))
 end)
 
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}

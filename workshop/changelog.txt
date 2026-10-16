@@ -16,6 +16,7 @@
 [*][b]Rough Night less often.[/b] A short sleep that leaves you rested now counts as a full night: four hours from half tired to fully rested no longer reads as a rough one.
 [*][b]Smoke gets into your clothes.[/b] For six hours after a smoke your clothes go stale half as fast again, Smoker or not.
 [*][b]Migraines after a knock on the head.[/b] The headache that comes back days after a concussion can now bring on a migraine.
+[*][b]Hangovers dry you out.[/b] A hangover builds dehydration unless you keep drinking water, a hangover on a dehydrated body is worse, and a day of being dry counts toward a migraine even after a sip.
 [/list]
 [h2]Fixed[/h2]
 [list]
