@@ -373,6 +373,15 @@ splitter._md.DanTraits.glucose = 300
 assert(DanTraits_DiaParts(splitter, food("Chocolate", 110)) == 5, "already at 300: a little at a time")
 splitter._md.DanTraits.glucose = 125; splitter._md.DanTraits.diaFast = 60
 assert(DanTraits_DiaParts(splitter, food("Chocolate", 50)) ~= nil, "sugar still going in counts")
+-- the insulin on board hits at this body's sensitivity, as it does in the live model: at 125 with
+-- 3 doses injected an hour ago, an 85 g bar dosed for an ordinary body peaks at 379 (halve it)
+-- for an ordinary body and at 311 (eat it whole) for one that insulin hits three times as hard
+splitter._md.DanTraits.diaFast = 0; splitter._md.DanTraits.diaInsulin = { { dose = 3, t = 60 } }
+assert(DanTraits_DiaParts(splitter, food("Chocolate", 85)) == 2, "ordinary sensitivity: the 3 doses working are not enough, eat half at a time")
+DanTraits_VitalityDiaSensitivity = function() return 3 end
+assert(DanTraits_DiaParts(splitter, food("Chocolate", 85)) == nil, "insulin hitting three times as hard: the 3 doses on board cover it whole")
+DanTraits_VitalityDiaSensitivity = nil
+splitter._md.DanTraits.diaInsulin = {}
 -- the meter: level 2 adds the insulin still working, level 3 what to do
 local m1 = knower(3); minute()
 assert(#DanTraits_DiaMeterAdvice(m1, 250) == 0, "level 1: the meter says no more")
@@ -385,15 +394,29 @@ local a2 = DanTraits_DiaMeterAdvice(m2, 200)
 assert(#a2 == 1 and a2[1][1] == "UI_DanTraits_DiaOnBoard", "level 2: insulin still working only")
 local m3 = knower(0, true); minute()
 local hi = DanTraits_DiaMeterAdvice(m3, 250)
-assert(hi[2][1] == "UI_DanTraits_DiaCorrect" and hi[2][2] == 3, "250, nothing on board: 3 doses to 110 (2.8)")
+assert(hi[2][1] == "UI_DanTraits_DiaCorrect" and hi[2][2] == 3, "250, nothing on board: 3 doses to 110 (settles at 256 with the creep and the kidneys: 2.9)")
 DanTraits_DiaInject(m3, 2)
-assert(DanTraits_DiaMeterAdvice(m3, 250)[2][2] == 1, "with 2 doses already working: 1 more")
+assert(DanTraits_DiaMeterAdvice(m3, 250)[2][2] == 1, "with 2 doses already working: 1 more (settles at 178: 1.35)")
+-- the correction counts Type 1's creep (0.17 a minute, 41 over the four hours a dose takes) and
+-- the kidneys dumping sugar above 180, as the live model does: 120 with nothing working is not
+-- on course but 161 in four hours, one dose; 400 settles at 348 (the kidneys take most of the
+-- creep back), 5 doses, not the 7 that 400 + 41 - 110 would say
+local creep = knower(0, true); minute()
+local c120 = DanTraits_DiaMeterAdvice(creep, 120)
+assert(c120[2][1] == "UI_DanTraits_DiaCorrect" and c120[2][2] == 1, "120, nothing on board: the creep makes it 161 in four hours: 1 dose, got " .. tostring(c120[2][1]) .. " " .. tostring(c120[2][2]))
+assert(DanTraits_DiaMeterAdvice(creep, 115)[2][2] == 1, "115 reads as a dose too (156 in four hours)")
+assert(DanTraits_DiaMeterAdvice(creep, 400)[2][2] == 5, "400: the kidneys count, 5 doses (348 - 110 = 4.8), not 7")
+DanTraits_DiaInject(creep, 1)
+local c120d = DanTraits_DiaMeterAdvice(creep, 120)
+assert(c120d[2][1] == "UI_DanTraits_DiaSteady" and c120d[2][3] == true, "120 with a dose working: settles at 111, on course, said in green")
+DanTraits_DiaInject(creep, 1)
+local c120dd = DanTraits_DiaMeterAdvice(creep, 100)
+assert(c120dd[2][1] == "UI_DanTraits_DiaEat" and c120dd[2][2] == 15, "100 with two doses working: settles at 41, eat about 15 g (17, to the nearest 5), got " .. tostring(c120dd[2][1]) .. " " .. tostring(c120dd[2][2]))
 local lo = knower(0, true); minute()
 local low = DanTraits_DiaMeterAdvice(lo, 60)
 assert(low[2][1] == "UI_DanTraits_DiaEat" and low[2][2] == 15, "60: eat about 15 g (12.5, to the nearest 5)")
 lo._md.DanTraits.diaFast = 10
-assert(DanTraits_DiaMeterAdvice(lo, 60)[2][1] == "UI_DanTraits_DiaSteady", "60 with 10 g of sugar still going in: on course (heading for 100)")
-assert(DanTraits_DiaMeterAdvice(knower(0, true), 120)[2][3] == true, "120: on course, said in green")
+assert(DanTraits_DiaMeterAdvice(lo, 60)[2][1] == "UI_DanTraits_DiaSteady", "60 with 10 g of sugar still going in: on course (heading for 100); under the low line the meter never says inject")
 instanceof = realInstanceof
 -- the meter's tooltip: its last reading, how long ago, and the advice it gave then
 local meterMd = {}

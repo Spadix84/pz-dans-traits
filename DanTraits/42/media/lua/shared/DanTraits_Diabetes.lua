@@ -218,6 +218,15 @@ end
 -- Doses to cover a food: carbohydrates x DIA_CARB_MGDL / (DIA_DOSE_MGDL x
 -- sensitivity), about one dose per 12.5 g. Type 2 is not told doses: its own
 -- insulin covers most of a meal, so the Type 1 sum would overdose it.
+-- The forecast behind the splitting advice and the meter's correction is the
+-- model's own minute steps (diaProject: carbohydrates, insulin on board at
+-- this body's sensitivity, Type 1's creep, the kidneys) run four hours ahead,
+-- nothing else (no exercise, sleep or drink). Both aim where sugar settles
+-- once everything on board has worked, creep and all: a Type 1 at 120 with
+-- nothing working is told the dose the next four hours need, not "steady",
+-- and one at 100 with two doses working is told to eat. A reading under the
+-- low line is low now: it is told to eat unless the sugar already going in
+-- covers it, and is never told to inject.
 local DIA_KNOW_FA     = { 3, 6, 9 }   -- First Aid for levels 1, 2, 3
 local DIA_KNOW_RECIPE = "DanTraitsInsulinDosing"
 local DIA_KNOW_RANGE  = { 0.6, 0.8 }  -- levels 1 and 2: doses x this, rounded down, to doses x (2 - this), rounded up
@@ -276,19 +285,19 @@ function DanTraits_DiaFoodDoses(player, item)
     return carbs * DIA_CARB_MGDL / (DIA_DOSE_MGDL * k), fast
 end
 
--- where sugar would peak over the next four hours if this food went in now
--- with its doses: the model's own minute steps for carbohydrates, insulin
--- (what is on board as well), Type 1's creep and the kidneys, nothing else
--- (no exercise, sleep or drink). The doses are given for an ordinary body, so
--- the sensitivity cancels out of the insulin step.
+-- the next four hours if this food went in now with its doses (the header's
+-- forecast): where sugar would peak, and where it settles at the end. The
+-- insulin on board hits at this body's sensitivity k, as the live model
+-- applies it; the new doses are given for an ordinary body (DanTraits_DiaParts),
+-- so the sensitivity cancels out of their step.
 local DIA_SIM_MINUTES = DIA_INSULIN_END
-local function diaPeakIfDosed(d, carbs, fast, doses)
+local function diaProject(d, carbs, fast, doses, k)
     local g = d.glucose
     local f = d.diaFast + (fast and carbs or 0)
     local s = d.diaSlow + (fast and 0 or carbs)
     local shots = {}
-    for _, shot in ipairs(d.diaInsulin or {}) do shots[#shots + 1] = { dose = shot.dose, t = shot.t } end
-    shots[#shots + 1] = { dose = doses, t = 0 }
+    for _, shot in ipairs(d.diaInsulin or {}) do shots[#shots + 1] = { dose = shot.dose * k, t = shot.t } end
+    if doses > 0 then shots[#shots + 1] = { dose = doses, t = 0 } end
     local peak = g
     for _ = 1, DIA_SIM_MINUTES do
         local a, b = f * DIA_FAST_RATE, s * DIA_SLOW_RATE
@@ -301,7 +310,7 @@ local function diaPeakIfDosed(d, carbs, fast, doses)
         if g > DIA_RENAL_ABOVE then g = g - (g - DIA_RENAL_ABOVE) * DIA_RENAL_RATE end
         if g > peak then peak = g end
     end
-    return peak
+    return peak, g
 end
 
 -- nil if the whole thing is safe to eat dosed, else how many parts to eat it
@@ -310,10 +319,11 @@ function DanTraits_DiaParts(player, item)
     local carbs, fast = diaItemCarbs(item)
     if carbs <= 0 then return nil end
     local d = diaData(player)
+    local k = diaSensitivity(player, 0, diaFitness(player))
     local doses = carbs * DIA_CARB_MGDL / DIA_DOSE_MGDL
-    if diaPeakIfDosed(d, carbs, fast, doses) < DIA_HIGH[3] then return nil end
+    if diaProject(d, carbs, fast, doses, k) < DIA_HIGH[3] then return nil end
     for n = 2, 4 do
-        if diaPeakIfDosed(d, carbs / n, fast, doses / n) < DIA_HIGH[3] then return n end
+        if diaProject(d, carbs / n, fast, doses / n, k) < DIA_HIGH[3] then return n end
     end
     return 5
 end
@@ -364,13 +374,18 @@ function DanTraits_DiaMeterAdvice(player, g)
     local out = { { "UI_DanTraits_DiaOnBoard", oneDecimal(onBoard) } }
     if level < 3 then return out end
     local k = diaSensitivity(player, 0, diaFitness(player))
-    -- where sugar is heading: now, plus food still going in, minus insulin still working
-    local heading = g + (d.diaFast + d.diaSlow) * DIA_CARB_MGDL - onBoard * DIA_DOSE_MGDL * k
-    local gap = heading - DIA_TARGET
-    if gap >= DIA_DOSE_MGDL * k * 0.5 then
-        out[#out + 1] = { "UI_DanTraits_DiaCorrect", math.floor(gap / (DIA_DOSE_MGDL * k) + 0.5) }
-    elseif gap <= -DIA_CARB_MGDL * 5 then
+    -- where sugar settles once the food going in and the insulin working have done,
+    -- with four hours of Type 1's creep and what the kidneys dump above 180 (the
+    -- forecast's own steps, from this reading)
+    local _, settles = diaProject({ glucose = g, diaFast = d.diaFast, diaSlow = d.diaSlow, diaInsulin = d.diaInsulin }, 0, true, 0, k)
+    local gap = settles - DIA_TARGET
+    -- low now: short unless the sugar already going in covers it (no waiting on the creep)
+    local lowNow = g < DIA_LOW[1]
+    if lowNow then gap = math.min(gap, g + (d.diaFast + d.diaSlow) * DIA_CARB_MGDL - DIA_TARGET) end
+    if gap <= -DIA_CARB_MGDL * 5 then
         out[#out + 1] = { "UI_DanTraits_DiaEat", math.floor(-gap / DIA_CARB_MGDL / 5 + 0.5) * 5 }
+    elseif not lowNow and gap >= DIA_DOSE_MGDL * k * 0.5 then
+        out[#out + 1] = { "UI_DanTraits_DiaCorrect", math.floor(gap / (DIA_DOSE_MGDL * k) + 0.5) }
     else
         out[#out + 1] = { "UI_DanTraits_DiaSteady", nil, true }
     end
