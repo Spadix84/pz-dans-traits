@@ -120,4 +120,29 @@ local ps7c = limbs(); local u = newPlayer({ traits = {}, parts = ps7c }); H.curr
 H.rolls = 0; H.rng = {}; impact(u, 1)
 assert(H.rolls == 0, "no trait: the impact hook does not roll")
 
+-- 8. the bones: the score starts at 0.5 (the 20%), drifts down 0.02 a day, is held by exercise and
+-- fed by calcium (at most 0.06 a day); the chance follows it, 10% strong to 30% weak
+H.expectEvery("minute", "Brittle")
+local bones = limbs(); local b = newPlayer({ parts = bones }); H.current = b
+H.minute(); local bd = b._md.DanTraits
+H.near(bd.brBone, 0.5 - 0.02 / 1440, 1e-12, "starts at 0.5 and drifts")
+H.near(DanTraits_BrittleChance(b), 20 * (1.5 - bd.brBone), 1e-9, "the chance follows the score")
+local function food(name, ft) return { getType = function() return name end, getFullType = function() return "Base." .. name end,
+  getFoodType = function() return ft end, haveExtraItems = function() return false end } end
+local was = bd.brBone
+DanTraits_RunHooks("eat", nil, b, food("Milk", "NoExplicit"), 1); H.near(bd.brBone, was + 0.04, 1e-12, "milk: +0.04")
+DanTraits_RunHooks("eat", nil, b, food("Cabbage", "Vegetables"), 1); H.near(bd.brBone, was + 0.06, 1e-12, "greens: +0.02")
+DanTraits_RunHooks("eat", nil, b, food("Egg", "Egg"), 1); H.near(bd.brBone, was + 0.06, 1e-12, "the day's calcium is capped at 0.06")
+DanTraits_RunHooks("eat", nil, b, food("Steak", "Meat"), 1); H.near(bd.brBone, was + 0.06, 1e-12, "meat: nothing")
+H.hours = H.hours + 24; H.minute()
+DanTraits_RunHooks("eat", nil, b, food("Egg", "Egg"), 0.5); H.near(bd.brBone, was + 0.06 - 0.02 / 1440 + 0.005, 1e-12, "a new day: half an egg, +0.005")
+bd.vitExercise = 0.6; local held = bd.brBone; H.minute(); H.near(bd.brBone, held, 1e-12, "regular exercise holds the drift")
+bd.brBone = 1; H.near(DanTraits_BrittleChance(b), 10, 1e-9, "strong bones: 10%")
+H.rng = { 10 }; hit(b, "WEAPONHIT", 5); for _, x in ipairs(bones) do assert(x._fracture == 0, "roll 10: safe with strong bones") end
+H.rng = { 9, 0, 0 }; hit(b, "WEAPONHIT", 5); assert(bones[1]._fracture > 0, "roll 9: snaps")
+bd.brBone = 0; H.near(DanTraits_BrittleChance(b), 30, 1e-9, "weak bones: 30%")
+assert(DanTraits_ExtraCommands.brittle(b, { "bone", "0.75" }):find("fracture chance 15.0%", 1, true), "the console sets the score")
+local other = newPlayer({ traits = {}, parts = limbs() }); H.current = other
+H.minute(); assert(other._md.DanTraits == nil or other._md.DanTraits.brBone == nil, "no trait: no score")
+
 H.pass()

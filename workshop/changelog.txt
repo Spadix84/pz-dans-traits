@@ -23,6 +23,7 @@
 [*][b]Sensitive Skin[/b] now burns in the sun in two hours instead of three, and bleach stings the hands.
 [*][b]Resilient and the Knox virus.[/b] The chance to beat it is 10% at most (the sandbox default; was 25), a Run Down body has less, and you beat it once: a second infection has you within hours.
 [*][b]Tinnitus reaches further.[/b] Ringing ears make a migraine likelier, bring Schizophrenia's whispers on, and spoil a night's sleep.
+[*][b]Brittle bones can be looked after.[/b] Dairy, greens, eggs and regular exercise strengthen them over weeks; neglect them and they get worse. The fracture chance follows.
 [/list]
 [h2]Fixed[/h2]
 [list]
