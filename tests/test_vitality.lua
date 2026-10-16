@@ -286,22 +286,46 @@ for _, h in ipairs({ { "infectionFight", 0.2, 0.3 }, { "concussionHeal", 0.25, 0
   near(DanTraits_RunHooks(h[1], h[2], nv), h[2] * (1 - h[3]), 1e-12, h[1] .. ": Run Down")
 end
 
--- sandbox: VitalityEnabled = false makes every reader neutral and stops the minute update
-SandboxVars = { DanTraits = { VitalityEnabled = false } }
-local off = newPlayer(); H.current = off; SandboxVars.DanTraits.VitalityEnabled = true; minute(); SandboxVars.DanTraits.VitalityEnabled = false
+-- sandbox: VitalityEnabled = false makes every reader neutral and stops the minute update.
+-- First a Thriving character with Vitality on: the kilo on the carry, a sleep debt, both moodles showing
+local shown = {}
+MF = { getMoodle = function(name)
+  shown[name] = shown[name] or {}
+  local m = shown[name]
+  return { setThresholds = function() end, setValue = function(_, v) m.value = v end }
+end }
+SandboxVars = { DanTraits = {} }
+local off = newPlayer(); H.current = off
+minute(); V(off).vitality, V(off).vitDiet, V(off).vitSleep, V(off).vitSleepDebt = 1.0, 1, 1, 0.6
+minute()
+assert(off._carry == 9 and V(off).vitCarryKg == 1 and V(off).vitCarryBase == 8, "on, Thriving: the kilo on the carry, got " .. off._carry)
+near(shown.Vitality.value, V(off).vitality, 1e-9, "the Vitality moodle shows the score")
+near(shown.SleptBadly.value, 0.5 * (1 - V(off).vitSleepDebt), 1e-9, "the Slept Badly moodle shows the debt")
+assert(V(off).vitSleepDebt > 0.59, "the debt is there to clear")
+-- switched off mid-save (review 2026-10-16 A1.12): the first minute off gives the kilo back, drops the
+-- debt and the night in progress (or MDD, Hallucinations and Migraine read a stale debt for the rest of
+-- the save) and sets both moodles to nothing; after that nothing moves
+SandboxVars.DanTraits.VitalityEnabled = false
+shown = {}
+V(off).vitAsleep, V(off).vitNightHours, V(off).vitNightWakes = true, 3, 2
+minute()
+assert(off._carry == 8 and V(off).vitCarryKg == 0, "off: the kilo given back, got " .. off._carry)
+assert(V(off).vitSleepDebt == nil and V(off).vitNightHours == nil and V(off).vitNightWakes == nil and V(off).vitAsleep == nil, "off: the sleep keys are cleared")
+assert(DanTraits_SleepDebt(off) == 0, "off: no debt to read")
+near(shown.Vitality.value, 0.5, 1e-9, "off: the Vitality moodle at neutral")
+near(shown.SleptBadly.value, 0.5, 1e-9, "off: the Slept Badly moodle at nothing")
 V(off).vitality = 1.0; off._st.unhappiness = 50
 assert(DanTraits_VitalityEffect(off) == 0, "off: effect 0")
 for _, fn in ipairs(DanTraits_Hooks.infectionHazard) do assert(fn(1, off, {}) == nil, "off: infection hook silent") end
 for _, fn in ipairs(DanTraits_Hooks.enduranceRegen) do assert(fn(1, off, V(off)) == nil, "off: endurance hook silent") end
 for _, fn in ipairs(DanTraits_Hooks.catchCold) do assert(fn(1, off, V(off)) == nil, "off: cold hook silent") end
 assert(not DanTraits_VitalityOnEat(off, food({ name = "Carrot", kcal = 100, foodType = "Vegetables" }), 1), "off: meals not scored")
-minute(); assert(V(off).vitality == 1.0 and off._st.unhappiness == 50, "off: nothing moves")
--- switched off mid-save: the sleep debt and the night in progress go with it, or MDD, Hallucinations and
--- Migraine read a stale debt for the rest of the save (review 2026-10-16 A1.12)
-V(off).vitSleepDebt, V(off).vitNightHours, V(off).vitNightWakes, V(off).vitAsleep = 0.6, 3, 2, true
+minute(); assert(V(off).vitality == 1.0 and off._st.unhappiness == 50 and off._carry == 8, "off: nothing moves")
+-- the debt set again while off (an old save's keys) is cleared once more, and a kilo noted on an old save is given back by the base it kept
+V(off).vitSleepDebt, V(off).vitCarryKg, V(off).vitCarryBase, off._carry = 0.6, 1, 8, 9
 minute()
-assert(V(off).vitSleepDebt == nil and V(off).vitNightHours == nil and V(off).vitNightWakes == nil and V(off).vitAsleep == nil, "off: the sleep keys are cleared")
-assert(DanTraits_SleepDebt(off) == 0, "off: no debt to read")
+assert(V(off).vitSleepDebt == nil and off._carry == 8 and V(off).vitCarryKg == 0, "off: stale keys cleared again, got carry " .. off._carry)
+MF = nil
 SandboxVars = nil
 near(DanTraits_VitalityEffect(off), 1, 1e-9, "on again (unset): the effect is back")
 
