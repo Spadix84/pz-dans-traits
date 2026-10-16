@@ -469,7 +469,8 @@ end
 --               foodSicknessRise, so subscribers see the game's rise, not floors written
 --               later in the same minute
 --           10  Sleep (light reading, wakes)
---           19  GoodClotter (Positives: cuts bleeding time before Blood reads it)
+--           11  Home (where the night was slept, the home's pull; before the floors of the mood systems)
+--           19  Clotting (expires clots), GoodClotter (Positives: cuts bleeding time before Blood reads it)
 --           20  Blood (loss this minute, sets bloodLossMin)
 --           21  Hemophilia (holds bleed times)
 --           22  WoundCare (reads BloodPartRate)
@@ -480,20 +481,24 @@ end
 --           25  FearOfBlood (reads bloodLossMin)
 --           30  Meds (the levels every medicated system reads this minute)
 --           39  Spoons (the energy budget MS spends; reads the night Vitality scored)
---           40  Alcohol, Anemia, Anger, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
---               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, MDD, Migraine,
+--           40  AgeTraits, Alcohol, Anemia, Anger, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
+--               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, Laundry, MDD, Migraine,
 --               MS, Smoker, Sunburn, Tinnitus, Triptan (floors and rates; among themselves by label)
 --               (Iron Stomach in Positives is a foodSicknessRise pipeline hook, not a clock system)
+--           41  Grit (Positives: its share of the pain reduction, after the order-40 floors),
+--               SensitiveSkin (LaundryTraits: reads the garment state Laundry left at 40)
+--           42  Knox (the Resilient roll against the zombie infection)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --           96  Moodles (reads what every system above left in mod data; changes nothing)
 --   ten     10  Dependent
---           40  MDD, Migraine
+--           40  Laundry (the wash and the washers), MDD, Migraine
 --           90  Hallucinations
 --   frame    0  the stat delta pipeline: enduranceRegen (Vitality, Smoker lungs, Blood,
 --               Anemia, Concussion, Asthma, Heart, Dehydration, Age subscribe; the cuts multiply)
 --           20  Blood        22  WoundCare (movement sampling)    24  Concussion
---           40  Alcohol (panic decay), Arthritis, ArthritisGrip, Meds (diazepam), Smoker (held anger)
+--           40  AgeTraits (Bad Knees, Pace Yourself), Alcohol (panic decay), Arthritis, ArthritisGrip,
+--               Dependent (held anger), Heart (the angina surcharge), Meds (diazepam), Smoker (held anger)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
 --   are still registered by their own files.)
 local drivers = { minute = {}, ten = {}, frame = {} }

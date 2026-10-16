@@ -78,7 +78,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
     washboard (`DanTraits_BadBackStrain`, the same load and notices as a heavy pack).
   - Laundry's hooks: `laundryOdour`, `laundryMood`, `laundryFresh`, `laundryMoodle`,
     `laundrySkilled`, `laundryAtHome`, `laundryWashed`, `laundryTooltip`.
-- **Sandbox pages**: the options are split into Vitality: General, Health, Daily Life and Laundry.
+- **Sandbox pages**: the options are split into Vitality: General, Health, Daily Life, Laundry and Reading.
   Option names are unchanged, so saved settings keep their values.
 
 ### Changed
