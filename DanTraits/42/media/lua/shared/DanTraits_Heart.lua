@@ -6,8 +6,11 @@
 -- half way up, carrying more than you can, cold air; and it drains at rest.
 -- Age (the 40s and 50s; lower in the 20s), a smoking habit (the nicotine
 -- meter), caffeine working, a Run Down body (Vitality), a stimulant overdose
--- (too many inhaler puffs or caffeine pills) and every heart attack already
--- survived make it build faster; beta blockers make it build slower. The
+-- (too many inhaler puffs or caffeine pills), blood lost (half the volume
+-- gone: half as fast again), an anaemic's iron deficit, a wound infection's
+-- fever and every heart attack already survived make it build faster; beta
+-- blockers make it build slower. A cold body (soaked, or a night without a
+-- fire) builds strain like cold air does, indoors or out. The
 -- strain shows on the Chest Pain moodle from 0.4 (working hard) and 0.75
 -- (pounding); at 1 it is chest pain (angina): 15 to 30 minutes of a pain
 -- floor, endurance recovery at a third, no running or sprinting (the game's
@@ -79,6 +82,11 @@ local HC_CAFFEINE      = 1.3     -- while caffeine is working (Sleep's six-hour 
 local HC_STIM_OVER     = 2       -- while too many inhaler puffs or caffeine pills are in the system (DanTraits_Meds.lua)
 local HC_VITALITY      = 0.3     -- x (1 - this x Vitality effect, -1..1)
 local HC_SCAR          = 0.2     -- x (1 + this x heart attacks survived)
+local HC_BLOOD         = 1.0     -- x (1 + this x the share of blood volume lost): half the blood gone, x1.5 (DanTraits_Blood.lua)
+local HC_IRON          = 0.5     -- x (1 + this x an anaemic's iron deficit, 0..1) (DanTraits_Anemia.lua)
+local HC_FEVER         = 0.5     -- x (1 + this x a wound infection's fever, 0..1) (DanTraits_Infection.lua)
+local HC_BODY_COLD_C   = { 36, 34 }  -- body temperature from which a cold body counts, to where it counts in full...
+local HC_BODY_COLD     = 0.01    -- ...building this a minute at full, like cold air (a soaked body indoors)
 local HC_BETA_CUT      = 0.5     -- strain build and heart attacks x this, fully built up
 local HC_BETA_REGEN    = 0.1     -- endurance recovery x (1 - this x built), anyone on beta blockers
 -- the moodle and chest pain
@@ -149,6 +157,10 @@ local function strainRate(player, d)
     if (d.slCaffeineHours or 0) > 0 then rate = rate * HC_CAFFEINE end
     if DanTraits_MedHeartStrain and DanTraits_MedHeartStrain(player) then rate = rate * HC_STIM_OVER end
     if DanTraits_VitalityEffect then rate = rate * (1 - HC_VITALITY * (tonumber(DanTraits_VitalityEffect(player)) or 0)) end   -- -1..1, so not DanTraits_Strength
+    -- a heart racing to make up for what the blood cannot carry: volume lost, red cells short, a fever
+    if DanTraits_BloodActive and DanTraits_BloodActive() and d.bloodVol then rate = rate * (1 + HC_BLOOD * clamp01(1 - d.bloodVol)) end
+    rate = rate * (1 + HC_IRON * DanTraits_Strength("DanTraits_IronDeficit", player))
+    rate = rate * (1 + HC_FEVER * DanTraits_Strength("DanTraits_InfectionFever", player))
     rate = rate * (1 + HC_SCAR * (d.hcAttacks or 0))
     rate = rate * betaCut(player)
     return math.max(0, rate)
@@ -177,6 +189,13 @@ local function strainBuild(player, d, spent, level, moving)
         local temp = DanTraits_AirTemp(player)
         if temp and temp < HC_COLD_C then build = build + HC_COLD end
     end
+    -- a cold body (soaked clothes, a swim, a night without a fire), indoors or out
+    pcall(function()
+        local t = player:getStats():get(CharacterStat.TEMPERATURE)
+        if type(t) == "number" and t > 30 and t < HC_BODY_COLD_C[1] then
+            build = build + HC_BODY_COLD * clamp01((HC_BODY_COLD_C[1] - t) / (HC_BODY_COLD_C[1] - HC_BODY_COLD_C[2]))
+        end
+    end)
     return build
 end
 

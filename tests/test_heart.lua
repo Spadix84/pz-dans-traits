@@ -30,6 +30,19 @@ near(DanTraits_HeartStrainRate(older, D(older)), 1.5, 1e-12, "50s x1.5")
 local young = H.player({ traits = { "heart", "age20s" } })
 near(DanTraits_HeartStrainRate(young, D(young)), 0.8, 1e-12, "20s x0.8")
 d.hcAttacks = 2; near(DanTraits_HeartStrainRate(p, d), 1.4, 1e-12, "two attacks survived: x1.4"); d.hcAttacks = nil
+-- 1b. the blood: volume lost, an anaemic's iron deficit, a fever each push it up
+DanTraits_BloodActive = function() return true end
+d.bloodVol = 0.5; near(DanTraits_HeartStrainRate(p, d), 1.5, 1e-12, "half the blood gone: x1.5")
+DanTraits_BloodActive = function() return false end
+near(DanTraits_HeartStrainRate(p, d), 1, 1e-12, "Blood switched off: not read")
+DanTraits_BloodActive = nil; d.bloodVol = nil
+DanTraits_IronDeficit = function() return 0.5 end
+near(DanTraits_HeartStrainRate(p, d), 1.25, 1e-12, "half an iron deficit: x1.25")
+DanTraits_IronDeficit = nil
+DanTraits_InfectionFever = function() return 1 end
+near(DanTraits_HeartStrainRate(p, d), 1.5, 1e-12, "a full fever: x1.5")
+DanTraits_InfectionFever = nil
+near(DanTraits_HeartStrainRate(p, d), 1, 1e-12, "none of them loaded: x1")
 DanTraits_RunHooks("pill", nil, p, "PillsBeta")
 near(DanTraits_MedState(p, "beta"), 1, 1e-9, "one pill")
 near(DanTraits_HeartStrainRate(p, d), 1, 1e-12, "first pill: not built up yet")
