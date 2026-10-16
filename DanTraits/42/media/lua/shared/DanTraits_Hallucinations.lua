@@ -421,7 +421,8 @@ DanTraits_Episodes = {
 -- concussed or feverish: too far gone for a panic bout
 local strength = DanTraits_Strength   -- another system's 0..1, by the name of its getter (0 when not loaded)
 local function schizoDown(player)
-    return strength("DanTraits_ConcussionStrength", player) > 0 or strength("DanTraits_InfectionFever", player) > 0
+    return strength("DanTraits_ConcussionStrength", player) > 0 or strength("DanTraits_ConcussionLateStrength", player) > 0
+        or strength("DanTraits_InfectionFever", player) > 0
 end
 
 local function schizoChance(player)

@@ -47,6 +47,20 @@ withdrawal = 0.5; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half +1")
 DanTraits_CaffeineWithdrawalOf = nil
 near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Caffeine loaded: nothing")
 
+-- 1c2. the headache that comes back after a concussion adds 2.0 at its worst
+DanTraits_ConcussionLateStrength = function() return 0.5 end
+near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half the late headache +1")
+DanTraits_ConcussionLateStrength = nil
+near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Concussion loaded: nothing")
+
+-- 1c3. thirst is the moment's or the hours of it (the dehydration load), whichever is worse
+DanTraits_Dehydration = function() return 0.5 end
+near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half the dehydration load, no thirst now: +1")
+p._st.thirst = 0.65; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "half thirst now and half the load: +1, not +2")
+p._st.thirst = 1; near(DanTraits_MigraineChance(p), 0.3 + 2.0, 1e-9, "parched now: +2")
+p._st.thirst = 0; DanTraits_Dehydration = nil
+near(DanTraits_MigraineChance(p), 0.3, 1e-9, "no Dehydration loaded, no thirst: nothing")
+
 -- 1d. heat: the hotter of the air (27 C to full at 35) and the body (37.5 to full at 38.5), +2 at full
 H.climate.temp = 31; near(DanTraits_MigraineChance(p), 0.3 + 1.0, 1e-9, "31 C: half heat +1")
 H.climate.temp = 40; near(DanTraits_MigraineChance(p), 0.3 + 2.0, 1e-9, "40 C: full heat +2")
@@ -250,6 +264,13 @@ H.setPain(s1, 0); for _ = 1, 60 do minute() end
 assert(H.pain(s1) == 30, "taken in the aura: pain floor 60 x 0.5 severity, not halved again: " .. H.pain(s1))
 M(s1).migSeverity = 0.3; minute()
 assert(moodleValue <= 0.5 * (1 - 0.5), "a halved attack still shows as Migraine, not Aura: " .. tostring(moodleValue))
+-- an aura cleared from outside (the 2026-10-15 stuck Aura): the moodle follows the state off
+local sa = newPlayer(); H.current = sa
+sa._md.DanTraits = { migSinceEnd = 99, migStrong = { "sleep", "thirst", "stress" } }
+H.rng = { 0, 50 }; ten(); minute()
+near(moodleValue, 0.5 * (1 - 0.01), 1e-9, "aura showing")
+M(sa).migAuraLeft = nil; minute()
+near(moodleValue, 0.5, 1e-9, "aura gone: moodle off, not stuck on Aura")
 MF = nil
 covered = false
 local s2 = newPlayer(); H.current = s2

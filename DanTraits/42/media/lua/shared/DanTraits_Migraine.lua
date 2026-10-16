@@ -1,7 +1,9 @@
 -- Project Zomboid Vitality Project: Migraines.
 -- Every ten minutes there is a small chance of an attack, pushed up by a
--- bad night (Vitality's sleep debt), thirst, stress, a hangover, nicotine
--- withdrawal, caffeine withdrawal, a wound infection's fever, bright
+-- bad night (Vitality's sleep debt), thirst (the hours of it, the dehydration
+-- load, or the moment's), stress, a hangover, nicotine withdrawal, caffeine
+-- withdrawal, a wound infection's fever, a concussion and the headache that
+-- comes back after one, bright
 -- daylight outdoors, sleeping with the light on, heat (hot air or an
 -- overheated body), the smell of corpses close by and a storm on the way (in
 -- the twelve hours before the forecast says it starts), and never
@@ -68,6 +70,7 @@ local MIG_LIGHT         = 1.5     -- added in bright daylight outdoors
 local MIG_HANGOVER      = 2.0     -- added at a full-strength hangover
 local MIG_NICOTINE      = 1.5     -- added at full nicotine withdrawal (Smoker)
 local MIG_CONCUSSION    = 3.0     -- added at the worst concussion
+local MIG_CONCUSSION_LATE = 2.0   -- added at the worst of the headache that comes back after one (DanTraits_Concussion.lua)
 local MIG_FEVER         = 2.0     -- added at full fever (wound infection)
 local MIG_CAFFEINE      = 2.0     -- added at full caffeine withdrawal (Caffeine Dependent)
 local MIG_HEAT          = 2.0     -- added at full heat: the hotter of the air...
@@ -320,12 +323,16 @@ local strength = DanTraits_Strength   -- another system's 0..1, by the name of i
 local function migraineParts(player)
     local parts = {}
     parts.sleep = MIG_SLEEP_DEBT * strength("DanTraits_SleepDebt", player)
+    -- thirst: the moment's (from 30%), or the hours of it (the dehydration load), whichever is worse
     local thirst = statOf(player, CharacterStat.THIRST)
-    if thirst > MIG_THIRST_FROM then parts.thirst = MIG_THIRST * (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) end
+    local thirstNow = thirst > MIG_THIRST_FROM and (thirst - MIG_THIRST_FROM) / (1 - MIG_THIRST_FROM) or 0
+    local dry = math.max(thirstNow, strength("DanTraits_Dehydration", player))
+    if dry > 0 then parts.thirst = MIG_THIRST * dry end
     parts.stress = MIG_STRESS * statOf(player, CharacterStat.STRESS)
     if DanTraits_HangoverStrength then parts.hangover = MIG_HANGOVER * strength("DanTraits_HangoverStrength", player) end
     if DanTraits_NicotineWithdrawal then parts.nicotine = MIG_NICOTINE * strength("DanTraits_NicotineWithdrawal", player) end
     if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * strength("DanTraits_ConcussionStrength", player) end
+    if DanTraits_ConcussionLateStrength then parts.concussionLate = MIG_CONCUSSION_LATE * strength("DanTraits_ConcussionLateStrength", player) end
     if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * strength("DanTraits_CaffeineWithdrawalOf", player) end
     if DanTraits_InfectionFever then parts.fever = MIG_FEVER * strength("DanTraits_InfectionFever", player) end
     parts.light = MIG_SLEEP_LIGHT * sleepLit(player) + (inBrightLight(player) and MIG_LIGHT or 0)
@@ -416,6 +423,46 @@ local function updateMigraineTen(player, d)
     if ZombRand(10000) < chance * 100 then startAura(player, d, cause) end
 end
 
+-- The hunt for the 2026-10-15 stuck Aura (the aura's keys gone without an
+-- attack, while sitting watching TV in the dark). Each minute of an aura,
+-- note a few other systems' counters and the table itself; if the aura then
+-- goes without an attack, one log line says whether the whole mod-data table
+-- went back to an older copy (counters jump, a different table) or only the
+-- migraine keys were cleared, and what the character was doing.
+local auraLastMinute = {}   -- per player: { the table, its key count, a few counters } at the last aura minute
+
+local function keyCount(d)
+    local n = 0
+    for _ in pairs(d) do n = n + 1 end
+    return n
+end
+
+local function doing(player)
+    local parts = {}
+    pcall(function()
+        local queue = ISTimedActionQueue.getTimedActionQueue(player).queue
+        if queue and queue[1] then parts[#parts + 1] = "action " .. tostring(queue[1].Type) end
+    end)
+    pcall(function() if player:isSitOnGround() then parts[#parts + 1] = "sitting on the ground" end end)
+    pcall(function() if player:isSittingOnFurniture() then parts[#parts + 1] = "sitting on furniture" end end)
+    pcall(function() if player:isAsleep() then parts[#parts + 1] = "asleep" end end)
+    pcall(function() if player:getVehicle() then parts[#parts + 1] = "in a vehicle" end end)
+    return #parts > 0 and table.concat(parts, ", ") or "nothing noted"
+end
+
+local function auraWatch(player, d)
+    local was = auraLastMinute[player]
+    if was and not d.migAuraLeft and not d.migActive then
+        print("[DanTraits] migraine aura vanished without an attack: "
+            .. (was.table == d and "same table" or "a DIFFERENT table") .. ", keys " .. was.keys .. " -> " .. keyCount(d)
+            .. ", vitAwakeMin " .. tostring(was.awake) .. " -> " .. tostring(d.vitAwakeMin)
+            .. ", hmAwayH " .. tostring(was.away) .. " -> " .. tostring(d.hmAwayH)
+            .. ", severity " .. tostring(d.migSeverity) .. ", cause " .. tostring(d.migCause)
+            .. "; " .. doing(player))
+    end
+    auraLastMinute[player] = d.migAuraLeft and { table = d, keys = keyCount(d), awake = d.vitAwakeMin, away = d.hmAwayH } or nil
+end
+
 -- the trait gone (the console, another mod, a save without it): the aura or
 -- the attack in progress ends, Short Sighted is given back, the moodle comes off
 local function clearMigraine(player, d)
@@ -430,6 +477,7 @@ end
 local function updateMigraineMinute(player, d)
     d = migData(player)
     d.migGlare = nil
+    auraWatch(player, d)
     if d.migAuraLeft then
         -- sumatriptan taken in the aura: the attack to come is half as bad
         if not d.migTripUsed and triptanIn(player) then
@@ -444,6 +492,7 @@ local function updateMigraineMinute(player, d)
     end
     if not d.migActive then
         if d.migBlur ~= nil then updateBlur(player, d, false) end
+        updateMoodle(player, 0)   -- the moodle follows the state: no Aura left showing with nothing behind it
         return
     end
 

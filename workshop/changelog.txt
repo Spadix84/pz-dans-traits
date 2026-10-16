@@ -15,6 +15,7 @@
 [list]
 [*][b]Rough Night less often.[/b] A short sleep that leaves you rested now counts as a full night: four hours from half tired to fully rested no longer reads as a rough one.
 [*][b]Smoke gets into your clothes.[/b] For six hours after a smoke your clothes go stale half as fast again, Smoker or not.
+[*][b]Migraines after a knock on the head.[/b] The headache that comes back days after a concussion can now bring on a migraine.
 [/list]
 [h2]Fixed[/h2]
 [list]
