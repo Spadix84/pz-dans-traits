@@ -267,12 +267,31 @@ local function updateHeat(player, d)
     return load
 end
 
+-- the trait gone (the console, another mod, a save without it): the heat,
+-- the flare and the stiffness and head pain MS put on come off at once
+local function clearMS(player, d)
+    if not d then return end
+    pcall(function()
+        local bd = player:getBodyDamage()
+        for _, g in ipairs({ { HANDS, d.msHands }, { LEGS, d.msLegs } }) do
+            local on = g[2] or 0
+            if on > 0 then
+                for _, name in ipairs(g[1]) do
+                    local part = bd:getBodyPart(BodyPartType[name])
+                    if part then part:setStiffness(math.max(0, (part:getStiffness() or 0) - on)) end
+                end
+            end
+        end
+        if (d.msPainHead or 0) > 0 then
+            local head = bd:getBodyPart(BodyPartType.Head)
+            if head then head:setAdditionalPain(math.max(0, (head:getAdditionalPain() or 0) - d.msPainHead)) end
+        end
+    end)
+    d.msHeat, d.msTier, d.msFlareH = nil, nil, nil
+    d.msHands, d.msLegs, d.msPainHead = nil, nil, nil
+end
+
 local function updateMSMinute(player, d)
-    if not hasTrait(player, "ms") then
-        d.msHeat, d.msTier, d.msFlareH = nil, nil, nil
-        d.msHands, d.msLegs, d.msPainHead = nil, nil, nil
-        return
-    end
     updateFlare(player, d)
     local load = updateHeat(player, d)
     local flaring = (d.msFlareH or 0) > 0
@@ -421,4 +440,4 @@ end
 -- unless the Starting Medication sandbox option is off
 DanTraits_StartingKit({ trait = "ms", flag = "msKitGiven", meds = MS_START, items = MS_KIT })
 
-DanTraits_Every("minute", "MS", updateMSMinute, 40)
+DanTraits_Every("minute", "MS", updateMSMinute, 40, { trait = "ms", clear = clearMS })

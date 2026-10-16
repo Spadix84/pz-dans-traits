@@ -154,6 +154,23 @@ H.mins(5); near(f._parts.LowerLeg_R._stiff, 23, 1e-9, "...and keep easing")
 H.mins(20); near(f._parts.LowerLeg_R._stiff, 8, 1e-9, "...down to the everyday floor, no further")
 near(f._parts.Hand_R._stiff, 0, 1e-9, "the flare's weak hands go too")
 
+-- 7b. the trait gone (the console, another mod): what MS put on comes off at once;
+--     the game's own exercise stiffness on top of it stays
+do
+  local g = newPlayer(); H.current = g
+  local gd = DanTraits_Data(g)
+  gd.msFlareH = 10; H.minute(g)
+  near(g._parts.LowerLeg_R._stiff, 35, 1e-9, "flare: legs stiff")
+  H.climate.temp = 40; H.mins(30); H.climate.temp = 20
+  assert((gd.msPainHead or 0) > 0 and (gd.msHands or 0) > 20, "hot: MS's pain on the head, the hands stiffer than the flare's")
+  g._parts.Hand_R._stiff = gd.msHands + 15   -- 15 of exercise on top of what MS holds
+  g._traits.ms = nil; H.minute(g)
+  near(g._parts.LowerLeg_R._stiff, 0, 1e-9, "the legs' floor comes off at once, not 2 a minute")
+  near(g._parts.Hand_R._stiff, 15, 1e-9, "the hands keep only the exercise stiffness")
+  assert(gd.msHeat == nil and gd.msFlareH == nil and gd.msHands == nil and gd.msLegs == nil and gd.msPainHead == nil, "the heat, the flare and the ceilings are gone")
+  H.current = p
+end
+
 SandboxVars = nil   -- the budget back on
 
 -- 8. baclofen halves the stiffness, heat's and legs' alike

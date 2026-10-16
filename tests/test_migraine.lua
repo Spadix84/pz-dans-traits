@@ -161,8 +161,13 @@ local before = ss._vision; minute()
 assert(ss._traits[SS] and M(ss).migBlur == nil and ss._vision == before, "short-sighted without glasses: blurred already, nothing flipped")
 ss._glasses = true; minute()
 assert(not ss._traits[SS] and M(ss).migBlur == true, "short-sighted in glasses: flipped off for the attack")
+local cleared
+MF = { getMoodle = function() return { setThresholds = function() end, setValue = function(_, v) cleared = v end } end }
 ss._traits["migraine"] = nil; minute()
 assert(ss._traits[SS] and M(ss).migBlur == nil, "the Migraines trait gone mid-attack: Short Sighted given back")
+assert(M(ss).migActive == false and M(ss).migHoursLeft == 0 and cleared == 0.5, "the attack ends with the trait: migActive off, the moodle off")
+cleared = nil; minute(); assert(cleared == nil, "cleared once, not every minute")
+MF = nil
 H.current = q
 
 -- 5. sleeping it off runs the clock at double speed; it ends, refractory starts, moodle cleared

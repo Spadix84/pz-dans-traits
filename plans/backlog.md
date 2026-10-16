@@ -13,7 +13,6 @@ doc first). Risk: how likely it is to break something already working.
 | Life Story, phase 2: Random mode, no UI (see `life-story-design.md`) | Design doc | L | Medium | Characters that feel like people, not solved builds |
 | WoundCare: swapping a bandage for a rag within a minute gives the rag the bandage's life | Review 2026-10-02 | S | Low | Wrong item state |
 | Arthritis: a weapon saved mid-swing keeps 0.35x damage until swung again | Review 2026-10-02 | S | Low | A weapon stays weak across a reload |
-| Migraine: moodle and migActive stick if the trait is removed mid-attack | Review 2026-10-02 | S | Low | Stuck moodle |
 | A Really Bad Day: the kit search scans 121x121x3 squares at game start | Review 2026-10-02 | S | Low | One-off stall on a new game |
 | A Really Bad Day: balance pass (plan 21, deferred) | Review programme | M | Low | Deferred until played more |
 | Dice: move the hand-rolled ZombRand dice to DanTraits_Roll/RollPercent (Sleep, Migraine, MDD, Jinxed, Dependent, Arthritis, Brittle; tests change with them) | Review 2026-10-02 | M | Low | One way to roll |

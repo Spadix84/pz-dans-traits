@@ -431,11 +431,21 @@ end
 -- Every system that runs on the clock registers here instead of on
 -- Events.EveryOneMinute / EveryTenMinutes / OnPlayerUpdate:
 --
---   DanTraits_Every(cadence, label, fn, order)
+--   DanTraits_Every(cadence, label, fn, order, opts)
 --     cadence  "minute" | "ten" | "frame"
 --     label    the system's name for the dashboard's attribution card ("Blood")
 --     fn       fn(player, d), d = the player's mod data
 --     order    number, lower runs first, default 100; equal orders run by label
+--     opts     optional. opts.trait: the trait the system belongs to, a mod key
+--              ("asthma") or fn(player, d) -> bool; fn then runs only while the
+--              character has it. opts.clear: fn(player, d), run once when that
+--              stops holding (the trait taken off mid-game by the console or
+--              another mod, or a save loaded without it; also once at the
+--              first sight of a character without it, so a stale save is put
+--              right): the system takes back what it left on the character,
+--              its moodle, its floors on the parts, the attack in progress.
+--              Blood, Infection, Concussion and WoundCare stand down on their
+--              sandbox switch and hand-roll the same thing.
 --
 -- Core registers the only three handlers. Each does the preamble once (the
 -- local player, dead check; the frame one also skips non-local players), then
@@ -478,23 +488,50 @@ end
 local drivers = { minute = {}, ten = {}, frame = {} }
 DanTraits_Drivers = drivers      -- read-only view for the tests and the dashboard
 
-function DanTraits_Every(cadence, label, fn, order)
+function DanTraits_Every(cadence, label, fn, order, opts)
     local list = drivers[cadence]
     if not list or type(fn) ~= "function" then return false end
     label = tostring(label or "")
     order = order or 100
+    local entry = { cadence = cadence, label = label, fn = fn, order = order }
+    local trait = opts and opts.trait
+    if type(trait) == "string" then
+        local key = trait
+        entry.has = function(player) return hasTrait(player, key) end
+    elseif type(trait) == "function" then
+        entry.has = trait
+    end
+    if entry.has then
+        entry.clear = opts.clear
+        entry.had = {}   -- per player: whether the trait held the last time this ran
+    end
     local at = #list
     while at >= 1 and (list[at].order > order or (list[at].order == order and list[at].label > label)) do at = at - 1 end
-    table.insert(list, at + 1, { cadence = cadence, label = label, fn = fn, order = order })
+    table.insert(list, at + 1, entry)
     return true
+end
+
+-- one registration for one player: the system while its trait holds, its
+-- clear once when that stops (see opts above)
+local function runEntry(entry, track, player, d)
+    local tag = entry.label .. " (" .. entry.cadence .. ")"
+    if not entry.has then
+        DanTraits_Guard(tag, track, entry.label, entry.fn, player, d)
+        return
+    end
+    local ok, has = DanTraits_Guard(tag .. " trait", entry.has, player, d)
+    if ok and has == true then
+        entry.had[player] = true
+        DanTraits_Guard(tag, track, entry.label, entry.fn, player, d)
+    elseif entry.had[player] ~= false then
+        entry.had[player] = false
+        if entry.clear then DanTraits_Guard(tag .. " clear", track, entry.label, entry.clear, player, d) end
+    end
 end
 
 local function runDrivers(list, player, d)
     local track = DanTraits_Track or function(_, fn, ...) return fn(...) end
-    for i = 1, #list do
-        local entry = list[i]
-        DanTraits_Guard(entry.label .. " (" .. entry.cadence .. ")", track, entry.label, entry.fn, player, d)
-    end
+    for i = 1, #list do runEntry(list[i], track, player, d) end
 end
 
 local function runClock(list)

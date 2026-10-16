@@ -129,8 +129,18 @@ local function asthmaEffectiveTier(d)
     return math.min(3, asthmaTierOf(d.asthma or 0))
 end
 
+-- the trait gone (the console, another mod, a save without it): the attack,
+-- the cough gap and the irritation go with it, and the moodle comes off
+local function clearAsthma(player, d)
+    if not d then return end
+    if d.asthma == nil and not d.asthmaAttack then return end
+    d.asthma, d.asthmaAttack, d.asthmaShownTier = nil, nil, nil
+    d.asthmaCoughIn, d.asthmaCoughTier, d.asthmaEndPrev = nil, nil, nil
+    d.asthmaFainted, d.asthmaEmptyMin = nil, nil
+    asthmaUpdateMoodle(player, 0)
+end
+
 local function updateAsthmaMinute(player, d)
-    if not hasTrait(player, "asthma") then return end
     d = asthmaData(player)
     local stats = player:getStats()
     local irritation = d.asthma
@@ -294,4 +304,4 @@ function DanTraits_IsInhaler(item) return DanTraits_IsItem(item, INHALER_ITEM) e
 -- Start with one inhaler (none if the Starting Medication sandbox option is off).
 DanTraits_StartingKit({ trait = "asthma", flag = "asthmaKitGiven", items = { INHALER_ITEM } })
 
-DanTraits_Every("minute", "Asthma", updateAsthmaMinute, 40)
+DanTraits_Every("minute", "Asthma", updateAsthmaMinute, 40, { trait = "asthma", clear = clearAsthma })

@@ -63,6 +63,24 @@ end
 assert(p._st.panic == math.min(100, panicBefore + 10), "inhaler sets the heart racing: +10 panic")
 print(string.format("inhaler: %.2f -> %.2f, attack over, tier now %d", before, irritation(p), (function() local t=0 for i,th in ipairs({0.25,0.5,0.75,0.9}) do if irritation(p) >= th then t = i end end return t end)()))
 
+-- 5b. the trait gone mid-attack (the console, another mod): the attack, the cough
+--     gap and the irritation go with it and the moodle comes off, once
+do
+  local g = newPlayer({}); H.current = g
+  local gd = DanTraits_Data(g)
+  gd.asthma = 0.95; gd.asthmaAttack = true; gd.asthmaCoughIn = 3
+  g._traits.asthma = nil
+  moodleValues = {}
+  minute()
+  assert(gd.asthmaAttack == nil and gd.asthma == nil and gd.asthmaCoughIn == nil, "the attack goes with the trait")
+  assert(#moodleValues == 1 and moodleValues[1] == 0.5, "the AirwayIrritation moodle comes off")
+  minute(); assert(#moodleValues == 1, "cleared once, not every minute")
+  local temp = H.climate.temp; H.climate.temp = 20
+  g._traits.asthma = true; minute(); assert(irritation(g) == 0, "back with the trait: a clean airway")
+  H.climate.temp = temp
+  H.current = p
+end
+
 -- 6. tier 2 halves regen: set irritation to 0.6 by hand
 p._md.DanTraits.asthma = 0.6; p._md.DanTraits.asthmaAttack = false
 p._st.endurance = 0.2; DanTraits_DeltaRemember(p._md.DanTraits, "enduranceRegen", 0.2)

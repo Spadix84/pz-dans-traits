@@ -399,7 +399,6 @@ end
 
 -- the ten-minute roll
 local function updateMigraineTen(player, d)
-    if not hasTrait(player, "migraine") then return end
     d = migData(player)
     rollTriggers(d)
     if d.migActive or d.migAuraLeft then return end
@@ -412,13 +411,20 @@ local function updateMigraineTen(player, d)
     if ZombRand(10000) < chance * 100 then startAura(player, d, cause) end
 end
 
+-- the trait gone (the console, another mod, a save without it): the aura or
+-- the attack in progress ends, Short Sighted is given back, the moodle comes off
+local function clearMigraine(player, d)
+    if not d then return end
+    if d.migBlur ~= nil then updateBlur(player, d, false) end
+    d.migGlare = nil
+    if not d.migActive and not d.migAuraLeft then return end
+    d.migAuraLeft, d.migActive, d.migHoursLeft, d.migCause = nil, false, 0, nil
+    updateMoodle(player, 0)
+end
+
 local function updateMigraineMinute(player, d)
-    if d then d.migGlare = nil end
-    if not hasTrait(player, "migraine") then
-        if d and d.migBlur ~= nil then updateBlur(player, d, false) end   -- the trait went mid-attack
-        return
-    end
     d = migData(player)
+    d.migGlare = nil
     if d.migAuraLeft then
         -- sumatriptan taken in the aura: the attack to come is half as bad
         if not d.migTripUsed and triptanIn(player) then
@@ -562,6 +568,6 @@ DanTraits_ExtraCommands.migraine = function(player, args)
         d.migActive and string.format(", attack %.1f h left", d.migHoursLeft or 0) or "")
 end
 
-DanTraits_Every("minute", "Migraine", updateMigraineMinute, 40)
+DanTraits_Every("minute", "Migraine", updateMigraineMinute, 40, { trait = "migraine", clear = clearMigraine })
 DanTraits_Every("minute", "Triptan", updateTriptanMinute, 40)
-DanTraits_Every("ten", "Migraine", updateMigraineTen, 40)
+DanTraits_Every("ten", "Migraine", updateMigraineTen, 40, { trait = "migraine" })

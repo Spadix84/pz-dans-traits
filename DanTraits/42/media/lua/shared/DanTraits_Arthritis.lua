@@ -118,8 +118,24 @@ local function reliefScale(player)
 end
 DanTraits_ArthritisRelief = reliefScale
 
+-- the trait gone (the console, another mod, a save without it): the floor
+-- comes off the joints at once and the flare with it
+local function clearArthritis(player, d)
+    if not d then return end
+    local target = d.artStiffTarget or 0
+    if target > 0 then
+        pcall(function()
+            local bd = player:getBodyDamage()
+            for _, name in ipairs(JOINTS) do
+                local part = bd:getBodyPart(BodyPartType[name])
+                if part then part:setStiffness(math.max(0, (part:getStiffness() or 0) - target)) end
+            end
+        end)
+    end
+    d.artWeather, d.artRelief, d.artJoint, d.artStiffTarget, d.artCombatSet = nil, nil, nil, nil, nil
+end
+
 local function updateArthritisMinute(player, d)
-    if not hasTrait(player, "arthritis") then return end
     local weather = DanTraits_RunHooks("arthritisJoint", jointFactor(player), player)   -- Age: sooner in the 40s
     local relief = reliefScale(player)
     local joint = weather * relief
@@ -140,9 +156,8 @@ local function updateArthritisMinute(player, d)
 end
 
 -- per frame: the game sets combat speed when an attack starts; scale it once each time it changes
-local function updateArthritisFrame(player)
-    local d = player:getModData().DanTraits
-    if not d or not hasTrait(player, "arthritis") then return end
+local function updateArthritisFrame(player, d)
+    if not d then return end
     local cs = nil
     pcall(function() cs = player:getCombatSpeed() end)
     if not cs or cs <= 0 or cs == d.artCombatSet then return end
@@ -282,8 +297,8 @@ end
 Events.OnWeaponSwing.Add(onWeaponSwing)
 Events.OnPlayerAttackFinished.Add(onAttackFinished)
 DanTraits_Every("frame", "ArthritisGrip", restoreDue, 40)
-DanTraits_Every("minute", "Arthritis", updateArthritisMinute, 40)
-DanTraits_Every("frame", "Arthritis", updateArthritisFrame, 40)
+DanTraits_Every("minute", "Arthritis", updateArthritisMinute, 40, { trait = "arthritis", clear = clearArthritis })
+DanTraits_Every("frame", "Arthritis", updateArthritisFrame, 40, { trait = "arthritis" })
 
 -- a new character has lived with it: a bottle of painkillers at the start
 -- (the Starting Medication option), once

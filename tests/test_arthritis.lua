@@ -57,6 +57,21 @@ assert(halo[#halo] == "UI_DanTraits_ArthritisFlare", "flare notice on crossing 0
 local n = #halo; minute(); assert(#halo == n, "notice once per flare")
 H.climate.temp = 20; minute(); assert(p._md.DanTraits.artJoint == 0, "factor tracked")
 
+-- 2b. the trait gone (the console, another mod): the floor comes off the joints at once,
+--     the exercise stiffness above it stays, and the flare is forgotten
+do
+  local g = newPlayer(); H.current = g
+  H.climate.temp = -5; minute(); H.climate.temp = 20
+  assert(g._parts.Hand_L._stiff == 45 and g._md.DanTraits.artJoint == 1, "a full flare: 45 on the joints")
+  g._parts.Hand_R._stiff = 45 + 10
+  g._traits.arthritis = nil; minute()
+  assert(g._parts.Hand_L._stiff == 0 and g._parts.UpperLeg_L._stiff == 0, "the floor comes off at once")
+  assert(g._parts.Hand_R._stiff == 10, "only what the trait put on: the exercise stiffness stays")
+  assert(g._md.DanTraits.artJoint == nil and g._md.DanTraits.artStiffTarget == nil, "the flare is forgotten")
+  minute(); assert(g._parts.Hand_R._stiff == 10, "cleared once: the hands are not docked again")
+  H.current = p
+end
+
 -- 2b. relief: painkillers halve the weather's share while in the system, prednisone cuts it to a third; the stronger counts
 local eff = {}
 DanTraits_MedEffect = function(who, id) return eff[id] or 0 end

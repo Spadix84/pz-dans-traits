@@ -12,6 +12,8 @@
 -- the vanilla cache refreshed, false for a reference that names nothing.
 -- And DanTraits_StartingKit: the spec a file registers for what a new
 -- character with its trait begins with, run once by core's create handler.
+-- And DanTraits_Every's trait and clear options: the system runs only while
+-- the trait holds, and its clear runs once when that stops.
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
@@ -222,6 +224,35 @@ do
   -- the guard itself: pcall's shape, so callers can read the result
   local okG, res = DanTraits_Guard("test-guard", function(a, b) return a + b end, 2, 3)
   assert(okG == true and res == 5, "a call that works returns ok and its result")
+end
+
+-- 12. DanTraits_Every with a trait: fn runs only while the character has it, clear
+--     runs once when it stops (and once at the first sight of a character without it)
+do
+  local runs, clears = 0, 0
+  local p = H.player({ traits = { "asthma" } }); H.current = p
+  assert(DanTraits_Every("minute", "EveryTest", function(player, d) runs = runs + 1 end, 40,
+    { trait = "asthma", clear = function(player, d) clears = clears + 1; d.everyCleared = true end }) == true, "registered")
+  H.minute(); H.minute()
+  assert(runs == 2 and clears == 0, "with the trait: the system runs, nothing to clear: " .. runs .. "/" .. clears)
+  p._traits.asthma = nil
+  H.minute()
+  assert(runs == 2 and clears == 1 and p._md.DanTraits.everyCleared == true, "the trait gone: the system stops, clear runs with the mod data: " .. runs .. "/" .. clears)
+  H.minute(); H.minute()
+  assert(clears == 1, "clear runs once, not every minute: " .. clears)
+  p._traits.asthma = true; H.minute()
+  assert(runs == 3 and clears == 1, "back with the trait: the system runs again: " .. runs .. "/" .. clears)
+  p._traits.asthma = nil; H.minute()
+  assert(clears == 2, "and gone again: cleared again: " .. clears)
+  -- a character seen without the trait from the start: cleared once (a stale save), never run
+  local q = H.player({}); H.current = q
+  H.minute(); H.minute()
+  assert(runs == 3 and clears == 3 and q._md.DanTraits.everyCleared == true, "a character without it: cleared once at first sight: " .. runs .. "/" .. clears)
+  -- a trait test can be a function; no clear is fine
+  local fnRuns, on = 0, false
+  DanTraits_Every("minute", "EveryTest2", function() fnRuns = fnRuns + 1 end, 40, { trait = function() return on end })
+  H.minute(); assert(fnRuns == 0, "a function test that says no: not run")
+  on = true; H.minute(); assert(fnRuns == 1, "...and yes: run")
 end
 
 H.pass()
