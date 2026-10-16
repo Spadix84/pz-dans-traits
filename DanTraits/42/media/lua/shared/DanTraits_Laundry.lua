@@ -628,14 +628,29 @@ function L.runningWasher(obj)
             if obj:isActivated() then container = obj:getContainer() end
         elseif is(obj, "IsoCombinationWasherDryer") then
             if obj:isActivated() and obj:isModeWasher() then container = obj:getContainer() end
+        elseif is(obj, "IsoStackedWasherDryer") then
+            -- (two drums: the washer's own switch and container)
+            if obj:isWasherActivated() then container = obj:getContainerByType("clothingwasher") end
         end
     end)
     return container
 end
 
-local function isWasher(obj) return is(obj, "IsoClothingWasher") or is(obj, "IsoCombinationWasherDryer") end
+local function isWasher(obj)
+    return is(obj, "IsoClothingWasher") or is(obj, "IsoCombinationWasherDryer") or is(obj, "IsoStackedWasherDryer")
+end
 
--- every garment in a running washer is marked; the effects land when it is next seen
+-- the machine has finished with this garment: vanilla's cycle leaves every part
+-- at blood 0 and dirt 0 and the garment soaked. Before that it is only in the
+-- drum, and pulling it out early is not a wash.
+local function cycleDone(item)
+    for _, p in ipairs(L.snapshot(item)) do
+        if p.blood > 0 or p.dirt > 0 then return false end
+    end
+    return wetness(item) >= 100 - 1e-6
+end
+
+-- every garment a running washer has finished with is marked; the effects land when it is next seen
 local function markWasher(obj)
     local container = L.runningWasher(obj)
     if not container then return false end
@@ -643,7 +658,7 @@ local function markWasher(obj)
         local items = container:getItems()
         for i = 0, items:size() - 1 do
             local item = items:get(i)
-            if L.isClothing(item) then
+            if L.isClothing(item) and cycleDone(item) then
                 local s = L.state(item, true)
                 if s then s.mw = true end
             end
@@ -651,6 +666,7 @@ local function markWasher(obj)
     end)
     return true
 end
+L.markWasher = markWasher
 
 local function squareAt(x, y, z)
     local sq = nil

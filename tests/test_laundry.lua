@@ -374,6 +374,24 @@ do
   local combo = { kind = "IsoCombinationWasherDryer", isActivated = function() return true end,
                   isModeWasher = function() return false end, getContainer = function() return container end }
   assert(L.runningWasher(combo) == nil, "a combo drying is not washing")
+  local stacked = { kind = "IsoStackedWasherDryer", isWasherActivated = function() return true end,
+                    getContainerByType = function(_, t) return t == "clothingwasher" and container or nil end }
+  assert(L.runningWasher(stacked) == container, "a stacked washer-dryer washing (its own switch and drum)")
+  stacked.isWasherActivated = function() return false end
+  assert(L.runningWasher(stacked) == nil, "its washer off")
+  -- marked only once the cycle has finished with the garment (blood 0, dirt 0, soaked): pulled out
+  -- early it was a wash at full blood (review 2026-10-16 A1.9)
+  local bloody = garment("Clothing", { Torso = { 0.5, 0.2 } }, { wet = 100 })
+  local dry = garment("Clothing", { Torso = { 0, 0 } }, { wet = 0 })
+  local done = garment("Clothing", { Torso = { 0, 0 } }, { wet = 100 })
+  local drum = { getItems = function() return list({ bloody, dry, done }) end }
+  local running = { kind = "IsoClothingWasher", isActivated = function() return true end, getContainer = function() return drum end }
+  assert(L.markWasher(running), "a running washer is a running washer")
+  assert((L.state(done) or {}).mw == true, "the finished garment is marked")
+  assert(not (L.state(bloody) or {}).mw and not (L.state(dry) or {}).mw, "a garment still bloody, or not yet wet, is not")
+  bloody.blood.Torso, bloody.dirt.Torso = 0, 0
+  L.markWasher(running)
+  assert((L.state(bloody) or {}).mw == true, "once the cycle has it clean and soaked, it is")
 end
 
 -- 13. fabric wear: a roll per wash, never under 1, off means off
