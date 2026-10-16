@@ -11,10 +11,11 @@
 --
 --   DanTraits_FoodTags(item)  a table of tags for the item (a Food; anything
 --                             that fails to answer counts as plain):
---     junk        packaged snacks, candy, soda, by name (false for the safe names)
+--     junk        packaged snacks, candy, soda, by name (false for the safe
+--                 names) or by the Candy and Chocolate food types
 --     junkSafe    the name is on the junk safe-list, so not junk even if packaged
 --     wheat       wheat by name, or a wheat ingredient in an evolved dish
---     fastCarb    sugar that hits fast (diabetes)
+--     fastCarb    sugar that hits fast (diabetes), by name or the candy types
 --     meat        flesh by food type, by name, or a meat ingredient in a dish
 --     iron        0..1, how much of a full meat portion of iron it carries (1
 --                 for meat, fish, game and insects by type or name, else 0)
@@ -58,8 +59,13 @@
 --   rice          not wheat; ricecake is still a cake for junk and sugar
 --   oatmeal, oatsraw, granolabar   not wheat, as whole names only
 --   chips         not wheat (crisps, corn chips) but junk; chipsbowl is not junk
+--   chamomile     not meat ("ham"); turkeyegg an egg, not meat; gummy fish and worms candy,
+--                 not a fish and no iron; soupopen and the poppies (bagel, pods,
+--                 seed) not junk ("pop"); jellybeans and coffee beans not greens
+--                 (checked against the game's 722 food items, review 2026-10-16)
 -- Food types come from a second small table (FOOD_TYPES, whole lowercase
--- name). Dish ingredients (an evolved dish lists its parts as "Base.Steak")
+-- name): meat, egg and greens, and the Candy and Chocolate types are junk and
+-- fast sugar whatever the name (Allsorts, Jujubes, licorice). Dish ingredients (an evolved dish lists its parts as "Base.Steak")
 -- contribute meat, wheat and dairy only: junk, sugar and iron stay the dish's own.
 
 local FOOD_WORDS = {
@@ -134,6 +140,9 @@ local FOOD_SAFE = {
     cornflour = { wheat = true }, rice = { wheat = true },
     graham = { meat = true }, kidneybean = { meat = true }, gooseberr = { meat = true }, crabapple = { meat = true },
     grated = { meat = true }, eggplant = { meat = true, egg = true },
+    chamomile = { meat = true }, turkeyegg = { meat = true }, gummy = { meat = true, iron = true },
+    soupopen = { junk = true }, popp = { junk = true },
+    jellybean = { greens = true }, coffeebean = { greens = true },
     peanutbutter = { dairy = true }, butternut = { dairy = true }, coconutmilk = { dairy = true },
 }
 
@@ -169,6 +178,7 @@ local FOOD_TYPES = {
     egg = { egg = true },
     vegetables = { greens = true }, greens = { greens = true }, herb = { greens = true },
     beans = { greens = true }, leafy = { greens = true },
+    candy = { junk = true, fastCarb = true }, chocolate = { junk = true, fastCarb = true },
 }
 
 local NONE = {}
@@ -203,7 +213,7 @@ local function scanName(name)
         junk = (hit.junk and not safe.junk) == true, junkSafe = safe.junk == true,
         wheat = (hit.wheat and not safe.wheat) == true, fastCarb = hit.fastCarb == true,
         meat = (hit.meat and not safe.meat) == true, egg = (hit.egg and not safe.egg) == true,
-        greens = hit.greens == true, iron = hit.iron or 0, caffeine = hit.caffeine or 0,
+        greens = (hit.greens and not safe.greens) == true, iron = (not safe.iron and hit.iron) or 0, caffeine = hit.caffeine or 0,
         dairy = (hit.dairy and not safe.dairy) == true,
         canned = string.find(name, "canned", 1, true) ~= nil or string.find(name, "dried", 1, true) ~= nil,
     }
@@ -259,6 +269,8 @@ end
 
 -- the tags read on first use; (item, entry) -> value, never nil
 local LAZY = {
+    junk = function(item, entry) return entry.tags.junk or (not entry.tags.junkSafe and typeTags(item, entry).junk == true) end,
+    fastCarb = function(item, entry) return entry.tags.fastCarb or typeTags(item, entry).fastCarb == true end,
     wheat = function(item, entry) return entry.tags.wheat or ingredientHas(item, "wheat") end,
     dairy = function(item, entry) return entry.tags.dairy or ingredientHas(item, "dairy") end,
     meat = function(item, entry) return entry.tags.meat or typeTags(item, entry).meat == true or ingredientHas(item, "meat") end,
@@ -297,7 +309,7 @@ function DanTraits_FoodTags(item)
     end
     local st = entry.tags
     return setmetatable({
-        junk = st.junk, junkSafe = st.junkSafe, fastCarb = st.fastCarb, canned = st.canned,
+        junkSafe = st.junkSafe, canned = st.canned,
     }, { __index = function(t, k)
         local get = LAZY[k]
         if not get then return nil end

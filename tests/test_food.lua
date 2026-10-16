@@ -32,7 +32,7 @@ local cases = {
   { "MeatSteamBun", wheat = true, meat = true, iron = 1 }, { "BunsHamburger", wheat = true, meat = true },
   { "Tortilla", wheat = true }, { "Cornbread", wheat = true }, { "PotatoPancakes", wheat = true, junk = true, fastCarb = true },
   { "Rice" }, { "Potato" }, { "Corn" }, { "Apple", fastCarb = true }, { "Steak", meat = true },
-  { "WhiteCrappie", meat = true, fastCarb = true }, { "Poppies", junk = true, fastCarb = true },
+  { "WhiteCrappie", meat = true, fastCarb = true }, { "Poppies", fastCarb = true },
   { "GamePieceRed", iron = 1, fastCarb = true }, { "TortillaChips", junk = true }, { "Oatmeal" }, { "OatsRaw" },
   { "GranolaBar", fastCarb = true }, { "Cornflour2" }, { "RiceCake", junk = true, fastCarb = true },
   -- Diabetes' tests
@@ -50,7 +50,7 @@ local cases = {
   -- Vitality's, Anemia's and Caffeine's tests
   { "Crisps", junk = true }, { "Peanuts" }, { "Cabbage" }, { "Bass", meat = true }, { "Venison", meat = true, iron = 1 },
   { "CannedBeans", greens = true, canned = true }, { "Chocolate_SnikSnak", junk = true, fastCarb = true, caffeine = 15 },
-  { "ChocolateCoveredCoffeeBeans", junk = true, fastCarb = true, greens = true, caffeine = 300 },
+  { "ChocolateCoveredCoffeeBeans", junk = true, fastCarb = true, caffeine = 300 },
   { "Coffee2", caffeine = 600 }, { "CocoaPowder", caffeine = 30 }, { "TeaBag2", caffeine = 40 },
   -- the conflicts settled in the header
   { "Jerky", junk = true, meat = true }, { "Sugarcane", fastCarb = true }, { "ChipsBowl" },
@@ -76,14 +76,17 @@ local byType = {
   { "DogFood", meat = true }, { "Stock", meat = true }, { "Sausage", meat = true }, { "Bacon", meat = true },
   { "Meat", meat = true, iron = 1 }, { "Egg", egg = true }, { "Vegetables", greens = true }, { "Herb", greens = true },
   { "Fruits" }, { "Bread" }, { "Cheese" }, { "Rice" }, { "NoExplicit" }, { "Bean" },
+  { "Candy", junk = true, fastCarb = true }, { "Chocolate", junk = true, fastCarb = true },
 }
 for _, c in ipairs(byType) do
   local t = tags(item("Thing", c[1]))
   assert((t.meat == true) == (c.meat == true), c[1] .. " food type: meat")
   assert(t.iron == (c.iron or 0), c[1] .. " food type: iron")
   assert((t.egg == true) == (c.egg == true) and (t.greens == true) == (c.greens == true), c[1] .. " food type: egg and greens")
-  assert(t.wheat == false and t.junk == false, c[1] .. " food type: only meat, iron, egg and greens come from the type")
+  assert((t.junk == true) == (c.junk == true) and (t.fastCarb == true) == (c.fastCarb == true), c[1] .. " food type: junk and fast sugar")
+  assert(t.wheat == false, c[1] .. " food type: wheat never comes from the type")
 end
+assert(tags(item("Sugarcane", "Candy")).junk == false, "a junk-safe name is not junk by type either")
 assert(tags(item("Thing", nil)).meat == false, "no food type, plain name: nothing")
 
 -- 3. a dish takes meat and wheat from its ingredients, nothing else
@@ -132,5 +135,41 @@ local nothing = tags({})
 assert(nothing.wheat == false and nothing.meat == false and nothing.junk == false and nothing.iron == 0 and nothing.caffeine == 0, "an empty object is plain")
 local blank = tags(nil)
 assert(blank.wheat == false and blank.rotten == false and blank.ingredients == 0, "nil is plain")
+
+-- 7. the game's own food list (tests/fixtures/foods_b42.lua: every base:food item with its
+-- FoodType). Names the word lists misread (review 2026-10-16 A1.5), and the candy types.
+local rows = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/fixtures/foods_b42.lua")
+assert(#rows > 700, "the real list: " .. #rows .. " items")
+local real = {}
+for _, row in ipairs(rows) do
+  local short = row[1]:match("%.(.*)$")
+  real[short] = tags(item(short, row[2] ~= "" and row[2] or nil))
+end
+local function none(t, ...) for _, k in ipairs({ ... }) do if t[k] == true then return false end end return true end
+assert(real.Chamomile.greens and none(real.Chamomile, "meat"), "chamomile is a herb, not ham")
+assert(real.ChamomileDried.greens and none(real.ChamomileDried, "meat"), "dried chamomile too")
+assert(real.TurkeyEgg.egg and none(real.TurkeyEgg, "meat"), "a turkey egg is an egg")
+assert(real.CandyGummyfish.junk and real.CandyGummyfish.fastCarb and none(real.CandyGummyfish, "meat") and real.CandyGummyfish.iron == 0, "gummy fish: candy, no iron")
+assert(real.BagelPoppy.wheat and none(real.BagelPoppy, "junk"), "a poppy bagel is bread, not junk")
+assert(none(real.PoppyPods, "junk") and none(real.PoppySeed, "junk") and none(real.PoppyPodsDried, "junk"), "poppies are not pop")
+assert(none(real.CannedMushroomSoupOpen, "junk") and none(real.TinnedSoupOpen, "junk"), "opened soup is not junk")
+assert(real.TinnedSoupOpen.greens, "tinned soup keeps its vegetables type")
+assert(real.JellyBeans.junk and real.JellyBeans.fastCarb and none(real.JellyBeans, "greens"), "jelly beans: candy, not beans")
+assert(real.ChocolateCoveredCoffeeBeans.caffeine == 300 and none(real.ChocolateCoveredCoffeeBeans, "greens"), "coffee beans: caffeine, not greens")
+local candy, soups = 0, 0
+for _, row in ipairs(rows) do
+  local short, ft = row[1]:match("%.(.*)$"), row[2]
+  local t = real[short]
+  if ft == "Candy" or ft == "Chocolate" then
+    candy = candy + 1
+    assert(t.junk and t.fastCarb, short .. " [" .. ft .. "] is junk and fast sugar by type")
+    assert(none(t, "meat", "greens", "egg") and t.iron == 0, short .. " [" .. ft .. "] is nothing but candy")
+  end
+  if string.find(short, "Soup", 1, true) then soups = soups + 1; assert(not t.junk, short .. " is not junk") end
+end
+assert(candy >= 25 and soups >= 10, "the sweep covered " .. candy .. " candy and " .. soups .. " soups")
+-- the words still earn what they should on real names
+assert(real.Steak.meat and real.Steak.iron == 1 and real.Bread.wheat and real.Chocolate.junk and real.Chocolate.caffeine == 15, "real names, expected tags")
+assert(real.Popcorn.junk, "popcorn is still junk")
 
 H.pass("food")

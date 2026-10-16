@@ -22,6 +22,7 @@
 [*]A driver who fainted (blood loss, a seizure, a concussion) kept driving: the engine is cut now, so the car rolls to a stop.
 [*]Antibiotics taken on a dirty wound before the infection showed did not count towards the course, which could end in a relapse for doing the right thing. They count now.
 [*]Hemophilia: bandages now soak through two and a half times faster, as the trait says; Good Clotter's last longer.
+[*]Chamomile tea was counted as meat (a Vegetarian would not drink it), a turkey egg as meat, gummy fish as meat with iron, opened canned soup and poppy-seed bagels as junk, jelly beans as greens; and licorice, jujubes and other candy were not junk. All sorted.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]
