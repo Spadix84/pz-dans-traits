@@ -186,6 +186,26 @@ a._t.deep = 0
 H.rollf = 0; mins(48 * 60); H.rollf = 0.99
 assert(not D(p).infFocus, "no relapse")
 
+-- 9b. a course started on a dirty wound, before the infection shows, counts towards it
+-- (it was zeroed every minute while the wound was only contaminated, so the infection showed
+-- with the count at 0 and one more dose left an unfinished course and a relapse roll)
+p = newPlayer(); H.current = p; a = arm(p); a._t.deep = 10
+DanTraits_ExtraCommands.contaminate(p, { "forearm_l", "120" })
+DanTraits_TakeAntibiotic(p, 1); mins(60)
+assert(D(p).infDoses == 1, "a dose taken during incubation is kept, got " .. tostring(D(p).infDoses))
+assert(D(p).infParts.ForeArm_L.inc and D(p).infParts.ForeArm_L.inc > 0, "still incubating")
+mins(61); assert(D(p).infParts.ForeArm_L.L > 0 and D(p).infActive, "the infection shows")
+assert(D(p).infDoses == 1, "with the early dose still counted")
+for _ = 1, 9 do DanTraits_TakeAntibiotic(p, 1); mins(8 * 60) end
+assert(D(p).infParts.ForeArm_L == nil and not D(p).infUnfinished, "ten doses in all, the early one included: a finished course, no relapse")
+-- cleaned before it shows: nothing to treat, the count goes back to zero
+p = newPlayer(); H.current = p; a = arm(p); a._t.deep = 10
+DanTraits_ExtraCommands.contaminate(p, { "forearm_l", "120" })
+DanTraits_TakeAntibiotic(p, 1); mins(10); assert(D(p).infDoses == 1, "kept while contaminated")
+a._alcohol = 1; mins(2); assert(D(p).infParts.ForeArm_L == nil or not D(p).infParts.ForeArm_L.inc, "cleaned off")
+assert(D(p).infDoses == 0, "nothing brewing: the count is reset")
+a._alcohol = 0
+
 -- 10. a small infection on a wound that closes goes with it; SICKNESS ours only
 p = newPlayer(); H.current = p; a = arm(p); a._t.scratch = 3
 DanTraits_ExtraCommands.infect(p, { "forearm_l", "1" }); minute()

@@ -358,7 +358,9 @@ local function updateInfectionMinute(player, d)
             end
         end
     end
-    if not d.infActive and not d.infUnfinished then d.infDoses = 0 end
+    -- (a course started on a dirty wound counts: the doses are kept while any
+    -- part is contaminated, so an infection that then shows is not a fresh count)
+    if not d.infActive and not d.infUnfinished and not contaminated then d.infDoses = 0 end
 
     local stage = 0
     if contaminated then stage = 1 end

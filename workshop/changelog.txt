@@ -20,6 +20,7 @@
 [*]With Project A-Life, a ringing house alarm filled the error log (two errors a tick, from A-Life's NPC hearing). Its NPCs still hear the alarm.
 [*]A drink was counted on every tick of the drinking animation instead of once: Delicate Stomach went Nauseous on one beer, Caffeine Dependent got minutes of caffeine from a mug of coffee, and Lactose Intolerant got a notice per sip. One drink, one count now.
 [*]A driver who fainted (blood loss, a seizure, a concussion) kept driving: the engine is cut now, so the car rolls to a stop.
+[*]Antibiotics taken on a dirty wound before the infection showed did not count towards the course, which could end in a relapse for doing the right thing. They count now.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]
