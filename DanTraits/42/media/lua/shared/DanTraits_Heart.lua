@@ -15,7 +15,12 @@
 -- again. Resting (spending no endurance, not moving fast) lets it pass twice
 -- as fast. Pushing on through it (spending endurance at Endurance moodle 2
 -- or worse, trying to run or sprint, or swinging) risks a heart attack each
--- minute. A heart attack: you go down (the shared pass-out,
+-- minute. "Endurance spent" is the minute's drop in the stat: vanilla's spend
+-- and what other systems take (an asthma attack's gasping, blood loss, the
+-- spoons wall) all count, since a body fighting for breath strains its heart;
+-- the mod's own surcharges (the angina swing, the week's spending stage) are
+-- taken off the minute's baseline as they are charged, so they never feed
+-- the strain they came from. A heart attack: you go down (the shared pass-out,
 -- DanTraits_Faint.lua, deep: nothing wakes you) for 5 to 15 game minutes
 -- with health lost, endurance emptied, and a week of recovery in three
 -- stages: endurance comes back at x0.5 / x0.65 / x0.8, swings, sprinting
@@ -321,6 +326,8 @@ local function updateHeartFrame(player, d)
                 DanTraits_StatAdd(stats, CharacterStat.ENDURANCE, -extra)
                 now = math.max(0, now - extra)
                 DanTraits_DeltaRemember(d, "enduranceRegen", now)
+                -- the surcharge is not exertion: off the minute's baseline, so exertion() reads vanilla's spend only
+                if d.hcEndPrev then d.hcEndPrev = d.hcEndPrev - extra end
             end
         end
     end

@@ -24,6 +24,7 @@
 [*]Hemophilia: bandages now soak through two and a half times faster, as the trait says; Good Clotter's last longer.
 [*]Chamomile tea was counted as meat (a Vegetarian would not drink it), a turkey egg as meat, gummy fish as meat with iron, opened canned soup and poppy-seed bagels as junk, jelly beans as greens; and licorice, jujubes and other candy were not junk. All sorted.
 [*]Diabetes: being out of breath for any other reason (an asthma attack, chest pain, blood loss) no longer counts as exercise and drains sugar.
+[*]Heart Condition: swinging through chest pain made the pain worse than it should have (the mod's own extra cost was read as more exertion). Fixed.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]

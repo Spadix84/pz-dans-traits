@@ -81,8 +81,12 @@ p._run = true; H.frame(p)
 assert(d.hcTried == "run" or d.hcTried == "sprint", "a run is remembered too")
 p._run = false
 p._st.endurance = 1; DanTraits_DeltaRemember(d, "enduranceRegen", 1); H.frame(p)   -- (told to the regen pipeline, or it reads the jump as recovery and trims it)
+local baseline = d.hcEndPrev
 p._attacking = true; p._st.endurance = 0.9; H.frame(p)
 near(p._st.endurance, 0.85, 1e-9, "a swing that spent 0.1 spends 0.15")
+-- the 0.05 surcharge is not exertion: it comes off the minute's baseline, so the minute reads the
+-- 0.1 vanilla spent and the pain does not feed itself (review 2026-10-16 A1.7)
+near(d.hcEndPrev, baseline - 0.05, 1e-9, "the surcharge is taken off the minute's baseline")
 p._attacking = false
 H.frame(p)                                   -- nothing happens with no fall
 
