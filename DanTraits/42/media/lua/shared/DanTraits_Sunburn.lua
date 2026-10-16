@@ -9,7 +9,7 @@
 -- three hours of full summer sun burns bare skin, less in cool weather (the
 -- sun counts for nothing at 5 C and fully from 20 C), less early and late in
 -- the day (full from 11 to 3, half at 9 and at 5, nothing before 7 or after
--- 7 in the evening), and none in shade or indoors, where exposure fades again
+-- 7 in the evening), and none in shade, indoors or in a vehicle, where exposure fades again
 -- over four hours. A hat covers the head,
 -- shoes the feet, a shirt the torso and arms: whatever the clothing's own
 -- covered parts say. A burnt part hurts for 24 hours, the last six easing off,
@@ -92,11 +92,19 @@ local function hourNow()
     return tonumber(hour) or 12
 end
 
+-- a seat in a vehicle is shade: for a seated character isOutside() is the
+-- vehicle's square's flag (the car is outdoors), but the roof is over you
+local function inVehicle(player)
+    local v = nil
+    pcall(function() v = player:getVehicle() end)
+    return v ~= nil
+end
+
 -- 0..1: how hard the sun is beating down on this character now
 local function sunOn(player)
     local outside = false
     pcall(function() outside = player:isOutside() end)
-    if not outside then return 0 end
+    if not outside or inVehicle(player) then return 0 end
     local sun = 0
     pcall(function()
         local c = getClimateManager()

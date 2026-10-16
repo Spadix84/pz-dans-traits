@@ -108,6 +108,16 @@ assert(not d.sbBurn, "toughened skin: three hours and a bit is not enough now")
 d.sbTan = 1
 near(DanTraits_SunBurnMinutes(d), 540, 1e-9, "a full tan: nine hours")
 d.sbTan, d.sbExp = nil, nil
+
+-- 5b. a seat in a vehicle is shade: the game's isOutside for a seated character is the car's
+--     square's, but the roof is over you (three hours of noon driving burnt the head and hands)
+assert(DanTraits_SunOn(p) > 0, "outside at noon: the sun is on you")
+p.getVehicle = function() return { getId = function() return 1 end } end
+assert(DanTraits_SunOn(p) == 0, "in a vehicle: none")
+H.mins(200)
+assert(not (d.sbExp and d.sbExp.Head) and not d.sbBurn, "three hours of driving: nothing builds, nothing burns")
+p.getVehicle = nil
+assert(DanTraits_SunOn(p) > 0, "out of the car: the sun again")
 p._outside = false
 H.minute()
 

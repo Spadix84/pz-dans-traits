@@ -32,6 +32,7 @@
 [*]Spiraling: starting a comfort food and cancelling it gave the full three hours of relief. Relief now matches the portion eaten.
 [*]Asthma, MS, Arthritis, Migraines: a trait taken off mid-game (the debug console, another mod) left its attack, stiffness or moodle behind. It all comes off with the trait now.
 [*]Diabetes: the meter's correction ignored the Type 1 creep and the kidneys, so a Type 1 at 115 read "steady" and was at 156 four hours later; and the food forecast counted the insulin on board at an ordinary body's strength. Both follow the real model now.
+[*]Sunburn: a long drive at noon burnt your head and hands through the roof. A seat in a car is shade now.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]
