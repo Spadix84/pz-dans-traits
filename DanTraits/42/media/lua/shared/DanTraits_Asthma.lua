@@ -55,6 +55,7 @@ local ASTHMA_FAINT_MIN      = { 2, 5 }   -- game minutes out (deep: stays down)
 local ASTHMA_INHALER_RELIEF   = 0.5
 local ASTHMA_INHALER_PANIC    = 10    -- a puff sets the heart racing (out of 100)
 local ASTHMA_WAKE_TIER        = 3     -- asleep at this tier or worse: you wake up gasping
+local ASTHMA_NIGHT            = 0.3   -- a night slept on an irritated airway scores x (1 - this x irritation) (nightQuality)
 local ASTHMA_FEVER_RATE     = 0.004   -- per minute at full fever (wound infection), passive: no mask helps
 local ASTHMA_MASK_GAS_PASSIVE = 0.2   -- multiplier on non-environmental build-up with a gas mask
 
@@ -254,6 +255,12 @@ end
 
 -- Claw back endurance regeneration according to tier, through the stat delta
 -- pipeline (DanTraits_Util.lua): half at tier 2, none from tier 3.
+-- a night slept on an irritated airway is a worse night (Vitality scores it; a tier-3 attack wakes you outright, above)
+DanTraits_AddHook("nightQuality", function(quality, player, d)
+    if not d or (d.asthma or 0) <= 0 or not DanTraits_HasTrait(player, "asthma") then return nil end
+    return quality * (1 - ASTHMA_NIGHT * DanTraits_Clamp01(d.asthma))
+end)
+
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)
     if not hasTrait(player, "asthma") then return nil end
     local tier = asthmaEffectiveTier(asthmaData(player))

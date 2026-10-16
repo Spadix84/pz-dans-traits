@@ -76,6 +76,18 @@ assert(DanTraits_ExtraFumble(low3) == 14, "tier 3: +14%")
 H.rng = { 0 }; H.fire("OnWeaponSwing", low3, { name = "bat" })
 assert(#low3._dropped == 1 and halo[#halo] == "UI_DanTraits_FumblerDrop", "shaky hands drop the weapon")
 
+-- 7b. a low in the night: under 55 asleep wakes you, once, drenched in sweat; that night scores 30% lower
+local night = newPlayer({ traits = { "diabetes1" }, asleep = true }); H.current = night
+night._md.DanTraits = { glucose = 60 }; minute()
+assert((night._woke or 0) == 0 and night._asleep, "tier 1 asleep: sleeps on")
+night._md.DanTraits.glucose = 50; minute()
+assert(night._woke == 1 and not night._asleep and halo[#halo] == "UI_DanTraits_DiaNightLow", "tier 2: woken, sweating")
+H.near(DanTraits_RunHooks("nightQuality", 0.8, night, night._md.DanTraits), 0.56, 1e-9, "the night scores 30% lower")
+H.near(DanTraits_RunHooks("nightQuality", 0.8, night, night._md.DanTraits), 0.8, 1e-9, "...once")
+night._asleep = true; minute(); assert(night._woke == 1, "the same low: not woken again")
+night._md.DanTraits.glucose = 100; minute(); night._md.DanTraits.glucose = 50; minute()
+assert(night._woke == 2, "a new low: woken again")
+
 -- 8. high tiers: thirst, tiredness, then queasy and low, then health to the floor
 local hi = newPlayer({ health = 30 }); H.current = hi
 hi._md.DanTraits = { glucose = 300 }; minute()

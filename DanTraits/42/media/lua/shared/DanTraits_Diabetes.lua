@@ -76,6 +76,8 @@ local DIA_LOW_HP_DRAIN      = 0.5                 -- per minute at the worst tie
 local DIA_LOW_FAINT         = 0.04                -- per minute at the worst tier: a chance of blacking out
 local DIA_LOW_FAINT_MIN     = { 5, 20 }           -- game minutes out (shallow: a new wound wakes you)
 local DIA_LOW_FAINT_GAP     = 30                  -- minutes between blackouts (d.diaFaintGap)
+local DIA_NIGHT_LOW_TIER    = 2                   -- a low at this tier or worse while asleep wakes you, drenched in sweat...
+local DIA_NIGHT_CUT         = 0.3                 -- ...and that night scores x (1 - this) (nightQuality)
 local DIA_HIGH_THIRST       = { 0.002, 0.004, 0.006 }  -- per minute (0..1)
 local DIA_HIGH_FATIGUE      = { 0.0005, 0.0015, 0.003 }
 local DIA_HIGH_UNHAPPY_FLOOR = { 0, 15, 30 }
@@ -434,6 +436,17 @@ end
 DanTraits_DiaTier = diaTier
 
 -- vague on purpose: three of the six messages are shared between low and high
+-- a low in the night: at DIA_NIGHT_LOW_TIER or worse asleep you wake drenched
+-- in sweat, once per low (diaNightWoke), and the night is scored lower
+-- (diaNightLow, read once by the nightQuality hook below)
+local function diaNightLow(player, d, low, asleep)
+    if low <= 0 then d.diaNightWoke = nil return end
+    if not asleep or low < DIA_NIGHT_LOW_TIER or d.diaNightWoke then return end
+    d.diaNightWoke, d.diaNightLow = true, true
+    pcall(function() player:forceAwake() end)
+    notify(player, "UI_DanTraits_DiaNightLow")
+end
+
 local function diaHalo(player, d, low, high)
     local tier = math.max(low, high)
     if tier == 0 then d.diaHaloIn = nil; return end
@@ -540,6 +553,7 @@ local function updateDiabetesMinute(player, d)
     if (d.diaFaintGap or 0) > 0 then d.diaFaintGap = d.diaFaintGap - 1 end
     d.diaFumble = low > 0 and DIA_LOW_FUMBLE[low] or 0
     d.diaLow = low > 0 and low or nil
+    diaNightLow(player, d, low, asleep)
     if low == 0 and high == 0 then return end
 
     -- the symptoms (the stat helpers never throw; the body-damage calls are the game's)
@@ -686,6 +700,13 @@ local function infectionSugar(player)
     if not d or not d.glucose then return 0 end
     return math.max(0, math.min(1, (d.glucose - DIA_HIGH[1]) / (DIA_HIGH[3] - DIA_HIGH[1])))
 end
+-- a night with a low in it scores lower (Vitality scores the night; the flag is set by diaNightLow)
+DanTraits_AddHook("nightQuality", function(quality, player, d)
+    if not d or not d.diaNightLow then return nil end
+    d.diaNightLow = nil
+    return quality * (1 - DIA_NIGHT_CUT)
+end)
+
 DanTraits_AddHook("infectionHazard", function(h, player)
     local t = infectionSugar(player)
     if t <= 0 then return nil end

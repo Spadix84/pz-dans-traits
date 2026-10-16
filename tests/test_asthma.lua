@@ -109,6 +109,10 @@ local sl = newPlayer({ asleep = true }); H.current = sl; sl._md.DanTraits = { as
 minute()
 assert(math.abs(irritation(sl) - 0.492) < 1e-9, "asleep decay 0.008")
 print("asleep decay: 0.500 -> " .. string.format("%.3f", irritation(sl)))
+-- a night slept on an irritated airway scores lower: x (1 - 0.3 x irritation)
+H.near(DanTraits_RunHooks("nightQuality", 0.8, sl, sl._md.DanTraits), 0.8 * (1 - 0.3 * irritation(sl)), 1e-9, "nocturnal asthma: a worse night")
+sl._md.DanTraits.asthma = 0
+H.near(DanTraits_RunHooks("nightQuality", 0.8, sl, sl._md.DanTraits), 0.8, 1e-9, "a clear airway: the night as it was")
 
 -- 9. starting kit: one real inhaler item, given once
 local nw = newPlayer({}); H.fire("OnCreatePlayer", 0, nw)
@@ -277,5 +281,14 @@ do
   minute(); H.near(lg3._md.DanTraits.asthma, 0.014 * 1.25, 1e-9, "half-damaged lungs: x 1.25")
   print("one cough shared, cigarette irritates, lungs speed the build")
 end
+
+-- bleach fumes (laundry): straight onto the airway; a dust mask halves them, a gas mask stops them
+local bf = newPlayer({}); H.current = bf
+assert(DanTraits_AsthmaFumes(bf, 0.08)); assert(math.abs(irritation(bf) - 0.08) < 1e-9, "fumes: 0.08")
+local bfd = newPlayer({ worn = { mask = { getType = function() return "Hat_DustMask" end, getBodyLocation = function() return "base:mask" end } } })
+DanTraits_AsthmaFumes(bfd, 0.08); assert(math.abs(irritation(bfd) - 0.04) < 1e-9, "a dust mask halves them")
+local bfg = newPlayer({ worn = { maskeyes = { getType = function() return "Hat_GasMask" end, getBodyLocation = function() return "base:maskeyes" end } } })
+assert(not DanTraits_AsthmaFumes(bfg, 0.08), "a gas mask stops them")
+assert(not DanTraits_AsthmaFumes(H.player({}), 0.08), "no asthma: nothing")
 
 H.pass()
