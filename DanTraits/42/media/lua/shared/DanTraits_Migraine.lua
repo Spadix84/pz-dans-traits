@@ -452,17 +452,54 @@ local function doing(player)
     return #parts > 0 and table.concat(parts, ", ") or "nothing noted"
 end
 
+-- the keys of a table, as a set
+local function keySet(d)
+    local set = {}
+    for k in pairs(d) do set[tostring(k)] = true end
+    return set
+end
+
+-- the keys in a and not in b, as "k1 k2"
+local function keysMissing(a, b)
+    local out = {}
+    for k in pairs(a) do if not b[k] then out[#out + 1] = k end end
+    table.sort(out)
+    return #out > 0 and table.concat(out, " ") or "none"
+end
+
+-- 2026-10-16: the line fired once ("a DIFFERENT table, keys 126 -> 124", the
+-- counters unchanged), so the table was swapped for an older copy, not cleared.
+-- This now also says whether the player object and the top-level mod data
+-- table changed (the game reloading the character, or a Java mod, would
+-- change those; a Lua copy of our sub-table would not), which keys went and
+-- which arrived, and the clocks.
 local function auraWatch(player, d)
     local was = auraLastMinute[player]
+    local md = player:getModData()
     if was and not d.migAuraLeft and not d.migActive then
+        local keys = keySet(d)
+        local hours, survived = nil, nil
+        pcall(function() hours = getGameTime():getWorldAgeHours() end)
+        pcall(function() survived = player:getHoursSurvived() end)
         print("[DanTraits] migraine aura vanished without an attack: "
-            .. (was.table == d and "same table" or "a DIFFERENT table") .. ", keys " .. was.keys .. " -> " .. keyCount(d)
+            .. (was.table == d and "same table" or "a DIFFERENT table (" .. tostring(was.table) .. " -> " .. tostring(d) .. ")")
+            .. ", mod data " .. (was.md == md and "same" or "DIFFERENT") .. ", player " .. (was.player == tostring(player) and "same" or "DIFFERENT")
+            .. ", keys " .. was.keys .. " -> " .. keyCount(d)
+            .. ", gone: " .. keysMissing(was.set, keys) .. ", new: " .. keysMissing(keys, was.set)
             .. ", vitAwakeMin " .. tostring(was.awake) .. " -> " .. tostring(d.vitAwakeMin)
             .. ", hmAwayH " .. tostring(was.away) .. " -> " .. tostring(d.hmAwayH)
-            .. ", severity " .. tostring(d.migSeverity) .. ", cause " .. tostring(d.migCause)
+            .. ", world hours " .. tostring(was.hours) .. " -> " .. tostring(hours) .. ", survived " .. tostring(survived)
+            .. ", severity " .. tostring(d.migSeverity) .. ", cause " .. tostring(d.migCause) .. ", sinceEnd " .. tostring(d.migSinceEnd)
             .. "; " .. doing(player))
     end
-    auraLastMinute[player] = d.migAuraLeft and { table = d, keys = keyCount(d), awake = d.vitAwakeMin, away = d.hmAwayH } or nil
+    if d.migAuraLeft then
+        local hours = nil
+        pcall(function() hours = getGameTime():getWorldAgeHours() end)
+        auraLastMinute[player] = { table = d, md = md, player = tostring(player), keys = keyCount(d), set = keySet(d),
+            awake = d.vitAwakeMin, away = d.hmAwayH, hours = hours }
+    else
+        auraLastMinute[player] = nil
+    end
 end
 
 -- the trait gone (the console, another mod, a save without it): the aura or
