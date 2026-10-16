@@ -255,4 +255,12 @@ near(DanTraits_RunHooks("woundHeal", 0.35, wh), 0.35 * 0.9, 1e-12, "half a meter
 local nw = H.player(); H.current = nw; nw._md.DanTraits = { nicMeter = 1 }
 near(DanTraits_RunHooks("woundHeal", 0.35, nw), 0.35, 1e-12, "a meter without the trait: untouched")
 
+-- 15. smoke in your clothes: the laundry odour rate x1.5 for six hours after a smoke, habit or not
+local sm = H.player(); H.current = sm
+near(DanTraits_RunHooks("laundryOdour", 1, sm), 1, 1e-12, "never smoked: the plain rate")
+smoke(sm, "CigaretteSingle", vanillaNonSmoker)
+near(DanTraits_RunHooks("laundryOdour", 1, sm), 1.5, 1e-12, "just smoked: x1.5")
+mins(5 * 60); near(DanTraits_RunHooks("laundryOdour", 1, sm), 1.5, 1e-12, "five hours on: still")
+mins(70); near(DanTraits_RunHooks("laundryOdour", 1, sm), 1, 1e-12, "six hours on: gone")
+
 H.pass()

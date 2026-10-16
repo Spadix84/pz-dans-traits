@@ -34,7 +34,9 @@
 -- years of it. Damaged lungs recover endurance slower (through the
 -- enduranceRegen hook of the stat delta pipeline), and cough, more
 -- often the worse the lungs and the stronger the habit, on exertion and
--- in the first hour after waking. The cough is the game's own, heard by
+-- in the first hour after waking. Smoke gets into your clothes too: for
+-- six hours after any smoke worn clothes go stale half as fast again (the
+-- laundry's odour hook, DanTraits_Laundry.lua). The cough is the game's own, heard by
 -- zombies, through the one shared cough (DanTraits_Util.lua: a single gap
 -- across Smoker and Asthma). A Brittle Asthma character's airway is irritated
 -- by every cigarette (DanTraits_AsthmaSmoked) and by damaged lungs (Asthma
@@ -115,6 +117,8 @@ local COUGH_MORNING_MIN = 60
 -- wounds
 local NIC_INF_GROWTH   = 0.2     -- wound infection climb x (1 + this x meter), Smokers only
 local NIC_WOUND_HEAL   = 0.2     -- an unstitched deep wound heals x (1 - this x meter), Smokers only
+local NIC_ODOUR        = 1.5     -- worn clothes go stale x this (the laundryOdour hook)...
+local NIC_ODOUR_H      = 6       -- ...for this many hours after a smoke, anyone who smokes
 -- caffeine
 local CAF_INDUCE_PER_CIG = 0.1    -- caffeine clearance x (1 + induction), induction up to 1
 local CAF_INDUCE_HALF_H  = 39
@@ -578,6 +582,15 @@ DanTraits_AddHook("woundHeal", function(rate, player)
     local d = player and player:getModData().DanTraits
     if not d or (d.nicMeter or 0) <= 0 or not isSmoker(player) then return nil end
     return rate * (1 - NIC_WOUND_HEAL * d.nicMeter)
+end)
+
+-- smoke gets into your clothes: for a few hours after a cigarette, cigar or
+-- pipe (anyone's, habit or not) worn clothes go stale faster (the laundry's
+-- odour rate, DanTraits_Laundry.lua), on top of Sweaty or Cool Customer
+DanTraits_AddHook("laundryOdour", function(k, player)
+    local d = player and player:getModData().DanTraits
+    if not d or not d.nicSmokeHours or d.nicSmokeHours >= NIC_ODOUR_H then return nil end
+    return k * NIC_ODOUR
 end)
 
 DanTraits_Every("minute", "Smoker", updateSmokerMinute, 40)
