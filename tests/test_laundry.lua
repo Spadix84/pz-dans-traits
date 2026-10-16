@@ -96,6 +96,8 @@ ISWorldObjectContextMenu = {
 }
 
 SandboxVars = { DanTraits = {} }
+local tooltipSources = {}
+DanShared_Tooltip = { add = function(id, order, fn) tooltipSources[id] = { order = order, fn = fn } end }
 H.load("Laundry", "LaundryWash", "LaundryDry", "LaundryGear", "Bathing", "client/DanTraits_LaundryClient.lua")
 local L = DanTraits_Laundry
 assert(L and L.on(), "loaded and on by default")
@@ -500,6 +502,17 @@ do
   L.state(g).m = true
   assert(L.tooltipLines(g)[1][1] == "Tooltip_DanTraits_Musty", "musty first")
   assert(L.tooltipLines(garment("Clothing", {})) == nil, "a fresh dry garment: nothing")
+  -- through the shared strip, not a render wrap of its own (two boxes painted over each other
+  -- with item info on; review 2026-10-16 A1.10)
+  local src = tooltipSources.laundry
+  assert(src and src.order == 22, "registered with DanShared_Tooltip at 22 (after Reading's 20, before item info's 25)")
+  local strip = src.fn(nil, g)
+  local lines = L.tooltipLines(g)
+  assert(strip and #strip == #lines and strip[1][1] == lines[1][1], "the same lines")
+  assert(type(strip[1][2]) == "number" and type(strip[1][3]) == "number" and type(strip[1][4]) == "number", "as { text, r, g, b }")
+  assert(strip[1][2] == 1 and strip[1][3] == 0.75, "a bad line in the warning colour")
+  assert(src.fn(nil, garment("Clothing", {})) == nil, "nothing for a fresh dry garment")
+  assert(not (ISToolTipInv and ISToolTipInv.DanTraitsWraps and ISToolTipInv.DanTraitsWraps["render:laundry-info"]), "no render wrap of its own")
 end
 
 -- 18. Infection: a musty garment over a wound counts as dirty clothing there

@@ -26,11 +26,12 @@
 -- A clothesline post right-clicked gets its container at once (the clock
 -- would give it one within ten minutes anyway).
 --
--- Garment tooltips get a strip below with the laundry state: damp (and how
--- long before musty), stale or musty, a set-in stain, fabric protector left,
--- washes so far.
+-- Garment tooltips get the laundry state in the shared strip under the
+-- tooltip (DanShared_Tooltip.lua, with Reading's lines and Dan's Vanilla
+-- Fixes' item info): damp (and how long before musty), stale or musty, a
+-- set-in stain, fabric protector left, washes so far.
 require "ISUI/ISWorldObjectContextMenu"
-require "ISUI/ISToolTipInv"
+require "DanShared_Tooltip"
 require "DanTraits_Laundry"
 require "DanTraits_LaundryWash"
 require "DanTraits_LaundryDry"
@@ -279,7 +280,6 @@ Events.OnFillInventoryObjectContextMenu.Add(onInventoryMenu)
 
 -- tooltip lines ------------------------------------------------------------------------
 
-local PAD_X, PAD_Y = 5, 4
 local GOOD = { r = 0.55, g = 0.8, b = 1 }
 local BAD = { r = 1, g = 0.75, b = 0.45 }
 
@@ -302,26 +302,17 @@ function L.tooltipLines(item)
     return lines
 end
 
-local function drawLines(self, lines)
-    local font = UIFont.Small
-    local tm = getTextManager()
-    local lineH = tm:getFontHeight(font)
-    local width = self.width
-    for _, line in ipairs(lines) do width = math.max(width, tm:MeasureStringX(font, line[1]) + PAD_X * 2) end
-    local top = self.height
-    local extra = #lines * lineH + PAD_Y * 2
-    self:drawRect(0, top, width, extra, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b)
-    self:drawRectBorder(0, top - 1, width, extra + 1, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b)
+-- into the shared strip (one strip for every feature, lowest order first, so
+-- nothing draws over anything; a wrap of its own here painted a second box
+-- over item info's "Covers:" line)
+DanShared_Tooltip.add("laundry", 22, function(_, item)
+    local lines = L.tooltipLines(item)
+    if not lines then return nil end
+    local out = {}
     for i, line in ipairs(lines) do
         local c = line[2] and BAD or GOOD
-        self:drawText(line[1], PAD_X, top + PAD_Y + (i - 1) * lineH, c.r, c.g, c.b, 1, font)
+        out[i] = { line[1], c.r, c.g, c.b }
     end
-end
-
-DanTraits_Wrap(ISToolTipInv, "render", "laundry-info", function(original, self, ...)
-    original(self, ...)
-    if not self.item or (ISContextMenu.instance and ISContextMenu.instance.visibleCheck) then return end
-    local lines = nil
-    pcall(function() lines = L.tooltipLines(self.item) end)
-    if lines then pcall(drawLines, self, lines) end
+    return out
 end)
+
