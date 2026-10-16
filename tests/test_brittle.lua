@@ -32,15 +32,15 @@ local hit = H.on("OnPlayerGetDamage")
 local parts = limbs()
 local p = newPlayer({ parts = parts }); H.current = p
 H.rolls = 0
-hit(p, "BLUNT", 1.9); hit(p, "BLUNT", nil); hit(p, "BLUNT", 0)
+hit(p, "WEAPONHIT", 1.9); hit(p, "WEAPONHIT", nil); hit(p, "WEAPONHIT", 0)
 assert(H.rolls == 0, "a light hit does not roll")
 for _, x in ipairs(parts) do assert(x._fracture == 0, "nothing fractured") end
 assert(#halo == 0, "no notice")
 
 -- 2. a solid hit but the roll is 20 or more: safe
-H.rng = { 20 }; hit(p, "BLUNT", 5)
+H.rng = { 20 }; hit(p, "WEAPONHIT", 5)
 for _, x in ipairs(parts) do assert(x._fracture == 0, "roll 20: safe") end
-H.rng = { 99 }; hit(p, "BLUNT", 5)
+H.rng = { 99 }; hit(p, "WEAPONHIT", 5)
 for _, x in ipairs(parts) do assert(x._fracture == 0, "roll 99: safe") end
 assert(#halo == 0, "still no notice")
 
@@ -49,7 +49,7 @@ for index = 0, 5 do
   local ps = limbs()
   local q = newPlayer({ parts = ps }); H.current = q
   H.clearHalo()
-  H.rng = { 19, index, 39 }; hit(q, "BLUNT", 2)
+  H.rng = { 19, index, 39 }; hit(q, "WEAPONHIT", 2)
   for i, x in ipairs(ps) do
     if i == index + 1 then assert(x._fracture == 79, LIMBS[i] .. " fractured at 40 + 39, got " .. x._fracture)
     else assert(x._fracture == 0, LIMBS[i] .. " untouched") end
@@ -57,29 +57,42 @@ for index = 0, 5 do
   assert(halo[#halo] == "UI_DanTraits_BrittleSnap" and #halo == 1, "one snap notice")
 end
 local lo = limbs(); local q = newPlayer({ parts = lo }); H.current = q
-H.rng = { 0, 0, 0 }; hit(q, "BLUNT", 2)
+H.rng = { 0, 0, 0 }; hit(q, "WEAPONHIT", 2)
 assert(lo[1]._fracture == 40, "fracture time floor is 40, got " .. lo[1]._fracture)
 
 -- 4. the picked limb is already fractured: skipped, no notice, time not reset
 local broken = limbs({ Hand_L = 55 })
 local r = newPlayer({ parts = broken }); H.current = r
 H.clearHalo()
-H.rng = { 0, 4, 7 }; hit(r, "BLUNT", 9)
+H.rng = { 0, 4, 7 }; hit(r, "WEAPONHIT", 9)
 assert(broken[5]._fracture == 55, "an already-fractured limb keeps its time")
 assert(#halo == 0, "no notice when nothing new snaps")
 for i, x in ipairs(broken) do if i ~= 5 then assert(x._fracture == 0, "no other limb picked") end end
 
 -- 5. the limb is missing from the body: nothing happens
 local none = newPlayer({ parts = {} }); H.current = none
-H.rng = { 0, 0, 0 }; hit(none, "BLUNT", 9)
+H.rng = { 0, 0, 0 }; hit(none, "WEAPONHIT", 9)
 assert(#halo == 0, "no such limb: no notice")
 
 -- 6. without the trait: no roll at all
 local plain = limbs()
 local other = newPlayer({ traits = {}, parts = plain }); H.current = other
-H.rolls = 0; hit(other, "BLUNT", 30)
+H.rolls = 0; hit(other, "WEAPONHIT", 30)
 assert(H.rolls == 0, "no trait: no roll")
 for _, x in ipairs(plain) do assert(x._fracture == 0, "no trait: nothing fractures") end
+
+-- 6b. only a hit the game reports as one (WEAPONHIT) rolls: fire, a wound infection, hunger and
+--     thirst come through the same event and take health off, and none of them snaps a bone
+do
+  local ps = limbs()
+  local f = newPlayer({ parts = ps }); H.current = f
+  H.rolls = 0; H.clearHalo()
+  for _, kind in ipairs({ "FIRE", "INFECTION", "HUNGER", "THIRST", "BLEEDING" }) do hit(f, kind, 30) end
+  assert(H.rolls == 0 and #halo == 0, "fire, infection, hunger, thirst: no roll, nothing snaps")
+  for _, x in ipairs(ps) do assert(x._fracture == 0, "no limb fractured") end
+  H.rng = { 0, 0, 0 }; hit(f, "WEAPONHIT", 5)
+  assert(ps[1]._fracture > 0, "the same damage as a hit: rolled and snapped")
+end
 
 -- 7. falls, crashes and being hit by a car never roll on the damage event (the game reports an
 -- 11 km/h bump as 2-3 damage); they come through Concussion's impact hook with its chance

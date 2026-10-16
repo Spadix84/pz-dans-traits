@@ -6,14 +6,18 @@ local notify = DanTraits_Notify
 
 -- Brittle -------------------------------------------------------------------
 -- A solid hit (a weapon, a zombie: 2 damage or more) rolls FRACTURE_CHANCE.
--- Falls, car crashes and being hit by a car are judged on Concussion's
--- "impact" hook instead, by the same scale as the head: the chance of a
--- concussion times IMPACT_SCALE times FRACTURE_CHANCE. A bump at 11 km/h
--- (the game reports it as 2-3 damage) or a hop off a fence is nothing; a
--- fence at 50 km/h about a fifth; a crash sure to concuss, two fifths.
+-- Only what the game reports as a hit (OnPlayerGetDamage "WEAPONHIT", from
+-- IsoGameCharacter.Hit) counts: the same event carries fire, a wound
+-- infection, hunger and thirst taking health off, and none of those snaps
+-- a bone. Falls, car crashes and being hit by a car are judged on
+-- Concussion's "impact" hook instead, by the same scale as the head: the
+-- chance of a concussion times IMPACT_SCALE times FRACTURE_CHANCE. A bump
+-- at 11 km/h (the game reports it as 2-3 damage) or a hop off a fence is
+-- nothing; a fence at 50 km/h about a fifth; a crash sure to concuss, two
+-- fifths.
 local FRACTURE_CHANCE = 20    -- percent, on a solid hit
 local IMPACT_SCALE    = 2     -- a crash certain to concuss rolls this many times FRACTURE_CHANCE
-local IMPACT_TYPES    = { FALLDOWN = true, CARCRASHDAMAGE = true, CARHITDAMAGE = true }
+local HIT_TYPE        = "WEAPONHIT"   -- the one damage report that is a hit
 local BRITTLE_PARTS = {
     BodyPartType.ForeArm_L, BodyPartType.ForeArm_R,
     BodyPartType.LowerLeg_L, BodyPartType.LowerLeg_R,
@@ -46,7 +50,8 @@ function DanTraits_BrittleHit(player, damage)
 end
 
 local function onPlayerGetDamage(player, damageType, damage)
-    if IMPACT_TYPES[damageType] then return end   -- judged on the impact hook below
+    -- a fall or a crash is judged on the impact hook below; fire, infection, hunger and thirst are not hits
+    if damageType ~= HIT_TYPE then return end
     DanTraits_BrittleHit(player, damage)
 end
 
