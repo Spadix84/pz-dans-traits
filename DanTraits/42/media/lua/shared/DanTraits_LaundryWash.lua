@@ -22,7 +22,9 @@
 --
 -- Wringing (ISWringClothing) leaves a garment damp: it stops at
 -- LaundryWringLeaves (shoes 70) instead of 10, so it saves time but not the
--- drying. It is not offered at or under that line.
+-- drying. The game's own menu still offers it between that line and its own
+-- (only isValid is ours), so at or under the line the action refuses and
+-- says why, once (the shape of core's refuse-food wrap).
 --
 -- Only clothing and bags. Bandages and rags (which turn into clean ones) and
 -- blood on weapons wash as in vanilla. The menu side (skipping what cannot
@@ -156,7 +158,12 @@ local function wrapWashing()
     DanTraits_Wrap(ISWringClothing, "isValid", "laundry-wring", function(original, self, ...)
         local ok = original(self, ...)
         if not ok or not L.on() or not L.isClothing(self.item) then return ok end
-        return L.wetness(self.item) > L.wringLeaves(self.item) + 1
+        if L.wetness(self.item) > L.wringLeaves(self.item) + 1 then return true end
+        if not self.danTraitsRefusedShown then
+            self.danTraitsRefusedShown = true
+            L.message(self.character, nil, nil, "IGUI_DanTraits_WringDamp")
+        end
+        return false
     end)
     DanTraits_Wrap(ISWringClothing, "getDuration", "laundry-wring", function(original, self, ...)
         local t = original(self, ...)

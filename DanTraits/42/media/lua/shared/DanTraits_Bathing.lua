@@ -25,9 +25,12 @@ require "DanTraits"
 -- (TABAS_BathingUtils.cleaningWornItems): here a patch of blood or dirt never
 -- goes under the soap floor with soap or shampoo to hand (a bar in the
 -- inventory, or the shower's own soap list), nor under the no-soap floor
--- without (a washboard's floors with one carried), nor under a set-in stain;
+-- without (a washboard's floors with one carried; Homemaker's floors for a
+-- Homemaker), nor under a set-in stain;
 -- a patch already under its floor is left where it was. Only a washing
--- machine gets a garment fully clean, bath or no bath. Its own objects (the
+-- machine gets a garment fully clean, bath or no bath. A bath does not count
+-- as a wash (the washed clock, Fresh Clothes and the laundryWashed hook stay
+-- with the sink and the machine; plans/laundry.md). Its own objects (the
 -- tub's water, the towel) and the body are untouched.
 local installed = false
 
@@ -78,8 +81,8 @@ local function installClothes()
         end)
         local a, b, c, d = original(character, wornItems, pct, factor, ...)
         if #snaps > 0 then
-            local soap, method = soapToHand(character), L.methodFor(character)
-            for _, e in ipairs(snaps) do pcall(function() L.applyFloors(e.item, e.snap, method, soap) end) end
+            local soap, method, skilled = soapToHand(character), L.methodFor(character), L.skilled(character)
+            for _, e in ipairs(snaps) do pcall(function() L.applyFloors(e.item, e.snap, method, soap, skilled) end) end
         end
         return a, b, c, d
     end

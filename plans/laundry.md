@@ -490,6 +490,13 @@ What changed from the design, from what the game files showed:
   LaundryMood scales it.
 - Spikes S1 to S6 could not run without the game; each is now a field-test
   check (section 19 of the checklist).
+- Bathing (review 2026-10-16): the clothes you bathe or shower in get the
+  hand-wash floors with Homemaker counted now. A bath does not count as a
+  wash: the washed clock, Fresh Clothes and the `laundryWashed` hook stay
+  with the sink, the washboard and the machine. Open for the user: should a
+  bath with soap count as a hand wash? The starting outfit begins fresh and
+  dry, so Fresh Clothes shows for about a day and a half before the sweat
+  catches up; by design, not written down until now.
 
 ## Traits (built 2026-10-11)
 

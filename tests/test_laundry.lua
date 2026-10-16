@@ -234,7 +234,10 @@ do
   H.near(act:getDuration(), 250, 1e-9, "only the water that comes out takes time")
   act:complete()
   assert(shirt.wet == 50, "wrung to 50, got " .. tostring(shirt.wet))
-  assert(not act:isValid(), "at the line: not offered again")
+  local said = #H.halo
+  assert(not act:isValid(), "at the line: refused (the game's menu still offers it)")
+  assert(#H.halo == said + 1 and H.halo[#H.halo] == "IGUI_DanTraits_WringDamp", "and says why")
+  assert(not act:isValid() and #H.halo == said + 1, "once per action, not every tick")
   local shoes = garment("Clothing", {}, { wet = 100, loc = "base:shoes" })
   ISWringClothing.complete({ item = shoes, character = player })
   assert(shoes.wet == 70, "shoes: 70")
@@ -552,6 +555,13 @@ do
   shirt.blood.Torso_Upper = 1
   TABAS_BathingUtils.cleaningWornItems(bather, worn, 0.1, 1)
   H.near(shirt.blood.Torso_Upper, 0.2, 1e-9, "soap to hand: 20%")
+  -- a Homemaker's floors reach the bath too (the laundrySkilled hook, LaundryTraits' in the game)
+  DanTraits_AddHook("laundrySkilled", function(_, who) if who._homemaker then return true end end)
+  bather._homemaker = true; bather._soaps.uses = 0
+  shirt.blood.Torso_Upper = 1
+  TABAS_BathingUtils.cleaningWornItems(bather, worn, 0.1, 1)
+  H.near(shirt.blood.Torso_Upper, 0.25, 1e-9, "a Homemaker, no soap: a washboard's 25%, not 40%")
+  DanTraits_Hooks.laundrySkilled = nil
   TABAS_BathingUtils = nil
 end
 
@@ -619,6 +629,16 @@ do
   assert(sqs and #sqs == 5 and sqs[5] == b, "east-west: five clear squares")
   assert(L.lineSquares(a, "ns") == nil, "north-south: blocked")
   assert(L.lineSquares(row[2], "ew") == nil, "not enough squares beyond: nothing")
+  -- where to stand while putting it up: beside or behind the first post, never on the line
+  -- (the action re-checks the line's squares every tick; the walk used to end on the first wire)
+  local who = person(); who.getX = function() return 9 end; who.getY = function() return 9 end
+  assert(L.lineStandSquare(who, a, "ew") == nil, "nothing beside or behind: nowhere to stand (south is blocked, north and west do not exist)")
+  local north, west = square(10, 9), square(9, 10)
+  assert(L.lineStandSquare(who, a, "ew") == north, "the nearest clear square beside the post")
+  who.getX = function() return 8 end
+  assert(L.lineStandSquare(who, a, "ew") == west, "...or behind it, whichever is nearer")
+  for _, s in ipairs(sqs) do assert(L.lineStandSquare(who, a, "ew") ~= s, "never a line square") end
+  assert(L.lineStandSquare(who, a, "ns") == nil, "a line that cannot go up: nowhere")
 
   local p = person()
   local function item(t)

@@ -180,10 +180,18 @@ local function fireMenu(playerObj, context, heat)
     end)
 end
 
--- clotheslines: put one up on the clicked square, or take a built one down
+-- clotheslines: put one up on the clicked square, or take a built one down.
+-- The walk goes to a square off the line (L.lineStandSquare): the action
+-- re-checks every line square is free each tick, and walkAdj could end on
+-- the first wire square and cancel it.
 local function onPutUp(playerObj, sq, dir)
     local mats = L.lineMaterials(playerObj)
-    if not mats or not luautils.walkAdj(playerObj, sq, true) then return end
+    if not mats then return end
+    local stand = L.lineStandSquare(playerObj, sq, dir)
+    if not stand then return end
+    local there = false
+    pcall(function() there = playerObj:getCurrentSquare() == stand end)
+    if not there then ISTimedActionQueue.add(ISWalkToTimedAction:new(playerObj, stand)) end
     ISTimedActionQueue.add(ISLaundryAction:new(playerObj, mats.posts[1], "putup", sq, dir))
 end
 

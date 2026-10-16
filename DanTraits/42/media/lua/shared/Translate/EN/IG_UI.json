@@ -2,5 +2,6 @@
     "IGUI_DanTraits_WashNeedsSoap": "Won't get cleaner without soap",
     "IGUI_DanTraits_WashNeedsBoard": "Needs a washboard or a washing machine to get cleaner",
     "IGUI_DanTraits_WashNeedsMachine": "Needs a washing machine to get cleaner",
+    "IGUI_DanTraits_WringDamp": "As wrung out as it will get",
     "IGUI_ContainerTitle_clothesline": "Clothesline"
 }

@@ -237,6 +237,32 @@ function L.lineSquares(sq, dir)
     return out
 end
 
+-- a square to stand on while putting a line up from sq: beside the first
+-- post either way, or behind it, the nearest to the player that is clear
+-- floor and not on the line. The action re-checks that every line square is
+-- free each tick, so a walk that ends on a wire square cancels it. nil when
+-- there is none (the line itself must be clear: L.lineSquares).
+function L.lineStandSquare(player, sq, dir)
+    local lay = L.LINE_LAYOUT[dir]
+    local line = L.lineSquares(sq, dir)
+    if not lay or not line then return nil end
+    local onLine = {}
+    for _, s in ipairs(line) do onLine[s] = true end
+    local best, bestD = nil, nil
+    pcall(function()
+        local px, py = player:getX(), player:getY()
+        local cell = getCell()
+        for _, o in ipairs({ { lay.dy, lay.dx }, { -lay.dy, -lay.dx }, { -lay.dx, -lay.dy } }) do
+            local s = cell:getGridSquare(sq:getX() + o[1], sq:getY() + o[2], sq:getZ())
+            if s and not onLine[s] and s:hasFloor() and s:isFree(false) then
+                local dist = (s:getX() - px) ^ 2 + (s:getY() - py) ^ 2
+                if not bestD or dist < bestD then best, bestD = s, dist end
+            end
+        end
+    end)
+    return best
+end
+
 local function addPiece(sq, spriteName, line, wire)
     local sprite = getSprite and getSprite(spriteName)
     local obj = sprite and IsoObject.new(getCell(), sq, sprite) or IsoObject.new(sq, spriteName)
