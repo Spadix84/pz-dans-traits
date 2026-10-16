@@ -25,6 +25,7 @@
 [*][b]Tinnitus reaches further.[/b] Ringing ears make a migraine likelier, bring Schizophrenia's whispers on, and spoil a night's sleep.
 [*][b]Brittle bones can be looked after.[/b] Dairy, greens, eggs and regular exercise strengthen them over weeks; neglect them and they get worse. The fracture chance follows.
 [*][b]Home helps more.[/b] Spiraling eases at home (twice as much for a Homebody), and an MS character resting at home gets spoons back faster.
+[*][b]A Really Bad Day, worse.[/b] You wake dehydrated, sunburnt in summer, and the clothes next door are somebody's unwashed ones.
 [/list]
 [h2]Fixed[/h2]
 [list]

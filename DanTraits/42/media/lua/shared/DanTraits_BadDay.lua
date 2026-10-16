@@ -29,7 +29,12 @@ local traitData = DanTraits_Data
 -- survivable", until proper balance is worked out. Replay the opening
 -- without a new character with the console command `badday` (`badday fire`
 -- also relights the house): DanTraits_BadDayReplay.
--- Disinfectant and a bandage wait in a nearby house (below).
+-- Disinfectant and a bandage wait in a nearby house (below), with somebody's
+-- unwashed clothes: a t-shirt and jeans that are stale and never washed
+-- (the laundry's state, when laundry is on). The night's drinking left the
+-- body dry (half the dehydration load, DanTraits_Dehydration.lua), and in
+-- the summer months (May to September) you fell asleep in the sun: a
+-- sunburn on the head, neck and forearms (DanTraits_Sunburn.lua).
 local function badDayFresh(player)
     if not player or not hasTrait(player, "badday") then return nil end
     if player:getHoursSurvived() > 0 then return nil end
@@ -38,6 +43,11 @@ end
 
 local BAD_DAY_PART      = "ForeArm_L"
 local BAD_DAY_INFECTION = 2      -- the wound's infection level (Infection.lua: 2 stops healing, 5 spreads)
+local BAD_DAY_DEHYDRATION = 0.5  -- the dehydration load a night's drinking leaves (0..1)
+local BAD_DAY_SUNBURN_H = 12     -- hours of sunburn left, on...
+local BAD_DAY_SUNBURN_PARTS = { "Head", "Neck", "ForeArm_L", "ForeArm_R" }   -- ...these, May to September
+local BAD_DAY_SUMMER    = { 4, 8 }   -- the game's months are 0-based: May to September
+local BAD_DAY_STALE     = 60     -- odour of the clothes in the kit (stale, not yet musty)
 
 -- the infected laceration
 local function badDayWound(player, bd)
@@ -87,6 +97,16 @@ local function applyBadDay(player)
     local wet = DanTraits_StatMax(CharacterStat.WETNESS)
     pcall(function() stats:set(CharacterStat.WETNESS, wet) end)
     DanTraits_EachPart(player, function(part) part:setWetness(wet) end, "BadDay")
+
+    -- the night's drinking left the body dry; asleep in the sun, in summer
+    local d = traitData(player)
+    d.dhLoad = math.max(d.dhLoad or 0, BAD_DAY_DEHYDRATION)
+    local month = nil
+    pcall(function() month = getGameTime():getMonth() end)
+    if type(month) == "number" and month >= BAD_DAY_SUMMER[1] and month <= BAD_DAY_SUMMER[2] then
+        d.sbBurn = d.sbBurn or {}
+        for _, part in ipairs(BAD_DAY_SUNBURN_PARTS) do d.sbBurn[part] = math.max(d.sbBurn[part] or 0, BAD_DAY_SUNBURN_H) end
+    end
 end
 
 local function onBadDayCreatePlayer(playerNum, player)
@@ -164,7 +184,7 @@ end
 -- other than your own (then out to 60, then your own house's far rooms);
 -- kitchen appliances, bins and the like are skipped. Put back if the game
 -- fills that container with loot afterwards.
-local BAD_DAY_KIT_ITEMS = { "Base.Disinfectant", "Base.Bandage" }
+local BAD_DAY_KIT_ITEMS = { "Base.Disinfectant", "Base.Bandage", "Base.Tshirt_DefaultTEXTURE", "Base.Trousers_Denim" }
 local BAD_DAY_KIT_NEAR, BAD_DAY_KIT_FAR, BAD_DAY_KIT_FARTHEST = 15, 40, 60
 local BAD_DAY_KIT_SKIP = { fridge = true, freezer = true, stove = true, microwave = true, oven = true,
     bin = true, toilet = true, clothingwasher = true, clothingdryer = true, barbecue = true,
@@ -225,10 +245,20 @@ local function hasItem(cont, fullType)
     return found
 end
 
+-- somebody's unwashed clothes: stale, never washed (the laundry's state, when it is on)
+local function wornIn(item)
+    local Ldry = DanTraits_Laundry
+    if not item or not Ldry or not Ldry.on or not Ldry.on() or not Ldry.isClothing(item) then return end
+    local s = Ldry.state(item, true)
+    if s then s.o = math.max(s.o or 0, BAD_DAY_STALE) end
+end
+
 local function stockKit(cont)
     for _, fullType in ipairs(BAD_DAY_KIT_ITEMS) do
         if not hasItem(cont, fullType) then
-            pcall(function() cont:AddItem(fullType) end)
+            local item = nil
+            pcall(function() item = cont:AddItem(fullType) end)
+            wornIn(item)
         end
     end
 end

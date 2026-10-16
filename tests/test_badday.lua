@@ -69,6 +69,21 @@ assert(p._groin._inf == true and p._groin._infL == 2, "already infected, at leve
 assert(p._cleared and p._removedWorn == 2, "no clothes left")
 assert(p._st.wetness == 100 and p._groin._wet == 100, "soaked: stat and body parts")
 assert(p._md.DanTraits.badDayApplied == true, "marked applied")
+assert(p._md.DanTraits.dhLoad == 0.5, "the night's drinking: half the dehydration load")
+assert(p._md.DanTraits.sbBurn == nil, "no month known (the harness): no sunburn")
+-- in the summer months you fell asleep in the sun: head, neck and forearms burnt
+local gt = getGameTime
+getGameTime = function() local t = gt(); t.getMonth = function() return 6 end; return t end
+local july = newPlayer({ room = true }); H.current = july
+H.fire("OnCreatePlayer", 0, july)
+local burn = july._md.DanTraits.sbBurn
+assert(burn and burn.Head == 12 and burn.Neck == 12 and burn.ForeArm_L == 12 and burn.ForeArm_R == 12 and burn.Torso_Upper == nil, "July: asleep in the sun")
+getGameTime = function() local t = gt(); t.getMonth = function() return 1 end; return t end
+local feb = newPlayer({ room = true }); H.current = feb
+H.fire("OnCreatePlayer", 0, feb)
+assert(feb._md.DanTraits.sbBurn == nil, "February: no sun to sleep in")
+getGameTime = gt
+H.current = p
 
 -- 2. created again (a reload, a respawn on the same character): nothing is applied twice
 p._st.intox = 40; p._cold.strength = 20; p._removedWorn = nil
@@ -155,15 +170,21 @@ p = newPlayer(); H.current = p
 p.getX = function() return 100 end; p.getY = function() return 100 end
 p.getCurrentSquare = function() return squares["100,100"] end
 H.fire("OnGameStart")
-assert(#drawer._items == 2 and drawer._items[1]._type == "Disinfectant" and drawer._items[2]._type == "Bandage", "disinfectant and a bandage in the dresser next door")
+assert(#drawer._items == 4 and drawer._items[1]._type == "Disinfectant" and drawer._items[2]._type == "Bandage", "disinfectant and a bandage in the dresser next door")
+assert(drawer._items[3]._type == "Tshirt_DefaultTEXTURE" and drawer._items[4]._type == "Trousers_Denim", "and somebody's clothes")
 assert(#fridge._items == 0 and #ownDrawer._items == 0 and #distant._items == 0 and #tooClose._items == 0, "nowhere else")
 local spot = p._md.DanTraits.badDayKit
 assert(spot and spot.x == 125 and spot.kind == "dresser", "the spot is remembered")
-H.fire("OnGameStart"); assert(#drawer._items == 2, "placed once")
--- the game fills that container later and the kit is gone: back it goes; other containers are left alone
+H.fire("OnGameStart"); assert(#drawer._items == 4, "placed once")
+-- the game fills that container later and the kit is gone: back it goes (once), other containers are left
+-- alone; with laundry on, the clothes come stale and never washed
+DanTraits_Laundry = { on = function() return true end, isClothing = function(it) return it._type ~= "Disinfectant" and it._type ~= "Bandage" end,
+  state = function(it, create) local md = it.getModData(); md.DTL = md.DTL or { o = 0 }; return md.DTL end }
 drawer._items = {}
 H.fire("OnFillContainer", "bedroom", "dresser", drawer)
-assert(#drawer._items == 2, "refilled container gets the kit back")
+assert(#drawer._items == 4, "refilled container gets the kit back")
+assert(drawer._items[3].getModData().DTL.o == 60 and drawer._items[1].getModData().DTL == nil, "the clothes are stale; the bandage is not laundry")
+DanTraits_Laundry = nil
 H.fire("OnFillContainer", "bedroom", "counter", distant); assert(#distant._items == 0, "not another container")
 -- nothing in range in other houses: out to 60, then the own house
 squares["125,100"] = nil; squares["120,100"] = nil
