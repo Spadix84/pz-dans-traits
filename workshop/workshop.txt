@@ -51,7 +51,7 @@ description=[h2]Everything else[/h2]
 description=[b]Negative:[/b] Arthritis, Asthma, Type 2 Diabetes, Brittle, Major Depressive Disorder, Epilepsy, Fear of Blood, Anaemic, Alcoholic, Germaphobe, Smoker, Gluten and Lactose Intolerance, Vegetarian, Caffeine Dependent, Hallucinations, Tinnitus, Straight Edge, Homebody, Sweaty, Sensitive Skin.
 description=[b]Positive:[/b] Renaissance Faire Geek, Resilient (can beat the Knox virus), Grit, Fast Recovery, Deep Sleeper, Steady Hands, Iron Gut, Keen Cook, Good Clotter, Thick Skull, Outdoorsy, Cat's Eyes, Early Riser, Meal Prepper, Gym Regular, Night Shift, Hollow Legs, Nomad, Cool Customer, Slob, Homemaker.
 description=[b]Age-only:[/b] Green, Quick Study, Bottomless Pit, Pace Yourself, Settled, Reading Glasses, Bad Back, Bad Knees, Old Hand, Delicate Stomach, Old Injury, Set in Their Ways, Seen It All, Cast Iron, Old Bones Know Rain.
-description=The field guide has the details.
+description=Every one is explained in the field guide.
 description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-conditions.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-conditions.png[/img][/url]
 description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-perks.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-perks.png[/img][/url]
 description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-moodles.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-moodles.png[/img][/url]
@@ -66,7 +66,7 @@ description=[*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandit
 description=[*][b]Bugs?[/b] Leave a comment, or open an issue on GitHub. Your console.txt helps.
 description=[/list]
 description=
-description=[url=https://spadix84.github.io/pz-dans-traits/field-guide.html]Field guide: traits, systems and numbers[/url]
+description=[url=https://spadix84.github.io/pz-dans-traits/field-guide.html]Field guide: every trait, system and number[/url]
 description=[url=https://github.com/Spadix84/pz-dans-traits]Source and full changelog on GitHub[/url]
 description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img][/url]
 description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png[/img][/url]
