@@ -410,9 +410,9 @@ end
 function BU_Window:scan()
     local src = self.source
     self.zone = S.zone(self.character, S.sourceSquare(src))
-    self.rows = S.containers(self.zone, src.container)
+    self.rows = S.containers(self.zone, src.container, self.character)
     if src.kind == "object" and src.row then
-        src.row = S.row(src.object, src.container, BU.parseKey(src.key).index, src.object:getSquare(), self.zone)
+        src.row = S.row(src.object, src.container, BU.parseKey(src.key).index, src.object:getSquare(), self.zone, self.character)
         src.row.pinned = true
         table.insert(self.rows, 1, src.row)
     end

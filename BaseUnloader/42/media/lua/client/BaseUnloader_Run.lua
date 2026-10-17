@@ -137,7 +137,7 @@ local function containersFor(state)
     if state.rows then
         for _, row in ipairs(state.rows) do
             pcall(function()
-                row.capacity = row.container:getCapacity()
+                row.capacity = S.capacity(row.container, state.player)
                 row.used = row.container:getCapacityWeight()
                 row.free = math.max(0, row.capacity - row.used)
             end)
@@ -148,8 +148,36 @@ local function containersFor(state)
     local sq = src and S.sourceSquare(src) or nil
     local zone = S.zone(state.player, sq)
     state.zone = zone
-    state.rows = S.containers(zone, src and src.container or nil)
+    state.rows = S.containers(zone, src and src.container or nil, state.player)
     return state.rows
+end
+
+-- Another home for an item whose container is full: a container tagged with
+-- its category that still has room for it (use = weight already planned
+-- into each container this step).
+local function elsewhere(r, rows, use, notKey)
+    local open = {}
+    for _, row in ipairs(rows) do
+        if row.key ~= notKey and (row.free or 0) - (use[row.key] or 0) >= (r.weight or 0) then open[#open + 1] = row end
+    end
+    return BU.tagDestination(r, BU.store().tags, open)
+end
+
+-- Before a trip is planned: items whose container cannot take them go to a
+-- tagged alternative with room, so a full shelf sends the overflow next door
+-- instead of leaving it in the trunk.
+local function reroute(items, rows)
+    local byKey = rowsByKey(rows)
+    local use = {}
+    for _, r in ipairs(items) do
+        local row = byKey[r.dest]
+        local w = r.weight or 0
+        if row and (row.free or 0) - (use[r.dest] or 0) < w then
+            local other = elsewhere(r, rows, use, r.dest)
+            if other then r.dest = other end
+        end
+        use[r.dest] = (use[r.dest] or 0) + w
+    end
 end
 
 -- The bags are filled every trip: an item that fits a worn bag's remaining
@@ -221,10 +249,30 @@ local function deliverStep(state, carried)
         return true
     end
     state.expect = {}
+    local use = {}
     for _, r in ipairs(stop.items) do
-        local from = r.item:getContainer()
-        ISTimedActionQueue.add(ISInventoryTransferAction:new(state.player, r.item, from, row.container))
-        state.expect[#state.expect + 1] = { record = r, from = from, delivering = true }
+        local fits = false
+        pcall(function() fits = row.container:hasRoomFor(state.player, r.item) end)
+        if fits then
+            local from = r.item:getContainer()
+            ISTimedActionQueue.add(ISInventoryTransferAction:new(state.player, r.item, from, row.container))
+            state.expect[#state.expect + 1] = { record = r, from = from, delivering = true }
+            use[stop.key] = (use[stop.key] or 0) + (r.weight or 0)
+        else
+            -- full after all: somewhere else tagged for it, or it stays in the bag
+            local other = elsewhere(r, rows, use, stop.key)
+            if other then
+                state.plan.carried[idKey(r.id)] = other
+                use[other] = (use[other] or 0) + (r.weight or 0)
+            else
+                state.plan.carried[idKey(r.id)] = nil
+                state.noRoom = (state.noRoom or 0) + 1
+            end
+        end
+    end
+    if #state.expect == 0 then
+        state.pending = true
+        return true
     end
     queueMarker(state)
     return true
@@ -283,6 +331,7 @@ local function loadStep(state)
     pcall(function() budget = player:getMaxWeight() - player:getInventory():getCapacityWeight() end)
     local bags = bagsOf(player)
     carryWeights(items, bags)
+    reroute(items, rows)
     local trip = BU.trip(items, rows, posOf(player), budget)
     state.noRoom = (state.noRoom or 0) + trip.skipped.noRoom
     state.noContainer = trip.skipped.noContainer

@@ -209,18 +209,29 @@ local function histograms(container)
     return contents, cats, n
 end
 
+-- what a container takes for this character: the game scales capacity by
+-- Organized and Disorganized, and hasRoomFor judges by that scaled figure
+function S.capacity(container, player)
+    local capacity = 0
+    pcall(function()
+        if player and container.getEffectiveCapacity then
+            capacity = container:getEffectiveCapacity(player)
+        else
+            capacity = container:getCapacity()
+        end
+    end)
+    return capacity
+end
+
 -- the record for one container of a world object
-function S.row(obj, container, index, sq, zone)
+function S.row(obj, container, index, sq, zone, player)
     local x, y, z = sq:getX(), sq:getY(), sq:getZ()
     local kind = container:getType()
     local key = BU.key(x, y, z, kind, index)
     local name, named = S.nameOf(container, key)
     local contents, cats, count = histograms(container)
-    local capacity, used = 0, 0
-    pcall(function()
-        capacity = container:getCapacity()
-        used = container:getCapacityWeight()
-    end)
+    local capacity, used = S.capacity(container, player), 0
+    pcall(function() used = container:getCapacityWeight() end)
     local row = { key = key, container = container, object = obj, x = x, y = y, z = z, kind = kind,
                   kindLabel = S.kindLabel(kind), name = name, named = named, room = S.roomName(sq),
                   contents = contents, cats = cats, count = count, capacity = capacity, used = used,
@@ -235,7 +246,7 @@ function S.row(obj, container, index, sq, zone)
     return row
 end
 
-local function rowsOnSquare(sq, zone, out, skipContainer)
+local function rowsOnSquare(sq, zone, out, skipContainer, player)
     local objs = sq:getObjects()
     for i = 0, objs:size() - 1 do
         local obj = objs:get(i)
@@ -251,7 +262,7 @@ local function rowsOnSquare(sq, zone, out, skipContainer)
                     pcall(function() c = obj:getContainerByIndex(ci) end)
                 end
                 if c and c ~= skipContainer and not SKIP_KINDS[c:getType()] then
-                    out[#out + 1] = S.row(obj, c, ci, sq, zone)
+                    out[#out + 1] = S.row(obj, c, ci, sq, zone, player)
                 end
             end
         end
@@ -260,7 +271,7 @@ end
 
 -- every container in the zone, as records, sorted by room then name; the
 -- source's own container is left out (it gets its own row)
-function S.containers(zone, skipContainer)
+function S.containers(zone, skipContainer, player)
     local out = {}
     if not zone then return out end
     local cell = getCell()
@@ -269,7 +280,7 @@ function S.containers(zone, skipContainer)
             for x = zone.x1, zone.x2 do
                 if S.inZone(zone, x, y) then
                     local sq = cell:getGridSquare(x, y, z)
-                    if sq then rowsOnSquare(sq, zone, out, skipContainer) end
+                    if sq then rowsOnSquare(sq, zone, out, skipContainer, player) end
                 end
             end
         end
@@ -417,16 +428,32 @@ function S.loadSource(saved, player)
         return S.objectSource(found.object, found.container, nil)
     end
     if saved.kind == "vehicle" then
-        local vehicle
-        pcall(function()
-            local list = getCell():getVehicles()
-            for i = 0, list:size() - 1 do
-                local v = list:get(i)
-                if v:getId() == saved.id then vehicle = v end
-            end
-        end)
+        local vehicle = S.findVehicle(saved.id, saved.x, saved.y, saved.z)
         if not vehicle then return nil end
         return S.vehicleSource(vehicle)
+    end
+    return nil
+end
+
+-- the vehicle with this id, looked for on the squares round where it was
+-- parked (a few tiles either way: it may have rolled)
+function S.findVehicle(id, x, y, z)
+    if not x or not y then return nil end
+    local cell = getCell()
+    local found
+    for r = 0, 6 do
+        for dx = -r, r do
+            for dy = -r, r do
+                if not found and (math.abs(dx) == r or math.abs(dy) == r) then
+                    pcall(function()
+                        local sq = cell:getGridSquare(x + dx, y + dy, z or 0)
+                        local v = sq and sq:getVehicleContainer() or nil
+                        if v and (id == nil or v:getId() == id) then found = v end
+                    end)
+                end
+            end
+        end
+        if found then return found end
     end
     return nil
 end
