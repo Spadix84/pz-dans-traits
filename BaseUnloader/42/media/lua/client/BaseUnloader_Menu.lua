@@ -114,7 +114,7 @@ end
 -- right-click items in an inventory window: the container they sit in
 function M.onInventoryMenu(playerNum, context, items)
     local player = getSpecificPlayer(playerNum)
-    if not player then return end
+    if not player or player:getVehicle() then return end
     local first = ISInventoryPane.getActualItems(items)[1]
     if not first then return end
     local container
@@ -146,7 +146,7 @@ ISVehicleMenu.FillMenuOutsideVehicle = function(playerNum, context, vehicle, tes
     local result = fillOutside(playerNum, context, vehicle, test)
     if test then return result end
     local player = getSpecificPlayer(playerNum)
-    if player and vehicle and S.vehiclePart(vehicle) then
+    if player and not player:getVehicle() and vehicle and S.vehiclePart(vehicle) then
         local sub = ISContextMenu:getNew(context)
         local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
         context:addSubMenu(option, sub)

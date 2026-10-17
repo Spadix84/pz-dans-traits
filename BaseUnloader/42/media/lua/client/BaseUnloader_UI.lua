@@ -12,6 +12,7 @@ require "ISUI/ISScrollingListBox"
 require "ISUI/ISButton"
 require "ISUI/ISTextEntryBox"
 require "ISUI/ISTextBox"
+require "ISUI/ISTickBox"
 require "ISUI/ISContextMenu"
 require "ISUI/ISInventoryPane"
 require "BaseUnloader_Scan"
@@ -26,6 +27,32 @@ local HEADER_HGT = FONT_HGT_SMALL + 8
 local PAD = 6
 local DRAG_START = 5     -- pixels the mouse moves before a press becomes a drag
 local MAX_NAME = 40
+local ICON = ROW_HGT - 10
+local BOX = FONT_HGT_SMALL + 2
+
+-- the picture the loot window gives a container of this kind, else its shelf
+local function containerIcon(row)
+    local tex
+    pcall(function()
+        local kind = row.container:getType()
+        if ContainerButtonIcons and ContainerButtonIcons[kind] then tex = ContainerButtonIcons[kind] end
+        if not tex then tex = getTexture("media/ui/Container_Shelf.png") end
+    end)
+    return tex
+end
+
+local function itemIcon(g)
+    local tex
+    pcall(function()
+        local first = g.items[1] and g.items[1].item
+        if first then tex = first:getTex() end
+    end)
+    return tex
+end
+
+local function drawIcon(list, tex, x, y)
+    if tex then list:drawTextureScaledAspect(tex, x, y + 5, ICON, ICON, 1, 1, 1, 1) end
+end
 
 BU_ItemList = ISScrollingListBox:derive("BU_ItemList")
 BU_ContainerList = ISScrollingListBox:derive("BU_ContainerList")
@@ -46,55 +73,97 @@ function BU_ItemList:doDrawItem(y, item, alt)
     local win = self.window
     if alt then self:drawRect(0, y, self:getWidth(), item.height, 0.06, 1, 1, 1) end
     self:drawRectBorder(0, y, self:getWidth(), item.height, 0.3, self.borderColor.r, self.borderColor.g, self.borderColor.b)
+    if self.sel[g.fullType] then self:drawRect(1, y + 1, self:getWidth() - 2, item.height - 2, 0.25, 0.35, 0.55, 0.85) end
     if self:isMouseOver() and self.mouseoverselected == item.index then dim(self, 1, y + 1, self:getWidth() - 2, item.height - 2) end
     local line1 = y + 4
     local line2 = y + 6 + FONT_HGT_SMALL
     local count = getText("IGUI_BU_Count", g.count, BU.fmtWeight(g.weight))
     local cw = getTextManager():MeasureStringX(UIFont.Small, count)
-    self:drawText(g.name, PAD, line1, 1, 1, 1, 1, UIFont.Small)
+    drawIcon(self, itemIcon(g), PAD, y)
+    local tx = PAD + ICON + PAD
+    self:drawText(g.name, tx, line1, 1, 1, 1, 1, UIFont.Small)
     self:drawText(count, self.width - cw - PAD - 14, line1, 0.7, 0.7, 0.7, 1, UIFont.Small)
     local dest, how = win:destinationLabel(g)
     if dest then
         local r, gg, b = 0.6, 0.85, 0.6
         if how == "oneoff" then r, gg, b = 0.6, 0.75, 0.95 end
         if how == "mixed" then r, gg, b = 0.85, 0.8, 0.5 end
-        self:drawText(getText("IGUI_BU_GoesTo", dest), PAD + 10, line2, r, gg, b, 1, UIFont.Small)
+        self:drawText(getText("IGUI_BU_GoesTo", dest), tx, line2, r, gg, b, 1, UIFont.Small)
     else
-        self:drawText(getText("IGUI_BU_Unassigned"), PAD + 10, line2, 0.95, 0.55, 0.5, 1, UIFont.Small)
+        self:drawText(getText("IGUI_BU_Unassigned"), tx, line2, 0.95, 0.55, 0.5, 1, UIFont.Small)
     end
     return y + item.height
+end
+
+-- Selection: click picks one type, Ctrl-click adds or removes one, Shift-click
+-- takes the range from the last click. A drag carries the whole selection when
+-- it starts on a selected row, else just that row.
+function BU_ItemList:selectedGroups(pressed)
+    local out = {}
+    if pressed and self.sel[pressed.fullType] then
+        for _, it in ipairs(self.items) do
+            if self.sel[it.item.fullType] then out[#out + 1] = it.item end
+        end
+    else
+        out[1] = pressed
+    end
+    return out
+end
+
+function BU_ItemList:selectOnly(index)
+    self.sel = {}
+    local it = self.items[index]
+    if it then self.sel[it.item.fullType] = true end
+    self.lastClick = index
 end
 
 function BU_ItemList:onMouseDown(x, y)
     ISScrollingListBox.onMouseDown(self, x, y)
     local index = self:rowAt(x, y)
-    if index >= 1 and index <= #self.items then
-        self.pressRow = index
-        self.pressX, self.pressY = x, y
+    if index < 1 or index > #self.items then return end
+    self.pressRow = index
+    self.pressX, self.pressY = x, y
+    local g = self.items[index].item
+    if isCtrlKeyDown() then
+        if self.sel[g.fullType] then self.sel[g.fullType] = nil else self.sel[g.fullType] = true end
+        self.lastClick = index
+    elseif isShiftKeyDown() and self.lastClick then
+        local a, b = math.min(self.lastClick, index), math.max(self.lastClick, index)
+        for i = a, b do
+            local it = self.items[i]
+            if it then self.sel[it.item.fullType] = true end
+        end
+    elseif not self.sel[g.fullType] then
+        self:selectOnly(index)
     end
+end
+
+function BU_ItemList:startDrag()
+    local row = self.items[self.pressRow]
+    if not row then return end
+    self.window.drag = { groups = self:selectedGroups(row.item) }
 end
 
 function BU_ItemList:onMouseMove(dx, dy)
     ISScrollingListBox.onMouseMove(self, dx, dy)
     if self.pressRow and isMouseButtonDown(0) and not self.window.drag then
         local x, y = self:getMouseX(), self:getMouseY()
-        if math.abs(x - (self.pressX or x)) + math.abs(y - (self.pressY or y)) >= DRAG_START then
-            local row = self.items[self.pressRow]
-            if row then self.window.drag = { group = row.item } end
-        end
+        if math.abs(x - (self.pressX or x)) + math.abs(y - (self.pressY or y)) >= DRAG_START then self:startDrag() end
     end
 end
 
 function BU_ItemList:onMouseMoveOutside(dx, dy)
     ISScrollingListBox.onMouseMoveOutside(self, dx, dy)
-    if self.pressRow and isMouseButtonDown(0) and not self.window.drag then
-        local row = self.items[self.pressRow]
-        if row then self.window.drag = { group = row.item } end
-    end
+    if self.pressRow and isMouseButtonDown(0) and not self.window.drag then self:startDrag() end
 end
 
 function BU_ItemList:onMouseUp(x, y)
     ISScrollingListBox.onMouseUp(self, x, y)
+    -- a plain click on an already selected row, without a drag, narrows the selection to it
+    if self.pressRow and not self.window.drag and not isCtrlKeyDown() and not isShiftKeyDown() then
+        local index = self:rowAt(x, y)
+        if index == self.pressRow then self:selectOnly(index) end
+    end
     self.pressRow = nil
 end
 
@@ -108,8 +177,9 @@ function BU_ItemList:onRightMouseUp(x, y)
     if index < 1 or index > #self.items then return end
     local g = self.items[index].item
     local win = self.window
+    if not self.sel[g.fullType] then self:selectOnly(index) end
     local menu = ISContextMenu.get(win.playerNum, self:getAbsoluteX() + x, self:getAbsoluteY() + y)
-    menu:addOption(getText("IGUI_BU_Unassign"), win, BU_Window.unassign, g)
+    menu:addOption(getText("IGUI_BU_Unassign"), win, BU_Window.unassignGroups, self:selectedGroups(g))
     if g.category then
         menu:addOption(getText("IGUI_BU_UnassignCategory", g.category), win, BU_Window.unassignCategory, g)
     end
@@ -118,6 +188,7 @@ end
 function BU_ItemList:new(x, y, width, height, window)
     local o = ISScrollingListBox.new(self, x, y, width, height)
     o.window = window
+    o.sel = {}
     o.itemheight = ROW_HGT
     o.drawBorder = true
     return o
@@ -145,11 +216,17 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     local line1 = y + 4
     local line2 = y + 6 + FONT_HGT_SMALL
     local nameW = getTextManager():MeasureStringX(UIFont.Small, row.name)
-    local shade = row.pinned and 0.85 or 1
-    self:drawText(row.name, PAD, line1, shade, shade, shade, 1, UIFont.Small)
+    local hidden = win:isHidden(row)
+    local shade = (row.pinned or hidden) and 0.7 or 1
+    drawIcon(self, containerIcon(row), PAD, y)
+    local tx = PAD + ICON + PAD
+    self:drawText(row.name, tx, line1, shade, shade, shade, 1, UIFont.Small)
+    local after = tx + nameW + 8
     if row.named then
-        self:drawText(row.kindLabel, PAD + nameW + 8, line1, 0.6, 0.6, 0.6, 1, UIFont.Small)
+        self:drawText(row.kindLabel, after, line1, 0.6, 0.6, 0.6, 1, UIFont.Small)
+        after = after + getTextManager():MeasureStringX(UIFont.Small, row.kindLabel) + 8
     end
+    if hidden then self:drawText(getText("IGUI_BU_HiddenTag"), after, line1, 0.6, 0.5, 0.5, 1, UIFont.Small) end
     local n = win.ruleCounts[row.key] or 0
     local right = row.pinned and getText("IGUI_BU_Source") or getText("IGUI_BU_Fill", BU.fmtWeight(row.used), BU.fmtWeight(row.capacity))
     local rw = getTextManager():MeasureStringX(UIFont.Small, right)
@@ -157,7 +234,13 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     -- second line: how far, and outdoors which way (the room is the header)
     local place = win:distanceLabel(row) or ""
     if not row.room and row.offset then place = row.offset .. ", " .. place end
-    self:drawText(place, PAD + 10, line2, 0.6, 0.6, 0.6, 1, UIFont.Small)
+    if row.tagged and row.room then place = row.room .. ", " .. place end
+    self:drawText(place, tx, line2, 0.6, 0.6, 0.6, 1, UIFont.Small)
+    local tagText = win:tagLabel(row)
+    if tagText then
+        local px = tx + getTextManager():MeasureStringX(UIFont.Small, place) + 10
+        self:drawText(tagText, px, line2, 0.55, 0.8, 0.9, 1, UIFont.Small)
+    end
     if n > 0 and not row.pinned then
         local t = getText("IGUI_BU_Rules", n)
         local tw = getTextManager():MeasureStringX(UIFont.Small, t)
@@ -206,7 +289,23 @@ function BU_ContainerList:onRightMouseUp(x, y)
     local menu = ISContextMenu.get(win.playerNum, self:getAbsoluteX() + x, self:getAbsoluteY() + y)
     menu:addOption(getText("IGUI_BU_Rename"), win, BU_Window.rename, row)
     if not row.pinned then
+        if win:isHidden(row) then
+            menu:addOption(getText("IGUI_BU_Unhide"), win, BU_Window.setHidden, row, false)
+        else
+            menu:addOption(getText("IGUI_BU_Hide"), win, BU_Window.setHidden, row, true)
+        end
         menu:addOption(getText("IGUI_BU_SendUnassigned"), win, BU_Window.sendUnassigned, row)
+        local catOption = menu:addOption(getText("IGUI_BU_Categories"), nil, nil)
+        local sub = ISContextMenu:getNew(menu)
+        menu:addSubMenu(catOption, sub)
+        local tags = BU.store().tags
+        for _, cat in ipairs(win:categories()) do
+            local on = BU.hasTag(tags, row.key, cat)
+            sub:addOption((on and "[x] " or "[  ] ") .. win:categoryLabel(cat), win, BU_Window.toggleTag, row, cat)
+        end
+        if #BU.tagsOf(tags, row.key) > 0 then
+            menu:addOption(getText("IGUI_BU_ClearTags"), win, BU_Window.clearTags, row)
+        end
         local n = win.ruleCounts[row.key] or 0
         if n > 0 then
             menu:addOption(getText("IGUI_BU_ClearRules", n), win, BU_Window.clearRulesTo, row)
@@ -275,6 +374,13 @@ function BU_Window:createChildren()
     self.rescanBtn:setAnchorLeft(false)
     self.rescanBtn:setAnchorRight(true)
     self:addChild(self.rescanBtn)
+
+    self.hiddenBox = ISTickBox:new(self.filterBox:getRight() + PAD * 2, th + PAD, BOX, barH, "", self, BU_Window.onShowHidden)
+    self.hiddenBox:initialise()
+    self.hiddenBox:instantiate()
+    self.hiddenBox:addOption(getText("IGUI_BU_ShowHidden"))
+    self.hiddenBox:setWidthToFit()
+    self:addChild(self.hiddenBox)
 
     local top = self.filterBox:getBottom() + PAD + FONT_HGT_SMALL + PAD
     local leftW = math.floor((self.width - PAD * 3) * 0.42)
@@ -348,12 +454,58 @@ function BU_Window:destinationLabel(g)
         end
     end
     local key = oneKey or ruleKey
+    local how = "rule"
+    if not key then
+        key = BU.tagDestination(probe, BU.store().tags, self:visibleRows())
+        how = "tag"
+    end
     if not key then return nil end
     local row = self.byKey[key]
     local name = row and row.name or getText("IGUI_BU_Missing")
     if mixed then return name, "mixed" end
     if oneKey then return name, "oneoff" end
-    return name, "rule"
+    return name, how
+end
+
+-- tags ---------------------------------------------------------------------------------------------------------
+
+function BU_Window:categoryLabel(cat)
+    return getTextOrNull("IGUI_ItemCat_" .. cat) or cat
+end
+
+-- the categories offered: the standard list plus any the items here or in the base carry
+function BU_Window:categories()
+    local seen, out = {}, {}
+    for _, cat in ipairs(BU.CATEGORIES) do seen[cat] = true; out[#out + 1] = cat end
+    for _, g in ipairs(self.groups) do
+        if g.category and not seen[g.category] then seen[g.category] = true; out[#out + 1] = g.category end
+    end
+    for _, row in ipairs(self.rows) do
+        for cat in pairs(row.cats or {}) do
+            if not seen[cat] then seen[cat] = true; out[#out + 1] = cat end
+        end
+    end
+    table.sort(out, function(a, b) return self:categoryLabel(a) < self:categoryLabel(b) end)
+    return out
+end
+
+function BU_Window:tagLabel(row)
+    local list = BU.tagsOf(BU.store().tags, row.key)
+    if #list == 0 then return nil end
+    local names = {}
+    for i, cat in ipairs(list) do names[i] = self:categoryLabel(cat) end
+    return table.concat(names, ", ")
+end
+
+function BU_Window:toggleTag(row, cat)
+    local tags = BU.store().tags
+    BU.setTag(tags, row.key, cat, not BU.hasTag(tags, row.key, cat))
+    self:fill()
+end
+
+function BU_Window:clearTags(row)
+    BU.store().tags[row.key] = nil
+    self:fill()
 end
 
 function BU_Window:distanceLabel(row)
@@ -380,20 +532,67 @@ function BU_Window:fill()
     local list = self.containerList
     list:clear()
     local lastHeader = nil
+    self.hiddenCount = 0
+    local tags = BU.store().tags
+    local function header(text)
+        if text == lastHeader then return end
+        local h = list:addItem(text, { header = true, text = text })
+        list:setScrollHeight(list:getScrollHeight() - h.height + HEADER_HGT)
+        h.height = HEADER_HGT
+        lastHeader = text
+    end
+    local function shown(row, hidden)
+        local text = string.lower(row.name .. " " .. (row.place or "") .. " " .. row.kindLabel .. " " .. (self:tagLabel(row) or ""))
+        return (row.pinned or filter == "" or string.find(text, filter, 1, true)) and (self.showHidden or not hidden)
+    end
+    -- the source, then the tagged containers, then everything else by room
     for _, row in ipairs(self.rows) do
-        local text = string.lower(row.name .. " " .. (row.place or "") .. " " .. row.kindLabel)
-        if row.pinned or filter == "" or string.find(text, filter, 1, true) then
-            local header = row.pinned and getText("IGUI_BU_Source") or ((row.room or getText("IGUI_BU_Outside")) .. ", " .. S.floorLabel(row.z))
-            if header ~= lastHeader then
-                local h = list:addItem(header, { header = true, text = header })
-                list:setScrollHeight(list:getScrollHeight() - h.height + HEADER_HGT)
-                h.height = HEADER_HGT
-                lastHeader = header
-            end
+        local hidden = not row.pinned and self:isHidden(row)
+        if hidden then self.hiddenCount = self.hiddenCount + 1 end
+        row.tagged = not row.pinned and tags[row.key] ~= nil
+        if row.pinned and shown(row, hidden) then
+            header(getText("IGUI_BU_Source"))
+            list:addItem(row.name, row)
+        end
+    end
+    for _, row in ipairs(self.rows) do
+        if row.tagged and shown(row, self:isHidden(row)) then
+            header(getText("IGUI_BU_Tagged"))
+            list:addItem(row.name, row)
+        end
+    end
+    for _, row in ipairs(self.rows) do
+        if not row.pinned and not row.tagged and shown(row, self:isHidden(row)) then
+            header((row.room or getText("IGUI_BU_Outside")) .. ", " .. S.floorLabel(row.z))
             list:addItem(row.name, row)
         end
     end
     list:setYScroll(scroll)
+end
+
+-- hiding ---------------------------------------------------------------------------------------------------
+
+function BU_Window:isHidden(row)
+    return BU.store().hidden[row.key] == true
+end
+
+function BU_Window:setHidden(row, hidden)
+    BU.store().hidden[row.key] = hidden and true or nil
+    self:fill()
+end
+
+function BU_Window:onShowHidden(index, selected)
+    self.showHidden = selected
+    self:fill()
+end
+
+-- the containers Suggest may pick: not the hidden ones
+function BU_Window:visibleRows()
+    local out = {}
+    for _, row in ipairs(self.rows) do
+        if not row.pinned and not self:isHidden(row) then out[#out + 1] = row end
+    end
+    return out
 end
 
 -- assignments ----------------------------------------------------------------------------------------------
@@ -435,6 +634,14 @@ function BU_Window:dropItems(items, row, oneOff)
     self:fill()
 end
 
+function BU_Window:assignGroups(groups, row, oneOff)
+    for _, g in ipairs(groups) do self:assignGroup(g, row, oneOff) end
+end
+
+function BU_Window:unassignGroups(groups)
+    for _, g in ipairs(groups) do self:unassign(g) end
+end
+
 function BU_Window:unassign(g)
     local rules = BU.store().rules
     BU.setRule(rules, g.fullType, nil)
@@ -465,7 +672,7 @@ end
 
 function BU_Window:onSuggest()
     local rules = BU.store().rules
-    local picks = BU.suggest(self.groups, self.rows, rules)
+    local picks = BU.suggest(self.groups, self:visibleRows(), rules)
     local n = 0
     for fullType, key in pairs(picks) do
         if not (self.source.key and key == self.source.key) then
@@ -530,7 +737,7 @@ function BU_Window:prerender()
     -- the window's own drag: settled when the button comes up, wherever that is
     if self.drag and not isMouseButtonDown(0) then
         local row = self.containerList:rowUnderMouse()
-        if row then self:assignGroup(self.drag.group, row, isCtrlKeyDown()) end
+        if row then self:assignGroups(self.drag.groups, row, isCtrlKeyDown()) end
         self.drag = nil
     end
 end
@@ -540,12 +747,14 @@ function BU_Window:render()
     if self.isCollapsed then return end
     local y = self.filterBox:getBottom() + PAD
     local text = getText("IGUI_BU_Status", #self.groups, self.unassigned or 0, #self.rows - (self.source.row and 1 or 0))
+    if (self.hiddenCount or 0) > 0 then text = text .. " " .. getText("IGUI_BU_HiddenCount", self.hiddenCount) end
     self:drawText(text, PAD, y, 0.8, 0.8, 0.8, 1, UIFont.Small)
     local hint = getText("IGUI_BU_Hint")
     local hw = getTextManager():MeasureStringX(UIFont.Small, hint)
     self:drawText(hint, self.width - hw - PAD, y, 0.55, 0.55, 0.55, 1, UIFont.Small)
     if self.drag then
-        local label = self.drag.group.name
+        local label = self.drag.groups[1].name
+        if #self.drag.groups > 1 then label = label .. " " .. getText("IGUI_BU_More", #self.drag.groups - 1) end
         local mx, my = self:getMouseX(), self:getMouseY()
         local w = getTextManager():MeasureStringX(UIFont.Small, label) + 12
         self:drawRect(mx + 10, my + 6, w, FONT_HGT_SMALL + 6, 0.85, 0.1, 0.1, 0.1)

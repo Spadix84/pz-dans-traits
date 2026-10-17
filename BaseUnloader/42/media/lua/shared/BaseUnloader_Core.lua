@@ -42,6 +42,8 @@ end
 --   rules[fullType]      the key of the container that item type goes in
 --   rules["cat:<cat>"]   the key a whole display category goes in
 --   plans[who]           an unfinished run: { source, oneOffs, carried }
+--   hidden[key]          containers kept out of the window's list
+--   tags[key]            { [category] = true }: the categories a container takes
 function BU.store()
     if BU._store then return BU._store end
     local d
@@ -52,6 +54,8 @@ function BU.store()
     d.names = d.names or {}
     d.rules = d.rules or {}
     d.plans = d.plans or {}
+    d.hidden = d.hidden or {}
+    d.tags = d.tags or {}
     BU._store = d
     return d
 end
@@ -96,6 +100,62 @@ function BU.ruleCounts(rules)
     local counts = {}
     for _, key in pairs(rules) do counts[key] = (counts[key] or 0) + 1 end
     return counts
+end
+
+-- tags --------------------------------------------------------------------------------
+
+-- the display categories offered for tagging; any other seen on an item joins the list
+BU.CATEGORIES = {
+    "Accessory", "Ammo", "Bag", "Camping", "Clothing", "Communications", "Container", "Cooking",
+    "Electronics", "Entertainment", "Explosives", "FirstAid", "Fishing", "Food", "Furniture",
+    "Gardening", "Household", "Instrument", "Junk", "Key", "LightSource", "Literature", "Material",
+    "Memento", "Mechanics", "Paint", "Security", "Sports", "Tool", "Trapping", "VehicleMaintenance",
+    "WaterContainer", "Weapon", "WeaponPart",
+}
+
+function BU.setTag(tags, key, category, on)
+    local t = tags[key]
+    if on then
+        if not t then t = {}; tags[key] = t end
+        t[category] = true
+    elseif t then
+        t[category] = nil
+        local any = false
+        for _ in pairs(t) do any = true end
+        if not any then tags[key] = nil end
+    end
+end
+
+function BU.hasTag(tags, key, category)
+    local t = tags[key]
+    return t ~= nil and t[category] == true
+end
+
+-- a container's tags as a sorted list
+function BU.tagsOf(tags, key)
+    local out = {}
+    for cat in pairs(tags[key] or {}) do out[#out + 1] = cat end
+    table.sort(out)
+    return out
+end
+
+-- Where an item's category is welcome: among the containers tagged with it,
+-- the one already holding that type, else the one with most room. Rules
+-- come first (see destinationOf); this is the fallback for whole categories.
+function BU.tagDestination(item, tags, containers)
+    if not item.category or not tags then return nil end
+    local best, bestN, room = nil, 0, -1
+    for _, c in ipairs(containers) do
+        if BU.hasTag(tags, c.key, item.category) then
+            local n = c.contents and item.fullType and c.contents[item.fullType] or 0
+            if n > bestN then
+                best, bestN = c, n
+            elseif bestN == 0 and (c.free or 0) > room then
+                best, room = c, c.free or 0
+            end
+        end
+    end
+    return best and best.key or nil
 end
 
 -- the items -----------------------------------------------------------------------------

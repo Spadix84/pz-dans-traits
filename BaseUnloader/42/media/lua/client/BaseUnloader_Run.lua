@@ -250,18 +250,18 @@ local function loadStep(state)
     local src = state.source
     if not src then return false end
     local plan = state.plan
-    local rules = BU.store().rules
+    local store = BU.store()
+    local rows = containersFor(state)
     local items = {}
     local pool = S.items(src.container)
     if src.kind == "self" then pool = allCarried(state.player) end
     for _, r in ipairs(pool) do
         if BU.movable(r) then
-            r.dest = BU.destinationOf(r, rules, plan.oneOffs)
+            r.dest = BU.destinationOf(r, store.rules, plan.oneOffs) or BU.tagDestination(r, store.tags, rows)
             if r.dest then items[#items + 1] = r end
         end
     end
     if #items == 0 then return false end
-    local rows = containersFor(state)
     if src.kind == "self" then
         -- already in hand: everything with a home joins the delivery
         local byKey = rowsByKey(rows)
