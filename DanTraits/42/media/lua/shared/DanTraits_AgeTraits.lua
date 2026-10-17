@@ -285,7 +285,7 @@ local function kneeRest(player)
     pcall(function() if player:isSittingOnFurniture() then
         sitting = true
         local props = player:getSitOnFurnitureObject():getProperties()
-        comfy = props:get("BedType") ~= nil or (IsoFlagType and props:Is(IsoFlagType.bed) == true)
+        comfy = props:get("BedType") ~= nil or (IsoFlagType and props:has(IsoFlagType.bed) == true)
     end end)
     if comfy then return BK_EASE_COMFY end
     if sitting or DanTraits_Asleep(player) then return BK_EASE_SIT end
