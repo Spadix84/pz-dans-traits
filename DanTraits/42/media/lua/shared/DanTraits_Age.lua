@@ -50,8 +50,12 @@
 --   arthritis   Arthritis: joint factor, so flares come sooner (arthritisJoint)
 --   heart       Heart Condition: chest pain chance (DanTraits_AgeHeart, read by Heart)
 --   gym         Gym Regular: starting regularity, at least this (gymRegularity)
---   handy       Handy: extra Carpentry levels at spawn
--- In Their 20s cannot be taken with Arthritis (the script); Handy costs it 2 more.
+--   handyLevels Handy: levels on top of vanilla's at spawn, by skill name. The
+--               40s and 50s get +1 Carpentry; the 20s have vanilla's four
+--               levels (Carpentry, Maintenance, Carving, Masonry) taken back
+--               and train those skills faster instead (handyXp, Events.AddXP):
+--               young hands learn the trade, they do not arrive knowing it
+-- In Their 20s cannot be taken with Arthritis (the script).
 -- The traits only one age can take are in DanTraits_AgeTraits.lua.
 --
 -- Trait costs are fixed by the script, so age is priced through the Age
@@ -76,21 +80,25 @@ local num = DanTraits_PartNum
 local AGE = {
     [20] = { levels = 0, endurance = 1.25, xp = 1.5, heal = 1.5, stiff = 1.5, wakes = 0.8,
              cells = 1.15, concussion = 1.2, hangover = 0.85, dia = -0.05, heart = 0.8, gym = 65,
-             learn3 = 1.2, hunger = 1.15, clear = 1.2 },
+             learn3 = 1.2, hunger = 1.15, clear = 1.2,
+             handyLevels = { Woodwork = -1, Maintenance = -1, Carving = -1, Masonry = -1 }, handyXp = 1.5 },
     [30] = { levels = 0 },
     [40] = { levels = 2, side = 1, endurance = 0.92, xp = 0.9, heal = 0.9, stiff = 0.85, wakes = 1.15,
              cells = 0.8, concussion = 0.75, hangover = 1.25, dia = 0.1, heart = 1.25,
-             brittle = 1.25, arthritis = 1.3, handy = 1,
+             brittle = 1.25, arthritis = 1.3, handyLevels = { Woodwork = 1 },
              trade = 1.1, hunger = 0.95, clear = 0.9 },
     [50] = { levels = 3, side = 2, endurance = 0.85, xp = 0.8, heal = 0.8, stiff = 0.7, wakes = 1.3,
              cells = 0.65, concussion = 0.6, hangover = 1.5, dia = 0.2, heart = 1.5,
-             brittle = 1.5, arthritis = 1.6, handy = 1,
+             brittle = 1.5, arthritis = 1.6, handyLevels = { Woodwork = 1 },
              learn3 = 0.9, trade = 1.15, hunger = 0.9, clear = 0.8 },
 }
 -- Age pricing: trait (lower-case type, as the creation screen holds it) ->
 -- band -> points more (or fewer, negative). The body costs more to keep with
 -- age; learning is cheap young and dear old; a hearty appetite is natural
--- young. (Light Eater had a row until 2026-10-07; taken out as not worth it.)
+-- young; the cheap habits (Gym Regular, Meal Prepper, Early Riser at 1) are
+-- harder kept old, 2 in the 40s and 3 in the 50s (2026-10-16). (Light Eater
+-- had a row until 2026-10-07; taken out as not worth it. Handy cost the 20s
+-- 2 more from 2026-10-13 to 2026-10-16, when its levels went instead.)
 local AGE_PRICE = {
     ["base:strong"]         = { [40] = 2, [50] = 4 },
     ["base:athletic"]       = { [40] = 2, [50] = 4 },
@@ -99,7 +107,9 @@ local AGE_PRICE = {
     ["base:fastlearner"]    = { [20] = -1, [50] = 1 },
     ["base:slowlearner"]    = { [20] = 1, [50] = 1 },      -- gives a point fewer, young or old
     ["base:heartyappetite"] = { [20] = 1, [50] = -1 },     -- gives a point fewer young, one more old
-    ["base:handy"]          = { [20] = 2 },                -- 10 young (2026-10-13; barred before)
+    ["dantraits:gymregular"]  = { [40] = 1, [50] = 2 },   -- the habits: 2 and 3 instead of 1
+    ["dantraits:mealprepper"] = { [40] = 1, [50] = 2 },
+    ["dantraits:earlyriser"]  = { [40] = 1, [50] = 2 },
     -- the conditions the 20s band itself softens give fewer points young
     -- (2026-10-10): the band's endurance, healing, blood, strain, resistance
     -- and clearance factors already take part of the sting out, so a stack of
@@ -114,6 +124,8 @@ local AGE_PRICE = {
     ["dantraits:dependent"]  = { [20] = 1 },   -- hangovers x0.85, drink clears x1.2
 }
 local AGE_LEARN_BELOW = 3      -- learn3: skills under this level
+-- vanilla Handy's XP boosts (game 42.21): the skills handyLevels and handyXp speak of
+local HANDY_SKILLS = { "Woodwork", "Maintenance", "Carving", "Masonry" }
 local AGE_TRAIT = { [20] = "age20s", [30] = "age30s", [40] = "age40s", [50] = "age50s" }
 local AGE_BANDS = { 20, 30, 40, 50 }
 local AGE_MAX_LEVEL = 10
@@ -213,8 +225,12 @@ function DanTraits_AgeLevels(boosts, band, handy, bonus, green)
             end
         end
     end
-    if handy and info.handy then
-        out[Perks.Woodwork] = (out[Perks.Woodwork] or 0) + info.handy
+    if handy and info.handyLevels then
+        for name, n in pairs(info.handyLevels) do
+            local perk = Perks[name]
+            local v = (out[perk] or 0) + n
+            out[perk] = v ~= 0 and v or nil
+        end
     end
     return out
 end
@@ -409,10 +425,18 @@ local function inList(list, perk)
     return false
 end
 
+local function isHandySkill(perk)
+    for _, name in ipairs(HANDY_SKILLS) do
+        if Perks[name] == perk then return true end
+    end
+    return false
+end
+
 -- Experience by band: Fitness and Strength (xp); any other skill under
 -- level 3 (learn3: the young pick things up, the old do not); the skills the
--- profession boosts (trade: the trade you know keeps coming). The factors
--- multiply.
+-- profession boosts (trade: the trade you know keeps coming); Handy's four
+-- skills with Handy (handyXp: the 20s train them instead of starting with
+-- the levels). The factors multiply.
 local function onAgeAddXP(player, perk, amount)
     if not player or not perk or not amount or amount <= 0 then return end
     local k = 1
@@ -429,6 +453,10 @@ local function onAgeAddXP(player, perk, amount)
         if trade and trade ~= 1 then
             local main, rest = DanTraits_AgeProfessionSkills(player)
             if inList(main, perk) or inList(rest, perk) then k = k * trade end
+        end
+        local handy = ageValue(player, "handyXp")
+        if handy and handy ~= 1 and isHandySkill(perk) and hasVanillaTrait(player, "base:handy") then
+            k = k * handy
         end
     end
     if k == 1 then return end

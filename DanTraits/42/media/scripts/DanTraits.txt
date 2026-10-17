@@ -133,7 +133,9 @@ module DanTraits {
 
     /* Positive, cheap: every exercise starts at regularity 50, like a Fitness
        Instructor's 40 to 60. Applied once, to a new character, by
-       media/lua/shared/DanTraits_GymRegular.lua. */
+       media/lua/shared/DanTraits_GymRegular.lua. Costs 2 in the 40s and 3 in
+       the 50s (the age price table, DanTraits_Age.lua), as do Meal Prepper
+       and Early Riser. */
     character_trait_definition DanTraits:gymregular
     {
         IsProfessionTrait = false,
@@ -270,9 +272,10 @@ module DanTraits {
        granted at spawn to a character who picked none. The 20s cost points
        (they recover and train faster), the 40s and 50s give points back
        (more profession levels, a slower body). The 20s can't take
-       Arthritis; Handy costs them 2 more (the age price table, since
-       2026-10-13; they could not take it before). media/lua/shared/
-       DanTraits_Age.lua, docs/age.md. */
+       Arthritis; with Handy they start without its four levels and train
+       those skills x1.5 instead (DanTraits_Age.lua; they could not take it
+       before 2026-10-13, and paid 2 more for it until 2026-10-16).
+       media/lua/shared/DanTraits_Age.lua, docs/age.md. */
     character_trait_definition DanTraits:age20s
     {
         IsProfessionTrait = false,

@@ -93,7 +93,8 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 - **Bad Back** and **Bad Knees** give 5 points each (were 4 and 3); **Set in Their Ways** gives 4 (was 2).
 - **Pace Yourself** costs 4 (was 2): a tenth of the endurance on swings and sprints was too cheap at 2.
 - **Blacksmith Knowledge** (the pickable `base:blacksmith`) adds +1 Short Blunt to its XP boosts and costs 7 (was 6); recipes unchanged.
-- **Handy** can be taken in the 20s again (no longer in In Their 20s' `MutuallyExclusiveTraits`), at 10 points: a +2 row in the age price table, shown in red beside its cost. A whole-block override like Keen Cook's; the occupation's free `base:blacksmith2` is vanilla's.
+- **Handy** can be taken in the 20s again (no longer in In Their 20s' `MutuallyExclusiveTraits`), at vanilla's 8 points, but gives the 20s none of its four starting levels: Carpentry, Maintenance, Carving and Masonry are shown greyed on the creation screen and taken back at spawn (`handyLevels` in the band table, through `DanTraits_AgeLevels`), and those four skills train x1.5 instead (`handyXp`, in the `Events.AddXP` handler, multiplying with the band's other factors; vanilla's +75% boost on them stays). The 40s and 50s keep their +1 Carpentry. (It cost the 20s 10 for three days of this cycle.)
+- **Gym Regular, Meal Prepper and Early Riser cost 2 in the 40s and 3 in the 50s** (1 everywhere else): three +1 / +2 rows in the age price table, shown in red beside the cost.
 - **Rough Night less often.** A night's hours half was hours slept over 7 (5 or 9 with the sleep
   traits), but the game wakes you when tiredness runs out, so a half-tired character slept about
   four hours, woke rested and still scored under 0.8; a lit room or one wake then tipped it into

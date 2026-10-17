@@ -307,19 +307,19 @@ a { color: var(--ink) }
   <article class="card" data-k="age"><div class="top"><h3>In Their 20s</h3><span class="pts age">+6</span></div><p class="lead">Young, and the body shows it; the brain is a sponge; the metabolism runs high.</p><ul>
     <li>Endurance back a quarter faster; Fitness and Strength train x1.5; wounds heal and stiffness fades x1.5; night wakes count less against the sleep score. No extra profession level.</li>
     <li>Any skill under level 3 trains x1.2. Hunger x1.15; caffeine, drink, food sickness and daily medication clear x1.2.</li>
-    <li>A healthier heart and less Type 2 resistance; Gym Regular starts at 65. Not with Arthritis; Handy costs 2 more (10). Fit and Fast Learner a point cheaper. The conditions this body softens give fewer points: Multiple Sclerosis and Heart Condition 3 fewer, Asthma and Hemophilia 2, Type 2, Anaemic, Smoker and Alcoholic 1. Every number is in the Age table.</li></ul></article>
+    <li>A healthier heart and less Type 2 resistance; Gym Regular starts at 65. Not with Arthritis. Handy gives none of its four starting levels and trains those skills x1.5 instead. Fit and Fast Learner a point cheaper. The conditions this body softens give fewer points: Multiple Sclerosis and Heart Condition 3 fewer, Asthma and Hemophilia 2, Type 2, Anaemic, Smoker and Alcoholic 1. Every number is in the Age table.</li></ul></article>
 
   <article class="card" data-k="age"><div class="top"><h3>In Their 30s</h3><span class="pts age">0</span></div><p class="lead">The game as it is: no bonus, no penalty.</p></article>
 
   <article class="card" data-k="age"><div class="top"><h3>In Their 40s</h3><span class="pts age">-2</span></div><p class="lead">Years on the job, in a body a little slower.</p><ul>
     <li>Two levels in the main skill, one in each other skill the profession boosts. The trade trains x1.1.</li>
     <li>Endurance x0.92, Fitness and Strength XP x0.9, healing x0.9, stiffness x0.85, night wakes count more against the sleep score. Hunger x0.95; everything clears x0.9, so a daily pill holds longer and so does a hangover.</li>
-    <li>Strong and Athletic +2 points, Stout and Fit +1. Arthritis flares sooner; Brittle, Heart Condition and Type 2 bite harder. Handy gets an extra level of Carpentry. Every number is in the Age table.</li></ul></article>
+    <li>Strong and Athletic +2 points, Stout and Fit +1; Gym Regular, Meal Prepper and Early Riser cost 2. Arthritis flares sooner; Brittle, Heart Condition and Type 2 bite harder. Handy gets an extra level of Carpentry. Every number is in the Age table.</li></ul></article>
 
   <article class="card" data-k="age"><div class="top"><h3>In Their 50s</h3><span class="pts age">-6</span></div><p class="lead">A lifetime of knowing how, in a body that keeps the receipts.</p><ul>
     <li>Three levels in the main skill, two in the rest of the trade. The trade trains x1.15; a new skill under level 3 only x0.9.</li>
     <li>Endurance x0.85, XP x0.8, healing x0.8, stiffness x0.7, wakes x1.3, red cells x0.65, concussions x0.6, hangovers x1.5. Hunger x0.9; everything clears x0.8.</li>
-    <li>Strong and Athletic +4, Stout and Fit +2, Fast Learner +1; Slow Learner gives one fewer, Hearty Appetite one more.</li>
+    <li>Strong and Athletic +4, Stout and Fit +2, Fast Learner +1; Gym Regular, Meal Prepper and Early Riser cost 3; Slow Learner gives one fewer, Hearty Appetite one more.</li>
     <li>Arthritis flares sooner still; Brittle and Heart Condition x1.5; Type 2 resistance +0.2. Handy gets an extra level of Carpentry. Every number is in the Age table.</li></ul></article>
 
   <article class="card" data-k="ageonly"><span class="band">20s only</span><div class="top"><h3>Green</h3><span class="pts neg">-4</span></div><p class="lead">New to the job: every occupation skill starts a level lower. Experience gain is unchanged.</p></article>
@@ -371,7 +371,7 @@ a { color: var(--ink) }
       <tr><td>Arthritis: how hard the cold reaches the joints</td><td class="num">not allowed</td><td class="num">x1</td><td class="num down">x1.3</td><td class="num down">x1.6</td></tr>
       <tr><td>Type 2 Diabetes: insulin resistance</td><td class="num up">-0.05</td><td class="num">0</td><td class="num down">+0.1</td><td class="num down">+0.2</td></tr>
       <tr><td>Gym Regular: starting regularity at least</td><td class="num up">65</td><td class="num">&ndash;</td><td class="num">&ndash;</td><td class="num">&ndash;</td></tr>
-      <tr><td>Handy: Carpentry at the start</td><td class="num">+0 (costs 10)</td><td class="num">+0</td><td class="num up">+1</td><td class="num up">+1</td></tr>
+      <tr><td>Handy: Carpentry at the start</td><td class="num down">-1 (all four skills; they train x1.5)</td><td class="num">+0</td><td class="num up">+1</td><td class="num up">+1</td></tr>
     </tbody></table></div>
   <p class="note">The band's learning factors and the age-only traits' (Quick Study, Old Hand, Set in Their Ways) add rather than multiply: the 20s with Quick Study on a skill under 3 is x1.6, the 50s with Old Hand on a trade skill x1.4, the 50s with Set in Their Ways on a new skill under 3 x0.75.</p>
   <p class="note">Clearance cuts both ways: a young body burns through a dose and a hangover alike; an old one holds a daily pill a fifth longer and the shakes too. Rescue drugs (diazepam, painkillers, the inhaler) keep their own half-life for everyone.</p>
@@ -389,6 +389,7 @@ a { color: var(--ink) }
       <tr><td>Multiple Sclerosis, Heart Condition (give)</td><td class="num down">+3</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
       <tr><td>Asthma, Hemophilia (give)</td><td class="num down">+2</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
       <tr><td>Type 2, Anaemic, Smoker, Alcoholic (give)</td><td class="num down">+1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+      <tr><td>Gym Regular, Meal Prepper, Early Riser</td><td class="num">0</td><td class="num">0</td><td class="num down">+1</td><td class="num down">+2</td></tr>
     </tbody></table></div>
   <p class="note">The fifteen age-only traits are in the Traits section above, under the Age-only filter. Sandbox: Age (on), Default Age (the band given to a character who reaches the world with no Age trait, such as an old save), and Profession Levels per band.</p>
 </section>

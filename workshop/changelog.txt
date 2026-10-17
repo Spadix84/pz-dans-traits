@@ -21,7 +21,8 @@ Safe mid-save: home is worked out from the nights you sleep from here on, your c
 [*][b]Bad Back and Bad Knees give 5 points each[/b] (were 4 and 3), and [b]Set in Their Ways[/b] gives 4 (was 2).
 [*][b]Pace Yourself costs 4[/b] (was 2).
 [*][b]Blacksmith Knowledge[/b] adds a level of Short Blunt and costs 7 (was 6).
-[*][b]In Their 20s can take Handy again[/b], at 10 points (2 more than vanilla's 8).
+[*][b]In Their 20s can take Handy again[/b], at its usual 8 points, but a young Handy starts without its four skill levels and trains those skills half again as fast instead. The 40s and 50s still get their extra level of Carpentry.
+[*][b]Gym Regular, Meal Prepper and Early Riser cost 2 in the 40s and 3 in the 50s[/b] (still 1 for the young).
 [*][b]Rough Night less often.[/b] A short sleep that leaves you rested now counts as a full night: four hours from half tired to fully rested no longer reads as a rough one.
 [*][b]Smoke gets into your clothes.[/b] For six hours after a smoke your clothes go stale half as fast again, Smoker or not.
 [*][b]Migraines after a knock on the head.[/b] The headache that comes back days after a concussion can now bring on a migraine.

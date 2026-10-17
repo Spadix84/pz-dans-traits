@@ -152,6 +152,13 @@ a trait that gives points means it gives that many fewer.
 | Multiple Sclerosis, Heart Condition (give) | +3 | 0 | 0 | 0 |
 | Asthma, Hemophilia (give) | +2 | 0 | 0 | 0 |
 | Type 2, Anaemic, Smoker, Alcoholic (give) | +1 | 0 | 0 | 0 |
+| Gym Regular, Meal Prepper, Early Riser | 0 | 0 | +1 | +2 |
+
+The last row is the cheap habits: 1 point young, 2 in the 40s and 3 in the
+50s (2026-10-16), since a habit kept into middle age is worth more than one
+you have barely started. Handy had a +2 in the 20s from 2026-10-13 to
+2026-10-16; it now costs vanilla's 8 everywhere and gives the 20s no levels
+instead (the table below).
 
 Existing characters are not affected; the table is read on the creation
 screen only (`DanTraits_AgeSurcharge`, `DanTraits_AgePrices`).
@@ -201,7 +208,7 @@ Notes:
 
 | Trait | 20s | 40s | 50s |
 |---|---|---|---|
-| Handy (vanilla) | costs 10 (2 more) | +1 Carpentry at the start | +1 Carpentry at the start |
+| Handy (vanilla) | none of its four starting levels (Carpentry, Maintenance, Carving, Masonry: shown greyed on the creation screen, taken back at spawn); those four skills train x1.5 instead, on top of the band's own factors | +1 Carpentry at the start | +1 Carpentry at the start |
 | Arthritis | cannot be taken | the cold and damp reach the joints x1.3 as fast, so flares come sooner | x1.6 |
 | Brittle | no change | fracture chance x1.25 | x1.5 |
 | Heart Condition | strain builds x0.8 | x1.25 | x1.5 |
@@ -214,8 +221,11 @@ Notes:
 Notes on the less obvious rows:
 
 - **Arthritis** is the only lock-out among the older traits, and only for
-  the 20s; Handy was one too until 2026-10-13, when it became 2 points
-  dearer in the 20s instead. (Until 2026-10-05 the lock-out only worked if
+  the 20s; Handy was one too until 2026-10-13 (then 2 points dearer until
+  2026-10-16, when the 20s lost its levels and gained its training rate
+  instead: young hands learn the trade, they do not arrive knowing it).
+  Vanilla's own +75% rate on those skills stays, so a 20s Handy trains
+  them x2.625 all told. (Until 2026-10-05 the lock-out only worked if
   Arthritis or Handy was picked first: the game checks an exclusion from one side. The creation
   screen now checks both sides, for every trait.) The
   50s are locked out of nothing: Athletic or Gym Regular at 55 is allowed,
