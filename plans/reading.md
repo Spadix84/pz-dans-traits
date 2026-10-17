@@ -419,6 +419,24 @@ A master sandbox toggle plus its own sandbox page, `DansVanillaFixesReading`:
 5. **The real-book list**: should I draft the ~100 titles next, for the user
    to cut?
 
+## Immersion (2026-10-17)
+
+The user's ask: reading's good should ramp with how long you have read without
+stopping, little at first, more as you forget the world. Built as a multiplier
+on the stress and unhappiness drip only (boredom stays flat: turning pages is
+unboring from page one): `R.immersion(info, minutes)` runs from
+`IMMERSION_LOW` 0.4 at minute 0 to `IMMERSION_HIGH` 1.3 at `IMMERSION_MINUTES`
+60 (picture media 20) and holds, in our minutes a page, so a Fast Reader is
+immersed in the same pages. The action keeps `readSession.minutes`; each tick
+applies its pages at the midpoint of their minutes. The sitting is noted in
+the character's data (`sitting = { key, minutes, at }`) and `R.sittingStart`
+carries it over when the same title is started within `IMMERSION_GRACE_MIN` 15
+game minutes, so an interruption does not reset an hour's immersion, and a
+chapter read straight after a chapter continues the sitting. Averages: a
+30-minute chapter from cold 0.625 of the old rate; three hours 1.15; a whole
+novel in one sitting about 1.25. No sandbox option; the constants are the
+knobs. Tests in `tests/test_reading.lua` (immersion section, the long read).
+
 ## As built (2026-10-12)
 
 Built as designed, in Dan's Vanilla Fixes (`DansVanillaFixes_ReadingData.lua`

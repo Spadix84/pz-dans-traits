@@ -10,7 +10,10 @@
 --                book from the bookmark, or a chapter's worth when the
 --                action was started with readChapter set.
 --   start        the plan for the session: from which page, how many
---   update       pages turned since the last tick get their relief, the
+--   update       pages turned since the last tick get their relief (stress
+--                and unhappiness by the immersion ramp: how many minutes
+--                into the sitting, carried over from a sitting of the same
+--                title put down moments ago), the
 --                bookmark moves (character and copy), the family's page
 --                count grows until the taste is found out, a disliked book
 --                ticks boredom back now and then
@@ -71,7 +74,11 @@ local function turned(self, info, pagesNow)
     if n <= 0 then return end
     rd.pages = pagesNow
     local player = self.character
-    R.applyPages(player, info, n, rd.reread)
+    local mpp = R.minutesPerPage(player, info)
+    local minutes = rd.minutes or 0
+    R.applyPages(player, info, n, rd.reread, minutes + n * mpp / 2)
+    rd.minutes = minutes + n * mpp
+    R.sittingNote(player, info, rd.minutes)
     R.setMark(player, self.item, info, pagesNow)
     if not rd.reread then
         local verdict = R.notePages(player, info.family, n)
@@ -133,7 +140,7 @@ if not ISReadABook.danTraitsReadingWrapped then
                 local ok, yes = pcall(function() return self.character:isLiteratureRead(info.raw) end)
                 reread = ok and yes == true
             end
-            self.readSession = { pages = p.from, reread = reread }
+            self.readSession = { pages = p.from, reread = reread, minutes = R.sittingStart(self.character, info) }
         end)
     end
 

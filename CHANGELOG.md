@@ -100,6 +100,15 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Changed
 
+- **Reading: immersion.** The stress and unhappiness a page takes off now climb with how long you
+  have been reading without stopping. A sitting's first pages give 0.4 of the page's rate; it
+  climbs over the first hour (20 minutes for a comic, magazine or newspaper) to 1.3 and stays
+  there. Boredom is untouched: a page is a page. Put the book down and pick the same title up
+  within 15 game minutes and the sitting carries on from where it was (a zombie at the window
+  does not undo an hour of reading); longer, or another title, starts cold. A chapter at a time
+  (30 minutes) averages about 0.6 of the old rate; a three-hour sitting about 1.15, so an
+  afternoon lost in a book does more than the same pages in snatches. `R.IMMERSION_*` in
+  `DanTraits_Reading.lua`; the sitting is kept in the character's reading data (`sitting`).
 - **Germaphobe** gives 8 points (was 4).
 - **Bad Back** and **Bad Knees** give 5 points each (were 4 and 3); **Set in Their Ways** gives 4 (was 2).
 - **Pace Yourself** costs 4 (was 2): a tenth of the endurance on swings and sprints was too cheap at 2.

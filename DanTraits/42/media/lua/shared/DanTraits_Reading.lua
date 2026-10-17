@@ -23,6 +23,8 @@
 --   { v = 1, liked = family, disliked = family, found = { [family] = true },
 --     pagesIn = { [family] = pages read }, marks = { [key] = pages },
 --     read = { [key] = { q, family, when, verdict } },
+--     sitting = { key, minutes, at } (the last read: which title, how far into
+--       the sitting, when it last turned a page; for the immersion ramp)
 --     moodle = { level, family, quality, strength, key, ends = world hour } }
 -- Item mod data DVF_ReadPages: the pages read in this copy (a second bookmark).
 -- Those two keys and the IGUI_DVF_BookTitle_ title prefix keep the names they
@@ -53,6 +55,15 @@ R.FOUND_PAGES = 30              -- pages in a family before the character knows 
 R.TASTE = { liked = 1.25, neutral = 1.0, disliked = 0.5 }
 R.QUALITY = { 0.8, 0.9, 1.0, 1.1, 1.2 }
 R.REREAD = 0.2                  -- of the drip, a finished title in the liked family only
+-- immersion: the stress and unhappiness drip starts at LOW of itself and climbs
+-- to HIGH over the first MINUTES of a sitting (picture media sooner), in our
+-- minutes a page; boredom is flat, a page is a page. A sitting survives an
+-- interruption if the same title is picked up within GRACE game minutes.
+R.IMMERSION_LOW = 0.4
+R.IMMERSION_HIGH = 1.3
+R.IMMERSION_MINUTES = 60
+R.IMMERSION_PICTURE_MINUTES = 20
+R.IMMERSION_GRACE_MIN = 15
 R.DISLIKE_TICK_MIN = 20         -- a disliked book adds boredom this often, in game minutes
 R.DISLIKE_TICK = 2
 R.MOODLE_HOURS = 48             -- a novel or picture book, whatever its quality
@@ -397,14 +408,41 @@ local function nudge(stats, stat, amount, max)
     stats:set(stat, math.max(0, math.min(max, v)))
 end
 
--- n pages read: the relief, applied at once
-function R.applyPages(player, info, n, reread)
+-- immersion -------------------------------------------------------------------------
+
+-- the multiplier on the stress and unhappiness drip this far into a sitting
+function R.immersion(info, minutes)
+    local span = info.medium == "novel" and R.IMMERSION_MINUTES or R.IMMERSION_PICTURE_MINUTES
+    local t = math.max(0, math.min(1, (minutes or 0) / span))
+    return R.IMMERSION_LOW + (R.IMMERSION_HIGH - R.IMMERSION_LOW) * t
+end
+
+-- a sitting begins: the minutes carried over from the last one, when it was
+-- the same title put down less than GRACE minutes ago, else 0
+function R.sittingStart(player, info)
+    local s = R.data(player).sitting
+    if not s or s.key ~= info.key then return 0 end
+    local ago = (now() - (tonumber(s.at) or 0)) * 60
+    if ago < 0 or ago > R.IMMERSION_GRACE_MIN then return 0 end
+    return tonumber(s.minutes) or 0
+end
+
+-- pages turned: where the sitting stands now (not transmitted; the client
+-- that reads is the one that resumes)
+function R.sittingNote(player, info, minutes)
+    R.data(player).sitting = { key = info.key, minutes = minutes, at = now() }
+end
+
+-- n pages read: the relief, applied at once; minutes is how far into the
+-- sitting these pages are (nil: no ramp, the flat rate)
+function R.applyPages(player, info, n, reread, minutes)
     if n <= 0 or serverSide() then return end
     local b, s, u = R.perPage(player, info, reread)
+    local imm = minutes and R.immersion(info, minutes) or 1
     local stats = player:getStats()
     nudge(stats, CharacterStat.BOREDOM, b * n, 100)
-    nudge(stats, CharacterStat.STRESS, s * n, 1)
-    nudge(stats, CharacterStat.UNHAPPINESS, u * n, 100)
+    nudge(stats, CharacterStat.STRESS, s * n * imm, 1)
+    nudge(stats, CharacterStat.UNHAPPINESS, u * n * imm, 100)
 end
 
 -- a disliked book, every DISLIKE_TICK_MIN minutes: a little boredom back
