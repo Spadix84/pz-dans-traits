@@ -171,13 +171,13 @@ its points. With the Age option off none of them is offered.
 | Green | 20s | gives 4 | Every skill the occupation boosts starts one level lower (not under 0). The skills still train at the occupation's faster rate: experience gain is unchanged (the description says so). Shown greyed on the creation screen |
 | Quick Study | 20s | costs 4 | Any skill below level 5 gains experience x1.4 (on top of the band's x1.2 under level 3) |
 | Reading Glasses | 40s, 50s | gives 2 | Starts with a pair of reading glasses. Without reading or prescription glasses on, reading takes x1.5 as long and needs a properly lit room (sunglasses do not count) |
-| Bad Back | 40s, 50s | gives 4 | The Heavy Load moodle builds lower-back pain, faster the heavier the load (about two hours at the second level to the worst of it), and so does scrubbing on a washboard (0.06 a garment: five garments reach the first ache). It eases over about four hours with the load off, twice as fast asleep. Not with Strong |
-| Bad Knees | 40s, 50s | gives 3 | Running, sprinting (four times as fast), each fence, wall or window climbed (0.08) and each stomp (0.02) build pain in both lower legs. Walking never rests them; standing still eases the load over about three hours, sitting (or sleeping) twice as fast, a seat you could sleep on (a sofa, an armchair) three times. |
+| Bad Back | 40s, 50s | gives 5 | The Heavy Load moodle builds lower-back pain, faster the heavier the load (about two hours at the second level to the worst of it), and so does scrubbing on a washboard (0.06 a garment: five garments reach the first ache). It eases over about four hours with the load off, twice as fast asleep. Not with Strong |
+| Bad Knees | 40s, 50s | gives 5 | Running, sprinting (four times as fast), each fence, wall or window climbed (0.08) and each stomp (0.02) build pain in both lower legs. Walking never rests them; standing still eases the load over about three hours, sitting (or sleeping) twice as fast, a seat you could sleep on (a sofa, an armchair) three times. |
 | Old Hand | 40s, 50s | costs 4 | Every skill the occupation boosts gains experience x1.25 (Maintenance for the Unemployed); until 2026-10-07 only the main skill |
 | Old Injury | 50s | gives 3 | One arm or leg, picked at the start and announced once, always carries a little stiffness; in the cold and damp it stiffens further and hurts. Not with Arthritis |
-| Set in Their Ways | 50s | gives 2 | Skills the occupation does not boost gain experience x0.85. Fitness and Strength are left to age |
+| Set in Their Ways | 50s | gives 4 | Skills the occupation does not boost gain experience x0.85. Fitness and Strength are left to age |
 | Bottomless Pit | 20s | gives 6 | Hunger builds x1.3 on top of the band's x1.15; from the Hungry moodle's second level, 0.1 unhappiness a minute awake (0.2 at the third). Not with Light Eater |
-| Pace Yourself | 40s | costs 2 | A tenth of the endurance a swing or a sprint spends comes straight back |
+| Pace Yourself | 40s | costs 4 | A tenth of the endurance a swing or a sprint spends comes straight back |
 | Settled | 40s | gives 4 | A night anywhere but a bed in a house (a bed object on a square with a room) scores 0.2 worse, and so does the first night in any new bed |
 | Delicate Stomach | 40s, 50s | gives 2 | A junk meal (the Vitality grade) brings 15 food sickness for a whole portion; a drink with hunger over half brings 10. Not with Iron Gut |
 | Seen It All | 50s | costs 3 | Panic builds x0.8 (the game's own rise, through the stat delta pipeline); Fear of Blood faints half as often; Germaphobe's filth stress half. Not with Cowardly |
@@ -201,7 +201,7 @@ Notes:
 
 | Trait | 20s | 40s | 50s |
 |---|---|---|---|
-| Handy (vanilla) | cannot be taken | +1 Carpentry at the start | +1 Carpentry at the start |
+| Handy (vanilla) | costs 10 (2 more) | +1 Carpentry at the start | +1 Carpentry at the start |
 | Arthritis | cannot be taken | the cold and damp reach the joints x1.3 as fast, so flares come sooner | x1.6 |
 | Brittle | no change | fracture chance x1.25 | x1.5 |
 | Heart Condition | strain builds x0.8 | x1.25 | x1.5 |
@@ -213,9 +213,10 @@ Notes:
 
 Notes on the less obvious rows:
 
-- **Handy and Arthritis** are the only lock-outs among the older traits, and
-  only for the 20s. (Until 2026-10-05 this only worked if Arthritis or Handy
-  was picked first: the game checks an exclusion from one side. The creation
+- **Arthritis** is the only lock-out among the older traits, and only for
+  the 20s; Handy was one too until 2026-10-13, when it became 2 points
+  dearer in the 20s instead. (Until 2026-10-05 the lock-out only worked if
+  Arthritis or Handy was picked first: the game checks an exclusion from one side. The creation
   screen now checks both sides, for every trait.) The
   50s are locked out of nothing: Athletic or Gym Regular at 55 is allowed,
   just harder to keep up.

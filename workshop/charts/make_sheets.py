@@ -16,7 +16,7 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 MEDIA = os.path.join(HERE, "..", "..", "DanTraits", "42", "media")
 EN = os.path.join(MEDIA, "lua", "shared", "Translate", "EN")
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 RETIRED = {"jinxed", "ironstomach", "bouncesback"}
 AGE = ["age20s", "age30s", "age40s", "age50s"]
@@ -147,10 +147,10 @@ def main():
           cells="\n".join(trait_cell(v) for v in neg),
           note="Also reworked from vanilla: Smoker and Fear of Blood.")
 
-    write("perks", title="Perks", cols=2, gap=30, box=72, img=54, ds=18,
+    write("perks", title="Perks", cols=3, gap=12, box=60, img=54, ds=15,
           h1="The perks <span>that pay for them</span>",
           sub="Some fold a vanilla trait in; most lean on the same health systems the conditions do.",
-          cells="\n".join(trait_cell(v, n=3) for v in pos),
+          cells="\n".join(trait_cell(v) for v in pos),
           note="Also reworked from vanilla: Resilient, Iron Gut, Keen Cook, Outdoorsman and Cat's Eyes.")
 
     cells = ['<div class="head">Pick a decade first</div>']
@@ -187,7 +187,7 @@ def main():
         else:
             desc = "  |  ".join(" → ".join(levels) for levels in sides)
         moodles.append((title, desc, f))
-    write("moodles", title="Moodles", cols=3, gap=10, box=56, img=48, ds=15,
+    write("moodles", title="Moodles", cols=3, gap=6, box=50, img=44, ds=14,
           h1="%d new moodles <span>so you always know why</span>" % len(moodles),
           sub="Every lasting effect shows up beside the game's own, level by level. Moodle Framework draws them.",
           cells="\n".join(cell(icon_url("ui", f), title, desc=desc) for title, desc, f in moodles),

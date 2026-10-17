@@ -3,10 +3,16 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
-## Unreleased
+## 1.3.0 - 2026-10-17
 
 ### New
 
+- **Companion link** (`DanTraits_Telemetry.lua`): the telemetry file is written while the companion app
+  is running, not only in debug mode. The companion (its own repo, `pz-companion`, grown from the old
+  `tools/dashboard.py`) rewrites `~/Zomboid/Lua/companion_link.txt` every 5 s with the unix time; the
+  mod reads it every 10 s and treats a stamp under 60 s old as alive. The command channel (give, set
+  health, run Lua) stays debug-only, and the snapshot now carries `debug` so the companion knows when
+  to show it. Multiplayer: still off. `tools/dashboard.py` and `Dashboard.bat` are gone from this repo.
 - **Home**, for everyone (sandbox option Home, `DanTraits_Home.lua`, minute order 11): where you
   sleep most nights becomes home. Each night Vitality scores (not a nap, not in a vehicle) is filed
   where the character fell asleep, the building's footprint (`IsoGridSquare.getBuildingDef`) or
@@ -84,6 +90,10 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 ### Changed
 
 - **Germaphobe** gives 8 points (was 4).
+- **Bad Back** and **Bad Knees** give 5 points each (were 4 and 3); **Set in Their Ways** gives 4 (was 2).
+- **Pace Yourself** costs 4 (was 2): a tenth of the endurance on swings and sprints was too cheap at 2.
+- **Blacksmith Knowledge** (the pickable `base:blacksmith`) adds +1 Short Blunt to its XP boosts and costs 7 (was 6); recipes unchanged.
+- **Handy** can be taken in the 20s again (no longer in In Their 20s' `MutuallyExclusiveTraits`), at 10 points: a +2 row in the age price table, shown in red beside its cost. A whole-block override like Keen Cook's; the occupation's free `base:blacksmith2` is vanilla's.
 - **Rough Night less often.** A night's hours half was hours slept over 7 (5 or 9 with the sleep
   traits), but the game wakes you when tiredness runs out, so a half-tired character slept about
   four hours, woke rested and still scored under 0.8; a lit room or one wake then tipped it into
@@ -91,6 +101,18 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   bedtime fatigue cleared by morning (`vitNightBedFatigue`, the highest at the start of any sleep
   that night), when bedtime fatigue was at least 0.1. Four hours from half tired to rested is a
   full night; an alarm at 0.4 after going to bed at 0.8 still counts by the hours.
+- **Alcohol withdrawal raises anger**, the way a Smoker's craving does (`DanTraits_Dependent.lua`):
+  each ten-minute tick sets a held level (`alcAnger`) climbing 0.1 towards a floor of 0.3 x
+  withdrawal strength while craving and 0.6 x from the shakes on, and every frame keeps the anger
+  stat at or above it against vanilla's drain. Asleep, sated by a drink or cured, the held level
+  is taken back off the stat. At the starting meter (0.5) that is Irritated, then Annoyed; at a
+  full meter Annoyed, then Angry, with everything `DanTraits_Anger.lua` gives the moodle. The
+  craving and shakes moodle texts say so. The hold runs only for a character with the trait, or
+  with a hold still to take off (the trait just gone): it ran for everyone, writing `alcAnger = 0`
+  into every character's mod data every ten minutes (review 2026-10-16 A2.22; pinned in
+  `tests/test_alcoholic.lua`).
+- **Arthritis** starting kit (Starting Medication) adds a quarter bottle of prednisone (5 of 20
+  pills) beside the painkillers.
 
 - **Smoke gets into your clothes** (`DanTraits_Smoker.lua`): for six hours after any cigarette, cigar or pipe, habit or not, worn clothes go stale half as fast again (x1.5 on the laundry odour rate, on top of Sweaty or Cool Customer).
 - **The headache after a concussion feeds Migraine** (`DanTraits_Migraine.lua`, `DanTraits_Hallucinations.lua`): the post-concussion headache (`DanTraits_ConcussionLateStrength`, which outlasts the score) was read by nothing; it now adds up to 2.0 to the migraine chance, beside the concussion itself, and keeps Schizophrenia's panic bouts down the way the concussion does.
@@ -99,7 +121,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 - **Arthritis: morning stiffness** (`DanTraits_Arthritis.lua`): getting up from a night's sleep adds 15 to the joints' stiffness floor, fading over half an hour; a coffee or tea in that half hour halves what is left; a nap adds nothing; the floor never passes a full flare's 45.
 - **Anaemic: coffee with your iron** (`DanTraits_Anemia.lua`): while caffeine is working (Sleep's six-hour clock), a meal or an iron pill gives half the iron, so the pills are best timed away from the coffee.
 - **Sensitive Skin burns and stings** (`DanTraits_Sunburn.lua`, `DanTraits_LaundryTraits.lua`): the sun burns a sensitive skin in two hours of full sun, not three (stacking with a tan and Outdoorsman), and bleaching a garment stings the hands (15 discomfort a garment, with a notice).
-- **Resilient beats the Knox virus once, 10% at most, less when Run Down** (`DanTraits_Knox.lua`, sandbox): the Knox Survival Chance is 10 by default and at most (was 25 of 100); a Run Down body (Vitality) has down to half of it, a fit one the full value, never more; it is beaten once only, and a second infection is not rolled, says so, and runs its course in six hours.
+- **Resilient beats the Knox virus once, 10% by default, less when Run Down** (`DanTraits_Knox.lua`, sandbox): the Knox Survival Chance is 10 by default (was 25; the option still runs to 100, so a save made before keeps its stored 25 and logs no error); a Run Down body (Vitality) has down to half of it, a fit one the full value, never more; it is beaten once only, and a second infection is not rolled, says so, and runs its course in six hours.
 - **Tinnitus is read by the rest** (`DanTraits_Tinnitus.lua`, `DanTraits_Migraine.lua`, `DanTraits_Hallucinations.lua`): while the ears ring, a migraine is likelier (+1.5), Schizophrenia's whispers come easier (+0.15) and a night slept through it scores 15% lower.
 - **Brittle: a bone score** (`DanTraits_Brittle.lua`): the fracture chance follows the bones (a fifth to start, a tenth with strong bones, three tenths with weak); they drift down 0.02 a day, regular exercise (Vitality) holds the drift, and dairy, greens and eggs put some back, at most 0.06 a day. Brittle with Lactose Intolerance pays for its calcium in cramps. Console `brittle bone [0..1]`.
 - **Home is a comfort for Spiraling and a rest for MS** (`DanTraits_MDD.lua`, `DanTraits_Spoons.lua`): a depressive episode's floor eases by up to 10 at home (Homebody doubles it), and true rest at home gives MS up to half as many spoons again, under the same daily cap.
@@ -129,9 +151,11 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 - **Small, confirmed maths** (`DanTraits.lua`, `DanTraits_Sleep.lua`, `DanTraits_Age.lua`, `DanTraits_Smoker.lua`, `DanTraits_Vitality.lua`, `DanTraits_Migraine.lua`): Age scaled the night's wake count before Restless Sleeper's free wake came off (by load order), so a 50s Restless Sleeper paid 0.6 of the free wake, and it scaled the morning wake too, so an unbroken night cost the 50s 0.3 of a wake. `DanTraits_AddHook` takes an order now (lower first, default 100): Sleep's free wake runs at 10, and Age scales only the wakes over the one every night has. Smoker's withdrawal hunger went through the `hungerRise` pipeline the next minute and was scaled again by Age and Bottomless Pit; it is told to the pipeline (`DanTraits_DeltaRemember`, as Pace Yourself does). A nap moved Vitality's sleep score though the header (and `plans/spoon-theory-ms.md`) say a nap is not scored; it eases the debt and leaves the score alone now. Migraines counted a painkiller taken before the attack as the attack's first dose (the one-off 10% cut); only a pill taken in the attack (the pain effect rising past what it was, `migMedsSeen`) counts.
 - **Infrastructure** (`DanTraits.lua`, `DanTraits_Asthma.lua`, `DanTraits_Infection.lua`, `DanTraits_Smoker.lua`, `DanTraits_Util.lua`, `client/DanTraits_HealthPanel.lua`, `DansVanillaFixes_Coolers.lua`): the three `DanTraits_Later` jobs with no tag (Asthma's cough burst, Infection's undo of vanilla's antibiotic effect, Smoker's dose) shared the one "later" log slot, so after the first failure the other two were silent for ever; each has its tag (`DanTraits_LaterPending` is readable by the tests, which pin them). `DanTraits_PanicDecay` called `stats:get` and `stats:set` bare against Util's own header; both are guarded. The health panel re-wrapped itself when another mod wrapped `doDrawItem` after it and a second world was loaded, and every mod line then showed twice; the inner layer now finds itself inside the outer's call and passes through. Dan's Vanilla Fixes' coolers called the game unguarded every ten minutes and on every inventory refresh (`squareOf`, `airTemp`, `place`, `coolFood`, `label`); every call is guarded, the two-argument `getAirTemperatureForSquare` falls back to the plain one, and the air reads 20 C when it cannot be read.
 - **Laundry, smaller** (`DanTraits_LaundryWash.lua`, `DanTraits_LaundryDry.lua`, `client/DanTraits_LaundryClient.lua`, `DanTraits_Bathing.lua`): "Wring" was still offered by the game's own menu between the mod's line and vanilla's (only `isValid` is the mod's) and then silently never started; it refuses with "As wrung out as it will get", once (the header no longer claims it is not offered). Putting up a clothesline could be cancelled by the character standing on one of its own squares (the action re-checks every square is free each tick, and the walk could end on the first wire square): the walk now goes to a square beside or behind the first post, off the line (`L.lineStandSquare`). The clothes you bathe or shower in got the hand-wash floors without Homemaker's; the bath passes it now. A bath still does not count as a wash (the plan did not say it should; noted in `plans/laundry.md` as open, with the starting outfit's day and a half of Fresh Clothes).
+- **Reading: a comfort re-read overwrote the finish record's verdict, and two "no glasses" rules stacked** (`DanTraits_Reading.lua`, `DanTraits_ReadingHooks.lua`): a re-read recomputed the verdict at level 0, so a book recorded "loved" became "great" in the tooltip and the journal; the record's verdict is kept. And ReadingHooks had a glasses list of its own (only `Base.Glasses_Reading` counted, for every 40s and 50s character) beside the Reading Glasses trait's rule, so the two disagreed about prescription glasses. One rule now: the trait's `DanTraits_NeedsGlasses`; the small-print extra on a page applies to whoever it says needs glasses.
 
 - **A crash was judged against whoever came next** (`DanTraits_Concussion.lua`): the car's top speed, a crash waiting on the speed after it, the head's last reading and the minute's strain flags were module state, tied to no character, so a multiplayer respawn or a second split-screen player in the window after a crash would have been knocked for it. They are per player object now (a weak table); a character that is gone takes its state with it.
 - **The clocks ran for player 0 only** (`DanTraits.lua`, `DanTraits_Util.lua`): the minute and ten-minute drivers ran every system for `getSpecificPlayer(0)` while the frame driver ran every local player, so split-screen player 1 got the frame systems and the delta pipeline but no minute system, pain floor or moodle. They run for every local player now, each once. `DanTraits_FloorUp` booked its floor flag on player 0 whatever stats it was handed; it books it on the player the drivers are running for (`DanTraits_RunningFor`).
+- **"Read a chapter" on a multiplayer client** (`client/DanTraits_ReadingClient.lua`): the server rebuilds a timed action from `ISReadABook:new`'s own parameters, so the chapter flag set after `new()` never reached it and the server read the whole book, finishing the title when the client's chapter ended. The option is not offered on a multiplayer client; singleplayer and split-screen keep it. The laundry action's singleplayer shape (all the work in `perform()`, no `complete()`) is written down in its header and in `plans/multiplayer.md`.
 ### Other mods
 
 - **This Is Your Life** (Workshop 3773911887): the age traits work in its Personnel Assessment
@@ -152,6 +176,107 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   The handler is registered by reference, so `DanTraits_ALife.lua` takes it off the event and
   adds it back behind a wrapper that passes a source that is not an IsoObject as nil. Its NPCs
   still hear the alarm. The load line now reads `..., sound true; hits 3/3`.
+
+### Reading for pleasure (built in Dan's Vanilla Fixes 2026-10-12, moved into Vitality 2026-10-15)
+
+Reading was a vending machine: ten minutes, a fixed drop in boredom, stress and unhappiness at the
+end, once per title. Now it is something to carry on a run (design and as-built notes:
+`plans/reading.md`; its own sandbox page, Vitality: Reading, with a master switch).
+
+- **Every vanilla title is tagged**: 1,177 books, 224 comics and 167 magazines get a genre family
+  (18 of them, folded from the game's 55 book subjects and 24 magazine subjects; comics by the
+  words in their titles), a page count (softcovers 180-380, hardcovers 250-500, serious reading
+  300-650, kids' books 24-64, comics 24-48, magazines 60-140, newspapers 12-40, each title its own)
+  and a hidden quality of one to five stars, most at two or three. The table is generated from the
+  game jar by `DanTraits/tools/gen_reading_data.py` (a bytecode walk of the `Book`,
+  `ComicBook` and `Magazine` registries), with hand fixes in `DanTraits_ReadingBooks.lua`.
+- **Long reads.** A novel is 1.5 minutes a page, picture media half a minute, scaled by the server's
+  own Minutes Per Page; Fast Reader, Slow Reader, reading glasses, sitting and other mods' wraps
+  carry over, because the time is scaled from vanilla's own answer. A 350-page novel is about nine
+  hours, six with Fast Reader. The relief arrives **per page** (a novel's vanilla totals spread
+  over 300 pages, so a long book gives more; comics, magazines and newspapers keep their totals)
+  and vanilla's lump at the end is cancelled. Stats stop at zero, as before.
+- **Bookmarks.** Progress is kept per character per title and on the copy; a read that stops
+  resumes where it was, on any copy. Right-click **Read a chapter (~30 min)** reads a chapter's
+  worth and stops, without the title being marked read.
+- **Taste.** Each character likes one family and dislikes another (never Kids or Humor), hidden
+  until about 30 pages in a family bring a notice: "You're really into this.", "Not your kind of
+  book." or "It's fine." A liked book does x1.25, a disliked one x0.5 and adds a little boredom
+  every twenty minutes. The tooltip shows the genre, the verdict once known, the pages read of the
+  total, and your verdict after finishing.
+- **Good Read**, a new moodle (Moodle Framework), on finishing a book: Good Read, Great Read
+  (four or five stars, or a liked genre) or Loved It (both, with a quarter more strength). It
+  lasts about two days (48 hours) for a novel whatever its quality, 12 hours for a comic or
+  magazine (never above Good Read; nothing for a newspaper), and carries **one buff, set by the
+  genre**, which its description names with the hours left ("Horror: panic fades faster. About
+  41 h left."). Stat buffs: Horror eases panic, Thrillers stress, Romance and Humor low moods,
+  Popular Fiction and Kids boredom, Classics boredom and low moods, Faith stress and low moods,
+  True Stories panic and stress, Westerns brings stamina back faster. XP buffs (+5%, only when no
+  skill book's multiplier is running): Sports Fitness and Strength, Sci-Fi Electrical and
+  Mechanics, Science First Aid and Foraging, History Aiming and Reloading, Fringe Trapping and
+  Sneaking, Arts Carving and Pottery, Self-Help Cooking, Farming, Carpentry, Tailoring and
+  Maintenance. Serious Reading makes books read a tenth faster. Every buff scales with the
+  moodle's strength. Only one runs at a time: a new finish takes over when it is a higher level,
+  or the same level with more time to run; otherwise the running buff stays as it is.
+- **Re-reads** give a fifth of the drip in the liked family only (sandbox switch), and no moodle.
+- **Real books**: about 200 titles from before July 1993, title and author only, with their real
+  page counts and a quality by hand. A novel in loot has an 8% chance (sandbox) of being one from
+  the same genre; it is named like a vanilla book and read-tracking works on it unchanged.
+- **This Is Your Life**: books you finish and tastes you find out go in its survivor journal, as
+  dated lines ("July 12, 1993 - Finished "Jurassic Park". Loved it.").
+- Books from other mods get a neutral fallback (Popular Fiction, 120 pages, three stars, no moodle).
+  Skill books, recipe magazines, fliers, brochures and the old newspapers are untouched.
+- Multiplayer: the stat changes run on the client that owns the character, as vanilla's do;
+  built for it (no wrap of `new`, `complete` handled on the server) but not yet tried on a server.
+- **Vitality's say** (`DanTraits_ReadingHooks.lua`): a page does 15% more good at
+  home by the home's strength (30% for a Homebody), half as much when concussed (and takes a
+  quarter longer), and a Really Bad Day's first day gets a quarter more comfort from any book.
+  In their 40s a reader without reading glasses takes a tenth longer per page, in their 50s 15%.
+- **Moved from Dan's Vanilla Fixes** on 2026-10-15, so it ships with Vitality: the files are
+  `DanTraits_Reading*.lua` (core, action, books, data, client, This Is Your Life), the API is
+  `DanTraits_Reading` (was `DVF_Reading`), the options are `DanTraits.Reading*` on the Vitality:
+  Reading page, and the text keys are `IGUI_DanTraits_*`. The save keys (`DVF_Reading` on the
+  character, `DVF_ReadPages` on a copy, the `IGUI_DVF_BookTitle_` prefix of a real book) keep their
+  old names, so bookmarks and real books in a save carry on. The tooltip strip is shared:
+  `DanShared_Tooltip.lua` ships in both mods, identical (`deploy.py` refuses to deploy if they
+  differ), and draws one strip whichever loads first.
+
+### Laundry: load the washer in one click (built in Dan's Vanilla Fixes 2026-10-09, moved into Vitality 2026-10-15)
+
+- Right-click a washing machine (or a combo washer/dryer set to wash, or a stacked pair's
+  washer): **Put dirty clothes in the washer (N)** walks you over and moves every garment you
+  carry that the game calls Dirty or Bloody, bags included, into it with the game's own
+  transfer actions. What you are wearing stays on. Greyed with the reason when nothing you
+  carry needs it or the machine is running.
+- `DanTraits_LaundryWasher.lua` (was `DansVanillaFixes_WasherClient.lua`); the option is on whether
+  or not the laundry rules are.
+
+### Dan's Vanilla Fixes: item info in tooltips (2026-10-13)
+
+Our own take on the parts of Better Item Info worth keeping (that mod replaced the item tooltip
+and hid every Dan's Vanilla Fixes line under it). New sandbox page Dan's Vanilla Fixes: Item Info.
+
+- **One strip** under vanilla's tooltip for every line
+  (`DanShared_Tooltip.lua`, `DanShared_Tooltip.add(id, order, fn)`, shared with Vitality since the
+  reading move): the reading lines (genre,
+  pages read of the total, verdict), the item info below, then the collection line. The
+  reading and collection lines used to be two strips that drew over each other.
+- **Read time left** on skill books and on the novels, comics and magazines the reading overhaul
+  handles: "Time to finish: about 3 h 40 min", from the read action's own duration, so Fast and
+  Slow Reader, glasses, sitting, Anger, Home and the age traits all count. Nothing for a volume
+  above your level + 1, for the illiterate, or one read through.
+- **Uses left** on drainables ("Uses left: 7 of 20"); batteries and anything that runs on one
+  show a charge in percent.
+- **Weapon numbers by skill** (`DansVanillaFixes_ItemInfo.lua`): the skill it trains and your
+  level, then damage from level 1, critical chance at 2 (vanilla's 3 a level), attack speed and
+  reach at 3, knockback and endurance per swing at 4; firearms by Aiming (damage, critical
+  chance, accuracy, range and noise). Maintenance 1 adds the condition in numbers, Maintenance 2
+  how often a hit wears the weapon (vanilla's 1 in chance + 2 x the maintenance mod). Sandbox
+  Weapon Numbers Need Skill off shows them all from the start.
+- **Clothing**: the body parts covered, four a line, and for a garment you are not wearing how
+  its insulation, wind and water resistance and running and combat speed compare with what you
+  wear in that slot, one line each, green better, red worse (vanilla already compares bite,
+  scratch and bullet defence).
 
 ### Dan's Vanilla Fixes: shop cigarettes come full (2026-10-12)
 
@@ -179,69 +304,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `new` from now on.
 - Changing occupation cannot slip a trait past the age gate (see 1.2.0, Age).
 
-### Dan's Vanilla Fixes: reading for pleasure (2026-10-12)
-
-Reading was a vending machine: ten minutes, a fixed drop in boredom, stress and unhappiness at the
-end, once per title. Now it is something to carry on a run (design and as-built notes:
-`plans/reading.md`; its own sandbox page, Dan's Vanilla Fixes: Reading, with a master switch).
-
-- **Every vanilla title is tagged**: 1,177 books, 224 comics and 167 magazines get a genre family
-  (18 of them, folded from the game's 55 book subjects and 24 magazine subjects; comics by the
-  words in their titles), a page count (softcovers 180-380, hardcovers 250-500, serious reading
-  300-650, kids' books 24-64, comics 24-48, magazines 60-140, newspapers 12-40, each title its own)
-  and a hidden quality of one to five stars, most at two or three. The table is generated from the
-  game jar by `DansVanillaFixes/tools/gen_reading_data.py` (a bytecode walk of the `Book`,
-  `ComicBook` and `Magazine` registries), with hand fixes in `DansVanillaFixes_ReadingBooks.lua`.
-- **Long reads.** A novel is 1.5 minutes a page, picture media half a minute, scaled by the server's
-  own Minutes Per Page; Fast Reader, Slow Reader, reading glasses, sitting and other mods' wraps
-  carry over, because the time is scaled from vanilla's own answer. A 350-page novel is about nine
-  hours, six with Fast Reader. The relief arrives **per page** (a novel's vanilla totals spread
-  over 300 pages, so a long book gives more; comics, magazines and newspapers keep their totals)
-  and vanilla's lump at the end is cancelled. Stats stop at zero, as before.
-- **Bookmarks.** Progress is kept per character per title and on the copy; a read that stops
-  resumes where it was, on any copy. Right-click **Read a chapter (~30 min)** reads a chapter's
-  worth and stops, without the title being marked read.
-- **Taste.** Each character likes one family and dislikes another (never Kids or Humor), hidden
-  until about 30 pages in a family bring a notice: "You're really into this.", "Not your kind of
-  book." or "It's fine." A liked book does x1.25, a disliked one x0.5 and adds a little boredom
-  every twenty minutes. The tooltip shows the genre, the verdict once known, the pages read of the
-  total, and your verdict after finishing.
-- **Good Read**, a new moodle (Moodle Framework), on finishing a book: Good Read, Great Read
-  (four or five stars, or a liked genre) or Loved It (both, with a quarter more strength). It
-  lasts 12 to 48 hours by quality (12 for a comic or magazine, never above Good Read; nothing for a
-  newspaper), a quarter longer for Classics. While it runs, boredom and unhappiness ease a little
-  each minute, plus the genre's bonus: Horror eases panic, Thrillers and True Stories ease stress,
-  Romance unhappiness, Sci-Fi boredom, Westerns endurance, Faith stress and unhappiness, Sports
-  +5% Fitness and Strength XP, Science & Nature +5% Foraging XP, Self-Help +5% XP to seven
-  practical skills (the XP ones only when no skill book's multiplier is running). A stronger finish
-  replaces the moodle; a weaker one only refreshes it if it would last longer.
-- **Re-reads** give a fifth of the drip in the liked family only (sandbox switch), and no moodle.
-- **Real books**: about 200 titles from before July 1993, title and author only, with their real
-  page counts and a quality by hand. A novel in loot has an 8% chance (sandbox) of being one from
-  the same genre; it is named like a vanilla book and read-tracking works on it unchanged.
-- **This Is Your Life**: books you finish and tastes you find out go in its survivor journal, as
-  dated lines ("July 12, 1993 - Finished "Jurassic Park". Loved it.").
-- Books from other mods get a neutral fallback (Popular Fiction, 120 pages, three stars, no moodle).
-  Skill books, recipe magazines, fliers, brochures and the old newspapers are untouched.
-- Multiplayer: the stat changes run on the client that owns the character, as vanilla's do; the
-  mod is still singleplayer-only in practice.
-
-### Vitality: hooks into the reading overhaul (2026-10-12)
-
-- `DanTraits_Reading.lua`: with Dan's Vanilla Fixes' reading on, a page does 15% more good at
-  home by the home's strength (30% for a Homebody), half as much when concussed (and takes a
-  quarter longer), and a Really Bad Day's first day gets a quarter more comfort from any book.
-  In their 40s a reader without reading glasses takes a tenth longer per page, in their 50s 15%.
-
 ## 1.2.0 - 2026-10-10
-
-### Dan's Vanilla Fixes: load the washer in one click (2026-10-09)
-
-- Right-click a washing machine (or a combo washer/dryer set to wash, or a stacked pair's
-  washer): **Put dirty clothes in the washer (N)** walks you over and moves every garment you
-  carry that the game calls Dirty or Bloody, bags included, into it with the game's own
-  transfer actions. What you are wearing stays on. Greyed with the reason when nothing you
-  carry needs it or the machine is running.
 
 ### Dan's Vanilla Fixes: a collection checklist (2026-10-09)
 

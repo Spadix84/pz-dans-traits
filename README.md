@@ -52,13 +52,14 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Homemaker](#homemaker-4) | +4 | Washes cleaner by hand with half the wear; loves line-dried clothes. |
 | [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
 | [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
+| [Blacksmith Knowledge](#blacksmith-knowledge-7-vanilla-reworked) | 7 | Vanilla's recipes, +2 Metalworking and +1 Maintenance, plus +1 Short Blunt. |
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
 | [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
 | [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | +6 | No bonus profession level; recovers, heals and trains faster. |
 | [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
 | [Grit](#grit-8) | +8 | Feels pain a third less. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
-| [Resilient](#resilient-10-vanilla-reworked) | 10 | Vanilla's disease resistance, plus a 10% chance (at most, and once) to beat the Knox infection. |
+| [Resilient](#resilient-10-vanilla-reworked) | 10 | Vanilla's disease resistance, plus a 10% chance (by default, and once) to beat the Knox infection. |
 
 ### Negative traits
 
@@ -96,7 +97,7 @@ Stiff joints and an unreliable grip.
 
 - Slower to move and swing. A Stiff Joints moodle shows how much the weather is in the joints.
 - Flares in the cold and damp (humidity, rain outdoors). The cold is read from the joints' own skin temperature, the game's thermoregulator, which clothing, wind and wet feed: gloves and a coat keep a flare off. Only with no reading does the air decide.
-- Relief: painkillers halve the weather's share of a flare while they are in your system (about two hours a pill); prednisone cuts it to about a third (x0.35) while you take it. The stronger counts, they do not stack, and neither touches the everyday stiffness. A new character starts with a bottle of painkillers (Starting Medication).
+- Relief: painkillers halve the weather's share of a flare while they are in your system (about two hours a pill); prednisone cuts it to about a third (x0.35) while you take it. The stronger counts, they do not stack, and neither touches the everyday stiffness. A new character starts with a bottle of painkillers and a quarter bottle of prednisone, 5 pills (Starting Medication).
 - A swing can slip: 1% calm, more when panicked, hurt, tired or flaring. A slipped swing lands at a third of the weapon's damage.
 - Past half a flare one slip in three throws the weapon to the ground instead (a dosed full flare sits exactly at half, and is safe). The sandbox option Arthritis Drops Weapons turns that off.
 - Cannot be taken in the 20s; flares sooner in the 40s.
@@ -227,7 +228,7 @@ Attacks that cost you hours.
 
 #### Alcoholic (-4)
 
-- Withdrawal after a day without a drink: craving, low mood and poor sleep, then pain, nausea and the shakes. Heavy drinkers get hallucinations and seizures, and a seizure can concuss.
+- Withdrawal after a day without a drink: craving, low mood, irritability (the vanilla Angry moodle, which has [effects of its own](#anger)) and poor sleep, then pain, nausea, the shakes and a worse temper. Heavy drinkers get hallucinations and seizures, and a seizure can concuss.
 - The deeper the habit, the sooner and harder it comes. Feeling tipsy ends the craving at a normal habit.
 - Anyone who drinks too often gains the trait. A month without alcohol loses it, and any drink after that is a coin flip to relapse.
 - The habit is tolerance too: more drink to feel it, hangovers a little milder.
@@ -293,7 +294,7 @@ Attacks that cost you hours.
 #### Resilient (10, vanilla reworked)
 
 - Less prone to disease and slower to turn, as vanilla. Re-costed from 4 to 10.
-- A 10% chance to beat the Knox infection (sandbox option Resilient: Knox Survival Chance, 10 at most); a Run Down body (Vitality) has down to half of it. Once only: a second infection runs its course in six hours, with a notice. The roll is hidden: you get sick like anyone else, and if you are lucky the fever breaks partway through and the infection is gone. Every new infection rolls again.
+- A 10% chance to beat the Knox infection (sandbox option Resilient: Knox Survival Chance, 10 by default); a Run Down body (Vitality) has down to half of it. Once only: a second infection runs its course in six hours, with a notice. The roll is hidden: you get sick like anyone else, and if you are lucky the fever breaks partway through and the infection is gone. Every new infection rolls again.
 
 #### Grit (+8)
 
@@ -328,6 +329,10 @@ Attacks that cost you hours.
 #### Keen Cook (4, vanilla reworked)
 
 - Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade (knife work). Re-costed from 3 to 4.
+
+#### Blacksmith Knowledge (7, vanilla reworked)
+
+- Vanilla's forging recipes, +2 Metalworking and +1 Maintenance, plus +1 Short Blunt (hammer work). Re-costed from 6 to 7. The occupation's own Blacksmith Knowledge is vanilla's.
 
 #### Homemaker (+4)
 
@@ -415,14 +420,14 @@ Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Youn
   - Red cells rebuild x1.15 / x0.8 / x0.65; a concussion heals x1.2 / x0.75 / x0.6; hangovers x0.85 / x1.25 / x1.5.
   - **The mind:** any skill under level 3 trains x1.2 / x1 / x0.9; the profession's own skills train x1 / x1.1 / x1.15.
   - **The metabolism:** hunger builds x1.15 / x0.95 / x0.9; caffeine, drink, food sickness and daily or course medication clear x1.2 / x0.9 / x0.8 (a daily pill holds a fifth longer in the 50s, and so does everything bad).
-- **In Their 20s:** cannot take Handy or Arthritis; Gym Regular starts at 65; Type 2 resistance a little lower; a Heart Condition acts up less (x0.8).
+- **In Their 20s:** cannot take Arthritis; Handy costs 10 (2 more); Gym Regular starts at 65; Type 2 resistance a little lower; a Heart Condition acts up less (x0.8).
 - **In Their 40s and 50s:** Handy gives +1 Carpentry more; Arthritis flares sooner (x1.3 / x1.6); Brittle bones snap more often (x1.25 / x1.5); a Heart Condition acts up more (x1.25 / x1.5); Type 2 resistance is higher.
 - **Age pricing:** a trait can cost more or fewer points in a band, shown beside its cost on the creation screen (red dearer, green cheaper). Strong and Athletic +2 / +4 in the 40s / 50s, Stout +1 / +2, Fit -1 in the 20s then +1 / +2; Fast Learner -1 in the 20s and +1 in the 50s; Slow Learner gives a point fewer in the 20s and the 50s; Hearty Appetite gives a point fewer in the 20s and one more in the 50s. The conditions the 20s band softens give fewer points young: Multiple Sclerosis and Heart Condition 3 fewer, Asthma and Hemophilia 2, Type 2, Anaemic, Smoker and Alcoholic 1.
 - **Traits only one age can take:**
   - 20s: **Green (-4)**, every occupation skill starts a level lower; **Quick Study (+4)**, skills under level 5 gain experience x1.4; **Bottomless Pit (-6)**, hunger a third faster again and going hungry drags the mood down.
-  - 40s: **Pace Yourself (+2)**, a tenth of the stamina a swing or sprint spends comes back; **Settled (-4)**, sleeps badly off a house bed and the first night in any new one.
-  - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-4)**, a heavy load builds back pain; **Bad Knees (-3)**, running, sprinting, climbing and stomping build knee pain, walking never rests it, sitting rests it twice as fast and a sofa or armchair three times; **Old Hand (+4)**, every skill the occupation boosts gains experience x1.25; **Delicate Stomach (-2)**, junk food and a drink on an empty stomach bring a queasy stomach.
-  - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-2)**, skills outside the occupation gain experience x0.85; **Seen It All (+3)**, panic builds a fifth slower, Fear of Blood faints and filth stress halved; **Cast Iron (+2)**, medication side effects half as often and the overdose line a pill higher; **Old Bones Know Rain (+1)**, tomorrow's storm or freezing night announced the morning before.
+  - 40s: **Pace Yourself (+4)**, a tenth of the stamina a swing or sprint spends comes back; **Settled (-4)**, sleeps badly off a house bed and the first night in any new one.
+  - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-5)**, a heavy load builds back pain; **Bad Knees (-5)**, running, sprinting, climbing and stomping build knee pain, walking never rests it, sitting rests it twice as fast and a sofa or armchair three times; **Old Hand (+4)**, every skill the occupation boosts gains experience x1.25; **Delicate Stomach (-2)**, junk food and a drink on an empty stomach bring a queasy stomach.
+  - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-4)**, skills outside the occupation gain experience x0.85; **Seen It All (+3)**, panic builds a fifth slower, Fear of Blood faints and filth stress halved; **Cast Iron (+2)**, medication side effects half as often and the overdose line a pill higher; **Old Bones Know Rain (+1)**, tomorrow's storm or freezing night announced the morning before.
 - **Green** takes the levels away only; it does not change how fast anything trains.
 - **Sandbox:** turn age off, set the default decade, set the profession levels per decade.
 
@@ -549,7 +554,7 @@ Shock, a concussion and Fear of Blood can all put you on the floor.
 
 ### Anger
 
-The vanilla Angry moodle does nothing in the base game. Here it costs you, from Annoyed up; Irritated is only the warning. A smoker's withdrawal is what raises it (up to Angry at full withdrawal), and anger from another mod counts the same.
+The vanilla Angry moodle does nothing in the base game. Here it costs you, from Annoyed up; Irritated is only the warning. A smoker's withdrawal raises it (up to Angry at full withdrawal), and so does an Alcoholic's (up to Annoyed while craving and Angry once the shakes start, at the deepest habit; a drink or sleep takes it back off). Anger from another mod counts the same.
 
 - **Rough:** every melee hit has an extra chance to wear the weapon: half as much again at Annoyed, double at Angry, two and a half times at Furious. Anger never takes a weapon's last point. Furious swings cost extra endurance.
 - **Loud:** from Angry up the character curses out loud now and then (about once an hour, more often and louder at Furious), and zombies nearby hear it. Never asleep, and never within three minutes of a cough.
@@ -603,7 +608,22 @@ Washing and drying clothes take some care (`DanTraits_Laundry*.lua`; design in [
 - **Clotheslines.** The pulley clotheslines in yards each hold 15, and you can put one up yourself: right-click the ground with two long sticks, planks or saplings and two lengths of rope, twine, sheet strips, denim strips or wire carried (Put up a clothesline, east-west or north-south); one you put up can be taken down again. Clothes on a line dry with the weather: fast in sun, wind and warmth, slowly at night or in the cold, and rain soaks them again; under a roof, at a steady pace. Daylight also airs out a little staleness (never under 30).
 - **Keeping clothes clean.** A worn **poncho** takes the blood and dirt for the parts it covers. The garbage bag poncho wears as it is used (a chance at a condition point each time blood or dirt lands on it, and each ten minutes of hard work or heat) and falls apart at nothing; besides the game's recipe there is a rough one (one bag and a knife or scissors, no skill). **Fabric protector** (new item, with cleaning supplies and in shoe shops) and **fabric wax** (made from two candles and an empty tin) treat a garment so only half the blood and dirt that lands on it stays, for about three washes.
 - Garment tooltips show the state: damp and how long before musty, stale or musty, a set-in stain, fabric protector left, washes so far.
+- **Load the washer in one click.** Right-click a washing machine (or a combo washer/dryer set to wash, or a stacked pair's washer): Put dirty clothes in the washer (N) walks over and moves every dirty or bloody garment you carry, bags included, into it. What you wear stays on. This one works with laundry off too.
 - **Traits.** Sweaty (-2) and Cool Customer (+3) change how fast clothes go stale, Slob (+2) is not bothered either way, Homemaker (+4) washes better, and Sensitive Skin (-2) itches in damp, musty or unwashed clothes. Laundry reaches into other traits too: Nomad minds stale clothes half as much, a Homebody's clothes line-dried at home lift twice as much, bleaching indoors irritates Asthma, washing bloody clothes stresses Fear of Blood, and every garment scrubbed on a washboard strains a Bad Back. With laundry off, none of it does anything.
+
+### Reading
+
+Reading for pleasure is something to carry on a run (`DanTraits_Reading*.lua`; design and as-built notes in [plans/reading.md](plans/reading.md)). Its own sandbox page, Vitality: Reading, with one switch to turn it off. Skill books, recipe magazines, fliers and brochures stay vanilla. Built in Dan's Vanilla Fixes, moved here on 2026-10-15.
+
+- **Every title is tagged.** Every vanilla novel, comic, magazine and newspaper has one of 18 genres, a page count and a hidden quality of one to five stars, from a table generated out of the game (`DanTraits/tools/gen_reading_data.py`). Books from other mods read as Popular Fiction, 120 pages, three stars.
+- **Long reads.** A novel is 1.5 minutes a page (half a minute for picture media), scaled by the game's Minutes Per Page and by everything that changes vanilla's read time (Fast and Slow Reader, glasses, sitting). A 350-page novel is about nine hours, six with Fast Reader. The relief arrives page by page, not as a lump at the end.
+- **Bookmarks.** Your place is kept per character and on the copy. Right-click **Read a chapter (~30 min)** reads a chapter's worth and stops.
+- **Taste.** Each character likes one genre and dislikes another, found out about 30 pages in. A liked book does a quarter more, a disliked one half as much and brings a little boredom back.
+- **Good Read moodle** on finishing a book: Good Read, Great Read (four or five stars, or a liked genre) or Loved It (both). About two days for a novel, half a day for a comic or magazine, with one bonus set by the genre that the moodle names: a stat that eases (panic, stress, low moods, boredom, stamina), a few skills' XP at +5%, or Serious Reading's faster pages. One at a time; a better finish takes over.
+- **Real books.** About 200 real titles from before July 1993; a novel in loot has an 8% chance (sandbox) of being one from its genre.
+- **Vitality's say.** At home a page does 15% more good by the home's strength (30% for a Homebody); concussed, half as much and a quarter slower; a Really Bad Day's first day gets a quarter more comfort from any book; in the 40s without reading glasses a page takes a tenth longer, in the 50s 15%.
+- **This Is Your Life:** finished books and tastes found out go in its survivor journal.
+- The tooltip shows the genre, how you feel about it once you know, pages read of the total, and your verdict once finished. With Dan's Vanilla Fixes on, its item info adds the time left to finish.
 
 ### Moodles
 
@@ -613,7 +633,7 @@ Every effect that lasts has one. All of them need [Moodle Framework](https://ste
 - The rest are fed from one place (`DanTraits_Moodles.lua`): Chest Pain, Seizure, Tinnitus, Gut Flare, Filthy, Sunburn, Dehydration, Caffeine Withdrawal, Alcohol Withdrawal, Nicotine Craving, Depression, Low Iron, Stiff Joints, MS Heat, MS Flare, Spoons.
 - Three have a good side: beta blockers working, anticonvulsants working, and sun block on. The icon going out is the reminder to take the next one.
 - Home has both sides: Settling In and At Home while you are there, Missing Home and Homesick while you are not.
-- Stale Clothes and Musty Clothes come from [laundry](#laundry).
+- Stale Clothes and Musty Clothes come from [laundry](#laundry), Good Read from [reading](#reading).
 - Blood Sugar says the sugar is out of range but not which way; the meter is how you find out. Hallucinations has none; it would give the episodes away.
 
 ## Layout
@@ -622,23 +642,23 @@ Every effect that lasts has one. All of them need [Moodle Framework](https://ste
 DanTraits/42/            the mod as the game sees it (mod.info, poster.png, media/...)
 DanTraits/common/        empty; Build 42 expects it beside 42/
   media/lua/shared/      one file per trait + DanTraits.lua (core helpers, eat/pill hooks)
-  media/lua/client/      context menus, moodles, telemetry for the dashboard
+  media/lua/client/      context menus, moodles, telemetry for the companion app
   media/scripts/         trait and item definitions
-DanTraits/tools/         dashboard.py + Dashboard.bat (live readout and command console),
-                         make_icons.py (draws the moodle, item and age trait icons)
+DanTraits/tools/         make_icons.py (draws the moodle, item and age trait icons), make_reading_icon.py
+                         (Good Read), gen_reading_data.py (the reading table, from the game jar)
 tests/                   offline tests (fengari); python tests/run_tests.py
 workshop/                workshop.txt and preview.png for the Steam Workshop page
 deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back, or --workshop)
 ```
 
-Mod data is one table per player (`getModData().DanTraits`) with a prefix per system (`alc*`, `nic*`, `inf*`, ...); the dashboard groups it by that prefix. A renamed key is moved by `DanTraits_MigrateModData` in the core.
+Mod data is one table per player (`getModData().DanTraits`) with a prefix per system (`alc*`, `nic*`, `inf*`, ...); the companion app's Live tab groups it by that prefix. A renamed key is moved by `DanTraits_MigrateModData` in the core.
 
 ## Workflow
 
 1. Edit in this repo.
 2. `python tests/run_tests.py`
 3. `python deploy.py` then restart the game (traits, items and Lua are read at boot). While the Workshop upload folder (`~/Zomboid/Workshop/DanTraits`) exists the game loads that copy instead of `~/Zomboid/mods/DanTraits`, so the deploy mirrors into both and they never differ.
-4. `DanTraits/tools/Dashboard.bat` for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events. The game side of it (telemetry file and command channel) only runs in debug mode (start the game with `-debug`), and never in multiplayer.
+4. The companion app (the `pz-companion` repo beside this one, `Companion.bat`) for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events, the console log, the field guide, and later Chronicle and music. The game writes the telemetry while the companion is running (it leaves a heartbeat file in `~/Zomboid/Lua`) or in debug mode (`-debug`); the command channel only works in debug mode, and nothing runs in multiplayer. Design: `plans/companion.md`.
 
 To publish: `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` (workshop.txt, preview.png and `Contents/mods/DanTraits` without the dev tools), then upload it from the game's main menu, Workshop. After the first upload the game writes the item's `id=` into that workshop.txt; the build keeps it, so later uploads update the same item.
 
@@ -646,7 +666,7 @@ The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file
 
 ## Status and known issues
 
-Version 1.2.1, Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
+Version 1.3.0, Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
 
 - **A Really Bad Day** is not balanced yet. Its glass shard killed even a character with no other traits, so for now the wound is an infected cut and the trait gives 8 points instead of 12, until a proper balance is found.
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.

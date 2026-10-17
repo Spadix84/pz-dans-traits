@@ -1,18 +1,27 @@
-[h1]Next update (in progress)[/h1]
+[h1]1.3.0: Home, laundry and reading for pleasure[/h1]
+Safe mid-save: home is worked out from the nights you sleep from here on, your clothes start clean and fresh, a half-read book keeps its place, and the sandbox settings you had carry over to the new pages. Every detail is in CHANGELOG.md on GitHub.
+
 [h2]New[/h2]
 [list]
 [*][b]Home.[/b] Where you sleep most nights becomes home: three of the last seven nights in one place and it is yours, sleep somewhere new more often and home moves there, no claiming needed. At home, boredom, stress and low moods ease, nights slept there score better and books go faster (half as much at three nights, fully at seven). Two days away and you miss it, until you walk back in. New moodle: Home, with Settling In / At Home on the good side and Missing Home / Homesick on the bad. A sandbox option turns it off.
 [*][b]Homebody (-2)[/b] (new trait): home does you twice the good, and a day away is missed, badly.
 [*][b]Nomad (+3)[/b] (new trait): no place is home and none is missed; a night under the sky scores better.
-[*][b]Laundry.[/b] Washing and drying take some care, on a sandbox page of its own (one switch turns it off). Hand washing gets clothes only so clean (40% without soap, 20% with); a new [b]washboard[/b] gets them cleaner and only a washing machine gets them spotless. Wrung clothes stay damp, and clothes left damp too long (worn damp, sooner) go musty. Worn clothes go stale with sweat, faster with hard work and heat. New moodle: Stale Clothes / Musty Clothes, a small dip in mood, and on its good side Fresh Clothes / Line-Dried when everything you wear is clean, dry and fresh (a small lift; twice that for clothes dried on a line in the sun). Wet clothes dry slower on your back and leave them a little stale, so it pays to dry them first. Old blood sets into a stain only bleach gets out, and washing slowly wears fabric. Dry clothes by the fire or on a [b]clothesline[/b] (the ones in yards work, and you can put one up with two sticks and two lengths of rope): sun, wind and warmth dry them fast, rain soaks them again. A worn poncho keeps the clothes under it clean (the garbage bag one wears with every splash of blood or dirt it takes and with hard work, until it tears apart, and there is a rough no-skill recipe for it), and new [b]fabric protector[/b] and [b]fabric wax[/b] halve the blood and dirt a garment takes. Moved from Dan's Vanilla Fixes, which no longer touches washing.
+[*][b]Laundry.[/b] Washing and drying take some care, on a sandbox page of its own (one switch turns it off). Hand washing gets clothes only so clean (40% without soap, 20% with); a new [b]washboard[/b] gets them cleaner and only a washing machine gets them spotless. Wrung clothes stay damp, and clothes left damp too long (worn damp, sooner) go musty. Worn clothes go stale with sweat, faster with hard work and heat. New moodle: Stale Clothes / Musty Clothes, a small dip in mood, and on its good side Fresh Clothes / Line-Dried when everything you wear is clean, dry and fresh (a small lift; twice that for clothes dried on a line in the sun). Wet clothes dry slower on your back and leave them a little stale, so it pays to dry them first. Old blood sets into a stain only bleach gets out, and washing slowly wears fabric. Dry clothes by the fire or on a [b]clothesline[/b] (the ones in yards work, and you can put one up with two sticks and two lengths of rope): sun, wind and warmth dry them fast, rain soaks them again. A worn poncho keeps the clothes under it clean (the garbage bag one wears with every splash of blood or dirt it takes and with hard work, until it tears apart, and there is a rough no-skill recipe for it), and new [b]fabric protector[/b] and [b]fabric wax[/b] halve the blood and dirt a garment takes. Right-click a washing machine to put every dirty garment you carry in it at once. Moved from Dan's Vanilla Fixes, which no longer touches washing.
 [*][b]Five laundry traits.[/b] [b]Sweaty (-2)[/b]: clothes go stale nearly twice as fast. [b]Cool Customer (+3)[/b]: clothes stay fresh twice as long. [b]Slob (+2)[/b]: stale clothes are no bother, fresh ones no joy. [b]Homemaker (+4)[/b]: washes cleaner by hand with half the wear, and loves line-dried clothes. [b]Sensitive Skin (-2)[/b]: damp, musty or never-washed clothes itch.
 [*][b]Laundry and your other traits:[/b] Nomad minds stale clothes half as much, a Homebody loves clothes dried at home, bleaching indoors sets off Asthma, washing bloody clothes stresses Fear of Blood, and a washboard is hard on a Bad Back.
 [*][b]Germaphobe -8[/b] (was -4): hard to live with, now paid for.
-[*][b]Reading.[/b] With Dan's Vanilla Fixes (its new reading overhaul: every novel has a genre, real pages and a hidden quality, reads take hours with the relief page by page, each character likes one genre and dislikes another, and finishing a book gives the Good Read moodle), Vitality joins in: books do more good at home (twice that for a Homebody), half as much and slower when concussed, a Bad Day's first day takes comfort from any book, and over 40 without reading glasses a page takes a little longer.
-[*][b]Sandbox pages:[/b] the options are split into Vitality: General, Health, Daily Life and Laundry. Saved settings carry over.
+[*][b]Reading for pleasure.[/b] Every novel, comic and magazine has a genre, real pages and a hidden quality. A novel takes hours, its comfort arrives page by page, and a book you put down keeps your place (right-click for Read a chapter). Each character likes one genre and dislikes another, found out by reading. Finishing a book gives the new [b]Good Read[/b] moodle: about two days of one bonus set by the genre, which the moodle names. Real books from before 1993 turn up among the game's own. Books do more good at home (twice that for a Homebody), less when concussed, a Bad Day's first day takes comfort from any book, and over 40 without reading glasses a page takes a little longer. Skill books and recipe magazines are untouched. A sandbox page of its own; one switch turns it off.
+[*][b]Sandbox pages:[/b] the options are split into Vitality: General, Health, Daily Life, Laundry and Reading. Saved settings carry over.
 [/list]
 [h2]Changed[/h2]
 [list]
+[*][b]Companion link.[/b] The mod's live readout (the testing telemetry file) is now written whenever the companion app is running beside the game, not only in debug mode. The test commands stay debug-only. Nothing changes for anyone who does not run it.
+[*][b]Alcohol withdrawal makes you irritable.[/b] Craving a drink raises the Angry moodle (up to Annoyed at the deepest habit), and the shakes raise it further (up to Angry), with everything anger does. A drink, or sleep, takes it back off.
+[*][b]Arthritis starts with prednisone.[/b] With Starting Medication on, a new Arthritis character also gets a quarter bottle of prednisone (5 pills), the end of a course, for the first bad flare.
+[*][b]Bad Back and Bad Knees give 5 points each[/b] (were 4 and 3), and [b]Set in Their Ways[/b] gives 4 (was 2).
+[*][b]Pace Yourself costs 4[/b] (was 2).
+[*][b]Blacksmith Knowledge[/b] adds a level of Short Blunt and costs 7 (was 6).
+[*][b]In Their 20s can take Handy again[/b], at 10 points (2 more than vanilla's 8).
 [*][b]Rough Night less often.[/b] A short sleep that leaves you rested now counts as a full night: four hours from half tired to fully rested no longer reads as a rough one.
 [*][b]Smoke gets into your clothes.[/b] For six hours after a smoke your clothes go stale half as fast again, Smoker or not.
 [*][b]Migraines after a knock on the head.[/b] The headache that comes back days after a concussion can now bring on a migraine.
@@ -21,7 +30,7 @@
 [*][b]Arthritis mornings.[/b] The half hour after getting up is the stiffest; a coffee or tea loosens the joints.
 [*][b]Anaemic: coffee with your iron.[/b] Tea or coffee with a meal, or with the pill, halves the iron you take up.
 [*][b]Sensitive Skin[/b] now burns in the sun in two hours instead of three, and bleach stings the hands.
-[*][b]Resilient and the Knox virus.[/b] The chance to beat it is 10% at most (the sandbox default; was 25), a Run Down body has less, and you beat it once: a second infection has you within hours.
+[*][b]Resilient and the Knox virus.[/b] The chance to beat it is 10% by default (was 25; a save made before this update keeps its 25 until you change it in the sandbox), a Run Down body has less, and you beat it once: a second infection has you within hours.
 [*][b]Tinnitus reaches further.[/b] Ringing ears make a migraine likelier, bring Schizophrenia's whispers on, and spoil a night's sleep.
 [*][b]Brittle bones can be looked after.[/b] Dairy, greens, eggs and regular exercise strengthen them over weeks; neglect them and they get worse. The fracture chance follows.
 [*][b]Home helps more.[/b] Spiraling eases at home (twice as much for a Homebody), and an MS character resting at home gets spoons back faster.
@@ -32,6 +41,7 @@
 [/list]
 [h2]Fixed[/h2]
 [list]
+[*][b]Migraines:[/b] the moodle no longer stays on Aura for hours when no attack follows it.
 [*]With Project A-Life, a ringing house alarm filled the error log (two errors a tick, from A-Life's NPC hearing). Its NPCs still hear the alarm.
 [*]A drink was counted on every tick of the drinking animation instead of once: Delicate Stomach went Nauseous on one beer, Caffeine Dependent got minutes of caffeine from a mug of coffee, and Lactose Intolerant got a notice per sip. One drink, one count now.
 [*]A driver who fainted (blood loss, a seizure, a concussion) kept driving: the engine is cut now, so the car rolls to a stop.
@@ -53,8 +63,10 @@
 [*]Small sums: a Restless Sleeper in their 50s paid for the free wake and every older character paid a little for the morning wake itself; a smoker's withdrawal hunger was scaled twice by age and Bottomless Pit; a nap moved the sleep score though only nights are meant to; and a painkiller taken hours before a migraine counted as the attack's first dose. All put right.
 [*]Under the hood: three deferred jobs shared one error-log slot (only the first failure was ever printed); the health panel could show every mod line twice after loading a second world with another health mod on; and Dan's Vanilla Fixes' coolers could throw an error every ten minutes on a vanished container. All guarded.
 [*]Laundry: "Wring" on a garment already wrung now says so instead of silently doing nothing; putting up a clothesline no longer cancels itself because you walked onto one of its squares; and a Homemaker's cleaner hand wash reaches the clothes you bathe in.
+[*]Reading: re-reading a book you loved no longer downgrades your verdict of it, and a prescription pair counts as reading glasses everywhere.
 [*]Concussion: a crash is judged on the character it happened to; a second split-screen player, or a character who takes over after a death on a server, no longer inherits it.
 [*]Split-screen: the minute systems, pain floors and moodles now run for every local player, not only the first.
+[*]Reading: "Read a chapter" is not offered on a multiplayer client (the server would have read the whole book); singleplayer and split-screen keep it.
 [/list]
 
 [h1]1.2.0: Age, a heart that matters, and clotting powder[/h1]
