@@ -22,7 +22,7 @@ option DanTraits.StartingMedication
 {type = boolean, default = true, page = DanTraits, translation = DanTraitsStartingMedication,}
 
 option DanTraits.KnoxSurviveChance
-{type = integer, min = 0, max = 10, default = 10, page = DanTraits, translation = DanTraitsKnoxSurviveChance,}
+{type = integer, min = 0, max = 100, default = 10, page = DanTraits, translation = DanTraitsKnoxSurviveChance,}
 
 option DanTraits.BloodEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsBloodEnabled,}

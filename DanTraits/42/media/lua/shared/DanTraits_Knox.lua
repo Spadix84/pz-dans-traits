@@ -1,7 +1,7 @@
 -- Project Zomboid Vitality Project: Resilient against the Knox virus.
 -- Vanilla Resilient, re-costed from 4 to 10 (scripts/DanTraits.txt), keeps
--- its own effect and gains a chance (sandbox KnoxSurviveChance, default and
--- at most 10%) that the body beats a zombie infection, once. The roll is
+-- its own effect and gains a chance (sandbox KnoxSurviveChance, 10% by
+-- default) that the body beats a zombie infection, once. The roll is
 -- made, hidden, the first minute the body is seen infected, and a Run Down
 -- body has less of a chance (Vitality's effect, -1..1: down to half at the
 -- bottom; a fit body gets the full chance, never more). A lucky character

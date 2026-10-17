@@ -52,7 +52,7 @@
     "Sandbox_DanTraitsInhalerLoot": "Inhaler Loot (%%)",
     "Sandbox_DanTraitsInhalerLoot_tooltip": "How often inhalers turn up, in percent of the mod's normal rate. 100 is normal, 200 twice as often.<br>0: inhalers never spawn as loot (Asthma still starts with one).",
     "Sandbox_DanTraitsKnoxSurviveChance": "Resilient: Knox Survival Chance (%%)",
-    "Sandbox_DanTraitsKnoxSurviveChance_tooltip": "The chance a Resilient character beats a zombie infection, at most: a Run Down body (Vitality) has down to half of it. They get sick like anyone else, then the fever breaks partway through. Once only: a second infection is fatal within hours.<br>0: Resilient never survives it, as in the base game.",
+    "Sandbox_DanTraitsKnoxSurviveChance_tooltip": "The chance a Resilient character beats a zombie infection: a Run Down body (Vitality) has down to half of it. They get sick like anyone else, then the fever breaks partway through. Once only: a second infection is fatal within hours.<br>0: Resilient never survives it, as in the base game.",
     "Sandbox_DanTraitsLaundryEnabled": "Laundry",
     "Sandbox_DanTraitsLaundryEnabled_tooltip": "Washing and drying clothes take some care. Hand washing only gets clothes so clean (a washing machine gets them fully clean), wrung clothes stay damp, wet clothes dry slowly on the body and leave it a little stale, damp clothes left too long go musty, worn clothes go stale with sweat, old blood sets into a stain that needs bleach, and washing slowly wears fabric. Stale or musty clothes worn lower your mood a little.<br>Off: vanilla washing, wringing and drying; nothing on this page applies.",
     "Sandbox_DanTraitsLaundryHandFloor": "Hand Wash Floor, No Soap (%%)",
