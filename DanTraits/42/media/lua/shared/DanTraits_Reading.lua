@@ -1,19 +1,22 @@
--- Dan's Vanilla Fixes: reading for pleasure, the rules (the action wraps are
--- in DansVanillaFixes_ReadingAction.lua, the tooltip, context option and
--- moodle in client/DansVanillaFixes_ReadingClient.lua, the journal bridge in
--- client/DansVanillaFixes_TIYL.lua; design and as-built notes in
+-- Project Zomboid Vitality Project: reading for pleasure, the rules (the action wraps are
+-- in DanTraits_ReadingAction.lua, the tooltip, context option and
+-- moodle in client/DanTraits_ReadingClient.lua, the journal bridge in
+-- client/DanTraits_ReadingTIYL.lua; design and as-built notes in
 -- plans/reading.md).
 --
 -- Vanilla reads a novel in ten minutes and pays out all its boredom, stress
 -- and unhappiness relief at the end, once per title. Here every vanilla
 -- novel, comic, magazine and newspaper has a genre family, a page count and
--- a hidden quality (DansVanillaFixes_ReadingData.lua, generated from the
--- game; DansVanillaFixes_ReadingBooks.lua adds real 1993 books and hand
+-- a hidden quality (DanTraits_ReadingData.lua, generated from the
+-- game; DanTraits_ReadingBooks.lua adds real 1993 books and hand
 -- fixes). A read takes real time, the relief arrives per page while you
 -- read, and a book you put down is bookmarked for the character by title.
 -- Each character likes one family and dislikes another, hidden until about
 -- FOUND_PAGES pages in that family tell them. Finishing a book gives the
--- Good Read moodle for a day or two with a small buff matched to the genre.
+-- Good Read moodle for about two days with one buff, set by the genre: each
+-- family eases a stat, speeds a few skills' XP or quickens reading (R.BUFF),
+-- and the moodle says which. Only one runs at a time; a new finish takes over
+-- when it is a higher level, or the same level with more time to run.
 -- Skill books, recipe magazines, fliers and brochures keep vanilla.
 --
 -- Player mod data DVF_Reading:
@@ -22,16 +25,20 @@
 --     read = { [key] = { q, family, when, verdict } },
 --     moodle = { level, family, quality, strength, key, ends = world hour } }
 -- Item mod data DVF_ReadPages: the pages read in this copy (a second bookmark).
+-- Those two keys and the IGUI_DVF_BookTitle_ title prefix keep the names they
+-- had in Dan's Vanilla Fixes, where reading started, so saves carry on.
+-- Vitality's own hooks (home, age, concussion, Bad Day) are in
+-- DanTraits_ReadingHooks.lua.
 --
 -- Stat scales (42.21): boredom and unhappiness 0-100, stress 0-1. The item
 -- scripts' StressChange is in hundredths, as the game applies it.
 
-require "DansVanillaFixes_ReadingData"
-require "DansVanillaFixes_ReadingBooks"
+require "DanTraits_ReadingData"
+require "DanTraits_ReadingBooks"
 
-DVF_Reading = DVF_Reading or {}
-local R = DVF_Reading
-local D = DVF_ReadingData
+DanTraits_Reading = DanTraits_Reading or {}
+local R = DanTraits_Reading
+local D = DanTraits_ReadingData
 
 R.KEY = "DVF_Reading"
 R.ITEM_KEY = "DVF_ReadPages"
@@ -48,27 +55,35 @@ R.QUALITY = { 0.8, 0.9, 1.0, 1.1, 1.2 }
 R.REREAD = 0.2                  -- of the drip, a finished title in the liked family only
 R.DISLIKE_TICK_MIN = 20         -- a disliked book adds boredom this often, in game minutes
 R.DISLIKE_TICK = 2
-R.MOODLE_HOURS = { 12, 18, 24, 36, 48 }   -- by quality, a novel
-R.SHORT_MOODLE_HOURS = 12                 -- comics and magazines, level 1 only
+R.MOODLE_HOURS = 48             -- a novel or picture book, whatever its quality
+R.SHORT_MOODLE_HOURS = 12       -- comics and magazines, level 1 only
 R.LOVED_BONUS = 0.25            -- Loved It: on top of the liked multiplier
-R.CLASSICS_LONGER = 1.25
 R.FALLBACK = { family = "popular", pages = 120, quality = 3 }   -- another mod's literature
 R.PLAYERS = 4
 
--- the moodle's drains per minute at strength 1 (the genre buffs on top)
-R.EASE_BOREDOM = 0.03
-R.EASE_UNHAPPY = 0.02
+-- the one buff a finished book gives, by family: stat changes per minute at
+-- strength 1, skills whose XP runs at XP_MULT, or read = page time x this
+-- (the XP and read factors also scale with strength: 1 + 0.05 x strength).
+-- The moodle's text for each is IGUI_DanTraits_ReadingBuff_<family>.
 R.BUFF = {
     horror = { panic = 0.5 },
-    thrillers = { stress = 0.001 },
-    romance = { unhappy = 0.03 },
-    scifi = { boredom = 0.03 },
+    thrillers = { stress = 0.0015 },
+    romance = { unhappy = 0.05 },
+    popular = { boredom = 0.05 },
+    classics = { boredom = 0.04, unhappy = 0.04 },
+    faith = { stress = 0.001, unhappy = 0.03 },
+    truestories = { panic = 0.25, stress = 0.001 },
+    kids = { boredom = 0.05 },
+    humor = { unhappy = 0.05 },
     westerns = { endurance = 0.0005 },
-    truestories = { stress = 0.001 },
-    faith = { stress = 0.0005, unhappy = 0.02 },
+    serious = { read = 0.9 },
     sports = { xp = { "Fitness", "Strength" } },
-    science = { xp = { "PlantScavenging" } },
-    selfhelp = { xp = { "Cooking", "Farming", "Doctor", "Woodwork", "Tailoring", "Mechanics", "Electricity" } },
+    scifi = { xp = { "Electricity", "Mechanics" } },
+    science = { xp = { "Doctor", "PlantScavenging" } },
+    history = { xp = { "Aiming", "Reloading" } },
+    fringe = { xp = { "Trapping", "Sneak" } },
+    arts = { xp = { "Carving", "Pottery" } },
+    selfhelp = { xp = { "Cooking", "Farming", "Woodwork", "Tailoring", "Maintenance" } },
 }
 R.XP_MULT = 1.05
 
@@ -94,7 +109,7 @@ end
 -- sandbox ---------------------------------------------------------------------------
 
 function R.opt(name, default)
-    local opts = SandboxVars and SandboxVars.DansVanillaFixes
+    local opts = SandboxVars and SandboxVars.DanTraits
     local v = opts and opts[name]
     if v == nil then return default end
     return v
@@ -105,7 +120,7 @@ function R.on()
 end
 
 function R.familyName(family)
-    return getText("IGUI_DVF_Genre_" .. tostring(family))
+    return getText("IGUI_DanTraits_Genre_" .. tostring(family))
 end
 
 -- the title ------------------------------------------------------------------------
@@ -458,13 +473,8 @@ end
 
 function R.moodleHours(info, level)
     if level <= 0 then return 0 end
-    local hours
-    if info.medium == "novel" or info.medium == "picture" then
-        hours = R.MOODLE_HOURS[math.max(1, math.min(5, info.quality))]
-    else
-        hours = R.SHORT_MOODLE_HOURS
-    end
-    if info.family == "classics" then hours = hours * R.CLASSICS_LONGER end
+    local hours = R.SHORT_MOODLE_HOURS
+    if info.medium == "novel" or info.medium == "picture" then hours = R.MOODLE_HOURS end
     return hours * (tonumber(R.opt("ReadingMoodleScale", 1)) or 1)
 end
 
@@ -486,7 +496,9 @@ end
 function R.finish(player, info, reread)
     local d = R.data(player)
     local level = reread and 0 or R.moodleLevel(player, info)
-    local verdict = R.verdictFor(info, level)
+    -- a re-read keeps the verdict the first reading gave (recomputed at level 0 it turned "loved" into "great")
+    local prior = reread and d.read[info.key]
+    local verdict = (prior and prior.verdict) or R.verdictFor(info, level)
     d.read[info.key] = { q = info.quality, family = info.family, when = now(), verdict = verdict, title = R.titleText(info) }
     d.marks[info.key] = nil
     local result = { level = level, hours = 0, verdict = verdict, reread = reread }
@@ -495,9 +507,10 @@ function R.finish(player, info, reread)
         local strength = R.strength(player, info, level)
         local m = d.moodle
         local t = now()
-        if m and m.level and m.ends and m.ends > t and m.level > level then
-            -- the one running is stronger: it just lasts at least as long again
-            m.ends = math.max(m.ends, t + hours)
+        local running = m and m.level and m.ends and m.ends > t
+        if running and (m.level > level or (m.level == level and m.ends - t >= hours)) then
+            -- one buff at a time: the running one is better, and stays as it is
+            result.kept = true
         else
             R.endMoodle(player)
             d.moodle = { level = level, family = info.family, quality = info.quality, strength = strength,
@@ -522,13 +535,19 @@ function R.moodle(player)
     return m
 end
 
+-- a buff factor scaled by the moodle's strength: 1.05 at 1 becomes 1.0625 at 1.25
+local function scaled(factor, strength)
+    return 1 + (factor - 1) * (strength or 1)
+end
+R.scaled = scaled
+
 local function xpMult(player, perkName, value, onlyIfOurs)
     pcall(function()
         local perk = Perks and Perks[perkName]
         if not perk then return end
         local current = player:getXp():getMultiplier(perk)
         if onlyIfOurs then
-            if math.abs(current - R.XP_MULT) > 0.001 then return end
+            if math.abs(current - onlyIfOurs) > 0.001 then return end
         elseif current > 1 then
             return   -- a skill book's multiplier is running; leave it
         end
@@ -543,7 +562,8 @@ function R.endMoodle(player)
     if not m then return end
     local buff = R.BUFF[m.family]
     if buff and buff.xp and m.xpOn then
-        for _, perk in ipairs(buff.xp) do xpMult(player, perk, 1, true) end
+        local ours = type(m.xpOn) == "number" and m.xpOn or R.XP_MULT   -- true before 2026-10-12
+        for _, perk in ipairs(buff.xp) do xpMult(player, perk, 1, ours) end
     end
     d.moodle = nil
 end
@@ -561,8 +581,6 @@ function R.minute(player)
     if player:isDead() then return end
     local s = m.strength or 1
     local stats = player:getStats()
-    nudge(stats, CharacterStat.BOREDOM, -R.EASE_BOREDOM * s, 100)
-    nudge(stats, CharacterStat.UNHAPPINESS, -R.EASE_UNHAPPY * s, 100)
     local buff = R.BUFF[m.family]
     if not buff then return end
     if buff.panic then nudge(stats, CharacterStat.PANIC, -buff.panic * s, 100) end
@@ -571,9 +589,25 @@ function R.minute(player)
     if buff.boredom then nudge(stats, CharacterStat.BOREDOM, -buff.boredom * s, 100) end
     if buff.endurance then nudge(stats, CharacterStat.ENDURANCE, buff.endurance * s, 1) end
     if buff.xp and not m.xpOn then
-        m.xpOn = true
-        for _, perk in ipairs(buff.xp) do xpMult(player, perk, R.XP_MULT, false) end
+        m.xpOn = scaled(R.XP_MULT, s)   -- the value set, so only ours is taken off
+        for _, perk in ipairs(buff.xp) do xpMult(player, perk, m.xpOn, false) end
     end
+end
+
+-- the running buff's page-time factor (Serious Reading)
+R.addDurationHook("goodread", function(player, info)
+    local m = R.moodle(player)
+    local buff = m and R.BUFF[m.family]
+    return buff and buff.read and scaled(buff.read, m.strength) or nil
+end)
+
+-- the moodle's text: the genre, what it does and the hours left
+function R.moodleText(player)
+    local m = R.moodle(player)
+    if not m then return nil end
+    local hours = math.max(1, math.floor(m.ends - now() + 0.5))
+    return getText("IGUI_DanTraits_Reading_MoodleDesc", R.familyName(m.family),
+        getText("IGUI_DanTraits_ReadingBuff_" .. tostring(m.family)), hours)
 end
 
 -- the title as text, for the journal: a real book's own, else the game's translation
@@ -612,7 +646,7 @@ function R.makeReal(item, key)
     if not row then return false end
     local ok = pcall(function()
         local base = item:getScriptItem():getDisplayName()
-        local title = getText("IGUI_DVF_BookBy", row.title, row.author)
+        local title = getText("IGUI_DanTraits_BookBy", row.title, row.author)
         item:setName(getText("IGUI_MagazineNameNoIssue", base, title))
         item:getModData().literatureTitle = R.REAL_PREFIX .. key
         item:getModData()[R.ITEM_KEY] = nil

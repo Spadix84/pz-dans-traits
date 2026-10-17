@@ -269,8 +269,10 @@ module DanTraits {
        other. The 30s are the default: cost 0, hidden at creation and
        granted at spawn to a character who picked none. The 20s cost points
        (they recover and train faster), the 40s and 50s give points back
-       (more profession levels, a slower body). The 20s can't take Handy or
-       Arthritis. media/lua/shared/DanTraits_Age.lua, docs/age.md. */
+       (more profession levels, a slower body). The 20s can't take
+       Arthritis; Handy costs them 2 more (the age price table, since
+       2026-10-13; they could not take it before). media/lua/shared/
+       DanTraits_Age.lua, docs/age.md. */
     character_trait_definition DanTraits:age20s
     {
         IsProfessionTrait = false,
@@ -279,7 +281,7 @@ module DanTraits {
         Cost = 6,
         UIName = UI_trait_DanAge20s,
         UIDescription = UI_trait_DanAge20sdesc,
-        MutuallyExclusiveTraits = DanTraits:age30s;DanTraits:age40s;DanTraits:age50s;base:handy;DanTraits:arthritis,
+        MutuallyExclusiveTraits = DanTraits:age30s;DanTraits:age40s;DanTraits:age50s;DanTraits:arthritis,
     }
 
     character_trait_definition DanTraits:age30s
@@ -356,7 +358,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:badback,
-        Cost = -4,
+        Cost = -5,
         UIName = UI_trait_DanBadBack,
         UIDescription = UI_trait_DanBadBackdesc,
         MutuallyExclusiveTraits = base:strong,
@@ -367,7 +369,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:badknees,
-        Cost = -3,
+        Cost = -5,
         UIName = UI_trait_DanBadKnees,
         UIDescription = UI_trait_DanBadKneesdesc,
     }
@@ -398,7 +400,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:setinways,
-        Cost = -2,
+        Cost = -4,
         UIName = UI_trait_DanSetInWays,
         UIDescription = UI_trait_DanSetInWaysdesc,
     }
@@ -444,7 +446,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:paceyourself,
-        Cost = 2,
+        Cost = 4,
         UIName = UI_trait_DanPaceYourself,
         UIDescription = UI_trait_DanPaceYourselfdesc,
     }
@@ -593,6 +595,28 @@ module DanTraits {
         MutuallyExclusiveTraits = base:cook2,
         XPBoosts = Cooking=2;Butchering=1;SmallBlade=1,
         GrantedRecipes = MakeCakeBatter;MakePieDough;MakeBreadDough;MakeBaguetteDough;MakeBiscuits;MakeChocolateChipCookieDough;MakeOatmealCookieDough;MakeShortbreadCookieDough;MakeSugarCookieDough;MakePizza;MakeFriedOnionRings;MakeFriedShrimp;MakeCabbageRolls;MakeJar;MakeGuacamole,
+    }
+
+    /* Vanilla Blacksmith Knowledge (the pickable one; the occupation's free
+       base:blacksmith2 grants no skills and is left alone), with a level of
+       Short Blunt added (hammer work), re-costed from 6 to 7. Whole-block override:
+       a field a game update adds to the vanilla definition is lost here, so
+       after a game update compare with media/scripts/generated/characters/
+       character_traits.txt in the game folder. Vanilla fields copied (game
+       42.21.0): IsProfessionTrait, DisabledInMultiplayer, CharacterTrait,
+       Cost (6, changed to 7), UIName, UIDescription, XPBoosts (SmallBlunt=1 added),
+       MutuallyExclusiveTraits, GrantedRecipes. */
+    character_trait_definition base:blacksmith
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = base:blacksmith,
+        Cost = 7,
+        UIName = UI_trait_Blacksmith,
+        UIDescription = UI_trait_BlacksmithDesc,
+        XPBoosts = Blacksmith=2;Maintenance=1;SmallBlunt=1,
+        MutuallyExclusiveTraits = base:blacksmith2,
+        GrantedRecipes = Advanced_Forge;Blast_Furnace;Charcoal_Burner_MetalDrum;Charcoal_Pit;Dome_Kiln;Forge;Smelting_Furnace;Forge_Primitive_Forge;Primitive_Furnace;Forge_Baking_Pan;Forge_Baking_Tray;Forge_Bucket;Forge_Ball_Peen_Hammer_Head;Forge_Clawhammer_Head;Forge_Cooking_Pot;Forge_Corkscrew;Forge_Crowbar;Forge_Crude_Shortsword_Blade;Forge_Crude_Sword_Blade;Forge_Door_Knob;Forge_Fine_Butter_Knives;Forge_Fine_Forks;Forge_Fine_Spoons;Forge_Fishing_Hooks;Forge_Forceps;Forge_Forks;Forge_Frying_Pan;Forge_Garden_Hoe_Head;Forge_Gardening_Trowel;Forge_Hand_Scythe_Head;Forge_Hinge;Forge_Hunting_Knife_Blade;Forge_Kettle;Forge_Kitchen_Knife_Blade;Forge_Large_Knife_Blade;Forge_Machete_Blade;Forge_Masons_Chisel;Forge_Masons_Trowel;Forge_Meat_Cleaver_Blade;Forge_Metalworking_Chisel;Forge_Metalworking_Pliers;Forge_Metalworking_Punch;Forge_File;Forge_Drill;Forge_Nails;Forge_Needle;Forge_Pick_Axe_Head;Forge_Roasting_Pan;Forge_Saucepan;Forge_Saw;Forge_Scissors;Forge_Scythe_Head;Forge_Spade_Head;Forge_Sheep_Shears;Forge_Sledgehammer_Head;Forge_Small_Knife;Forge_Small_Steel_Sheet;Forge_Smithing_Hammer_Head;Forge_Spoons;Forge_Steel_Sheet;Forge_Straight_Razor;Forge_Sword_Blade;Forge_Tongs;Forge_Tweezers;MakeCrudeWhetstone;Forge_Heading_Tool;Forge_Draw_Plate;ForgeMaceHead;MakeSpikedClub;ForgeSpearHead;ForgeLongSpearHead;Forge_Wood_Axe_Head;Forge_Old_Axe_Head;Forge_Hand_Axe_Head;Forge_Fleshing_Tool;Forge_Cup;Forge_Buckle;Forge_Lantern;Forge_Carpentry_Chisel;Forge_Wrench,
     }
 
     /* Chest pain, and at worst a heart attack, only ever while the Endurance

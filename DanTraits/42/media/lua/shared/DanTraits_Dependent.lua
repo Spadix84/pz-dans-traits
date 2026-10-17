@@ -13,8 +13,8 @@ local fraction = DanTraits_StatFraction
 --
 -- An Alcoholic in withdrawal goes through stages, each sooner the higher the
 -- meter (onset x (1 - 0.5 x meter)), and everything scales with the meter:
---   craving   (a day dry):        stress and low mood climb, sleep is light and poor
---   shakes    (two days dry):     pain, nausea, and weapons slip from shaking hands
+--   craving   (a day dry):        stress and low mood climb, short-tempered, sleep is light and poor
+--   shakes    (two days dry):     pain, nausea, weapons slip from shaking hands, and the temper worsens
 --   delirium  (three days dry, meter 0.6+ only): hallucinations and seizures
 -- The acute phase holds for five days, then fades over the next five to a
 -- lingering craving. A seizure in delirium is a real fall (DanTraits_Collapse)
@@ -24,6 +24,12 @@ local fraction = DanTraits_StatFraction
 -- moodle level 2) at a full meter. A month without any
 -- alcohol cures the trait. After that the character is never quite free: the
 -- first drink of any drinking session is a coin flip to relapse.
+--
+-- The temper is the game's anger stat (the Angry moodle, which
+-- DanTraits_Anger.lua gives its effects), held up the way a Smoker's craving
+-- holds it: each tick sets a level climbing towards the stage's floor, every
+-- frame keeps ANGER at or above it against vanilla's drain, and a drink (or
+-- sleep) takes the held irritability back off with it.
 local DRINK = DanTraits_DRINK   -- DRINK.any: had any alcohol (DanTraits_Util.lua)
 local ALC_BUILD_H       = 10    -- intoxication-hours (1.0 intoxication for 1 h) to fill the meter...
 local ALC_DAY_CAP       = 0.08  -- ...but it fills at most this much a day
@@ -51,6 +57,10 @@ local DEP_PAIN          = 20    -- aches: pain floor (0..100) at full withdrawal
 local DEP_PAIN_RAMP     = 1
 local ALC_SICK          = 40    -- nausea floor (food sickness, 0..100) at w = 1...
 local ALC_SICK_RAMP     = 3     -- ...climbing this much a tick
+local ALC_ANGER_CRAVE   = 0.3   -- irritability floor (anger, 0..1) at w = 1 while craving...
+local ALC_ANGER         = 0.6   -- ...and from the shakes on (a Smoker's full craving is 0.6 too)
+local ALC_ANGER_RAMP    = 0.1   -- climbing at most this much a tick
+local ALC_ANGER_MARGIN  = 0.002 -- held this far above the floor, clear of vanilla's per-tick drain
 local ALC_SHAKE_DROP    = 10    -- percent chance a swing drops the weapon at w = 1
 local ALC_SLEEP_WAKE    = 2     -- light wakes you (1 + this x w) times as easily
 local ALC_SLEEP_CUT     = 0.4   -- night quality x (1 - this x w)
@@ -81,6 +91,34 @@ local add = DanTraits_StatAdd
 
 local function clearWithdrawal(d)
     d.alcWithdrawing, d.alcStage, d.alcW, d.alcShakes = false, 0, 0, 0
+end
+
+-- irritability (see the header): alcAnger is the level held up
+local function holdAnger(stats, d)
+    local hold = d.alcAnger or 0
+    if hold <= 0 then return end
+    pcall(function()
+        if (stats:get(CharacterStat.ANGER) or 0) < hold then
+            stats:set(CharacterStat.ANGER, math.min(1, hold + ALC_ANGER_MARGIN))
+        end
+    end)
+end
+
+local function setAngerFloor(stats, d, floor)
+    local held = d.alcAnger or 0
+    local hold = 0
+    if floor > 0 then
+        local now = 0
+        pcall(function() now = stats:get(CharacterStat.ANGER) or 0 end)
+        hold = math.min(floor, math.max(held, now) + ALC_ANGER_RAMP)
+    end
+    if hold < held then
+        -- eased: take the difference off ANGER too, or the moodle lingers for hours
+        local by = held - hold
+        pcall(function() stats:set(CharacterStat.ANGER, math.max(0, (stats:get(CharacterStat.ANGER) or 0) - by)) end)
+    end
+    d.alcAnger = hold
+    holdAnger(stats, d)
 end
 
 -- a random hallucination from the Hallucinations trait's set, if it is loaded
@@ -212,8 +250,21 @@ local function updateDependent(player, d)
     d.alcMeter = meter
 
     if has then withdrawal(player, d, stats, intox, meter) end
+
+    local angerFloor = 0
+    if has and d.alcWithdrawing and not DanTraits_Asleep(player) then
+        angerFloor = ((d.alcStage or 0) >= 2 and ALC_ANGER or ALC_ANGER_CRAVE) * (d.alcW or 0)
+    end
+    -- only with the trait, or with a hold still to take off (the trait just gone): everyone
+    -- else's mod data is left alone (this ran for every character, writing alcAnger = 0)
+    if has or d.alcAnger then setAngerFloor(stats, d, angerFloor) end
 end
 DanTraits_Every("ten", "Dependent", updateDependent, 10)
+
+-- per frame: hold the irritability
+DanTraits_Every("frame", "Dependent", function(player, d)
+    if d then holdAnger(player:getStats(), d) end
+end, 40)
 
 local function withdrawalOf(player, d)
     if not d or not d.alcWithdrawing or not hasTrait(player, "dependent") then return 0 end

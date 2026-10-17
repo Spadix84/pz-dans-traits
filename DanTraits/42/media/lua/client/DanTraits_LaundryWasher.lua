@@ -1,4 +1,4 @@
--- Dan's Vanilla Fixes: load the washing machine in one click.
+-- Project Zomboid Vitality Project: load the washing machine in one click.
 --
 -- Right-click a washing machine (or a combo washer/dryer set to wash, or the
 -- washer of a stacked pair) and "Put dirty clothes in the washer (N)" moves
@@ -8,8 +8,8 @@
 -- option is greyed with the reason when nothing you carry needs it or the
 -- machine is running. The walk and the moves are the game's own transfer
 -- actions, so weight, room and interruptions behave as they always do.
-DVF_Washer = DVF_Washer or {}
-local M = DVF_Washer
+DanTraits_Washer = DanTraits_Washer or {}
+local M = DanTraits_Washer
 
 local function is(obj, class)
     local ok, res = pcall(function() return instanceof(obj, class) end)
@@ -100,10 +100,10 @@ function M.onMenu(playerNum, context, worldobjects, test)
     local playerObj = getSpecificPlayer(playerNum)
     if not playerObj then return end
     local items = M.dirtyClothes(playerObj)
-    local option = context:addOption(getText("ContextMenu_DVF_WasherLoad", #items), playerObj, M.load, washer, container, items)
+    local option = context:addOption(getText("ContextMenu_DanTraits_WasherLoad", #items), playerObj, M.load, washer, container, items)
     if not option then return end
-    if running(washer) then greyOut(option, "ContextMenu_DVF_WasherRunning")
-    elseif #items == 0 then greyOut(option, "ContextMenu_DVF_WasherNone") end
+    if running(washer) then greyOut(option, "ContextMenu_DanTraits_WasherRunning")
+    elseif #items == 0 then greyOut(option, "ContextMenu_DanTraits_WasherNone") end
 end
 
 Events.OnFillWorldObjectContextMenu.Add(M.onMenu)

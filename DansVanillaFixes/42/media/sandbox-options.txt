@@ -3,20 +3,8 @@ VERSION = 1,
 option DansVanillaFixes.ColdPackHours
 {type = integer, min = 1, max = 48, default = 6, page = DansVanillaFixes, translation = DansVanillaFixesColdPackHours,}
 
-option DansVanillaFixes.ReadingEnabled
-{type = boolean, default = true, page = DansVanillaFixesReading, translation = DansVanillaFixesReadingEnabled,}
+option DansVanillaFixes.ItemInfoTooltips
+{type = boolean, default = true, page = DansVanillaFixesItemInfo, translation = DansVanillaFixesItemInfoTooltips,}
 
-option DansVanillaFixes.ReadingPageScale
-{type = double, min = 0.1, max = 4.0, default = 1.0, page = DansVanillaFixesReading, translation = DansVanillaFixesReadingPageScale,}
-
-option DansVanillaFixes.ReadingRealBookChance
-{type = integer, min = 0, max = 100, default = 8, page = DansVanillaFixesReading, translation = DansVanillaFixesReadingRealBookChance,}
-
-option DansVanillaFixes.ReadingTasteStrength
-{type = double, min = 0.0, max = 2.0, default = 1.0, page = DansVanillaFixesReading, translation = DansVanillaFixesReadingTasteStrength,}
-
-option DansVanillaFixes.ReadingMoodleScale
-{type = double, min = 0.1, max = 4.0, default = 1.0, page = DansVanillaFixesReading, translation = DansVanillaFixesReadingMoodleScale,}
-
-option DansVanillaFixes.ReadingRereadComfort
-{type = boolean, default = true, page = DansVanillaFixesReading, translation = DansVanillaFixesReadingRereadComfort,}
+option DansVanillaFixes.ItemInfoWeaponSkill
+{type = boolean, default = true, page = DansVanillaFixesItemInfo, translation = DansVanillaFixesItemInfoWeaponSkill,}

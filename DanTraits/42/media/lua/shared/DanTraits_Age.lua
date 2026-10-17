@@ -51,7 +51,7 @@
 --   heart       Heart Condition: chest pain chance (DanTraits_AgeHeart, read by Heart)
 --   gym         Gym Regular: starting regularity, at least this (gymRegularity)
 --   handy       Handy: extra Carpentry levels at spawn
--- In Their 20s cannot be taken with Handy or Arthritis (the script).
+-- In Their 20s cannot be taken with Arthritis (the script); Handy costs it 2 more.
 -- The traits only one age can take are in DanTraits_AgeTraits.lua.
 --
 -- Trait costs are fixed by the script, so age is priced through the Age
@@ -99,6 +99,7 @@ local AGE_PRICE = {
     ["base:fastlearner"]    = { [20] = -1, [50] = 1 },
     ["base:slowlearner"]    = { [20] = 1, [50] = 1 },      -- gives a point fewer, young or old
     ["base:heartyappetite"] = { [20] = 1, [50] = -1 },     -- gives a point fewer young, one more old
+    ["base:handy"]          = { [20] = 2 },                -- 10 young (2026-10-13; barred before)
     -- the conditions the 20s band itself softens give fewer points young
     -- (2026-10-10): the band's endurance, healing, blood, strain, resistance
     -- and clearance factors already take part of the sting out, so a stack of

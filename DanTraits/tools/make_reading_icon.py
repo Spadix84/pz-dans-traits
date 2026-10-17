@@ -1,8 +1,8 @@
-"""Draw Dan's Vanilla Fixes' pixel icons: the Good Read moodle (an open book).
+"""Draw the reading overhaul's Good Read moodle icon (an open book).
 Each is a 16 x 16 grid of palette letters written out at 32 x 32 as a PNG (no
-libraries needed), the same way DanTraits/tools/make_icons.py draws Vitality's.
+libraries needed), the same way make_icons.py draws the rest of Vitality's.
 
-    python DansVanillaFixes/tools/make_icons.py
+    python DanTraits/tools/make_reading_icon.py
 
 Moodle icons go to 42/media/ui and 42/media/ui/32 (Moodle Framework looks in
 the size folder first).

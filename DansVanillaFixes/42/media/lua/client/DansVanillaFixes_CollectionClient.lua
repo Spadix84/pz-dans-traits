@@ -9,11 +9,11 @@
 --   tooltip      a line under the vanilla tooltip: green "In your
 --                collection", or grey "Not in your collection yet". The
 --                tooltip is drawn by Java from the item, so the line goes in
---                a strip drawn on below it; near the bottom of the screen it
---                can run off.
+--                a strip drawn on below it (DanShared_Tooltip.lua); near
+--                the bottom of the screen it can run off.
 
 require "ISUI/ISEquippedItem"
-require "ISUI/ISToolTipInv"
+require "DanShared_Tooltip"
 require "ISUI/ISInventoryPane"
 require "DansVanillaFixes_Collection"
 require "DansVanillaFixes_CollectionUI"
@@ -111,14 +111,6 @@ Events.OnFillInventoryObjectContextMenu.Add(C.onContextMenu)
 
 -- tooltip -----------------------------------------------------------------------
 
-local PAD_X, PAD_Y = 5, 4
-
-local function tooltipPlayer(self)
-    local p
-    pcall(function() p = self.tooltip:getCharacter() end)
-    return p or getSpecificPlayer(0)
-end
-
 -- the line for an item on the list, or nil
 function C.tooltipLine(player, item)
     local e = C.entryFor(item)
@@ -130,24 +122,7 @@ function C.tooltipLine(player, item)
     return getText("IGUI_DVF_Collection_Missing"), 0.6, 0.6, 0.6
 end
 
-local function drawLine(self, text, r, g, b)
-    local font = UIFont.Small
-    local tm = getTextManager()
-    local width = math.max(self.width, tm:MeasureStringX(font, text) + PAD_X * 2)
-    local top = self.height
-    local extra = tm:getFontHeight(font) + PAD_Y * 2
-    self:drawRect(0, top, width, extra, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b)
-    self:drawRectBorder(0, top - 1, width, extra + 1, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b)
-    self:drawText(text, PAD_X, top + PAD_Y, r, g, b, 1, font)
-end
-
-if not ISToolTipInv.dvfCollectionWrapped then
-    ISToolTipInv.dvfCollectionWrapped = true
-    local vanillaRender = ISToolTipInv.render
-    function ISToolTipInv:render()
-        vanillaRender(self)
-        if not self.item or (ISContextMenu.instance and ISContextMenu.instance.visibleCheck) then return end
-        local ok, text, r, g, b = pcall(C.tooltipLine, tooltipPlayer(self), self.item)
-        if ok and text then pcall(drawLine, self, text, r, g, b) end
-    end
-end
+DanShared_Tooltip.add("collection", 30, function(player, item)
+    local text, r, g, b = C.tooltipLine(player, item)
+    if text then return { { text, r, g, b } } end
+end)

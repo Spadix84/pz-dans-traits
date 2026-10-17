@@ -1,5 +1,5 @@
--- Dan's Vanilla Fixes: the long read. Wraps the vanilla read action
--- (ISReadABook) for the literature DansVanillaFixes_Reading.lua handles;
+-- Project Zomboid Vitality Project: the long read. Wraps the vanilla read action
+-- (ISReadABook) for the literature DanTraits_Reading.lua handles;
 -- everything else goes through untouched. Never wraps new: in multiplayer
 -- the game reads new's parameter names.
 --
@@ -8,7 +8,7 @@
 --                modifiers (Fast or Slow Reader, reading glasses, sitting,
 --                other mods' wraps) carry over. A session is the rest of the
 --                book from the bookmark, or a chapter's worth when the
---                action was started with dvfChapter set.
+--                action was started with readChapter set.
 --   start        the plan for the session: from which page, how many
 --   update       pages turned since the last tick get their relief, the
 --                bookmark moves (character and copy), the family's page
@@ -23,16 +23,16 @@
 --   stop         an interrupted read keeps its bookmark; nothing else to do
 
 require "TimedActions/ISReadABook"
-require "DansVanillaFixes_Reading"
+require "DanTraits_Reading"
 
-local R = DVF_Reading
+local R = DanTraits_Reading
 
 local function infoOf(self)
-    if self.dvfInfo == nil then
+    if self.readInfo == nil then
         local ok, info = pcall(R.info, self.item)
-        self.dvfInfo = ok and info or false
+        self.readInfo = ok and info or false
     end
-    return self.dvfInfo or nil
+    return self.readInfo or nil
 end
 
 -- the session: from the bookmark, the rest of the book or a chapter of it
@@ -42,9 +42,9 @@ local function plan(self, info)
     local left = info.pages - from
     if left <= 0 then from, left = 0, info.pages end
     local span = left
-    if self.dvfChapter then span = math.min(left, R.chapterPages(player, info)) end
-    self.dvfPlan = { from = from, span = span }
-    return self.dvfPlan
+    if self.readChapter then span = math.min(left, R.chapterPages(player, info)) end
+    self.readPlan = { from = from, span = span }
+    return self.readPlan
 end
 
 -- vanilla's own time for this item before the character's modifiers: the flat
@@ -59,14 +59,14 @@ end
 
 -- the pages read so far this session for a job delta of 0..1
 local function pagesAt(self, info, delta)
-    local p = self.dvfPlan
+    local p = self.readPlan
     local pages = p.from + math.floor(p.span * math.max(0, math.min(1, delta)) + 1e-6)
     return math.min(info.pages, pages)
 end
 
 -- n new pages turned: relief, bookmark, taste, the disliked tick
 local function turned(self, info, pagesNow)
-    local rd = self.dvfRead
+    local rd = self.readSession
     local n = pagesNow - rd.pages
     if n <= 0 then return end
     rd.pages = pagesNow
@@ -104,8 +104,8 @@ local function withoutTitle(self, fn)
     return result
 end
 
-if not ISReadABook.dvfReadingWrapped then
-    ISReadABook.dvfReadingWrapped = true
+if not ISReadABook.danTraitsReadingWrapped then
+    ISReadABook.danTraitsReadingWrapped = true
 
     local vanillaDuration = ISReadABook.getDuration
     function ISReadABook:getDuration(...)
@@ -127,13 +127,13 @@ if not ISReadABook.dvfReadingWrapped then
         local info = infoOf(self)
         if not info then return end
         pcall(function()
-            local p = self.dvfPlan or plan(self, info)
+            local p = self.readPlan or plan(self, info)
             local reread = R.finished(self.character, info.key)
             if not reread and info.raw then
                 local ok, yes = pcall(function() return self.character:isLiteratureRead(info.raw) end)
                 reread = ok and yes == true
             end
-            self.dvfRead = { pages = p.from, reread = reread }
+            self.readSession = { pages = p.from, reread = reread }
         end)
     end
 
@@ -141,20 +141,20 @@ if not ISReadABook.dvfReadingWrapped then
     function ISReadABook:update(...)
         vanillaUpdate(self, ...)
         local info = infoOf(self)
-        if not info or not self.dvfRead then return end
+        if not info or not self.readSession then return end
         pcall(function() turned(self, info, pagesAt(self, info, self:getJobDelta())) end)
     end
 
     local vanillaStop = ISReadABook.stop
     function ISReadABook:stop(...)
-        self.dvfRead = nil
+        self.readSession = nil
         return vanillaStop(self, ...)
     end
 
     local vanillaPerform = ISReadABook.perform
     function ISReadABook:perform(...)
         local info = infoOf(self)
-        local rd = self.dvfRead
+        local rd = self.readSession
         if not info or not rd then return vanillaPerform(self, ...) end
         pcall(settle, self, info)
         if rd.pages < info.pages then
@@ -167,7 +167,7 @@ if not ISReadABook.dvfReadingWrapped then
     local vanillaComplete = ISReadABook.complete
     function ISReadABook:complete(...)
         local info = infoOf(self)
-        local rd = self.dvfRead
+        local rd = self.readSession
         if not info or not rd then return vanillaComplete(self, ...) end
         pcall(settle, self, info)
         local finished = rd.pages >= info.pages
@@ -200,11 +200,11 @@ end
 function R.sayTaste(player, verdict)
     pcall(function()
         if verdict == "liked" then
-            HaloTextHelper.addGoodText(player, getText("IGUI_DVF_Taste_liked"))
+            HaloTextHelper.addGoodText(player, getText("IGUI_DanTraits_Taste_liked"))
         elseif verdict == "disliked" then
-            HaloTextHelper.addBadText(player, getText("IGUI_DVF_Taste_disliked"))
+            HaloTextHelper.addBadText(player, getText("IGUI_DanTraits_Taste_disliked"))
         else
-            local text = getText("IGUI_DVF_Taste_neutral")
+            local text = getText("IGUI_DanTraits_Taste_neutral")
             if not pcall(HaloTextHelper.addText, player, text) then HaloTextHelper.addGoodText(player, text) end
         end
     end)
@@ -213,6 +213,6 @@ end
 function R.sayFinish(player, info, res)
     pcall(function()
         if res.level <= 0 then return end
-        HaloTextHelper.addGoodText(player, getText("IGUI_DVF_Finished_" .. tostring(res.level)))
+        HaloTextHelper.addGoodText(player, getText("IGUI_DanTraits_Finished_" .. tostring(res.level)))
     end)
 end

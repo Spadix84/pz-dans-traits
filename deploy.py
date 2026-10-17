@@ -8,7 +8,7 @@
     python deploy.py --dry-run  show what would change, touch nothing
     python deploy.py --workshop repo  -> ~/Zomboid/Workshop/DanTraits  (the folder the
                                 in-game Workshop uploader reads: workshop.txt, preview.png,
-                                Contents/mods/DanTraits; the dev tools are left out)
+                                Contents/mods/DanTraits; tools/ is left out)
     python deploy.py --patch    repo  -> ~/Zomboid/mods/DansVanillaFixes  (the separate
                                 Dan's Vanilla Fixes mod; mirror, like the default)
 
@@ -30,6 +30,9 @@ GAME_WORKSHOP = os.path.join(os.path.expanduser("~"), "Zomboid", "Workshop", "Da
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}
 # Build 42 looks for a common/ folder beside 42/; git cannot hold an empty one
 KEEP_DIRS = {"common"}
+# the tooltip strip both mods ship at the same path; the game loads one copy,
+# so the two must not drift apart
+SHARED = [os.path.join("42", "media", "lua", "client", "DanShared_Tooltip.lua")]
 
 
 def walk(root, skip=()):
@@ -117,6 +120,10 @@ def main():
     ap.add_argument("--workshop", action="store_true", help="build the Workshop upload folder")
     ap.add_argument("--patch", action="store_true", help="deploy the Dan's Vanilla Fixes mod instead")
     a = ap.parse_args()
+    if not a.pull:
+        for rel in SHARED:
+            if not filecmp.cmp(os.path.join(REPO_MOD, rel), os.path.join(REPO_PATCH, rel), shallow=False):
+                raise SystemExit("%s differs between DanTraits and DansVanillaFixes: make them the same first" % rel)
     if a.workshop and (a.patch or a.pull):
         ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --patch or --pull")
     if a.workshop:

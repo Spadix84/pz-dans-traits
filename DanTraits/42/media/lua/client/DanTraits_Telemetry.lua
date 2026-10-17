@@ -1,5 +1,6 @@
--- Project Zomboid Vitality Project: live telemetry and a command channel for the companion
--- dashboard (tools/dashboard.py in the mod folder).
+-- Project Zomboid Vitality Project: live telemetry and a command channel for the
+-- companion app (the pz-companion repo beside this one; it grew out of the old
+-- tools/dashboard.py).
 --
 -- Twice a second (real time) the whole picture is written as JSON to
 -- <user>/Zomboid/Lua/DanTraits_Telemetry.json: vanilla stats, body, the
@@ -7,9 +8,12 @@
 -- Once a second <user>/Zomboid/Lua/DanTraits_Commands.txt is read, each
 -- line run as a command, and the file emptied. Single player only.
 --
--- Off unless the game runs in debug mode (-debug): the command channel can
--- give items, set health and run Lua, so it never runs for an ordinary player
--- or in multiplayer.
+-- The telemetry writes while the game runs in debug mode (-debug) or while the
+-- companion is running: it rewrites <user>/Zomboid/Lua/companion_link.txt
+-- every 5 s with the unix time, and the stamp counts as fresh for 60 s
+-- (checked every 10 s, so a player without the companion pays one small file
+-- read every 10 s). The command channel can give items, set health and run
+-- Lua, so it stays debug-only, and nothing here runs in multiplayer.
 --
 -- Commands (one per line):
 --   set <key> <value>        mod-data field: set glucose 40 / set asthma 0.9 / set mddEpisode true / set x nil
@@ -43,6 +47,9 @@
 -- sunburn, tinnitus, roughstitch, ...), each taking (player, words) and returning a line.
 local TELEMETRY_FILE = "DanTraits_Telemetry.json"
 local COMMAND_FILE   = "DanTraits_Commands.txt"
+local LINK_FILE      = "companion_link.txt"
+local LINK_CHECK_MS  = 10000
+local LINK_FRESH_S   = 60
 local WRITE_EVERY_MS = 500
 local READ_EVERY_MS  = 1000
 local LOG_KEEP       = 25
@@ -155,6 +162,7 @@ local function snapshot(player)
     local out = { t = safe(function() return getTimestampMs() end, 0) }
     out.hoursSurvived = safe(function() return player:getHoursSurvived() end, 0)
     out.paused = safe(function() return isGamePaused() end, false)
+    out.debug = safe(function() return isDebugEnabled() == true end, false)   -- the companion shows the command panel only then
     out.game = {
         day = safe(function() return getGameTime():getDay() end),
         hour = safe(function() return getGameTime():getHour() end),
@@ -459,13 +467,33 @@ local function readCommands(player)
 end
 
 -- Driver --------------------------------------------------------------------------
+local function debugMode()
+    local debug = false
+    pcall(function() debug = isDebugEnabled() == true end)
+    return debug
+end
+-- the companion's heartbeat file, read every 10 s: alive while its unix stamp is under 60 s old
+local linkChecked, linkAlive = -1e9, false
+local function companionLinked()
+    local now = getTimestampMs()
+    if now - linkChecked < LINK_CHECK_MS then return linkAlive end
+    linkChecked = now
+    linkAlive = false
+    pcall(function()
+        local reader = getFileReader(LINK_FILE, false)
+        if not reader then return end
+        local line = reader:readLine()
+        reader:close()
+        local stamp = tonumber(line)
+        if stamp and getTimestamp() - stamp < LINK_FRESH_S then linkAlive = true end
+    end)
+    return linkAlive
+end
 local function enabled()
     local mp = false
     pcall(function() mp = isClient() or isServer() end)
     if mp then return false end
-    local debug = false
-    pcall(function() debug = isDebugEnabled() == true end)
-    return debug
+    return debugMode() or companionLinked()
 end
 DanTraits_TelemetryEnabled = enabled
 
@@ -478,7 +506,7 @@ local function onTick()
     if not player or player:isDead() then return end
     if now - lastRead >= READ_EVERY_MS then
         lastRead = now
-        readCommands(player)
+        if debugMode() then readCommands(player) end   -- never from the companion alone
     end
     if now - lastWrite >= WRITE_EVERY_MS then
         lastWrite = now

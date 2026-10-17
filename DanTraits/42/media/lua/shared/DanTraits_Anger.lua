@@ -3,8 +3,8 @@
 --
 -- Vanilla keeps an anger stat and shows it as the Angry moodle (Irritated,
 -- Annoyed, Angry, Furious), but nothing in the game reads it. Here it is
--- nicotine withdrawal that raises it (DanTraits_Smoker.lua); another mod's
--- anger counts the same. By moodle level, from Annoyed (level 2) up; Irritated
+-- nicotine and alcohol withdrawal that raise it (DanTraits_Smoker.lua,
+-- DanTraits_Dependent.lua); another mod's anger counts the same. By moodle level, from Annoyed (level 2) up; Irritated
 -- is only the warning:
 --
 -- Rough. A melee hit has an extra chance to wear the weapon, on top of the
@@ -146,7 +146,7 @@ DanTraits_ExtraCommands.anger = function(player, args)
     if not value then return "anger <0..1> | anger curse   (level now " .. tostring(angerLevel(player)) .. ")" end
     value = DanTraits_Clamp01(value)
     pcall(function() player:getStats():set(CharacterStat.ANGER, value) end)
-    return "anger " .. tostring(value) .. " (the game drains it; a Smoker's craving holds its own floor)"
+    return "anger " .. tostring(value) .. " (the game drains it; a Smoker's craving and an Alcoholic's withdrawal hold their own floors)"
 end
 
 Events.OnWeaponHitXp.Add(onWeaponHit)

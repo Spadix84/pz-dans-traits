@@ -1,4 +1,4 @@
--- Dan's Vanilla Fixes: This Is Your Life (Workshop 3773911887) support. Does
+-- Project Zomboid Vitality Project: This Is Your Life (Workshop 3773911887) support. Does
 -- nothing unless that mod is loaded; no dependency either way.
 --
 -- Its survivor journal keeps a "life so far" timeline: plain strings in
@@ -8,9 +8,9 @@
 -- (ThisIsYourLife/TIYLMilestones.lua, TIYLSurvivorJournal.lua). Reading adds
 -- its own lines: a book finished, with the verdict, and a taste found out.
 
-require "DansVanillaFixes_Reading"
+require "DanTraits_Reading"
 
-local R = DVF_Reading
+local R = DanTraits_Reading
 
 local function active()
     return type(TIYL) == "table"
@@ -23,7 +23,7 @@ local function dateText()
     local name
     local ok, text = pcall(getText, "UI_TIYL_Common_Month" .. tostring(month))
     if ok and type(text) == "string" and text ~= "" and not text:find("^UI_TIYL") then name = text end
-    if not name then name = getText("IGUI_DVF_Month" .. tostring(month)) end
+    if not name then name = getText("IGUI_DanTraits_Month" .. tostring(month)) end
     return name .. " " .. tostring((time and time:getDay() or 0) + 1) .. ", " .. tostring(time and time:getYear() or 1993)
 end
 
@@ -45,10 +45,10 @@ R.onFinish("tiyl", function(player, info, result)
     if not active() then return end
     local verdict = result and result.verdict or "fine"
     if result and result.reread then verdict = "again" end
-    R.journalLine(player, getText("IGUI_DVF_Journal_Finished", R.titleText(info), getText("IGUI_DVF_JournalVerdict_" .. verdict)))
+    R.journalLine(player, getText("IGUI_DanTraits_Journal_Finished", R.titleText(info), getText("IGUI_DanTraits_JournalVerdict_" .. verdict)))
 end)
 
 R.onTasteFound("tiyl", function(player, family, verdict)
     if not active() or verdict == "neutral" then return end
-    R.journalLine(player, getText("IGUI_DVF_JournalTaste_" .. verdict, R.familyName(family)))
+    R.journalLine(player, getText("IGUI_DanTraits_JournalTaste_" .. verdict, R.familyName(family)))
 end)

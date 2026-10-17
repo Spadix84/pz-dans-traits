@@ -21,5 +21,9 @@
     "ContextMenu_DanTraits_PutUpLine": "Put up a clothesline",
     "ContextMenu_DanTraits_Line_ew": "Running east-west",
     "ContextMenu_DanTraits_Line_ns": "Running north-south",
-    "ContextMenu_DanTraits_TakeDownLine": "Take down clothesline"
+    "ContextMenu_DanTraits_TakeDownLine": "Take down clothesline",
+    "ContextMenu_DanTraits_WasherLoad": "Put dirty clothes in the washer (%1)",
+    "ContextMenu_DanTraits_WasherNone": "No dirty or bloody clothes carried (what you wear stays on).",
+    "ContextMenu_DanTraits_WasherRunning": "The washer is running.",
+    "ContextMenu_DanTraits_ReadChapter": "Read a chapter (~%1 min)"
 }

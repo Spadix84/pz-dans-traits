@@ -1,10 +1,10 @@
--- Dan's Vanilla Fixes: the hand-edited side of the reading table. Loaded after
--- the generated DansVanillaFixes_ReadingData.lua and read by
--- DansVanillaFixes_Reading.lua.
+-- Project Zomboid Vitality Project: the hand-edited side of the reading table. Loaded after
+-- the generated DanTraits_ReadingData.lua and read by
+-- DanTraits_Reading.lua.
 --
 --   D.real       real books from before July 1993, mixed in alongside the
 --                game's fictional titles (an OnFillContainer swap of a vanilla
---                subject book at the sandbox chance, DansVanillaFixes_Reading.lua).
+--                subject book at the sandbox chance, DanTraits_Reading.lua).
 --                Only the title and the author's name are used. Each row:
 --                key, { title, author, pages, family, quality 1-5, cover S/H/B }.
 --                Page counts are the common first editions, give or take.
@@ -12,11 +12,11 @@
 --                { family = , pages = , quality = }, any field.
 --
 -- The item's name is "Book: "Title", by Author" like a vanilla one, and its
--- literatureTitle is IGUI_DVF_BookTitle_<key> (the translation lives in
--- Translate/EN/IG_UI.json), so the game's own read-tracking and tooltip work
--- on it unchanged.
-DVF_ReadingData = DVF_ReadingData or {}
-local D = DVF_ReadingData
+-- literatureTitle is IGUI_DVF_BookTitle_<key> (the prefix from when reading
+-- lived in Dan's Vanilla Fixes, kept so saves carry on), so the game's own
+-- read-tracking and tooltip work on it unchanged.
+DanTraits_ReadingData = DanTraits_ReadingData or {}
+local D = DanTraits_ReadingData
 
 D.real = {}
 local function R(key, title, author, pages, family, quality, cover)

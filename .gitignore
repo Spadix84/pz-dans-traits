@@ -1,9 +1,10 @@
-# files the game and the dashboard exchange live in ~/Zomboid/Lua, never here
+# files the game and the companion app exchange live in ~/Zomboid/Lua, never here
 *.pyc
 .DS_Store
 .claude/
 DanTraits_Commands.txt
 DanTraits_Telemetry.json
+companion_link.txt
 Thumbs.db
 __pycache__/
 tests/node_modules/

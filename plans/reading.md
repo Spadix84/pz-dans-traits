@@ -6,6 +6,15 @@ Design note, drafted 2026-10-12 from the user's idea and BUILT the same day
 entertainment reading only: novels, comics, magazines, newspapers and other
 print. Skill books and recipe magazines keep their vanilla behaviour.
 
+**Moved into Vitality on 2026-10-15**, so it ships with the main mod: the
+`DansVanillaFixes_Reading*` files are now `DanTraits_Reading*` (the TIYL bridge
+is `client/DanTraits_ReadingTIYL.lua`, Vitality's own hooks
+`DanTraits_ReadingHooks.lua`), `DVF_Reading` is `DanTraits_Reading`, the options
+are `DanTraits.Reading*` on the Vitality: Reading page and the text keys
+`IGUI_DanTraits_*`. The save keys (`DVF_Reading`, `DVF_ReadPages`,
+`IGUI_DVF_BookTitle_`) keep their names. Older file names below are as they were
+when written.
+
 ## Why
 
 In vanilla, reading for fun works like a vending machine. You find a title you
@@ -238,26 +247,34 @@ comics and magazines.
   2. Great Read: quality 4–5, or liked genre.
   3. **Loved It**: liked genre **and** quality 4–5. The user's +0.25 applies
      here, on top of the liked ×1.25.
-- **Duration** is 24 h at quality 3 and 48 h at quality 5. It scales down to
-  12 h for comics and magazines, which never go above level 1. Newspapers and
-  fliers give no moodle.
-- **Effect**: boredom builds 10–25% slower and unhappiness drifts down
-  slightly. Then there is **one small buff matched to the genre**:
+- **Duration** (changed 2026-10-12 at the user's request): about two days,
+  48 h, for any novel; 12 h for comics and magazines, which never go above
+  level 1. Newspapers and fliers give no moodle.
+- **Effect** (changed 2026-10-12): **one buff, set by the genre**, and nothing
+  else (the general boredom and unhappiness easing is gone). The moodle's
+  description names it with the hours left. Only one runs at a time: a new
+  finish takes over when it is a higher level, or the same level with more
+  time to run. Stat rates scale with strength; so do the XP and reading
+  factors (1 + 0.05 x strength). Numbers live in `R.BUFF`.
 
   | Family | Buff |
   |---|---|
-  | Horror | panic builds 10% slower |
-  | Thrillers & Crime | stress builds 10% slower |
-  | Romance | unhappiness decays a little faster |
-  | Sci-Fi & Fantasy | boredom builds a further 10% slower |
-  | Westerns | endurance recovers 5% faster |
-  | True Stories | stress decays a little faster |
+  | Horror | panic fades faster |
+  | Thrillers & Crime | stress eases |
+  | Romance, Humor | low moods ease |
+  | Popular Fiction, Kids | boredom eases |
+  | Classics | boredom and low moods ease |
+  | Faith | stress and low moods ease |
+  | True Stories | panic and stress ease |
+  | Westerns | stamina comes back faster |
+  | Serious Reading | books read a tenth faster |
   | Sports | +5% Fitness and Strength XP |
-  | Science & Nature | +5% Foraging XP |
-  | Self-Help & Lifestyle | +5% XP to all non-combat skills |
-  | Faith | stress builds 5% slower and unhappiness decays a little faster |
-  | Classics | the moodle lasts 25% longer |
-  | the rest | the base moodle only |
+  | Sci-Fi & Fantasy | +5% Electrical and Mechanics XP |
+  | Science & Nature | +5% First Aid and Foraging XP |
+  | History | +5% Aiming and Reloading XP |
+  | Fringe | +5% Trapping and Sneaking XP |
+  | Arts | +5% Carving and Pottery XP |
+  | Self-Help & Lifestyle | +5% Cooking, Farming, Carpentry, Tailoring and Maintenance XP |
 
   Every value is multiplied by the moodle level's strength. The table is a
   first draft to tune.
