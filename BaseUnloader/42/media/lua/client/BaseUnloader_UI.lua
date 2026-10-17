@@ -470,23 +470,11 @@ end
 -- tags ---------------------------------------------------------------------------------------------------------
 
 function BU_Window:categoryLabel(cat)
-    return getTextOrNull("IGUI_ItemCat_" .. cat) or cat
+    return S.categoryLabel(cat)
 end
 
--- the categories offered: the standard list plus any the items here or in the base carry
 function BU_Window:categories()
-    local seen, out = {}, {}
-    for _, cat in ipairs(BU.CATEGORIES) do seen[cat] = true; out[#out + 1] = cat end
-    for _, g in ipairs(self.groups) do
-        if g.category and not seen[g.category] then seen[g.category] = true; out[#out + 1] = g.category end
-    end
-    for _, row in ipairs(self.rows) do
-        for cat in pairs(row.cats or {}) do
-            if not seen[cat] then seen[cat] = true; out[#out + 1] = cat end
-        end
-    end
-    table.sort(out, function(a, b) return self:categoryLabel(a) < self:categoryLabel(b) end)
-    return out
+    return S.categories(self.groups, self.rows)
 end
 
 function BU_Window:tagLabel(row)
@@ -785,6 +773,12 @@ function BU_Window:new(x, y, width, height, character, source)
     o.minimumWidth = 560
     o.minimumHeight = 320
     return o
+end
+
+-- something outside the window changed the saved data: redraw
+function BU_Window.refresh(playerNum)
+    local win = BU_Window.instances[playerNum]
+    if win then win:fill() end
 end
 
 -- open for a source (closing any window already open for this player)

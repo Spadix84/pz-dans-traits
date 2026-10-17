@@ -76,6 +76,33 @@ M.onRenamed = function(_, button, playerNum, row)
     end)
 end
 
+-- categories from a menu: the container's row is built on the spot
+M.onToggleTag = function(row, playerNum, cat)
+    local tags = BaseUnloader.store().tags
+    BaseUnloader.setTag(tags, row.key, cat, not BaseUnloader.hasTag(tags, row.key, cat))
+    BU_Window.refresh(playerNum)
+end
+
+M.onClearTags = function(row, playerNum)
+    BaseUnloader.store().tags[row.key] = nil
+    BU_Window.refresh(playerNum)
+end
+
+-- the Categories submenu for a world container, on any menu
+function M.addCategoryOptions(menu, row, playerNum)
+    local tags = BaseUnloader.store().tags
+    local option = menu:addOption(getText("IGUI_BU_Categories"), nil, nil)
+    local sub = ISContextMenu:getNew(menu)
+    menu:addSubMenu(option, sub)
+    for _, cat in ipairs(S.categories(nil, { row })) do
+        local on = BaseUnloader.hasTag(tags, row.key, cat)
+        sub:addOption((on and "[x] " or "[  ] ") .. S.categoryLabel(cat), row, M.onToggleTag, playerNum, cat)
+    end
+    if #BaseUnloader.tagsOf(tags, row.key) > 0 then
+        menu:addOption(getText("IGUI_BU_ClearTags"), row, M.onClearTags, playerNum)
+    end
+end
+
 -- the Resume / Stop / Forget options, when there is a plan
 local function addPlanOptions(context, player)
     if BU_Run.isRunning(player) then
@@ -102,6 +129,8 @@ function M.onWorldMenu(playerNum, context, worldobjects, test)
         context:addSubMenu(option, sub)
         sub:addOption(getText("ContextMenu_BU_Unload"), found, M.onUnloadObject, player)
         sub:addOption(getText("ContextMenu_BU_RenameContainer"), found, M.onRenameObject, playerNum)
+        local src = S.objectSource(found, found:getContainer(), nil)
+        if src then M.addCategoryOptions(sub, src.row, playerNum) end
         addPlanOptions(sub, player)
     elseif BU_Run.hasPlan(player) or BU_Run.isRunning(player) then
         local sub = ISContextMenu:getNew(context)
@@ -139,6 +168,36 @@ end
 
 Events.OnFillWorldObjectContextMenu.Add(M.onWorldMenu)
 Events.OnFillInventoryObjectContextMenu.Add(M.onInventoryMenu)
+
+-- right-click on a container icon in the loot window: vanilla builds the
+-- player's context menu (Rename Bag and the admin tools); the Base Unloader
+-- entries go on after it for a world container
+local backpackRightMouseDown = ISInventoryPage.onBackpackRightMouseDown
+ISInventoryPage.onBackpackRightMouseDown = function(button, x, y)
+    local result = backpackRightMouseDown(button, x, y)
+    pcall(function()
+        local page = button.parent.parent
+        local container = button.inventory
+        local playerNum = page.player
+        local player = getSpecificPlayer(playerNum)
+        if not player or player:getVehicle() then return end
+        if container:getContainingItem() then return end
+        local parent = container:getParent()
+        if not parent or instanceof(parent, "BaseVehicle") or not parent.getSquare then return end
+        local kind = container:getType()
+        if kind == "floor" or kind == "inventorymale" or kind == "inventoryfemale" then return end
+        local src = S.objectSource(parent, container, nil)
+        if not src then return end
+        local context = getPlayerContextMenu(playerNum)
+        local sub = ISContextMenu:getNew(context)
+        local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
+        context:addSubMenu(option, sub)
+        sub:addOption(getText("ContextMenu_BU_Unload"), container, M.onUnloadContainer, player)
+        M.addCategoryOptions(sub, src.row, playerNum)
+        addPlanOptions(sub, player)
+    end)
+    return result
+end
 
 -- the vehicle menu is filled by a function, not an event: add to it after vanilla
 local fillOutside = ISVehicleMenu.FillMenuOutsideVehicle

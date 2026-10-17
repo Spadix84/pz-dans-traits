@@ -97,6 +97,29 @@ function S.inZone(zone, x, y)
     return dx * dx + dy * dy <= zone.r * zone.r
 end
 
+-- categories ------------------------------------------------------------------------------------
+
+function S.categoryLabel(cat)
+    return getTextOrNull("IGUI_ItemCat_" .. cat) or cat
+end
+
+-- the categories offered for tagging: the standard list plus any extra ones
+-- found (on the groups being unloaded, and in the containers' contents)
+function S.categories(groups, rows)
+    local seen, out = {}, {}
+    for _, cat in ipairs(BU.CATEGORIES) do seen[cat] = true; out[#out + 1] = cat end
+    for _, g in ipairs(groups or {}) do
+        if g.category and not seen[g.category] then seen[g.category] = true; out[#out + 1] = g.category end
+    end
+    for _, row in ipairs(rows or {}) do
+        for cat in pairs(row.cats or {}) do
+            if not seen[cat] then seen[cat] = true; out[#out + 1] = cat end
+        end
+    end
+    table.sort(out, function(a, b) return S.categoryLabel(a) < S.categoryLabel(b) end)
+    return out
+end
+
 -- names and places --------------------------------------------------------------------------
 
 function S.kindLabel(kind)
