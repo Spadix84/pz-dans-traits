@@ -203,6 +203,12 @@ function S.row(obj, container, index, sq, zone)
                   contents = contents, cats = cats, count = count, capacity = capacity, used = used,
                   free = math.max(0, capacity - used) }
     row.place = S.placeLabel(row, zone)
+    if not row.room and zone then
+        local dx, dy = x - zone.cx, y - zone.cy
+        local dir = BU.compass(dx, dy)
+        local tiles = math.floor(math.sqrt(dx * dx + dy * dy) + 0.5)
+        if dir and tiles > 0 then row.offset = getText("IGUI_BU_Tiles", tiles, getText("IGUI_BU_Dir_" .. dir)) end
+    end
     return row
 end
 

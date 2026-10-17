@@ -22,6 +22,7 @@ local S = BU_Scan
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local ROW_HGT = FONT_HGT_SMALL * 2 + 10
+local HEADER_HGT = FONT_HGT_SMALL + 8
 local PAD = 6
 local DRAG_START = 5     -- pixels the mouse moves before a press becomes a drag
 local MAX_NAME = 40
@@ -43,7 +44,8 @@ function BU_ItemList:doDrawItem(y, item, alt)
     if y + item.height + self:getYScroll() <= 0 then return y + item.height end
     local g = item.item
     local win = self.window
-    self:drawRectBorder(0, y, self:getWidth(), item.height, 0.5, self.borderColor.r, self.borderColor.g, self.borderColor.b)
+    if alt then self:drawRect(0, y, self:getWidth(), item.height, 0.06, 1, 1, 1) end
+    self:drawRectBorder(0, y, self:getWidth(), item.height, 0.3, self.borderColor.r, self.borderColor.g, self.borderColor.b)
     if self:isMouseOver() and self.mouseoverselected == item.index then dim(self, 1, y + 1, self:getWidth() - 2, item.height - 2) end
     local line1 = y + 4
     local line2 = y + 6 + FONT_HGT_SMALL
@@ -128,7 +130,13 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     if y + item.height + self:getYScroll() <= 0 then return y + item.height end
     local row = item.item
     local win = self.window
-    self:drawRectBorder(0, y, self:getWidth(), item.height, 0.5, self.borderColor.r, self.borderColor.g, self.borderColor.b)
+    if row.header then
+        self:drawRect(0, y, self:getWidth(), item.height, 0.35, 0.25, 0.3, 0.4)
+        self:drawText(row.text, PAD, y + 4, 0.9, 0.9, 0.95, 1, UIFont.Small)
+        return y + item.height
+    end
+    if alt then self:drawRect(0, y, self:getWidth(), item.height, 0.06, 1, 1, 1) end
+    self:drawRectBorder(0, y, self:getWidth(), item.height, 0.3, self.borderColor.r, self.borderColor.g, self.borderColor.b)
     local over = self:isMouseOver() and self.mouseoverselected == item.index
     if over then dim(self, 1, y + 1, self:getWidth() - 2, item.height - 2) end
     if over and (win.drag or ISMouseDrag.dragging) then
@@ -143,19 +151,18 @@ function BU_ContainerList:doDrawItem(y, item, alt)
         self:drawText(row.kindLabel, PAD + nameW + 8, line1, 0.6, 0.6, 0.6, 1, UIFont.Small)
     end
     local n = win.ruleCounts[row.key] or 0
-    local right = ""
-    if row.pinned then
-        right = getText("IGUI_BU_Source")
-    else
-        right = getText("IGUI_BU_Fill", BU.fmtWeight(row.used), BU.fmtWeight(row.capacity))
-        if n > 0 then right = getText("IGUI_BU_Rules", n) .. "  " .. right end
-    end
+    local right = row.pinned and getText("IGUI_BU_Source") or getText("IGUI_BU_Fill", BU.fmtWeight(row.used), BU.fmtWeight(row.capacity))
     local rw = getTextManager():MeasureStringX(UIFont.Small, right)
     self:drawText(right, self.width - rw - PAD - 14, line1, 0.7, 0.7, 0.7, 1, UIFont.Small)
-    local place = row.place or ""
-    local far = win:distanceLabel(row)
-    if far then place = place .. "  " .. far end
-    self:drawText(place, PAD + 10, line2, 0.65, 0.65, 0.65, 1, UIFont.Small)
+    -- second line: how far, and outdoors which way (the room is the header)
+    local place = win:distanceLabel(row) or ""
+    if not row.room and row.offset then place = row.offset .. ", " .. place end
+    self:drawText(place, PAD + 10, line2, 0.6, 0.6, 0.6, 1, UIFont.Small)
+    if n > 0 and not row.pinned then
+        local t = getText("IGUI_BU_Rules", n)
+        local tw = getTextManager():MeasureStringX(UIFont.Small, t)
+        self:drawText(t, self.width - tw - PAD - 14, line2, 0.6, 0.85, 0.6, 1, UIFont.Small)
+    end
     return y + item.height
 end
 
@@ -163,7 +170,9 @@ function BU_ContainerList:rowUnderMouse()
     if not self:isMouseOver() then return nil end
     local index = self:rowAt(self:getMouseX(), self:getMouseY())
     if index < 1 or index > #self.items then return nil end
-    return self.items[index].item
+    local row = self.items[index].item
+    if row.header then return nil end
+    return row
 end
 
 -- a drop from the vanilla inventory windows lands here; the window's own drag
@@ -184,7 +193,7 @@ end
 
 function BU_ContainerList:onMouseDoubleClick(x, y)
     local index = self:rowAt(x, y)
-    if index < 1 or index > #self.items then return end
+    if index < 1 or index > #self.items or self.items[index].item.header then return end
     self.window:rename(self.items[index].item)
 end
 
@@ -192,6 +201,7 @@ function BU_ContainerList:onRightMouseUp(x, y)
     local index = self:rowAt(x, y)
     if index < 1 or index > #self.items then return end
     local row = self.items[index].item
+    if row.header then return end
     local win = self.window
     local menu = ISContextMenu.get(win.playerNum, self:getAbsoluteX() + x, self:getAbsoluteY() + y)
     menu:addOption(getText("IGUI_BU_Rename"), win, BU_Window.rename, row)
@@ -273,6 +283,7 @@ function BU_Window:createChildren()
     self.itemList:instantiate()
     self.itemList:setAnchorBottom(true)
     self.itemList:setFont(UIFont.Small, 3)
+    self.itemList.itemheight = ROW_HGT
     self:addChild(self.itemList)
 
     self.containerList = BU_ContainerList:new(self.itemList:getRight() + PAD, top, self.width - leftW - PAD * 3, self.height - top - rh - PAD, self)
@@ -281,6 +292,7 @@ function BU_Window:createChildren()
     self.containerList:setAnchorRight(true)
     self.containerList:setAnchorBottom(true)
     self.containerList:setFont(UIFont.Small, 3)
+    self.containerList.itemheight = ROW_HGT
     self:addChild(self.containerList)
 
     self.resizeWidget2:bringToTop()
@@ -365,14 +377,23 @@ function BU_Window:fill()
     end
     self.itemList:setYScroll(scroll)
     scroll = self.containerList:getYScroll()
-    self.containerList:clear()
+    local list = self.containerList
+    list:clear()
+    local lastHeader = nil
     for _, row in ipairs(self.rows) do
         local text = string.lower(row.name .. " " .. (row.place or "") .. " " .. row.kindLabel)
         if row.pinned or filter == "" or string.find(text, filter, 1, true) then
-            self.containerList:addItem(row.name, row)
+            local header = row.pinned and getText("IGUI_BU_Source") or ((row.room or getText("IGUI_BU_Outside")) .. ", " .. S.floorLabel(row.z))
+            if header ~= lastHeader then
+                local h = list:addItem(header, { header = true, text = header })
+                list:setScrollHeight(list:getScrollHeight() - h.height + HEADER_HGT)
+                h.height = HEADER_HGT
+                lastHeader = header
+            end
+            list:addItem(row.name, row)
         end
     end
-    self.containerList:setYScroll(scroll)
+    list:setYScroll(scroll)
 end
 
 -- assignments ----------------------------------------------------------------------------------------------

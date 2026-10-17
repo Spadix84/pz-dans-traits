@@ -219,7 +219,11 @@ end
 -- from the last stop; a container's items are taken while they fit the budget
 -- and the container's room. A single item heavier than the whole budget is
 -- still taken when nothing else has been, so a heavy item never stalls a run.
--- Returns { stops = { { key, items } }, weight, skipped = { noRoom = n, noContainer = n } }.
+-- An item's carry (what it costs to carry: zero once it fits a worn bag, set
+-- by the caller) counts against the budget; its weight counts against the
+-- container's room. Every destination is tried, so a bag's worth is taken
+-- even when the hands are already full.
+-- Returns { stops = { { key, items } }, weight (the carry total), skipped = { noRoom = n, noContainer = n } }.
 function BU.trip(items, containers, from, budget)
     local byKey = containerByKey(containers)
     local byDest, order = {}, {}
@@ -251,15 +255,16 @@ function BU.trip(items, containers, from, budget)
         local take = {}
         for _, item in ipairs(byDest[key]) do
             local w = item.weight or 0
-            local fits = w <= left or (weight == 0 and #take == 0)
+            local cw = item.carry or w
+            local fits = cw <= left or (weight == 0 and #take == 0)
             if room ~= nil and w > room then
                 fits = false
                 skipped.noRoom = skipped.noRoom + 1
             end
             if fits then
                 take[#take + 1] = item
-                left = left - w
-                weight = weight + w
+                left = left - cw
+                weight = weight + cw
                 if room ~= nil then room = room - w end
             end
         end
@@ -267,7 +272,6 @@ function BU.trip(items, containers, from, budget)
             stops[#stops + 1] = { key = key, items = take }
             here = c
         end
-        if left <= 0 then break end
     end
     return { stops = stops, weight = weight, skipped = skipped }
 end

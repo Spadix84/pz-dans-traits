@@ -71,7 +71,7 @@ local function idKey(id)
     return tostring(id)
 end
 
--- the bags worn or carried, as { item, inv, reduction }
+-- the bags worn or carried, as { item, inv, reduction }, best reduction first
 local function bagsOf(player)
     local bags = {}
     pcall(function()
@@ -85,6 +85,7 @@ local function bagsOf(player)
             end
         end
     end)
+    table.sort(bags, function(a, b) return a.reduction > b.reduction end)
     return bags
 end
 
@@ -131,13 +132,46 @@ local function rowsByKey(rows)
     return byKey
 end
 
--- the containers of the base, scanned once per step
+-- the containers of the base: scanned once per run, their room refreshed each step
 local function containersFor(state)
+    if state.rows then
+        for _, row in ipairs(state.rows) do
+            pcall(function()
+                row.capacity = row.container:getCapacity()
+                row.used = row.container:getCapacityWeight()
+                row.free = math.max(0, row.capacity - row.used)
+            end)
+        end
+        return state.rows
+    end
     local src = state.source
     local sq = src and S.sourceSquare(src) or nil
     local zone = S.zone(state.player, sq)
     state.zone = zone
-    return S.containers(zone, src and src.container or nil)
+    state.rows = S.containers(zone, src and src.container or nil)
+    return state.rows
+end
+
+-- The bags are filled every trip: an item that fits a worn bag's remaining
+-- room (best reduction first) costs nothing against the carry limit; only
+-- what has to go in the hands counts, at full weight.
+local function carryWeights(items, bags)
+    local sorted = {}
+    for _, b in ipairs(bags) do
+        local left = 0
+        pcall(function() left = b.inv:getCapacity() - b.inv:getCapacityWeight() end)
+        sorted[#sorted + 1] = { reduction = b.reduction or 0, left = left }
+    end
+    table.sort(sorted, function(a, b) return a.reduction > b.reduction end)
+    for _, r in ipairs(items) do
+        r.carry = r.weight
+        for _, b in ipairs(sorted) do
+            if r.carry == r.weight and r.weight <= b.left then
+                b.left = b.left - r.weight
+                r.carry = 0
+            end
+        end
+    end
 end
 
 local function queueMarker(state)
@@ -247,6 +281,8 @@ local function loadStep(state)
     local player = state.player
     local budget = 0
     pcall(function() budget = player:getMaxWeight() - player:getInventory():getCapacityWeight() end)
+    local bags = bagsOf(player)
+    carryWeights(items, bags)
     local trip = BU.trip(items, rows, posOf(player), budget)
     state.noRoom = (state.noRoom or 0) + trip.skipped.noRoom
     state.noContainer = trip.skipped.noContainer
@@ -272,7 +308,6 @@ local function loadStep(state)
             end
         end)
     end
-    local bags = bagsOf(player)
     state.expect = {}
     for _, stop in ipairs(trip.stops) do
         for _, r in ipairs(stop.items) do
