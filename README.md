@@ -636,6 +636,16 @@ Every effect that lasts has one. All of them need [Moodle Framework](https://ste
 - Stale Clothes and Musty Clothes come from [laundry](#laundry), Good Read from [reading](#reading).
 - Blood Sugar says the sugar is out of range but not which way; the meter is how you find out. Hallucinations has none; it would give the episodes away.
 
+## Base Unloader
+
+A separate mod in this repo (`BaseUnloader/`, its own Workshop item once uploaded) that puts a loot run away for you. Design talked through on 2026-10-16; built the same day, not yet play-tested.
+
+- Right-click the car (**Unload trunk to base**), any container, or items in a loot window (**Unload to base**), or your own items (**Put away what I am carrying**). A window opens: left, what is in the source grouped by type with where each type goes; right, every container in the base with its name, kind, room, floor, distance from you and how full it is. The base is the building you are in or next to plus a margin, together with a circle round the source (sandbox: Building Margin 4, Nearby Radius 12, Floors Searched 3).
+- Drag a type onto a container to say that type lives there; the rule is remembered for the save, so the next run needs almost no dragging. Items dragged straight out of the vanilla inventory windows onto a container row do the same. Ctrl while dropping sends just those items, this run only. **Suggest** fills the gaps from what the base already holds (the container with most of that type, then the fridge or freezer for perishables, then the category, then a container of a suitable kind). Right-click a type to unassign it or its whole category; right-click a container to send everything unassigned there or clear its assignments.
+- Hover a container row and it lights up in the world. Double-click it (or right-click, in the world too) to rename it; the loot window shows the name as well, since it is the game's own container name with a copy kept in the save.
+- **Start**: the character walks to the source, loads a trip's worth into worn bags (then hands) within the carry weight, walks round the base nearest-container first putting things down, and goes back for more until the source holds nothing with a home. Favourites and anything worn or held are never touched. A closed trunk lid is opened on the way. Each step is planned from what is actually in the source and the bags, so a zombie, a key press or a reload only pauses it: **Resume unloading** is on every right-click menu while a plan is saved, **Forget the unfinished run** drops it. If two steps in a row move nothing (a container that refuses the item) the run stops rather than loop.
+- Files: `shared/BaseUnloader_Core.lua` (keys, saved data in `ModData.getOrCreate("BaseUnloader")`, rules, grouping, suggestions, trip planning: pure, tested), `client/BaseUnloader_Scan.lua` (zone, container rows, names, places, item records, sources), `client/BaseUnloader_Run.lua` (the step machine over `luautils.walkToContainer` and `ISInventoryTransferAction`, one destination per step because walkToContainer clears the queue, a marker action ending each step), `client/BaseUnloader_UI.lua` (the window), `client/BaseUnloader_Menu.lua` (the menus; the vehicle menu is a wrapped `ISVehicleMenu.FillMenuOutsideVehicle`). Deploy with `python deploy.py --unloader`; test with `python tests/run_tests.py baseunloader`. Singleplayer only for now (the saved data is not transmitted).
+
 ## Layout
 
 ```
@@ -647,6 +657,8 @@ DanTraits/common/        empty; Build 42 expects it beside 42/
 DanTraits/tools/         make_icons.py (draws the moodle, item and age trait icons), make_reading_icon.py
                          (Good Read), gen_reading_data.py (the reading table, from the game jar)
 tests/                   offline tests (fengari); python tests/run_tests.py
+DansVanillaFixes/        Dan's Vanilla Fixes, a separate mod (python deploy.py --patch)
+BaseUnloader/            Base Unloader, a separate mod (python deploy.py --unloader)
 workshop/                workshop.txt and preview.png for the Steam Workshop page
 deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back, or --workshop)
 ```

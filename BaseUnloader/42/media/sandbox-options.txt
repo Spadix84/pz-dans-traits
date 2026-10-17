@@ -1,0 +1,10 @@
+VERSION = 1,
+
+option BaseUnloader.Radius
+{type = integer, min = 3, max = 60, default = 12, page = BaseUnloader, translation = BaseUnloaderRadius,}
+
+option BaseUnloader.Pad
+{type = integer, min = 0, max = 20, default = 4, page = BaseUnloader, translation = BaseUnloaderPad,}
+
+option BaseUnloader.Floors
+{type = integer, min = 0, max = 8, default = 3, page = BaseUnloader, translation = BaseUnloaderFloors,}

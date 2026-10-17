@@ -1,0 +1,404 @@
+-- Base Unloader: the run. One step at a time: walk to the source and load up
+-- (a trip's worth, planned by the core), or walk to one container and put
+-- down what belongs there. A tiny marker action ends every step; when it
+-- completes the next step is planned from what is actually in the trunk and
+-- the bag, so an interruption (a zombie, a key press, a reload) loses
+-- nothing: the plan is saved in the world's mod data and Resume plans the next
+-- step from scratch.
+--
+-- Vanilla does the walking and the moving: luautils.walkToContainer paths to a
+-- world container or a vehicle's vpart area, ISInventoryTransferAction moves
+-- each item. Only one destination is queued at a time because walkToContainer
+-- clears the queue before it walks.
+
+require "TimedActions/ISBaseTimedAction"
+require "BaseUnloader_Scan"
+
+local BU = BaseUnloader
+local S = BU_Scan
+BU_Run = {}
+local R = BU_Run
+
+R.active = {}          -- [playerNum] = state of a run in progress
+R.MAX_NO_PROGRESS = 2  -- steps in a row that moved nothing before the run gives up
+
+-- the marker ------------------------------------------------------------------------------
+
+BU_MarkAction = ISBaseTimedAction:derive("BU_MarkAction")
+
+function BU_MarkAction:isValid() return true end
+function BU_MarkAction:update() end
+function BU_MarkAction:start() end
+function BU_MarkAction:stop() ISBaseTimedAction.stop(self) end
+
+function BU_MarkAction:perform()
+    ISBaseTimedAction.perform(self)
+    if self.state then self.state.stepDone = true end
+end
+
+function BU_MarkAction:new(character, state)
+    local o = ISBaseTimedAction.new(self, character)
+    o.state = state
+    o.maxTime = 1
+    o.stopOnWalk = false
+    o.stopOnAim = false
+    o.stopOnRun = false
+    return o
+end
+
+-- helpers -----------------------------------------------------------------------------------
+
+local function whoIs(player)
+    local who
+    pcall(function() who = player:getUsername() end)
+    if not who or who == "" then who = "player" .. tostring(player:getPlayerNum()) end
+    return who
+end
+
+local function say(player, good, text)
+    pcall(function()
+        if good then HaloTextHelper.addGoodText(player, text) else HaloTextHelper.addBadText(player, text) end
+    end)
+end
+
+local function posOf(player)
+    local sq = S.squareOf(player)
+    if sq then return { x = sq:getX(), y = sq:getY(), z = sq:getZ() } end
+    return { x = player:getX(), y = player:getY(), z = player:getZ() }
+end
+
+local function idKey(id)
+    return tostring(id)
+end
+
+-- the bags worn or carried, as { item, inv, reduction }
+local function bagsOf(player)
+    local bags = {}
+    pcall(function()
+        local items = player:getInventory():getItems()
+        for i = 0, items:size() - 1 do
+            local it = items:get(i)
+            if instanceof(it, "InventoryContainer") and it:getInventory() then
+                local red = 0
+                pcall(function() red = it:getWeightReduction() end)
+                bags[#bags + 1] = { item = it, inv = it:getInventory(), reduction = red, planned = 0 }
+            end
+        end
+    end)
+    return bags
+end
+
+-- every item the character carries, main inventory and inside bags, as records
+local function allCarried(player)
+    local out = {}
+    local function walk(inv, depth)
+        local items = inv:getItems()
+        for i = 0, items:size() - 1 do
+            local it = items:get(i)
+            local r = S.itemRecord(it)
+            if r then out[#out + 1] = r end
+            if depth < 3 and instanceof(it, "InventoryContainer") and it:getInventory() then
+                walk(it:getInventory(), depth + 1)
+            end
+        end
+    end
+    pcall(function() walk(player:getInventory(), 0) end)
+    return out
+end
+
+-- the carried items this run owns, with their destinations; drops from the
+-- plan anything no longer carried
+local function carriedRecords(state)
+    local plan = state.plan
+    local found, seen = {}, {}
+    for _, r in ipairs(allCarried(state.player)) do
+        local dest = plan.carried[idKey(r.id)]
+        if dest then
+            r.dest = dest
+            found[#found + 1] = r
+            seen[idKey(r.id)] = true
+        end
+    end
+    for k in pairs(plan.carried) do
+        if not seen[k] then plan.carried[k] = nil end
+    end
+    return found
+end
+
+local function rowsByKey(rows)
+    local byKey = {}
+    for _, row in ipairs(rows) do byKey[row.key] = row end
+    return byKey
+end
+
+-- the containers of the base, scanned once per step
+local function containersFor(state)
+    local src = state.source
+    local sq = src and S.sourceSquare(src) or nil
+    local zone = S.zone(state.player, sq)
+    state.zone = zone
+    return S.containers(zone, src and src.container or nil)
+end
+
+local function queueMarker(state)
+    state.stepDone = false
+    state.inStep = true
+    ISTimedActionQueue.add(BU_MarkAction:new(state.player, state))
+end
+
+-- the steps ------------------------------------------------------------------------------------
+
+local function finish(state)
+    local plan = state.plan
+    local n = state.delivered or 0
+    say(state.player, true, getText("IGUI_BU_Done", n))
+    local nowhere = (state.noContainer or 0) + (state.lost or 0)
+    if nowhere > 0 then say(state.player, false, getText("IGUI_BU_Nowhere", nowhere)) end
+    if (state.noRoom or 0) > 0 then say(state.player, false, getText("IGUI_BU_NoRoom", state.noRoom)) end
+    BU.store().plans[state.who] = nil
+    R.active[state.playerNum] = nil
+end
+
+function R.pause(state, textKey)
+    R.active[state.playerNum] = nil
+    state.inStep = false
+    say(state.player, false, getText(textKey or "IGUI_BU_Paused"))
+end
+
+-- put down what is carried: one container per step, nearest first
+local function deliverStep(state, carried)
+    local rows = containersFor(state)
+    local stops, lost = BU.deliveryOrder(carried, rows, posOf(state.player))
+    for _, r in ipairs(lost) do
+        state.plan.carried[idKey(r.id)] = nil
+        state.lost = (state.lost or 0) + 1
+    end
+    if #stops == 0 then return false end
+    local stop = stops[1]
+    local row = rowsByKey(rows)[stop.key]
+    local ok, reached = pcall(luautils.walkToContainer, row.container, state.playerNum)
+    if not ok or not reached then
+        -- cannot get there: those items stay in the bag and leave the plan
+        for _, r in ipairs(stop.items) do
+            state.plan.carried[idKey(r.id)] = nil
+            state.lost = (state.lost or 0) + 1
+        end
+        state.pending = true
+        return true
+    end
+    state.expect = {}
+    for _, r in ipairs(stop.items) do
+        local from = r.item:getContainer()
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(state.player, r.item, from, row.container))
+        state.expect[#state.expect + 1] = { record = r, from = from, delivering = true }
+    end
+    queueMarker(state)
+    return true
+end
+
+-- the bag with room for an item, else the main inventory
+local function pickBag(player, bags, r)
+    for _, b in ipairs(bags) do
+        local fits = false
+        pcall(function()
+            fits = b.inv:hasRoomFor(player, r.item) and (b.inv:getCapacityWeight() + b.planned + r.weight <= b.inv:getCapacity())
+        end)
+        if fits then
+            b.planned = b.planned + r.weight
+            return b.inv
+        end
+    end
+    return player:getInventory()
+end
+
+-- load a trip's worth from the source
+local function loadStep(state)
+    local src = state.source
+    if not src then return false end
+    local plan = state.plan
+    local rules = BU.store().rules
+    local items = {}
+    local pool = S.items(src.container)
+    if src.kind == "self" then pool = allCarried(state.player) end
+    for _, r in ipairs(pool) do
+        if BU.movable(r) then
+            r.dest = BU.destinationOf(r, rules, plan.oneOffs)
+            if r.dest then items[#items + 1] = r end
+        end
+    end
+    if #items == 0 then return false end
+    local rows = containersFor(state)
+    if src.kind == "self" then
+        -- already in hand: everything with a home joins the delivery
+        local byKey = rowsByKey(rows)
+        local any = false
+        for _, r in ipairs(items) do
+            if byKey[r.dest] then
+                plan.carried[idKey(r.id)] = r.dest
+                any = true
+            else
+                state.noContainer = (state.noContainer or 0) + 1
+            end
+        end
+        if not any then return false end
+        state.pending = true
+        return true
+    end
+    local player = state.player
+    local budget = 0
+    pcall(function() budget = player:getMaxWeight() - player:getInventory():getCapacityWeight() end)
+    local trip = BU.trip(items, rows, posOf(player), budget)
+    state.noRoom = (state.noRoom or 0) + trip.skipped.noRoom
+    state.noContainer = trip.skipped.noContainer
+    if #trip.stops == 0 then return false end
+    local ok, reached = pcall(luautils.walkToContainer, src.container, state.playerNum)
+    if not ok then
+        R.pause(state, "IGUI_BU_LeaveVehicle")
+        return true
+    end
+    if not reached then
+        R.pause(state, "IGUI_BU_CantReach")
+        return true
+    end
+    if src.kind == "vehicle" then
+        -- a closed trunk lid opens on the way
+        pcall(function()
+            local vpart = src.vpart
+            if vpart:getDoor() and vpart:getInventoryItem() and not vpart:getDoor():isOpen() then
+                if vpart:getDoor():isLocked() then
+                    ISTimedActionQueue.add(ISUnlockVehicleDoor:new(player, vpart))
+                end
+                ISTimedActionQueue.add(ISOpenVehicleDoor:new(player, vpart:getVehicle(), vpart))
+            end
+        end)
+    end
+    local bags = bagsOf(player)
+    state.expect = {}
+    for _, stop in ipairs(trip.stops) do
+        for _, r in ipairs(stop.items) do
+            local into = pickBag(player, bags, r)
+            ISTimedActionQueue.add(ISInventoryTransferAction:new(player, r.item, src.container, into))
+            plan.carried[idKey(r.id)] = stop.key
+            state.expect[#state.expect + 1] = { record = r, from = src.container }
+        end
+    end
+    queueMarker(state)
+    return true
+end
+
+function R.step(state)
+    local player = state.player
+    if not player or player:isDead() then
+        R.active[state.playerNum] = nil
+        return
+    end
+    local carried = carriedRecords(state)
+    if #carried > 0 and deliverStep(state, carried) then return end
+    if loadStep(state) then return end
+    finish(state)
+end
+
+-- a step's marker completed: count what moved, give up if nothing does twice
+local function afterStep(state)
+    local moved = 0
+    for _, e in ipairs(state.expect or {}) do
+        local now
+        pcall(function() now = e.record.item:getContainer() end)
+        if now ~= e.from then
+            moved = moved + 1
+            if e.delivering then
+                state.delivered = (state.delivered or 0) + 1
+                state.plan.carried[idKey(e.record.id)] = nil
+            end
+        elseif not e.delivering then
+            -- did not leave the source: not carried after all
+            state.plan.carried[idKey(e.record.id)] = nil
+        end
+    end
+    state.expect = nil
+    if moved == 0 then
+        state.noProgress = (state.noProgress or 0) + 1
+        if state.noProgress >= R.MAX_NO_PROGRESS then
+            R.pause(state, "IGUI_BU_Stuck")
+            return
+        end
+    else
+        state.noProgress = 0
+    end
+    state.pending = true
+end
+
+function R.onTick()
+    for num, state in pairs(R.active) do
+        if state.pending then
+            state.pending = false
+            R.step(state)
+        elseif state.inStep then
+            if state.stepDone then
+                state.inStep = false
+                afterStep(state)
+            else
+                local q = ISTimedActionQueue.getTimedActionQueue(state.player)
+                if q and #q.queue == 0 then R.pause(state) end
+            end
+        end
+    end
+end
+
+-- starting, resuming, forgetting ---------------------------------------------------------------------
+
+local function newState(player, source, plan)
+    local num = player:getPlayerNum()
+    return { player = player, playerNum = num, who = whoIs(player), source = source, plan = plan,
+             delivered = 0, pending = true }
+end
+
+-- a new run from the window: the one-off assignments ride with the plan
+function R.start(player, source, oneOffs)
+    local who = whoIs(player)
+    local plan = { source = S.saveSource(source), oneOffs = oneOffs or {}, carried = {} }
+    BU.store().plans[who] = plan
+    local state = newState(player, source, plan)
+    R.active[player:getPlayerNum()] = state
+    say(player, true, getText("IGUI_BU_Started"))
+end
+
+function R.hasPlan(player)
+    return BU.store().plans[whoIs(player)] ~= nil
+end
+
+function R.isRunning(player)
+    return R.active[player:getPlayerNum()] ~= nil
+end
+
+-- pick a saved plan back up: the source is found again by id or key; with the
+-- source gone, what is already carried is still put away
+function R.resume(player)
+    local who = whoIs(player)
+    local plan = BU.store().plans[who]
+    if not plan then return false end
+    plan.carried = plan.carried or {}
+    plan.oneOffs = plan.oneOffs or {}
+    local source = S.loadSource(plan.source, player)
+    if not source then say(player, false, getText("IGUI_BU_SourceGone")) end
+    local state = newState(player, source, plan)
+    R.active[player:getPlayerNum()] = state
+    say(player, true, getText("IGUI_BU_Resumed"))
+    return true
+end
+
+function R.forget(player)
+    BU.store().plans[whoIs(player)] = nil
+    R.active[player:getPlayerNum()] = nil
+end
+
+function R.stop(player)
+    local state = R.active[player:getPlayerNum()]
+    if state then R.pause(state) end
+end
+
+Events.OnTick.Add(R.onTick)
+Events.OnGameStart.Add(function()
+    BU.resetStore()
+    R.active = {}
+end)

@@ -1,0 +1,6 @@
+name=Base Unloader
+id=BaseUnloader
+url=https://github.com/Spadix84/pz-dans-traits
+modversion=0.1.0
+versionMin=42.0.0
+description=Come home from a loot run, right-click the trunk (or any container, or your own bag) and choose Unload to base. A window lists every container in your base with where it is, by room and floor. Drag items onto the container they belong in, or press Suggest to have it guess from what you already keep where, then Start: your character loads up, walks round the base and puts everything away, trip after trip. Rules remember where each item type goes, so the next run needs almost no dragging. Rename containers from the list and the loot window shows the names too. If a zombie interrupts, right-click to resume where you left off. Singleplayer only for now.

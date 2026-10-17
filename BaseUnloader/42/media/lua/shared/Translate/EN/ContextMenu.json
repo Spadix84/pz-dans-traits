@@ -1,0 +1,10 @@
+{
+    "ContextMenu_BU_Title": "Base Unloader",
+    "ContextMenu_BU_Unload": "Unload to base",
+    "ContextMenu_BU_UnloadTrunk": "Unload trunk to base",
+    "ContextMenu_BU_PutAway": "Put away what I am carrying",
+    "ContextMenu_BU_RenameContainer": "Rename container",
+    "ContextMenu_BU_Resume": "Resume unloading",
+    "ContextMenu_BU_Stop": "Stop unloading",
+    "ContextMenu_BU_Forget": "Forget the unfinished run"
+}

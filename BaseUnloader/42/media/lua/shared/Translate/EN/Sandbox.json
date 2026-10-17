@@ -1,0 +1,9 @@
+{
+    "Sandbox_BaseUnloader": "Base Unloader",
+    "Sandbox_BaseUnloaderRadius": "Nearby Radius",
+    "Sandbox_BaseUnloaderRadius_tooltip": "Containers within this many tiles of the one you are unloading count as part of the base, even outside the building. The whole building you are unloading in or next to always counts.",
+    "Sandbox_BaseUnloaderPad": "Building Margin",
+    "Sandbox_BaseUnloaderPad_tooltip": "Tiles around the building's footprint that still count as the base: the porch, the shed by the door, the car on the drive.",
+    "Sandbox_BaseUnloaderFloors": "Floors Searched",
+    "Sandbox_BaseUnloaderFloors_tooltip": "How many floors above and below the one you are on are searched for containers."
+}

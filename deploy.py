@@ -11,6 +11,8 @@
                                 Contents/mods/DanTraits; tools/ is left out)
     python deploy.py --patch    repo  -> ~/Zomboid/mods/DansVanillaFixes  (the separate
                                 Dan's Vanilla Fixes mod; mirror, like the default)
+    python deploy.py --unloader repo  -> ~/Zomboid/mods/BaseUnloader  (the separate Base
+                                Unloader mod; mirror, like the default)
 
 The game only reads the mod folder, so edit here, deploy, then restart the
 game (registries and item scripts are read at boot; Lua is reloaded too).
@@ -25,6 +27,8 @@ REPO_MOD = os.path.join(HERE, "DanTraits")
 GAME_MOD = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "DanTraits")
 REPO_PATCH = os.path.join(HERE, "DansVanillaFixes")
 GAME_PATCH = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "DansVanillaFixes")
+REPO_UNLOADER = os.path.join(HERE, "BaseUnloader")
+GAME_UNLOADER = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "BaseUnloader")
 REPO_WORKSHOP = os.path.join(HERE, "workshop")
 GAME_WORKSHOP = os.path.join(os.path.expanduser("~"), "Zomboid", "Workshop", "DanTraits")
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}
@@ -119,12 +123,13 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--workshop", action="store_true", help="build the Workshop upload folder")
     ap.add_argument("--patch", action="store_true", help="deploy the Dan's Vanilla Fixes mod instead")
+    ap.add_argument("--unloader", action="store_true", help="deploy the Base Unloader mod instead")
     a = ap.parse_args()
     if not a.pull:
         for rel in SHARED:
             if not filecmp.cmp(os.path.join(REPO_MOD, rel), os.path.join(REPO_PATCH, rel), shallow=False):
                 raise SystemExit("%s differs between DanTraits and DansVanillaFixes: make them the same first" % rel)
-    if a.workshop and (a.patch or a.pull):
+    if a.workshop and (a.patch or a.unloader or a.pull):
         ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --patch or --pull")
     if a.workshop:
         copied, removed, same = build_workshop(a.dry_run)
@@ -136,6 +141,8 @@ def main():
         print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
         return
     repo, game = (REPO_PATCH, GAME_PATCH) if a.patch else (REPO_MOD, GAME_MOD)
+    if a.unloader:
+        repo, game = REPO_UNLOADER, GAME_UNLOADER
     src, dst = (game, repo) if a.pull else (repo, game)
     if not os.path.isdir(src):
         raise SystemExit("missing: " + src)
@@ -150,7 +157,7 @@ def main():
     # The game loads ~/Zomboid/Workshop/DanTraits/Contents/mods/DanTraits in preference to
     # ~/Zomboid/mods/DanTraits while the upload folder exists, so a deploy that left it
     # stale looked like it did nothing. Keep the two identical.
-    if not a.pull and not a.patch and os.path.isdir(GAME_WORKSHOP):
+    if not a.pull and not a.patch and not a.unloader and os.path.isdir(GAME_WORKSHOP):
         copied, removed, same = build_workshop(a.dry_run)
         print("%s -> %s (the game loads this copy while it exists)" % (HERE, GAME_WORKSHOP))
         for rel in copied:

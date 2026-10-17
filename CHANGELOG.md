@@ -3,6 +3,17 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Base Unloader 0.1.0 - 2026-10-16 (separate mod, not yet play-tested)
+
+- **Base Unloader** (`BaseUnloader/`): right-click the trunk, a container or your own items for a
+  window of every container in the base (name, kind, room, floor, distance, fill); drag item types
+  onto containers to set remembered rules, or drag items from the inventory windows; Suggest fills
+  the gaps from what the base already holds; Start has the character load up within the carry
+  weight and walk the base nearest first, trip after trip, opening a closed trunk lid on the way.
+  Rename containers from the list or the world; the loot window shows the names. Runs pause on any
+  interruption and Resume from the saved plan; two steps that move nothing stop the run. Sandbox:
+  Nearby Radius, Building Margin, Floors Searched. Offline test `tests/test_baseunloader.lua`.
+
 ## 1.3.0 - 2026-10-17
 
 ### New
