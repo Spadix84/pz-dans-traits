@@ -340,6 +340,18 @@ function S.itemRecord(it)
         r.food = it:IsFood()
         if r.food and it.getOffAgeMax then r.perishable = it:getOffAgeMax() < BU.NEVER_OFF end
     end)
+    -- fresh, stale or rotten: frozen food keeps, so it counts as fresh
+    if r.food and r.perishable then
+        pcall(function()
+            r.rotten = it:isRotten() == true
+            local frozen = false
+            pcall(function() frozen = it:isFrozen() == true end)
+            if not r.rotten and not frozen then
+                local age, off = it:getAge() or 0, it:getOffAge() or BU.NEVER_OFF
+                r.stale = age >= off
+            end
+        end)
+    end
     -- dirty or bloody clothing is laundry, when the option is on
     pcall(function()
         if S.laundryOn() and it:IsClothing() then

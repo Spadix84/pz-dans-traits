@@ -20,6 +20,9 @@ BU.FLOOR_COST = 40            -- a change of floor costs this many tiles of walk
 BU.CAT_PREFIX = "cat:"        -- a rule keyed "cat:Food" sends a whole display category
 BU.LAUNDRY_TAG = "Laundry"    -- the tag (not a game category) that marks where dirty clothes go
 BU.LAUNDRY_KINDS = { clothingdryerbasic = 1, clothingwasher = 2 }   -- the laundry cart, then the washer
+BU.GARBAGE_TAG = "Garbage"
+BU.GARBAGE_KINDS = { bin = true, dumpster = true, composter = true }
+BU.COLD_KINDS = { freezer = 1, icecream = 1, fridge = 2 }           -- fresh food: a freezer, else a fridge
 
 -- keys ------------------------------------------------------------------------------
 
@@ -110,7 +113,7 @@ end
 BU.CATEGORIES = {
     "Accessory", "Ammo", "Bag", "Camping", "Clothing", "Communications", "Container", "Cooking",
     "Electronics", "Entertainment", "Explosives", "FirstAid", "Fishing", "Food", "Furniture",
-    "Gardening", "Household", "Instrument", "Junk", "Key", "Laundry", "LightSource", "Literature", "Material",
+    "Garbage", "Gardening", "Household", "Instrument", "Junk", "Key", "Laundry", "LightSource", "Literature", "Material",
     "Memento", "Mechanics", "Paint", "Security", "Sports", "Tool", "Trapping", "VehicleMaintenance",
     "WaterContainer", "Weapon", "WeaponPart",
 }
@@ -190,6 +193,105 @@ function BU.tagDestination(item, tags, containers)
         end
     end
     return best and best.key or nil
+end
+
+-- the resolver ---------------------------------------------------------------------------------
+
+local function lowerKind(c) return string.lower(c.kind or "") end
+local function isBin(c) return BU.GARBAGE_KINDS[lowerKind(c)] == true end
+local function isLaundryKind(c) return BU.LAUNDRY_KINDS[lowerKind(c)] ~= nil end
+local function isColdKind(c) return BU.COLD_KINDS[lowerKind(c)] ~= nil end
+
+-- has the container room for the item, counting what this step already planned into it
+local function roomFor(c, item, use)
+    if c.free == nil then return true end
+    return (c.free - (use and use[c.key] or 0)) >= (item.weight or 0)
+end
+
+-- the container scoring highest; ties go to the one with most room
+local function most(cands, score)
+    local best, bestN, room = nil, 0, -1
+    for _, c in ipairs(cands) do
+        local n = score(c) or 0
+        if n > bestN or (n == bestN and n > 0 and (c.free or 0) > room) then best, bestN, room = c, n, c.free or 0 end
+    end
+    return best
+end
+
+local function nearest(cands, pos)
+    local best, bestD = nil, nil
+    for _, c in ipairs(cands) do
+        local d = pos and BU.dist(pos, c) or 0
+        if bestD == nil or d < bestD then best, bestD = c, d end
+    end
+    return best
+end
+
+-- Where an item goes, and why. In order:
+--   oneoff    a drop with Ctrl for this very item
+--   laundry   dirty or bloody clothing: a Laundry-tagged container, the cart, the washer
+--   garbage   stale or rotten perishable food: a Garbage-tagged container or a bin
+--   contains  a container that already holds that very item type
+--   freezer   fresh perishable food: a freezer, else a fridge
+--   rule      the type's assigned container
+--   tag       a container tagged with the item's category
+--   category  a container that already holds that category
+--   nearest   the closest container nothing points at (no rule, no tag, not cold, not a bin, not laundry)
+-- Every stage but oneoff only considers containers with room for the item, so a
+-- full shelf hands on to the next stage; nothing with room anywhere returns nil.
+-- ctx: { rules, tags, oneOffs, containers, use, pos, sourceKey, hidden, ruleCounts }
+function BU.resolve(item, ctx)
+    local one = ctx.oneOffs and item.id ~= nil and (ctx.oneOffs[item.id] or ctx.oneOffs[tostring(item.id)]) or nil
+    if one then return one, "oneoff" end
+    local open, shown = {}, {}
+    for _, c in ipairs(ctx.containers or {}) do
+        if c.key ~= ctx.sourceKey and not c.pinned and roomFor(c, item, ctx.use) then
+            open[#open + 1] = c
+            if not (ctx.hidden and ctx.hidden[c.key]) then shown[#shown + 1] = c end
+        end
+    end
+    if item.laundry then
+        local k = BU.laundryDestination(item, ctx.tags, open)
+        if k then return k, "laundry" end
+    end
+    local perishable = item.food and item.perishable
+    if perishable and (item.rotten or item.stale) then
+        local bin = most(open, function(c)
+            if BU.hasTag(ctx.tags, c.key, BU.GARBAGE_TAG) then return 2 end
+            if isBin(c) then return 1 end
+            return 0
+        end)
+        if bin then return bin.key, "garbage" end
+    end
+    local holds = most(shown, function(c) return c.contents and item.fullType and c.contents[item.fullType] or 0 end)
+    if holds then return holds.key, "contains" end
+    if perishable and not item.rotten and not item.stale then
+        local cold = most(open, function(c)
+            local rank = BU.COLD_KINDS[lowerKind(c)]
+            if rank == 1 then return 2 end
+            if rank == 2 then return 1 end
+            return 0
+        end)
+        if cold then return cold.key, "freezer" end
+    end
+    local rule = ctx.rules and item.fullType and ctx.rules[item.fullType] or nil
+    if rule then
+        for _, c in ipairs(open) do
+            if c.key == rule then return rule, "rule" end
+        end
+    end
+    local tagged = BU.tagDestination(item, ctx.tags, open)
+    if tagged then return tagged, "tag" end
+    local cat = most(shown, function(c) return c.cats and item.category and c.cats[item.category] or 0 end)
+    if cat then return cat.key, "category" end
+    local free = {}
+    for _, c in ipairs(shown) do
+        local pointed = (ctx.ruleCounts and ctx.ruleCounts[c.key] or 0) > 0 or (ctx.tags and ctx.tags[c.key] ~= nil)
+        if not pointed and not isColdKind(c) and not isBin(c) and not isLaundryKind(c) then free[#free + 1] = c end
+    end
+    local near = nearest(free, ctx.pos)
+    if near then return near.key, "nearest" end
+    return nil
 end
 
 -- the items -----------------------------------------------------------------------------

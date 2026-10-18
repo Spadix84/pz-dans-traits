@@ -89,8 +89,12 @@ function BU_ItemList:doDrawItem(y, item, alt)
         local r, gg, b = 0.6, 0.85, 0.6
         if how == "oneoff" then r, gg, b = 0.6, 0.75, 0.95 end
         if how == "mixed" then r, gg, b = 0.85, 0.8, 0.5 end
-        if how == "laundry" then r, gg, b = 0.75, 0.7, 0.95 end
-        self:drawText(getText("IGUI_BU_GoesTo", dest), tx, line2, r, gg, b, 1, UIFont.Small)
+        if how == "laundry" or how == "garbage" or how == "freezer" then r, gg, b = 0.75, 0.7, 0.95 end
+        if how == "nearest" or how == "category" or how == "contains" then r, gg, b = 0.65, 0.8, 0.8 end
+        local why = getTextOrNull("IGUI_BU_Why_" .. tostring(how))
+        local text = getText("IGUI_BU_GoesTo", dest)
+        if why then text = text .. "  (" .. why .. ")" end
+        self:drawText(text, tx, line2, r, gg, b, 1, UIFont.Small)
     else
         self:drawText(getText("IGUI_BU_Unassigned"), tx, line2, 0.95, 0.55, 0.5, 1, UIFont.Small)
     end
@@ -453,10 +457,16 @@ function BU_Window:scan()
     self:fill()
 end
 
+-- the resolver's view of the base from this window
+function BU_Window:context()
+    local store = BU.store()
+    local sq = S.squareOf(self.character)
+    return { rules = store.rules, tags = store.tags, oneOffs = nil, containers = self.rows, use = nil,
+             pos = sq and { x = sq:getX(), y = sq:getY(), z = sq:getZ() } or nil,
+             sourceKey = self.source.key, hidden = store.hidden, ruleCounts = self.ruleCounts }
+end
+
 function BU_Window:destinationLabel(g)
-    local rules = BU.store().rules
-    local probe = { fullType = g.fullType, category = g.category }
-    local ruleKey = BU.destinationOf(probe, rules, nil)
     local oneKey, mixed = nil, false
     for _, r in ipairs(g.items) do
         local k = self.oneOffs[r.id]
@@ -467,16 +477,12 @@ function BU_Window:destinationLabel(g)
             mixed = true
         end
     end
-    local key = oneKey
-    local how = "rule"
-    if not key and g.laundry then
-        key = BU.laundryDestination({ laundry = true }, BU.store().tags, self:visibleRows())
-        how = "laundry"
-    end
-    if not key then key = ruleKey end
+    local key, how = oneKey, "oneoff"
     if not key then
-        key = BU.tagDestination(probe, BU.store().tags, self:visibleRows())
-        how = "tag"
+        local first = g.items[1] or {}
+        local probe = { fullType = g.fullType, category = g.category, weight = first.weight, food = g.food,
+                        perishable = g.perishable, laundry = g.laundry, rotten = first.rotten, stale = first.stale }
+        key, how = BU.resolve(probe, self:context())
     end
     if not key then return nil end
     local row = self.byKey[key]
@@ -678,10 +684,20 @@ function BU_Window:unassignCategory(g)
     self:unassign(g)
 end
 
+-- a type is assigned when a rule or a one-off says where it goes; the
+-- resolver's inferences (already holds some, category, nearest) are not
+function BU_Window:isAssigned(g)
+    if BU.store().rules[g.fullType] then return true end
+    for _, r in ipairs(g.items) do
+        if self.oneOffs[r.id] then return true end
+    end
+    return false
+end
+
 function BU_Window:sendUnassigned(row)
     local rules = BU.store().rules
     for _, g in ipairs(self.groups) do
-        if not self:destinationLabel(g) then BU.setRule(rules, g.fullType, row.key) end
+        if not self:isAssigned(g) then BU.setRule(rules, g.fullType, row.key) end
     end
     self:fill()
 end

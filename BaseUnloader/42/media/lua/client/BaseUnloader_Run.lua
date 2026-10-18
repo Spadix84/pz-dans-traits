@@ -152,45 +152,25 @@ local function containersFor(state)
     return state.rows
 end
 
--- Another home for an item whose container is full: a container tagged with
--- its category that still has room for it (use = weight already planned
--- into each container this step).
-local function elsewhere(r, rows, use, notKey)
-    local open = {}
-    for _, row in ipairs(rows) do
-        if row.key ~= notKey and (row.free or 0) - (use[row.key] or 0) >= (r.weight or 0) then open[#open + 1] = row end
-    end
-    return BU.tagDestination(r, BU.store().tags, open)
+-- what the resolver needs to place this run's items
+local function contextFor(state, rows, use)
+    local store = BU.store()
+    local src = state.source
+    return { rules = store.rules, tags = store.tags, oneOffs = state.plan.oneOffs, containers = rows, use = use or {},
+             pos = posOf(state.player), sourceKey = src and src.key or nil, hidden = store.hidden,
+             ruleCounts = BU.ruleCounts(store.rules) }
 end
 
--- Before a trip is planned: items whose container is gone or cannot take
--- them go to a tagged alternative with room, so a full shelf sends the
--- overflow next door; what has nowhere at all is marked skip and never
--- takes bag room. Returns the items that can go, and the counts of the rest.
-local function reroute(items, rows)
-    local byKey = rowsByKey(rows)
-    local use = {}
-    local keep, noRoom, noContainer = {}, 0, 0
-    for _, r in ipairs(items) do
-        local row = byKey[r.dest]
-        local w = r.weight or 0
-        local other = nil
-        if not row then
-            other = elsewhere(r, rows, use, r.dest)
-            if not other then noContainer = noContainer + 1 end
-        elseif (row.free or 0) - (use[r.dest] or 0) < w then
-            other = elsewhere(r, rows, use, r.dest)
-            if not other then noRoom = noRoom + 1 end
-        else
-            other = r.dest
-        end
-        if other then
-            r.dest = other
-            use[other] = (use[other] or 0) + w
-            keep[#keep + 1] = r
-        end
+-- Another home for an item whose container turned out full: the resolver
+-- again, without that container (use = weight already planned this step).
+local function elsewhere(state, r, rows, use, notKey)
+    local rest = {}
+    for _, row in ipairs(rows) do
+        if row.key ~= notKey then rest[#rest + 1] = row end
     end
-    return keep, noRoom, noContainer
+    local ctx = contextFor(state, rest, use)
+    ctx.oneOffs = nil
+    return (BU.resolve(r, ctx))
 end
 
 -- The bags are filled every trip: an item that fits a worn bag's remaining
@@ -309,7 +289,7 @@ local function deliverStep(state, carried)
             use[stop.key] = (use[stop.key] or 0) + (r.weight or 0)
         else
             -- full after all: somewhere else tagged for it, or it stays in the bag
-            local other = elsewhere(r, rows, use, stop.key)
+            local other = elsewhere(state, r, rows, use, stop.key)
             if other then
                 state.plan.carried[idKey(r.id)] = other
                 use[other] = (use[other] or 0) + (r.weight or 0)
@@ -347,49 +327,39 @@ local function loadStep(state)
     local src = state.source
     if not src then return false end
     local plan = state.plan
-    local store = BU.store()
     local rows = containersFor(state)
     local items = {}
     local pool = S.items(src.container)
     if src.kind == "self" then pool = allCarried(state.player) end
+    -- every item through the resolver, the room it takes counted for the next
+    local ctx = contextFor(state, rows, {})
+    local nowhere = 0
     for _, r in ipairs(pool) do
         if BU.movable(r) then
-            -- a one-off for this very item first; then the laundry for dirty clothes; then the rules and tags
-            r.dest = (plan.oneOffs and plan.oneOffs[idKey(r.id)])
-                or BU.laundryDestination(r, store.tags, rows)
-                or BU.destinationOf(r, store.rules, plan.oneOffs)
-                or BU.tagDestination(r, store.tags, rows)
-            if r.dest then items[#items + 1] = r end
+            r.dest = BU.resolve(r, ctx)
+            if r.dest then
+                ctx.use[r.dest] = (ctx.use[r.dest] or 0) + (r.weight or 0)
+                items[#items + 1] = r
+            else
+                nowhere = nowhere + 1
+            end
         end
     end
+    state.noContainer = nowhere
     if #items == 0 then return false end
     if src.kind == "self" then
         -- already in hand: everything with a home joins the delivery
-        local byKey = rowsByKey(rows)
-        local any = false
-        for _, r in ipairs(items) do
-            if byKey[r.dest] then
-                plan.carried[idKey(r.id)] = r.dest
-                any = true
-            else
-                state.noContainer = (state.noContainer or 0) + 1
-            end
-        end
-        if not any then return false end
+        for _, r in ipairs(items) do plan.carried[idKey(r.id)] = r.dest end
         state.pending = true
         return true
     end
     local player = state.player
     local budget = 0
     pcall(function() budget = player:getMaxWeight() - player:getInventory():getCapacityWeight() end)
-    local keep, noRoom, noContainer = reroute(items, rows)
-    state.noRoom = noRoom
-    state.noContainer = noContainer
-    if #keep == 0 then return false end
     local bags = bagsOf(player)
-    carryWeights(keep, bags)
-    local trip = BU.trip(keep, rows, posOf(player), budget)
-    state.noRoom = state.noRoom + trip.skipped.noRoom
+    carryWeights(items, bags)
+    local trip = BU.trip(items, rows, posOf(player), budget)
+    state.noRoom = trip.skipped.noRoom
     if #trip.stops == 0 then return false end
     state.route = nil
     local ok, reached = pcall(luautils.walkToContainer, src.container, state.playerNum)
