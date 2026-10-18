@@ -18,6 +18,8 @@ BU.VERSION = "0.1.0"
 BU.NEVER_OFF = 1000000000     -- Food.getOffAgeMax() for food that never goes off
 BU.FLOOR_COST = 40            -- a change of floor costs this many tiles of walking in the planner (the stairs are never next to you)
 BU.CAT_PREFIX = "cat:"        -- a rule keyed "cat:Food" sends a whole display category
+BU.LAUNDRY_TAG = "Laundry"    -- the tag (not a game category) that marks where dirty clothes go
+BU.LAUNDRY_KINDS = { clothingdryerbasic = 1, clothingwasher = 2 }   -- the laundry cart, then the washer
 
 -- keys ------------------------------------------------------------------------------
 
@@ -108,7 +110,7 @@ end
 BU.CATEGORIES = {
     "Accessory", "Ammo", "Bag", "Camping", "Clothing", "Communications", "Container", "Cooking",
     "Electronics", "Entertainment", "Explosives", "FirstAid", "Fishing", "Food", "Furniture",
-    "Gardening", "Household", "Instrument", "Junk", "Key", "LightSource", "Literature", "Material",
+    "Gardening", "Household", "Instrument", "Junk", "Key", "Laundry", "LightSource", "Literature", "Material",
     "Memento", "Mechanics", "Paint", "Security", "Sports", "Tool", "Trapping", "VehicleMaintenance",
     "WaterContainer", "Weapon", "WeaponPart",
 }
@@ -131,12 +133,44 @@ function BU.hasTag(tags, key, category)
     return t ~= nil and t[category] == true
 end
 
+-- tag a container with every category found inside it (cats: { [category] = n });
+-- returns how many tags were new
+function BU.tagFromContents(tags, key, cats)
+    local added = 0
+    for cat, n in pairs(cats or {}) do
+        if n > 0 and not BU.hasTag(tags, key, cat) then
+            BU.setTag(tags, key, cat, true)
+            added = added + 1
+        end
+    end
+    return added
+end
+
 -- a container's tags as a sorted list
 function BU.tagsOf(tags, key)
     local out = {}
     for cat in pairs(tags[key] or {}) do out[#out + 1] = cat end
     table.sort(out)
     return out
+end
+
+-- Where dirty or bloody clothing goes: a container tagged Laundry, else the
+-- laundry cart, else the washer; the one with most room. nil with none about.
+function BU.laundryDestination(item, tags, containers)
+    if not item.laundry then return nil end
+    local best, bestRank, room = nil, 99, -1
+    for _, c in ipairs(containers) do
+        local rank = nil
+        if BU.hasTag(tags, c.key, BU.LAUNDRY_TAG) then
+            rank = 0
+        elseif BU.LAUNDRY_KINDS[string.lower(c.kind or "")] then
+            rank = BU.LAUNDRY_KINDS[string.lower(c.kind or "")]
+        end
+        if rank and (rank < bestRank or (rank == bestRank and (c.free or 0) > room)) then
+            best, bestRank, room = c, rank, c.free or 0
+        end
+    end
+    return best and best.key or nil
 end
 
 -- Where an item's category is welcome: among the containers tagged with it,
@@ -170,11 +204,12 @@ function BU.groups(items)
     local byType, list = {}, {}
     for _, item in ipairs(items) do
         if BU.movable(item) then
-            local g = byType[item.fullType]
+            local gkey = item.fullType .. (item.laundry and "|laundry" or "")
+            local g = byType[gkey]
             if not g then
                 g = { fullType = item.fullType, name = item.name, category = item.category, count = 0, weight = 0,
-                      items = {}, food = item.food, perishable = item.perishable }
-                byType[item.fullType] = g
+                      items = {}, food = item.food, perishable = item.perishable, laundry = item.laundry == true }
+                byType[gkey] = g
                 list[#list + 1] = g
             end
             g.count = g.count + 1
@@ -183,7 +218,10 @@ function BU.groups(items)
         end
     end
     table.sort(list, function(a, b)
-        if a.name == b.name then return a.fullType < b.fullType end
+        if a.name == b.name then
+            if a.fullType == b.fullType then return (a.laundry and 1 or 0) < (b.laundry and 1 or 0) end
+            return a.fullType < b.fullType
+        end
         return a.name < b.name
     end)
     return list

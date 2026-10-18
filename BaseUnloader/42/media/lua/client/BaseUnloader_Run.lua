@@ -354,7 +354,11 @@ local function loadStep(state)
     if src.kind == "self" then pool = allCarried(state.player) end
     for _, r in ipairs(pool) do
         if BU.movable(r) then
-            r.dest = BU.destinationOf(r, store.rules, plan.oneOffs) or BU.tagDestination(r, store.tags, rows)
+            -- a one-off for this very item first; then the laundry for dirty clothes; then the rules and tags
+            r.dest = (plan.oneOffs and plan.oneOffs[idKey(r.id)])
+                or BU.laundryDestination(r, store.tags, rows)
+                or BU.destinationOf(r, store.rules, plan.oneOffs)
+                or BU.tagDestination(r, store.tags, rows)
             if r.dest then items[#items + 1] = r end
         end
     end

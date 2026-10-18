@@ -4,6 +4,8 @@
     "Sandbox_BaseUnloaderRadius_tooltip": "Containers within this many tiles of the one you are unloading count as part of the base, even outside the building. The whole building you are unloading in or next to always counts.",
     "Sandbox_BaseUnloaderPad": "Building Margin",
     "Sandbox_BaseUnloaderPad_tooltip": "Tiles around the building's footprint that still count as the base: the porch, the shed by the door, the car on the drive.",
+    "Sandbox_BaseUnloaderLaundry": "Dirty Clothes to the Laundry",
+    "Sandbox_BaseUnloaderLaundry_tooltip": "Dirty or bloody clothing goes to a container tagged Laundry, else the laundry cart, else the washer, whatever its type's rule says. A drop with Ctrl still sends those very items wherever you put them.",
     "Sandbox_BaseUnloaderFloors": "Floors Searched",
     "Sandbox_BaseUnloaderFloors_tooltip": "How many floors above and below the one you are on are searched for containers."
 }

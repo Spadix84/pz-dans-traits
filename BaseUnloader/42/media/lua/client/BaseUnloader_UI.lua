@@ -81,13 +81,15 @@ function BU_ItemList:doDrawItem(y, item, alt)
     local cw = getTextManager():MeasureStringX(UIFont.Small, count)
     drawIcon(self, itemIcon(g), PAD, y)
     local tx = PAD + ICON + PAD
-    self:drawText(g.name, tx, line1, 1, 1, 1, 1, UIFont.Small)
+    local name = g.laundry and getText("IGUI_BU_Dirty", g.name) or g.name
+    self:drawText(name, tx, line1, 1, 1, 1, 1, UIFont.Small)
     self:drawText(count, self.width - cw - PAD - 14, line1, 0.7, 0.7, 0.7, 1, UIFont.Small)
     local dest, how = win:destinationLabel(g)
     if dest then
         local r, gg, b = 0.6, 0.85, 0.6
         if how == "oneoff" then r, gg, b = 0.6, 0.75, 0.95 end
         if how == "mixed" then r, gg, b = 0.85, 0.8, 0.5 end
+        if how == "laundry" then r, gg, b = 0.75, 0.7, 0.95 end
         self:drawText(getText("IGUI_BU_GoesTo", dest), tx, line2, r, gg, b, 1, UIFont.Small)
     else
         self:drawText(getText("IGUI_BU_Unassigned"), tx, line2, 0.95, 0.55, 0.5, 1, UIFont.Small)
@@ -295,6 +297,9 @@ function BU_ContainerList:onRightMouseUp(x, y)
             menu:addOption(getText("IGUI_BU_Hide"), win, BU_Window.setHidden, row, true)
         end
         menu:addOption(getText("IGUI_BU_SendUnassigned"), win, BU_Window.sendUnassigned, row)
+        if (row.count or 0) > 0 then
+            menu:addOption(getText("IGUI_BU_TagFromContents"), win, BU_Window.tagFromContents, row)
+        end
         local catOption = menu:addOption(getText("IGUI_BU_Categories"), nil, nil)
         local sub = ISContextMenu:getNew(menu)
         menu:addSubMenu(catOption, sub)
@@ -382,6 +387,15 @@ function BU_Window:createChildren()
     self.hiddenBox:setWidthToFit()
     self:addChild(self.hiddenBox)
 
+    local autoW = math.max(70, getTextManager():MeasureStringX(UIFont.Small, getText("IGUI_BU_AutoTag")) + 20)
+    self.autoTagBtn = ISButton:new(self.rescanBtn:getX() - autoW - PAD, th + PAD, autoW, barH, getText("IGUI_BU_AutoTag"), self, BU_Window.autoTag)
+    self.autoTagBtn:initialise()
+    self.autoTagBtn:instantiate()
+    self.autoTagBtn:setAnchorLeft(false)
+    self.autoTagBtn:setAnchorRight(true)
+    self.autoTagBtn:setTooltip(getText("IGUI_BU_AutoTagTip"))
+    self:addChild(self.autoTagBtn)
+
     local top = self.filterBox:getBottom() + PAD + FONT_HGT_SMALL + PAD
     local leftW = math.floor((self.width - PAD * 3) * 0.42)
     self.itemList = BU_ItemList:new(PAD, top, leftW, self.height - top - rh - PAD, self)
@@ -453,8 +467,13 @@ function BU_Window:destinationLabel(g)
             mixed = true
         end
     end
-    local key = oneKey or ruleKey
+    local key = oneKey
     local how = "rule"
+    if not key and g.laundry then
+        key = BU.laundryDestination({ laundry = true }, BU.store().tags, self:visibleRows())
+        how = "laundry"
+    end
+    if not key then key = ruleKey end
     if not key then
         key = BU.tagDestination(probe, BU.store().tags, self:visibleRows())
         how = "tag"
@@ -489,6 +508,23 @@ function BU_Window:toggleTag(row, cat)
     local tags = BU.store().tags
     BU.setTag(tags, row.key, cat, not BU.hasTag(tags, row.key, cat))
     self:fill()
+end
+
+function BU_Window:tagFromContents(row)
+    BU.tagFromContents(BU.store().tags, row.key, row.cats)
+    self:fill()
+end
+
+-- every listed container (not hidden, not the source) takes the categories of what it holds
+function BU_Window:autoTag()
+    local tags = BU.store().tags
+    local n = 0
+    for _, row in ipairs(self:visibleRows()) do
+        if (row.count or 0) > 0 and BU.tagFromContents(tags, row.key, row.cats) > 0 then n = n + 1 end
+    end
+    pcall(function() HaloTextHelper.addGoodText(self.character, getText("IGUI_BU_AutoTagged", n)) end)
+    self:fill()
+    return n
 end
 
 function BU_Window:clearTags(row)

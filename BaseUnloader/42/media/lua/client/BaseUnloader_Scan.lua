@@ -25,6 +25,7 @@ end
 function S.radius() return sandbox("Radius", 12) end
 function S.pad() return sandbox("Pad", 4) end
 function S.floors() return sandbox("Floors", 3) end
+function S.laundryOn() return sandbox("Laundry", true) end
 
 -- squares -----------------------------------------------------------------------------
 
@@ -338,6 +339,15 @@ function S.itemRecord(it)
         r.equipped = it:isEquipped() or it:isWorn()
         r.food = it:IsFood()
         if r.food and it.getOffAgeMax then r.perishable = it:getOffAgeMax() < BU.NEVER_OFF end
+    end)
+    -- dirty or bloody clothing is laundry, when the option is on
+    pcall(function()
+        if S.laundryOn() and it:IsClothing() then
+            local dirty, blood = false, 0
+            pcall(function() dirty = it:isDirty() == true end)
+            pcall(function() blood = it:getBloodLevel() or 0 end)
+            r.laundry = dirty or blood > 0
+        end
     end)
     if not r.fullType then return nil end
     r.weight = r.weight or 0

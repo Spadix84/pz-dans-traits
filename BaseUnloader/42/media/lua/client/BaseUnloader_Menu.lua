@@ -83,6 +83,11 @@ M.onToggleTag = function(row, playerNum, cat)
     BU_Window.refresh(playerNum)
 end
 
+M.onTagFromContents = function(row, playerNum)
+    BaseUnloader.tagFromContents(BaseUnloader.store().tags, row.key, row.cats)
+    BU_Window.refresh(playerNum)
+end
+
 M.onClearTags = function(row, playerNum)
     BaseUnloader.store().tags[row.key] = nil
     BU_Window.refresh(playerNum)
@@ -91,6 +96,9 @@ end
 -- the Categories submenu for a world container, on any menu
 function M.addCategoryOptions(menu, row, playerNum)
     local tags = BaseUnloader.store().tags
+    if (row.count or 0) > 0 then
+        menu:addOption(getText("IGUI_BU_TagFromContents"), row, M.onTagFromContents, playerNum)
+    end
     local option = menu:addOption(getText("IGUI_BU_Categories"), nil, nil)
     local sub = ISContextMenu:getNew(menu)
     menu:addSubMenu(option, sub)
