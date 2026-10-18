@@ -16,7 +16,7 @@ local BU = BaseUnloader
 
 BU.VERSION = "0.1.0"
 BU.NEVER_OFF = 1000000000     -- Food.getOffAgeMax() for food that never goes off
-BU.FLOOR_COST = 12            -- a change of floor costs this many tiles of walking in the planner
+BU.FLOOR_COST = 40            -- a change of floor costs this many tiles of walking in the planner (the stairs are never next to you)
 BU.CAT_PREFIX = "cat:"        -- a rule keyed "cat:Food" sends a whole display category
 
 -- keys ------------------------------------------------------------------------------
@@ -316,7 +316,9 @@ function BU.trip(items, containers, from, budget)
         for _, item in ipairs(byDest[key]) do
             local w = item.weight or 0
             local cw = item.carry or w
-            local fits = cw <= left or (weight == 0 and #take == 0)
+            -- free to carry (it rides in a bag), within what the hands can still take, or the
+            -- one item a trip always takes so a heavy item never stalls a run
+            local fits = cw <= 0 or cw <= left or (weight == 0 and #take == 0)
             if room ~= nil and w > room then
                 fits = false
                 skipped.noRoom = skipped.noRoom + 1
@@ -336,14 +338,77 @@ function BU.trip(items, containers, from, budget)
     return { stops = stops, weight = weight, skipped = skipped }
 end
 
--- the stops a delivery makes with what is already carried: nearest first, all of it
-function BU.deliveryOrder(carried, containers, from)
+-- A tour through the points (each with x, y, z) starting at `from` and, when
+-- `back` is given, ending near it: nearest-next first, then two-opt until no
+-- pair of legs can be uncrossed. The floor cost in dist keeps a floor's stops
+-- together. Returns the points in visiting order.
+function BU.tour(points, from, back)
+    local n = #points
+    if n <= 1 then return { points[1] } end
+    local remaining, order = {}, {}
+    for i, p in ipairs(points) do remaining[i] = p end
+    local here = from or points[1]
+    while #remaining > 0 do
+        local bestI, bestD = 1, nil
+        for i, p in ipairs(remaining) do
+            local d = BU.dist(here, p)
+            if bestD == nil or d < bestD then bestI, bestD = i, d end
+        end
+        here = table.remove(remaining, bestI)
+        order[#order + 1] = here
+    end
+    -- two-opt: reversing order[i..j] swaps the legs into i and out of j
+    local function at(i)
+        if i == 0 then return from end
+        if i == n + 1 then return back end
+        return order[i]
+    end
+    local function leg(a, b)
+        if not a or not b then return 0 end
+        return BU.dist(a, b)
+    end
+    local improved, guard = true, 0
+    while improved and guard < 50 do
+        improved = false
+        guard = guard + 1
+        for i = 1, n - 1 do
+            for j = i + 1, n do
+                local before = leg(at(i - 1), order[i]) + leg(order[j], at(j + 1))
+                local after = leg(at(i - 1), order[j]) + leg(order[i], at(j + 1))
+                if after + 0.0001 < before then
+                    local a, b = i, j
+                    while a < b do
+                        order[a], order[b] = order[b], order[a]
+                        a, b = a + 1, b - 1
+                    end
+                    improved = true
+                end
+            end
+        end
+    end
+    return order
+end
+
+-- the cost of walking a tour: from, every point in order, then back when given
+function BU.tourCost(order, from, back)
+    local total, here = 0, from
+    for _, p in ipairs(order) do
+        if here then total = total + BU.dist(here, p) end
+        here = p
+    end
+    if back and here then total = total + BU.dist(here, back) end
+    return total
+end
+
+-- the stops a delivery makes with what is already carried: a tour from where
+-- the character stands, ending near `back` (the source, for the next load)
+function BU.deliveryOrder(carried, containers, from, back)
     local byKey = containerByKey(containers)
-    local byDest, order = {}, {}
+    local byDest, points = {}, {}
     local lost = {}
     for _, item in ipairs(carried) do
         if item.dest and byKey[item.dest] then
-            if not byDest[item.dest] then byDest[item.dest] = {}; order[#order + 1] = item.dest end
+            if not byDest[item.dest] then byDest[item.dest] = {}; points[#points + 1] = byKey[item.dest] end
             local list = byDest[item.dest]
             list[#list + 1] = item
         else
@@ -351,16 +416,8 @@ function BU.deliveryOrder(carried, containers, from)
         end
     end
     local stops = {}
-    local here = from or { x = 0, y = 0, z = 0 }
-    while #order > 0 do
-        local bestI, bestD = 1, nil
-        for i, key in ipairs(order) do
-            local d = BU.dist(here, byKey[key])
-            if bestD == nil or d < bestD then bestI, bestD = i, d end
-        end
-        local key = table.remove(order, bestI)
-        stops[#stops + 1] = { key = key, items = byDest[key] }
-        here = byKey[key]
+    for _, c in ipairs(BU.tour(points, from, back)) do
+        stops[#stops + 1] = { key = c.key, items = byDest[c.key] }
     end
     return stops, lost
 end

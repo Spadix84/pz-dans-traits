@@ -163,21 +163,34 @@ local function elsewhere(r, rows, use, notKey)
     return BU.tagDestination(r, BU.store().tags, open)
 end
 
--- Before a trip is planned: items whose container cannot take them go to a
--- tagged alternative with room, so a full shelf sends the overflow next door
--- instead of leaving it in the trunk.
+-- Before a trip is planned: items whose container is gone or cannot take
+-- them go to a tagged alternative with room, so a full shelf sends the
+-- overflow next door; what has nowhere at all is marked skip and never
+-- takes bag room. Returns the items that can go, and the counts of the rest.
 local function reroute(items, rows)
     local byKey = rowsByKey(rows)
     local use = {}
+    local keep, noRoom, noContainer = {}, 0, 0
     for _, r in ipairs(items) do
         local row = byKey[r.dest]
         local w = r.weight or 0
-        if row and (row.free or 0) - (use[r.dest] or 0) < w then
-            local other = elsewhere(r, rows, use, r.dest)
-            if other then r.dest = other end
+        local other = nil
+        if not row then
+            other = elsewhere(r, rows, use, r.dest)
+            if not other then noContainer = noContainer + 1 end
+        elseif (row.free or 0) - (use[r.dest] or 0) < w then
+            other = elsewhere(r, rows, use, r.dest)
+            if not other then noRoom = noRoom + 1 end
+        else
+            other = r.dest
         end
-        use[r.dest] = (use[r.dest] or 0) + w
+        if other then
+            r.dest = other
+            use[other] = (use[other] or 0) + w
+            keep[#keep + 1] = r
+        end
     end
+    return keep, noRoom, noContainer
 end
 
 -- The bags are filled every trip: an item that fits a worn bag's remaining
@@ -228,15 +241,51 @@ function R.pause(state, textKey)
 end
 
 -- put down what is carried: one container per step, nearest first
+local function sourcePos(state)
+    local src = state.source
+    if src and src.kind ~= "self" and src.x then return { x = src.x, y = src.y, z = src.z or 0 } end
+    return nil
+end
+
+-- the trip's tour is planned once, from where the character stands, ending
+-- near the source for the next load; each step takes its first remaining stop
+local function nextStop(state, carried, rows)
+    local byKey = rowsByKey(rows)
+    local byDest = {}
+    local lost = {}
+    for _, r in ipairs(carried) do
+        if r.dest and byKey[r.dest] then
+            if not byDest[r.dest] then byDest[r.dest] = {} end
+            local list = byDest[r.dest]
+            list[#list + 1] = r
+        else
+            lost[#lost + 1] = r
+        end
+    end
+    local route = state.route
+    if route then
+        while #route > 0 and not byDest[route[1]] do table.remove(route, 1) end
+        if #route == 0 then route = nil end
+    end
+    if not route then
+        local stops = BU.deliveryOrder(carried, rows, posOf(state.player), sourcePos(state))
+        route = {}
+        for _, s in ipairs(stops) do route[#route + 1] = s.key end
+        state.route = route
+    end
+    if #route == 0 then return nil, lost end
+    local key = table.remove(route, 1)
+    return { key = key, items = byDest[key] }, lost
+end
+
 local function deliverStep(state, carried)
     local rows = containersFor(state)
-    local stops, lost = BU.deliveryOrder(carried, rows, posOf(state.player))
+    local stop, lost = nextStop(state, carried, rows)
     for _, r in ipairs(lost) do
         state.plan.carried[idKey(r.id)] = nil
         state.lost = (state.lost or 0) + 1
     end
-    if #stops == 0 then return false end
-    local stop = stops[1]
+    if not stop then return false end
     local row = rowsByKey(rows)[stop.key]
     local ok, reached = pcall(luautils.walkToContainer, row.container, state.playerNum)
     if not ok or not reached then
@@ -329,13 +378,16 @@ local function loadStep(state)
     local player = state.player
     local budget = 0
     pcall(function() budget = player:getMaxWeight() - player:getInventory():getCapacityWeight() end)
+    local keep, noRoom, noContainer = reroute(items, rows)
+    state.noRoom = noRoom
+    state.noContainer = noContainer
+    if #keep == 0 then return false end
     local bags = bagsOf(player)
-    carryWeights(items, bags)
-    reroute(items, rows)
-    local trip = BU.trip(items, rows, posOf(player), budget)
-    state.noRoom = (state.noRoom or 0) + trip.skipped.noRoom
-    state.noContainer = trip.skipped.noContainer
+    carryWeights(keep, bags)
+    local trip = BU.trip(keep, rows, posOf(player), budget)
+    state.noRoom = state.noRoom + trip.skipped.noRoom
     if #trip.stops == 0 then return false end
+    state.route = nil
     local ok, reached = pcall(luautils.walkToContainer, src.container, state.playerNum)
     if not ok then
         R.pause(state, "IGUI_BU_LeaveVehicle")
