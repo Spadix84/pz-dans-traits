@@ -11,3 +11,6 @@ option BaseUnloader.Laundry
 
 option BaseUnloader.Floors
 {type = integer, min = 0, max = 8, default = 3, page = BaseUnloader, translation = BaseUnloaderFloors,}
+
+option BaseUnloader.MaxLoad
+{type = integer, min = 0, max = 4, default = 2, page = BaseUnloader, translation = BaseUnloaderMaxLoad,}

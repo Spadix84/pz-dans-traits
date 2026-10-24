@@ -2,7 +2,9 @@
 -- or items in a loot window for "Unload to base"; right-click your own items
 -- for "Put away what I'm carrying"; while a plan is saved, Resume and Forget
 -- are on every one of those menus. Any world container can also be renamed
--- from here, which the loot window then shows.
+-- from here, which the loot window then shows, and its categories set (or the
+-- container put off limits) from the world, its loot-window icon or any item
+-- inside it.
 
 require "BaseUnloader_Scan"
 require "BaseUnloader_Run"
@@ -78,13 +80,23 @@ end
 
 -- categories from a menu: the container's row is built on the spot
 M.onToggleTag = function(row, playerNum, cat)
-    local tags = BaseUnloader.store().tags
-    BaseUnloader.setTag(tags, row.key, cat, not BaseUnloader.hasTag(tags, row.key, cat))
+    local store = BaseUnloader.store()
+    local on = not BaseUnloader.hasTag(store.tags, row.key, cat)
+    BaseUnloader.setTag(store.tags, row.key, cat, on)
+    -- the set remembered is the one being composed, not what a tick-off left behind
+    if on then BaseUnloader.noteTags(store, row.key) end
     BU_Window.refresh(playerNum)
 end
 
 M.onTagFromContents = function(row, playerNum)
-    BaseUnloader.tagFromContents(BaseUnloader.store().tags, row.key, row.cats)
+    local store = BaseUnloader.store()
+    BaseUnloader.tagFromContents(store.tags, row.key, row.cats)
+    BaseUnloader.noteTags(store, row.key)
+    BU_Window.refresh(playerNum)
+end
+
+M.onApplyLastTags = function(row, playerNum)
+    BaseUnloader.applyLastTags(BaseUnloader.store(), row.key)
     BU_Window.refresh(playerNum)
 end
 
@@ -93,9 +105,19 @@ M.onClearTags = function(row, playerNum)
     BU_Window.refresh(playerNum)
 end
 
--- the Categories submenu for a world container, on any menu
-function M.addCategoryOptions(menu, row, playerNum)
-    local tags = BaseUnloader.store().tags
+M.onSetOffLimits = function(row, playerNum, on)
+    BaseUnloader.store().offLimits[row.key] = on and true or nil
+    BU_Window.refresh(playerNum)
+end
+
+-- the Categories submenu and off limits for a world container, on any menu
+function M.addContainerOptions(menu, row, playerNum)
+    local store = BaseUnloader.store()
+    local tags = store.tags
+    local last = BaseUnloader.lastTagsFor(store, row.key)
+    if last then
+        menu:addOption(getText("IGUI_BU_ApplyLastTags", S.categoryNames(last)), row, M.onApplyLastTags, playerNum)
+    end
     if (row.count or 0) > 0 then
         menu:addOption(getText("IGUI_BU_TagFromContents"), row, M.onTagFromContents, playerNum)
     end
@@ -109,6 +131,26 @@ function M.addCategoryOptions(menu, row, playerNum)
     if #BaseUnloader.tagsOf(tags, row.key) > 0 then
         menu:addOption(getText("IGUI_BU_ClearTags"), row, M.onClearTags, playerNum)
     end
+    if store.offLimits[row.key] then
+        menu:addOption(getText("IGUI_BU_OffLimitsOff"), row, M.onSetOffLimits, playerNum, false)
+    else
+        menu:addOption(getText("IGUI_BU_OffLimitsOn"), row, M.onSetOffLimits, playerNum, true)
+    end
+end
+
+-- the source for a loot-window container that belongs to a world object (a
+-- cupboard, a crate, a fridge), nil for floors, bodies, bags and vehicles
+local function worldSource(container)
+    local src
+    pcall(function()
+        if container:getContainingItem() then return end
+        local parent = container:getParent()
+        if not parent or instanceof(parent, "BaseVehicle") or not parent.getSquare then return end
+        local kind = container:getType()
+        if kind == "floor" or kind == "inventorymale" or kind == "inventoryfemale" then return end
+        src = S.objectSource(parent, container, nil)
+    end)
+    return src
 end
 
 -- the Resume / Stop / Forget options, when there is a plan
@@ -138,7 +180,7 @@ function M.onWorldMenu(playerNum, context, worldobjects, test)
         sub:addOption(getText("ContextMenu_BU_Unload"), found, M.onUnloadObject, player)
         sub:addOption(getText("ContextMenu_BU_RenameContainer"), found, M.onRenameObject, playerNum)
         local src = S.objectSource(found, found:getContainer(), nil)
-        if src then M.addCategoryOptions(sub, src.row, playerNum) end
+        if src then M.addContainerOptions(sub, src.row, playerNum) end
         addPlanOptions(sub, player)
     elseif BU_Run.hasPlan(player) or BU_Run.isRunning(player) then
         local sub = ISContextMenu:getNew(context)
@@ -170,6 +212,9 @@ function M.onInventoryMenu(playerNum, context, items)
         if parent and (instanceof(parent, "BaseVehicle") or parent.getSquare) and container:getType() ~= "floor" then
             sub:addOption(getText("ContextMenu_BU_Unload"), container, M.onUnloadContainer, player)
         end
+        -- the categories of the container the item sits in
+        local src = worldSource(container)
+        if src then M.addContainerOptions(sub, src.row, playerNum) end
     end
     addPlanOptions(sub, player)
 end
@@ -189,19 +234,14 @@ ISInventoryPage.onBackpackRightMouseDown = function(button, x, y)
         local playerNum = page.player
         local player = getSpecificPlayer(playerNum)
         if not player or player:getVehicle() then return end
-        if container:getContainingItem() then return end
-        local parent = container:getParent()
-        if not parent or instanceof(parent, "BaseVehicle") or not parent.getSquare then return end
-        local kind = container:getType()
-        if kind == "floor" or kind == "inventorymale" or kind == "inventoryfemale" then return end
-        local src = S.objectSource(parent, container, nil)
+        local src = worldSource(container)
         if not src then return end
         local context = getPlayerContextMenu(playerNum)
         local sub = ISContextMenu:getNew(context)
         local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
         context:addSubMenu(option, sub)
         sub:addOption(getText("ContextMenu_BU_Unload"), container, M.onUnloadContainer, player)
-        M.addCategoryOptions(sub, src.row, playerNum)
+        M.addContainerOptions(sub, src.row, playerNum)
         addPlanOptions(sub, player)
     end)
     return result

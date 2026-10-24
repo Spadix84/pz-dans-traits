@@ -26,6 +26,7 @@ function S.radius() return sandbox("Radius", 12) end
 function S.pad() return sandbox("Pad", 4) end
 function S.floors() return sandbox("Floors", 3) end
 function S.laundryOn() return sandbox("Laundry", true) end
+function S.maxLoad() return sandbox("MaxLoad", BU.MAX_LOAD_LEVEL) end
 
 -- squares -----------------------------------------------------------------------------
 
@@ -102,6 +103,20 @@ end
 
 function S.categoryLabel(cat)
     return getTextOrNull("IGUI_ItemCat_" .. cat) or cat
+end
+
+-- a short list of category names for a menu: the first few, then "+N"
+function S.categoryNames(list, most)
+    most = most or 3
+    local names = {}
+    for i, cat in ipairs(list) do
+        if i > most then
+            names[#names + 1] = "+" .. tostring(#list - most)
+            break
+        end
+        names[#names + 1] = S.categoryLabel(cat)
+    end
+    return table.concat(names, ", ")
 end
 
 -- the categories offered for tagging: the standard list plus any extra ones
@@ -338,7 +353,20 @@ function S.itemRecord(it)
         r.favorite = it:isFavorite()
         r.equipped = it:isEquipped() or it:isWorn()
         r.food = it:IsFood()
-        if r.food and it.getOffAgeMax then r.perishable = it:getOffAgeMax() < BU.NEVER_OFF end
+    end)
+    -- a bag weighs what is in it too (getActualWeight is the empty bag's own)
+    pcall(function()
+        if instanceof(it, "InventoryContainer") and it:getInventory() then
+            r.bag = true
+            r.weight = it:getUnequippedWeight()
+        end
+    end)
+    pcall(function()
+        if r.food and it.getOffAgeMax then
+            local max = it:getOffAgeMax()
+            r.perishable = max < BU.NEVER_OFF
+            r.longLife = r.perishable and max >= BU.LONG_LIFE_DAYS
+        end
     end)
     -- fresh, stale or rotten: frozen food keeps, so it counts as fresh
     if r.food and r.perishable then
@@ -369,6 +397,31 @@ end
 
 -- the items of a container as records; the player's own inventory also skips
 -- the bags being worn and what is inside them
+-- every item of a container, bags opened (three deep), as records: an item in
+-- a bag carries `parent` (the bag's id) and `from` (the bag's inventory), so
+-- the run can take it out of the bag where it sits (vanilla moves items out of
+-- bags in a trunk or on a seat; the loot window shows them)
+function S.allItems(container)
+    local out = {}
+    local function walk(inv, depth, parent)
+        local items = inv:getItems()
+        for i = 0, items:size() - 1 do
+            local it = items:get(i)
+            local r = S.itemRecord(it)
+            if r then
+                r.from = inv
+                r.parent = parent
+                out[#out + 1] = r
+            end
+            if depth < 3 and instanceof(it, "InventoryContainer") and it:getInventory() then
+                walk(it:getInventory(), depth + 1, r and r.id or nil)
+            end
+        end
+    end
+    pcall(function() walk(container, 0, nil) end)
+    return out
+end
+
 function S.items(container)
     local out = {}
     pcall(function()
@@ -438,7 +491,9 @@ function S.selfSource(player)
 end
 
 function S.saveSource(src)
-    return { kind = src.kind, id = src.id, key = src.key, x = src.x, y = src.y, z = src.z, label = src.label }
+    local part = nil
+    if src.vpart then pcall(function() part = src.vpart:getId() end) end   -- a glove box or seat resumes as itself, not the trunk
+    return { kind = src.kind, id = src.id, key = src.key, x = src.x, y = src.y, z = src.z, label = src.label, part = part }
 end
 
 function S.loadSource(saved, player)
@@ -452,7 +507,9 @@ function S.loadSource(saved, player)
     if saved.kind == "vehicle" then
         local vehicle = S.findVehicle(saved.id, saved.x, saved.y, saved.z)
         if not vehicle then return nil end
-        return S.vehicleSource(vehicle)
+        local vpart = nil
+        if saved.part then pcall(function() vpart = vehicle:getPartById(saved.part) end) end
+        return S.vehicleSource(vehicle, vpart)
     end
     return nil
 end

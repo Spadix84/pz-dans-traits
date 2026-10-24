@@ -7,5 +7,7 @@
     "Sandbox_BaseUnloaderLaundry": "Dirty Clothes to the Laundry",
     "Sandbox_BaseUnloaderLaundry_tooltip": "Dirty or bloody clothing goes to a container tagged Laundry, else the laundry cart, else the washer, whatever its type's rule says. A drop with Ctrl still sends those very items wherever you put them.",
     "Sandbox_BaseUnloaderFloors": "Floors Searched",
-    "Sandbox_BaseUnloaderFloors_tooltip": "How many floors above and below the one you are on are searched for containers."
+    "Sandbox_BaseUnloaderFloors_tooltip": "How many floors above and below the one you are on are searched for containers.",
+    "Sandbox_BaseUnloaderMaxLoad": "Heaviest Load",
+    "Sandbox_BaseUnloaderMaxLoad_tooltip": "The highest level of the Heavy Load moodle a run will carry you to: 0 never over your carry weight, 1 up to 1.25 times it, 2 up to 1.5 times, 3 up to 1.75 times, 4 up to twice it. Worn bags fill first, at their weight reduction; the hands take the rest."
 }

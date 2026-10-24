@@ -71,40 +71,41 @@ local function idKey(id)
     return tostring(id)
 end
 
--- the bags worn or carried, as { item, inv, reduction }, best reduction first
+-- the worn bags, as the trip planner wants them: { inv, left (room by weight),
+-- keep (the share of an item's weight still felt inside: 1 - reduction), ok }.
+-- A bag only carried (in the hands or loose) is not one: what goes in it
+-- weighs in full, so the hands might as well hold it.
 local function bagsOf(player)
     local bags = {}
     pcall(function()
         local items = player:getInventory():getItems()
         for i = 0, items:size() - 1 do
             local it = items:get(i)
-            if instanceof(it, "InventoryContainer") and it:getInventory() then
-                local red = 0
+            local worn = false
+            pcall(function() worn = it:isEquipped() == true or it:isWorn() == true end)
+            if worn and instanceof(it, "InventoryContainer") and it:getInventory() then
+                local inv = it:getInventory()
+                local red, left = 0, 0
                 pcall(function() red = it:getWeightReduction() end)
-                bags[#bags + 1] = { item = it, inv = it:getInventory(), reduction = red, planned = 0 }
+                pcall(function() left = inv:getCapacity() - inv:getCapacityWeight() end)
+                bags[#bags + 1] = { item = it, inv = inv, left = left, keep = 1 - (red or 0) / 100,
+                    ok = function(r)
+                        local fits = false
+                        pcall(function() fits = r.item ~= it and inv:hasRoomFor(player, r.item) end)
+                        return fits
+                    end }
             end
         end
     end)
-    table.sort(bags, function(a, b) return a.reduction > b.reduction end)
     return bags
 end
 
 -- every item the character carries, main inventory and inside bags, as records
 local function allCarried(player)
-    local out = {}
-    local function walk(inv, depth)
-        local items = inv:getItems()
-        for i = 0, items:size() - 1 do
-            local it = items:get(i)
-            local r = S.itemRecord(it)
-            if r then out[#out + 1] = r end
-            if depth < 3 and instanceof(it, "InventoryContainer") and it:getInventory() then
-                walk(it:getInventory(), depth + 1)
-            end
-        end
-    end
-    pcall(function() walk(player:getInventory(), 0) end)
-    return out
+    local inv = nil
+    pcall(function() inv = player:getInventory() end)
+    if not inv then return {} end
+    return S.allItems(inv)
 end
 
 -- the carried items this run owns, with their destinations; drops from the
@@ -158,7 +159,7 @@ local function contextFor(state, rows, use)
     local src = state.source
     return { rules = store.rules, tags = store.tags, oneOffs = state.plan.oneOffs, containers = rows, use = use or {},
              pos = posOf(state.player), sourceKey = src and src.key or nil, hidden = store.hidden,
-             ruleCounts = BU.ruleCounts(store.rules) }
+             offLimits = store.offLimits, ruleCounts = BU.ruleCounts(store.rules) }
 end
 
 -- Another home for an item whose container turned out full: the resolver
@@ -171,28 +172,6 @@ local function elsewhere(state, r, rows, use, notKey)
     local ctx = contextFor(state, rest, use)
     ctx.oneOffs = nil
     return (BU.resolve(r, ctx))
-end
-
--- The bags are filled every trip: an item that fits a worn bag's remaining
--- room (best reduction first) costs nothing against the carry limit; only
--- what has to go in the hands counts, at full weight.
-local function carryWeights(items, bags)
-    local sorted = {}
-    for _, b in ipairs(bags) do
-        local left = 0
-        pcall(function() left = b.inv:getCapacity() - b.inv:getCapacityWeight() end)
-        sorted[#sorted + 1] = { reduction = b.reduction or 0, left = left }
-    end
-    table.sort(sorted, function(a, b) return a.reduction > b.reduction end)
-    for _, r in ipairs(items) do
-        r.carry = r.weight
-        for _, b in ipairs(sorted) do
-            if r.carry == r.weight and r.weight <= b.left then
-                b.left = b.left - r.weight
-                r.carry = 0
-            end
-        end
-    end
 end
 
 local function queueMarker(state)
@@ -210,6 +189,7 @@ local function finish(state)
     local nowhere = (state.noContainer or 0) + (state.lost or 0)
     if nowhere > 0 then say(state.player, false, getText("IGUI_BU_Nowhere", nowhere)) end
     if (state.noRoom or 0) > 0 then say(state.player, false, getText("IGUI_BU_NoRoom", state.noRoom)) end
+    if (state.tooHeavy or 0) > 0 then say(state.player, false, getText("IGUI_BU_TooHeavy", state.tooHeavy)) end
     BU.store().plans[state.who] = nil
     R.active[state.playerNum] = nil
 end
@@ -258,24 +238,39 @@ local function nextStop(state, carried, rows)
     return { key = key, items = byDest[key] }, lost
 end
 
+-- an item the run gives up on (nowhere to go, cannot get there, no room after
+-- all) leaves the plan and is not picked up again this run: with the player's
+-- own bag as the source, the next load would route it straight back to the
+-- same container and the run would spin on it every tick (2026-10-22)
+local function giveUp(state, r, counter)
+    state.plan.carried[idKey(r.id)] = nil
+    state.gaveUp = state.gaveUp or {}
+    state.gaveUp[idKey(r.id)] = true
+    state[counter] = (state[counter] or 0) + 1
+end
+
+-- a step that queued nothing counts toward the stuck check all the same
+local function stall(state)
+    state.noProgress = (state.noProgress or 0) + 1
+    if state.noProgress >= R.MAX_NO_PROGRESS then
+        R.pause(state, "IGUI_BU_Stuck")
+        return true
+    end
+    state.pending = true
+    return true
+end
+
 local function deliverStep(state, carried)
     local rows = containersFor(state)
     local stop, lost = nextStop(state, carried, rows)
-    for _, r in ipairs(lost) do
-        state.plan.carried[idKey(r.id)] = nil
-        state.lost = (state.lost or 0) + 1
-    end
+    for _, r in ipairs(lost) do giveUp(state, r, "lost") end
     if not stop then return false end
     local row = rowsByKey(rows)[stop.key]
     local ok, reached = pcall(luautils.walkToContainer, row.container, state.playerNum)
     if not ok or not reached then
         -- cannot get there: those items stay in the bag and leave the plan
-        for _, r in ipairs(stop.items) do
-            state.plan.carried[idKey(r.id)] = nil
-            state.lost = (state.lost or 0) + 1
-        end
-        state.pending = true
-        return true
+        for _, r in ipairs(stop.items) do giveUp(state, r, "lost") end
+        return stall(state)
     end
     state.expect = {}
     local use = {}
@@ -294,32 +289,13 @@ local function deliverStep(state, carried)
                 state.plan.carried[idKey(r.id)] = other
                 use[other] = (use[other] or 0) + (r.weight or 0)
             else
-                state.plan.carried[idKey(r.id)] = nil
-                state.noRoom = (state.noRoom or 0) + 1
+                giveUp(state, r, "noRoom")
             end
         end
     end
-    if #state.expect == 0 then
-        state.pending = true
-        return true
-    end
+    if #state.expect == 0 then return stall(state) end
     queueMarker(state)
     return true
-end
-
--- the bag with room for an item, else the main inventory
-local function pickBag(player, bags, r)
-    for _, b in ipairs(bags) do
-        local fits = false
-        pcall(function()
-            fits = b.inv:hasRoomFor(player, r.item) and (b.inv:getCapacityWeight() + b.planned + r.weight <= b.inv:getCapacity())
-        end)
-        if fits then
-            b.planned = b.planned + r.weight
-            return b.inv
-        end
-    end
-    return player:getInventory()
 end
 
 -- load a trip's worth from the source
@@ -328,38 +304,34 @@ local function loadStep(state)
     if not src then return false end
     local plan = state.plan
     local rows = containersFor(state)
-    local items = {}
-    local pool = S.items(src.container)
-    if src.kind == "self" then pool = allCarried(state.player) end
-    -- every item through the resolver, the room it takes counted for the next
-    local ctx = contextFor(state, rows, {})
-    local nowhere = 0
-    for _, r in ipairs(pool) do
-        if BU.movable(r) then
-            r.dest = BU.resolve(r, ctx)
-            if r.dest then
-                ctx.use[r.dest] = (ctx.use[r.dest] or 0) + (r.weight or 0)
-                items[#items + 1] = r
-            else
-                nowhere = nowhere + 1
-            end
-        end
-    end
+    local pool
+    if src.kind == "self" then pool = allCarried(state.player) else pool = S.allItems(src.container) end
+    -- every item through the resolver, the room it takes counted for the next;
+    -- bags are unpacked (a bag waits until nothing inside it is going anywhere)
+    local items, nowhere = BU.route(pool, contextFor(state, rows, {}))
     state.noContainer = nowhere
     if #items == 0 then return false end
     if src.kind == "self" then
-        -- already in hand: everything with a home joins the delivery
-        for _, r in ipairs(items) do plan.carried[idKey(r.id)] = r.dest end
+        -- already in hand: everything with a home joins the delivery, except what
+        -- this run has already given up on
+        local joined = 0
+        for _, r in ipairs(items) do
+            if not (state.gaveUp and state.gaveUp[idKey(r.id)]) then
+                plan.carried[idKey(r.id)] = r.dest
+                joined = joined + 1
+            end
+        end
+        if joined == 0 then return false end
         state.pending = true
         return true
     end
     local player = state.player
+    -- never past the sandbox's Heavy Load level (2: 1.5x the max weight); worn bags fill first
     local budget = 0
-    pcall(function() budget = player:getMaxWeight() - player:getInventory():getCapacityWeight() end)
-    local bags = bagsOf(player)
-    carryWeights(items, bags)
-    local trip = BU.trip(items, rows, posOf(player), budget)
+    pcall(function() budget = BU.loadBudget(player:getMaxWeight(), player:getInventory():getCapacityWeight(), S.maxLoad()) end)
+    local trip = BU.trip(items, rows, posOf(player), budget, bagsOf(player))
     state.noRoom = trip.skipped.noRoom
+    state.tooHeavy = trip.skipped.tooHeavy
     if #trip.stops == 0 then return false end
     state.route = nil
     local ok, reached = pcall(luautils.walkToContainer, src.container, state.playerNum)
@@ -386,10 +358,11 @@ local function loadStep(state)
     state.expect = {}
     for _, stop in ipairs(trip.stops) do
         for _, r in ipairs(stop.items) do
-            local into = pickBag(player, bags, r)
-            ISTimedActionQueue.add(ISInventoryTransferAction:new(player, r.item, src.container, into))
+            local into = r.into and r.into.inv or player:getInventory()
+            local from = r.from or src.container
+            ISTimedActionQueue.add(ISInventoryTransferAction:new(player, r.item, from, into))
             plan.carried[idKey(r.id)] = stop.key
-            state.expect[#state.expect + 1] = { record = r, from = src.container }
+            state.expect[#state.expect + 1] = { record = r, from = from }
         end
     end
     queueMarker(state)
@@ -510,5 +483,6 @@ end
 Events.OnTick.Add(R.onTick)
 Events.OnGameStart.Add(function()
     BU.resetStore()
+    pcall(function() BU.store().lastTags = nil end)   -- "same categories as last" is for this sitting
     R.active = {}
 end)

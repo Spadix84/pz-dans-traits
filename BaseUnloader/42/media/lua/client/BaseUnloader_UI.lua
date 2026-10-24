@@ -186,9 +186,6 @@ function BU_ItemList:onRightMouseUp(x, y)
     if not self.sel[g.fullType] then self:selectOnly(index) end
     local menu = ISContextMenu.get(win.playerNum, self:getAbsoluteX() + x, self:getAbsoluteY() + y)
     menu:addOption(getText("IGUI_BU_Unassign"), win, BU_Window.unassignGroups, self:selectedGroups(g))
-    if g.category then
-        menu:addOption(getText("IGUI_BU_UnassignCategory", g.category), win, BU_Window.unassignCategory, g)
-    end
 end
 
 function BU_ItemList:new(x, y, width, height, window)
@@ -223,7 +220,8 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     local line2 = y + 6 + FONT_HGT_SMALL
     local nameW = getTextManager():MeasureStringX(UIFont.Small, row.name)
     local hidden = win:isHidden(row)
-    local shade = (row.pinned or hidden) and 0.7 or 1
+    local off = not row.pinned and win:isOffLimits(row)
+    local shade = (row.pinned or hidden or off) and 0.7 or 1
     drawIcon(self, containerIcon(row), PAD, y)
     local tx = PAD + ICON + PAD
     self:drawText(row.name, tx, line1, shade, shade, shade, 1, UIFont.Small)
@@ -231,6 +229,11 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     if row.named then
         self:drawText(row.kindLabel, after, line1, 0.6, 0.6, 0.6, 1, UIFont.Small)
         after = after + getTextManager():MeasureStringX(UIFont.Small, row.kindLabel) + 8
+    end
+    if off then
+        local t = getText("IGUI_BU_OffLimitsTag")
+        self:drawText(t, after, line1, 0.9, 0.55, 0.4, 1, UIFont.Small)
+        after = after + getTextManager():MeasureStringX(UIFont.Small, t) + 8
     end
     if hidden then self:drawText(getText("IGUI_BU_HiddenTag"), after, line1, 0.6, 0.5, 0.5, 1, UIFont.Small) end
     local n = win.ruleCounts[row.key] or 0
@@ -300,7 +303,16 @@ function BU_ContainerList:onRightMouseUp(x, y)
         else
             menu:addOption(getText("IGUI_BU_Hide"), win, BU_Window.setHidden, row, true)
         end
+        if win:isOffLimits(row) then
+            menu:addOption(getText("IGUI_BU_OffLimitsOff"), win, BU_Window.setOffLimits, row, false)
+        else
+            menu:addOption(getText("IGUI_BU_OffLimitsOn"), win, BU_Window.setOffLimits, row, true)
+        end
         menu:addOption(getText("IGUI_BU_SendUnassigned"), win, BU_Window.sendUnassigned, row)
+        local last = BU.lastTagsFor(BU.store(), row.key)
+        if last then
+            menu:addOption(getText("IGUI_BU_ApplyLastTags", S.categoryNames(last)), win, BU_Window.applyLastTags, row)
+        end
         if (row.count or 0) > 0 then
             menu:addOption(getText("IGUI_BU_TagFromContents"), win, BU_Window.tagFromContents, row)
         end
@@ -314,6 +326,9 @@ function BU_ContainerList:onRightMouseUp(x, y)
         end
         if #BU.tagsOf(tags, row.key) > 0 then
             menu:addOption(getText("IGUI_BU_ClearTags"), win, BU_Window.clearTags, row)
+        end
+        if win:taggedCount() > 0 then
+            menu:addOption(getText("IGUI_BU_ClearAllTags"), win, BU_Window.askClearAllTags)
         end
         local n = win.ruleCounts[row.key] or 0
         if n > 0 then
@@ -436,22 +451,8 @@ function BU_Window:scan()
     end
     self.byKey = {}
     for _, row in ipairs(self.rows) do self.byKey[row.key] = row end
-    local items
-    if src.kind == "self" then
-        items = {}
-        local function walk(inv, depth)
-            local list = inv:getItems()
-            for i = 0, list:size() - 1 do
-                local it = list:get(i)
-                local r = S.itemRecord(it)
-                if r then items[#items + 1] = r end
-                if depth < 3 and instanceof(it, "InventoryContainer") and it:getInventory() then walk(it:getInventory(), depth + 1) end
-            end
-        end
-        pcall(function() walk(src.container, 0) end)
-    else
-        items = S.items(src.container)
-    end
+    -- everything, bags opened: what is in a bag is listed (and goes) on its own
+    local items = S.allItems(src.container)
     self.items = items
     self.groups = BU.groups(items)
     self:fill()
@@ -463,7 +464,7 @@ function BU_Window:context()
     local sq = S.squareOf(self.character)
     return { rules = store.rules, tags = store.tags, oneOffs = nil, containers = self.rows, use = nil,
              pos = sq and { x = sq:getX(), y = sq:getY(), z = sq:getZ() } or nil,
-             sourceKey = self.source.key, hidden = store.hidden, ruleCounts = self.ruleCounts }
+             sourceKey = self.source.key, hidden = store.hidden, offLimits = store.offLimits, ruleCounts = self.ruleCounts }
 end
 
 function BU_Window:destinationLabel(g)
@@ -481,7 +482,7 @@ function BU_Window:destinationLabel(g)
     if not key then
         local first = g.items[1] or {}
         local probe = { fullType = g.fullType, category = g.category, weight = first.weight, food = g.food,
-                        perishable = g.perishable, laundry = g.laundry, rotten = first.rotten, stale = first.stale }
+                        perishable = g.perishable, longLife = g.longLife, laundry = g.laundry, rotten = first.rotten, stale = first.stale }
         key, how = BU.resolve(probe, self:context())
     end
     if not key then return nil end
@@ -511,17 +512,27 @@ function BU_Window:tagLabel(row)
 end
 
 function BU_Window:toggleTag(row, cat)
-    local tags = BU.store().tags
-    BU.setTag(tags, row.key, cat, not BU.hasTag(tags, row.key, cat))
+    local store = BU.store()
+    local on = not BU.hasTag(store.tags, row.key, cat)
+    BU.setTag(store.tags, row.key, cat, on)
+    if on then BU.noteTags(store, row.key) end   -- the set being composed, not what a tick-off left
     self:fill()
 end
 
 function BU_Window:tagFromContents(row)
-    BU.tagFromContents(BU.store().tags, row.key, row.cats)
+    local store = BU.store()
+    BU.tagFromContents(store.tags, row.key, row.cats)
+    BU.noteTags(store, row.key)
     self:fill()
 end
 
--- every listed container (not hidden, not the source) takes the categories of what it holds
+-- the categories last set by hand, onto this container too
+function BU_Window:applyLastTags(row)
+    BU.applyLastTags(BU.store(), row.key)
+    self:fill()
+end
+
+-- every listed container (not hidden, not off limits, not the source) takes the categories of what it holds
 function BU_Window:autoTag()
     local tags = BU.store().tags
     local n = 0
@@ -536,6 +547,36 @@ end
 function BU_Window:clearTags(row)
     BU.store().tags[row.key] = nil
     self:fill()
+end
+
+-- how many containers in this base have categories, hidden and off-limits ones too
+function BU_Window:taggedCount()
+    local tags, n = BU.store().tags, 0
+    for _, row in ipairs(self.rows) do
+        if tags[row.key] then n = n + 1 end
+    end
+    return n
+end
+
+-- every container in this base loses its categories, once the player says yes
+function BU_Window:askClearAllTags()
+    local modal = ISModalDialog:new(0, 0, 300, 150, getText("IGUI_BU_ClearAllTagsAsk", self:taggedCount()), true, self, BU_Window.onClearAllTags, self.playerNum)
+    modal:initialise()
+    modal:addToUIManager()
+end
+
+function BU_Window:onClearAllTags(button)
+    if button.internal ~= "YES" then return end
+    self:clearAllTags()
+end
+
+function BU_Window:clearAllTags()
+    local keys = {}
+    for i, row in ipairs(self.rows) do keys[i] = row.key end
+    local n = BU.clearTagsOf(BU.store().tags, keys)
+    pcall(function() HaloTextHelper.addGoodText(self.character, getText("IGUI_BU_ClearedAllTags", n)) end)
+    self:fill()
+    return n
 end
 
 function BU_Window:distanceLabel(row)
@@ -616,11 +657,21 @@ function BU_Window:onShowHidden(index, selected)
     self:fill()
 end
 
--- the containers Suggest may pick: not the hidden ones
+-- off limits: a run only puts there what was dragged there
+function BU_Window:isOffLimits(row)
+    return BU.store().offLimits[row.key] == true
+end
+
+function BU_Window:setOffLimits(row, on)
+    BU.store().offLimits[row.key] = on and true or nil
+    self:fill()
+end
+
+-- the containers Suggest and Auto-tag may pick: not the hidden or off-limits ones
 function BU_Window:visibleRows()
     local out = {}
     for _, row in ipairs(self.rows) do
-        if not row.pinned and not self:isHidden(row) then out[#out + 1] = row end
+        if not row.pinned and not self:isHidden(row) and not self:isOffLimits(row) then out[#out + 1] = row end
     end
     return out
 end
@@ -677,11 +728,6 @@ function BU_Window:unassign(g)
     BU.setRule(rules, g.fullType, nil)
     for _, r in ipairs(g.items) do self.oneOffs[r.id] = nil end
     self:fill()
-end
-
-function BU_Window:unassignCategory(g)
-    BU.setRule(BU.store().rules, BU.catKey(g.category), nil)
-    self:unassign(g)
 end
 
 -- a type is assigned when a rule or a one-off says where it goes; the
