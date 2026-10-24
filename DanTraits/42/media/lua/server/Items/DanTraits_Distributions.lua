@@ -75,6 +75,7 @@ local ITEMS = {
     },
     {
         name = "DanTraits.InsulinPen",
+        sandbox = "InsulinLoot",   -- pens, vials and syringes alike
         procedural = {
             BathroomCabinet = 0.5, MedicalCabinet = 1.5, MedicalClinicDrugs = 4,
             MedicalStorageDrugs = 8, HospitalRoomShelves = 4, DoctorTools = 6, NurseTools = 2,
@@ -91,6 +92,44 @@ local ITEMS = {
             { { "MedicalCache1", "MedicalBox", "items" }, 4 },
         },
         bags = { HandbagsAndPurses = 0.01 },
+        clutter = {},
+    },
+    {
+        -- vials are stock: hospital and pharmacy storage and the medical fridges,
+        -- seldom a home's bathroom or kitchen fridge
+        name = "DanTraits.InsulinVial",
+        sandbox = "InsulinLoot",
+        procedural = {
+            BathroomCabinet = 0.2, MedicalClinicDrugs = 3, MedicalStorageDrugs = 8,
+            HospitalRoomShelves = 2, DoctorTools = 2, StoreShelfMedical = 1,
+            SafehouseMedical = 3, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
+            ArmyStorageMedical = 3, TestingLab = 3,
+            FridgeMedical = 8, FridgeGeneric = 0.15, FridgeRich = 0.2, FridgeHoarder = 0.3,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.3 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 3 },
+        },
+        bags = {},
+        clutter = {},
+    },
+    {
+        -- syringes: wherever medicine is kept, and where drugs are
+        name = "DanTraits.InsulinSyringe",
+        sandbox = "InsulinLoot",
+        procedural = {
+            BathroomCabinet = 0.8, MedicalCabinet = 2, MedicalClinicDrugs = 4, MedicalStorageDrugs = 8,
+            HospitalRoomShelves = 4, DoctorTools = 6, NurseTools = 4, AmbulanceDriverTools = 4,
+            StoreShelfMedical = 2, SafehouseMedical = 5, SafehouseMedical_Mid = 3, SafehouseMedical_Late = 2,
+            ArmyStorageMedical = 3, TestingLab = 3, DerelictHouseDrugs = 2, DrugShackDrugs = 4,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.8 },
+            { { "all", "inventoryfemale", "items" }, 0.03 },
+            { { "all", "inventorymale", "items" }, 0.03 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 4 },
+        },
+        bags = { HandbagsAndPurses = 0.02 },
         clutter = {},
     },
     {
@@ -152,6 +191,7 @@ local ITEMS = {
     prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
     prescription("DanTraits.Sumatriptan", 0.8),     -- Migraines: new in the early 90s, a little rarer
     prescription("DanTraits.Nitroglycerin", 0.9),   -- Heart Condition: an old, common heart tablet
+    prescription("DanTraits.Cyclobenzaprine", 0.3), -- the muscle relaxant, anyone's: rare
     {
         -- anti-anxiety pills: the vanilla beta blocker's old job, found where
         -- prescriptions are, a little more often in a drug shack
@@ -291,6 +331,20 @@ local ITEMS = {
         bags = {},
         clutter = {},
     },
+    {
+        -- The Insulin Papers: a medical history journal, as common as Living With
+        -- Type 1 and in the same places, plus the labs
+        name = "DanTraits.InsulinPapersMag",
+        procedural = {
+            HospitalMagazineRack = 2, MedicalOfficeDesk = 1.5, MedicalOfficeCounter = 1.5,
+            WaitingRoomDesk = 1, StoreShelfMedical = 1, BookstoreMedical = 2, LibraryMedical = 2,
+            LibraryMagazines = 0.5, MagazineRackMixed = 0.3, CrateMagazines = 0.3,
+            BathroomShelf = 0.05, BedroomSidetable = 0.05, TestingLab = 1,
+        },
+        suburbs = {},
+        bags = {},
+        clutter = {},
+    },
     -- laundry (DanTraits_Laundry*.lua): the washboard where cleaning things are kept
     -- (bleach is 10 in a laundry room, for scale), fabric protector a little rarer
     -- than bleach in the same places, and in shoe shops
@@ -314,7 +368,47 @@ local ITEMS = {
         bags = {},
         clutter = {},
     },
+    -- dryer sheets: as common as bleach in a laundry room, stocked on cleaning shelves
+    {
+        name = "DanTraits.DryerSheets",
+        procedural = {
+            LaundryCleaning = 10, GigamartCleaning = 6, StoreCounterCleaning = 2, StoreKitchenCleaning = 1,
+            GigamartHousewares = 1, JanitorCleaning = 0.5, KitchenRandom = 0.2,
+        },
+        suburbs = {},
+        bags = {},
+        clutter = {},
+    },
+    -- noise-cancelling headphones: a premium thing in 1993, a fifth as common as
+    -- ordinary headphones in an electronics store, and with the army's headsets
+    -- and a therapist's desk
+    {
+        name = "DanTraits.NCHeadphones",
+        procedural = {
+            ElectronicStoreMusic = 4, ArmyStorageElectronics = 3, UniversityDesk_Therapy = 2,
+            BandPracticeInstruments = 1, MusicStoreCDs = 1, CrateElectronics = 1,
+            OfficeDeskHomeClassy = 0.3, LivingRoomShelfClassy = 0.2,
+        },
+        suburbs = {},
+        bags = {},
+        clutter = {},
+    },
 }
+
+-- The five fitness magazines (DanTraits_FitnessData.lua): each this spread, so
+-- the five together are as common in a gym locker as vanilla's health magazine
+-- (10 there); fewer on sports shelves and magazine racks, now and then on a
+-- living-room shelf.
+local FITNESS_MAG_SPREAD = {
+    GymLockers = 2, FitnessTrainer = 3, BoxingLockers = 1, PoolLockers = 1, ClosetSportsEquipment = 1,
+    CrateSports = 1, SchoolGymSportsGear = 0.5, LibrarySports = 1, MagazineRackMixed = 0.5,
+    CrateMagazines = 0.5, LibraryMagazines = 0.3, LivingRoomShelf = 0.02,
+}
+for _, name in ipairs({ "FitMagUpperLower", "FitMagPPL", "FitMagRun", "FitMagStrongman", "FitMagLimber" }) do
+    local procedural = {}
+    for list, weight in pairs(FITNESS_MAG_SPREAD) do procedural[list] = weight end
+    ITEMS[#ITEMS + 1] = { name = "DanTraits." .. name, procedural = procedural, suburbs = {}, bags = {}, clutter = {} }
+end
 
 -- What a found Pill Caddy holds. The game rolls a container item's contents
 -- from SuburbsDistributions[item type] (vanilla's Bag_ALICEpack_Army and
@@ -343,6 +437,7 @@ local CADDY_CONTENTS = {
         "DanTraits.Prednisone", 1,
         "DanTraits.Baclofen", 1,
         "DanTraits.Amantadine", 1,
+        "DanTraits.Cyclobenzaprine", 1,
     },
 }
 

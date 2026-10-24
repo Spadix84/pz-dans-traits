@@ -466,8 +466,8 @@ end
 -- in the same minute, so it is written down here:
 --
 --   minute   0  the stat delta pipeline (DanTraits_DeltaHook in Util): catchCold and
---               foodSicknessRise, so subscribers see the game's rise, not floors written
---               later in the same minute
+--               foodSicknessRise (and boredomRise, registered by ADHD), so subscribers
+--               see the game's rise, not floors written later in the same minute
 --           10  Sleep (light reading, wakes)
 --           11  Home (where the night was slept, the home's pull; before the floors of the mood systems)
 --           19  Clotting (expires clots), GoodClotter (Positives: cuts bleeding time before Blood reads it)
@@ -481,12 +481,13 @@ end
 --           25  FearOfBlood (reads bloodLossMin)
 --           30  Meds (the levels every medicated system reads this minute)
 --           39  Spoons (the energy budget MS spends; reads the night Vitality scored)
---           40  AgeTraits, Alcohol, Anemia, Anger, Arthritis, Asthma, Caffeine, Dehydration, Diabetes,
+--           40  ADHD, AgeTraits, Alcohol, Anemia, Anger, Arthritis, Asthma, Caffeine, Cooking, Dehydration, Diabetes,
 --               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, Laundry, MDD, Migraine,
 --               MS, Smoker, Sunburn, Tinnitus, Triptan (floors and rates; among themselves by label)
 --               (Iron Stomach in Positives is a foodSicknessRise pipeline hook, not a clock system)
 --           41  Grit (Positives: its share of the pain reduction, after the order-40 floors),
---               SensitiveSkin (LaundryTraits: reads the garment state Laundry left at 40)
+--               SensitiveSkin (LaundryTraits: reads the garment state Laundry left at 40),
+--               Sensory (reads Germaphobe's grime, Laundry's itch and Tinnitus from 40, Home from 11)
 --           42  Knox (the Resilient roll against the zombie infection)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)

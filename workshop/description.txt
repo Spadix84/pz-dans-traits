@@ -48,7 +48,6 @@ Each decade has traits of its own: Bottomless Pit in your 20s, Bad Knees and Rea
 [b]Negative:[/b] Arthritis, Asthma, Type 2 Diabetes, Brittle, Major Depressive Disorder, Epilepsy, Fear of Blood, Anaemic, Alcoholic, Germaphobe, Smoker, Gluten and Lactose Intolerance, Vegetarian, Caffeine Dependent, Hallucinations, Tinnitus, Straight Edge, Homebody, Sweaty, Sensitive Skin.
 [b]Positive:[/b] Renaissance Faire Geek, Resilient (can beat the Knox virus), Grit, Fast Recovery, Deep Sleeper, Steady Hands, Iron Gut, Keen Cook, Good Clotter, Thick Skull, Outdoorsy, Cat's Eyes, Early Riser, Meal Prepper, Gym Regular, Night Shift, Hollow Legs, Nomad, Cool Customer, Slob, Homemaker.
 [b]Age-only:[/b] Green, Quick Study, Bottomless Pit, Pace Yourself, Settled, Reading Glasses, Bad Back, Bad Knees, Old Hand, Delicate Stomach, Old Injury, Set in Their Ways, Seen It All, Cast Iron, Old Bones Know Rain.
-Every one is explained in the field guide.
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-conditions.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-conditions.png[/img][/url]
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-perks.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-perks.png[/img][/url]
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-moodles.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-moodles.png[/img][/url]
@@ -59,11 +58,11 @@ Every one is explained in the field guide.
 [*][b]Mid-save?[/b] Safe to add. An existing character is put in their 30s and keeps their skills.
 [*][b]Point signs?[/b] Minus means a flaw and plus a perk, as on this page. The creation screen shows the sign the other way round.
 [*][b]Too hard?[/b] Most systems have a switch on one of the five Vitality sandbox pages, and the conditions are traits you choose.
+[*][b]A wound still takes health?[/b] Blood Loss replaces bleeding, but an open wound still hurts its body part until it is bandaged (a deep one until it is stitched), as in vanilla. The neck counts for most of your health, so it shows most there. Turn off Wound Damage on the Vitality: Health sandbox page and wounds cost only blood.
 [*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandits and This Is Your Life are supported. Dynamic Traits and Expanded Moodles loads, but it doubles up on addictions, so pick one of the two.
 [*][b]Bugs?[/b] Leave a comment, or open an issue on GitHub. Your console.txt helps.
 [/list]
 
-[url=https://spadix84.github.io/pz-dans-traits/field-guide.html]Field guide: every trait, system and number[/url]
 [url=https://github.com/Spadix84/pz-dans-traits]Source and full changelog on GitHub[/url]
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img][/url]
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png[/img][/url]

@@ -73,6 +73,27 @@ do
   assert(DanTraits_DropHeld(p, false) == false and DanTraits_DropHeld(nil) == false, "fails soft")
 end
 
+-- DropHeld in a vehicle: into the seat's own container, or with no room kept in the inventory; never the road
+do
+  local bat = { name = "bat" }
+  local p = H.player(); H.current = p
+  p.getPrimaryHandItem = function() return bat end
+  local inSeat, room, removed = {}, true, 0
+  local seat = { hasRoomFor = function() return room end, AddItem = function(_, it) inSeat[#inSeat + 1] = it end }
+  local vehicle = { getSeat = function() return 0 end,
+                    getPartForSeatContainer = function() return { getItemContainer = function() return seat end } end }
+  p.getVehicle = function() return vehicle end
+  p.getInventory = function() return { Remove = function() removed = removed + 1 end } end
+  assert(DanTraits_DropHeld(p, false) == true and inSeat[1] == bat and removed == 1 and #p._dropped == 0, "into the seat, not onto the road")
+  room = false
+  local halos = #H.halo
+  assert(DanTraits_DropHeld(p, false, "UI_DanTraits_FumblerDrop") == true and #inSeat == 1 and removed == 1 and #p._dropped == 0, "no room: out of the hands, kept in the inventory")
+  assert(#H.halo == halos, "nothing fell, so no 'dropped' notice (2026-10-22)")
+  room = true
+  DanTraits_DropHeld(p, false, "UI_DanTraits_FumblerDrop")
+  assert(#H.halo == halos + 1, "into the seat: the notice")
+end
+
 -- Clamp01 / StatMax
 assert(DanTraits_Clamp01(-3) == 0 and DanTraits_Clamp01(0.4) == 0.4 and DanTraits_Clamp01(7) == 1, "clamp01")
 assert(DanTraits_StatMax(CharacterStat.PAIN) == 100 and DanTraits_StatMax(CharacterStat.STRESS) == 1, "stat max")
@@ -316,6 +337,17 @@ do
   assert(dd.coughs == 3 and dd.lastCoughWhy == "asthma", "records the count and the last reason")
   local bare = H.player(); bare.triggerCough = nil; H.current = bare; H.sounds = {}
   assert(DanTraits_Cough(bare, 35, "smoker") and H.sounds[#H.sounds] == 35, "no triggerCough: falls back to a sound at the radius")
+end
+
+-- DanTraits_BodyLocation: one spelling for B42's "base:sweaterhat", B41's "Sweater_Hat" and a bare string
+do
+  local function item(loc) return { getBodyLocation = function() return loc end } end
+  assert(DanTraits_BodyLocation(item("base:sweaterhat")) == "sweaterhat", "B42 id: prefix off")
+  assert(DanTraits_BodyLocation(item("Sweater_Hat")) == "sweaterhat", "B41 id: lower, underscores off")
+  assert(DanTraits_BodyLocation(item("mod:Torso_Extra_Vest")) == "torsoextravest", "another group's prefix off")
+  assert(DanTraits_BodyLocation(item(nil)) == "", "no location: empty")
+  assert(DanTraits_BodyLocation({ getBodyLocation = function() error("boom") end }) == "", "a throw: empty")
+  assert(DanTraits_BodyLocation(nil) == "", "no item: empty")
 end
 
 -- DanTraits_PanicDecay: a stats object that throws is a game failure, not ours; nothing raised

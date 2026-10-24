@@ -68,7 +68,25 @@ assert(DanTraits_TelemetryEnabled(), "on in debug mode")
 function isClient() return true end
 assert(not DanTraits_TelemetryEnabled(), "never in multiplayer, even in debug mode")
 function isClient() return false end
+-- the companion's heartbeat (unix seconds) turns the telemetry on without debug mode, never the commands
+function getTimestamp() return 1700000000 end
+function isDebugEnabled() return false end
+files["companion_link.txt"] = "1699999990\n"          -- 10 s old: fresh
+H.now = 20000
+assert(DanTraits_TelemetryEnabled(), "on while the companion link is fresh")
+files["DanTraits_Commands.txt"] = "health 10\n"
+tick()
+assert(files["DanTraits_Telemetry.json"] and st.health ~= 10 and files["DanTraits_Commands.txt"] == "health 10\n", "telemetry written, command left alone outside debug")
+assert(files["DanTraits_Telemetry.json"]:find('"debug":false', 1, true), "snapshot says debug off")
+files["companion_link.txt"] = "1699999000\n"          -- 1000 s old: stale
+assert(DanTraits_TelemetryEnabled(), "the link is only re-read every 10 s")
+H.now = 31000; assert(not DanTraits_TelemetryEnabled(), "stale link: off")
+files["companion_link.txt"] = nil
+H.now = 42000; assert(not DanTraits_TelemetryEnabled(), "no link file: off")
+function isDebugEnabled() return true end
+files["DanTraits_Telemetry.json"] = nil
 files["DanTraits_Commands.txt"] = nil
+H.now = 51000   -- the link block above ran the clock to 42000 (and the last write happened at 20000)
 
 tick()                       -- first tick: writes (lastWrite 0 -> now 1000)
 assert(files["DanTraits_Telemetry.json"], "telemetry written")
@@ -80,12 +98,12 @@ print("SAMPLE:" .. out)
 
 -- 3. throttling: nothing happens 100 ms later, a write happens 500 ms later
 files["DanTraits_Telemetry.json"] = nil
-H.now = 1100; tick(); assert(files["DanTraits_Telemetry.json"] == nil, "no write inside 500 ms")
-H.now = 1500; tick(); assert(files["DanTraits_Telemetry.json"], "write at 500 ms")
+H.now = 51100; tick(); assert(files["DanTraits_Telemetry.json"] == nil, "no write inside 500 ms")
+H.now = 51500; tick(); assert(files["DanTraits_Telemetry.json"], "write at 500 ms")
 
 -- 4. commands: read, run, file emptied, results logged into the next snapshot
 files["DanTraits_Commands.txt"] = "set glucose 40\nstat PANIC 100\nweight 110\ninject 3\ncarbs 25 slow\nmdd start 0.7 30\nepisode charge\ngive DanTraits.InsulinPen 2\nhealth 40\nhalo Shaky\nbogus 1\n\n"
-H.now = 2100; tick()
+H.now = 52100; tick()
 assert(md.DanTraits.glucose == 40 and st.panic == 100 and st.weight == 110 and injected == 3, "set/stat/weight/inject ran")
 assert(md.DanTraits.diaSlow == 25 and md.DanTraits.mddEpisode == true and md.DanTraits.mddSeverity == 0.7 and md.DanTraits.mddHoursLeft == 30, "carbs/mdd ran")
 assert(#episodes == 1 and #inv == 2 and st.health == 40 and halos[1] == "Shaky", "episode/give/health/halo ran")
@@ -93,7 +111,7 @@ assert(files["DanTraits_Commands.txt"] == "", "command file emptied")
 local snap = files["DanTraits_Telemetry.json"]
 assert(snap:find("unknown command: bogus", 1, true) and snap:find("set glucose = 40", 1, true), "results in the log")
 -- nothing to read: file untouched, no new log entries
-H.now = 3200; tick()
+H.now = 53200; tick()
 assert(files["DanTraits_Commands.txt"] == "", "empty stays empty")
 assert(DanTraits_RunCommand(player, "set mddEpisode false") == "set mddEpisode = false" and md.DanTraits.mddEpisode == false)
 assert(DanTraits_RunCommand(player, "set glucose nil") == "set glucose = nil" and md.DanTraits.glucose == nil)
@@ -105,7 +123,7 @@ H.expectHooks("OnStoryEvent")
 H.fire("OnStoryEvent", player, { source = "DanTraits", kind = "SmokerCraving", text = "I need a cigarette", tone = "bad" })
 H.fire("OnStoryEvent", player, { source = "OtherMod", kind = "Found", text = "Found a <photo>", tone = "good" })
 H.fire("OnStoryEvent", player, "not a table")
-H.now = 4000; tick()
+H.now = 54000; tick()
 snap = files["DanTraits_Telemetry.json"]
 local a, b = snap:find('"text":"Found a <photo>"', 1, true), snap:find('"text":"I need a cigarette"', 1, true)
 assert(a and b and a < b, "both events, newest first: " .. snap)

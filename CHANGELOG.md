@@ -3,6 +3,406 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Unreleased
+
+### New
+
+- **Fitness overhaul** (`DanTraits_FitnessData.lua`, `DanTraits_Fitness.lua` at minute order 40,
+  `DanTraits_FitnessActions.lua`, `ISDanTraitsStretchAction`, `client/DanTraits_FitnessUI.lua`;
+  design and as-built notes in `plans/fitness-overhaul.md`; sandbox `FitnessEnabled`,
+  `FitnessStrain`). Four groups (arms, chest, core, legs). A training minute adds `1/30` load x the
+  exercise's share x intensity (1.3 for burpees and weights); load falls `1/36` an hour, x2 asleep,
+  x2 stretching or x1.25 Loosened Up, x1.15 on plan, x1.1 with Limber, then the new
+  `fitnessRecovery` hook (Age's stiffness factor by band, Vitality `1 + 0.25e`). States: Ready
+  (under 0.15, trained 20 to 96 h ago), Rested, Recovering (0.15+), Sore (0.6+), Overworked (1+),
+  Pulled. A rep's XP (marked by wrapping `ISFitnessAction:exeLooped`) is scaled by the lowest
+  group factor from the load it carried into the session (x1.25 Ready, x0.6 Sore, x0.3
+  Overworked; x0.5 past 1.5 load in a session), x0.7 Overtrained, x1.15 on plan, x the improvised
+  weight (kilos held / 6 or 5, 0.5 to 1.2), x1.15 within 3 tiles of a weight bench
+  (`CustomName = Fitness_Contraption`), then the `fitnessXp` hook; applied through
+  `DanTraits_AgeXpAdjust`, skipping Age's own top-ups. Pulled muscle: a minute's risk `0.02 x
+  (carried - 0.6) / 0.4 + 0.01 x (session - 1.5) / 0.5`, x1.5 improvised, x0.5 at a bench,
+  `fitnessStrain` hook; 36 h (x2 asleep), pain floor 25, the part's stiffness held at 30, the
+  group refused in the window and a running exercise stopped. Pumped: 15 training minutes in a
+  session (gaps of 10 or less join, hard work aside), 3 h of stress -0.0004, unhappiness -0.05,
+  boredom -0.1 a minute, Depression's exercise relief at least 0.8 (new `mddExercise` hook).
+  Loosened Up: 10 stretching minutes, 4 h, Arthritis's joint factor x0.7, stiffness fades x2
+  stretching / x1.25 after (new `stiffFade` hook in Age's pacing). Overtrained: seven days in a
+  row with 20 hard minutes, until two without; XP x0.7, nights -0.05, `enduranceRegen` x0.9.
+- **Exercises:** added to `FitnessExercises.exercisesType` at load: Improvised Curl (barbell curl
+  animation, two hands: log, propane tank, full bucket, sandbag, gravel bag, dirt bag, car
+  batteries, tyre), One-Arm Curl and Overhead Press (biceps curl and dumbbell press animations:
+  car batteries, paint cans, vinegar jug, flour), the heaviest carried at 1.5 kg or more;
+  Stretching (`ISDanTraitsStretchAction`, the `TiredStretch` ext animation every 6 s, standing or
+  sat); and three hidden ones counted per minute with their own regularity (2, 2 and 1
+  `incRegularity` steps): jogging (running, not sprinting), loaded carry (heavy load 1+, moving),
+  hard work (metabolic rate 5+). The window borrows animations by swapping `ExerciseType` at
+  `start` and the type at `serverStart`. Right-click a weight bench or treadmill: Work Out.
+- **Training plans:** Full Body (everyone), Upper/Lower, Push Pull Legs, First Five Miles,
+  Strongman, Active Recovery; seven-day cycles of targets (20 minutes of a kind; stretching 15;
+  rest under 20 hard minutes). On plan (every target day of the last seven done): XP and recovery
+  x1.15, Vitality's exercise score +0.1 (new `exerciseScore` hook). Fitness Instructors know them
+  all. The window shows the groups, the plan drop-down, today's target, seven days and bonuses.
+- **Fitness magazines:** Iron Monthly: Upper/Lower and Push Pull Legs (Strength +10% each),
+  Pavement: First Five Miles (Fitness +10%), Strongman Quarterly (both +5%), Limber (Fitness +10%,
+  recovery +10%); `LearnedRecipes` knowledge flags read with `isRecipeActuallyKnown`; the bonus is
+  on all Fitness or Strength XP. Loot, each: gym lockers 2, fitness trainer 3, boxing and pool
+  lockers 1, sports closets and crates 1, school gym 0.5, library sports 1, magazine racks and
+  crates 0.5, library magazines 0.3, living-room shelves 0.02.
+- **Cooking overhaul** (`DanTraits_Cooking.lua` at minute order 40, `client/DanTraits_CookingClient.lua`;
+  design and the vanilla facts it rests on in `plans/cooking-overhaul.md`; sandbox `CookingEnabled`).
+  A proper meal is 300 kcal of one dish tier (bites of a dish within an hour add up, through the
+  `eat` hook). Tier: Home-cooked (an evolved dish with 2+ ingredients; never-cooked dishes stop
+  here), Hearty (cooked, 3+, Cooking 3), Chef's (cooked, 4+ or 3 and a spice, Cooking 7); none for
+  burnt, rotten, raw-but-cookable or under 2 ingredients; stale drops a tier. The cook's level is
+  stamped on the dish (`dtCook` mod data, wrapping `ISAddItemInRecipe:complete`), else the
+  eater's. Good Meal afterglow: unhappiness 6 / 10 / 15 and stress 0.03 / 0.05 / 0.08, plus 25 /
+  50 / 75% of the dish's own drop, paid evenly over 3 / 4 / 5 h awake; x1.25 at home (x1.5
+  Homebody), x0.5 the same full type within 24 h, none for a Sensory Issues disliked texture;
+  replaces a running glow only if it pays more than is left; holds Depression's `mddFoodTimer`.
+  Fuelled 4 h: Fitness and Strength XP +5 / 10 / 15% (new `fitnessXpAll` hook in Fitness's
+  experience handler). By the dish's protein, carbs and fat as calories against 25 / 50 / 40%:
+  Recovering 6 h (`fitnessRecovery` x1.1 / 1.2 / 1.3), Energised 3 h (5 / 10 / 15% of the endurance
+  spent each minute given back, `enduranceRegen` told), Full 4 h (`hungerRise` x0.95 / 0.9 /
+  0.85). Side stitch: exercising at Food Eaten 3 (2% a minute) or 4 (5%): lower torso stiffness 25,
+  an hour's cooldown. Diet goals (fitness window): Bulk, Strength XP +10% while `isIncWeight`;
+  Cut, Fitness XP +10% while `isDecWeight` and a quarter more of the game's loss. Fuelled with 20
+  hard minutes today, weight under 78 or over 82 drifts 0.2 kg a day toward it. New moodle Good
+  Meal (Good Meal, Great Meal; bad side Side Stitch); a tooltip line on dishes.
+- **Fitness experience cap:** the product of Fitness's factors on one gain (training factor,
+  magazines, Natural Runner, `fitnessXpAll`) is capped at x2 before the `FitnessXp` sandbox pace.
+- New moodles: Sore Muscles (Sore, Overworked, Pulled Muscle), Pumped (Loosened Up, Pumped; bad
+  side Restless), Overtrained.
+- **Fitness traits** (`DanTraits_Fitness.lua`, constants in its `TR` table): Well Conditioned (4:
+  recovery x1.5, Ready from 14 h, strain heals x2; not with Lingering Soreness), Natural Runner (3:
+  a jog minute logs and pumps as 2, legs load x0.5, Fitness XP x1.25 while running or sprinting
+  outside a rep), Weightlifter (4: weights and improvised XP x1.2, no x1.5 improvised strain),
+  Regimented (3: plan bonus x2, one missed target day in seven forgiven), Lingering Soreness (-3:
+  recovery x0.6, Ready from 30 h), Injury Prone (-3: strain risk x2, 54 h), Exercise Averse (-3:
+  never Pumped, +0.15 boredom and +0.05 unhappiness a training minute, plan bonus x0.5; not with
+  Endorphin Junkie), Inflexible (-2: stretching boosts keep half, `stiffFade` x0.7 otherwise,
+  `arthritisJoint` x1.1, x0.85 loosened), Endorphin Junkie (1: Pumped 360 min, lift x2; 48 h
+  without, Restless: boredom floor 30, stress floor 0.15). Trait icons in `make_icons.py`.
+- **Links:** Diabetes (both types) burns 1 mg/dL a minute of a workout instead of running's 0.5,
+  then 0.2 x `DanTraits_FitAfterglow` (the Pumped share left); Type 2 resistance -0.1 x the
+  afterglow. Asthma: a `breathless` exercise (burpees) builds as running does. Heart: `HC_LIFT`
+  0.02 a minute of a heavy (intensity over 1) or improvised exercise. Brittle: 20 minutes today on
+  exercises loading the legs at half a share or more (`DanTraits_FitLegMinutes`) puts 0.02 a day
+  back. Bad Back: an improvised two-handed curl minute adds 0.008 through
+  `DanTraits_BadBackStrain`, and core strain risk x1.5. Gym Regular knows Upper/Lower. MS left out
+  on purpose.
+- **Fitness, round two (2026-10-18, after the first play):** the window's section is now one child
+  panel (`DanTraitsFitnessSection`), so it shows in replacement windows too (Neat Rocco's
+  `NR_FitnessPanel` overrides `render` and restacks unknown children at the bottom); the improvised
+  exercises are named for the stand-in carried by setting `exeData.name` when the list is built
+  (Neat Rocco lists by it): `%1 Curls`, `%1 One-Arm Curls`, `%1 Overhead Press`; a hint says more
+  plans come from magazines. Stretching has a progress bar (`setJobDelta` from the calendar).
+  Overtraining's hard day is `40 + 6 x (Fitness + Strength)` minutes (was 20). Powerlifter is
+  now Weightlifter, Disciplined now Regimented (Lifestyle: Hobbies has a Disciplined).
+- **Arthritis and MS:** `conditionFactor` in Fitness: `1 - 0.2 x (Fitness + Strength) / 20 x
+  kept` (kept: Vitality's exercise score or the regularity, over 0.5) x 0.9 Loosened Up (0.95
+  Inflexible), on Arthritis's `arthritisJoint` (was x0.7 Loosened Up) and a new `msRelief` hook
+  in MS (0.5..1) on its hand and leg stiffness, heat pain, the old fatigue drip and the spoons
+  spent. Arthritis -12 (was -10), now not with Athletic, Fit, Strong or Stout; MS -16 (was -15),
+  now also not with Fit or Stout.
+- **Bad Back -8 (was -5):** pain 60 at a full load (was 45), stiffness 30 on the lower back and 25
+  on the thighs x the load; thrown out past half a load under Heavy Load 2+ or a lift
+  (`DanTraits_BadBackStrain` this minute), `0.004 x (load - 0.5) / 0.5` a minute, x2 for seven
+  days after the last: 240 minutes of pain 85, stiffness 70 back / 40 thighs, no running or
+  sprinting (frame). Core conditioning from `DanTraits_FitWeekMinutes(player, "core")` / 90: the
+  load x (1 - 0.4c), a throw-out x (1 - 0.5c), nothing in the week after a throw-out. New moodle
+  Back Strain (1 aching, 2 bad, 3 thrown out).
+- **Sets in reps:** muscle load is counted per rep (`DanTraits_FitOnRep`, called from the
+  `exeLooped` wrap after the game's rep; `FIT_REP_EFFORT` 0.5 minutes of effort a rep, so a set of
+  50 is 25 effort minutes and 0.83 load) instead of per minute, which had loaded slow exercises
+  (squats, about an in-game hour for 50) twice as hard for the same experience. Jogging,
+  carrying, hard work and stretching stay per minute. The window's time box is a rep count
+  (`IGUI_FitnessTime` overridden to "Reps (stretching: minutes)"; the count rides in
+  `DanTraits_FitPendingReps`, the game's clock gets 240 minutes, the set ends on its last rep, and
+  the bar is `setJobDelta(repnb / dtReps)`). Plan targets for the strength days show as reps (two
+  to an effort minute: 40). New sandbox option `FitnessXp` (10 to 500, default 100): every
+  Fitness and Strength gain x it/100.
+- **Plans made plain:** `onPlan` now needs a target day done in the last seven and no unforgiven
+  miss in the last `FIT_MISS_DAYS` (2) days, and returns the day missed and the day the bonus is
+  back (`ftMissDay`, `ftBackDay`); the window shows on or off plan and why under today's target,
+  and `UI_DanTraits_FitOnPlanNow` / `FitOffPlanNow` notices mark the change.
+- **ADHD (-2)** (`DanTraits_ADHD.lua`, minute order 40, test_adhd.lua): registers the minute
+  delta hook `boredomRise` (CharacterStat.BOREDOM) and returns each rise x1.5; falls untouched.
+  `ISReadABook` at the head of the queue with a skill book (`SkillBook[item:getSkillTrained()]`)
+  adds 0.3 boredom a minute (counted x1.5 by the next minute's pipeline) with one "so dull" notice
+  per book id. A started action not in the exempt list (walk, path-find, vehicle enter/exit/seat,
+  climb window, door, rest, sit, sensory stim) stops by `forceStop` (vanilla `stop` resets the
+  queue) at `1/150` a minute x (1 + boredom 0..1), not with any Panic moodle, then not for 60
+  game minutes (`adhdNext`). Hyperfocus: a minute with a started, non-exempt, non-skill-book
+  action adds 1 to `adhdFocus`; at 20 (minus 5 x coffee) `adhdHyper`: `ISBaseTimedAction:adjustMaxTime`
+  x0.85, `Events.AddXP` +10% through `DanTraits_AgeXpAdjust`, the boredom rise returns 0 and
+  boredom eases 0.1 a minute (`DanTraits_DeltaRemember` after, so a wiped rise does not undo it),
+  no drifting, no skill-book boredom; 3 minutes with an empty queue (`adhdIdle`; exempt actions
+  neither build nor count as idle), any Panic moodle or sleep end it, drifting off resets the
+  build. Moodle Hyperfocus (-1 from half the build, -2 locked in). Coffee: `dose()` in
+  `DanTraits_Caffeine.lua` now calls `DanTraits_AdhdOnCaffeine` for anyone; `adhdCaf` halves every
+  5 h, effect = level / 100: boredom multiplier 1.5 -> 1.25, drift x(1 - 0.5e), focus 5e minutes
+  sooner. Novelty: the building footprint (`DanTraits_HomePlaceOf`) not in `adhdSeen` takes 15
+  boredom and 3 unhappiness off, at most every 30 minutes (the spawn building and buildings found
+  in the gap are not marked; the list restarts past 3000). Home's boredom relief now runs through
+  a `homeBoredom` hook; ADHD halves it. Exclusive with Homebody. Console `adhd`, `adhd distract`,
+  `adhd focus`. Icons in `make_icons.py` (trait, `ui/Hyperfocus`).
+- **Sensory Issues (-8)** (`DanTraits_Sensory.lua`, `ISSensoryStimAction`,
+  `client/DanTraits_SensoryClient.lua`, minute order 41): one sensory load (`siLoad`, 0..100) fed
+  by six channels, each 0..1 and weighted (touch 1, grime 1, sound 1.5, crowd 2, light 0.7,
+  smell 1). Touch: wool and knit garments 0.5 each, denim 0.15, tight headgear (fullhat, mask,
+  maskeyes, maskfull, scba locations, helmets) 0.3, Laundry's `L.itch` count x0.2, wetness over
+  30%. Grime: `DanTraits_GermGrime` from 0.1 to 0.6. Sound: the loudest `OnWorldSound` heard
+  (radius 12 or more, full at 60, halved by distance), fading x0.5 a minute, plus Tinnitus ringing
+  0.5, a running engine 0.3, `getIsThunderStorming` 0.3; ears: Deaf 0, Hard of Hearing 0.5, Keen
+  Hearing 1.25, `Hat_EarMuffs` x0.4, `Hat_EarMuff_Protectors` x0.2 (were x0.6 and x0.3 until
+  2026-10-19), `DanTraits.NCHeadphones` x0. Crowd: `getNumVisibleZombies`
+  over one, full at ten, plus 0.15 per `getNumVeryCloseZombies`. Light: `DanTraits_InBrightLight`
+  0.6, x0.4 with shades. Smell: corpses within 4 tiles, full at 6. The load closes a tenth of the
+  gap to 100 x input/1.5 each minute when climbing and drains 0.75 a minute x calm (1.5 until 2026-10-20; indoors and
+  clear 1.5, home 1.5, dark 1.3, sitting 1.2, asleep 4; asleep only touch counts, at half),
+  blocked at input 1. Tiers 30/60/90 (an overload lasts until under 50, 70 until 2026-10-20): stress floors
+  0.25/0.5/0.75 (ramp 0.02), unhappiness 25/40, `enduranceRegen` x0.8/0.6; an overload rolls
+  meltdown (panic 40, anger 0.5) or shutdown (stamina x0.5, boredom and unhappiness 50). Input
+  adds 0.0015 stress a minute per unit. Food: two safe and two disliked of eight texture groups
+  (name words, food types and cancelling words, checked against the game's 722 foods; three
+  ingredients or more is mixed; the first safe group is crunchy, mushy, plain or sweet); safe -20
+  load, -10 unhappiness; disliked +10 load, +15 unhappiness, +0.1 stress and a 50% gag at 35%
+  through (`ISEatFoodAction:update` wrap, `forceStop`); overloaded, `refuseFood` turns away all
+  but safe food (food only: `instanceof(item, "Food")` first, since the hook runs on every right-clicked
+  item and a food method called on clothing is logged by B42 even inside pcall); a neither food eaten three whole portions under the first tier is learned
+  (`siLearned`). Stim action on fidget toys and plushes (walking allowed, running or aiming stops it): -30 load, -0.1 stress, half within an
+  hour. Hooks: Migraine `overload` trigger (1.5 at full), `spoonSpend` x(1 + 0.5 load/100),
+  `nightQuality` x0.85 when asleep at 60 or more, a garment tooltip line in `client/DanTraits_SensoryClient.lua` (`DanTraits_SensoryGarmentTip`: soft in green for
+  cotton or a soft name, scratchy, rough or tight in red; independent of laundry). **Harsher (2026-10-20, the user: it reaches overwhelm fast enough but does not bite):** timed actions
+  started at Overwhelmed x1.2 and overloaded x1.4 (`ISBaseTimedAction.adjustMaxTime`, beside ADHD's wrap); a
+  meltdown throws down what is in the hands 10% a minute (`DanTraits_DropHeld`) and shouts 20% a minute (Say +
+  `addSound` radius 20); a shutdown blocks sprinting (frame driver SensoryShutdown, the moodle on an
+  attempt); every overload since the last sleep of 240 minutes in one go makes the input for 100 x0.85 (up to
+  three, `siToll`), with notices for worn thin and slept off. The starting outfit counts as washed. **Take A Bath And Shower** (`DanTraits_Bathing.lua` now
+  exports `DanTraits_BathingMode(player)`, "BATH"/"SHOWER" while its `tabas_IsBathing` flag is up, the
+  mode from `OnBathingStart`, and `DanTraits_BathingWet(player)`, true until `tabas_HasBathingWet` clears):
+  the drain x3 in a bath and x2 in a shower (`CALM_BATH`, `CALM_SHOWER`), and the bath's wetness is not a
+  touch trigger. **Noise-cancelling headphones** (`DanTraits.NCHeadphones`,
+  clothing on `base:hat`, the ear protectors' model): for anyone, worn they grant the game's Deaf trait
+  (its audio reads it) on the minute and on `OnClothingUpdated`, taken back off when removed (`hpDeaf`
+  marks ours; a deaf character is left alone); loot ElectronicStoreMusic 4, ArmyStorageElectronics 3,
+  UniversityDesk_Therapy 2, a few others; icon in `make_icons.py`. Moodle SensoryLoad (level 3 meltdown, 4 shutdown),
+  icons in `make_icons.py`. test_sensory.lua.
+
+- **Dryer sheets** (`DanTraits.DryerSheets`, `DanTraits_Laundry.lua`, `ISLaundryAction` kind
+  `sheet`, `client/DanTraits_LaundryWasher.lua`): a box of 20 (drainable, the tissue box model;
+  laundry rooms 10, Gigamart cleaning 6, other cleaning shelves). Right-click a dryer (a combo set
+  to dry, a stacked pair's dryer) with the box carried: Add a dryer sheet (N left), greyed while it
+  runs or with a sheet in. The sheet is a flag on the machine's mod data (`dtlSheet`). Vanilla's
+  dryer (`ClothingDryerLogic`, 42.21) runs 90 minutes and locks its drum, so the watch works like
+  the washers': switched on through `ISToggleClothingDryer` / `ISToggleComboWasherDryer` (or seen
+  running within 4 tiles, for a stacked pair's Java switch) a sheeted dryer joins `lnDryers`; each
+  ten-minute look scents every garment in it under 10% wet (`ds`, the wash count it belongs to,
+  counting a machine wash still pending), and once idle or switched off a last look does the same
+  and spends the sheet. A scented garment gathers odour at half the rate (`SHEET_ODOUR`) until its
+  next wash. Unworn clothes never gathered odour, so they stay fresh until worn either way.
+  Sensitive Skin counts a scented garment against the skin as itchy; tooltips say "Dryer sheet:
+  stays fresh longer" (and "Dryer-sheet perfume: it itches" for Sensitive Skin). Icon in
+  `make_icons.py`; tests in test_laundry 24, test_laundryaction 10, test_laundrytraits 7,
+  test_washer 4.
+- **Sleeping in clothes** (`DanTraits_Sleep.lua`, sandbox `SleepClothesEnabled`). Each minute
+  asleep, worn items are costed by body location (`CL_SLOTS`) and summed, capped at 1. Free
+  (unlisted): underwear, socks, T-shirt, tank top, short-sleeved shirt, shorts, short pants, bath
+  robe, jewellery, make-up, bandages. Warm slots (shirt 0.15, pants 0.25, sweater 0.2, jacket 0.3,
+  bulky/down jacket 0.45-0.5, boilersuit 0.4, hats, gloves...) are scaled by warmth `(air - 10) /
+  10` clamped 0..1, with `getAirTemperatureForCharacter(player, false)`, and are free at any
+  Hypothermia moodle level; gear (shoes 0.25, backpack 0.3, webbing 0.2, armour pieces, masks,
+  holsters, belts) always counts. Tiredness drains `x (1 - 0.12 x cost)` on top of the light
+  factor, and the night's score loses `0.1 x` the average cost (in the same `nightQuality` hook
+  as light, `d.slLastNightClothes`); Deep Sleeper pays half (`DS_REST_BRIGHT`). Waking after 60+
+  minutes asleep at an average of 0.25+ shows "Slept badly in your clothes". Harness worn items
+  take an optional `loc`; tests in test_sleep 12.
+- **Undress and Sleep** (`client/DanTraits_SleepMenu.lua`, `DanTraits_SleepUndressList` in
+  `DanTraits_Sleep.lua`, `ISDanTraitsBedtimeAction`). Inserted right after the game's own Sleep
+  option (built in Java by `ISWorldObjectContextMenuLogic`; found by `onSelect ==
+  ISWorldObjectContextMenu.onSleep` or by name, submenus searched 3 deep), so beds, sofas and the
+  ground all get it; left out while that option is greyed (not tired, too early) or
+  `SleepClothesEnabled` is off, greyed with a reason when nothing needs to come off. Takes off every
+  worn item in `CL_SLOTS`, warm slots only at warmth 0.5+ (15C and up, never with the Cold moodle);
+  worn `InventoryContainer`s and bags in either hand (a two-handed one once) are dropped. Queue:
+  `luautils.walkAdj` to the bed (skipped on the ground or already sat on it), the game's
+  `ISInventoryPaneContextMenu.unequipItem` per garment and `dropItem` per bag (to the floor), then
+  a one-tick client action that calls `onConfirmSleep` with YES, so the game's sprite-grid pathing,
+  zombie, pain and panic checks still run and the confirm dialog is skipped. On waking (minute
+  order 90), the garments it took off (`d.slUndressed`, item IDs recorded when the bedtime action
+  runs, so ones the player put back on by hand are left out) go back on through
+  `ISInventoryPaneContextMenu.wearItem`, if still carried (`getItemWithIDRecursiv`) and not worn;
+  the same once a refused sleep leaves the player idle and never asleep for 2 minutes. Bags stay
+  on the floor. Tests in test_sleepmenu.
+- **Hot water bottle** (`DanTraits_HotWaterBottle.lua` at minute order 20, `ISDanTraitsHeatAction`,
+  `client/DanTraits_HotWaterBottleClient.lua`). Vanilla `Base.HotWaterBottle` (1 L, cookable,
+  microwave-safe; loot's "HotWaterBottleEmpty" spawns it empty) counts as hot over `itemHeat` 1.6
+  but cools to the room in about a minute of real time, so the bottle keeps its own warmth in item
+  mod data (`dtHwbLeft` hours, `dtHwbAt`): stamped full (4) whenever seen over 1.6 with fluid in it,
+  carried or in the cell's process list (stoves, microwaves, fires; empty on an MP client), and
+  counted down lazily at 1 an hour, 2/3 asleep, 2 outdoors below 0C. Hot above 3, Warm above 1,
+  then Tepid; emptied, it is forgotten. Held on a group (the action, 30 calendar minutes, Hot or
+  Warm, carried): the new `fitnessGroupRecovery` hook in `recover()` gives that group x2 / x1.5;
+  1 / 0.6 stiffness off each of its parts a minute (before Age at 23.5, which paces the fall); a
+  pulled muscle there loses 4 / 2 minutes an extra minute (two hours a Hot session); on the core
+  `DanTraits_BadBackEase` (new, AgeTraits) takes 0.004 / 0.0024 off the back's load, or runs a
+  thrown-out back's minutes 1 / 0.5 faster; `arthritisJoint` x0.8 / x0.9, and x0.9 for an hour
+  after. Asleep with a Hot or Warm bottle carried: every group x1.25 / x1.15, and minutes asleep
+  at air 10C or below (or the Cold moodle) lift the night's score by up to 0.05 at four hours
+  (`nightQuality`). The menu lists each group with its state; greyed with how to heat it when
+  cold or empty. Tooltip line via `DanShared_Tooltip`. Tests in test_hotwaterbottle 10,
+  test_agetraits (Bad Back ease).
+- **Cyclobenzaprine** (`DanTraits_Relaxant.lua` at minute order 60, the `cyclobenzaprine`
+  rescue drug in `DanTraits_Meds.lua`, item in `DanTraits.txt`, icon in `make_icons.py`). The
+  usual 1993 prescription muscle relaxant (Flexeril). 20 tablets (UseDelta 0.05), taken with
+  vanilla's Take Pills like sumatriptan; loot `prescription(..., 0.3)`, Pill Caddy contents
+  weight 1, spawns 30-100% full. Half-life 8 h, covered at 0.5, over at 2.5 (overH 6: fatigue
+  0.0015, faint 0.003, heart strain); taking: fatigue 0.0003 awake, thirst 0.0001; side: fatigue
+  0.0006 for 6 h; lapse notice for anyone. Covered: `stiffFade` x2; new `strainRelief` hook in
+  Fitness `strainMinute` (the pull's pain floor and held stiffness x0.5); new `backRelief` hook
+  in AgeTraits `updateBadBack` (pain and stiffness x0.5, x0.65 thrown out; load and throw-out
+  chance unchanged); `fitnessXp` x0.85, `fitnessStrain` x1.5; Drunk moodle at any level adds
+  0.0008 fatigue a minute awake. Tests in test_relaxant 6, test_agetraits (backRelief).
+- **Animal insulin** (`DanTraits_Diabetes.lua`, items and recipes in `DanTraits.txt`).
+  `DanTraits_AddPancreasParts` inserts `{ item, nb = 1 }` into the vanilla
+  `AnimalPartsDefinitions.animals[kind].parts` lists (shared per kind, so once per table, at load
+  and again on `OnGameBoot`): `DanTraits.Pancreas` for adult cattle, calves, adult pigs, sheep and
+  deer, `DanTraits.PancreasSmall` for piglets, lambs, fawns, rabbits and raccoons; none for rats,
+  mice and birds. Both are Food after `Smallanimalmeat` (2 days fresh, 4 to rotten). The
+  `DanTraitsExtractInsulin` / `DanTraitsExtractInsulinSmall` craftRecipes (`SliceMeat_Surface`,
+  400, First Aid 2, `NeedToBeLearn`, `AutoLearnAny = Doctor:8`) take a sharp knife (kept), one
+  Pancreas or four small ones (`IsUncookedFoodItem;ItemCount`; rotten and frozen refused by
+  default), one use of `base:vinegar`, a `Base.RippedSheets` and 0.2 l of
+  RubbingAlcohol/Vodka/Whiskey, and make one `DanTraits.InsulinVial` (40 doses, the pen's
+  insulin). Taught by the new magazine `DanTraits.InsulinPapersMag` "The Insulin Papers". A vial
+  injects through the same `ISDiabetesAction` as a pen, valid only while a
+  `DanTraits.InsulinSyringe` is carried (`DanTraits_InsulinSyringeFor`, bags included; the menu
+  greys with `Tooltip_DanTraits_NoSyringe`). Type 1's kit adds a syringe to the always-given
+  items. The vial joins the `insulin` drug's items, the syringe the Pill Caddy's extras. Loot:
+  vials in medical storage and fridges, syringes wherever medicine is kept plus drug shacks, the
+  magazine at Living With Type 1's rate in the same lists, plus `TestingLab`. Icons in `make_icons.py`.
+- **Diabetes sandbox options.** `InsulinLoot` (percent, pens, vials and syringes, through the
+  loot spec's `sandbox` field like `InhalerLoot`) and `UntreatedDiabetesDays` (0 to 60, default 1):
+  above 350 the health floor is now `DanTraits_DiaHighFloor(diaKetoHours)`, 15 at the two-hour
+  drain start sinking linearly to 0 at `days x 24` hours (0: stays 15). At the default this
+  replaces the old 15-until-24-hours-then-0 step with a slope ending at the same time. Tests in
+  test_diabetes 12, test_actions 3, test_client 2 (the harness inventory gains `getAllEvalRecurse`).
+
+- **Medication reminder** (`DanTraits_Meds.lua`, `DanTraits_Moodles.lua`, `DanTraits_HealthPanel.lua`): daily
+  drugs and the antidepressant gain `everyH` (24 or 12) and `item` (the full type the name is read from), and every dose
+  notes `meds[id].lastH` (world hours; `DanTraits_MedStart` too). `DanTraits_MedSchedule(player)` is the scheduled drugs
+  for traits the character has; `DanTraits_MedDue` is 1 from `everyH - 2` hours after the last dose, 2 once out of the
+  system with build-up left, 0 once that is gone; `DanTraits_MedSince`, `DanTraits_MedNextIn`, `DanTraits_MedInSystem`
+  read the rest. New moodle MedsDue (the worst of the schedule; sandbox `MedReminderMoodle`, default on) with its icon in
+  `make_icons.py`. The health panel's render is wrapped (OnGameStart, guarded against a second layer like doDrawItem):
+  for your own character a Daily Medication header and a line per scheduled drug go where the body part list starts,
+  and the list, its height and `allTextHeight` move down to fit. Tests in test_meds 13, test_moodles, test_healthpanel 11.
+
+- **Blood readout on the health panel** (`DanTraits_Blood.lua`, `DanTraits_HealthPanel.lua`): a Blood section above
+  Daily Medication, your own character only, by the examiner's First Aid level read live (the same bands as the body part
+  lines). 0-2: how you look (no sign, worn down while red cells are short, pale and weak, pale and light-headed, in
+  shock, close to death) and "still bleeding". 3-5: the class of blood loss (none, a little = class I, then II to IV by
+  tier), bleeding slowly / steadily / heavily (under 0.1%, from 0.4% a minute), coming back or "needs water" (no
+  refill), red cells low (`bloodWeak` > 0). 6-8: volume and red cells to the nearest 5%, the net loss or refill an hour.
+  9-10: whole percentages, net loss to 0.1% an hour with the time to shock (60% volume) or to the heart giving out (50%),
+  time back to full, time for red cells back to normal. The refill now notes the minute's gains (`bloodVolGain`,
+  `bloodCellGain`) and `DanTraits_BloodState(player)` hands the panel volume, cells, loss, gains, tier, weakness and the
+  shock and death edges (nil with the blood off). The sections share one 4 px gap each (`HP_GAP`, was `HP_MED_GAP`).
+  Tests in test_blood 8b, test_healthpanel 12.
+  A doctor sees a patient's blood too, at the doctor's level. Split-screen reads the patient's mod data; in
+  multiplayer (each client runs its own players' blood) a relay asks the patient's client
+  (`client/DanTraits_BloodRelay.lua`, `server/DanTraits_BloodRelay.lua`): `DanTraits_PatientBloodState(doctor,
+  patient)` sends `bloodAsk` when the last answer is 3 s old (at most once a second) and returns it for 10 s; the server
+  passes an ask on only within 4 tiles or in the same vehicle and no more than every 0.5 s per doctor, and passes a
+  `bloodTell` back only to a doctor who asked about the sender in the last 5 s, keyed by the sender's online id and
+  stripped to the panel's nine numbers (false with the blood off). Daily Medication stays your own (and split-screen).
+  Tests in test_bloodrelay (new), test_healthpanel 12.
+
+### Changed
+
+- **Antidepressants build up in 3 days** (`MDD_MED_FULL_DAYS` 14 to 3). The streak cap (x4) is now 12 days, so a lapse
+  starts costing benefit after about 3 days off instead of 14; discontinuation still needs a 7-day streak.
+- **Wound Damage sandbox option** (`WoundDamageEnabled`, default on, Health page; Steam report from Arkantos Eli,
+  2026-10-23). Blood Loss refunds vanilla's bleed health loss but keeps `BodyPart.DamageUpdate`'s wound damage to the
+  part (deep wound unstitched 3.125, bandaged 1.5625; scratch 0.9375, cut 1.875, bite 2.1875 unbandaged; bullet left
+  in 3.125 / 1.5625; x `damageScaler` 0.0057 x the game-time multiplier, through `CombatManager.applyDamage`). The neck
+  weighs 0.7 in overall health (head 0.6, hand 0.1), so an open neck cut costs about 4.6x what the bleed refund gives
+  back. Off (with Blood Loss on), the Blood frame driver gives the same amount back to each part
+  (`refundWoundDamage`); invulnerable characters and parts at 0 are skipped. Burns and fractures stay vanilla. The
+  Blood Loss tooltip, the Workshop FAQ and the systems chart now say the wound itself still hurts. test_blood 11b.
+
+### Fixed
+
+- **Dropped in a car, it stays in the car** (`DanTraits_DropHeld`, Util): a meltdown, a seizure, MS hands giving out or
+  an Arthritis or shakes fumble while driving threw the item onto the road. In a vehicle it now goes into the seat's own
+  container (`getPartForSeatContainer(getSeat(player))`) when there is room, else it just leaves the hands (and then
+  says nothing: the "dropped" notice is for something that fell).
+- **Review 2026-10-22 follow-ups** (`plans/review-2026-10-22.md`, found before any of this batch was played):
+  `DanTraits_BodyLocation` in Util is the one spelling of a body location (B42's `base:sweaterhat`; Sleep's slot table
+  kept underscores and missed 34 of 72 slots, Laundry and Sensory had their own copies); the hot water bottle's night
+  count waits for Vitality's `nightGap` and a look at the bottle (`DanTraits_HwbStage`, the Hold action's `isValid`)
+  no longer re-stamps its clock at the indoor rate; ADHD's `boredomRise` leaves rises flagged by another system's
+  floor alone (hyperfocus was undoing Sensory's and Endorphin Junkie's floors every minute); Sensory's tier notices
+  come again on the next climb (`siTold` follows the tier down, `siPeak` keeps the calm line) and
+  `DanTraits_SensoryOverload` reads only during an overload (Migraine's trigger fired from Overwhelmed); Fitness counts
+  reps on a multiplayer client off `ActiveAnimLooped` (vanilla's `exeLooped` runs on the server only, so no load, no
+  Pumped and a set that never ended), `clearFitness` clears the log, day and streaks too (stale days replayed on
+  re-enable), the plan week is seven days not eight, a pending rep count carries its exercise and is cleared on Cancel,
+  the window no longer writes the shared exercise definition; Fuelled needs Fitness on; a sweat-damp garment taken off
+  is on the ordinary damp clock (`sw` cleared off the body), `L.rainedOn` counts a drizzle (0.05) and the bath
+  (`DanTraits_BathingWet`); Bad Back leaves no `bbMoodle = 0` on characters without it; ADHD never drifts off from an
+  action under `DRIFT_MIN_TIME` 200 (a transfer, an equip: the queue behind it went too). 2026-10-23 (user's call): a
+  jog or a loaded-carry minute is half a hard minute (`FIT_HARD_HALF` in `hardMinutes`) toward a rest day's 20 and the
+  Overtrained streak; most looting is a loaded carry, and at full weight a week of walking home encumbered was
+  Overtrained.
+- **Machine washes lost** (`DanTraits_Laundry.lua`): a washer was watched only once the player
+  stood within 4 tiles of it at a ten-minute look while it ran. Vanilla's cycle
+  (`ClothingWasherLogic`, 42.21) takes 0.02 blood and dirt a minute off each part and switches
+  itself off at 90 minutes, so a load started and left alone was never credited: the clothes kept
+  their odour (Stale Clothes) and a wash count of 0 (Sensitive Skin's "unwashed" itch), dryer or
+  not. Now the toggle actions (`ISToggleClothingWasher`, `ISToggleComboWasherDryer`) put the washer
+  on the watch list when switched on and mark the finished load when switched off; setting a combo
+  to dry marks it first (`ISSetComboWasherDryerMode`); a watched washer found idle marks what it
+  left finished before dropping off. A pending machine wash lands on a worn garment within the
+  minute, and the moodle level is worked out every minute, so a change of clothes shows at once.
+- **Migraine left Short Sighted on** (`DanTraits_Migraine.lua`): the attack's blur flips Short
+  Sighted and restores the character's own state from `migBlur` at the end. An attack on
+  2026-10-18 ended (MigraineEnd fired) with `migBlur` gone and the trait still on; the likely cause
+  is the open mod-data swap (`md.DanTraits` replaced by a copy from a minute earlier, seen with the
+  2026-10-16 aura). Now `migSight` notes the character's own Short Sighted every ten minutes outside an
+  attack, and the restore (attack end, Migraines removed) and a re-flip after a glasses change fall
+  back to it when `migBlur` is missing.
+- **Hard hats held Stale Clothes up** (`DanTraits_Laundry.lua`): every `hat`-slot item counted as a
+  half layer that sweats, so ear protectors (`Hat_EarMuff_Protectors`, worn all day for Sensory
+  Issues) reached odour 58 and kept the moodle at Stale Clothes on 2026-10-19 under an outfit that
+  was otherwise all at 0 to 1.5 (read from `players.db`). New `L.isHard`: the ear protectors,
+  `Hat_Army`, `Hat_ArmyWWII`, `Hat_ArmyDesert(New)`, `Hat_Fireman` and any type containing `Helmet`
+  or `HardHat` are layer 0 (`fullhat` helmets were already). `L.sight` zeroes odour a hard item
+  gathered before (not musty ones).
+- **Half the wardrobe never sweated** (`DanTraits_Laundry.lua`): the `FULL`/`HALF` layer lists were
+  written with underscores (`short_pants`, `tank_top`, `torso_extra_vest`, `underwear_bottom`,
+  `short_sleeve_shirt`, `jacket_suit`, `long_skirt`...), but Build 42's body location ids have
+  none (`shortpants`, `tanktop`, `torsoextravest`), so those garments were layer 0: never stale,
+  and left out of the Fresh Clothes count. Both sides are now matched with underscores stripped
+  (ids that keep one, like `jacket_bulky`, still match). Found 2026-10-20 reading the save: camo
+  shorts and a vest at odour 0 under a shirt at 21.
+- **Dryer loads never counted as dry** (`DanTraits_Laundry.lua`): vanilla's `ClothingDryerLogic`
+  (42.21 bytecode) takes one wetness point a game minute for its 90-minute cycle, so a load soaked
+  by the washer (100) comes out at 10, and `LN.DRY_AT` was 10 ("under this"). Clothes from the
+  dryer were not fresh, kept their damp clock, and a dryer sheet (which scents only dry garments)
+  never took. `DRY_AT` is now 15.
+- **Sweat counted as worn damp** (`DanTraits_Laundry.lua`): in the heat the game wets worn clothes
+  itself (`ClothingWetness`), and the laundry treated that like clothes put on wet: `LN.DAMP_WEAR`
+  25 odour an hour, the musty clock at x1.5, and body drying held to `LaundryBodyDryRate`%. On a
+  hot July day (2026-10-20) boots and socks washed and dried hours before read odour 58 and 38.
+  `L.bodyDry` now marks a garment `sw` when it rises from under `DAMP_AT` while worn and no rain is
+  falling on the wearer (new `L.rainedOn`: outside, `getRainIntensity` 0.1+); rain clears the mark,
+  and so do drying under `DRY_AT` and any wash. A marked garment dries at the game's speed, gathers
+  no damp-wear odour and keeps no damp hours (no "turns musty in" line either). Off the body the
+  mark goes too (2026-10-22): a sweat-damp shirt bagged kept `sw` and never went musty; `sight()`
+  now clears it when the garment is not worn, so it is on the ordinary damp clock in a bag.
+
 ## Base Unloader 0.1.0 - 2026-10-16 (separate mod, not yet play-tested)
 
 - **Base Unloader** (`BaseUnloader/`): right-click the trunk, a container or your own items for a
@@ -13,9 +413,64 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   Rename containers from the list or the world; the loot window shows the names. Runs pause on any
   interruption and Resume from the saved plan; two steps that move nothing stop the run. Sandbox:
   Nearby Radius, Building Margin, Floors Searched. Offline test `tests/test_baseunloader.lua`.
+- **Bags are unpacked** (2026-10-17, `BU.route`, `S.allItems`): a bag in the trunk or a container is
+  opened (three deep, as the character's own bags already were) and each item inside goes where it
+  belongs, taken straight out of the bag (vanilla moves items out of bags in a trunk). A bag waits
+  while anything inside it is going somewhere; once it is empty, or nothing left in it has a home,
+  it goes by its own rule with whatever is left. Inner bags are decided first. The window lists
+  what is inside bags too. A bag now counts at its full weight (`getUnequippedWeight`: the game's
+  `getActualWeight` is the empty bag's), so a full duffel no longer overloads a trip as 1 kg.
+- **Shelf food stays out of the freezer** (2026-10-17, play report): cans and snacks were going into
+  the freezer because it already held food (the contains and category steps took any container),
+  and food that takes a year to rot (ramen, mac and cheese, oats, pet food) counted as perishable.
+  Now only fresh food that rots within 90 days (`BU.LONG_LIFE_DAYS`, `BU.wantsCold`) is sent to a
+  fridge or freezer, by contains, category or Suggest; anything else goes there only by a rule or a
+  tag. The nearest-free fallback and the new filter also recognise modded fridges and freezers by
+  name (`isCold`), not only the vanilla types.
+- **Trips stop at Heavy Load 2** (2026-10-17, user asked; sandbox Heaviest Load, `BU.loadBudget`):
+  the game's Heavy Load moodle is the load over the max weight (level 1 over 1x, 2 over 1.25x, 3
+  over 1.5x, 4 over 1.75x), and a run now never loads past the chosen level (default 2: 1.5x).
+  Each item is costed where it rides: in the worn bag with the best weight reduction that has room
+  (its weight x (1 - reduction), as the game counts a worn bag's contents), else in the hands at
+  full weight; `BU.trip` assigns the bag (`item.into`) and the run puts it there. Bags only carried,
+  not worn, are not used. Replaced: bagged items counting as free, and one item always taken however
+  heavy; an item that cannot fit even on an empty load is left and reported ("too heavy to carry
+  without going past the load limit").
+- **Categories from an item, and the same set again** (2026-10-19, user asked): right-clicking an
+  item in a world container's loot window now has the container's Categories submenu under Base
+  Unloader, as the world and loot-window icon menus do (the shared `worldSource` check: not a bag,
+  floor, body or vehicle). The last categories set by hand (a toggle or "Categories from what is
+  inside"; Auto-tag and clearing leave it alone) are remembered per save (`store.lastTags`), and
+  every category menu, the window's too, offers "Same categories as last: Food, Cooking" on any
+  other container, which replaces its categories with that set (`BU.noteTags`, `BU.lastTagsFor`,
+  `BU.applyLastTags`). Tag one cupboard, then one click per cupboard for the rest.
+- **Off limits** (2026-10-21, user asked): any container can be marked "Off limits: only what I drag
+  here" from the window's right-click menu or the world, loot-window icon and item menus (last
+  entry, after the categories), and lifted again with "No longer off limits". Kept per save by key
+  (`store.offLimits`). The resolver leaves an off-limits container out of every stage but a rule
+  and a one-off: no laundry, bin, freezer, already-has-some, category tag, has-the-category or
+  nearest-free picks, so a fridge marked off limits hands fresh food to the next fridge and its
+  own tags are ignored. Suggest and Auto-tag skip it too. The window shows "(off limits)" by the
+  name, greyed. Unlike Hide, it changes where things go, not what is listed.
+- **Clear every container's categories** (2026-10-21, user asked): the window's container
+  right-click menu has "Clear the categories of every container in this base" while any container
+  in it is tagged. A Yes/No dialog names how many; Yes clears the tags of every container the
+  window scanned, hidden and off-limits ones too (`BU.clearTagsOf`, `BU_Window:clearAllTags`).
+  Containers in other bases, type assignments and the remembered "same categories as last" set
+  are left alone.
 
 ## 1.3.0 - 2026-10-17
 
+- **Review 2026-10-22** (`plans/review-2026-10-22.md`): a put-away run ("what I am carrying") that could not
+  deliver an item re-routed it to the same container every tick and froze the character; the run now gives up on it
+  (`giveUp`, `state.gaveUp`) and an empty step counts toward the stuck check (`stall`). A type rule now comes before
+  the "already holds one" and freezer inferences (a rule for hammers never won while any shelf held one); laundry and
+  rubbish still come first, a rule for shirts being for clean ones. Hidden containers are no longer inferred into by
+  kind (a hidden fridge took all fresh food, a hidden bin all rubbish); a tag on one still counts. A run started on a
+  glove box or seat resumes there, not on the trunk (`saveSource` keeps the part id). Whole-category rules (`cat:`),
+  which nothing set any more but `suggest` still obeyed, are gone from `destinationOf`, the window's menu and, on
+  load, from the save. "Same categories as last" is forgotten when a game starts and remembered only when a tag is
+  ticked on, not after a tick-off.
 ### New
 
 - **Companion link** (`DanTraits_Telemetry.lua`): the telemetry file is written while the companion app

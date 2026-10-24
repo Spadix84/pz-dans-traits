@@ -106,8 +106,6 @@ parameter turns it off for the session.
   in-page sparklines keep their ten minutes at two a second.
 - **Ledger.** Every character Chronicle has seen: name, days survived, kills,
   cause of death, their diary. Source for the dead-character's-diary-as-loot idea.
-- **Checklist.** The field-test checklist, moved from the claude.ai artifact, with
-  results stored locally beside the telemetry that proves them.
 - **Guide.** `docs/field-guide.html` from the pz-dans-traits checkout, served as is.
 - **Settings.** Paths (Zomboid folder, the pz-dans-traits checkout for the
   guide), API key and Spotify credentials, model choice, LAN binding.

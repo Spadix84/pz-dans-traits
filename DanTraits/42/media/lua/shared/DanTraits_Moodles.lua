@@ -43,7 +43,7 @@
 --   TriptanAfter       anyone, the day after sumatriptan: heavy-limbed and a
 --                      little clumsy (tired sooner, a swing's grip can slip)
 --   Antidepressants    good side only. Major Depressive Disorder: a pill's
---                      coverage is running, the paler green until the two-week
+--                      coverage is running, the paler green until the three-day
 --                      regimen is at full benefit (its own moodle, so it shows
 --                      through an episode). Anyone else: the game's own
 --                      antidepressant effect is running
@@ -53,6 +53,24 @@
 --   StaleClothes       anyone (DanTraits_Laundry.lua): Stale Clothes, then Musty
 --                      Clothes, from the worst garment worn; good side Fresh
 --                      Clothes, then Line-Dried, when everything worn is fresh
+--   SensoryLoad        Sensory Issues: On Edge, Overwhelmed, then an overload:
+--                      Meltdown (third level) or Shutdown (fourth)
+--   SoreMuscles        anyone (DanTraits_Fitness.lua): Sore, Overworked, then
+--                      Pulled Muscle
+--   Pumped             anyone, good side only: Loosened Up after stretching,
+--                      Pumped after a workout
+--   Overtrained        anyone: seven hard days in a row, until two easy ones
+--   BackStrain         Bad Back (DanTraits_AgeTraits.lua): Aching Back, Bad Back,
+--                      then Back Thrown Out
+--   Hyperfocus         ADHD (DanTraits_ADHD.lua), good side only: Getting Into
+--                      It, then Hyperfocused
+--   GoodMeal           anyone (DanTraits_Cooking.lua): good side Good Meal, then
+--                      Great Meal (a Chef's dish), while its afterglow or Fuelled
+--                      runs; bad side Side Stitch, after training stuffed
+--   MedsDue            a daily medication for a trait the character has
+--                      (DanTraits_Meds.lua): Medication Due, then Missed
+--                      Medication once it has worn off (the MedReminderMoodle
+--                      sandbox option hides it)
 --
 -- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
 -- range, not which way; the meter is how you find out. Hallucinations has
@@ -198,6 +216,33 @@ local SPECS = {
     { name = "Home", level = function(player, d) return d.hmMoodle or 0 end },
     -- laundry (DanTraits_Laundry.lua keeps lnMoodle: 1 stale, 2 musty; -1 fresh, -2 line-dried)
     { name = "StaleClothes", level = function(player, d) return d.lnMoodle or 0 end },
+    -- Sensory Issues (DanTraits_Sensory.lua keeps siTier and siOver): an overload is a meltdown or a shutdown
+    { name = "SensoryLoad", level = function(player, d)
+        if not hasTrait(player, "sensory") then return 0 end
+        local tier = d.siTier or 0
+        if tier >= 3 then return d.siOver == "shutdown" and 4 or 3 end
+        return tier
+    end },
+    -- fitness (DanTraits_Fitness.lua keeps ftMoodle 1..3, ftPumpMoodle -1 / -2, ftOverMoodle 1)
+    { name = "SoreMuscles", level = function(player, d) return d.ftMoodle or 0 end },
+    { name = "Pumped", level = function(player, d) return d.ftPumpMoodle or 0 end },
+    { name = "Overtrained", level = function(player, d) return d.ftOverMoodle or 0 end },
+    -- Bad Back (DanTraits_AgeTraits.lua keeps bbMoodle: 1 aching, 2 bad, 3 thrown out)
+    { name = "BackStrain", level = function(player, d)
+        if not hasTrait(player, "badback") then return 0 end
+        return d.bbMoodle or 0
+    end },
+    -- ADHD (DanTraits_ADHD.lua): -1 getting into it, -2 hyperfocused
+    { name = "Hyperfocus", level = function(player, d)
+        return DanTraits_AdhdMoodle and DanTraits_AdhdMoodle(player, d) or 0
+    end },
+    -- cooking (DanTraits_Cooking.lua keeps ckMoodle: -1 a good meal, -2 a Chef's, 1 a side stitch)
+    { name = "GoodMeal", level = function(player, d) return d.ckMoodle or 0 end },
+    -- a daily medication due (1) or worn off (2): the worst of the character's schedule
+    { name = "MedsDue", level = function(player, d)
+        if not DanTraits_MedDueLevel or not DanTraits_SandboxOn("MedReminderMoodle") then return 0 end
+        return DanTraits_MedDueLevel(player)
+    end },
 }
 
 DanTraits_MoodleNames = {}

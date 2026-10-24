@@ -1,7 +1,14 @@
 {
     "DanTraitsInsulinDosing": "Insulin Dosing",
+    "DanTraitsExtractInsulin": "Extract Insulin",
+    "DanTraitsExtractInsulinSmall": "Extract Insulin (Small Pancreases)",
     "DanTraitsMakeWashboard": "Make Washboard",
     "DanTraitsCarveWashboard": "Carve Washboard",
     "DanTraitsMakeFabricWax": "Make Fabric Wax",
-    "DanTraitsCutGarbageBagPoncho": "Cut a Garbage Bag Poncho"
+    "DanTraitsCutGarbageBagPoncho": "Cut a Garbage Bag Poncho",
+    "DanTraitsFitUpperLower": "Upper/Lower Split",
+    "DanTraitsFitPPL": "Push Pull Legs",
+    "DanTraitsFitRun": "First Five Miles",
+    "DanTraitsFitStrongman": "Strongman Training",
+    "DanTraitsFitLimber": "Active Recovery"
 }

@@ -22,8 +22,21 @@
     "ContextMenu_DanTraits_Line_ew": "Running east-west",
     "ContextMenu_DanTraits_Line_ns": "Running north-south",
     "ContextMenu_DanTraits_TakeDownLine": "Take down clothesline",
+    "ContextMenu_DanTraits_UndressSleep": "Undress and Sleep",
+    "ContextMenu_DanTraits_UndressSleepOff": "Takes off: %1",
+    "ContextMenu_DanTraits_UndressSleepDrop": "Puts down by the bed: %1",
+    "ContextMenu_DanTraits_UndressSleepNone": "Nothing you have on costs you sleep.",
     "ContextMenu_DanTraits_WasherLoad": "Put dirty clothes in the washer (%1)",
     "ContextMenu_DanTraits_WasherNone": "No dirty or bloody clothes carried (what you wear stays on).",
     "ContextMenu_DanTraits_WasherRunning": "The washer is running.",
-    "ContextMenu_DanTraits_ReadChapter": "Read a chapter (~%1 min)"
+    "ContextMenu_DanTraits_DryerSheet": "Add a dryer sheet",
+    "ContextMenu_DanTraits_DryerSheetLeft": "Add a dryer sheet (%1 left)",
+    "ContextMenu_DanTraits_DryerSheetIn": "There is a dryer sheet in already.",
+    "ContextMenu_DanTraits_DryerRunning": "The dryer is running.",
+    "ContextMenu_DanTraits_ReadChapter": "Read a chapter (~%1 min)",
+    "ContextMenu_DanTraits_SensoryFidget": "Fidget with it",
+    "ContextMenu_DanTraits_SensoryHold": "Hold it close",
+    "ContextMenu_DanTraits_FitWorkOut": "Work Out",
+    "ContextMenu_DanTraits_HwbApply": "Hold on sore muscles",
+    "ContextMenu_DanTraits_HwbGroup": "%1 (%2)"
 }

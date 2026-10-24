@@ -152,10 +152,10 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:arthritis,
-        Cost = -10,
+        Cost = -12,
         UIName = UI_trait_DanArthritis,
         UIDescription = UI_trait_DanArthritisdesc,
-        MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:oldinjury,
+        MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:oldinjury;base:athletic;base:fit;base:strong;base:stout,
     }
 
     character_trait_definition DanTraits:caffeine
@@ -361,7 +361,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:badback,
-        Cost = -5,
+        Cost = -8,
         UIName = UI_trait_DanBadBack,
         UIDescription = UI_trait_DanBadBackdesc,
         MutuallyExclusiveTraits = base:strong,
@@ -877,16 +877,151 @@ module DanTraits {
         UIDescription = UI_trait_DanSensitiveSkindesc,
     }
 
+    /* Touch, grime, noise, crowds, sun and smell feed one sensory load:
+       stress, then a meltdown or a shutdown; safe and disliked food groups.
+       DanTraits_Sensory.lua. */
+    character_trait_definition DanTraits:sensory
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:sensory,
+        Cost = -8,
+        UIName = UI_trait_DanSensory,
+        UIDescription = UI_trait_DanSensorydesc,
+    }
+
+    /* Boredom rises x1.5, skill books bore, and a running action stops now
+       and then (never while panicked); stick with it and you hyperfocus;
+       coffee helps; new buildings thrill, home is dull, so not with
+       Homebody. DanTraits_ADHD.lua. */
+    character_trait_definition DanTraits:adhd
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:adhd,
+        Cost = -2,
+        MutuallyExclusiveTraits = DanTraits:homebody,
+        UIName = UI_trait_DanADHD,
+        UIDescription = UI_trait_DanADHDdesc,
+    }
+
+    /* Fitness traits (media/lua/shared/DanTraits_Fitness.lua; plans/fitness-overhaul.md,
+       section 8). They change how training works, not the levels you start
+       with (vanilla's Athletic, Fit, Strong and the rest do that), and do
+       nothing with the sandbox option FitnessEnabled off.
+       Well Conditioned (+4): muscles recover x1.5, Ready from 14 hours, a pull heals twice as fast.
+       Natural Runner (+3): jogging loads the legs half as much and counts double; running Fitness XP x1.25.
+       Weightlifter (+4): weights and improvised weights XP x1.2; improvised weights no riskier.
+       Regimented (+3): the on-plan bonus doubled; one missed day a week forgiven.
+       Lingering Soreness (-3): muscles recover x0.6, Ready from 30 hours.
+       Injury Prone (-3): pull risk x2, a pull lasts 54 hours.
+       Exercise Averse (-3): never Pumped; training bores and saddens; the on-plan bonus halved.
+       Inflexible (-2): stretching does half; stiffness fades slower; Arthritis eased less, worse otherwise.
+       Endorphin Junkie (+1): Pumped twice as long and twice as strong; two days without it, Restless. */
+    character_trait_definition DanTraits:wellconditioned
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:wellconditioned,
+        Cost = 4,
+        UIName = UI_trait_DanWellConditioned,
+        UIDescription = UI_trait_DanWellConditioneddesc,
+        MutuallyExclusiveTraits = DanTraits:lingeringsoreness,
+    }
+
+    character_trait_definition DanTraits:naturalrunner
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:naturalrunner,
+        Cost = 3,
+        UIName = UI_trait_DanNaturalRunner,
+        UIDescription = UI_trait_DanNaturalRunnerdesc,
+    }
+
+    character_trait_definition DanTraits:weightlifter
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:weightlifter,
+        Cost = 4,
+        UIName = UI_trait_DanWeightlifter,
+        UIDescription = UI_trait_DanWeightlifterdesc,
+    }
+
+    character_trait_definition DanTraits:regimented
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:regimented,
+        Cost = 3,
+        UIName = UI_trait_DanRegimented,
+        UIDescription = UI_trait_DanRegimenteddesc,
+    }
+
+    character_trait_definition DanTraits:lingeringsoreness
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:lingeringsoreness,
+        Cost = -3,
+        UIName = UI_trait_DanLingeringSoreness,
+        UIDescription = UI_trait_DanLingeringSorenessdesc,
+        MutuallyExclusiveTraits = DanTraits:wellconditioned,
+    }
+
+    character_trait_definition DanTraits:injuryprone
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:injuryprone,
+        Cost = -3,
+        UIName = UI_trait_DanInjuryProne,
+        UIDescription = UI_trait_DanInjuryPronedesc,
+    }
+
+    character_trait_definition DanTraits:exerciseaverse
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:exerciseaverse,
+        Cost = -3,
+        UIName = UI_trait_DanExerciseAverse,
+        UIDescription = UI_trait_DanExerciseAversedesc,
+        MutuallyExclusiveTraits = DanTraits:endorphinjunkie,
+    }
+
+    character_trait_definition DanTraits:inflexible
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:inflexible,
+        Cost = -2,
+        UIName = UI_trait_DanInflexible,
+        UIDescription = UI_trait_DanInflexibledesc,
+    }
+
+    character_trait_definition DanTraits:endorphinjunkie
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:endorphinjunkie,
+        Cost = 1,
+        UIName = UI_trait_DanEndorphinJunkie,
+        UIDescription = UI_trait_DanEndorphinJunkiedesc,
+        MutuallyExclusiveTraits = DanTraits:exerciseaverse,
+    }
+
     character_trait_definition DanTraits:ms
     {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:ms,
-        Cost = -15,
+        Cost = -16,
         UIName = UI_trait_DanMS,
         UIDescription = UI_trait_DanMSdesc,
         XPBoosts = Fitness=-1;Strength=-1,
-        MutuallyExclusiveTraits = base:athletic;base:strong,
+        MutuallyExclusiveTraits = base:athletic;base:strong;base:fit;base:stout,
     }
 
     /* Rescue inhaler for Asthma: 10 puffs, each halves airway
@@ -922,6 +1057,99 @@ module DanTraits {
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
+    }
+
+    /* Insulin in a vial: the same insulin and the same 40 doses as a pen,
+       drawn up with an Insulin Syringe (any one carried, never used up).
+       Found where hospitals and pharmacies keep stock, or made from an
+       animal's pancreas (DanTraitsExtractInsulin below). */
+    item InsulinVial
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Insulin Vial,
+        Weight = 0.05,
+        Icon = InsulinVial,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_InsulinVial,
+        UseDelta = 0.025,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item InsulinSyringe
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:normal,
+        DisplayName = Insulin Syringe,
+        Weight = 0.01,
+        Icon = InsulinSyringe,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_InsulinSyringe,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    /* A pancreas from butchering (DanTraits_Diabetes.lua adds it to the
+       game's AnimalPartsDefinitions): cows, pigs, sheep and deer give a
+       Pancreas, the young and the small game (rabbits, raccoons) a Small
+       Pancreas. Raw organ meat, after vanilla's Smallanimalmeat: it spoils
+       in days, so extract it fresh or keep it cold. Cooked, it is only food. */
+    item Pancreas
+    {
+        DisplayCategory = AnimalPart,
+        ItemType = base:food,
+        DisplayName = Pancreas,
+        Weight = 0.2,
+        Icon = Pancreas,
+        Tooltip = Tooltip_DanTraits_Pancreas,
+        BadCold = true,
+        BadInMicrowave = true,
+        DangerousUncooked = true,
+        FoodType = Game,
+        GoodHot = true,
+        IsCookable = true,
+        MinutesToCook = 20,
+        MinutesToBurn = 60,
+        DaysFresh = 2,
+        DaysTotallyRotten = 4,
+        HungerChange = -8.0,
+        Calories = 100.0,
+        Carbohydrates = 0.0,
+        Lipids = 5.0,
+        Proteins = 15.0,
+        StaticModel = SmallAnimalMeat_Ground,
+        WorldStaticModel = SmallAnimalMeat_Ground,
+        CookingSound = FryingFood,
+    }
+
+    item PancreasSmall
+    {
+        DisplayCategory = AnimalPart,
+        ItemType = base:food,
+        DisplayName = Small Pancreas,
+        Weight = 0.05,
+        Icon = Pancreas,
+        Tooltip = Tooltip_DanTraits_PancreasSmall,
+        BadCold = true,
+        BadInMicrowave = true,
+        DangerousUncooked = true,
+        FoodType = Game,
+        GoodHot = true,
+        IsCookable = true,
+        MinutesToCook = 10,
+        MinutesToBurn = 40,
+        DaysFresh = 2,
+        DaysTotallyRotten = 4,
+        HungerChange = -2.0,
+        Calories = 25.0,
+        Carbohydrates = 0.0,
+        Lipids = 1.25,
+        Proteins = 4.0,
+        StaticModel = SmallAnimalMeat_Ground,
+        WorldStaticModel = SmallAnimalMeat_Ground,
+        CookingSound = FryingFood,
     }
 
     item GlucoseMeter
@@ -1057,6 +1285,30 @@ module DanTraits {
         Medical = true,
         Tooltip = Tooltip_DanTraits_Sumatriptan,
         UseDelta = 0.1666,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+        Tags = base:consumable,
+    }
+
+    /* Cyclobenzaprine, the muscle relaxant (1993: the usual prescription for a
+       strain or a bad back, sold as Flexeril): 20 tablets, one covers about 8
+       hours. Eases a pulled muscle's pain and stiffness, a Bad Back, stiffness
+       anywhere; drowsy and a dry mouth while it works, far drowsier with drink.
+       Anyone can take it (media/lua/shared/DanTraits_Relaxant.lua, on the
+       shared medication list). Swallowed with the game's own Take Pills
+       option, like sumatriptan. Rare: under a third as common as the other
+       prescriptions. */
+    item Cyclobenzaprine
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Cyclobenzaprine,
+        Weight = 0.1,
+        Icon = Cyclobenzaprine,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Cyclobenzaprine,
+        UseDelta = 0.05,
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
@@ -1215,6 +1467,105 @@ module DanTraits {
         Tags = base:magazine,
     }
 
+    /* The Insulin Papers: a medical history quarterly reprinting the 1922
+       method for extracting insulin from an animal pancreas. Teaches both
+       extraction recipes; First Aid 8 learns them without it. Hospital
+       magazine racks, medical offices, libraries and bookstores, labs. */
+    item InsulinPapersMag
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        DisplayName = The Insulin Papers,
+        Weight = 0.5,
+        Icon = InsulinPapersMag,
+        BoredomChange = -20,
+        StressChange = -15,
+        LearnedRecipes = DanTraitsExtractInsulin;DanTraitsExtractInsulinSmall,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineGround,
+        Tags = base:magazine,
+    }
+
+    /* Fitness magazines (media/lua/shared/DanTraits_Fitness*.lua;
+       plans/fitness-overhaul.md, section 4). Each teaches a training plan
+       (a knowledge flag, like Living With Type 1) and, once read, a lasting
+       bonus to all Strength or Fitness experience. Gym lockers, the fitness
+       trainer's things, sports shelves, magazine racks. */
+    item FitMagUpperLower
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        DisplayName = Iron Monthly: Upper/Lower,
+        Weight = 0.5,
+        Icon = FitMagUpperLower,
+        BoredomChange = -20,
+        StressChange = -10,
+        LearnedRecipes = DanTraitsFitUpperLower,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineGround,
+        Tags = base:magazine,
+    }
+
+    item FitMagPPL
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        DisplayName = Iron Monthly: Push Pull Legs,
+        Weight = 0.5,
+        Icon = FitMagPPL,
+        BoredomChange = -20,
+        StressChange = -10,
+        LearnedRecipes = DanTraitsFitPPL,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineGround,
+        Tags = base:magazine,
+    }
+
+    item FitMagRun
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        DisplayName = Pavement: First Five Miles,
+        Weight = 0.5,
+        Icon = FitMagRun,
+        BoredomChange = -20,
+        StressChange = -10,
+        LearnedRecipes = DanTraitsFitRun,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineGround,
+        Tags = base:magazine,
+    }
+
+    item FitMagStrongman
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        DisplayName = Strongman Quarterly,
+        Weight = 0.5,
+        Icon = FitMagStrongman,
+        BoredomChange = -20,
+        StressChange = -10,
+        LearnedRecipes = DanTraitsFitStrongman,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineGround,
+        Tags = base:magazine,
+    }
+
+    item FitMagLimber
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        DisplayName = Limber: Stretch and Recover,
+        Weight = 0.5,
+        Icon = FitMagLimber,
+        BoredomChange = -20,
+        StressChange = -15,
+        LearnedRecipes = DanTraitsFitLimber,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineGround,
+        Tags = base:magazine,
+    }
+
     /* Laundry (media/lua/shared/DanTraits_Laundry*.lua; plans/laundry.md). */
 
     /* Washboard: carried, a hand wash gets clothes cleaner (25% without
@@ -1265,6 +1616,47 @@ module DanTraits {
         UseDelta = 0.25,
         UseWhileEquipped = false,
         WorldStaticModel = TinCanEmpty,
+    }
+
+    /* Dryer sheets: a box of 20. One goes in a dryer with the load, and the
+       clothes it dries stay fresh longer once worn (DanTraits_Laundry.lua).
+       Sensitive Skin itches from the perfume. Laundry rooms and cleaning
+       shelves. The tissue box model stands in. */
+    item DryerSheets
+    {
+        DisplayCategory = Household,
+        ItemType = base:drainable,
+        DisplayName = Dryer Sheets,
+        Weight = 0.2,
+        Icon = DryerSheets,
+        Tooltip = Tooltip_DanTraits_DryerSheets,
+        UseDelta = 0.05,
+        UseWhileEquipped = false,
+        WorldStaticModel = TissueBox,
+        Tags = base:isfirefuel,
+        FireFuelRatio = 0.25,
+    }
+
+    /* Noise-cancelling headphones: worn on the head, they shut out every
+       sound (the game's Deaf trait while worn) and with it Sensory Issues'
+       noise. DanTraits_Sensory.lua. The shooting ear protectors' model
+       stands in. */
+    item NCHeadphones
+    {
+        DisplayCategory = Accessory,
+        ItemType = base:clothing,
+        DisplayName = Noise-Cancelling Headphones,
+        Weight = 0.4,
+        Icon = NCHeadphones,
+        Tooltip = Tooltip_DanTraits_NCHeadphones,
+        BloodLocation = Head,
+        BodyLocation = base:hat,
+        CanHaveHoles = false,
+        ChanceToFall = 30,
+        ClothingItem = Hat_EarMuff_Protectors,
+        Insulation = 0.2,
+        WindResistance = 0.2,
+        Tags = base:hasmetal;base:miscelectronic,
     }
 
     craftRecipe DanTraitsMakeWashboard
@@ -1345,6 +1737,63 @@ module DanTraits {
         outputs
         {
             item 1 Base.PonchoGarbageBag,
+        }
+    }
+
+    /* Animal insulin, after the 1922 acid-alcohol extraction: a fresh, raw
+       pancreas minced, soaked in alcohol with vinegar for the acid, then
+       strained through a clean rag. It makes the same 40-dose vial as the
+       pharmacy's (plans/backlog.md: weaker, less predictable extract is a
+       later idea). Learned from The Insulin Papers, or at First Aid 8.
+       Rotten and frozen pancreas are refused (the recipe default); cooked
+       is refused by IsUncookedFoodItem. Four small ones make one vial. */
+    craftRecipe DanTraitsExtractInsulin
+    {
+        timedAction = SliceMeat_Surface,
+        time = 400,
+        Tags = AnySurfaceCraft;Health,
+        category = Medical,
+        SkillRequired = Doctor:2,
+        xpAward = Doctor:15,
+        NeedToBeLearn = true,
+        AutoLearnAny = Doctor:8,
+        inputs
+        {
+            item 1 tags[base:sharpknife;base:meatcleaver] mode:keep flags[MayDegradeLight;IsNotDull],
+            item 1 [DanTraits.Pancreas] flags[IsUncookedFoodItem;ItemCount],
+            item 1 tags[base:vinegar],
+            item 1 [Base.RippedSheets],
+            item 1 [*],
+            -fluid 0.2 [RubbingAlcohol;Vodka;Whiskey],
+        }
+        outputs
+        {
+            item 1 DanTraits.InsulinVial,
+        }
+    }
+
+    craftRecipe DanTraitsExtractInsulinSmall
+    {
+        timedAction = SliceMeat_Surface,
+        time = 400,
+        Tags = AnySurfaceCraft;Health,
+        category = Medical,
+        SkillRequired = Doctor:2,
+        xpAward = Doctor:15,
+        NeedToBeLearn = true,
+        AutoLearnAny = Doctor:8,
+        inputs
+        {
+            item 1 tags[base:sharpknife;base:meatcleaver] mode:keep flags[MayDegradeLight;IsNotDull],
+            item 4 [DanTraits.PancreasSmall] flags[IsUncookedFoodItem;ItemCount],
+            item 1 tags[base:vinegar],
+            item 1 [Base.RippedSheets],
+            item 1 [*],
+            -fluid 0.2 [RubbingAlcohol;Vodka;Whiskey],
+        }
+        outputs
+        {
+            item 1 DanTraits.InsulinVial,
         }
     }
 

@@ -48,6 +48,11 @@
 --                                          list `tiers` whose point value reaches; 0 under
 --                                          the first
 --   DanTraits_IsItem(item, fullType)       item:getFullType() == fullType, false on failure
+--   DanTraits_BodyLocation(item)           the garment's body location as the game spells
+--                                          it in B42, lower-case, group prefix and
+--                                          underscores dropped ("base:SweaterHat" and the
+--                                          B41 "Sweater_Hat" both give "sweaterhat"); ""
+--                                          on failure. Every slot table keys on this
 --   DanTraits_ItemUses(item)               uses left (item:getCurrentUses()), 0 on failure
 --   DanTraits_FluidName(container)         the container's main fluid, lowercase
 --                                          ("coffee", "milk"), nil when empty or unknown
@@ -251,6 +256,18 @@ function DanTraits_IsItem(item, fullType)
     if not item then return false end
     local ok, res = pcall(function() return item:getFullType() == fullType end)
     return ok and res == true
+end
+
+-- B42 spells body locations "base:sweaterhat"; B41 and the mod's own tables
+-- spelt them "Sweater_Hat". One spelling for every lookup: lower-case, no
+-- group prefix, no underscores (Sleep's slot table missed 34 of its 72 slots
+-- on 2026-10-22 by keeping the underscores; Laundry had hit the same two days
+-- before)
+function DanTraits_BodyLocation(item)
+    local loc = ""
+    pcall(function() loc = tostring(item:getBodyLocation() or "") end)
+    loc = loc:lower():gsub("^.*:", "")
+    return (loc:gsub("_", ""))
 end
 
 -- the count of uses left (a full 40-dose pen is 40). getCurrentUses() is the
@@ -583,13 +600,26 @@ function DanTraits_DeltaRemember(d, name, value)
 end
 
 -- Dropping what is held (a fumbled swing, hands that give out, a seizure, the
--- shakes): the item leaves the hands and the inventory and lands on the
--- square. A two-handed weapon is in both hands and is dropped once.
+-- shakes, a meltdown): the item leaves the hands and the inventory and lands on
+-- the square. In a vehicle it lands in the car instead: in the seat's own
+-- container (the seat and footwell) when there is room, else it just leaves
+-- the hands and stays in the inventory. A two-handed weapon is in both hands
+-- and is dropped once.
 function DanTraits_DropHeld(player, bothHands, textKey)
     if not player then return false end
+    local vehicle, seat = nil, nil
+    pcall(function() vehicle = player:getVehicle() end)
+    if vehicle then
+        pcall(function()
+            local seatPart = vehicle:getPartForSeatContainer(vehicle:getSeat(player))
+            seat = seatPart and seatPart:getItemContainer()
+        end)
+    end
     local square = nil
-    pcall(function() square = player:getCurrentSquare() end)
-    if not square then return false end
+    if not vehicle then
+        pcall(function() square = player:getCurrentSquare() end)
+        if not square then return false end
+    end
     local held = {}
     pcall(function() held[#held + 1] = player:getPrimaryHandItem() end)
     if bothHands then
@@ -598,16 +628,26 @@ function DanTraits_DropHeld(player, bothHands, textKey)
             if second and second ~= held[1] then held[#held + 1] = second end
         end)
     end
-    local dropped = false
+    local dropped, fell = false, false
     for _, item in ipairs(held) do
         pcall(function()
             player:removeFromHands(item)
+            dropped = true
+            if vehicle then
+                if seat and seat:hasRoomFor(player, item) then
+                    player:getInventory():Remove(item)
+                    seat:AddItem(item)
+                    fell = true
+                end
+                return
+            end
             player:getInventory():Remove(item)
             square:AddWorldInventoryItem(item, 0.0, 0.0, 0.0)
-            dropped = true
+            fell = true
         end)
     end
-    if dropped and textKey and DanTraits_Notify then DanTraits_Notify(player, textKey) end
+    -- the notice says the item fell; in a car with no seat room it only left the hands
+    if fell and textKey and DanTraits_Notify then DanTraits_Notify(player, textKey) end
     return dropped
 end
 
@@ -637,7 +677,8 @@ end
 --     A minute system at order 95 (registered in core, label "PainFloor"): the
 --     largest registered floor is applied once, with the ramp of the source
 --     that set it, by raising the head's additional pain (never lowering it:
---     Concussion and wounds write it too). Floors whose hold has run out are
+--     Concussion and wounds write it too). A part holds 100 at most (about
+--     79 on the stat), so a floor above that puts the rest on the neck. Floors whose hold has run out are
 --     dropped, and d.painHurting[source] = floor is the health panel's "who
 --     is hurting" list. Floors are max-like, not additive.
 --   DanTraits_PainBurst(player, amount)
@@ -659,6 +700,13 @@ local function raiseHead(head, value)
     pcall(function()
         if (head:getAdditionalPain() or 0) < value then head:setAdditionalPain(math.min(100, value)) end
     end)
+end
+
+-- a floor past what the head can carry (100 part pain, about 79 on the stat): the rest on the neck
+local function neckPart(player)
+    local neck
+    pcall(function() neck = player:getBodyDamage():getBodyPart(BodyPartType.Neck) end)
+    return neck
 end
 
 -- a system that writes the head's pain itself (Concussion): never lowers it
@@ -699,6 +747,10 @@ function DanTraits_ApplyPainFloors(player, d)
     local value = math.min(best / PAIN_PART_RATIO, (d.painAdd or 0) + ramp / PAIN_PART_RATIO)
     d.painAdd = value
     raiseHead(head, value)
+    if value > 100 then
+        local neck = neckPart(player)
+        if neck then raiseHead(neck, value - 100) end
+    end
 end
 
 function DanTraits_PainBurst(player, amount)

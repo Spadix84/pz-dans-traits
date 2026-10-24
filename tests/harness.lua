@@ -127,13 +127,21 @@ end
 -- pain floors write there; see DanTraits_Util.lua): part pain x ratio, less
 -- the body's pain reduction. setPain puts the head where the stat reads v.
 local function headOf(p) return p:getBodyDamage():getBodyPart("Head") end
+-- the head, plus the neck a floor past the head's 100 spills onto
+local function neckPain(p)
+  local neck = p:getBodyDamage():getBodyPart("Neck")
+  return neck and neck.getAdditionalPain and neck:getAdditionalPain() or 0
+end
 function H.pain(p)
-  local v = (headOf(p):getAdditionalPain() or 0) * DanTraits_PAIN_PART_RATIO - (p._pr or 0)
+  local part = (headOf(p):getAdditionalPain() or 0) + neckPain(p)
+  local v = part * DanTraits_PAIN_PART_RATIO - (p._pr or 0)
   return math.floor(math.max(0, v) * 1e6 + 0.5) / 1e6
 end
 function H.setPain(p, v)
   local part = v > 0 and (v + (p._pr or 0)) / DanTraits_PAIN_PART_RATIO or 0
-  headOf(p):setAdditionalPain(part)
+  headOf(p):setAdditionalPain(math.min(100, part))
+  local neck = p:getBodyDamage():getBodyPart("Neck")
+  if neck and neck.setAdditionalPain then neck:setAdditionalPain(math.max(0, part - 100)) end
   -- the floors ramp from what they last applied; start them from here
   local d = p._md.DanTraits
   if d and d.painAdd then d.painAdd = part end
@@ -160,7 +168,7 @@ local STATS = {
   { "ENDURANCE", "endurance", 1 }, { "FOOD_SICKNESS", "foodsick", 100 }, { "THIRST", "thirst", 1 },
   { "HUNGER", "hunger", 1 }, { "BOREDOM", "boredom", 100 }, { "ANGER", "anger", 1 },
   { "NICOTINE_WITHDRAWAL", "nw", 0.51 }, { "WETNESS", "wetness", 100 },
-  { "SICKNESS", "sickness", 1 }, { "TEMPERATURE", "temperature", 1 }, { "DISCOMFORT", "discomfort", 1 },
+  { "SICKNESS", "sickness", 1 }, { "TEMPERATURE", "temperature", 1 }, { "DISCOMFORT", "discomfort", 100 },
   { "ZOMBIE_INFECTION", "zinf", 100 }, { "ZOMBIE_FEVER", "zfever", 100 },
 }
 
@@ -363,16 +371,22 @@ function H.player(o)
   function p._head:getType() return "Head" end
   function p._head:getAdditionalPain() return self._pain end
   function p._head:setAdditionalPain(v) self._pain = v end
+  -- and a neck, for a floor past what the head holds
+  p._neck = { _pain = 0 }
+  function p._neck:getType() return "Neck" end
+  function p._neck:getAdditionalPain() return self._pain end
+  function p._neck:setAdditionalPain(v) self._pain = v end
 
   p.hasTrait = function(_, t) return traits[t] == true end
   p._glasses, p._vision, p._worn = false, 0, {}
   p.isWearingGlasses = function() return p._glasses end
   p.updateVisionEffects = function() p._vision = p._vision + 1 end
-  -- worn items: entries are { type = "Base.X", name = "Display Name" }
+  -- worn items: entries are { type = "Base.X", name = "Display Name", loc = "base:tshirt" (optional) }
   p.getWornItems = function()
     return { size = function() return #p._worn end, getItemByIndex = function(_, i)
       local w = p._worn[i + 1]
-      return w and { getFullType = function() return w.type end, getDisplayName = function() return w.name end }
+      return w and { getFullType = function() return w.type end, getDisplayName = function() return w.name end,
+        getBodyLocation = w.loc and function() return w.loc end or nil }
     end }
   end
   p.getCharacterTraits = function()
@@ -413,6 +427,7 @@ function H.player(o)
       getBodyPart = function(_, t)
         for _, x in ipairs(parts) do if x:getType() == t then return x end end
         if t == "Head" then return p._head end
+        if t == "Neck" then return p._neck end
       end,
     }
   end
@@ -458,6 +473,11 @@ function H.player(o)
       AddItem = function(_, t) local it = newItem(t); inv[#inv + 1] = it; return it end,
       Remove = function() end, contains = function() return true end,
       getItems = function() return { size = function() return #inv end, get = function(_, i) return inv[i + 1] end } end,
+      getAllEvalRecurse = function(_, fn)
+        local hits = {}
+        for _, it in ipairs(inv) do if fn(it) then hits[#hits + 1] = it end end
+        return { size = function() return #hits end, get = function(_, i) return hits[i + 1] end }
+      end,
     }
   end
   p.getPrimaryHandItem = function() return { name = "bat" } end

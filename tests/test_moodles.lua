@@ -16,11 +16,11 @@ local d = DanTraits_Data(p)
 local function level(name, who, data) return DanTraits_MoodleLevels(who or p, data or d)[name] end
 
 -- 0. the list the client creates them from
-assert(#DanTraits_MoodleNames == 22, "twenty-two moodles")
+assert(#DanTraits_MoodleNames == 30, "thirty moodles")
 local listed = {}
 for _, name in ipairs(DanTraits_MoodleNames) do listed[name] = true end
 for _, name in ipairs({ "ChestPain", "Seizure", "Tinnitus", "GutFlare", "Filthy", "Sunburn", "Dehydration",
-                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons", "LightTooBright", "TriptanAfter", "Antidepressants", "WeakHeart", "Home", "StaleClothes" }) do
+                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons", "LightTooBright", "TriptanAfter", "Antidepressants", "WeakHeart", "Home", "StaleClothes", "SensoryLoad", "SoreMuscles", "Pumped", "Overtrained", "BackStrain", "Hyperfocus", "GoodMeal", "MedsDue" }) do
   assert(listed[name], name .. " is listed")
 end
 for name, l in pairs(DanTraits_MoodleLevels(p, d)) do assert(l == 0, name .. ": nothing to show on a well character") end
@@ -119,12 +119,12 @@ d.migGlare = nil; assert(level("LightTooBright") == 0, "no light adding pain")
 -- the day after sumatriptan, for anyone
 d.tripAfterMin = 600; assert(level("TriptanAfter") == 1, "heavy-limbed")
 d.tripAfterMin = nil; assert(level("TriptanAfter") == 0, "worn off")
--- antidepressants: Depression's regimen, paler until the two weeks are up; through an episode too
-DanTraits_MddBenefit = function() return (d.mddMedStreak or 0) >= 14 and 1 or 0.5 end
+-- antidepressants: Depression's regimen, paler until the three days are up; through an episode too
+DanTraits_MddBenefit = function() return (d.mddMedStreak or 0) >= 3 and 1 or 0.5 end
 d.mddMedDays, d.mddMedStreak = 0.5, 1; assert(level("Antidepressants") == -1, "a pill's coverage running: building up")
 d.mddEpisode, d.mddSeverity = true, 0.7; assert(level("Antidepressants") == -1 and level("Depression") == 2, "shows through an episode")
 d.mddEpisode = false
-d.mddMedStreak = 14; assert(level("Antidepressants") == -2, "two weeks unbroken: working")
+d.mddMedStreak = 3; assert(level("Antidepressants") == -2, "three days unbroken: working")
 d.mddMedDays = 0; assert(level("Antidepressants") == 0, "coverage run out: the icon goes")
 p._depress = 500; assert(level("Antidepressants") == 0, "Depression goes by its regimen, not the game's timer")
 p._depress = 0
@@ -156,7 +156,7 @@ d.gluten = 1                 -- bad 3
 H.minute()
 local n = 0
 for _ in pairs(set) do n = n + 1 end
-assert(n == 22, "all twenty-two set")
+assert(n == 30, "all thirty set")
 near(set.ChestPain.value, 0.65, 1e-9, "good 1 sits between 0.6 and 0.7")
 near(set.Seizure.value, 0.25, 1e-9, "bad 2 sits between 0.2 and 0.3")
 near(set.GutFlare.value, 0.15, 1e-9, "bad 3")
@@ -166,5 +166,31 @@ assert(set.Seizure.thresholds[4] == 0.4 and set.Seizure.thresholds[5] == 0.6, "b
 DanTraits_LevelMoodle(p, "Seizure", 9); near(set.Seizure.value, 0.05, 1e-9, "a level past 4 is 4")
 DanTraits_LevelMoodle(p, "Seizure", 1); near(set.Seizure.value, 0.35, 1e-9, "bad 1")
 MF = nil
+
+-- fitness (DanTraits_Fitness.lua keeps the levels): sore / overworked / pulled, Loosened Up / Pumped, Overtrained
+local fd = { ftMoodle = 2, ftPumpMoodle = -2, ftOverMoodle = 1 }
+assert(level("SoreMuscles", p, fd) == 2 and level("Pumped", p, fd) == -2 and level("Overtrained", p, fd) == 1, "fitness levels shown")
+assert(level("SoreMuscles", p, {}) == 0 and level("Pumped", p, {}) == 0, "no fitness data: nothing")
+-- Bad Back (DanTraits_AgeTraits.lua keeps bbMoodle)
+local back = H.player({ traits = { "badback" } })
+assert(level("BackStrain", back, { bbMoodle = 3 }) == 3, "Back Thrown Out")
+assert(level("BackStrain", p, { bbMoodle = 3 }) == 0, "no Bad Back: nothing")
+
+-- MedsDue: the worst of the character's daily drugs (DanTraits_Meds.lua), and its sandbox switch
+do
+  local m = H.player({ traits = { "heart" } }); local md = DanTraits_Data(m)
+  assert(level("MedsDue", m, md) == 0, "nothing taken: nothing due")
+  md.meds = { beta = { lvl = 1, built = 1, lastH = H.hours - 23 } }
+  assert(level("MedsDue", m, md) == 1, "23 hours since a once-a-day pill: due")
+  md.meds.beta.lvl = 0.3
+  assert(level("MedsDue", m, md) == 2, "worn off: missed")
+  SandboxVars = SandboxVars or {}; SandboxVars.DanTraits = SandboxVars.DanTraits or {}
+  SandboxVars.DanTraits.MedReminderMoodle = false
+  assert(level("MedsDue", m, md) == 0, "switched off in the sandbox")
+  SandboxVars.DanTraits.MedReminderMoodle = nil
+  local none = H.player(); local nd = DanTraits_Data(none)
+  nd.meds = { beta = { lvl = 0.3, built = 1, lastH = H.hours - 30 } }
+  assert(level("MedsDue", none, nd) == 0, "no Heart Condition: beta blockers are not on a schedule")
+end
 
 H.pass()

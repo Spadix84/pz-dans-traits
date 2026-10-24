@@ -27,6 +27,9 @@ option DanTraits.KnoxSurviveChance
 option DanTraits.BloodEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsBloodEnabled,}
 
+option DanTraits.WoundDamageEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsWoundDamageEnabled,}
+
 option DanTraits.InfectionEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsInfectionEnabled,}
 
@@ -48,11 +51,20 @@ option DanTraits.DehydrationEnabled
 option DanTraits.MedSideEffectChance
 {type = integer, min = 0, max = 100, default = 3, page = DanTraitsHealth, translation = DanTraitsMedSideEffectChance,}
 
+option DanTraits.MedReminderMoodle
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsMedReminderMoodle,}
+
 option DanTraits.MSSpoons
 {type = integer, min = 0, max = 24, default = 12, page = DanTraitsHealth, translation = DanTraitsMSSpoons,}
 
 option DanTraits.InhalerLoot
 {type = integer, min = 0, max = 500, default = 100, page = DanTraitsHealth, translation = DanTraitsInhalerLoot,}
+
+option DanTraits.InsulinLoot
+{type = integer, min = 0, max = 500, default = 100, page = DanTraitsHealth, translation = DanTraitsInsulinLoot,}
+
+option DanTraits.UntreatedDiabetesDays
+{type = integer, min = 0, max = 60, default = 1, page = DanTraitsHealth, translation = DanTraitsUntreatedDiabetesDays,}
 
 option DanTraits.ArthritisWeaponDrop
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsArthritisWeaponDrop,}
@@ -60,8 +72,23 @@ option DanTraits.ArthritisWeaponDrop
 option DanTraits.SleepLightEnabled
 {type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsSleepLightEnabled,}
 
+option DanTraits.SleepClothesEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsSleepClothesEnabled,}
+
 option DanTraits.HomeEnabled
 {type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsHomeEnabled,}
+
+option DanTraits.FitnessEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsFitnessEnabled,}
+
+option DanTraits.FitnessStrain
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsFitnessStrain,}
+
+option DanTraits.FitnessXp
+{type = integer, min = 10, max = 500, default = 100, page = DanTraitsLife, translation = DanTraitsFitnessXp,}
+
+option DanTraits.CookingEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsCookingEnabled,}
 
 option DanTraits.HangoverEnabled
 {type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsHangoverEnabled,}
