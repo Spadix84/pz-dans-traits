@@ -75,13 +75,33 @@ function ISDanTraitsBedtimeAction:new(character, bed, clothes)
     return o
 end
 
+local function isObject(x)
+    local ok, res = pcall(function() return instanceof(x, "IsoObject") end)
+    return ok and res == true
+end
+
+-- what the game's Sleep option sleeps on: (true, bed), (true, nil) for the
+-- ground, or false when it cannot be told. Sat or lying on the furniture the
+-- game builds it as "get up, then sleep" (ISContextMenu:addGetUpOption): the
+-- target is the menu itself, the sleep its first parameter, the bed its second.
+function M.sleepBed(opt)
+    if opt.onSelect == ISContextMenu.onGetUpAndThen then
+        if isObject(opt.param2) then return true, opt.param2 end
+        return false, nil
+    end
+    if opt.target == nil then return opt.onSelect == ISWorldObjectContextMenu.onSleep, nil end
+    if isObject(opt.target) then return true, opt.target end
+    return false, nil
+end
+
 -- the game's Sleep option, in the menu or one of its submenus: the menu it is in and the option
 function M.findSleep(menu, depth)
     depth = depth or 0
     if not menu or not menu.options then return nil, nil end
     local name = getText("ContextMenu_Sleep")
     for _, opt in ipairs(menu.options) do
-        if opt.onSelect == ISWorldObjectContextMenu.onSleep or (opt.name == name and not opt.subOption) then
+        local getUp = opt.onSelect == ISContextMenu.onGetUpAndThen and opt.param1 == ISWorldObjectContextMenu.onSleep
+        if opt.onSelect == ISWorldObjectContextMenu.onSleep or getUp or (opt.name == name and not opt.subOption) then
             return menu, opt
         end
         if opt.subOption and depth < MAX_DEPTH then
@@ -119,7 +139,11 @@ function M.undressAndSleep(playerObj, bed)
     local playerNum = playerObj:getPlayerNum()
     local clothes, bags = DanTraits_SleepUndressList(playerObj)
     ISTimedActionQueue.clear(playerObj)
-    if bed and not playerObj:isSittingOnFurniture() then
+    local sitting = false
+    pcall(function() sitting = playerObj:isSittingOnFurniture() end)
+    if sitting then
+        ISTimedActionQueue.add(ISWaitWhileGettingUp:new(playerObj))   -- clothes come off standing; the sleep lies back down
+    elseif bed then
         local near = true
         pcall(function() near = luautils.walkAdj(playerObj, bed:getSquare(), true) end)
         if not near then return end
@@ -168,8 +192,8 @@ function M.onMenu(playerNum, context, worldobjects, test)
     if not playerObj then return end
     local menu, sleep = M.findSleep(context)
     if not sleep or sleep.notAvailable then return end
-    local bed = sleep.target
-    if type(bed) ~= "userdata" and type(bed) ~= "table" then bed = nil end
+    local known, bed = M.sleepBed(sleep)
+    if not known then return end
     local option = menu:insertOptionAfter(sleep.name, getText("ContextMenu_DanTraits_UndressSleep"), playerObj, M.undressAndSleep, bed)
     if not option then return end
     local clothes, bags = DanTraits_SleepUndressList(playerObj)

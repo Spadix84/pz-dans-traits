@@ -222,7 +222,11 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `DanTraits_Sleep.lua`, `ISDanTraitsBedtimeAction`). Inserted right after the game's own Sleep
   option (built in Java by `ISWorldObjectContextMenuLogic`; found by `onSelect ==
   ISWorldObjectContextMenu.onSleep` or by name, submenus searched 3 deep), so beds, sofas and the
-  ground all get it; left out while that option is greyed (not tired, too early) or
+  ground all get it. Sat or lying on the furniture, the game builds Sleep with `addGetUpOption`
+  (target = the menu, `param1` = onSleep, `param2` = the bed): the bed is read from there and an
+  `ISWaitWhileGettingUp` goes first (taking the menu for the bed threw in `onConfirmSleep`, found
+  in play 2026-10-23); a target that is not an `IsoObject` leaves the option out. It is
+  left out while that option is greyed (not tired, too early) or
   `SleepClothesEnabled` is off, greyed with a reason when nothing needs to come off. Takes off every
   worn item in `CL_SLOTS`, warm slots only at warmth 0.5+ (15C and up, never with the Cold moodle);
   worn `InventoryContainer`s and bags in either hand (a two-handed one once) are dropped. Queue:
