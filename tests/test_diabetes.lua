@@ -103,7 +103,8 @@ for _ = 1, 119 do minute() end
 assert(hi3._health == 30, "over 350 for under two hours: no health lost, got " .. hi3._health)
 assert(hi3._st.foodsick > 40, "over 350: nauseous all the same")
 for _ = 1, 60 do minute() end
-assert(hi3._health == 15, "past two hours: health drains to the floor, got " .. hi3._health)
+-- the floor sinks from 15 at two hours to 0 at a day (UntreatedDiabetesDays 1): at three hours about 14.3
+assert(hi3._health > 14 and hi3._health < 15, "past two hours: health drains to the sinking floor, got " .. hi3._health)
 -- coming down and going straight back up counts the time already spent (it ebbs at the same pace)
 local spike = newPlayer({ health = 30 }); H.current = spike
 spike._md.DanTraits = { glucose = 500 }
@@ -274,7 +275,7 @@ H.rng = { 10 }; v, bad = DanTraits_DiaRead(plain); assert(v == 95 and bad == fal
 
 -- 14. starter kits
 local kit1 = newPlayer(); H.fire("OnCreatePlayer", 0, kit1)
-assert(#kit1._inv == 5 and kit1._inv[1]._type == "DanTraits.GlucoseMeter" and kit1._inv[2]._type == "DanTraits.TestStrips" and kit1._inv[5]._type == "DanTraits.InsulinPen", "Type 1: meter, strips, three pens")
+assert(#kit1._inv == 6 and kit1._inv[1]._type == "DanTraits.GlucoseMeter" and kit1._inv[2]._type == "DanTraits.TestStrips" and kit1._inv[3]._type == "DanTraits.InsulinSyringe" and kit1._inv[6]._type == "DanTraits.InsulinPen", "Type 1: meter, strips, a syringe, three pens")
 local kit2 = newPlayer({ traits = { "diabetes2" } }); H.fire("OnCreatePlayer", 0, kit2)
 assert(#kit2._inv == 3 and kit2._inv[3]._type == "DanTraits.Metformin", "Type 2: meter, strips, metformin")
 assert(select(2, DanTraits_MedState(kit2, "metformin")) == 1, "and already on it, fully built up")
@@ -282,7 +283,7 @@ H.fire("OnCreatePlayer", 0, kit2); assert(#kit2._inv == 3, "given once")
 local kit0 = newPlayer({ traits = {} }); H.fire("OnCreatePlayer", 0, kit0); assert(#kit0._inv == 0, "no trait: no kit")
 SandboxVars = { DanTraits = { StartingMedication = false } }
 local off1 = newPlayer(); H.fire("OnCreatePlayer", 0, off1)
-assert(#off1._inv == 2 and off1._inv[2]._type == "DanTraits.TestStrips", "Starting Medication off, Type 1: meter and strips, no pens")
+assert(#off1._inv == 3 and off1._inv[3]._type == "DanTraits.InsulinSyringe", "Starting Medication off, Type 1: meter, strips and the syringe, no pens")
 local off2 = newPlayer({ traits = { "diabetes2" } }); H.fire("OnCreatePlayer", 0, off2)
 assert(#off2._inv == 2, "Type 2: no metformin")
 SandboxVars = nil
@@ -454,5 +455,56 @@ assert(#DanTraits_DiaMeterLines(meterItem) == 1, "low First Aid: the reading onl
 DanTraits_AddHook("diaResistance", function(res) return res + 0.1 end)
 near(DanTraits_DiaResistance(lean), 0.1, 1e-9, "75 kg plus the hook's 0.1")
 near(DanTraits_DiaResistance(heavy), 1, 1e-9, "the clamp still holds")
+
+-- the fitness link (DanTraits_Fitness.lua): a workout burns 1 a minute, and its afterglow 0.2 a minute at full
+local fitKey, glow = nil, 0
+DanTraits_FitTrainingNow = function() return fitKey, fitKey and {} or nil end
+DanTraits_FitAfterglow = function() return glow end
+local gym = newPlayer(); H.current = gym
+fitKey = "pushups"
+for _ = 1, 30 do minute() end
+near(g(gym), 110 + 0.17 * 30 - 30, 0.01, "half an hour of push-ups: 30 off")
+fitKey, glow = nil, 1
+for _ = 1, 10 do minute() end
+near(g(gym), 110 + 0.17 * 40 - 30 - 2, 0.01, "the afterglow: 0.2 a minute")
+fitKey, glow = "dtstretch", 0
+minute()
+near(g(gym), 110 + 0.17 * 41 - 32, 0.01, "stretching burns nothing extra")
+DanTraits_FitTrainingNow, DanTraits_FitAfterglow = nil, nil
+
+-- the health floor above 350 (sandbox UntreatedDiabetesDays): 15 when the drain starts at two
+-- hours, sinking to 0 at the limit; 0 days never sinks
+near(DanTraits_DiaHighFloor(2), 15, 1e-9, "default: 15 at two hours")
+near(DanTraits_DiaHighFloor(13), 7.5, 1e-9, "default: halfway to a day, 7.5")
+near(DanTraits_DiaHighFloor(24), 0, 1e-9, "default: gone at a day")
+SandboxVars = { DanTraits = { UntreatedDiabetesDays = 14 } }
+near(DanTraits_DiaHighFloor(24), 15 * (1 - 22 / 334), 1e-9, "two weeks: barely lower after a day")
+near(DanTraits_DiaHighFloor(14 * 24), 0, 1e-9, "two weeks: gone at two weeks")
+SandboxVars = { DanTraits = { UntreatedDiabetesDays = 0 } }
+near(DanTraits_DiaHighFloor(1000), 15, 1e-9, "0: never fatal, the floor holds")
+SandboxVars = nil
+
+-- vials: insulin like a pen, but drawn up with a syringe carried anywhere on you
+local function typed(t) return { getFullType = function() return t end } end
+local vial, penItem = typed("DanTraits.InsulinVial"), typed("DanTraits.InsulinPen")
+assert(DanTraits_IsInsulin(vial) and DanTraits_IsInsulin(penItem) and DanTraits_IsInsulinVial(vial) and not DanTraits_IsInsulinVial(penItem), "both are insulin, one is a vial")
+local nurse = newPlayer()
+assert(DanTraits_InsulinSyringeFor(nurse, penItem) == true, "a pen needs nothing")
+assert(DanTraits_InsulinSyringeFor(nurse, vial) == nil, "a vial with no syringe: nothing to draw it up with")
+nurse:getInventory():AddItem("DanTraits.InsulinSyringe")
+assert(DanTraits_IsSyringe(DanTraits_InsulinSyringeFor(nurse, vial)), "with one: that syringe")
+
+-- butchering: each shared parts list gets one pancreas, once
+local cowparts, rabbitparts = { { item = "Base.Steak", minNb = 10, maxNb = 18 } }, {}
+AnimalPartsDefinitions = { animals = {
+    cowangus = { parts = cowparts }, bullangus = { parts = cowparts }, rabdoeswamp = { parts = rabbitparts },
+    ratgrey = { parts = {} }, cowholstein = {},
+} }
+assert(DanTraits_AddPancreasParts() == 2, "the cow list and the rabbit list, once each")
+assert(#cowparts == 2 and cowparts[2].item == "DanTraits.Pancreas" and cowparts[2].nb == 1, "one pancreas per cow")
+assert(#rabbitparts == 1 and rabbitparts[1].item == "DanTraits.PancreasSmall", "a small one per rabbit")
+assert(#AnimalPartsDefinitions.animals.ratgrey.parts == 0, "rats give none")
+assert(DanTraits_AddPancreasParts() == 0 and #cowparts == 2, "run again (OnGameBoot): nothing doubled")
+AnimalPartsDefinitions = nil
 
 H.pass()

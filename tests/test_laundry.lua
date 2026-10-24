@@ -44,6 +44,7 @@ local function garment(kind, parts, opts)
   function g:getCondition() return self.cond end
   function g:setCondition(v) self.cond = v end
   function g:getFullType() return self.type end
+  function g:getType() return (self.type:gsub("^.*%.", "")) end
   function g:getName() return "Garment" end
   function g:getContainer() return { Remove = function() g.removed = true end } end
   return g
@@ -87,6 +88,11 @@ ISWringClothing = {}
 function ISWringClothing:complete() self.item:setWetness(math.min(self.item:getWetness(), 10)); return true end
 function ISWringClothing:isValid() return self.item:getWetness() > 10 end
 function ISWringClothing:getDuration() return math.ceil(self.item:getWetness() * 5) end
+-- (the switch itself is the test's to flip)
+ISToggleClothingWasher = {}
+function ISToggleClothingWasher:complete() return true end
+ISToggleClothingDryer = {}
+function ISToggleClothingDryer:complete() return true end
 
 local menuCalls = {}
 ISWorldObjectContextMenu = {
@@ -140,6 +146,15 @@ do
   assert(L.layer(garment("Clothing", {}, { loc = "base:jacket" })) == 0.5, "a jacket half")
   assert(L.layer(garment("Clothing", {}, { loc = "base:necklace" })) == 0, "a necklace not at all")
   assert(L.layer(garment("InventoryContainer", {})) == 0, "a bag is not clothing")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:hat", type = "Base.Hat_BaseballCap" })) == 0.5, "a cap half")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:shortpants" })) == 1, "shorts by their B42 id sweat in full")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:tanktop" })) == 1, "and a tank top")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:underwearbottom" })) == 1, "and underwear")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:torsoextravest" })) == 0.5, "a vest half")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:jacket_bulky" })) == 0.5, "an id that keeps its underscore still matches")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:hat", type = "Base.Hat_EarMuff_Protectors" })) == 0, "ear protectors do not sweat")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:hat", type = "Base.Hat_HardHat" })) == 0, "nor a hard hat")
+  assert(L.layer(garment("Clothing", {}, { loc = "base:hat", type = "Base.Hat_BicycleHelmet" })) == 0, "nor a helmet")
 end
 
 -- 2. hand washing: 40% without soap, 20% with; odour and must out; the count
@@ -280,6 +295,32 @@ do
   L.sight(quick, false, 0); L.sight(quick, false, 2)
   assert(L.state(quick).m, "LaundryDampHours 2")
   SandboxVars.DanTraits = {}
+  -- a shirt damp from sweat is on no clock while worn (the body dries it); taken off and
+  -- bagged it is on the ordinary one (2026-10-22: it kept its sweat flag and never went musty)
+  local sweaty = garment("Clothing", {}, { wet = 45 })
+  L.state(sweaty, true).sw = true
+  L.sight(sweaty, true, 0); L.sight(sweaty, true, 8)
+  assert(not L.state(sweaty).m and L.mustyIn(sweaty) == nil and L.state(sweaty).sw, "worn and sweating: no damp clock")
+  L.sight(sweaty, false, 8)
+  assert(not L.state(sweaty).sw, "taken off: the sweat flag goes")
+  H.near(L.mustyIn(sweaty), 6, 1e-9, "and the damp clock starts")
+  L.sight(sweaty, false, 14)
+  assert(L.state(sweaty).m, "six hours in a bag: musty")
+end
+
+-- 8b. what wets a worn garment in the rain, a drizzle or the shower is not sweat (2026-10-22)
+do
+  local p = H.player({ outside = true })
+  H.climate.rain = 0
+  assert(not L.rainedOn(p), "dry outside: nothing falling")
+  H.climate.rain = 0.07
+  assert(L.rainedOn(p), "a drizzle counts")
+  p._outside = false
+  assert(not L.rainedOn(p), "indoors: no rain")
+  DanTraits_BathingWet = function() return true end
+  assert(L.rainedOn(p), "in the shower (Take A Bath And Shower): water, not sweat")
+  DanTraits_BathingWet = nil
+  H.climate.rain = 0
 end
 
 -- 9. sweat by layer and work; the sandbox rate
@@ -399,6 +440,46 @@ do
   assert((L.state(bloody) or {}).mw == true, "once the cycle has it clean and soaked, it is")
 end
 
+-- 12b. a wash is never lost (2026-10-17: clothes from washer to dryer still stale and
+-- "unwashed"): watched from the switch however far the player goes, a cycle that ended
+-- between looks still counts, and a garment put on counts as washed within the minute
+do
+  local p = person({ unhappy = 0 })
+  H.current = p
+  local d = DanTraits_Data(p)
+  local tee = garment("Clothing", { Torso = { 0, 0 } }, { wet = 100, loc = "base:tshirt" })
+  L.state(tee, true).o = 70
+  local on = true
+  local sq = { getX = function() return 40 end, getY = function() return 50 end, getZ = function() return 0 end }
+  local drum = { getItems = function() return list({ tee }) end }
+  local washer = { kind = "IsoClothingWasher", isActivated = function() return on end,
+                   getContainer = function() return drum end, getSquare = function() return sq end }
+  sq.getObjects = function() return list({ washer }) end
+  local savedCell = getCell
+  getCell = function() return { getGridSquare = function(_, x, y, z) if x == 40 and y == 50 and z == 0 then return sq end end } end
+  -- switched on through the game's own action: on the watch list, wherever the player is
+  ISToggleClothingWasher.complete({ character = p, object = washer })
+  assert(d.lnWashers and d.lnWashers["40,50,0"], "switched on: watched")
+  -- it finished and switched itself off before the next look: what it left counts
+  on = false
+  L.watchWashers(p, d)
+  assert(L.state(tee).mw == true and d.lnWashers["40,50,0"] == nil, "an ended cycle is still a wash, then dropped")
+  -- switched off by hand: marked at once
+  local jeans = garment("Clothing", { UpperLegL = { 0, 0 } }, { wet = 100, loc = "base:pants" })
+  drum.getItems = function() return list({ jeans }) end
+  ISToggleClothingWasher.complete({ character = p, object = washer })
+  assert(L.state(jeans).mw == true, "switched off by hand: marked before anything comes out")
+  -- out of the dryer and straight on: washed and fresh within the minute
+  tee.wet = 0
+  wear(p, tee)
+  d.lnMoodle = 1
+  H.mins(1)
+  assert(L.state(tee).o == 0 and L.state(tee).n == 1 and not L.state(tee).mw, "washed the minute it is worn")
+  assert(d.lnMoodle == -1, "the moodle follows within the minute")
+  getCell = savedCell
+  H.current = player
+end
+
 -- 13. fabric wear: a roll per wash, never under 1, off means off
 do
   H.rollf = 0.001
@@ -448,6 +529,33 @@ do
   H.mins(1); tee.dirt.Torso_Upper = 0.9; H.mins(1)
   assert(tee.dirt.Torso_Upper == 0.9, "LaundryPoncho off: no shield")
   SandboxVars.DanTraits = {}
+  H.current = player
+end
+
+-- 14b. a garbage bag poncho wears from what lands on it, and from hard work
+do
+  local p = person()
+  H.current = p
+  local bag = garment("Clothing", { Torso_Upper = { 0, 0 } }, { type = "Base.PonchoGarbageBag", loc = "base:jackethat", cond = 4 })
+  wear(p, bag)
+  H.mins(1)
+  H.rollf = 0.001
+  H.mins(1)
+  assert(bag.cond == 4, "nothing landed: no wear")
+  bag.blood.Torso_Upper = 0.2
+  H.mins(1)
+  assert(bag.cond == 3, "blood on the poncho itself: a point off")
+  assert(bag.blood.Torso_Upper == 0.2, "and the poncho keeps it")
+  bag.dirt.Torso_Upper = 0.1
+  H.mins(1)
+  assert(bag.cond == 2, "dirt on it too")
+  H.mins(10); H.ten()
+  assert(bag.cond == 2, "ten quiet minutes: no wear")
+  p._sprint = true
+  H.mins(10); H.ten()
+  p._sprint = false
+  assert(bag.cond == 1, "ten minutes sprinting: a point off")
+  H.rollf = 0.99
   H.current = player
 end
 
@@ -730,6 +838,33 @@ do
   L.sweat(damp, 0.4, 1); L.sweat(dry, 0.4, 1)
   H.near(L.state(damp).o, 25.4, 1e-9, "an hour worn damp: 25 more")
   H.near(L.state(dry).o, 0.4, 1e-9, "dry: just the wear")
+  -- sweat: a dry shirt that goes damp on the body away from rain
+  local sw = garment("Clothing", {}, { wet = 5, loc = "base:tshirt" })
+  L.bodyDry(sw, 20)
+  sw.wet = 20
+  L.bodyDry(sw, 20 + 1 / 60, false)
+  sw.wet = 45
+  L.bodyDry(sw, 20 + 2 / 60, false)
+  assert(L.state(sw).sw, "damp from sweat is marked")
+  L.sweat(sw, 0.4, 1)
+  H.near(L.state(sw).o, 0.4, 1e-9, "sweat-damp: only the sweat odour, not the damp wear")
+  assert(L.mustyIn(sw) == nil, "and no damp clock")
+  L.sight(sw, true, 30)
+  assert(not L.state(sw).dh, "the ten-minute look keeps no damp hours")
+  sw.wet = 25
+  L.bodyDry(sw, 30 + 1 / 60, false)
+  assert(sw.wet == 25, "sweat dries at the game's own speed")
+  sw.wet = 40
+  L.bodyDry(sw, 30 + 2 / 60, true)
+  assert(not L.state(sw).sw, "rain on top: no longer just sweat")
+  sw.wet = 10
+  L.bodyDry(sw, 30 + 3 / 60, false)
+  assert(not L.state(sw).sw, "dry: the mark goes")
+  -- a vanilla dryer leaves a soaked load at 10: that is dry
+  local tumbled = garment("Clothing", {}, { wet = 10 })
+  tumbled.isDirty = function() return false end
+  tumbled.isBloody = function() return false end
+  assert(L.isFresh(tumbled), "fresh out of the dryer at 10 wetness")
 end
 
 -- 23. fresh clothes: the good side of the moodle, and what it does
@@ -764,6 +899,14 @@ do
   L.state(pants).o = 60
   assert(L.wornLevel(p) == 1, "stale wins over fresh")
   L.state(pants).o = 0
+  local muffs = garment("Clothing", {}, { loc = "base:hat", type = "Base.Hat_EarMuff_Protectors" })
+  muffs.isDirty = function() return false end
+  muffs.isBloody = function() return false end
+  L.state(muffs, true).o = 58
+  wear(p, muffs)
+  assert(L.wornLevel(p) < 0, "ear protectors with old odour on them do not hold up Stale Clothes")
+  L.sight(muffs, true)
+  assert(L.state(muffs).o == 0, "and the old odour goes once they are seen")
   L.state(tee).sun = true
   local snap = L.snapshot(tee)
   L.afterHandWash(tee, snap, "hand", true)
@@ -774,6 +917,100 @@ do
   local night = garment("Clothing", {}, { wet = 50 })
   L.lineItem(night, { rain = 0, rate = 20, airing = false }, 1)
   assert(not (L.state(night) or {}).sun, "at night: not")
+  H.current = player
+end
+
+-- 24. dryer sheets: a sheet in the dryer scents what the run leaves dry, then is spent;
+--     scented clothes gather odour at half the rate until their next wash
+do
+  local p = person()
+  H.current = p
+  local d = DanTraits_Data(p)
+  -- which machines dry, and in which drum
+  local drum = { items = {} }
+  drum.getItems = function() return list(drum.items) end
+  local on = false
+  local sq = { getX = function() return 60 end, getY = function() return 70 end, getZ = function() return 0 end }
+  local dryer = { kind = "IsoClothingDryer", md = {}, isActivated = function() return on end,
+                  getContainer = function() return drum end, getSquare = function() return sq end,
+                  getModData = function(self) return self.md end }
+  sq.getObjects = function() return list({ dryer }) end
+  assert(L.isDryer(dryer) and L.runningDryer(dryer) == nil and L.dryerDrum(dryer) == drum, "a dryer, idle")
+  local combo = { kind = "IsoCombinationWasherDryer", isActivated = function() return true end,
+                  isModeWasher = function() return true end, getContainer = function() return drum end }
+  assert(L.runningDryer(combo) == nil, "a combo washing is not drying")
+  combo.isModeWasher = function() return false end
+  assert(L.runningDryer(combo) == drum, "a combo set to dry")
+  local stacked = { kind = "IsoStackedWasherDryer", isDryerActivated = function() return true end,
+                    getContainerByType = function(_, t) return t == "clothingdryer" and drum or nil end }
+  assert(L.runningDryer(stacked) == drum and L.dryerDrum(stacked) == drum, "a stacked pair's dryer drum")
+  assert(not L.isDryer({ kind = "IsoClothingWasher" }), "a washer is not a dryer")
+  -- a sheet goes in once
+  assert(not L.hasSheet(dryer) and L.addSheet(dryer) and L.hasSheet(dryer), "a sheet in")
+  assert(not L.addSheet(dryer), "not a second")
+  local savedCell = getCell
+  getCell = function() return { getGridSquare = function(_, x, y, z) if x == 60 and y == 70 and z == 0 then return sq end end } end
+  -- the load: a soaked tee just machine washed (not yet seen), and dry jeans
+  local tee = garment("Clothing", { Torso = { 0, 0 } }, { wet = 100, loc = "base:tshirt" })
+  L.state(tee, true).mw = true
+  local jeans = garment("Clothing", { UpperLegL = { 0, 0 } }, { wet = 0, loc = "base:pants" })
+  drum.items = { tee, jeans }
+  -- switched on through the game's own action: watched
+  on = true
+  ISToggleClothingDryer.complete({ character = p, object = dryer })
+  assert(d.lnDryers and d.lnDryers["60,70,0"], "sheeted and switched on: watched")
+  L.watchDryers(p, d)
+  assert(L.sheeted(L.state(jeans)) and not L.sheeted(L.state(tee)), "the dry garment scented, the soaked one not yet")
+  tee.wet = 5
+  L.watchDryers(p, d)
+  assert(L.sheeted(L.state(tee)), "dry now: scented (the wash still to land counts)")
+  -- the run ends between looks: the sheet is spent, the dryer dropped
+  on = false
+  L.watchDryers(p, d)
+  assert(not L.hasSheet(dryer) and d.lnDryers == nil, "spent, no longer watched")
+  -- the machine wash lands when it is worn: still scented
+  L.sight(tee, true, 2000)
+  assert(L.state(tee).n == 1 and L.sheeted(L.state(tee)), "washed, and still dryer-sheet fresh")
+  -- worn: half the odour
+  local plain = garment("Clothing", { Torso = { 0, 0 } }, { wet = 0, loc = "base:tshirt" })
+  L.sweat(plain, 1, 10)
+  L.sweat(tee, 1, 10)
+  H.near(L.state(plain).o, 10, 1e-9, "plain: 10")
+  H.near(L.state(tee).o, 10 * L.C.SHEET_ODOUR, 1e-9, "scented: half")
+  -- the next wash takes the scent out
+  L.afterHandWash(tee, L.snapshot(tee), "hand", true)
+  assert(not L.sheeted(L.state(tee)), "washed again: gone")
+  -- no sheet: a run scents nothing, and nothing is watched
+  local towel = garment("Clothing", {}, { wet = 0, loc = "base:shirt" })
+  drum.items = { towel }
+  on = true
+  ISToggleClothingDryer.complete({ character = p, object = dryer })
+  L.watchDryers(p, d)
+  assert(not L.sheeted(L.state(towel)) and d.lnDryers == nil, "no sheet: nothing")
+  -- a sheet put in, switched off by hand mid-run: what is dry is scented, the sheet spent
+  on = false
+  L.addSheet(dryer)
+  on = true
+  ISToggleClothingDryer.complete({ character = p, object = dryer })
+  on = false
+  ISToggleClothingDryer.complete({ character = p, object = dryer })
+  assert(L.sheeted(L.state(towel)) and not L.hasSheet(dryer) and d.lnDryers == nil, "switched off: scented, spent")
+  -- laundry off: switching does nothing
+  L.addSheet(dryer)
+  SandboxVars.DanTraits.LaundryEnabled = false
+  on = true
+  ISToggleClothingDryer.complete({ character = p, object = dryer })
+  assert(d.lnDryers == nil, "off: not watched")
+  SandboxVars.DanTraits.LaundryEnabled = nil
+  -- the tooltip says so
+  local scented = garment("Clothing", {}, { wet = 0 })
+  L.state(scented, true).ds = 0
+  local found = false
+  for _, line in ipairs(L.tooltipLines(scented) or {}) do
+    if line[1] == "Tooltip_DanTraits_Sheeted" and line[2] == false then found = true end
+  end
+  assert(found, "the tooltip line")
+  getCell = savedCell
   H.current = player
 end
 

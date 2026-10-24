@@ -164,18 +164,91 @@ H.mins(37)   -- 0.008 a minute: just short of 0.3
 assert(#H.halo == 0, "nothing said yet")
 H.mins(1); assert(H.halo[1] == "UI_DanTraits_BackAche", "the ache notice at 0.3")
 H.near(b._md.DanTraits.bbLoad, 0.304, 1e-9, "load after 38 minutes at level 2")
-assert(parts.Torso_Lower._pain > 0 and parts.Torso_Lower._pain <= 45 * 0.304 + 1e-9, "pain on the lower back, up to the load's share")
+assert(parts.Torso_Lower._pain > 0 and parts.Torso_Lower._pain <= 60 * 0.304 + 1e-9, "pain on the lower back, up to the load's share")
 assert(parts.LowerLeg_L._pain == 0, "nowhere else")
 b._moodles.heavy = 4
 H.mins(25); assert(H.halo[2] == "UI_DanTraits_BackBad", "the bad notice at 0.7")
 H.mins(100); H.near(b._md.DanTraits.bbLoad, 1, 1e-9, "capped at 1")
-H.near(parts.Torso_Lower._pain, 45, 1e-9, "full pain at a full load")
+H.near(parts.Torso_Lower._pain, 60, 1e-9, "full pain at a full load")
 b._moodles.heavy = 0
 H.mins(125); H.near(b._md.DanTraits.bbLoad, 0.5, 1e-9, "eases 0.004 a minute with the load off")
 b._asleep = true
 H.mins(63); assert(b._md.DanTraits.bbLoad == nil and H.halo[#H.halo] == "+UI_DanTraits_BackEased", "twice as fast asleep, then gone with a good notice")
 local plain = body({}, { moodles = { heavy = 4 } }); H.mins(60)
 assert(plain._md.DanTraits.bbLoad == nil, "no trait: nothing")
+-- strain from other work (laundry's washboard): the same load and notices
+local w = body({ "badback" }); H.clearHalo()
+for _ = 1, 5 do assert(DanTraits_BadBackStrain(w, 0.06)) end
+H.near(w._md.DanTraits.bbLoad, 0.3, 1e-9, "five scrubbed garments: the ache line")
+assert(H.halo[1] == "UI_DanTraits_BackAche", "with its notice")
+assert(not DanTraits_BadBackStrain(plain, 0.5) and plain._md.DanTraits.bbLoad == nil, "no trait: nothing")
+-- heat on it (a hot water bottle): the load eases, a thrown-out back's minutes run faster
+assert(DanTraits_BadBackEase(w, 0.1, 1))
+H.near(w._md.DanTraits.bbLoad, 0.2, 1e-9, "heat eases the load")
+assert(DanTraits_BadBackEase(w, 1, 1) and w._md.DanTraits.bbLoad == nil, "and can ease it away")
+w._md.DanTraits.bbOutMin = 2
+DanTraits_BadBackEase(w, 0.1, 1); DanTraits_BadBackEase(w, 0.1, 1)
+assert(w._md.DanTraits.bbOutMin == 1, "out: minutes off, but it still ends in the minute (with its notice)")
+w._md.DanTraits.bbOutMin = nil
+assert(not DanTraits_BadBackEase(plain, 0.1, 1), "no trait: nothing")
+
+-- Bad Back since 2026-10-18: a stiff back and thighs with the load (the game: clumsier, slower
+-- walking), the Back Strain moodle, thrown out, no running while out, a trained core
+local s1, sp = body({ "badback" }, { moodles = { heavy = 2 } })
+s1.setRunning = function(_, v) s1._run = v end
+s1._md.DanTraits = { bbLoad = 0.5 }
+H.rollf = 0.99
+H.mins(1)
+local sd = s1._md.DanTraits
+H.near(sp.UpperLeg_L._stiff, 25 * sd.bbLoad, 1e-9, "the thighs stiff with the load")
+H.near(sp.Torso_Lower._stiff, 30 * sd.bbLoad, 1e-9, "the lower back stiff")
+assert(sd.bbMoodle == 1, "Aching Back")
+sd.bbLoad = 0.75; H.mins(1)
+assert(sd.bbMoodle == 2, "Bad Back")
+sd.bbLoad = 0.9
+H.rollf = 0
+H.clearHalo(); H.mins(1)
+assert(sd.bbOutMin == 239 and sd.bbMoodle == 3 and H.halo[1] == "UI_DanTraits_BackOut", "thrown out: four hours")
+assert(sp.Torso_Lower._stiff >= 70 and sp.UpperLeg_R._stiff >= 40 and sp.Torso_Lower._pain > 0, "pain, a stiff back and legs")
+s1._run, s1._sprint = true, true
+H.frame(s1)
+assert(not s1._run and not s1._sprint and s1._cantSprint, "no running or sprinting while out")
+s1._moodles.heavy = 0
+H.rollf = 0.99
+H.mins(100)
+H.near(sd.bbLoad, 1, 1e-9, "the load holds while it is out")
+H.mins(139)
+assert(sd.bbOutMin == nil and H.halo[#H.halo] == "+UI_DanTraits_BackOutOver", "settled after four hours")
+-- the backRelief hook (a muscle relaxant): pain and stiffness x its factor, the load unchanged
+local relieve = nil
+DanTraits_AddHook("backRelief", function(k, _, _, out) if relieve then return k * (out and relieve.out or relieve.k) end return nil end)
+local r1, rp = body({ "badback" })
+r1._md.DanTraits = { bbLoad = 0.8 }
+relieve = { k = 0.5, out = 0.65 }
+H.mins(1)
+local rl = r1._md.DanTraits.bbLoad
+H.near(rp.Torso_Lower._stiff, 30 * rl * 0.5, 1e-9, "relieved: half the back's stiffness")
+H.near(rp.UpperLeg_L._stiff, 25 * rl * 0.5, 1e-9, "and the thighs'")
+H.near(rl, 0.8 - 0.004, 1e-9, "the load eases as ever")
+relieve = nil
+-- only under a heavy load or a lift, and only from half a load
+local s2 = body({ "badback" }, { moodles = { heavy = 1 } })
+s2._md.DanTraits = { bbLoad = 0.9 }
+H.rollf = 0
+H.mins(1)
+assert(s2._md.DanTraits.bbOutMin == nil, "a light load: never thrown out")
+assert(DanTraits_BadBackStrain(s2, 0.01)); H.mins(1)
+assert(s2._md.DanTraits.bbOutMin == 239, "a lift can throw it out")
+H.rollf = 0.99
+-- a trained core: the load builds x0.6 at 90 core minutes a week; not in the week after a throw-out
+DanTraits_FitWeekMinutes = function() return 90 end
+local s3 = body({ "badback" }, { moodles = { heavy = 2 } })
+H.mins(1)
+H.near(s3._md.DanTraits.bbLoad, 0.008 * 0.6, 1e-12, "a trained core: the load builds slower")
+s3._md.DanTraits.bbOutDay = math.floor(H.hours / 24)
+H.mins(1)
+H.near(s3._md.DanTraits.bbLoad, 0.008 * 0.6 + 0.008, 1e-12, "thrown out lately: no benefit")
+DanTraits_FitWeekMinutes = nil
 
 -- 6. Bad Knees: running, sprinting, each climb and each stomp; rest by posture
 local k, legs = body({ "badknees" })
@@ -204,9 +277,9 @@ k.isSitOnGround = function() return true end; H.mins(10)
 H.near(k._md.DanTraits.bkLoad, 0.33, 1e-9, "sitting on the ground: 0.01 a minute")
 k.isSitOnGround = function() return false end
 k.isSittingOnFurniture = function() return true end
-k.getSitOnFurnitureObject = function() return { getProperties = function() return { get = function() return nil end, Is = function() return false end } end } end
+k.getSitOnFurnitureObject = function() return { getProperties = function() return { get = function() return nil end, has = function() return false end } end } end
 H.mins(10); H.near(k._md.DanTraits.bkLoad, 0.23, 1e-9, "a plain chair: 0.01 a minute")
-k.getSitOnFurnitureObject = function() return { getProperties = function() return { get = function(_, n) if n == "BedType" then return "badBed" end end, Is = function() return false end } end } end
+k.getSitOnFurnitureObject = function() return { getProperties = function() return { get = function(_, n) if n == "BedType" then return "badBed" end end, has = function() return false end } end } end
 H.mins(10); H.near(k._md.DanTraits.bkLoad, 0.08, 1e-9, "a sofa or armchair: 0.015 a minute")
 k.isSittingOnFurniture = function() return false end
 H.mins(16); assert(k._md.DanTraits.bkLoad == nil and H.halo[#H.halo] == "+UI_DanTraits_KneesEased", "then settles with a good notice")

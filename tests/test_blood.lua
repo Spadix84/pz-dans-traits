@@ -174,6 +174,24 @@ p._st.hunger = 0; p._st.endurance = 0.5; frame(p); p._st.endurance = 0.6; frame(
 near(p._st.endurance, 0.5 + 0.1 * (1 - 0.5 * D(p).bloodWeak), 1e-9, "weak: slower endurance recovery")
 D(p).bloodCells = 0.95; minute(); assert(D(p).bloodWeak == 0, "95%: not weak")
 
+-- 8b. what the health panel reads: the minute's loss and refill, the tier and its edges
+p = newPlayer(); H.current = p
+p._md.DanTraits = { bloodVol = 0.8, bloodCells = 0.7 }
+arm = part(p, "ForeArm_L"); arm._bleeding, arm._time = true, 5
+minute()
+local st = DanTraits_BloodState(p)
+near(st.vol, D(p).bloodVol, 1e-12, "state: volume"); near(st.cells, D(p).bloodCells, 1e-12, "state: cells")
+near(st.loss, 0.004, 1e-12, "state: the minute's loss")
+near(st.volGain, 0.35 / 1440, 1e-9, "state: the minute's refill"); near(st.cellGain, 0.05 / 1440, 1e-9, "state: the minute's rebuild")
+assert(st.tier == 1 and st.weak > 0 and st.shock == 0.40 and st.death == 0.50, "state: tier 1, weak, the edges")
+p._md.DanTraits = { bloodVol = 1, bloodCells = 1 }; arm._time = 0; minute()
+st = DanTraits_BloodState(p)
+assert(st.volGain == 0 and st.cellGain == 0 and st.loss == 0, "full: nothing moving (the last minute's gains don't linger)")
+assert(DanTraits_BloodState(newPlayer()).vol == 1, "never updated: full")
+SandboxVars = { DanTraits = { BloodEnabled = false } }
+assert(DanTraits_BloodState(p) == nil, "off: no state")
+SandboxVars = nil
+
 -- 9. Hemophilia: open bleeds x1.5, a bandage only slows to a quarter; no extra health loss on top
 p = newPlayer({ "hemophilia" }); H.current = p
 arm = part(p, "ForeArm_L"); arm._bleeding, arm._time = true, 10
@@ -204,6 +222,45 @@ p:getBodyDamage():ReduceGeneralHealth(1); damage(p, "BLEEDING", 1); minute()
 near(p.overall(), 99, 1e-9, "off: vanilla keeps its bleed damage")
 assert(D(p) == nil or D(p).bloodVol == nil, "off: no blood kept")
 SandboxVars = nil
+
+-- 11b. Wound Damage off: vanilla's wound damage to the part (BodyPart.DamageUpdate, x the part's
+-- scaler x the game-time multiplier) is given back each frame; on (the default) it is kept
+local realGameTime = getGameTime
+local MULT = 0.8
+function getGameTime() local t = realGameTime(); t.getMultiplier = function() return MULT end; return t end
+local SCALE = 0.0057142857 * MULT
+local function vanillaTick(x, dmg) x:ReduceHealth(dmg * SCALE) end
+p = newPlayer(); H.current = p
+local neck = part(p, "Neck")
+function neck:getCutTime() return self._cutT or 0 end
+function neck:getDeepWoundTime() return self._deepT or 0 end
+function neck:haveBullet() return self._bullet == true end
+neck._cutT = 2
+vanillaTick(neck, 1.875); frame(p)
+near(neck._health, 100 - 1.875 * SCALE, 1e-9, "wound damage on (default): an open neck cut still hurts")
+SandboxVars = { DanTraits = { WoundDamageEnabled = false } }
+neck._health = 100
+for _ = 1, 50 do vanillaTick(neck, 1.875); frame(p) end
+near(neck._health, 100, 1e-9, "off: the cut's damage comes back, frame by frame")
+neck._bandaged = true; vanillaTick(neck, 0); frame(p)
+near(neck._health, 100, 1e-9, "off: a bandaged cut takes nothing and gets nothing")
+neck._health = 90; neck._cutT, neck._deepT = 0, 3; frame(p)
+near(neck._health, 90 + 1.5625 * SCALE, 1e-9, "off: a bandaged, unstitched deep wound: half")
+neck._health, neck._bandaged = 90, false; frame(p)
+near(neck._health, 90 + 3.125 * SCALE, 1e-9, "off: an open deep wound: full")
+neck._health, neck._stitched = 90, true; frame(p)
+near(neck._health, 90, 1e-12, "off: stitched, nothing to give back")
+neck._health, neck._deepT, neck._stitched, neck._bullet = 90, 0, false, true; frame(p)
+near(neck._health, 90 + 3.125 * SCALE, 1e-9, "off: a bullet left in")
+neck._health = 0; frame(p)
+assert(neck._health == 0, "off: a part at 0 is left alone")
+neck._health = 90; p.isInvulnerable = function() return true end; frame(p)
+near(neck._health, 90, 1e-12, "off: invulnerable, vanilla took nothing")
+p.isInvulnerable = nil
+SandboxVars = { DanTraits = { WoundDamageEnabled = false, BloodEnabled = false } }
+frame(p); near(neck._health, 90, 1e-12, "off, but Blood Loss off too: vanilla throughout")
+SandboxVars = nil
+getGameTime = realGameTime
 
 -- 12. commands and test wounds
 p = newPlayer(); H.current = p

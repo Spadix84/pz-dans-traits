@@ -188,6 +188,15 @@ diabetic = false
 m = open({ item("insulin", 5) }); o = m.options[1]
 assert(o.notAvailable and tip(o) == "Tooltip_DanTraits_NotDiabetic" and not o.sub, "not diabetic: greyed with the reason")
 diabetic = true
+-- a vial with no syringe carried: greyed with that reason; with one, the usual submenu
+local hasSyringe = false
+DanTraits_InsulinSyringeFor = function(_, it) if not it._vial then return true end return hasSyringe or nil end
+local vialItem = item("insulin", 5); vialItem._vial = true
+m = open({ vialItem }); o = m.options[1]
+assert(o.notAvailable and tip(o) == "Tooltip_DanTraits_NoSyringe" and not o.sub, "vial, no syringe: greyed")
+hasSyringe = true
+m = open({ vialItem }); assert(not m.options[1].notAvailable and m.options[1].sub, "vial and syringe: the dose submenu")
+DanTraits_InsulinSyringeFor = nil
 
 -- 3. the meter needs strips: found in the inventory, else greyed
 local strips = item("strips", 4)
@@ -355,6 +364,10 @@ assert(rows.Woodwork.item.level == 4 and rows.Woodwork.item.ageLevels == nil, "2
 rows = skills(carpenter, { "age50s", "base:handy" }, { Woodwork = 5, Fitness = 5, Strength = 5 })
 assert(rows.Woodwork.item.level == 9 and rows.Woodwork.item.ageLevels == 4, "50s Handy carpenter: 5 from the game, +3 +1 from age")
 assert(rows.Carving and rows.Carving.item.level == 2 and rows.Carving.item.ageLevels == 2, "and a row for a side skill the game's list did not have")
+rows = skills(carpenter, { "age20s", "base:handy" }, { Woodwork = 5, Carving = 2, Maintenance = 1, Masonry = 1, Fitness = 5, Strength = 5 })
+assert(rows.Woodwork.item.level == 4 and rows.Woodwork.item.ageLevels == -1 and rows.Maintenance.item.level == 0 and rows.Maintenance.item.ageLevels == -1
+  and rows.Carving.item.level == 1 and rows.Masonry.item.level == 0, "20s Handy carpenter: Handy's four levels shown taken back")
+assert(rows.Maintenance.text == "name:Maintenance UI_DanTraits_AgeLevelsLost:1", "and the row says so")
 rows = skills(carpenter, { "age40s" }, { Woodwork = 4, Carving = 1 })
 assert(rows.Woodwork.item.ageLevels == 2 and rows.Carving.item.level == 2 and rows.Carving.item.ageLevels == 1, "40s: +2 main, +1 side")
 rows = skills({ Woodwork = 9 }, { "age50s" }, { Woodwork = 9 })

@@ -20,6 +20,25 @@
 --        are holding (fresh, holding, sound).
 --   9-10 an infection that hasn't shown yet, and how far a break has healed.
 -- The debug view (ISHealthPanel.cheat) is left alone.
+--
+-- Blood: under the overall body status, how much blood the patient has
+-- (DanTraits_Blood.lua), told by the examiner's First Aid, the same levels:
+--   0-2  how they look: pale, light-headed, in shock, bleeding out; still bleeding.
+--   3-5  the class of blood loss, how fast it is bleeding, whether it is
+--        coming back or needs water, red cells low.
+--   6-8  the volume and red cells to the nearest 5%, the loss or refill an hour.
+--   9-10 the exact figures and how long: to shock, to the heart giving out,
+--        back to full.
+-- Yourself, or another player in split-screen: read from their mod data. Another
+-- player in multiplayer: their client is asked through the server
+-- (DanTraits_BloodRelay.lua), so it shows a moment after the panel opens.
+--
+-- Daily medication: under that, your own character's
+-- scheduled drugs (DanTraits_Meds.lua: the ones for traits you have), each
+-- with when it was last taken and when the next is due; orange when it is
+-- due, red once it has worn off. The body part list moves down to make room
+-- for both. Not shown for another player in multiplayer: their mod data is not
+-- sent to the doctor.
 require "XpSystem/ISUI/ISHealthPanel"
 
 local HP_VAGUE_BELOW   = 3       -- levels under this see only what anyone can see
@@ -28,8 +47,14 @@ local HP_EXPERT        = 9       -- hidden infection and healing from here
 local HP_RED_L         = 3       -- a layperson sees an infection from this level
 local HP_SPREAD_L      = 5       -- the infection is in the body from here (as DanTraits_Infection.lua)
 local HP_THIN_LIFE     = 1       -- a dressing is wearing thin under this life
+local HP_GAP           = 4       -- px under each section above the body part list
+local HP_BLEED_SLOW    = 0.001   -- blood volume a minute: bleeding slowly under this (6% an hour)...
+local HP_BLEED_HEAVY   = 0.004   -- ...heavily from this (24% an hour)
+local HP_BLOOD_SLIGHT  = 0.05    -- volume lost: "a little blood" from this (First Aid 3-5)
+local HP_BLOOD_FULL    = 0.005   -- short of full by less than this reads as full
 
 local RED, GREEN, ORANGE = { 0.89, 0.28, 0.28 }, { 0.28, 0.89, 0.28 }, { 1, 0.58, 0 }
+local GREY = { 0.7, 0.7, 0.7 }
 
 -- the game's own lines, by their text, once translations are loaded
 local known = nil
@@ -214,5 +239,193 @@ local function wrapDrawItem()
     ISHealthBodyPartListBox.DanTraitsDrawItem = drawItem
 end
 
+local BLOOD_COLOUR = { ORANGE, ORANGE, RED, RED }   -- by tier: pale, light-headed, shock, bleeding out
+
+-- a fraction as a percentage, to the nearest step
+local function pct(x, step) return math.floor(x * 100 / step + 0.5) * step end
+
+-- a stretch of game minutes as the panel words it
+local function inTime(minutes)
+    local h = minutes / 60
+    if h < 1 then return t("BloodUnderHour") end
+    if h < 1.5 then return t("BloodHour") end
+    if h < 48 then return getText("UI_DanTraits_health_BloodHours", tostring(math.floor(h + 0.5))) end
+    return getText("UI_DanTraits_health_BloodDays", tostring(math.floor(h / 24 + 0.5)))
+end
+
+-- the blood lines for a DanTraits_BloodState at the examiner's First Aid level: { text, colour }
+local function bloodLinesOf(s, level)
+    if not s then return {} end
+    local out = {}
+    local function add(text, colour) out[#out + 1] = { text, colour } end
+    local lost = math.max(0, 1 - s.vol)
+    local colour = BLOOD_COLOUR[s.tier] or GREEN
+    local bleeding = s.loss > 0
+    local bleedColour = s.loss >= HP_BLEED_HEAVY and RED or ORANGE
+    if level < HP_VAGUE_BELOW then
+        -- how they look
+        if s.tier > 0 then add(t("BloodFeel" .. s.tier), colour)
+        elseif s.weak > 0 then add(t("BloodFeelWeak"), ORANGE)
+        elseif not bleeding then add(t("BloodFeelFine"), GREEN) end
+        if bleeding then add(t("BloodStillBleeding"), bleedColour) end
+        return out
+    end
+    local expert = level >= HP_EXPERT
+    -- the volume
+    if level < HP_DETAIL then
+        if s.tier > 0 then add(t("BloodLoss" .. s.tier), colour)
+        else add(t(lost >= HP_BLOOD_SLIGHT and "BloodLossSlight" or "BloodLossNone"), GREEN) end
+    else
+        add(getText(expert and "UI_DanTraits_health_BloodVol" or "UI_DanTraits_health_BloodVolAbout",
+            tostring(pct(s.vol, expert and 1 or 5))), colour)
+    end
+    -- which way it is going
+    local net = s.loss - s.volGain   -- volume a minute, falling while over 0
+    if bleeding then
+        if level < HP_DETAIL then
+            add(t(s.loss >= HP_BLEED_HEAVY and "BleedHeavy" or (s.loss >= HP_BLEED_SLOW and "BleedSteady" or "BleedSlow")), bleedColour)
+        elseif net <= 0 then
+            add(t("BloodHolding"), GREY)
+        elseif not expert then
+            add(getText("UI_DanTraits_health_BloodLosingAbout", tostring(math.max(1, pct(net * 60, 1)))), bleedColour)
+        else
+            local hour = string.format("%.1f", DanTraits_Round(net * 60 * 100, 1))
+            local toShock, toDeath = s.vol - (1 - s.shock), s.vol - (1 - s.death)
+            if toShock > 0 then
+                add(getText("UI_DanTraits_health_BloodLosingShock", hour, inTime(toShock / net)), bleedColour)
+            elseif toDeath > 0 then
+                add(getText("UI_DanTraits_health_BloodLosingDeath", hour, inTime(toDeath / net)), RED)
+            else
+                add(getText("UI_DanTraits_health_BloodLosing", hour), RED)
+            end
+        end
+    elseif lost >= HP_BLOOD_FULL then
+        if s.volGain <= 0 then add(t("BloodNoRefill"), ORANGE)
+        elseif level < HP_DETAIL then add(t("BloodRefilling"), GREEN)
+        elseif not expert then add(getText("UI_DanTraits_health_BloodRefillAbout", tostring(math.max(1, pct(s.volGain * 60, 1)))), GREEN)
+        else add(getText("UI_DanTraits_health_BloodRefillFull", inTime(lost / s.volGain)), GREEN) end
+    end
+    -- the red cells
+    local cellsShort = 1 - s.cells
+    if level < HP_DETAIL then
+        if s.weak > 0 then add(t("BloodCellsLow"), ORANGE) end
+    elseif cellsShort >= HP_BLOOD_FULL then
+        local cellColour = s.weak > 0 and ORANGE or GREY
+        local rebuild = s.cellGain - s.loss
+        if not expert then
+            add(getText("UI_DanTraits_health_BloodCellsAbout", tostring(pct(s.cells, 5))), cellColour)
+        elseif rebuild > 0 then
+            add(getText("UI_DanTraits_health_BloodCellsBack", tostring(pct(s.cells, 1)), inTime(cellsShort / rebuild)), cellColour)
+        else
+            add(getText("UI_DanTraits_health_BloodCells", tostring(pct(s.cells, 1))), cellColour)
+        end
+    end
+    return out
+end
+
+-- the same for a character: their own state when they are on this machine, or
+-- the last answer from their client in multiplayer
+local function bloodLines(patient, level, doctor)
+    local here = false
+    pcall(function() here = patient:isLocalPlayer() end)
+    if here then return bloodLinesOf(DanTraits_BloodState and DanTraits_BloodState(patient), level) end
+    return bloodLinesOf(DanTraits_PatientBloodState and DanTraits_PatientBloodState(doctor, patient), level)
+end
+DanTraits_HealthBloodLines = bloodLines
+
+-- the bottle's name, as the game shows it
+local function medName(id)
+    local drug = DanTraits_Drugs[id]
+    local name = nil
+    if drug and drug.item then pcall(function() name = getItemNameFromFullType(drug.item) end) end
+    return name or id
+end
+
+-- the medication lines for a character: { text, colour }
+local function medLines(patient)
+    local out = {}
+    if not DanTraits_MedSchedule then return out end
+    for _, id in ipairs(DanTraits_MedSchedule(patient)) do
+        local since = DanTraits_MedSince(patient, id)
+        local inSystem = DanTraits_MedInSystem(patient, id)
+        local due = DanTraits_MedDue(patient, id)
+        local when
+        if not since then when = t(inSystem and "MedEarlier" or "MedNever")
+        elseif since < 1 then when = t("MedJustNow")
+        elseif since < 2 then when = t("MedHour")
+        elseif since < 48 then when = getText("UI_DanTraits_health_MedHours", tostring(math.floor(since)))
+        else when = getText("UI_DanTraits_health_MedDays", tostring(math.floor(since / 24))) end
+        local status, colour = nil, GREY
+        if due == 2 then status, colour = t("MedWornOff"), RED
+        elseif due == 1 then status, colour = t("MedDueNow"), ORANGE
+        elseif inSystem then
+            colour = GREEN
+            local nextIn = DanTraits_MedNextIn(patient, id)
+            if nextIn then
+                status = nextIn <= 1 and t("MedNextSoon") or getText("UI_DanTraits_health_MedNextIn", tostring(math.ceil(nextIn)))
+            end
+        end
+        out[#out + 1] = { medName(id) .. ": " .. when .. (status and (", " .. status) or ""), colour }
+    end
+    return out
+end
+DanTraits_HealthMedLines = medLines
+
+local function wrapRender()
+    if not ISHealthPanel or not ISHealthPanel.render then return end
+    if ISHealthPanel.render == ISHealthPanel.DanTraitsRender then return end
+    local original = ISHealthPanel.render
+    local function render(self)
+        -- wrapped twice (as doDrawItem above): only the outer layer adds the lines
+        if self.danTraitsRendering then return original(self) end
+        self.danTraitsRendering = true
+        local ok, err = pcall(original, self)
+        self.danTraitsRendering = nil
+        if not ok then error(err) end
+        if ISHealthPanel.cheat or self.blockingMessage or not self.listbox then return end
+        local patient, doctor, here = nil, nil, false
+        pcall(function() patient = self:getPatient(); here = patient:isLocalPlayer() end)
+        if not patient then return end
+        pcall(function() doctor = self:getDoctor() end)
+        local level = self.doctorLevel or 0
+        pcall(function() level = doctor:getPerkLevel(Perks.Doctor) end)
+        local sections = {}
+        local blood = bloodLines(patient, level, doctor)
+        if #blood > 0 then sections[#sections + 1] = { t("BloodHeader"), blood } end
+        local meds = here and medLines(patient) or {}
+        if #meds > 0 then sections[#sections + 1] = { t("MedHeader"), meds } end
+        if #sections == 0 then return end
+        local tm = getTextManager()
+        local fontHgt = tm:getFontHeight(UIFont.Small)
+        local border = UI_BORDER_SPACING or 10
+        local x, y = self.listbox:getX(), self.listbox:getY()
+        local widest = 0
+        local function line(str, c)
+            self:drawText(str, x, y, c[1], c[2], c[3], 1, UIFont.Small)
+            widest = math.max(widest, tm:MeasureStringX(UIFont.Small, str))
+            y = y + fontHgt
+        end
+        for _, section in ipairs(sections) do
+            line(section[1], { 1, 1, 1 })
+            for _, l in ipairs(section[2]) do line(l[1], l[2]) end
+            y = y + HP_GAP
+        end
+        -- the list moves down; the panel grows to fit on the next update
+        -- (vanilla sizes it from allTextHeight), within the screen
+        local extra = y - self.listbox:getY()
+        self.listbox:setY(y)
+        local all = (self.allTextHeight or 0) + extra
+        all = math.min(all, getCore():getScreenHeight() - self:getAbsoluteY() - fontHgt - border * 2)
+        self.allTextHeight = all
+        self.listbox:setHeight(math.max(0, all - y))
+        if self.listbox.vscroll then self.listbox.vscroll:setHeight(self.listbox:getHeight()) end
+        -- and wide enough for the longest line (vanilla's rounding)
+        self.listbox.textRight = math.max(self.listbox.textRight or 0, widest - math.fmod(widest, 20) + 40)
+    end
+    ISHealthPanel.render = render
+    ISHealthPanel.DanTraitsRender = render
+end
+
 -- after every other mod has put its own in
 Events.OnGameStart.Add(wrapDrawItem)
+Events.OnGameStart.Add(wrapRender)

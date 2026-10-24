@@ -3,7 +3,7 @@
 --
 -- What fits: anything on the shared medication list (DanTraits_Drugs, so the
 -- vanilla pills, the mod's bottles, the inhaler, insulin and nicotine gum)
--- plus the game's antibiotics. A whitelist, not "anything medical": bandages,
+-- plus the game's antibiotics and the insulin syringe. A whitelist, not "anything medical": bandages,
 -- splints and the glucose meter stay out.
 --   server/Items/DanTraits_PillCaddyAccept.lua  the item's AcceptItemFunction
 --   client/DanTraits_PillCaddyTab.lua           its tab in the inventory window
@@ -24,7 +24,7 @@ local CADDY_ITEM       = "DanTraits.PillCaddy"
 local CADDY_START_PCT  = 1       -- percent, once, for a new character with a medical trait
 
 -- not on the drug list, but medication (lower-case item types)
-local EXTRA_MEDS = { antibiotics = true, antibioticsbox = true }
+local EXTRA_MEDS = { antibiotics = true, antibioticsbox = true, insulinsyringe = true }
 
 -- the traits treated with medication
 local MEDICAL_TRAITS = { "heart", "epilepsy", "diabetes1", "diabetes2", "spiraling", "ms",

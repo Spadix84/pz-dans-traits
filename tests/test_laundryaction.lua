@@ -1,5 +1,5 @@
--- Offline test for shared/TimedActions/ISLaundryAction.lua (the five kinds: bleach,
--- fire, protect, putup, takedown: new, isValid, start, update, stop, perform) and the
+-- Offline test for shared/TimedActions/ISLaundryAction.lua (the six kinds: bleach,
+-- fire, protect, putup, takedown, sheet: new, isValid, start, update, stop, perform) and the
 -- world-object menus of client/DanTraits_LaundryClient.lua (the clothesline menu,
 -- the water source's Freshen and Bleach, the fire's Dry by the Fire, and the
 -- inventory menu's Protect Fabric), fired through OnFillWorldObjectContextMenu and
@@ -512,6 +512,28 @@ do
   inv:click("ContextMenu_DanTraits_ProtectFabric")
   assert(#queue == 2 and queue[1].kind == "protect" and queue[1].agent == can and queue[2].item == soaked, "a protect action per garment, the carried can")
   assert(queue[1]:isValid(), "valid")
+end
+
+-- 10. sheet: one dryer sheet from the box into an idle dryer without one
+do
+  local p = person()
+  local box = carry(p, protector(20))
+  box.type = "DanTraits.DryerSheets"
+  local on = false
+  local dryer = { kind = "IsoClothingDryer", md = {}, getModData = function(self) return self.md end,
+                  isActivated = function() return on end, getContainer = function() return { getItems = function() return list({}) end } end }
+  local a = ISLaundryAction:new(p, box, "sheet", dryer)
+  assert(a.faceTo == dryer and a.maxTime == 40 and a.label == "ContextMenu_DanTraits_DryerSheet", "sheet: faces the dryer")
+  assert(a:isValid(), "valid: a box with sheets, an idle dryer")
+  on = true; assert(not a:isValid(), "not while it runs"); on = false
+  a:start(); assert(a._anim == "Loot", "the loot animation")
+  H.clearHalo()
+  a:perform()
+  assert(box.uses == 19 and L.hasSheet(dryer) and halo[#halo] == "+UI_DanTraits_SheetIn", "one sheet used, in the dryer, the notice")
+  assert(not ISLaundryAction:new(p, box, "sheet", dryer):isValid(), "one in already: not a second")
+  dryer.md.dtlSheet = nil
+  box.uses = 0
+  assert(not ISLaundryAction:new(p, box, "sheet", dryer):isValid(), "an empty box")
 end
 
 -- 9. laundry off: the menus add nothing

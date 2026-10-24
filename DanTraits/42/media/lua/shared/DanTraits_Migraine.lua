@@ -3,7 +3,8 @@
 -- bad night (Vitality's sleep debt), thirst (the hours of it, the dehydration
 -- load, or the moment's), stress, a hangover, nicotine withdrawal, caffeine
 -- withdrawal, a wound infection's fever, a concussion and the headache that
--- comes back after one, ringing ears (Tinnitus), bright
+-- comes back after one, ringing ears (Tinnitus), a sensory overload (Sensory
+-- Issues), bright
 -- daylight outdoors, sleeping with the light on, heat (hot air or an
 -- overheated body), the smell of corpses close by and a storm on the way (in
 -- the twelve hours before the forecast says it starts), and never
@@ -51,7 +52,9 @@
 -- (attacks each trigger has brought on), migKnown (strong triggers worked
 -- out), tripAfterMin (minutes of the sumatriptan after-effect left),
 -- migKitGiven, migBlur (the character's own Short Sighted, true or false,
--- while the attack has flipped it), migGlare (0..1, the pain the light adds
+-- while the attack has flipped it), migSight (the character's own Short
+-- Sighted, noted every ten minutes outside an attack: put back from it when
+-- migBlur has gone missing), migGlare (0..1, the pain the light adds
 -- right now against full sun, after sunglasses; the Light Too Bright moodle
 -- in DanTraits_Moodles.lua; nil when the light adds none).
 -- Console: migraine | migraine start | migraine triggers
@@ -72,6 +75,7 @@ local MIG_NICOTINE      = 1.5     -- added at full nicotine withdrawal (Smoker)
 local MIG_CONCUSSION    = 3.0     -- added at the worst concussion
 local MIG_CONCUSSION_LATE = 2.0   -- added at the worst of the headache that comes back after one (DanTraits_Concussion.lua)
 local MIG_NOISE         = 1.5     -- added while the ears ring (Tinnitus)
+local MIG_OVERLOAD      = 1.5     -- added at a full sensory overload (Sensory Issues)
 local MIG_FEVER         = 2.0     -- added at full fever (wound infection)
 local MIG_CAFFEINE      = 2.0     -- added at full caffeine withdrawal (Caffeine Dependent)
 local MIG_HEAT          = 2.0     -- added at full heat: the hotter of the air...
@@ -96,14 +100,16 @@ local MIG_AURA_H        = 20 / 60 -- warning before the pain
 local MIG_SEV_MIN       = 0.5     -- severity is this plus up to 0.5
 local MIG_HOURS_BASE    = 3       -- attack length: this plus MIG_HOURS_SEV x severity
 local MIG_HOURS_SEV     = 3
-local MIG_PAIN          = 60      -- pain floor at severity 1 (see DanTraits_PainFloor)
+local MIG_PAIN          = 90      -- pain floor at severity 1 (see DanTraits_PainFloor): one of the worst pains there is
 local MIG_PAIN_LIGHT    = 15      -- extra floor in daylight outdoors
 local MIG_PAIN_ROOM     = 10      -- extra floor in a fully lit room (awake, out of the sun)
 local MIG_ROOM_DARK     = DanTraits_NIGHT.dark    -- light level at or below this: a dark room...
 local MIG_ROOM_LIT      = DanTraits_NIGHT.bright  -- ...at or above this: a lit one (the sleep system's readings)
 local MIG_SICK          = 50      -- food sickness floor at severity 1 (an untreated attack is 25..50: Queasy)
 local MIG_MOOD          = 15
-local MIG_RAMP          = 1
+local MIG_RAMP          = 1       -- mood floor: per minute
+local MIG_PAIN_RAMP     = 8       -- pain: per minute (90 in about eleven minutes: the aura is the warning, not the build-up)
+local MIG_SICK_RAMP     = 2       -- nausea: per minute
 local MIG_STRESS_RATE   = 0.0005  -- per minute
 local MIG_LIGHT_RATE    = 0.5     -- recovery rate in daylight outdoors...
 local MIG_SLEEP_RATE    = 2.0     -- ...and asleep in the dark (fully lit room: 1)
@@ -251,6 +257,15 @@ local function wearingShades(player)
 end
 DanTraits_WearingShades = wearingShades
 
+-- the character's own Short Sighted: what the attack flipped (migBlur), else
+-- what it was at the last ten-minute look outside an attack (migSight; 2026-10-18 an
+-- attack ended with migBlur gone and left Short Sighted on), else as it is now
+local function ownSight(d, have)
+    if d.migBlur ~= nil then return d.migBlur end
+    if d.migSight ~= nil then return d.migSight end
+    return have
+end
+
 -- the attack's blur: flip Short Sighted while it and wearing glasses agree
 -- (the game blurs when they differ); put the character's own state back after
 local function updateBlur(player, d, want)
@@ -265,17 +280,24 @@ local function updateBlur(player, d, want)
     local target = have
     if want then
         if have == glasses then
-            if d.migBlur == nil then d.migBlur = have end
+            d.migBlur = ownSight(d, have)
             target = not have
         end
-    elseif d.migBlur ~= nil then
-        target = d.migBlur
+    else
+        target = ownSight(d, have)
         d.migBlur = nil
     end
     if target == have then return end
     if DanTraits_SetTrait(player, "base:SHORT_SIGHTED", target) then
         pcall(function() player:updateVisionEffects() end)
     end
+end
+
+-- outside an attack, with nothing flipped: note the character's own Short Sighted
+local function noteSight(player, d)
+    local trait = CharacterTrait and CharacterTrait.SHORT_SIGHTED
+    if not trait or d.migBlur ~= nil then return end
+    pcall(function() d.migSight = player:getCharacterTraits():get(trait) == true end)
 end
 
 -- 0..1 how lit the room is, while asleep (the sleep system's reading)
@@ -314,6 +336,7 @@ local function migraineParts(player)
     if DanTraits_ConcussionStrength then parts.concussion = MIG_CONCUSSION * strength("DanTraits_ConcussionStrength", player) end
     if DanTraits_ConcussionLateStrength then parts.concussionLate = MIG_CONCUSSION_LATE * strength("DanTraits_ConcussionLateStrength", player) end
     if DanTraits_TinnitusRinging then parts.noise = MIG_NOISE * strength("DanTraits_TinnitusRinging", player) end
+    if DanTraits_SensoryOverload then parts.overload = MIG_OVERLOAD * strength("DanTraits_SensoryOverload", player) end
     if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * strength("DanTraits_CaffeineWithdrawalOf", player) end
     if DanTraits_InfectionFever then parts.fever = MIG_FEVER * strength("DanTraits_InfectionFever", player) end
     parts.light = MIG_SLEEP_LIGHT * sleepLit(player) + (inBrightLight(player) and MIG_LIGHT or 0)
@@ -395,6 +418,7 @@ local function updateMigraineTen(player, d)
     d = migData(player)
     rollTriggers(d)
     if d.migActive or d.migAuraLeft then return end
+    noteSight(player, d)
     if d.migSinceEnd < MIG_REFRACTORY_H then
         d.migSinceEnd = d.migSinceEnd + 10 / 60
         return
@@ -485,7 +509,7 @@ end
 -- the attack in progress ends, Short Sighted is given back, the moodle comes off
 local function clearMigraine(player, d)
     if not d then return end
-    if d.migBlur ~= nil then updateBlur(player, d, false) end
+    if d.migBlur ~= nil or d.migActive then updateBlur(player, d, false) end
     d.migGlare = nil
     if not d.migActive and not d.migAuraLeft then return end
     d.migAuraLeft, d.migActive, d.migHoursLeft, d.migCause = nil, false, 0, nil
@@ -550,8 +574,8 @@ local function updateMigraineMinute(player, d)
     if glare > 0 then d.migGlare = clamp01(glare / MIG_PAIN_LIGHT) end
     pcall(function()
         local stats = player:getStats()
-        DanTraits_PainFloor(player, d, "migraine", (MIG_PAIN * s + glare) * ease, MIG_RAMP)
-        floorUp(stats, CharacterStat.FOOD_SICKNESS, MIG_SICK * s * ease, MIG_RAMP)
+        DanTraits_PainFloor(player, d, "migraine", (MIG_PAIN * s + glare) * ease, MIG_PAIN_RAMP)
+        floorUp(stats, CharacterStat.FOOD_SICKNESS, MIG_SICK * s * ease, MIG_SICK_RAMP)
         floorUp(stats, CharacterStat.UNHAPPINESS, MIG_MOOD, MIG_RAMP)
         stats:set(CharacterStat.STRESS, math.min(1, (stats:get(CharacterStat.STRESS) or 0) + MIG_STRESS_RATE * s))
     end)

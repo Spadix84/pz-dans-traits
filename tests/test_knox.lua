@@ -1,5 +1,5 @@
 -- Offline test for DanTraits_Knox.lua: Resilient's hidden roll against the
--- Knox infection (sandbox KnoxSurviveChance, 10 by default and at most; a
+-- Knox infection (sandbox KnoxSurviveChance, 10 by default; a
 -- Run Down body has less), made once per infection; a lucky one is cleared
 -- (parts, body, clock, infection and fever stats) when the infection has run
 -- its break point, with a notice; an unlucky one is left to vanilla; no roll

@@ -188,4 +188,64 @@ local scored = newPlayer({ light = 0.1 }); H.current = scored
 for _ = 1, 5 do minute() end
 scored._asleep = false; minute()
 assert(scored._md.DanTraits.slNightMin == 5, "awake with Vitality on: kept for the night's score")
+
+-- 12. clothes in bed: sleepwear is free; other slots add up to 1; warm clothes fade from 20C to 10C
+-- and are free while cold; gear always counts; slower rest, a worse score, Deep Sleeper half, a notice
+H.roll = 9999
+local function dress(p, ...)
+  p._worn = {}
+  for _, loc in ipairs({ ... }) do p._worn[#p._worn + 1] = { type = "Base.X", name = loc, loc = "base:" .. loc } end
+end
+local cost = DanTraits_SleepClothesCost
+local bed = newPlayer({ light = 0.425, moodles = {} }); H.current = bed
+MoodleType = { HYPOTHERMIA = "HYPOTHERMIA" }
+dress(bed, "tshirt", "underwear_bottom", "socks", "shorts_short", "necklace", "eyes")
+near(cost(bed), 0, 1e-9, "sleepwear and jewellery: free")
+dress(bed, "pants", "shirt", "shoes")
+near(cost(bed), 0.65, 1e-9, "jeans, shirt, shoes at 20C")
+H.climate.temp = 15
+near(cost(bed), 0.25 + (0.25 + 0.15) / 2, 1e-9, "15C: warm clothes at half, shoes in full")
+H.climate.temp = 5; near(cost(bed), 0.25, 1e-9, "5C: only the shoes")
+H.climate.temp = 20; bed._moodles.HYPOTHERMIA = 1
+near(cost(bed), 0.25, 1e-9, "feeling cold: warm clothes free")
+bed._moodles.HYPOTHERMIA = 0
+dress(bed, "pants", "shirt", "sweater", "jacketbulky", "shoes", "back", "webbing")
+near(cost(bed), 1, 1e-9, "fully kitted: capped at 1")
+-- the game's own spellings (B42 scripts: base:sweaterhat, base:fullsuit, base:maskfull;
+-- 2026-10-22: the table kept underscores and 34 of 72 slots never matched)
+dress(bed, "sweaterhat", "fullsuit", "maskfull")
+near(cost(bed), 0.25 + 0.4 + 0.2, 1e-9, "hoodie, hazmat suit, gas mask with B42 ids")
+H.climate.temp = 5; near(cost(bed), 0.2, 1e-9, "5C: only the mask counts"); H.climate.temp = 20
+dress(bed, "Sweater_Hat", "Full_Suit", "Mask_Full")
+near(cost(bed), 0.25 + 0.4 + 0.2, 1e-9, "the B41 spellings land on the same slots")
+SandboxVars = { DanTraits = { SleepClothesEnabled = false } }
+near(cost(bed), 0, 1e-9, "off: free")
+SandboxVars = nil
+
+-- rest x (1 - 0.12 x cost), score -0.1 x cost
+dress(bed, "pants", "shirt", "shoes")
+bed._st.fatigue = 0.5; minute(); bed._st.fatigue = 0.4; minute()
+near(bed._st.fatigue, 0.5 - 0.1 * (1 - 0.12 * 0.65), 1e-6, "dressed: rest slower")
+near(DanTraits_RunHooks("nightQuality", 0.5, bed, bed._md.DanTraits), 0.5 - 0.1 * 0.65, 1e-6, "dressed: night scores worse")
+local deepBed = newPlayer({ traits = { "deepsleeper" }, light = 0.425 }); H.current = deepBed
+dress(deepBed, "pants", "shirt", "shoes")
+deepBed._st.fatigue = 0.5; minute(); deepBed._st.fatigue = 0.4; minute()
+near(deepBed._st.fatigue, 0.5 - 0.1 * (1 - 0.12 * 0.65 * 0.5), 1e-6, "deep sleeper: half the rest cost")
+near(DanTraits_RunHooks("nightQuality", 0.5, deepBed, deepBed._md.DanTraits), 0.5 - 0.1 * 0.65 * 0.5, 1e-6, "deep sleeper: half the score cost")
+
+-- the notice: on waking after an hour or more dressed at 0.25 or worse; not in sleepwear, not after a short nap
+local function sleepFor(p, minutes)
+  H.current = p; p._asleep = true
+  for _ = 1, minutes do minute() end
+  local n = #halo
+  p._asleep = false; minute()
+  return #halo > n and halo[#halo] == "UI_DanTraits_SleepClothed"
+end
+assert(sleepFor(bed, 60), "an hour dressed: told on waking")
+assert(not sleepFor(bed, 30), "half an hour: no notice")
+dress(bed, "tshirt", "underwear_bottom")
+assert(not sleepFor(bed, 120), "sleepwear: no notice")
+dress(bed, "belt", "shoes")
+assert(sleepFor(bed, 60), "shoes on: told")
+MoodleType = nil
 H.pass()

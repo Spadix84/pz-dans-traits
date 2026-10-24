@@ -276,7 +276,7 @@ local function updateHomeMinute(player, d)
     if not asleep then
         if atHome and s > 0 then
             local k = s * mult(player)
-            DanTraits_StatAdd(stats, CharacterStat.BOREDOM, -HM_BOREDOM * k)
+            DanTraits_StatAdd(stats, CharacterStat.BOREDOM, -DanTraits_RunHooks("homeBoredom", HM_BOREDOM * k, player))   -- ADHD: half
             DanTraits_StatAdd(stats, CharacterStat.UNHAPPINESS, -HM_UNHAPPY * k)
             DanTraits_StatAdd(stats, CharacterStat.STRESS, -HM_STRESS * k)
         elseif sick > 0 then

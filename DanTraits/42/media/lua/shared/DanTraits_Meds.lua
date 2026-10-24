@@ -18,8 +18,15 @@
 -- Rescue drugs (diazepam, sumatriptan, nitroglycerin) and course drugs (prednisone, taken through an MS
 -- flare) work at once: the effect is 1 while covered.
 -- Regimen drugs keep their model in their trait file and lend it to this one
--- through state() (antidepressants: Depression's two-week streak). Supplements
+-- through state() (antidepressants: Depression's three-day streak). Supplements
 -- (iron) only get the side effect roll here.
+--
+-- Daily drugs, and the antidepressant, also have a schedule (everyH: once a
+-- day or every 12 hours) and the bottle they come in (item, for the name).
+-- Every dose notes the time it went down (lastH, world hours), so the health
+-- panel can say when each was last taken, and a character on one for a trait
+-- they have gets the Medication moodle: due from DUE_EARLY_H before the
+-- interval is up, missed once it has worn off and the effect is slipping.
 --
 -- Side effects: the first dose on each game day rolls the side effect chance
 -- (sandbox MedSideEffectChance, percent, default 3; 0 turns them off). A hit
@@ -44,7 +51,8 @@
 -- back the way it was after the pill, so they only do what this list says.
 -- That panic drop belongs to diazepam now.
 --
--- Mod data: meds[id] = { lvl, built, day (last game day dosed), sideMin
+-- Mod data: meds[id] = { lvl, built, day (last game day dosed), lastH (world
+-- hours at the last dose; nil on a save from before it was kept), sideMin
 -- (minutes of side effect left), over (overdose running), overMin (minutes
 -- of it left) }.
 -- Old saves: the traits' own levels (hcBeta, epMeds, diaMedMinutes, msPred,
@@ -55,33 +63,35 @@ require "DanTraits"
 local notify = DanTraits_Notify
 
 local SIDE_CHANCE_DEFAULT = 3          -- percent, on each day a drug is taken
+local DUE_EARLY_H         = 2          -- a scheduled dose is due this many hours before its interval is up
 local DZ_PANIC_RATE       = 0.6        -- diazepam: panic per 30fps tick, the vanilla beta blocker rate
 
 -- The drug list. items: lower-case item types (getType) that are a dose.
 -- treats: trait ids (or what it is for), for the tooltip and the UI. kind: daily | rescue | course | regimen | supplement.
+-- everyH: hours between scheduled doses; item: the full type its name is read from.
 DanTraits_Drugs = {
     beta = {
-        items = { "pillsbeta" }, treats = { "heart" }, kind = "daily",
+        items = { "pillsbeta" }, treats = { "heart" }, kind = "daily", everyH = 24, item = "Base.PillsBeta",
         halfH = 24, onAt = 0.5, overAt = 3, buildDays = 3, fadeDays = 3,   -- once a day, like metformin
         side = { regen = 0.8 }, sideH = 8,
         over = { fatigue = 0.0005, faint = 0.002 },
         lapse = "UI_DanTraits_HeartBetaLapse", lapseTrait = "heart",
     },
     anticonvulsant = {
-        items = { "anticonvulsants" }, treats = { "epilepsy" }, kind = "daily",
+        items = { "anticonvulsants" }, treats = { "epilepsy" }, kind = "daily", everyH = 12, item = "DanTraits.Anticonvulsants",
         halfH = 12, onAt = 0.5, overAt = 3, buildDays = 5, fadeDays = 3,
         side = { fatigue = 0.0003 }, sideH = 8,
         over = { fatigue = 0.0012, regen = 0.7 },
         lapse = "UI_DanTraits_EpilepsyMedsLapse", lapseTrait = "epilepsy",
     },
     metformin = {
-        items = { "metformin" }, treats = { "diabetes2" }, kind = "daily",
+        items = { "metformin" }, treats = { "diabetes2" }, kind = "daily", everyH = 24, item = "DanTraits.Metformin",
         halfH = 24, onAt = 0.5, overAt = 3, buildDays = 2, fadeDays = 2,
         side = { sick = 30 }, sideH = 8,
         over = { sick = 50 },
     },
     antidepressant = {
-        items = { "pillsantidep" }, treats = { "spiraling" }, kind = "regimen",
+        items = { "pillsantidep" }, treats = { "spiraling" }, kind = "regimen", everyH = 24, item = "Base.PillsAntiDep",
         side = { sick = 30 }, sideH = 8,
         state = function(player)
             if not DanTraits_MddBenefit or not DanTraits_HasTrait(player, "spiraling") then return nil end
@@ -110,7 +120,7 @@ DanTraits_Drugs = {
         lapse = "UI_DanTraits_MSPredLapse", lapseTrait = { "ms", "arthritis" },
     },
     baclofen = {
-        items = { "baclofen" }, treats = { "ms" }, kind = "daily",
+        items = { "baclofen" }, treats = { "ms" }, kind = "daily", everyH = 12, item = "DanTraits.Baclofen",
         halfH = 12, onAt = 0.5, overAt = 3, buildDays = 2, fadeDays = 2,
         taking = { fatigue = 0.0001 },
         side = { regen = 0.85 }, sideH = 8,
@@ -118,12 +128,23 @@ DanTraits_Drugs = {
         lapse = "UI_DanTraits_MSBacLapse", lapseTrait = "ms",
     },
     amantadine = {
-        items = { "amantadine" }, treats = { "ms" }, kind = "daily",
+        items = { "amantadine" }, treats = { "ms" }, kind = "daily", everyH = 12, item = "DanTraits.Amantadine",
         halfH = 12, onAt = 0.5, overAt = 3, buildDays = 3, fadeDays = 3,
         taking = { thirst = 0.0001 },
         side = { sick = 30 }, sideH = 6,
         over = { stress = 0.0015 },
         lapse = "UI_DanTraits_MSAmanLapse", lapseTrait = "ms",
+    },
+    -- the muscle relaxant, for anyone (DanTraits_Relaxant.lua reads the cover):
+    -- a sore back, a pulled muscle, stiffness; drowsy and a dry mouth while it works
+    cyclobenzaprine = {
+        items = { "cyclobenzaprine" }, treats = { "pain" }, kind = "rescue",
+        halfH = 8, onAt = 0.5, overAt = 2.5,   -- one covers about 8 hours; three close together is too many
+        taking = { fatigue = 0.0003, thirst = 0.0001 },
+        side = { fatigue = 0.0006 }, sideH = 6,   -- a heavy, dizzy day
+        overH = 6,   -- the overdose lasts at least this long after the level falls back
+        over = { fatigue = 0.0015, faint = 0.003, heart = true },   -- a racing heart, like the tricyclics it is kin to
+        lapse = "UI_DanTraits_RelaxantLapse",
     },
     -- Everything else that is taken. The trait files still do what each one is
     -- for (the inhaler's relief, the gum's craving, the game's own painkiller,
@@ -178,7 +199,7 @@ DanTraits_Drugs = {
     -- insulin: Diabetes keeps the doses (a low blood sugar is its overdose);
     -- listed so the tracking UI can show the doses on board
     insulin = {
-        items = { "insulinpen" }, treats = { "diabetes1", "diabetes2" }, kind = "regimen",
+        items = { "insulinpen", "insulinvial" }, treats = { "diabetes1", "diabetes2" }, kind = "regimen",
         state = function(player)
             local d = DanTraits_Data(player)
             local doses = 0
@@ -209,11 +230,13 @@ local function stateOf(d, id)
     return m[id]
 end
 
-local function today()
+local function hoursNow()
     local h = 0
     pcall(function() h = getGameTime():getWorldAgeHours() or 0 end)
-    return math.floor(h / 24)
+    return h
 end
+
+local function today() return math.floor(hoursNow() / 24) end
 
 local function sideChance() return math.max(0, DanTraits_SandboxNum("MedSideEffectChance", SIDE_CHANCE_DEFAULT)) end
 
@@ -301,6 +324,77 @@ function DanTraits_MedEffect(player, id)
     return built
 end
 
+-- Scheduled doses ----------------------------------------------------------------
+
+-- the character has the trait (or any of the traits): who gets a drug's lapse notice, and whose schedule it is on
+local function hasLapseTrait(player, lapseTrait)
+    if not lapseTrait then return true end
+    if type(lapseTrait) == "table" then
+        for _, key in ipairs(lapseTrait) do if DanTraits_HasTrait(player, key) then return true end end
+        return false
+    end
+    return DanTraits_HasTrait(player, lapseTrait)
+end
+
+-- hours since the last dose went down, or nil (never taken, or a save from before it was noted)
+function DanTraits_MedSince(player, id)
+    local d = player and DanTraits_Data(player)
+    local s = d and d.meds and d.meds[id]
+    if not s or not s.lastH then return nil end
+    return math.max(0, hoursNow() - s.lastH)
+end
+
+-- in the system: a regimen drug by its own state (the coverage left), the rest by onAt
+local function inSystem(drug, lvl)
+    if drug.onAt then return lvl >= drug.onAt end
+    return lvl > 0
+end
+
+-- hours until the next scheduled dose is due (0 once it is), or nil when the last one was not noted
+function DanTraits_MedNextIn(player, id)
+    local drug = DanTraits_Drugs[id]
+    local since = DanTraits_MedSince(player, id)
+    if not drug or not drug.everyH or not since then return nil end
+    return math.max(0, drug.everyH - DUE_EARLY_H - since)
+end
+
+-- in the system now, by the drug's own measure
+function DanTraits_MedInSystem(player, id)
+    local drug = DanTraits_Drugs[id]
+    if not drug then return false end
+    return inSystem(drug, (DanTraits_MedState(player, id)))
+end
+
+-- 0 nothing to do, 1 the next dose is due, 2 it has worn off while the effect
+-- is still there to lose (once that is all gone you are off it: nothing)
+function DanTraits_MedDue(player, id)
+    local drug = DanTraits_Drugs[id]
+    if not drug or not drug.everyH or not player then return 0 end
+    local lvl, built = DanTraits_MedState(player, id)
+    if not inSystem(drug, lvl) then return built > 0 and 2 or 0 end
+    local nextIn = DanTraits_MedNextIn(player, id)
+    if nextIn and nextIn <= 0 then return 1 end
+    return 0
+end
+
+-- the scheduled drugs for the traits this character has, by id
+function DanTraits_MedSchedule(player)
+    local out = {}
+    if not player then return out end
+    for id, drug in pairs(DanTraits_Drugs) do
+        if drug.everyH and hasLapseTrait(player, drug.treats) then out[#out + 1] = id end
+    end
+    table.sort(out)
+    return out
+end
+
+-- the Medication moodle: the worst of the character's scheduled drugs
+function DanTraits_MedDueLevel(player)
+    local worst = 0
+    for _, id in ipairs(DanTraits_MedSchedule(player)) do worst = math.max(worst, DanTraits_MedDue(player, id)) end
+    return worst
+end
+
 -- Dosing ------------------------------------------------------------------------
 
 local function rollSide(player, d, id)
@@ -324,8 +418,9 @@ function DanTraits_MedTake(player, id, amount)
     local d = DanTraits_Data(player)
     migrate(d)
     rollSide(player, d, id)
-    if not drug.halfH then return 0 end
     local s = stateOf(d, id)
+    s.lastH = hoursNow()
+    if not drug.halfH then return 0 end
     s.lvl = (s.lvl or 0) + (amount or 1)
     return s.lvl
 end
@@ -340,6 +435,7 @@ function DanTraits_MedStart(player, id)
     s.lvl = math.max(s.lvl or 0, 1)
     s.built = 1
     s.day = today()
+    s.lastH = hoursNow()
 end
 
 -- Every minute -------------------------------------------------------------------
@@ -355,16 +451,6 @@ local function applyEffect(player, d, fx, awakeOnly)
         and DanTraits_Roll(fx.faint) then
         DanTraits_PassOut(player, DanTraits_RandRange(2, 5), "UI_DanTraits_ComeTo", false)
     end
-end
-
--- the lapse notice goes to a character with the trait (or any of the traits) the drug treats
-local function hasLapseTrait(player, lapseTrait)
-    if not lapseTrait then return true end
-    if type(lapseTrait) == "table" then
-        for _, key in ipairs(lapseTrait) do if DanTraits_HasTrait(player, key) then return true end end
-        return false
-    end
-    return DanTraits_HasTrait(player, lapseTrait)
 end
 
 local function updateDrug(player, d, id, drug, s)
@@ -508,7 +594,7 @@ end
 local SPAWN_TYPES = {
     ["DanTraits.Anticonvulsants"] = true, ["DanTraits.Metformin"] = true, ["DanTraits.IronPills"] = true,
     ["DanTraits.Diazepam"] = true, ["DanTraits.NicotineGum"] = true, ["DanTraits.Inhaler"] = true,
-    ["DanTraits.Sumatriptan"] = true, ["DanTraits.Nitroglycerin"] = true,
+    ["DanTraits.Sumatriptan"] = true, ["DanTraits.Nitroglycerin"] = true, ["DanTraits.Cyclobenzaprine"] = true,
 }
 
 function DanTraits_MedRandomFill(item)

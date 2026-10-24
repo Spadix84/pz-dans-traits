@@ -38,6 +38,8 @@ local BONE_EGG        = 0.01
 local BONE_FOOD_DAY   = 0.06
 local BONE_EXERCISE_FROM = 0.5
 local BONE_EXERCISE_DAY  = 0.02
+local BONE_LEGS_MIN      = 20      -- minutes today on the legs (squats, burpees, a jog, a carry; DanTraits_Fitness.lua)...
+local BONE_LEGS_DAY      = 0.02    -- ...put this much more back a day: bone grows where it is loaded
 local HIT_TYPE        = "WEAPONHIT"   -- the one damage report that is a hit
 local BRITTLE_PARTS = {
     BodyPartType.ForeArm_L, BodyPartType.ForeArm_R,
@@ -107,6 +109,7 @@ local function updateBoneMinute(player, d)
     if d.brDay ~= day then d.brDay, d.brBoneDay = day, 0 end
     local drift = -BONE_DRIFT_DAY / 1440
     if (d.vitExercise or 0) >= BONE_EXERCISE_FROM then drift = drift + BONE_EXERCISE_DAY / 1440 end   -- Vitality's exercise score
+    if DanTraits_FitLegMinutes and DanTraits_FitLegMinutes(player) >= BONE_LEGS_MIN then drift = drift + BONE_LEGS_DAY / 1440 end
     d.brBone = clamp01(d.brBone + drift)
 end
 

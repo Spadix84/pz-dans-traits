@@ -15,7 +15,8 @@
 -- a point, so a bar buys three hours and a can six, and if that pushes the
 -- clock back under the onset the craving lifts for now. Smoking speeds up the
 -- half-life (the "caffeineClearance" hook, DanTraits_Smoker.lua). Every dose, trait or not,
--- is also passed to the sleep system: caffeine makes light wake you.
+-- is also passed to the sleep system (caffeine makes light wake you), MS's
+-- spoons and ADHD (a clearer head).
 -- Migraines read the withdrawal (DanTraits_CaffeineWithdrawalOf).
 require "DanTraits"
 
@@ -58,6 +59,7 @@ local function dose(player, amount, what)
     -- anyone's sleep feels it (DanTraits_Sleep.lua); the habit is the trait's
     if DanTraits_SleepOnCaffeine then DanTraits_SleepOnCaffeine(player, amount) end
     if DanTraits_SpoonMask then DanTraits_SpoonMask(player, amount) end   -- the spoon budget: a coffee hides the wall for an hour
+    if DanTraits_AdhdOnCaffeine then DanTraits_AdhdOnCaffeine(player, amount) end   -- ADHD: a clearer head
     if not hasTrait(player, "caffeine") then return false end
     local d = cafData(player)
     d.cafLevel = d.cafLevel + amount

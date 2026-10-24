@@ -54,6 +54,9 @@ local DIA_RENAL_ABOVE       = 180
 local DIA_RENAL_RATE        = 0.002   -- per minute x (glucose - 180)
 local DIA_EXERCISE_DROP     = 0.5     -- per minute while running, sprinting or exerted
 local DIA_EXERT_ENDURANCE   = 0.6     -- "exerted" means endurance under this AND still being spent (Asthma's test)
+local DIA_TRAIN_DROP        = 1.0     -- per minute of a workout (DanTraits_Fitness.lua: the window's exercises, a loaded carry, a jog)
+local DIA_AFTER_DROP        = 0.2     -- per minute after one, x the afterglow left (Pumped, fading over its hours)
+local DIA_T2_AFTER_CUT      = 0.1     -- Type 2 resistance off, x the afterglow left
 local DIA_SLEEP_DROP        = 0.05    -- per minute asleep
 local DIA_PANIC_MIN         = 30      -- panic below this (out of 100) does nothing
 local DIA_PANIC_RISE        = 0.15    -- per minute at full panic, scaling linearly from the minimum (was 0.4: too fast in play)
@@ -87,7 +90,8 @@ local DIA_HIGH_DRAIN_AFTER  = 2                   -- ...once this many hours hav
                                                   -- a spike after a meal costs nothing, hours of it do (2026-10-08)
 local DIA_FEVER_RISE        = 0.1                 -- mg/dL per minute at full fever: illness raises blood sugar (sick day rules)
 local DIA_HEALTH_FLOOR      = 15                  -- percent: symptoms stop short of this...
-local DIA_KETO_HOURS        = 24                  -- ...until you have spent this long above the top threshold, then the floor is gone
+local DIA_KETO_DAYS         = 1                   -- ...and above the top threshold for hours on end the floor sinks, gone after
+                                                  -- this many days (sandbox UntreatedDiabetesDays: 0 never, 1 the old day)
 local DIA_MDD_UNHAPPY_MULT  = 1.5                 -- high-sugar mood floor during a depressive episode
 local DIA_HALO_MIN          = { 10, 5, 3 }        -- minutes between symptom messages by tier, plus up to as many again
 local DIA_MOODLE_TIER       = { 0.3, 0.6, 0.9 }   -- the BloodSugar moodle: value tier / 3, one moodle level per tier
@@ -96,6 +100,8 @@ local DIA_INF_HAZARD       = 1.0                 -- wound infection chance x (1 
 local DIA_INF_GROWTH       = 0.5                 -- infection climb x (1 + this x t): high sugar feeds it and slows healing
 
 local INSULIN_ITEM   = "DanTraits.InsulinPen"
+local VIAL_ITEM      = "DanTraits.InsulinVial"      -- the same insulin, drawn up with a syringe
+local SYRINGE_ITEM   = "DanTraits.InsulinSyringe"   -- never used up
 local METER_ITEM     = "DanTraits.GlucoseMeter"
 local STRIPS_ITEM    = "DanTraits.TestStrips"
 local METFORMIN_ITEM = "DanTraits.Metformin"
@@ -131,6 +137,7 @@ local function diaResistance(player, d)
     res = res - DIA_T2_EXERCISE_CUT * (DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0)
     if DanTraits_MedEffect then res = res - DIA_T2_PILL_CUT * DanTraits_MedEffect(player, "metformin") end
     if DanTraits_VitalityDiaResistance then res = res + DanTraits_VitalityDiaResistance(player) end   -- fit: lower, run down: higher
+    if DanTraits_FitAfterglow then res = res - DIA_T2_AFTER_CUT * DanTraits_FitAfterglow(player) end   -- a workout's hours after
     res = DanTraits_RunHooks("diaResistance", res, player, d)   -- Age: higher in the 40s, lower in the 20s
     return math.max(0, math.min(1, res))
 end
@@ -486,6 +493,18 @@ local function diaBlackout(player, d)
     end
 end
 
+-- the health floor for hours spent above the top threshold: DIA_HEALTH_FLOOR
+-- when the drain starts, sinking in a straight line to 0 at the sandbox's
+-- UntreatedDiabetesDays (1: a day, as before 2026-10-20; 0: it never sinks)
+function DanTraits_DiaHighFloor(hours)
+    local days = DanTraits_SandboxNum("UntreatedDiabetesDays", DIA_KETO_DAYS)
+    if days <= 0 then return DIA_HEALTH_FLOOR end
+    local span = days * 24 - DIA_HIGH_DRAIN_AFTER
+    if span <= 0 then return 0 end
+    local t = ((hours or 0) - DIA_HIGH_DRAIN_AFTER) / span
+    return DIA_HEALTH_FLOOR * math.max(0, math.min(1, 1 - t))
+end
+
 local function updateDiabetesMinute(player, d)
     if not diaHas(player) then
         if d and d.diaMoodle then diaMoodle(player, d, 0, 0) end
@@ -536,7 +555,15 @@ local function updateDiabetesMinute(player, d)
 
     -- everything else
     if g > DIA_RENAL_ABOVE then g = g - (g - DIA_RENAL_ABOVE) * DIA_RENAL_RATE end
-    if moving or (spending and endurance < DIA_EXERT_ENDURANCE) then g = g - DIA_EXERCISE_DROP end
+    -- a workout burns more than running about; stretching and hard work count as
+    -- the exertion they are. After one, the muscles keep drawing sugar in for hours.
+    local trainKey = DanTraits_FitTrainingNow and DanTraits_FitTrainingNow(player) or nil
+    if trainKey and trainKey ~= "dtstretch" and trainKey ~= "dtwork" then
+        g = g - DIA_TRAIN_DROP
+    elseif moving or (spending and endurance < DIA_EXERT_ENDURANCE) then
+        g = g - DIA_EXERCISE_DROP
+    end
+    if DanTraits_FitAfterglow then g = g - DIA_AFTER_DROP * DanTraits_FitAfterglow(player) end
     if asleep then g = g - DIA_SLEEP_DROP end
     if drunk then g = g - DIA_ALCOHOL_DROP end
     if panic > DIA_PANIC_MIN then g = g + (panic - DIA_PANIC_MIN) / (100 - DIA_PANIC_MIN) * DIA_PANIC_RISE end
@@ -557,10 +584,9 @@ local function updateDiabetesMinute(player, d)
     if low == 0 and high == 0 then return end
 
     -- the symptoms (the stat helpers never throw; the body-damage calls are the game's)
-    local function drainHealth(perMinute, floorOff)
+    local function drainHealth(perMinute, floor)
         pcall(function()
             local bd = player:getBodyDamage()
-            local floor = floorOff and 0 or DIA_HEALTH_FLOOR
             if bd:getOverallBodyHealth() > floor then
                 bd:ReduceGeneralHealth(math.min(perMinute, bd:getOverallBodyHealth() - floor))
             end
@@ -572,7 +598,7 @@ local function updateDiabetesMinute(player, d)
         statAdd(stats, CharacterStat.PANIC, DIA_LOW_PANIC[low])
         floorUp(stats, CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
         if low >= 3 then
-            drainHealth(DIA_LOW_HP_DRAIN, false)
+            drainHealth(DIA_LOW_HP_DRAIN, DIA_HEALTH_FLOOR)
             if not asleep then diaBlackout(player, d) end
         end
     else
@@ -583,7 +609,7 @@ local function updateDiabetesMinute(player, d)
         floorUp(stats, CharacterStat.UNHAPPINESS, mood, DIA_STAT_RAMP)
         floorUp(stats, CharacterStat.FOOD_SICKNESS, DIA_HIGH_SICK_FLOOR[high], DIA_STAT_RAMP)
         if high >= 3 and d.diaKetoHours >= DIA_HIGH_DRAIN_AFTER then
-            drainHealth(DIA_HIGH_HP_DRAIN, d.diaKetoHours >= DIA_KETO_HOURS)
+            drainHealth(DIA_HIGH_HP_DRAIN, DanTraits_DiaHighFloor(d.diaKetoHours))
         end
     end
 end
@@ -601,17 +627,36 @@ function DanTraits_ExtraFumble(player)
     return diaData(player).diaFumble or 0
 end
 
-function DanTraits_IsInsulin(item) return DanTraits_IsItem(item, INSULIN_ITEM) end
+-- a pen or a vial; a vial needs a syringe to inject (DanTraits_InsulinSyringeFor)
+function DanTraits_IsInsulin(item) return DanTraits_IsItem(item, INSULIN_ITEM) or DanTraits_IsItem(item, VIAL_ITEM) end
+function DanTraits_IsInsulinVial(item) return DanTraits_IsItem(item, VIAL_ITEM) end
+function DanTraits_IsSyringe(item) return DanTraits_IsItem(item, SYRINGE_ITEM) end
+
+-- what it takes to inject from this item: true for a pen, the first syringe
+-- carried (bags too) for a vial, nil when a vial has none to draw it up with
+function DanTraits_InsulinSyringeFor(player, item)
+    if not DanTraits_IsInsulinVial(item) then return true end
+    local found
+    pcall(function()
+        local all = player:getInventory():getAllEvalRecurse(DanTraits_IsSyringe)
+        if all and all:size() > 0 then found = all:get(0) end
+    end)
+    return found
+end
 function DanTraits_IsMeter(item) return DanTraits_IsItem(item, METER_ITEM) end
 function DanTraits_IsStrips(item) return DanTraits_IsItem(item, STRIPS_ITEM) end
 function DanTraits_IsMetformin(item) return DanTraits_IsItem(item, METFORMIN_ITEM) end
 
--- Type 1 starts with a meter, strips and three pens; Type 2 with a meter, strips and metformin,
--- built up. With the Starting Medication sandbox option off, only the meter and strips.
+-- Type 1 starts with a meter, strips, a syringe and three pens; Type 2 with a meter, strips and
+-- metformin, built up. With the Starting Medication sandbox option off, the meter and strips
+-- (and Type 1's syringe, for the vials it will have to find or make).
 DanTraits_StartingKit({
     trait = diaHas, flag = "diaKitGiven",
     setup = function(player) diaData(player) end,   -- the starting sugar
-    always = { METER_ITEM, STRIPS_ITEM },
+    always = function(player)
+        if hasTrait(player, "diabetes1") then return { METER_ITEM, STRIPS_ITEM, SYRINGE_ITEM } end
+        return { METER_ITEM, STRIPS_ITEM }
+    end,
     items = function(player)
         if hasTrait(player, "diabetes1") then return { INSULIN_ITEM, INSULIN_ITEM, INSULIN_ITEM } end
         return { METFORMIN_ITEM }
@@ -620,6 +665,53 @@ DanTraits_StartingKit({
 })
 
 DanTraits_Every("minute", "Diabetes", updateDiabetesMinute, 40)
+
+-- Animal insulin: butchering a mammal gives its pancreas, for the extraction
+-- recipes in DanTraits.txt. The game's AnimalPartsDefinitions keeps one parts
+-- list per kind, shared by every breed and sex (all the adult pigs read one
+-- table), so each list gets the entry once. One per carcass ("nb" is a fixed
+-- count: ButcheringUtil.addAnimalPart skips its size and skill scaling).
+-- Rats, mice and birds give none.
+local PANCREAS_ITEM       = "DanTraits.Pancreas"
+local PANCREAS_SMALL_ITEM = "DanTraits.PancreasSmall"
+local PANCREAS_OF = {
+    cowangus = PANCREAS_ITEM, bullangus = PANCREAS_ITEM, cowcalfangus = PANCREAS_ITEM,
+    cowsimmental = PANCREAS_ITEM, bullsimmental = PANCREAS_ITEM, cowcalfsimmental = PANCREAS_ITEM,
+    cowholstein = PANCREAS_ITEM, bullholstein = PANCREAS_ITEM, cowcalfholstein = PANCREAS_ITEM,
+    sowlandrace = PANCREAS_ITEM, boarlandrace = PANCREAS_ITEM, pigletlandrace = PANCREAS_SMALL_ITEM,
+    sowlargeblack = PANCREAS_ITEM, boarlargeblack = PANCREAS_ITEM, pigletlargeblack = PANCREAS_SMALL_ITEM,
+    ewesuffolk = PANCREAS_ITEM, ramsuffolk = PANCREAS_ITEM, lambsuffolk = PANCREAS_SMALL_ITEM,
+    ewerambouillet = PANCREAS_ITEM, ramrambouillet = PANCREAS_ITEM, lambrambouillet = PANCREAS_SMALL_ITEM,
+    ewefriesian = PANCREAS_ITEM, ramfriesian = PANCREAS_ITEM, lambfriesian = PANCREAS_SMALL_ITEM,
+    doewhitetailed = PANCREAS_ITEM, buckwhitetailed = PANCREAS_ITEM, fawnwhitetailed = PANCREAS_SMALL_ITEM,
+    rabdoeswamp = PANCREAS_SMALL_ITEM, rabbuckswamp = PANCREAS_SMALL_ITEM,
+    rabdoeappalachian = PANCREAS_SMALL_ITEM, rabbuckappalachian = PANCREAS_SMALL_ITEM,
+    rabdoecottontail = PANCREAS_SMALL_ITEM, rabbuckcottontail = PANCREAS_SMALL_ITEM,
+    raccoonsowgrey = PANCREAS_SMALL_ITEM, raccoonboargrey = PANCREAS_SMALL_ITEM,
+}
+
+function DanTraits_AddPancreasParts()
+    local defs = AnimalPartsDefinitions and AnimalPartsDefinitions.animals
+    if type(defs) ~= "table" then return 0 end
+    local added = 0
+    for animal, item in pairs(PANCREAS_OF) do
+        local parts = type(defs[animal]) == "table" and defs[animal].parts
+        if type(parts) == "table" then
+            local has = false
+            for _, part in pairs(parts) do
+                if type(part) == "table" and (part.item == PANCREAS_ITEM or part.item == PANCREAS_SMALL_ITEM) then has = true end
+            end
+            if not has then
+                table.insert(parts, { item = item, nb = 1 })
+                added = added + 1
+            end
+        end
+    end
+    return added
+end
+
+DanTraits_AddPancreasParts()   -- vanilla's shared definitions load before the mods'
+if Events and Events.OnGameBoot then Events.OnGameBoot.Add(DanTraits_AddPancreasParts) end   -- and again, if not
 
 -- Drinks are fluid containers, not food: hook the drink action and read the
 -- carbohydrates of the fluid times the litres that actually went down. The

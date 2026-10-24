@@ -114,6 +114,19 @@ assert(DanTraits_VitalitySleepNeed(wk) == 5 and DanTraits_VitalitySleepNeed(nt) 
 wk._asleep = true; wk._hours = 200; minute(); wk._hours = 205; wk._asleep = false; wk._st.fatigue = 0; for _ = 1, 60 do minute() end
 near(V(wk).vitLastSleepQuality, 1, 1e-9, "5 h fully rested is a perfect night for Wakeful")
 local mo = newPlayer({ vanilla = { "base:needsmoresleep" } }); assert(DanTraits_VitalitySleepNeed(mo) == 9, "Sleepyhead needs 9")
+-- a short sleep that cleared the tiredness it started with counts as full hours
+local sh = newPlayer(); H.current = sh
+sh._st.fatigue = 0.5; sh._asleep = true; sh._hours = 400; minute()
+sh._hours = 404; sh._asleep = false; sh._st.fatigue = 0; for _ = 1, 60 do minute() end
+near(V(sh).vitLastSleepQuality, 1, 1e-9, "4 h from half tired to rested: a full night")
+-- cut short: the larger of hours and the share cleared
+sh._st.fatigue = 0.8; sh._asleep = true; sh._hours = 420; minute()
+sh._hours = 424; sh._asleep = false; sh._st.fatigue = 0.4; for _ = 1, 60 do minute() end
+near(V(sh).vitLastSleepQuality, (4 / 7) * 0.5 + 0.6 * 0.5, 1e-9, "4 h, 0.8 to 0.4: hours (0.57) beat the half cleared")
+-- barely tired at bedtime: hours alone
+sh._st.fatigue = 0.05; sh._asleep = true; sh._hours = 440; minute()
+sh._hours = 443.5; sh._asleep = false; sh._st.fatigue = 0; for _ = 1, 60 do minute() end
+near(V(sh).vitLastSleepQuality, (3.5 / 7) * 0.5 + 0.5, 1e-9, "not tired going to bed: no recovery credit")
 -- long stretches awake wear it down
 local awake = newPlayer(); H.current = awake; V(awake) ; minute()
 awake._md.DanTraits.vitSleep = 0.8; awake._md.DanTraits.vitAwakeMin = 20 * 60

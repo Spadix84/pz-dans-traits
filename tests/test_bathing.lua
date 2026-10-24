@@ -32,4 +32,23 @@ DanTraits_ApplySunblock(other, 480)
 bathEnd(other)
 assert(DanTraits_SunblockLeft(other) == 480, "not the local player: left alone")
 
+-- 3. in the water: the mode while that mod's flag is up, wet until it calls you dry
+local bathStart = H.on("OnBathingStart")
+local md = p:getModData()
+assert(DanTraits_BathingMode(p) == nil and not DanTraits_BathingWet(p), "dry and out")
+md.tabas_IsBathing = true
+bathStart(p, "SHOWER")
+assert(DanTraits_BathingMode(p) == "SHOWER" and DanTraits_BathingWet(p), "in the shower")
+bathStart(p, "BATH")
+assert(DanTraits_BathingMode(p) == "BATH", "in the bath")
+md.tabas_IsBathing = nil
+md.tabas_HasBathingWet = true
+bathEnd(p)
+assert(DanTraits_BathingMode(p) == nil and DanTraits_BathingWet(p), "out, still wet from it")
+md.tabas_HasBathingWet = nil
+assert(not DanTraits_BathingWet(p), "dry again")
+md.tabas_IsBathing = true
+assert(DanTraits_BathingMode(p) == "BATH", "flag up with no start seen (a reload): a bath")
+md.tabas_IsBathing = nil
+
 H.pass()

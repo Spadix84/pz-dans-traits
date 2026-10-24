@@ -273,6 +273,13 @@ do
   local tip = DanTraits_RunHooks("laundryTooltip", {}, garment(nil, { loc = "base:tshirt" }))
   assert(#tip == 1 and tip[1][1] == "Tooltip_DanTraits_NeverWashed", "the tooltip says never washed")
   assert(#DanTraits_RunHooks("laundryTooltip", {}, mine) == 0, "not on a known clean one")
+  -- dryer-sheet perfume itches too, and the tooltip says why
+  L.state(found).ds = L.state(found).n
+  assert(L.itch(p) == 1, "a dryer-sheet shirt itches")
+  local sheetTip = DanTraits_RunHooks("laundryTooltip", {}, found)
+  assert(#sheetTip == 1 and sheetTip[1][1] == "Tooltip_DanTraits_SheetItch", "the tooltip says dryer-sheet perfume")
+  L.state(found).ds = nil
+  assert(L.itch(p) == 0, "unscented: no itch")
   assert(#DanTraits_RunHooks("laundryTooltip", {}, boots) == 0, "nor on shoes")
   -- laundry off: nothing
   p._st.discomfort = 0

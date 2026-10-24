@@ -8,6 +8,13 @@
 -- option is greyed with the reason when nothing you carry needs it or the
 -- machine is running. The walk and the moves are the game's own transfer
 -- actions, so weight, room and interruptions behave as they always do.
+--
+-- Right-click a dryer (a combo set to dry, or the dryer of a stacked pair)
+-- with a box of dryer sheets on you and "Add a dryer sheet (N left)" puts one
+-- in for the next run (ISLaundryAction "sheet"). Greyed while it runs or
+-- once a sheet is in.
+require "DanTraits_Laundry"
+
 DanTraits_Washer = DanTraits_Washer or {}
 local M = DanTraits_Washer
 
@@ -93,12 +100,56 @@ function M.load(playerObj, washer, container, items)
     return moved
 end
 
+-- the dryer among the clicked objects (a combo only while set to dry)
+function M.dryerOf(worldobjects)
+    for _, obj in ipairs(worldobjects or {}) do
+        if is(obj, "IsoClothingDryer") or is(obj, "IsoStackedWasherDryer") then return obj end
+        if is(obj, "IsoCombinationWasherDryer") then
+            local dry = false
+            pcall(function() dry = not obj:isModeWasher() end)
+            if dry then return obj end
+        end
+    end
+    return nil
+end
+
+-- a box of dryer sheets with any left, bags included
+function M.sheetBox(playerObj)
+    for _, item in ipairs(DanTraits_Laundry.carried(playerObj)) do
+        local t = nil
+        pcall(function() t = item:getFullType() end)
+        if t == "DanTraits.DryerSheets" and DanTraits_ItemUses(item) > 0 then return item end
+    end
+    return nil
+end
+
+function M.addSheet(playerObj, dryer, box)
+    local near = true
+    pcall(function() near = luautils.walkAdj(playerObj, dryer:getSquare()) end)
+    if not near then return end
+    ISTimedActionQueue.add(ISLaundryAction:new(playerObj, box, "sheet", dryer))
+end
+
+function M.onDryerMenu(playerObj, context, worldobjects)
+    local L = DanTraits_Laundry
+    if not L or not L.on() then return end
+    local dryer = M.dryerOf(worldobjects)
+    if not dryer then return end
+    local box = M.sheetBox(playerObj)
+    if not box then return end
+    local option = context:addOption(getText("ContextMenu_DanTraits_DryerSheetLeft", DanTraits_ItemUses(box)), playerObj, M.addSheet, dryer, box)
+    if not option then return end
+    if L.runningDryer(dryer) then greyOut(option, "ContextMenu_DanTraits_DryerRunning")
+    elseif L.hasSheet(dryer) then greyOut(option, "ContextMenu_DanTraits_DryerSheetIn") end
+end
+
 function M.onMenu(playerNum, context, worldobjects, test)
-    if test then return end
-    local washer, container = M.washerOf(worldobjects)
-    if not washer or not context then return end
+    if test or not context then return end
     local playerObj = getSpecificPlayer(playerNum)
     if not playerObj then return end
+    M.onDryerMenu(playerObj, context, worldobjects)
+    local washer, container = M.washerOf(worldobjects)
+    if not washer then return end
     local items = M.dirtyClothes(playerObj)
     local option = context:addOption(getText("ContextMenu_DanTraits_WasherLoad", #items), playerObj, M.load, washer, container, items)
     if not option then return end

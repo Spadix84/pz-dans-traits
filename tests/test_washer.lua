@@ -1,4 +1,4 @@
--- Offline test for DansVanillaFixes/42/media/lua/client/DansVanillaFixes_WasherClient.lua:
+-- Offline test for DanTraits/42/media/lua/client/DanTraits_LaundryWasher.lua:
 -- the washer among the clicked objects (a washing machine, a combo set to wash,
 -- a stacked pair's washer; not a dryer or a combo set to dry), the dirty or
 -- bloody garments carried (bags included, the worn ones left out, everything
@@ -8,7 +8,7 @@
 local H = dofile((arg[0]:match("^(.*)[/\\]") or ".") .. "/harness.lua")
 H.events()
 H.stubs()
-local ROOT = (arg[0]:match("^(.*)[/\\]") or ".") .. "/../DansVanillaFixes/42/media/lua/"
+local ROOT = (arg[0]:match("^(.*)[/\\]") or ".") .. "/../DanTraits/42/media/lua/"
 
 instanceof = function(o, cls) return type(o) == "table" and o.kind == cls end
 local function obj(kind, o) o = o or {}; o.kind = kind; o.getSquare = function() return "sq" end; return o end
@@ -27,8 +27,8 @@ ISToolTip = { new = function() return { initialise = function() end, setVisible 
 local texts = {}
 getText = function(key, n) texts[#texts + 1] = key; return key .. (n and (":" .. tostring(n)) or "") end
 
-dofile(ROOT .. "client/DansVanillaFixes_WasherClient.lua")
-local M = DVF_Washer
+dofile(ROOT .. "client/DanTraits_LaundryWasher.lua")
+local M = DanTraits_Washer
 
 -- 1. which object is a washer
 local washer = obj("IsoClothingWasher", { getContainer = function() return "wc" end, isActivated = function() return false end })
@@ -69,7 +69,7 @@ local function menu(objects)
 end
 assert(#menu({ dryer }) == 0, "no washer: no option")
 local opts = menu({ washer })
-assert(#opts == 1 and opts[1].text == "ContextMenu_DVF_WasherLoad:3" and not opts[1].notAvailable, "one option, three garments, live")
+assert(#opts == 1 and opts[1].text == "ContextMenu_DanTraits_WasherLoad:3" and not opts[1].notAvailable, "one option, three garments, live")
 queued = {}
 assert(opts[1].run() == 3, "loads three")
 assert(walked == 1 and #queued == 3 and queued[1].item == shirt and queued[1].src == "main" and queued[1].dst == "wc", "a walk, then a transfer each into the washer")
@@ -78,11 +78,11 @@ getSpecificPlayer = function() return p2 end
 local p3 = { getInventory = function() return { getItems = function() return list({ clean }) end } end, isEquipped = function() return false end }
 getSpecificPlayer = function() return p3 end
 opts = menu({ washer })
-assert(opts[1].notAvailable and opts[1].toolTip.description == "ContextMenu_DVF_WasherNone", "nothing to load: greyed, says why")
+assert(opts[1].notAvailable and opts[1].toolTip.description == "ContextMenu_DanTraits_WasherNone", "nothing to load: greyed, says why")
 getSpecificPlayer = function() return p end
 washer.isActivated = function() return true end
 opts = menu({ washer })
-assert(opts[1].notAvailable and opts[1].toolTip.description == "ContextMenu_DVF_WasherRunning", "running: greyed, says why")
+assert(opts[1].notAvailable and opts[1].toolTip.description == "ContextMenu_DanTraits_WasherRunning", "running: greyed, says why")
 washer.isActivated = function() return false end
 -- the game's test pass (building the menu to see if anything would show) adds nothing
 local before = #queued
@@ -93,5 +93,42 @@ assert(#queued == before, "test pass: nothing")
 luautils.walkAdj = function() return false end
 queued = {}
 assert(M.load(p, washer, "wc", { shirt }) == 0 and #queued == 0, "cannot get there: nothing moves")
+
+-- 4. dryer sheets: offered on a dryer (a combo set to dry, a stacked pair) with a box
+--    carried, greyed while it runs or with a sheet in; the click walks up and queues the action
+luautils.walkAdj = function() walked = walked + 1; return true end
+DanTraits_ItemUses = DanTraits_ItemUses or function(item) return item:getCurrentUses() end
+local box = { kind = "Drainable", uses = 12, getFullType = function() return "DanTraits.DryerSheets" end }
+function box:getCurrentUses() return self.uses end
+local sheetIn, dryerOn = false, false
+local carried = { shirt }
+DanTraits_Laundry = {
+  on = function() return true end,
+  carried = function() return carried end,
+  runningDryer = function() return dryerOn and "dc" or nil end,
+  hasSheet = function() return sheetIn end,
+}
+ISLaundryAction = { new = function(_, player, item, kind, source) return { kind = kind, item = item, source = source } end }
+assert(M.dryerOf({ washer, dryer }) == dryer and M.dryerOf({ comboDry }) == comboDry and M.dryerOf({ stacked }) == stacked, "a dryer, a combo set to dry, a stacked pair")
+assert(M.dryerOf({ washer, comboWash }) == nil, "a washer, or a combo set to wash: not a dryer")
+assert(#menu({ dryer }) == 0, "no box carried: no option")
+carried = { shirt, box }
+opts = menu({ dryer })
+assert(#opts == 1 and opts[1].text == "ContextMenu_DanTraits_DryerSheetLeft:12" and not opts[1].notAvailable, "the option, sheets left, live")
+queued, walked = {}, 0
+opts[1].run()
+assert(walked == 1 and #queued == 1 and queued[1].kind == "sheet" and queued[1].item == box and queued[1].source == dryer, "a walk, then the sheet action")
+sheetIn = true
+opts = menu({ dryer })
+assert(opts[1].notAvailable and opts[1].toolTip.description == "ContextMenu_DanTraits_DryerSheetIn", "one in: greyed, says why")
+sheetIn, dryerOn = false, true
+opts = menu({ dryer })
+assert(opts[1].notAvailable and opts[1].toolTip.description == "ContextMenu_DanTraits_DryerRunning", "running: greyed, says why")
+dryerOn = false
+box.uses = 0
+assert(#menu({ dryer }) == 0, "an empty box: no option")
+box.uses = 12
+DanTraits_Laundry.on = function() return false end
+assert(#menu({ dryer }) == 0, "laundry off: no option")
 
 H.pass("washer")

@@ -304,6 +304,7 @@ function L.tooltipLines(item)
     if L.hasStain(item) then lines[#lines + 1] = { getText("Tooltip_DanTraits_Stain"), true } end
     local pr = (s and s.pr) or 0
     if pr > 0 then lines[#lines + 1] = { getText("Tooltip_DanTraits_ProtectorLeft", math.floor(pr * 100 + 0.5)), false } end
+    if L.sheeted(s) then lines[#lines + 1] = { getText("Tooltip_DanTraits_Sheeted"), false } end
     if s and (s.n or 0) > 0 then lines[#lines + 1] = { getText("Tooltip_DanTraits_Washes", s.n), false } end
     lines = DanTraits_RunHooks("laundryTooltip", lines, item) or lines
     if #lines == 0 then return nil end

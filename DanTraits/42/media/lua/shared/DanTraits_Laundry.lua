@@ -20,6 +20,8 @@
 --   sun  dried on a clothesline in daylight since its last wash
 --   sh   ...on a clothesline at home (laundryAtHome)
 --   ok   known clean though never washed here (a starting outfit)
+--   sw   damp from sweat (worn, away from rain), until it dries or is washed
+--   ds   dried with a dryer sheet: the wash count it belongs to (L.sheeted)
 --
 -- Worn clothes dry on the body much faster in the game than anywhere else
 -- (measured 2026-10-11 at 26 C: a soaked tee in about 20 game minutes, 300
@@ -27,7 +29,11 @@
 -- out of the washer cost nothing. Two brakes on that: each minute a worn
 -- garment keeps only LaundryBodyDryRate% (25) of the drying the game gave it
 -- since the last minute (rises, from rain or a wash, are left alone), and
--- every hour worn while damp adds LN.DAMP_WEAR odour.
+-- every hour worn while damp adds LN.DAMP_WEAR odour. Neither applies to
+-- sweat: in the heat the game wets worn clothes itself, and a garment that
+-- went damp on the body away from rain is marked (sw) until it dries, so it
+-- dries at the game's speed, keeps no damp clock and gathers only the sweat
+-- odour (hot summer days turned fresh boots stale in two hours, 2026-10-20).
 --
 -- Seen means: worn or carried (bags included), every ten minutes; anything
 -- else when it is next picked up. Damp at LN.DAMP_AT wetness or more; drying
@@ -40,14 +46,18 @@
 -- sweats is fresh (odour under LN.FRESH), dry, not dirty or bloody and not
 -- musty, Fresh Clothes eases unhappiness and stress a little; Line-Dried
 -- (half or more of it dried on a line in daylight since it was washed) twice
--- as much. Blood left on a part for LaundryStainDays sets in: half of it,
+-- as much. A dryer sheet in the dryer (DryerSheets, one per load) scents
+-- every garment the run leaves dry: worn, it gathers odour at LN.SHEET_ODOUR
+-- of the rate until its next wash. Clothes put away never gather odour here,
+-- so they stay fresh until worn with or without one. Blood left on a part for LaundryStainDays sets in: half of it,
 -- capped at LN.STAIN_CAP, which keeps a washed stain under the game's bloody
 -- line. Bleach (DanTraits_LaundryWash.lua) clears stains.
 --
 -- Mod data on the player (ln prefix): lnEx, lnHeat, lnMins (this ten
 -- minutes' exertion and heat), lnMoodle (the level DanTraits_Moodles.lua
 -- shows), lnHomeLine (Line-Dried, on a line at home), lnWashers
--- ({ "x,y,z" = true }: washers seen running).
+-- ({ "x,y,z" = true }: washers switched on or seen running, watched until idle),
+-- lnDryers (the same for dryers with a sheet in).
 --
 -- Traits reach in only through hooks (DanTraits_RunHooks), so this module
 -- names none of them but Germaphobe; DanTraits_LaundryTraits.lua has them:
@@ -67,7 +77,8 @@ local L = DanTraits_Laundry
 -- the numbers, in one table (Kahlua's upvalue cap)
 local LN = {
     DAMP_AT       = 30,     -- wetness at which a garment counts as damp
-    DRY_AT        = 10,     -- under this it is dry and the clock starts over
+    DRY_AT        = 15,     -- under this it is dry and the clock starts over (a vanilla
+                            -- dryer's 90 minutes, one point a minute, leave a soaked load at 10)
     WORN_DAMP     = 1.5,    -- damp hours count this much worn
     DAMP_HOURS    = 6,      -- default LaundryDampHours
     CATCHUP_MAX_H = 72,     -- the most a garment unseen for a while catches up
@@ -102,7 +113,8 @@ local LN = {
     LINE_SHARE    = 0.5,    -- of the fresh garments line-dried in daylight, for Line-Dried
     WRING         = 50,     -- default LaundryWringLeaves
     WRING_SHOES   = 70,
-    WASHER_RADIUS = 4,      -- tiles around the player searched for running washers
+    WASHER_RADIUS = 4,      -- tiles around the player searched for running washers and dryers
+    SHEET_ODOUR   = 0.5,    -- a dryer-sheet garment gathers odour at this share of the rate
     EPS           = 0.005,  -- a patch this close to its floor counts as at it
 }
 L.C = LN
@@ -112,16 +124,28 @@ local WEAR = { hand = 0.01, board = 0.03, machine = 0.04, bleach = 0.25 }
 local WEAR_MODE = { 0, 0.5, 1, 2 }   -- LaundryWear: Off, Gentle, Normal, Harsh
 
 -- body locations by layer: against the skin sweats in full, the outer layer
--- half, anything else (jewellery, bags, belts, armour, masks) not at all
+-- half, anything else (jewellery, bags, belts, armour, masks) not at all.
+-- Matched without underscores: Build 42's ids have none (shortpants,
+-- tanktop, torsoextravest), so until 2026-10-20 those never sweated
 local FULL = {}
 for _, k in ipairs({ "underwear", "underwear_top", "underwear_bottom", "underwear_extra1", "underwear_extra2",
     "socks", "shirt", "tshirt", "short_sleeve_shirt", "tank_top", "pants", "pants_skinny", "short_pants",
     "shorts_short", "legs1", "legs5", "torso1", "torso1legs1", "dress", "long_dress", "skirt", "long_skirt",
     "boilersuit", "full_suit", "body_costume", "sweater", "sweater_hat", "jersey", "hands", "hands_left",
-    "hands_right", "shoes", "full_top", "bath_robe", "codpiece" }) do FULL[k] = true end
+    "hands_right", "shoes", "full_top", "bath_robe", "codpiece" }) do FULL[(k:gsub("_", ""))] = true end
 local HALF = {}
 for _, k in ipairs({ "jacket", "jacket_bulky", "jacket_down", "jacket_hat", "jacket_hat_bulky", "jacket_suit",
-    "full_robe", "torso_extra", "torso_extra_vest", "hat", "full_hat", "pants_extra", "scarf", "neck" }) do HALF[k] = true end
+    "full_robe", "torso_extra", "torso_extra_vest", "hat", "full_hat", "pants_extra", "scarf", "neck" }) do HALF[(k:gsub("_", ""))] = true end
+-- hard gear on a sweating slot: plastic and steel do not hold sweat (ear
+-- protectors worn all day for Sensory Issues held Stale Clothes up on
+-- 2026-10-19 under an outfit that was all fresh)
+local HARD = { Hat_EarMuff_Protectors = true, Hat_Army = true, Hat_ArmyWWII = true, Hat_ArmyDesert = true,
+    Hat_ArmyDesertNew = true, Hat_Fireman = true }
+function L.isHard(item)
+    local t = ""
+    pcall(function() t = tostring(item:getType() or "") end)
+    return HARD[t] == true or t:find("Helmet") ~= nil or t:find("HardHat") ~= nil
+end
 
 -- options ---------------------------------------------------------------------------
 
@@ -142,6 +166,21 @@ local function is(obj, class)
 end
 L.is = is
 
+-- water falling on the player now: rain outside (a drizzle counts), or Take A
+-- Bath And Shower's shower or bath (DanTraits_BathingWet); what wets a worn
+-- garment then is not sweat
+local LN_RAIN_MIN = 0.05
+function L.rainedOn(player)
+    local wet = false
+    pcall(function()
+        if DanTraits_BathingWet and DanTraits_BathingWet(player) then wet = true return end
+        if not player:isOutside() then return end
+        local cm = getClimateManager and getClimateManager()
+        wet = cm ~= nil and (cm:getRainIntensity() or 0) >= LN_RAIN_MIN
+    end)
+    return wet
+end
+
 -- the item's laundry state; create = make it if it has none
 function L.state(item, create)
     local m
@@ -159,18 +198,16 @@ end
 function L.isClothing(item) return item ~= nil and is(item, "Clothing") end
 function L.handles(item) return item ~= nil and (is(item, "Clothing") or is(item, "InventoryContainer")) end
 
--- "shirt" from base:shirt, ItemBodyLocation or a plain string
+-- "sweaterhat" from base:sweaterhat or Sweater_Hat (DanTraits_BodyLocation in Util)
 function L.location(item)
-    local loc = ""
-    pcall(function() loc = tostring(item:getBodyLocation() or "") end)
-    return (loc:lower():gsub("^.*:", ""))
+    return DanTraits_BodyLocation(item)
 end
 
 function L.layer(item)
     if not L.isClothing(item) then return 0 end
     local loc = L.location(item)
     if FULL[loc] then return 1 end
-    if HALF[loc] then return 0.5 end
+    if HALF[loc] then return L.isHard(item) and 0 or 0.5 end
     return 0
 end
 
@@ -258,12 +295,21 @@ function L.sight(item, worn, t, skilled)
     if not s then return nil end
     local elapsed = s.ls and math.max(0, math.min(LN.CATCHUP_MAX_H, t - s.ls)) or 0
     s.ls = t
+    -- (odour a hard hat gathered before it was known as one)
+    if not s.m and (s.o or 0) > 0 and L.isHard(item) then s.o = 0 end
     -- an unworn garment's drying is only worked out when it is looked at or
     -- moved (Java): bring it up to date first, or a shirt drying in a closed
     -- bag would read as soaked all day
     if not worn then pcall(function() item:updateWetness() end) end
     local w = wetness(item)
-    if w >= LN.DAMP_AT then
+    if w < LN.DRY_AT then s.sw = nil end
+    -- sweat dries on the body at the game's speed; taken off damp, the garment
+    -- is on the ordinary damp clock like any other (2026-10-22: a sweat-damp
+    -- shirt stuffed in a bag kept its sweat flag and never went musty)
+    if not worn then s.sw = nil end
+    if w >= LN.DAMP_AT and s.sw then
+        -- (sweat on the body: no damp clock)
+    elseif w >= LN.DAMP_AT then
         s.dh = (s.dh or 0) + elapsed * (worn and LN.WORN_DAMP or 1)
         if s.dh >= num("LaundryDampHours", LN.DAMP_HOURS) and not s.m then
             s.m = true
@@ -282,7 +328,7 @@ end
 -- hours left before a damp garment turns musty (nil when not damp or already musty)
 function L.mustyIn(item)
     local s = L.state(item, false)
-    if (s and s.m) or wetness(item) < LN.DAMP_AT then return nil end
+    if (s and (s.m or s.sw)) or wetness(item) < LN.DAMP_AT then return nil end
     return math.max(0, num("LaundryDampHours", LN.DAMP_HOURS) - ((s and s.dh) or 0))
 end
 
@@ -294,31 +340,45 @@ function L.rate(exFrac, heatFrac)
     return r * math.max(0, num("LaundryOdourRate", 100)) / 100
 end
 
+-- dried with a dryer sheet since its last wash (a machine wash still to be
+-- applied counts: the sheet went in after it)
+function L.sheeted(s)
+    return s ~= nil and s.ds ~= nil and s.ds == (s.n or 0) + (s.mw and 1 or 0)
+end
+
 function L.sweat(item, rate, hours)
     local layer = L.layer(item)
     if layer <= 0 then return end
     -- worn damp: the smell of clothes that dried on you
-    if wetness(item) >= LN.DAMP_AT then
+    local s = L.state(item, true)
+    if not s then return end
+    if wetness(item) >= LN.DAMP_AT and not s.sw then
         rate = rate + LN.DAMP_WEAR * math.max(0, num("LaundryOdourRate", 100)) / 100
     end
     if rate <= 0 then return end
-    local s = L.state(item, true)
-    if not s then return end
+    if L.sheeted(s) then rate = rate * LN.SHEET_ODOUR end
     s.o = math.min(100, (s.o or 0) + rate * layer * hours)
 end
 
 -- each minute, worn: give back what the body dried beyond LaundryBodyDryRate%.
 -- Only from a reading taken moments ago (a garment just put on, or put back
--- on after drying in a bag, starts a fresh reading).
-function L.bodyDry(item, t)
+-- on after drying in a bag, starts a fresh reading). A rise from dry-ish away
+-- from rain is sweat (sw): that dries at the game's own speed. rain: rain is
+-- falling on the wearer (L.rainedOn)
+function L.bodyDry(item, t, rain)
     local s = L.state(item, true)
     if not s then return end
     local w = wetness(item)
     local keep = math.max(0, math.min(100, num("LaundryBodyDryRate", LN.BODY_DRY))) / 100
-    if s.lw and s.lwT and t - s.lwT <= LN.WORN_GAP_H and w < s.lw and keep < 1 then
-        w = s.lw - (s.lw - w) * keep
-        setWetness(item, w)
+    if s.lw and s.lwT and t - s.lwT <= LN.WORN_GAP_H then
+        if w > s.lw + LN.EPS then
+            if rain then s.sw = nil elseif s.lw < LN.DAMP_AT then s.sw = true end
+        elseif w < s.lw and keep < 1 and not s.sw then
+            w = s.lw - (s.lw - w) * keep
+            setWetness(item, w)
+        end
     end
+    if w < LN.DRY_AT then s.sw = nil end
     if w > 0 then s.lw, s.lwT = w, t else s.lw, s.lwT = nil, nil end
 end
 
@@ -399,6 +459,7 @@ local function washed(item, s)
     s.ls = now()
     s.n = (s.n or 0) + 1
     s.sun, s.sh = nil, nil
+    s.sw = nil
     if s.pr then s.pr = math.max(0, s.pr - (L.PROTECT_PER_WASH or 0.34)); if s.pr <= 0 then s.pr = nil end end
     s.pb = nil
 end
@@ -620,6 +681,14 @@ end)
 
 -- washers ------------------------------------------------------------------------------
 
+-- Vanilla's cycle (ClothingWasherLogic, 42.21): every minute it takes 0.02
+-- blood and dirt off each part and soaks the garment, and it switches itself
+-- off after 90 minutes; nothing can come out while it runs. So a garment is
+-- finished by minute 50 at the latest, and the ten-minute look below sees it
+-- finished several times over, as long as the washer is watched: from the
+-- moment it is switched on (the toggle actions, below), or once the player
+-- has stood near it while it ran (a stacked pair's switch is Java).
+
 -- the washing container of a washer that is running now, else nil
 function L.runningWasher(obj)
     local container = nil
@@ -631,6 +700,19 @@ function L.runningWasher(obj)
         elseif is(obj, "IsoStackedWasherDryer") then
             -- (two drums: the washer's own switch and container)
             if obj:isWasherActivated() then container = obj:getContainerByType("clothingwasher") end
+        end
+    end)
+    return container
+end
+
+-- the drum a washer washes in, running or not (a combo's one drum, whichever mode)
+function L.washerDrum(obj)
+    local container = nil
+    pcall(function()
+        if is(obj, "IsoClothingWasher") or is(obj, "IsoCombinationWasherDryer") then
+            container = obj:getContainer()
+        elseif is(obj, "IsoStackedWasherDryer") then
+            container = obj:getContainerByType("clothingwasher")
         end
     end)
     return container
@@ -650,10 +732,9 @@ local function cycleDone(item)
     return wetness(item) >= 100 - 1e-6
 end
 
--- every garment a running washer has finished with is marked; the effects land when it is next seen
-local function markWasher(obj)
-    local container = L.runningWasher(obj)
-    if not container then return false end
+-- every garment in this drum the cycle has finished with is marked; the effects land when it is next seen
+local function markDrum(container)
+    if not container then return end
     pcall(function()
         local items = container:getItems()
         for i = 0, items:size() - 1 do
@@ -664,9 +745,27 @@ local function markWasher(obj)
             end
         end
     end)
+end
+L.markDrum = markDrum
+
+-- a running washer marks its load (true); an idle one marks nothing (false)
+local function markWasher(obj)
+    local container = L.runningWasher(obj)
+    if not container then return false end
+    markDrum(container)
     return true
 end
 L.markWasher = markWasher
+
+-- "x,y,z" of the washer's square, the watch list's key
+function L.washerKey(obj)
+    local key = nil
+    pcall(function()
+        local sq = obj:getSquare()
+        key = sq:getX() .. "," .. sq:getY() .. "," .. sq:getZ()
+    end)
+    return key
+end
 
 local function squareAt(x, y, z)
     local sq = nil
@@ -682,7 +781,8 @@ local function eachObject(sq, fn)
 end
 
 -- washers near the player join the watch list; every watched washer still
--- loaded marks its load while it runs, and drops off once it stands idle
+-- loaded marks its load while it runs, and once it stands idle marks what it
+-- left finished (a cycle that ended since the last look) and drops off
 local function watchWashers(player, d)
     local px, py, pz = 0, 0, 0
     pcall(function() px, py, pz = math.floor(player:getX()), math.floor(player:getY()), math.floor(player:getZ()) end)
@@ -703,12 +803,221 @@ local function watchWashers(player, d)
         local sq = x and squareAt(tonumber(x), tonumber(y), tonumber(z))
         if sq then
             local running = false
-            eachObject(sq, function(obj) if isWasher(obj) and markWasher(obj) then running = true end end)
-            if not running then d.lnWashers[key] = nil end
+            local idle = {}
+            eachObject(sq, function(obj)
+                if isWasher(obj) then
+                    if markWasher(obj) then running = true else idle[#idle + 1] = obj end
+                end
+            end)
+            if not running then
+                for _, obj in ipairs(idle) do markDrum(L.washerDrum(obj)) end
+                d.lnWashers[key] = nil
+            end
         end
     end
 end
 L.watchWashers = watchWashers
+
+-- the toggle actions: switched on, the washer is watched however far the
+-- player then goes; switched off (or a combo set to dry), what it finished is
+-- marked at once, before anything can be taken out
+function L.onWasherSwitched(character, obj)
+    if not L.on() or not character or not obj then return end
+    if L.runningWasher(obj) then
+        local key = L.washerKey(obj)
+        if not key then return end
+        local d = DanTraits_Data(character)
+        d.lnWashers = d.lnWashers or {}
+        d.lnWashers[key] = true
+    else
+        markDrum(L.washerDrum(obj))
+    end
+end
+
+-- dryer sheets ------------------------------------------------------------------------
+-- A sheet put in a dryer (the DryerSheets box, ISLaundryAction "sheet") is a
+-- flag on the machine's mod data, dtlSheet, so it waits in the drum however
+-- long until a run. Vanilla's dryer (ClothingDryerLogic, 42.21) runs 90
+-- minutes and nothing can come out while it runs, so the ten-minute look sees
+-- the load go dry. Each look at a running sheeted dryer scents every garment
+-- in it that is dry (ds); once it stands idle (or is switched off), a last
+-- look scents what it left dry and the sheet is spent. Only a watched run
+-- spends it: switched on by the toggle actions, or seen running nearby (a
+-- stacked pair's switch is Java).
+
+local function isDryer(obj)
+    return is(obj, "IsoClothingDryer") or is(obj, "IsoCombinationWasherDryer") or is(obj, "IsoStackedWasherDryer")
+end
+L.isDryer = isDryer
+
+-- the drying container of a dryer that is running now, else nil
+function L.runningDryer(obj)
+    local container = nil
+    pcall(function()
+        if is(obj, "IsoClothingDryer") then
+            if obj:isActivated() then container = obj:getContainer() end
+        elseif is(obj, "IsoCombinationWasherDryer") then
+            if obj:isActivated() and not obj:isModeWasher() then container = obj:getContainer() end
+        elseif is(obj, "IsoStackedWasherDryer") then
+            if obj:isDryerActivated() then container = obj:getContainerByType("clothingdryer") end
+        end
+    end)
+    return container
+end
+
+-- the drum a dryer dries in, running or not
+function L.dryerDrum(obj)
+    local container = nil
+    pcall(function()
+        if is(obj, "IsoClothingDryer") or is(obj, "IsoCombinationWasherDryer") then
+            container = obj:getContainer()
+        elseif is(obj, "IsoStackedWasherDryer") then
+            container = obj:getContainerByType("clothingdryer")
+        end
+    end)
+    return container
+end
+
+function L.hasSheet(obj)
+    local m = nil
+    pcall(function() m = obj:getModData() end)
+    return m ~= nil and m.dtlSheet == true
+end
+
+local function setSheet(obj, on)
+    pcall(function()
+        obj:getModData().dtlSheet = on or nil
+        if isClient and isClient() then obj:transmitModData() end
+    end)
+end
+
+-- a sheet goes in (the box's use is the caller's)
+function L.addSheet(obj)
+    if not isDryer(obj) or L.hasSheet(obj) then return false end
+    setSheet(obj, true)
+    return true
+end
+
+-- every dry garment in the drum gets the sheet's scent
+local function sheetDrum(container)
+    if not container then return end
+    pcall(function()
+        local items = container:getItems()
+        for i = 0, items:size() - 1 do
+            local item = items:get(i)
+            if L.isClothing(item) and wetness(item) < LN.DRY_AT then
+                local s = L.state(item, true)
+                if s then s.ds = (s.n or 0) + (s.mw and 1 or 0) end
+            end
+        end
+    end)
+end
+L.sheetDrum = sheetDrum
+
+-- a watched dryer has stopped: scent what it left dry, the sheet is spent
+local function dryerDone(obj)
+    if not L.hasSheet(obj) then return end
+    sheetDrum(L.dryerDrum(obj))
+    setSheet(obj, false)
+end
+
+-- (Kahlua has no next(): an empty watch list goes the long way)
+local function dropEmptyDryers(d)
+    if not d.lnDryers then return end
+    for _ in pairs(d.lnDryers) do return end
+    d.lnDryers = nil
+end
+
+-- sheeted dryers running near the player join the watch list; each watched one
+-- still loaded scents its dry load while it runs, and once idle finishes up
+local function watchDryers(player, d)
+    local px, py, pz = 0, 0, 0
+    pcall(function() px, py, pz = math.floor(player:getX()), math.floor(player:getY()), math.floor(player:getZ()) end)
+    local r = LN.WASHER_RADIUS
+    for x = px - r, px + r do
+        for y = py - r, py + r do
+            local sq = squareAt(x, y, pz)
+            if sq then
+                eachObject(sq, function(obj)
+                    if isDryer(obj) and L.hasSheet(obj) and L.runningDryer(obj) then
+                        d.lnDryers = d.lnDryers or {}
+                        d.lnDryers[x .. "," .. y .. "," .. pz] = true
+                    end
+                end)
+            end
+        end
+    end
+    if not d.lnDryers then return end
+    for key in pairs(d.lnDryers) do
+        local x, y, z = key:match("^(-?%d+),(-?%d+),(-?%d+)$")
+        local sq = x and squareAt(tonumber(x), tonumber(y), tonumber(z))
+        if sq then
+            local running = false
+            local idle = {}
+            eachObject(sq, function(obj)
+                if isDryer(obj) and L.hasSheet(obj) then
+                    local drum = L.runningDryer(obj)
+                    if drum then
+                        sheetDrum(drum)
+                        running = true
+                    else
+                        idle[#idle + 1] = obj
+                    end
+                end
+            end)
+            if not running then
+                for _, obj in ipairs(idle) do dryerDone(obj) end
+                d.lnDryers[key] = nil
+            end
+        end
+    end
+    dropEmptyDryers(d)
+end
+L.watchDryers = watchDryers
+
+-- the toggle actions: a sheeted dryer switched on is watched however far the
+-- player goes; a watched one switched off (or a combo set to wash) finishes up
+function L.onDryerSwitched(character, obj)
+    if not L.on() or not character or not isDryer(obj) or not L.hasSheet(obj) then return end
+    local key = L.washerKey(obj)
+    if not key then return end
+    local d = DanTraits_Data(character)
+    if L.runningDryer(obj) then
+        d.lnDryers = d.lnDryers or {}
+        d.lnDryers[key] = true
+    elseif d.lnDryers and d.lnDryers[key] then
+        dryerDone(obj)
+        d.lnDryers[key] = nil
+        dropEmptyDryers(d)
+    end
+end
+
+local function wrapWasherToggles()
+    pcall(require, "TimedActions/ISToggleClothingWasher")
+    pcall(require, "TimedActions/ISToggleClothingDryer")
+    pcall(require, "TimedActions/ISToggleComboWasherDryer")
+    pcall(require, "TimedActions/ISSetComboWasherDryerMode")
+    for _, class in ipairs({ ISToggleClothingWasher or false, ISToggleClothingDryer or false, ISToggleComboWasherDryer or false }) do
+        if class then
+            DanTraits_Wrap(class, "complete", "laundry-washer", function(original, self, ...)
+                local result = original(self, ...)
+                DanTraits_Guard("laundry-washer", L.onWasherSwitched, self.character, self.object)
+                DanTraits_Guard("laundry-dryer", L.onDryerSwitched, self.character, self.object)
+                return result
+            end)
+        end
+    end
+    if ISSetComboWasherDryerMode then
+        DanTraits_Wrap(ISSetComboWasherDryerMode, "complete", "laundry-washer", function(original, self, ...)
+            DanTraits_Guard("laundry-washer", markDrum, L.washerDrum(self.object))
+            local result = original(self, ...)
+            DanTraits_Guard("laundry-dryer", L.onDryerSwitched, self.character, self.object)
+            return result
+        end)
+    end
+end
+wrapWasherToggles()
+if Events and Events.OnGameStart then Events.OnGameStart.Add(wrapWasherToggles) end
 
 -- the clock --------------------------------------------------------------------------
 
@@ -766,17 +1075,37 @@ local function moodMinute(player, d)
     DanTraits_FloorUp(player:getStats(), CharacterStat.UNHAPPINESS, cap * math.min(1, k), rate * k / 60)
 end
 
+-- the moodle level from what is worn now
+local function refreshLevel(player, d)
+    local level, atHome = L.wornLevel(player)
+    d.lnHomeLine = atHome or nil
+    d.lnMoodle = tonumber(DanTraits_RunHooks("laundryMoodle", level, player)) or level
+end
+
+-- each minute: a garment just put on straight from the washer (or the dryer
+-- after it) counts as washed at once, and the moodle follows a change of
+-- clothes within the minute, not at the next ten-minute look
 local function updateLaundryMinute(player, d)
     if not L.on() then
         d.lnMoodle, d.lnEx, d.lnHeat, d.lnMins, d.lnHomeLine = nil, nil, nil, nil, nil
         return
     end
     sampleMinute(player, d)
-    moodMinute(player, d)
     local t = now()
+    local skilled = nil
+    local rain = L.rainedOn(player)
     for _, item in ipairs(L.worn(player)) do
-        if L.isClothing(item) and (wetness(item) > 0 or (L.state(item, false) or {}).lw) then L.bodyDry(item, t) end
+        if L.isClothing(item) then
+            local s = L.state(item, false)
+            if s and s.mw then
+                if skilled == nil then skilled = L.skilled(player) end
+                L.machineWashed(item, skilled)
+            end
+            if wetness(item) > 0 or (s and s.lw) then L.bodyDry(item, t, rain) end
+        end
     end
+    refreshLevel(player, d)
+    moodMinute(player, d)
     if L.shield then L.shield(player, d) end
 end
 
@@ -804,10 +1133,9 @@ local function updateLaundryTen(player, d)
     end
     if L.wearPonchos then L.wearPonchos(player, working) end
     watchWashers(player, d)
+    watchDryers(player, d)
     if L.watchLines then L.watchLines(player, d) end
-    local level, atHome = L.wornLevel(player)
-    d.lnHomeLine = atHome or nil
-    d.lnMoodle = tonumber(DanTraits_RunHooks("laundryMoodle", level, player)) or level
+    refreshLevel(player, d)
 end
 
 L.tenNow = updateLaundryTen   -- the laundry debug command runs a tick on demand

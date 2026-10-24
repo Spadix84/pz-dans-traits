@@ -100,7 +100,7 @@ H.clearHalo()
 H.rng = { 10 }; H.fire("OnWeaponSwing", f, {}); assert(#halo == 0, "10 >= 10: a clean swing")
 f._st.panic = 100; f._st.pain = 100; f._st.fatigue = 1
 assert(math.abs(DanTraits_FumbleChance(f) - 18) < 1e-9, "worst case 18%")
--- 9. antidepressants: a pill is a day of coverage, the vanilla lift is cancelled, benefit builds over 14 days
+-- 9. antidepressants: a pill is a day of coverage, the vanilla lift is cancelled, benefit builds over 3 days
 local m = newPlayer({}); H.current = m
 local pill = setmetatable({ character = m, item = { getType = function() return "PillsAntiDep" end } }, { __index = ISTakePillAction })
 pill:complete(); assert(pillsSwallowed == 1 and m._depress == 0, "swallowed, vanilla effect cancelled")
@@ -110,10 +110,13 @@ m._st.intox = 20; m._md.DanTraits.mddMedDays = 0; pill:complete(); assert(m._md.
 local other = setmetatable({ character = m, item = { getType = function() return "Pills" end } }, { __index = ISTakePillAction })
 m._md.DanTraits.mddMedDays = 0; other:complete(); assert(m._md.DanTraits.mddMedDays == 0, "painkillers are not antidepressants")
 m._depress = 6600; minute(); assert(m._depress == 0, "a lingering vanilla effect is zeroed every minute")
--- one pill a day for 14 days: streak 14, benefit 1
+-- one pill a day for 3 days: streak 3, benefit 1
 m._md.DanTraits.mddMedDays = 0; m._md.DanTraits.mddMedStreak = 0
-for day = 1, 14 do pill:complete(); for _ = 1, 144 do ten() end end
-assert(math.abs(DanTraits_MddBenefit(m) - 1) < 1e-6, "14 unbroken days = full benefit, streak " .. m._md.DanTraits.mddMedStreak)
+pill:complete(); for _ = 1, 144 do ten() end
+H.near(DanTraits_MddBenefit(m), 1 / 3, 1e-6, "one day: a third of the benefit")
+for day = 2, 3 do pill:complete(); for _ = 1, 144 do ten() end end
+assert(math.abs(DanTraits_MddBenefit(m) - 1) < 1e-6, "3 unbroken days = full benefit, streak " .. m._md.DanTraits.mddMedStreak)
+m._md.DanTraits.mddEpisode = false   -- one may have started over the three days
 -- benefit blunts the drag, cuts the floor and the onset chance
 m._st.pain = 100; m._st.unhappy = 0; minute(); assert(math.abs(m._st.unhappy - 0.7) < 1e-9, "full pain drag 1.0 x 0.7, got " .. m._st.unhappy); m._st.pain = 0
 m._md.DanTraits.mddEpisode = true; m._md.DanTraits.mddSeverity = 1; m._md.DanTraits.mddHoursLeft = 48

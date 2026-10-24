@@ -50,14 +50,14 @@ local MDD_RELIEF_HOME       = 10      -- floor reduction at home, at the home's 
 local MDD_OUTDOORS_FULL_MIN = 240
 local MDD_RECOVERY_BONUS    = 1.0     -- exercise and outdoors together shorten an episode by up to this (x2 speed)
 -- Antidepressants (Base.PillsAntiDep) are a regimen, not a dose. Each pill
--- adds a day of coverage; benefit builds over two weeks of unbroken
+-- adds a day of coverage; benefit builds over three days of unbroken
 -- coverage and drains if it lapses. The vanilla instant mood-clearing effect
 -- is switched off for this trait. The medication system (DanTraits_Meds.lua)
 -- reads this regimen for the drug list and rolls the side effect (queasy, on
 -- a few percent of the days a pill is taken).
 local MDD_MED_PILL_DAYS     = 1       -- coverage a pill adds (halved when drunk)
 local MDD_MED_MAX_DAYS      = 3       -- you can be a few days ahead, no more
-local MDD_MED_FULL_DAYS     = 14      -- unbroken coverage needed for full benefit
+local MDD_MED_FULL_DAYS     = 3       -- unbroken coverage needed for full benefit
 local MDD_MED_ONSET_CUT     = 0.6     -- episode chance x (1 - this x benefit)
 local MDD_MED_FLOOR_CUT     = 0.4     -- episode floor x (1 - this x benefit)
 local MDD_MED_DRAG_CUT      = 0.3     -- pain/stress drag x (1 - this x benefit)
@@ -107,7 +107,7 @@ local function mddRelief(player, d)
     if mddDrinking(player) then relief = relief + MDD_RELIEF_DRINK end
     if (d.mddSmokeTimer or 0) > 0 then relief = relief + MDD_RELIEF_SMOKE end
     if (d.mddFoodTimer or 0) > 0 then relief = relief + MDD_RELIEF_FOOD end
-    local regular = mddRegularity(player)
+    local regular = tonumber(DanTraits_RunHooks("mddExercise", mddRegularity(player), player)) or 0   -- Fitness: a workout today counts
     relief = relief + regular * MDD_RELIEF_EXERCISE
     local outdoors = math.min(1, d.mddOutside / MDD_OUTDOORS_FULL_MIN)
     relief = relief + outdoors * MDD_RELIEF_OUTDOORS

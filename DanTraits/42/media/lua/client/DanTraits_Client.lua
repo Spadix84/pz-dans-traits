@@ -150,6 +150,8 @@ local function diabetesMenu(playerNum, context, items)
             greyOut(option, "Tooltip_DanTraits_NotDiabetic")
         elseif usesOf(pen) <= 0 then
             greyOut(option, "Tooltip_DanTraits_InsulinEmpty")
+        elseif DanTraits_InsulinSyringeFor and not DanTraits_InsulinSyringeFor(playerObj, pen) then
+            greyOut(option, "Tooltip_DanTraits_NoSyringe")   -- a vial, and nothing to draw it up with
         else
             local sub = context:getNew(context)
             context:addSubMenu(option, sub)

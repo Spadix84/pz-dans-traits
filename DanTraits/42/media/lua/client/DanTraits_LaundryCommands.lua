@@ -31,7 +31,7 @@ local L = DanTraits_Laundry
 local KIT = {
     "Base.Tshirt_DefaultTEXTURE", "Base.Trousers_Denim", "Base.Socks_Ankle", "Base.Shoes_Black",
     "Base.Jacket_Padded", "Base.Necklace_Gold", "Base.Soap2", "Base.Bleach", "DanTraits.Washboard",
-    "DanTraits.FabricProtector", "Base.Candle", "Base.Candle", "Base.TinCanEmpty", "Base.Garbagebag",
+    "DanTraits.FabricProtector", "DanTraits.DryerSheets", "Base.Candle", "Base.Candle", "Base.TinCanEmpty", "Base.Garbagebag",
     "Base.KitchenKnife", "Base.LongStick", "Base.LongStick", "Base.Rope", "Base.Rope", "Base.PonchoGarbageBag",
 }
 

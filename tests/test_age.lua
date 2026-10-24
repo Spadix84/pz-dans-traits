@@ -55,6 +55,7 @@ local newPlayer = H.factory(nil, function(p, o)
   p.getDescriptor = function() return { getCharacterProfession = function() return o.prof or "carpenter" end } end
   p.getPerkLevel = function(_, perk) return levels[perk] or 0 end
   p.LevelPerk = function(_, perk) levels[perk] = (levels[perk] or 0) + 1 end
+  p.LoseLevel = function(_, perk) levels[perk] = (levels[perk] or 0) - 1 end
   p.getXp = function()
     return {
       setXPToLevel = function(_, perk, lvl) xpSet[perk] = lvl end,
@@ -123,6 +124,17 @@ assert(handy._levels.Woodwork == 7, "40s Handy carpenter: +2 +1, got " .. handy.
 local handyChef = create(newPlayer({ traits = { "age50s" }, vanilla = { "base:handy" }, prof = "chef" }))
 assert(handyChef._levels.Cooking == 7 and handyChef._levels.Butchering == 4 and handyChef._levels.Woodwork == 1, "50s Handy chef: +3 Cooking, +2 Butchering, +1 Carpentry")
 assert(create(newPlayer({ vanilla = { "base:handy" } }))._levels.Woodwork == 4, "30s Handy: no extra")
+-- 4b. the 20s: the four levels vanilla Handy gave (the game has added them by now) are taken back
+local HANDY = { "Woodwork", "Maintenance", "Carving", "Masonry" }
+local hy = newPlayer({ traits = { "age20s" }, vanilla = { "base:handy" } })
+for _, s in ipairs(HANDY) do hy._levels[s] = (hy._levels[s] or 0) + 1 end
+create(hy)
+assert(hy._levels.Woodwork == 4 and hy._levels.Maintenance == 0 and hy._levels.Carving == 1 and hy._levels.Masonry == 1,
+  "20s Handy carpenter: Handy's four levels come off, the profession's stay")
+assert(hy._xp.Woodwork == 4 and hy._xp.Maintenance == 0, "XP set to the new levels")
+local hy2 = newPlayer({ traits = { "age20s" } }); hy2._levels.Maintenance = 1
+create(hy2)
+assert(hy2._levels.Maintenance == 1 and hy2._levels.Woodwork == 4, "20s without Handy: nothing taken")
 
 -- 5. ties all get the levels; Fitness and Strength are never the main skill;
 --    the Unemployed get Maintenance; capped at 10
@@ -173,6 +185,12 @@ lv = DanTraits_AgeLevels({ Woodwork = integer(4) }, 50, true)
 assert(lv.Woodwork == 4, "50s Handy carpenter: 3 + 1 on the same skill")
 lv = DanTraits_AgeLevels({ Cooking = 4, Woodwork = 1 }, 50, true)
 assert(lv.Cooking == 3 and lv.Woodwork == 3, "Handy's Carpentry on top of the side levels")
+lv = DanTraits_AgeLevels({ Woodwork = 4 }, 20, true)
+assert(lv.Woodwork == -1 and lv.Maintenance == -1 and lv.Carving == -1 and lv.Masonry == -1 and count(lv) == 4,
+  "20s Handy: vanilla's four levels taken back (drawn greyed, like Green's)")
+lv = DanTraits_AgeLevels({ Woodwork = 4 }, 20, true, 1)
+assert(lv.Woodwork == nil and lv.Maintenance == -1 and count(lv) == 3, "a sandbox level on the main skill cancels Handy's loss there")
+assert(count(DanTraits_AgeLevels({ Woodwork = 4 }, 20, false)) == 0, "20s without Handy: nothing")
 lv = DanTraits_AgeLevels({ Sprinting = 2, Fitness = 3, Strength = 1, Lightfoot = 1 }, 50, false)
 assert(lv.Sprinting == 3 and lv.Lightfoot == 2 and count(lv) == 2, "Fitness and Strength get nothing, main or side")
 lv = DanTraits_AgeLevels({ Cooking = 2, Carving = 2 }, 30, true, 1)
@@ -206,6 +224,12 @@ assert(DanTraits_AgeSurcharge(20, "DanTraits:migraine") == 0 and DanTraits_AgeSu
 assert(DanTraits_AgeSurcharge(50, "base:brave") == 0 and DanTraits_AgeSurcharge(50, "age50s") == 0, "other traits: nothing")
 assert(DanTraits_AgeSurcharge(nil, "base:strong") == 0 and DanTraits_AgeSurcharge(30, "base:fit") == 0, "no band, or the 30s: nothing")
 assert(DanTraits_AgePrices()["base:fit"][20] == -1, "the table is readable")
+assert(DanTraits_AgeSurcharge(20, "base:handy") == 0 and DanTraits_AgeSurcharge(40, "base:handy") == 0, "Handy: vanilla's 8 in every band (the 20s paid 10 from 2026-10-13 to 2026-10-16)")
+for _, habit in ipairs({ "DanTraits:gymregular", "DanTraits:mealprepper", "DanTraits:earlyriser" }) do
+  assert(DanTraits_AgeSurcharge(20, habit) == 0 and DanTraits_AgeSurcharge(30, habit) == 0, habit .. ": 1 point young")
+  assert(DanTraits_AgeSurcharge(40, habit) == 1 and DanTraits_AgeSurcharge(50, habit) == 2, habit .. ": 2 in the 40s, 3 in the 50s")
+end
+assert(DanTraits_AgeSurcharge(50, "DanTraits:nightshift") == 0 and DanTraits_AgeSurcharge(50, "DanTraits:hollowlegs") == 0, "the other cheap traits: full price")
 
 -- 8. hooks with a floor or a cap: Gym Regular 65 in the 20s only; Arthritis joint in the 40s and 50s
 assert(DanTraits_RunHooks("gymRegularity", 50, aged("age20s")) == 65, "20s gym 65")
@@ -304,6 +328,15 @@ xp(o2, cook, 10); H.near(o2._xpCalls[2].amount, -1, 1e-9, "50s, a new skill: x0.
 o2._levels.Masonry = 1
 xp(o2, "Masonry", 10); H.near(o2._xpCalls[3].amount, 10 * (1.15 * 0.9 - 1), 1e-9, "a trade skill still under 3: both factors")
 local m2 = newPlayer(); m2._levels.Cooking = 1; xp(m2, "Cooking", 10); assert(#m2._xpCalls == 0, "30s: nothing")
+-- 10b2. Handy in the 20s: its four skills train x1.5 (on top of the band's other factors); nobody else's
+local yh = newPlayer({ traits = { "age20s" }, vanilla = { "base:handy" } }); yh._levels.Woodwork = 5; yh._levels.Masonry = 1
+xp(yh, "Woodwork", 10); H.near(yh._xpCalls[1].amount, 5, 1e-9, "20s Handy, Carpentry at 5: x1.5")
+xp(yh, "Masonry", 10); H.near(yh._xpCalls[2].amount, 10 * (1.5 * 1.2 - 1), 1e-9, "Masonry under 3: x1.5 and the band's x1.2")
+xp(yh, "Maintenance", 10); H.near(yh._xpCalls[3].amount, 8, 1e-9, "Maintenance too")
+yh._levels.Cooking = 5; xp(yh, "Cooking", 10); assert(#yh._xpCalls == 3, "a skill Handy does not boost: the plain rate")
+local yn = aged("age20s"); yn._levels.Woodwork = 5; xp(yn, "Woodwork", 10); assert(#yn._xpCalls == 0, "20s without Handy: nothing")
+local fh = newPlayer({ traits = { "age40s" }, vanilla = { "base:handy" }, prof = "chef" }); fh._levels.Woodwork = 5
+xp(fh, "Woodwork", 10); assert(#fh._xpCalls == 0, "40s Handy: the levels, not the rate")
 
 -- 10c. clearance: whatever drunkenness and food sickness fell by since the last minute is
 --      hurried (20s) or stretched (50s); rises and the 30s are left alone; the food sickness

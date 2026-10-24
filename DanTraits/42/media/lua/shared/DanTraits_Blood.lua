@@ -27,7 +27,11 @@
 --     then OnPlayerGetDamage(char, "BLEEDING", that amount). Bandaged: nothing.
 --   wound damage to the part itself, never reported: deep wound, not stitched,
 --     -3.125 (bandaged -1.5625); scratch -0.9375, cut -1.875, bite -2.1875,
---     unbandaged only. Kept: the injury hurts until it is dressed and stitched.
+--     unbandaged only; a bullet left in -3.125 (bandaged -1.5625). Through
+--     CombatManager.applyDamage, so part:ReduceHealth unless invulnerable.
+--     Kept by default: the injury hurts until it is dressed and stitched.
+--     With the Wound Damage sandbox option off it is given back each frame
+--     too (the neck weighs 0.7 in overall health, a hand 0.1).
 --   a shard left in holds bleedingTime and deepWoundTime at 3 or more (the
 --     wound never closes) and grows wound infection ten times faster.
 --   a bandage clears the bleeding/cut/deep wound/stitched flags but keeps
@@ -82,8 +86,13 @@ local BL_FAINT_GAP     = 30      -- minutes before it can happen again
 
 local clamp01 = DanTraits_Clamp01
 
+local WD_DEEP, WD_DEEP_BANDAGED = 3.125, 1.5625     -- deep wound not stitched, or a bullet left in
+local WD_SCRATCH, WD_CUT, WD_BITE = 0.9375, 1.875, 2.1875  -- unbandaged only
+local WD_SCALER        = 0.0057142857  -- BodyPart.damageScaler, if the getter fails
+
 local function sandboxOn() return DanTraits_SandboxOn("BloodEnabled") end
 function DanTraits_BloodActive() return sandboxOn() end
+local function woundDamageOn() return DanTraits_SandboxOn("WoundDamageEnabled") end
 
 local function blData(player)
     local d = traitData(player)
@@ -120,6 +129,48 @@ local function onBloodGetDamage(character, damageType, amount)
 end
 
 local partIs = DanTraits_PartIs
+
+local function partTime(part, getter)
+    local t = 0
+    pcall(function() t = part[getter](part) or 0 end)
+    return t
+end
+
+-- what BodyPart.DamageUpdate takes off the part this tick for its wounds,
+-- before the scaler and the multiplier (the same tests, in the same order)
+local function woundDamage(part)
+    local bandaged = partIs(part, "bandaged")
+    local dmg = 0
+    if partTime(part, "getDeepWoundTime") > 0 and not partIs(part, "stitched") then
+        dmg = dmg + (bandaged and WD_DEEP_BANDAGED or WD_DEEP)
+    end
+    if not bandaged then
+        if partTime(part, "getScratchTime") > 0 then dmg = dmg + WD_SCRATCH end
+        if partTime(part, "getCutTime") > 0 then dmg = dmg + WD_CUT end
+        if partTime(part, "getBiteTime") > 0 then dmg = dmg + WD_BITE end
+    end
+    if partIs(part, "haveBullet") then dmg = dmg + (bandaged and WD_DEEP_BANDAGED or WD_DEEP) end
+    return dmg
+end
+
+-- Wound Damage off: give the frame's wound damage back to each part. The
+-- frame driver and BodyDamage.Update both run once per player update, so
+-- whichever goes first the part is at most one frame's damage short. A part
+-- already at 0 is left alone (vanilla's ReduceHealth stops at 0, so the
+-- full amount may not have come off).
+local function refundWoundDamage(player)
+    if DanTraits_PartIs(player, "isInvulnerable") then return end
+    local mult = 0
+    pcall(function() mult = getGameTime():getMultiplier() or 0 end)
+    if mult <= 0 then return end
+    DanTraits_EachPart(player, function(part)
+        local dmg = woundDamage(part)
+        if dmg <= 0 or part:getHealth() <= 0 then return end
+        local scaler = WD_SCALER
+        pcall(function() scaler = part:getDamageScaler() or scaler end)
+        part:AddHealth(dmg * scaler * mult)
+    end, "Blood")
+end
 
 -- volume lost per minute from one part, before hooks; nil when not bleeding.
 -- Also returns the part's name, whether it is bandaged, and the rate it
@@ -177,6 +228,8 @@ local function bleedMinute(player, d)
 end
 
 local function refill(player, d, stats, asleep)
+    -- the minute's gains, for the health panel's estimates
+    d.bloodVolGain, d.bloodCellGain = 0, 0
     -- volume: water drawn in from the gut, so it needs drinking
     if d.bloodVol < 1 then
         local thirst = fraction(stats, CharacterStat.THIRST)
@@ -184,6 +237,7 @@ local function refill(player, d, stats, asleep)
         local gain = math.min(1 - d.bloodVol, DanTraits_RunHooks("bloodVolRefill", BL_VOL_DAY / 1440 * rate, player, d))
         if gain > 0 then
             d.bloodVol = d.bloodVol + gain
+            d.bloodVolGain = gain
             DanTraits_StatAdd(stats, CharacterStat.THIRST, gain * BL_VOL_THIRST)
         end
     end
@@ -198,6 +252,7 @@ local function refill(player, d, stats, asleep)
         local gain = math.max(0, math.min(1 - d.bloodCells, rate))
         if gain > 0 then
             d.bloodCells = d.bloodCells + gain
+            d.bloodCellGain = gain
             DanTraits_RunHooks("bloodCellsRebuilt", nil, player, gain)
         end
     end
@@ -207,6 +262,20 @@ local TIER_NOTICE = { "UI_DanTraits_BloodPale", "UI_DanTraits_BloodDizzy", "UI_D
 
 local function updateMoodle(player, lost)
     DanTraits_BadMoodle(player, "BloodLoss", math.min(1, lost / BL_DEATH), BL_MOODLE_TIER)
+end
+
+-- what the health panel reads (client/DanTraits_HealthPanel.lua), from the last
+-- minute's update: volume and red cells as fractions of normal, the minute's
+-- loss and refill, the tier and the tiers' edges. nil with the blood off.
+function DanTraits_BloodState(player)
+    if not sandboxOn() then return nil end
+    local d = nil
+    pcall(function() d = player:getModData().DanTraits end)
+    d = d or {}
+    return { vol = d.bloodVol or 1, cells = d.bloodCells or 1, loss = d.bloodLossMin or 0,
+             volGain = d.bloodVolGain or 0, cellGain = d.bloodCellGain or 0,
+             tier = d.bloodTier or 0, weak = d.bloodWeak or 0,
+             shock = BL_TIER[3], death = BL_DEATH }
 end
 
 -- switched off mid-game (sandbox, a server admin): stand down once, so the
@@ -390,5 +459,7 @@ DanTraits_Every("minute", "Blood", function(player, d)
     updateBloodDebug(player, d)
 end, 20)
 DanTraits_Every("frame", "Blood", function(player)
-    if sandboxOn() then updateBloodFrame(player) end
+    if not sandboxOn() then return end
+    updateBloodFrame(player)
+    if not woundDamageOn() then refundWoundDamage(player) end
 end, 20)

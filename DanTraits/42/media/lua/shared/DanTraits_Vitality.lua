@@ -117,6 +117,7 @@ local VIT_INF_FIGHT         = 0.30    -- the body's clearance of an infection wi
 local VIT_CC_HEAL           = 0.25    -- concussion healing x (1 + this x e)
 local VIT_WOUND_HEAL        = 0.25    -- unstitched deep wound healing x (1 + this x e)
 local VIT_LUNG_HEAL         = 0.25    -- a smoker's lungs recovering x (1 + this x e)
+local VIT_FIT_RECOVER       = 0.25    -- muscles recovering after training x (1 + this x e)
 local VIT_XP_TIER           = 4       -- Thriving: Fitness and Strength experience is multiplied...
 local VIT_XP_MULT           = 1.5     -- ...by this
 
@@ -299,7 +300,7 @@ local function updateVitalityMinute(player, d)
     d.vitActivity = (d.vitActivity or 0) * (1 - VIT_ACTIVE_DECAY) + math.max(0, met - VIT_ACTIVE_REST_MET)
     local active = VIT_ACTIVE_CAP * math.min(1, d.vitActivity / VIT_ACTIVE_DAY_TARGET)
     local trained = DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0
-    d.vitExercise = clamp01(math.max(trained, active))
+    d.vitExercise = clamp01(tonumber(DanTraits_RunHooks("exerciseScore", math.max(trained, active), player, d)) or math.max(trained, active))   -- Fitness: a plan followed
 
     -- sleep: segments accumulate into a night; the night is scored once the
     -- character has been up for an hour. Long stretches awake wear the score down.
@@ -450,6 +451,7 @@ DanTraits_AddHook("infectionFight", healsBy(VIT_INF_FIGHT))
 DanTraits_AddHook("concussionHeal", healsBy(VIT_CC_HEAL))
 DanTraits_AddHook("woundHeal", healsBy(VIT_WOUND_HEAL))
 DanTraits_AddHook("lungHeal", healsBy(VIT_LUNG_HEAL))
+DanTraits_AddHook("fitnessRecovery", healsBy(VIT_FIT_RECOVER))   -- muscles after training (DanTraits_Fitness.lua)
 
 -- Thriving: Fitness and Strength experience is x1.5. The event fires after
 -- the game adds the experience; half of it is added again, guarded

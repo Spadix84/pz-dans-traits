@@ -211,4 +211,48 @@ assert(not DanTraits_Data(hardy).meds.beta.over, "3.5 beta blockers with the lin
 DanTraits_Data(hardy).meds.beta.lvl = 4.5; H.mins(1)
 assert(DanTraits_Data(hardy).meds.beta.over, "4.5: over")
 
+-- 13. the schedule: the daily drugs for the traits a character has; each dose noted,
+--     due two hours before the interval is up, missed once it wears off, nothing once off it
+do
+  local function wait(m) H.mins(m); H.hours = H.hours + m / 60 end
+  local sc = H.player({ traits = { "heart", "epilepsy" } }); H.current = sc
+  local list = DanTraits_MedSchedule(sc)
+  assert(#list == 2 and list[1] == "anticonvulsant" and list[2] == "beta", "heart and epilepsy: " .. table.concat(list, ", "))
+  assert(#DanTraits_MedSchedule(H.player()) == 0, "no trait: nothing on the schedule")
+  assert(DanTraits_MedSince(sc, "beta") == nil and DanTraits_MedDue(sc, "beta") == 0 and DanTraits_MedDueLevel(sc) == 0, "never taken: nothing due")
+  DanTraits_RunHooks("pill", nil, sc, "PillsBeta")
+  near(DanTraits_MedSince(sc, "beta"), 0, 1e-9, "the dose is noted")
+  near(DanTraits_MedNextIn(sc, "beta"), 22, 1e-9, "once a day: due in 22 hours")
+  wait(21 * 60)
+  assert(DanTraits_MedDue(sc, "beta") == 0, "21 hours: not yet")
+  wait(60)
+  assert(DanTraits_MedDue(sc, "beta") == 1 and DanTraits_MedDueLevel(sc) == 1, "22 hours: due")
+  wait(3 * 60)
+  assert(not DanTraits_MedCovered(sc, "beta") and DanTraits_MedDue(sc, "beta") == 2, "25 hours: worn off, missed")
+  DanTraits_MedTake(sc, "beta", 1)
+  assert(DanTraits_MedDue(sc, "beta") == 0 and DanTraits_MedDueLevel(sc) == 0, "taken: nothing to do")
+  -- every 12 hours: due at 10
+  DanTraits_MedTake(sc, "anticonvulsant", 1)
+  wait(10 * 60)
+  assert(DanTraits_MedDue(sc, "anticonvulsant") == 1, "anticonvulsants: due at 10 hours")
+  -- off it: once the effect has faded there is nothing to miss
+  local off = H.player({ traits = { "heart" } }); H.current = off
+  DanTraits_Data(off).meds = { beta = { lvl = 0.2, built = 0.3 } }
+  assert(DanTraits_MedDue(off, "beta") == 2, "worn off with some effect left: missed")
+  DanTraits_Data(off).meds.beta.built = 0
+  assert(DanTraits_MedDue(off, "beta") == 0, "nothing left: off it")
+  -- an old save (no note of the last dose): not due until it wears off
+  DanTraits_Data(off).meds.beta = { lvl = 0.9, built = 1 }
+  assert(DanTraits_MedNextIn(off, "beta") == nil and DanTraits_MedDue(off, "beta") == 0, "unknown last dose, covered: nothing due")
+  -- a character who starts on it took this morning's
+  local st = H.player({ traits = { "heart" } }); H.current = st
+  DanTraits_MedStart(st, "beta")
+  near(DanTraits_MedSince(st, "beta"), 0, 1e-9, "starting on it: dosed now")
+  -- the antidepressant has its own state; a dose is still noted
+  local ad = H.player({ traits = { "spiraling" } }); H.current = ad
+  assert(DanTraits_MedSchedule(ad)[1] == "antidepressant", "Depression: antidepressants on the schedule")
+  DanTraits_RunHooks("pill", nil, ad, "PillsAntiDep")
+  near(DanTraits_MedSince(ad, "antidepressant"), 0, 1e-9, "an antidepressant dose is noted")
+end
+
 H.pass()

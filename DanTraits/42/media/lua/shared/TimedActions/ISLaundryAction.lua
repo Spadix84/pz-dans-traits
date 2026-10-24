@@ -14,6 +14,9 @@
 --               "ns"), with two posts and two ties carried
 --               (DanTraits_LaundryDry.lua). `item` is one of the posts.
 --   "takedown"  a clothesline put up that way (`source`, a post); no item.
+--   "sheet"     a dryer sheet into a dryer (`source`) from a box of them
+--               (`item`, drainable): one use, the dryer's next run scents
+--               the load (DanTraits_Laundry.lua).
 --
 -- Singleplayer shape: all the work is in perform(), there is no complete(),
 -- and isValid() is the only check. In B42 multiplayer the server rebuilds
@@ -37,6 +40,9 @@ function ISLaundryAction:isValid()
         local there = false
         pcall(function() there = self.source:getSquare() ~= nil end)
         return there and L().isBuiltLine(self.source)
+    elseif self.kind == "sheet" then
+        return self.item ~= nil and inv:containsRecursive(self.item) and DanTraits_ItemUses(self.item) > 0
+            and not L().hasSheet(self.source) and not L().runningDryer(self.source)
     end
     if not self.item or not inv:containsRecursive(self.item) then return false end
     if self.kind == "bleach" then
@@ -70,7 +76,7 @@ function ISLaundryAction:start()
     elseif self.kind == "fire" then
         self:setActionAnim("Loot")
         pcall(function() self:setAnimVariable("LootPosition", "") end)
-    elseif self.kind == "putup" or self.kind == "takedown" then
+    elseif self.kind == "putup" or self.kind == "takedown" or self.kind == "sheet" then
         self:setActionAnim("Loot")
         pcall(function() self:setAnimVariable("LootPosition", "Mid") end)
     else
@@ -106,6 +112,11 @@ function ISLaundryAction:perform()
         end
     elseif self.kind == "takedown" then
         L().takeDownLine(self.character, self.source)
+    elseif self.kind == "sheet" then
+        if L().addSheet(self.source) then
+            self.item:Use()
+            DanTraits_NotifyGood(self.character, "UI_DanTraits_SheetIn")
+        end
     end
     if self.item then
         pcall(function()
@@ -121,6 +132,7 @@ end
 -- kind "protect": extra = the protector or wax
 -- kind "putup": source = the first square, extra = "ew" | "ns", item = a post
 -- kind "takedown": source = a post, item = nil
+-- kind "sheet": source = the dryer, item = the box of dryer sheets
 function ISLaundryAction:new(character, item, kind, source, extra, water)
     local o = ISBaseTimedAction.new(self, character)
     o.item = item
@@ -146,6 +158,10 @@ function ISLaundryAction:new(character, item, kind, source, extra, water)
     elseif kind == "takedown" then
         o.faceTo = source
         o.maxTime = 200
+    elseif kind == "sheet" then
+        o.faceTo = source
+        o.label = getText("ContextMenu_DanTraits_DryerSheet")
+        o.maxTime = 40
     else
         o.agent = extra
         o.label = getText("ContextMenu_DanTraits_ProtectFabric")

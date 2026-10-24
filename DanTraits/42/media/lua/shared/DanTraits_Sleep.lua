@@ -30,6 +30,22 @@
 -- Desensitized: the things you have seen come back at night. A chance each
 -- hour asleep of waking from a nightmare, stressed and low.
 --
+-- Clothes in bed (sandbox option SleepClothesEnabled): sleeping dressed is
+-- shallower sleep, like a lit room. Sleepwear is free: underwear, socks, a
+-- T-shirt, tank top or short-sleeved shirt, shorts, a bath robe, and anything
+-- that is not really clothing (jewellery, glasses, make-up, bandages). Each
+-- other worn thing costs its slot's weight (jeans 0.25, a jacket 0.3, boots
+-- 0.25, a backpack 0.3...), up to 1 for fully dressed: tiredness drains up to
+-- 12% slower and the night scores up to 0.1 worse. Warm clothes cost nothing
+-- in the cold, so winter never asks you to strip and freeze: their weight
+-- fades from full at 20C air (as the game reads it for the character,
+-- indoors included) to none at 10C, and none at all while you have the Cold
+-- moodle. Gear (shoes, bags, belts, holsters, armour, masks) costs the same
+-- whatever the weather. Deep Sleeper pays half. Waking after an hour or more
+-- of a badly dressed sleep says so. "Undress and Sleep" under the game's
+-- Sleep option takes it all off, puts the bags down and sleeps
+-- (media/lua/client/DanTraits_SleepMenu.lua).
+--
 -- Deep Sleeper: Wakeful folded in (the vanilla trait is granted, so the
 -- shorter sleep and Vitality's five-hour night come with it; Wakeful itself
 -- is hidden at character creation, see media/lua/client). On top of that,
@@ -70,6 +86,37 @@ local DS_REST_BRIGHT    = 0.5     -- bright-light rest and score penalties x thi
 local DS_REST_DARK      = 1.5     -- dark rest and score bonuses x this
 local SL_FEVER_CUT      = 0.3     -- the night's score x (1 - this x fever)
 local SL_FEVER_WAKE     = 0.5     -- light wakes you x (1 + this x fever)
+-- clothes in bed
+local CL_REST           = 0.12    -- tiredness drains this much slower, fully dressed...
+local CL_QUALITY        = 0.10    -- ...and this much is taken off the night's score
+local CL_WARM_COLD      = 10      -- air at or below this (C): warm clothes are free...
+local CL_WARM_FULL      = 20      -- ...at or above this, they cost in full
+local CL_NOTIFY         = 0.25    -- waking after a sleep dressed at least this badly...
+local CL_NOTIFY_MIN     = 60      -- ...and at least this long says so
+local CL_STRIP_WARM     = 0.5     -- Undress and Sleep takes warm clothes off only while they cost at least this share (15C and up)
+-- what each body location costs; warm ones fade in the cold. A location not
+-- listed (sleepwear, jewellery, make-up, bandages) is free. Keyed the way
+-- DanTraits_BodyLocation spells them: B42's own ids, no underscores
+-- (base:sweaterhat); the B41 spellings are kept for the mods that still use them
+local CL_SLOTS = {}
+for loc, w in pairs({
+    shirt = 0.15, sweater = 0.2, sweaterhat = 0.25, jersey = 0.15, fulltop = 0.2, torso1 = 0.1,
+    torso1legs1 = 0.15, legs1 = 0.1, pants = 0.25, pantsskinny = 0.3, pantsextra = 0.15, skirt = 0.1,
+    longskirt = 0.15, dress = 0.15, longdress = 0.2, boilersuit = 0.4, fullsuit = 0.4, bodycostume = 0.3,
+    jacket = 0.3, jacketsuit = 0.3, jackethat = 0.35, jacketbulky = 0.45, jackethatbulky = 0.5,
+    jacketdown = 0.45, fullrobe = 0.1, torsoextra = 0.15, torsoextravest = 0.1, hat = 0.1,
+    fullhat = 0.15, scarf = 0.05, neck = 0.05, hands = 0.1, handsleft = 0.05, handsright = 0.05,
+}) do CL_SLOTS[loc] = { w = w, warm = true } end
+for loc, w in pairs({
+    shoes = 0.25, belt = 0.05, beltextra = 0.05, back = 0.3, satchel = 0.15, fannypackfront = 0.05,
+    fannypackback = 0.05, webbing = 0.2, ammostrap = 0.1, shoulderholster = 0.1, ankleholster = 0.05,
+    torsoextravestbullet = 0.3, cuirass = 0.4, shoulderpadleft = 0.1, shoulderpadright = 0.1,
+    sportshoulderpad = 0.3, sportshoulderpadontop = 0.3, elbowleft = 0.05, elbowright = 0.05,
+    kneeleft = 0.05, kneeright = 0.05, forearmleft = 0.05, forearmright = 0.05, thighleft = 0.05,
+    thighright = 0.05, calfleft = 0.05, calfright = 0.05, gaiterleft = 0.05, gaiterright = 0.05,
+    gorget = 0.15, codpiece = 0.1, mask = 0.05, maskeyes = 0.1, maskfull = 0.2, fullsuithead = 0.3,
+    fullsuitheadscba = 0.4, scba = 0.4, scbanotank = 0.3,
+}) do CL_SLOTS[loc] = { w = w } end
 
 local clamp01 = DanTraits_Clamp01
 
@@ -93,6 +140,76 @@ local function scaled(player, dark, good, bad)
     local deep = hasTrait(player, "deepsleeper")
     if dark > 0 then return good * dark * (deep and DS_REST_DARK or 1) end
     return bad * dark * DanTraits_RunHooks("sleepBright", deep and DS_REST_BRIGHT or 1, player)   -- Night Shift
+end
+
+-- how much warm clothes count: 0 in the cold (or while you feel it), 1 when warm
+local function clothesWarmth(player)
+    local cold = 0
+    pcall(function() cold = player:getMoodles():getMoodleLevel(MoodleType.HYPOTHERMIA) or 0 end)
+    if cold > 0 then return 0 end
+    local air = nil
+    pcall(function() air = getClimateManager():getAirTemperatureForCharacter(player, false) end)
+    if type(air) ~= "number" then return 1 end
+    return clamp01((air - CL_WARM_COLD) / (CL_WARM_FULL - CL_WARM_COLD))
+end
+
+-- 0 (sleepwear) .. 1 (fully dressed): how badly dressed for bed, given the weather
+local function clothesCost(player)
+    if not DanTraits_SandboxOn("SleepClothesEnabled") then return 0 end
+    local warmth, cost = nil, 0
+    pcall(function()
+        local worn = player:getWornItems()
+        for i = 0, worn:size() - 1 do
+            local item = worn:getItemByIndex(i)
+            local slot = CL_SLOTS[DanTraits_BodyLocation(item)]
+            if slot then
+                if slot.warm and warmth == nil then warmth = clothesWarmth(player) end
+                cost = cost + slot.w * (slot.warm and warmth or 1)
+            end
+        end
+    end)
+    return math.min(1, cost)
+end
+DanTraits_SleepClothesCost = clothesCost
+
+local function isBag(item)
+    local ok, res = pcall(function() return instanceof(item, "InventoryContainer") end)
+    return ok and res == true
+end
+
+-- what Undress and Sleep (media/lua/client/DanTraits_SleepMenu.lua) takes
+-- off: every worn thing that costs sleep, except warm clothes once the cold
+-- has taken most of their cost away (they keep you warm through the night).
+-- Worn bags and bags in the hands go on the floor instead. Two lists of items.
+function DanTraits_SleepUndressList(player)
+    local clothes, bags = {}, {}
+    if not DanTraits_SandboxOn("SleepClothesEnabled") then return clothes, bags end
+    local warmth = nil
+    pcall(function()
+        local worn = player:getWornItems()
+        for i = 0, worn:size() - 1 do
+            local item = worn:getItemByIndex(i)
+            local slot = CL_SLOTS[DanTraits_BodyLocation(item)]
+            if slot then
+                if slot.warm and warmth == nil then warmth = clothesWarmth(player) end
+                if isBag(item) then bags[#bags + 1] = item
+                elseif not slot.warm or warmth >= CL_STRIP_WARM then clothes[#clothes + 1] = item end
+            end
+        end
+    end)
+    for _, hand in ipairs({ "getPrimaryHandItem", "getSecondaryHandItem" }) do
+        local item = nil
+        pcall(function() item = player[hand](player) end)
+        local seen = false
+        for _, b in ipairs(bags) do if b == item then seen = true end end
+        if item and not seen and isBag(item) then bags[#bags + 1] = item end
+    end
+    return clothes, bags
+end
+
+-- the cost of sleeping dressed, for the trait (Deep Sleeper pays half)
+local function clothesScaled(player, clothes, full)
+    return full * clothes * (hasTrait(player, "deepsleeper") and DS_REST_BRIGHT or 1)
 end
 
 -- how easily light wakes this character: 1 is everyone
@@ -153,24 +270,32 @@ local function updateSleepMinute(player, d)
     asleep = DanTraits_Asleep(player)
     pcall(function() fatigue = stats:get(CharacterStat.FATIGUE) or 0 end)
     if not asleep then
-        d.slAsleepMin, d.slLastFatigue = nil, nil
+        if (d.slClothMin or 0) >= CL_NOTIFY_MIN and d.slClothSum / d.slClothMin >= CL_NOTIFY then
+            notify(player, "UI_DanTraits_SleepClothed")
+        end
+        d.slAsleepMin, d.slLastFatigue, d.slClothSum, d.slClothMin = nil, nil, nil, nil
         if (d.slNightMin or 0) > 0 and not DanTraits_SandboxOn("VitalityEnabled") then
-            d.slNightDark, d.slNightMin = 0, 0   -- no scorer to hand it to
+            d.slNightDark, d.slNightClothes, d.slNightMin = 0, 0, 0   -- no scorer to hand it to
         end
         return
     end
     local light = lightLevel(player)
     if light == nil then return end
     local dark = DanTraits_SandboxOn("SleepLightEnabled") and darknessOf(light) or 0   -- off: light counts as neutral everywhere
-    d.slLight, d.slDark = light, dark
+    local clothes = clothesCost(player)
+    d.slLight, d.slDark, d.slClothes = light, dark, clothes
     d.slAsleepMin = (d.slAsleepMin or 0) + 1
     d.slNightDark = (d.slNightDark or 0) + dark
+    d.slNightClothes = (d.slNightClothes or 0) + clothes
     d.slNightMin = (d.slNightMin or 0) + 1
+    d.slClothSum = (d.slClothSum or 0) + clothes
+    d.slClothMin = (d.slClothMin or 0) + 1
 
     -- rest: scale however much tiredness the game took off since last minute
     local last = d.slLastFatigue or fatigue
     if fatigue < last then
-        fatigue = clamp01(last - (last - fatigue) * (1 + scaled(player, dark, SL_REST_DARK, SL_REST_BRIGHT)))
+        local rate = 1 + scaled(player, dark, SL_REST_DARK, SL_REST_BRIGHT) - clothesScaled(player, clothes, CL_REST)
+        fatigue = clamp01(last - (last - fatigue) * rate)
         pcall(function() stats:set(CharacterStat.FATIGUE, fatigue) end)
     end
     d.slLastFatigue = fatigue
@@ -194,13 +319,15 @@ local function updateSleepMinute(player, d)
     end
 end
 
--- the night's score: how dark it was, on average, while asleep
+-- the night's score: how dark it was, and how dressed you were, on average, while asleep
 DanTraits_AddHook("nightQuality", function(quality, player, d)
     if not d or not d.slNightMin or d.slNightMin <= 0 then return nil end
     local dark = d.slNightDark / d.slNightMin
-    d.slLastNightDark = dark
-    d.slNightDark, d.slNightMin = 0, 0
-    return clamp01(quality + scaled(player, dark, SL_QUALITY_DARK, SL_QUALITY_BRIGHT))
+    local clothes = (d.slNightClothes or 0) / d.slNightMin
+    d.slLastNightDark, d.slLastNightClothes = dark, clothes
+    d.slNightDark, d.slNightClothes, d.slNightMin = 0, 0, 0
+    return clamp01(quality + scaled(player, dark, SL_QUALITY_DARK, SL_QUALITY_BRIGHT)
+        - clothesScaled(player, clothes, CL_QUALITY))
 end)
 
 -- a fever is a bad night: a worse score, and lighter sleep (DanTraits_Infection.lua)

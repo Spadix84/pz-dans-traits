@@ -144,6 +144,11 @@ local function tierOf(load) return DanTraits_TierOf(load, MS_TIER) end
 local function spoonCount() return math.max(0, math.floor(DanTraits_SandboxNum("MSSpoons", MS_SPOONS_DEFAULT))) end
 local function spoonsOn() return spoonCount() > 0 end
 local function spoonTier(player) return DanTraits_SpoonTier and DanTraits_SpoonTier(player) or 0 end
+-- the msRelief hook: what eases the symptoms (DanTraits_Fitness.lua: a fit body,
+-- stretching), 0.5..1 on stiffness, pain and fatigue; it never takes them away
+local function msRelief(player)
+    return math.max(0.5, math.min(1, tonumber(DanTraits_RunHooks("msRelief", 1, player)) or 1))
+end
 
 -- 0..1 from a start point to a full point
 local over = DanTraits_Over
@@ -297,13 +302,16 @@ local function updateMSMinute(player, d)
     local flaring = (d.msFlareH or 0) > 0
     local stats = player:getStats()
 
+    -- a fit body and stretching ease the symptoms a little (the msRelief hook: DanTraits_Fitness.lua)
+    local relief = msRelief(player)
+
     -- fatigue: the spoon budget's (DanTraits_Spoons.lua), or with no budget the
     -- old drip: MS's own, a flare's, and the heat's
     if not spoonsOn() and not DanTraits_Asleep(player) then
         local tired = MS_FATIGUE + (flaring and MS_FLARE_FATIGUE or 0)
         tired = tired * (1 - (1 - MS_AMAN_FATIGUE) * effect(player, "amantadine"))
         if load >= MS_TIER[1] then tired = tired + MS_HEAT_FATIGUE * load end
-        DanTraits_StatAdd(stats, CharacterStat.FATIGUE, tired)
+        DanTraits_StatAdd(stats, CharacterStat.FATIGUE, tired * relief)
     end
 
     -- stiffness: hands from heat (hot and up) or a flare, legs always
@@ -316,7 +324,7 @@ local function updateMSMinute(player, d)
         if sp >= 3 then legs = math.max(legs, MS_LEG_FLARE) elseif sp == 2 then legs = math.max(legs, MS_LEG_LOW) end
     end
     local relax = 1 - (1 - MS_BAC_STIFF) * effect(player, "baclofen")
-    hands, legs = hands * relax, legs * relax
+    hands, legs = hands * relax * relief, legs * relax * relief
     setFloors(player, d, hands, legs)
 
     -- discomfort gets to you: stress on top of the game's own (and spoons, in the spend hook)
@@ -327,7 +335,7 @@ local function updateMSMinute(player, d)
 
     local pain = 0
     if load >= MS_TIER[2] then
-        pain = MS_PAIN_HOT + (MS_PAIN - MS_PAIN_HOT) * over(load, MS_TIER[2], 1)
+        pain = (MS_PAIN_HOT + (MS_PAIN - MS_PAIN_HOT) * over(load, MS_TIER[2], 1)) * relief
         DanTraits_PainFloor(player, d, "ms", pain, MS_PAIN_RAMP)
     end
     easePain(player, d, pain)
@@ -365,7 +373,7 @@ DanTraits_AddHook("spoonSpend", function(cost, player, d)
     cost = cost * (1 + (d.msHeat or 0))
     if (d.msFlareH or 0) > 0 then cost = cost * MS_SPOON_FLARE_COST end
     cost = cost * (1 + MS_DISCOMFORT_COST * fraction(player:getStats(), CharacterStat.DISCOMFORT))
-    return cost
+    return cost * msRelief(player)
 end)
 
 DanTraits_AddHook("enduranceRegen", function(delta, player, d)

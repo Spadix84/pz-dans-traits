@@ -90,12 +90,12 @@ near(6 - wd.spPool, (1 / 160) * (1 + load) - 0.01, 1e-9, "tiring: the warmth spe
 near(DanTraits_RunHooks("enduranceRegen", 1, w, wd), 1 - 0.5 * wd.msHeat, 1e-9, "endurance comes back slower")
 
 -- 4b. discomfort (the game's Uncomfortable stat) wears MS down: stress on top of the game's, and spoons x (1 + 0.5 x it)
-w._st.stress = 0; w._st.discomfort = 0.5; H.minute(w)
+w._st.stress = 0; w._st.discomfort = 50; H.minute(w)
 near(w._st.stress, 0.0002, 1e-9, "half uncomfortable: 0.0002 stress a minute")
 DanTraits_SpoonsSet(w, 6); load = wd.msHeat; H.minute(w)
 near(6 - wd.spPool, (1 / 160) * (1 + load) * 1.25 - 0.01, 1e-9, "...and the spoons go x1.25")
 w._st.discomfort = 0; w._st.stress = 0; H.minute(w); assert(w._st.stress == 0, "comfortable: nothing")
-w._asleep = true; w._st.discomfort = 1; H.minute(w); assert(w._st.stress == 0, "asleep: nothing"); w._asleep = false; w._st.discomfort = 0
+w._asleep = true; w._st.discomfort = 100; H.minute(w); assert(w._st.stress == 0, "asleep: nothing"); w._asleep = false; w._st.discomfort = 0
 
 -- 5. a drink straight from a tap or a river cools: 0.4 a litre; filling a
 --    bottle there, or drinking from one, does not

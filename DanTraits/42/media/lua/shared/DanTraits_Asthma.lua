@@ -174,6 +174,11 @@ local function updateAsthmaMinute(player, d)
         end
         local moving = false
         pcall(function() moving = player:isSprinting() or player:isRunning() end)
+        -- a breathless exercise in place (burpees; DanTraits_Fitness.lua) is as hard on the airways as a run
+        if not moving and DanTraits_FitTrainingNow then
+            local _, spec = DanTraits_FitTrainingNow(player)
+            moving = spec ~= nil and spec.breathless == true
+        end
         if moving and not out then
             build = build + ASTHMA_SPRINT_RATE * passiveMult * (1 + ASTHMA_LUNGS_BUILD * lungs)
         end

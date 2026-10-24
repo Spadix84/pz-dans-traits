@@ -151,6 +151,7 @@ ISContextMenu = {}
 
 dofile(ROOT .. "shared/DansVanillaFixes_Collection.lua")
 dofile(ROOT .. "client/DansVanillaFixes_CollectionUI.lua")
+dofile(ROOT .. "client/DanShared_Tooltip.lua")
 dofile(ROOT .. "client/DansVanillaFixes_CollectionClient.lua")
 local C = DVF_Collection
 

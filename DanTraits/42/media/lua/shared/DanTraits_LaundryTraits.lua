@@ -12,8 +12,8 @@
 --   Homemaker (+4)       a hand wash gets clothes as clean as a washboard, a
 --                        washboard twice as clean; washing wears fabric half as
 --                        much; Line-Dried lifts x1.5. Not with Slob.
---   Sensitive Skin (-2)  damp, musty or never-washed clothes against the skin
---                        itch: discomfort, more with each garment. The clothes
+--   Sensitive Skin (-2)  damp, musty, never-washed or dryer-sheet clothes against
+--                        the skin itch: discomfort, more with each garment. The clothes
 --                        you start in count as washed. Bleaching stings the
 --                        hands (discomfort per garment), and the sun burns the
 --                        skin in two hours, not three (DanTraits_Sunburn.lua).
@@ -119,15 +119,15 @@ end)
 local function knownClean(s) return s ~= nil and ((s.n or 0) > 0 or s.ok == true) end
 L.knownClean = knownClean
 
--- how itchy: each garment against the skin (shoes aside) that is damp, musty or
--- never washed counts 1, a musty one 2
+-- how itchy: each garment against the skin (shoes aside) that is damp, musty,
+-- never washed or dried with a dryer sheet (the perfume) counts 1, a musty one 2
 function L.itch(player)
     local n = 0
     for _, item in ipairs(L.worn(player)) do
         if L.layer(item) >= 1 and L.location(item) ~= "shoes" then
             local s = L.state(item, false)
             if s and s.m then n = n + 2
-            elseif L.wetness(item) >= L.C.DAMP_AT or not knownClean(s) then n = n + 1 end
+            elseif L.wetness(item) >= L.C.DAMP_AT or not knownClean(s) or L.sheeted(s) then n = n + 1 end
         end
     end
     return n
@@ -165,11 +165,18 @@ DanTraits_StartingKit({
     end,
 })
 
--- a garment's tooltip says it has never been washed, for whoever it would itch
+-- a garment's tooltip says it has never been washed, or carries dryer-sheet
+-- perfume, for whoever it would itch
 DanTraits_AddHook("laundryTooltip", function(lines, item)
     local player = getSpecificPlayer and getSpecificPlayer(0)
     if not player or not hasTrait(player, "sensitiveskin") or L.layer(item) < 1 or L.location(item) == "shoes" then return nil end
-    if knownClean(L.state(item, false)) then return nil end
-    lines[#lines + 1] = { getText("Tooltip_DanTraits_NeverWashed"), true }
+    local s = L.state(item, false)
+    if not knownClean(s) then
+        lines[#lines + 1] = { getText("Tooltip_DanTraits_NeverWashed"), true }
+    elseif L.sheeted(s) then
+        lines[#lines + 1] = { getText("Tooltip_DanTraits_SheetItch"), true }
+    else
+        return nil
+    end
     return lines
 end)

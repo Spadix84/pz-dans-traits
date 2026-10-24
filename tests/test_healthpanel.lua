@@ -121,4 +121,156 @@ do
   assert(#d == 2, "the part's name and the one line: " .. texts(d))
 end
 
+-- 11. daily medication: a header and a line per scheduled drug at the top of the list's
+--     place, the list moved down and the panel grown to fit; your own character only
+do
+  H.load("Meds")
+  local plainText = getText
+  getText = function(k, a) if a ~= nil then return k .. ":" .. a end return plainText(k) end
+  local NAMES = { ["Base.PillsBeta"] = "Beta Blockers", ["DanTraits.Anticonvulsants"] = "Anticonvulsants" }
+  function getItemNameFromFullType(ft) return NAMES[ft] end
+  function getCore() return { getScreenHeight = function() return 1000 end } end
+  UI_BORDER_SPACING = 5
+  function getTextManager() return { getFontHeight = function() return 10 end, MeasureStringX = function(_, _, str) return #str * 5 end } end
+  ISHealthPanel.render = function(self) self.listbox._y = 50; self.allTextHeight = 300 end
+  H.fire("OnGameStart")
+  assert(ISHealthPanel.render == ISHealthPanel.DanTraitsRender, "render wrapped")
+
+  local me = H.player({ traits = { "heart", "epilepsy" } }); H.current = me
+  me.isLocalPlayer = function() return true end
+  local function panelFor(who)
+    local drawn = {}
+    local listbox = { _y = 0, _h = 0, textRight = 0 }
+    function listbox:getX() return 200 end
+    function listbox:getY() return self._y end
+    function listbox:setY(v) self._y = v end
+    function listbox:getHeight() return self._h end
+    function listbox:setHeight(v) self._h = v end
+    local panel = setmetatable({ listbox = listbox }, { __index = ISHealthPanel })
+    function panel:getPatient() return who end
+    function panel:getAbsoluteY() return 0 end
+    function panel:drawText(str, x, y, r, g, b) drawn[#drawn + 1] = { s = str, x = x, y = y, r = r, g = g } end
+    return panel, drawn
+  end
+
+  DanTraits_MedTake(me, "beta", 1)
+  H.hours = H.hours + 5
+  local panel, drawn = panelFor(me)
+  panel:render()
+  assert(texts(drawn) == "UI_DanTraits_health_MedHeader | Anticonvulsants: UI_DanTraits_health_MedNever | Beta Blockers: UI_DanTraits_health_MedHours:5, UI_DanTraits_health_MedNextIn:17", texts(drawn))
+  assert(drawn[1].x == 200 and drawn[1].y == 50 and drawn[3].y == 70, "at the list's place, a line apart")
+  assert(drawn[2].r == 0.7 and drawn[3].g == 0.89, "not taken grey, covered green")
+  assert(panel.listbox._y == 84 and panel.allTextHeight == 334 and panel.listbox._h == 250, "list down 34, panel grown 34: " .. panel.listbox._y .. " " .. panel.allTextHeight .. " " .. panel.listbox._h)
+  assert(panel.listbox.textRight > 0, "wide enough for the lines")
+
+  -- due, then worn off
+  H.hours = H.hours + 18
+  panel, drawn = panelFor(me); panel:render()
+  assert(drawn[3].s == "Beta Blockers: UI_DanTraits_health_MedHours:23, UI_DanTraits_health_MedDueNow" and drawn[3].r == 1, drawn[3].s)
+  DanTraits_Data(me).meds.beta.lvl, DanTraits_Data(me).meds.beta.built = 0.2, 0.5   -- worn off with some effect left to lose
+  panel, drawn = panelFor(me); panel:render()
+  assert(drawn[3].s == "Beta Blockers: UI_DanTraits_health_MedHours:23, UI_DanTraits_health_MedWornOff" and drawn[3].r == 0.89, drawn[3].s)
+  H.hours = H.hours + 48
+  panel, drawn = panelFor(me); panel:render()
+  assert(drawn[3].s == "Beta Blockers: UI_DanTraits_health_MedDays:2, UI_DanTraits_health_MedWornOff", drawn[3].s)
+
+  -- someone else's panel, a character with no daily drugs, the debug view: nothing added
+  local other = H.player({ traits = { "heart" } }); other.isLocalPlayer = function() return false end
+  panel, drawn = panelFor(other); panel:render()
+  assert(#drawn == 0 and panel.listbox._y == 50, "a patient: nothing")
+  local well = H.player(); well.isLocalPlayer = function() return true end
+  panel, drawn = panelFor(well); panel:render()
+  assert(#drawn == 0 and panel.listbox._y == 50, "no daily drugs: nothing")
+  ISHealthPanel.cheat = true
+  panel, drawn = panelFor(me); panel:render()
+  assert(#drawn == 0, "debug view: left alone")
+  ISHealthPanel.cheat = false
+
+  -- another mod's render wrapped over ours, then re-wrapped: the lines once
+  local ours = ISHealthPanel.render
+  ISHealthPanel.render = function(self) return ours(self) end
+  H.fire("OnGameStart")
+  panel, drawn = panelFor(me); panel:render()
+  assert(#drawn == 3 and panel.listbox._y == 84, "drawn once through two layers: " .. texts(drawn))
+
+  -- 12. blood: a section above the medication, told by the examiner's First Aid level
+  getText = function(k, a, b)
+    if b ~= nil then return k .. ":" .. a .. ":" .. b end
+    if a ~= nil then return k .. ":" .. a end
+    return plainText(k)
+  end
+  local state = nil
+  function DanTraits_BloodState() return state end
+  local function blood(level, s)
+    state = { vol = 1, cells = 1, loss = 0, volGain = 0, cellGain = 0, tier = 0, weak = 0, shock = 0.40, death = 0.50 }
+    for k, v in pairs(s or {}) do state[k] = v end
+    local lines = DanTraits_HealthBloodLines(me, level)
+    local out = {}
+    for _, l in ipairs(lines) do out[#out + 1] = l[1] end
+    return table.concat(out, " | "), lines
+  end
+  local P = "UI_DanTraits_health_"
+  -- full and well
+  assert(blood(0) == P .. "BloodFeelFine", blood(0))
+  assert(blood(4) == P .. "BloodLossNone", blood(4))
+  assert(blood(7) == P .. "BloodVolAbout:100", blood(7))
+  assert(blood(10) == P .. "BloodVol:100", blood(10))
+  -- a steady bleed into tier 1 (25% lost), drinking a little, short of red cells
+  local bleed = { vol = 0.75, cells = 0.72, loss = 0.002, volGain = 0.0002, cellGain = 0.00003, tier = 1, weak = 0.4 }
+  local s, lines = blood(1, bleed)
+  assert(s == P .. "BloodFeel1 | " .. P .. "BloodStillBleeding", s)
+  assert(lines[1][2][1] == 1 and lines[2][2][1] == 1, "pale: orange; a steady bleed: orange")
+  s = blood(3, bleed)
+  assert(s == P .. "BloodLoss1 | " .. P .. "BleedSteady | " .. P .. "BloodCellsLow", s)
+  s = blood(6, bleed)
+  assert(s == P .. "BloodVolAbout:75 | " .. P .. "BloodLosingAbout:11 | " .. P .. "BloodCellsAbout:70", s)
+  -- 10.8% net an hour; shock at 60% volume, 15 points off: 83 minutes; cells not rebuilding while it bleeds
+  s = blood(9, bleed)
+  assert(s == P .. "BloodVol:75 | " .. P .. "BloodLosingShock:10.8:" .. P .. "BloodHour | " .. P .. "BloodCells:72", s)
+  -- in shock and still losing: the heart gives out, red
+  s, lines = blood(10, { vol = 0.58, loss = 0.005, tier = 3 })
+  assert(s == P .. "BloodVol:58 | " .. P .. "BloodLosingDeath:30.0:" .. P .. "BloodUnderHour", s)
+  assert(lines[2][2][1] == 0.89, "red")
+  assert(blood(0, { vol = 0.58, loss = 0.005, tier = 3 }) == P .. "BloodFeel3 | " .. P .. "BloodStillBleeding", "a layperson: in shock")
+  -- under a dressing, drinking keeps up
+  assert(blood(8, { vol = 0.9, loss = 0.0001, volGain = 0.0002 }) == P .. "BloodVolAbout:90 | " .. P .. "BloodHolding", "holding")
+  assert(blood(4, { vol = 0.9, loss = 0.0001, volGain = 0.0002 }) == P .. "BloodLossSlight | " .. P .. "BleedSlow", "slow")
+  -- stopped: coming back, or not without water
+  local back = { vol = 0.9, volGain = 0.35 / 1440 }
+  assert(blood(4, back) == P .. "BloodLossSlight | " .. P .. "BloodRefilling", blood(4, back))
+  assert(blood(6, back) == P .. "BloodVolAbout:90 | " .. P .. "BloodRefillAbout:1", blood(6, back))
+  assert(blood(9, back) == P .. "BloodVol:90 | " .. P .. "BloodRefillFull:" .. P .. "BloodHours:7", blood(9, back))
+  assert(blood(5, { vol = 0.9 }) == P .. "BloodLossSlight | " .. P .. "BloodNoRefill", "thirsty: not refilling")
+  -- after: volume back, red cells rebuilding (2% short at 5% a day: about 10 hours)
+  local after = { cells = 0.98, cellGain = 0.05 / 1440 }
+  assert(blood(1, after) == P .. "BloodFeelFine", "a layperson: fine (not weak yet at 98%)")
+  assert(blood(10, after) == P .. "BloodVol:100 | " .. P .. "BloodCellsBack:98:" .. P .. "BloodHours:10", blood(10, after))
+  assert(blood(1, { cells = 0.8, weak = 0.25 }) == P .. "BloodFeelWeak", "a layperson: worn down")
+  -- on the panel: the blood section first, then the medication, the list down past both
+  state = { vol = 0.75, cells = 1, loss = 0, volGain = 0.0002, cellGain = 0, tier = 1, weak = 0, shock = 0.40, death = 0.50 }
+  DanTraits_BloodState = function() return state end
+  panel, drawn = panelFor(me); panel.doctorLevel = 3; panel:render()
+  assert(texts(drawn):find(P .. "BloodHeader | " .. P .. "BloodLoss1 | " .. P .. "BloodRefilling | " .. P .. "MedHeader", 1, true) == 1, texts(drawn))
+  assert(drawn[4].y == 84 and panel.listbox._y == 118, "a gap under each section: " .. drawn[4].y .. " " .. panel.listbox._y)
+  -- the examiner's level read live, over the panel's
+  panel, drawn = panelFor(me); panel.doctorLevel = 0
+  panel.getDoctor = function() return { getPerkLevel = function() return 9 end } end
+  panel:render()
+  assert(drawn[2].s == P .. "BloodVol:75", "live level 9: " .. drawn[2].s)
+  -- a patient: still nothing; blood off: only the medication
+  panel, drawn = panelFor(other); panel:render(); assert(#drawn == 0, "a patient, no answer from their client yet: nothing")
+  -- another player in multiplayer: their client's answer (DanTraits_BloodRelay.lua), at the doctor's level; no medication
+  local asked = nil
+  function DanTraits_PatientBloodState(doc, pat) asked = { doc, pat } return state end
+  local medic = { getPerkLevel = function() return 6 end }
+  panel, drawn = panelFor(other); panel.getDoctor = function() return medic end; panel:render()
+  assert(texts(drawn) == P .. "BloodHeader | " .. P .. "BloodVolAbout:75 | " .. P .. "BloodRefillAbout:1", texts(drawn))
+  assert(asked[1] == medic and asked[2] == other, "asked by the doctor about the patient")
+  DanTraits_PatientBloodState = nil
+  state = nil
+  panel, drawn = panelFor(me); panel:render(); assert(drawn[1].s == P .. "MedHeader", "blood off: medication only")
+  DanTraits_BloodState = nil
+  getText = plainText
+end
+
 H.pass()

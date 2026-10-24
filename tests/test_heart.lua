@@ -272,4 +272,17 @@ assert(D(plain).hcStrain == nil, "no trait: no strain")
 D(plain).hcWeakH = 150
 near(DanTraits_RunHooks("enduranceRegen", 1, plain, D(plain)), 0.5, 1e-9, "the week after an attack runs on whoever has it")
 
+-- the fitness link (DanTraits_Fitness.lua): a minute of heavy lifting or burpees bears down on the heart
+local lifter = H.player({ traits = { "heart" } }); H.current = lifter
+H.minute()
+local before = lifter._md.DanTraits.hcStrain or 0
+DanTraits_FitTrainingNow = function() return "barbellcurl", { intensity = 1.3 } end
+H.minute()
+assert((lifter._md.DanTraits.hcStrain or 0) > before, "heavy lifting builds strain")
+local liftStrain = lifter._md.DanTraits.hcStrain
+DanTraits_FitTrainingNow = function() return "situp", { intensity = 1 } end
+H.minute()
+assert((lifter._md.DanTraits.hcStrain or 0) <= liftStrain, "a light exercise adds no lifting strain")
+DanTraits_FitTrainingNow = nil
+
 H.pass()

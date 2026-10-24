@@ -9,7 +9,10 @@
 --            Quick Study (+4)     a skill below level 5 gains experience x1.4
 --   40s 50s  Reading Glasses (-2) starts with a pair; without glasses on, reading
 --                                 takes x1.5 as long and needs a properly lit room
---            Bad Back (-4)        a heavy load builds lower-back pain; rest eases it
+--            Bad Back (-8)        a heavy load builds lower-back pain and stiff legs
+--                                 (slower walking); rest eases it; a sore back under
+--                                 load can be thrown out (four hours of severe pain,
+--                                 no running); core training eases it
 --            Bad Knees (-3)       running, sprinting, climbing and stomping build knee
 --                                 pain; walking never rests them, sitting rests them
 --                                 faster, a comfy chair faster still
@@ -101,7 +104,25 @@ local RG_LIGHT       = 0.45    -- and no reading under this light level (0.25 is
 local BB_RISE        = 0.004   -- load per minute per level of the Heavy Load moodle (level 2: full in about 2 hours)
 local BB_EASE        = 0.004   -- off per minute with no heavy load...
 local BB_EASE_ASLEEP = 2       -- ...x this asleep
-local BB_PAIN        = 45      -- lower-back pain at a full load
+local BB_PAIN        = 60      -- lower-back pain at a full load (45 until 2026-10-18)
+local BB_STIFF_BACK  = 30      -- lower-back stiffness at a full load (the game: clumsier)...
+local BB_STIFF_LEGS  = 25      -- ...and on the thighs (the game: slower walking)
+-- thrown out: a sore back under load gives way
+local BB_OUT_FROM    = 0.5     -- back load from which it can go...
+local BB_OUT_CHANCE  = 0.004   -- ...a minute, rising from 0 at BB_OUT_FROM to this at a full load
+local BB_OUT_HEAVY   = 2       -- under Heavy Load this level or more, or lifting (DanTraits_BadBackStrain this minute)
+local BB_OUT_MIN     = 240     -- four hours
+local BB_OUT_PAIN    = 85      -- lower-back pain while it is out
+local BB_OUT_BACK    = 70      -- lower-back stiffness
+local BB_OUT_LEGS    = 40      -- stiffness on the thighs
+local BB_OUT_AGAIN_D = 7       -- days after a throw-out it is likelier again...
+local BB_OUT_AGAIN   = 2       -- ...this many times
+-- a trained core (DanTraits_Fitness.lua: minutes over the last seven days on
+-- sit-ups, burpees, carries) makes a stronger back, unless it was thrown out lately
+local BB_CORE_FULL   = 90      -- minutes a week for the full benefit
+local BB_CORE_RISE   = 0.4     -- the load builds x (1 - this x conditioning)
+local BB_CORE_OUT    = 0.5     -- a throw-out x (1 - this x conditioning)
+local BB_TIER        = { 0.3, 0.7 }   -- the Back Strain moodle: Aching Back, Bad Back; 3 thrown out
 -- Bad Knees
 local BK_RUN         = 0.01    -- load per minute running
 local BK_SPRINT      = 0.04    -- per minute sprinting
@@ -248,33 +269,125 @@ local function heavyLoadLevel(player)
     return level
 end
 
+-- raise a part's stiffness to at least this (the game eases it back by itself)
+local function stiffPart(player, name, floor)
+    if floor <= 0 then return end
+    pcall(function()
+        local part = player:getBodyDamage():getBodyPart(BodyPartType[name])
+        if part and (part:getStiffness() or 0) < floor then part:setStiffness(floor) end
+    end)
+end
+
+local function bbDay()
+    local hours = 0
+    pcall(function() hours = getGameTime():getWorldAgeHours() or 0 end)
+    return math.floor(hours / 24)
+end
+
+-- 0..1: how trained the core is this week; nothing for a while after a throw-out
+local function backConditioning(player, d)
+    if (d.bbOutDay or -1000) > bbDay() - BB_OUT_AGAIN_D then return 0 end
+    local minutes = DanTraits_FitWeekMinutes and DanTraits_FitWeekMinutes(player, "core") or 0
+    return clamp01(minutes / BB_CORE_FULL)
+end
+DanTraits_BackConditioning = function(player) return backConditioning(player, DanTraits_Data(player)) end
+
+local function throwOut(player, d)
+    d.bbOutMin = BB_OUT_MIN
+    d.bbOutDay = bbDay()
+    d.bbLoad = 1
+    notify(player, "UI_DanTraits_BackOut")
+end
+
 local function updateBadBack(player, d)
     if not hasTrait(player, "badback") then
-        d.bbLoad = nil
+        d.bbLoad, d.bbOutMin, d.bbMoodle, d.bbLifted = nil, nil, nil, nil
         return
     end
     local before = d.bbLoad or 0
     local level = heavyLoadLevel(player)
+    local cond = backConditioning(player, d)
     local now = before
     if level > 0 then
-        now = before + BB_RISE * level
-    else
+        now = before + BB_RISE * level * (1 - BB_CORE_RISE * cond)
+    elseif (d.bbOutMin or 0) <= 0 then
         now = before - BB_EASE * (DanTraits_Asleep(player) and BB_EASE_ASLEEP or 1)
     end
     now = ache(player, before, now, "UI_DanTraits_BackAche", "UI_DanTraits_BackBad", "UI_DanTraits_BackEased")
     d.bbLoad = now > 0 and now or nil
-    hurtPart(player, "Torso_Lower", BB_PAIN * now)
+
+    -- thrown out: a sore back under a heavy load, or a lift, can give way
+    local lifting = d.bbLifted
+    d.bbLifted = nil
+    if (d.bbOutMin or 0) <= 0 and now > BB_OUT_FROM and (level >= BB_OUT_HEAVY or lifting) then
+        local chance = BB_OUT_CHANCE * (now - BB_OUT_FROM) / (1 - BB_OUT_FROM) * (1 - BB_CORE_OUT * cond)
+        if (d.bbOutDay or -1000) > bbDay() - BB_OUT_AGAIN_D then chance = chance * BB_OUT_AGAIN end
+        if DanTraits_Roll(chance) then throwOut(player, d) end
+    end
+
+    -- the backRelief hook (a muscle relaxant): the pain and stiffness x this
+    -- (the load and the chance of throwing it out are left alone)
+    local relief = tonumber(DanTraits_RunHooks("backRelief", 1, player, d, (d.bbOutMin or 0) > 0)) or 1
+    if (d.bbOutMin or 0) > 0 then
+        d.bbOutMin = d.bbOutMin - 1
+        hurtPart(player, "Torso_Lower", BB_OUT_PAIN * relief)
+        stiffPart(player, "Torso_Lower", BB_OUT_BACK * relief)
+        stiffPart(player, "UpperLeg_L", BB_OUT_LEGS * relief)
+        stiffPart(player, "UpperLeg_R", BB_OUT_LEGS * relief)
+        if d.bbOutMin <= 0 then
+            d.bbOutMin = nil
+            notifyGood(player, "UI_DanTraits_BackOutOver")
+        end
+    else
+        hurtPart(player, "Torso_Lower", BB_PAIN * now * relief)
+        stiffPart(player, "Torso_Lower", BB_STIFF_BACK * now * relief)
+        stiffPart(player, "UpperLeg_L", BB_STIFF_LEGS * now * relief)
+        stiffPart(player, "UpperLeg_R", BB_STIFF_LEGS * now * relief)
+    end
+    -- the Back Strain moodle (DanTraits_Moodles.lua)
+    d.bbMoodle = (d.bbOutMin or 0) > 0 and 3 or DanTraits_TierOf(d.bbLoad or 0, BB_TIER)
 end
 
 -- strain from work other than carrying (laundry's washboard,
--- DanTraits_LaundryTraits.lua): the same load, so it eases the same way
+-- DanTraits_LaundryTraits.lua; an improvised lift, DanTraits_Fitness.lua): the
+-- same load, so it eases the same way, and a lift this minute can throw it out
 function DanTraits_BadBackStrain(player, amount)
     if not player or not hasTrait(player, "badback") then return false end
     local d = DanTraits_Data(player)
     local before = d.bbLoad or 0
-    local now = ache(player, before, before + (tonumber(amount) or 0), "UI_DanTraits_BackAche", "UI_DanTraits_BackBad", "UI_DanTraits_BackEased")
+    local add = (tonumber(amount) or 0) * (1 - BB_CORE_RISE * backConditioning(player, d))
+    local now = ache(player, before, before + add, "UI_DanTraits_BackAche", "UI_DanTraits_BackBad", "UI_DanTraits_BackEased")
+    d.bbLoad = now > 0 and now or nil
+    d.bbLifted = true
+    return true
+end
+
+-- heat on a sore back (a hot water bottle, DanTraits_HotWaterBottle.lua): the
+-- load eases by `amount` more, and a thrown-out back's minutes run `outMin`
+-- a minute faster (it still ends in updateBadBack, with its notice)
+function DanTraits_BadBackEase(player, amount, outMin)
+    if not player or not hasTrait(player, "badback") then return false end
+    local d = DanTraits_Data(player)
+    if (d.bbOutMin or 0) > 0 then
+        d.bbOutMin = math.max(1, d.bbOutMin - (tonumber(outMin) or 0))
+        return true
+    end
+    local before = d.bbLoad or 0
+    if before <= 0 then return true end
+    local now = ache(player, before, before - (tonumber(amount) or 0), "UI_DanTraits_BackAche", "UI_DanTraits_BackBad", "UI_DanTraits_BackEased")
     d.bbLoad = now > 0 and now or nil
     return true
+end
+
+-- per frame, while the back is out: no running, no sprinting
+local function updateBadBackFrame(player, d)
+    if (d.bbOutMin or 0) <= 0 or not hasTrait(player, "badback") then return end
+    local tried = false
+    pcall(function()
+        if player:isSprinting() then player:setSprinting(false); tried = true end
+        if player:isRunning() then player:setRunning(false); tried = true end
+    end)
+    if tried then pcall(function() player:setMoodleCantSprint(true) end) end
 end
 
 -- how the knees are resting: 0 walking (no rest), 1 standing still, BK_EASE_SIT
@@ -533,4 +646,4 @@ Events.OnGameStart.Add(wrapReading)
 Events.OnCreatePlayer.Add(onAgeTraitsCreatePlayer)
 Events.AddXP.Add(onAgeTraitsAddXP)
 DanTraits_Every("minute", "AgeTraits", updateAgeTraitsMinute, 40)
-DanTraits_Every("frame", "AgeTraits", function(player, d) updateBadKneesFrame(player, d); updatePaceYourself(player, d) end, 40)
+DanTraits_Every("frame", "AgeTraits", function(player, d) updateBadKneesFrame(player, d); updatePaceYourself(player, d); updateBadBackFrame(player, d) end, 40)

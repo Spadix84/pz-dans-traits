@@ -511,6 +511,9 @@ end
 local function updateAgeMinute(player, d)
     updateAgeClearance(player, d)
     local heal, stiff = ageValue(player, "heal"), ageValue(player, "stiff")
+    -- the stiffFade hook (Fitness: stretching hurries the fade); 1 is no change
+    stiff = tonumber(DanTraits_RunHooks("stiffFade", stiff or 1, player, d)) or stiff
+    if stiff == 1 then stiff = nil end
     if not heal and not stiff then
         d.ageParts = nil
         return
@@ -544,6 +547,13 @@ local function updateAgeMinute(player, d)
         d.ageParts[name] = kept and rec or nil
     end, "Age")
 end
+
+-- Fitness: muscles recover at the band's stiffness pace (faster young, slower old)
+DanTraits_AddHook("fitnessRecovery", function(rate, player)
+    local k = ageValue(player, "stiff")
+    if k then return rate * k end
+    return nil
+end)
 
 Events.OnCreatePlayer.Add(onAgeCreatePlayer)
 Events.AddXP.Add(onAgeAddXP)

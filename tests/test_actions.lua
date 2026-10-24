@@ -31,7 +31,9 @@ CharacterActionAnims = { TakePills = "TakePills", Bandage = "Bandage" }
 
 -- what the trait files would provide
 local seen = {}
-DanTraits_IsInsulin = function(item) return item._type == "Insulin" end
+DanTraits_IsInsulin = function(item) return item._type == "Insulin" or item._type == "Vial" end
+-- a vial needs a syringe (seen.syringe stands in for one carried); a pen needs nothing
+DanTraits_InsulinSyringeFor = function(_, item) if item._type ~= "Vial" then return true end return seen.syringe end
 DanTraits_IsMeter = function(item) return item._type == "GlucoseMeter" end
 DanTraits_IsMetformin = function(item) return item._type == "Metformin" end
 DanTraits_IsInhaler = function(item) return item._type == "Inhaler" end
@@ -96,6 +98,15 @@ local me3 = character(empty)
 local b = ISDiabetesAction:new(me3, empty, "inject", 2)
 assert(not b:isValid(), "empty pen is not valid")
 b:perform(); assert(seen.inject == nil and empty._used == 0, "nothing injected from an empty pen")
+-- a vial: valid only with a syringe carried, then the same as a pen
+local vial = item("Vial", 40)
+local me3v = character(vial)
+local v = ISDiabetesAction:new(me3v, vial, "inject", 2)
+assert(not v:isValid(), "a vial with no syringe is not valid")
+seen.syringe = {}
+assert(v:isValid(), "with a syringe it is")
+v:perform(); assert(vial._used == 2 and seen.inject.n == 2, "two doses drawn from the vial")
+seen.syringe, seen.inject = nil, nil
 
 -- 2. test: a strip is used, the reading is announced and the meter renamed
 local meter, strips = item("GlucoseMeter", 1), item("Strips", 3)

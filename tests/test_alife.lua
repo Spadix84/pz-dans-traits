@@ -160,4 +160,22 @@ local okE, err = pcall(DanTraits_MeasureHit, victim, function() error("boom") en
 assert(not okE and tostring(err):find("boom"), "the error passes on")
 ProjectALife.ModuleGunner.grazePlayer({}, {}, victim)
 assert(limbs[#limbs] == 5, "measuring again after an error")
+-- 7. alarm noise: A-Life's sound handler is swapped for one that drops a
+-- source that is not an IsoObject (a house alarm), and keeps a real one
+local heard = {}
+local function onWorldSound(x, y, z, radius, volume, source) heard[#heard + 1] = { radius, source }; return true end
+ProjectALife = { Investigation = { onWorldSound = onWorldSound } }
+Events.OnWorldSound.Add(onWorldSound)
+local alarm, npc = { alarm = true }, { npc = true }
+function instanceof(obj, cls) return cls == "IsoObject" and obj == npc end
+DanTraits_ALifeInstall = nil
+H.load("ALife")
+DanTraits_ALifeInstall()
+local sounds = H.only("OnWorldSound")
+assert(sounds ~= onWorldSound, "the handler is wrapped")
+H.fire("OnWorldSound", 10, 20, 0, 80, 100, alarm)
+H.fire("OnWorldSound", 10, 20, 0, 30, 50, npc)
+H.fire("OnWorldSound", 10, 20, 0, 30, 50, nil)
+assert(#heard == 3 and heard[1][1] == 80 and heard[1][2] == nil, "an alarm is still heard, without its source")
+assert(heard[2][2] == npc and heard[3][2] == nil, "a real source and no source pass through")
 H.pass()

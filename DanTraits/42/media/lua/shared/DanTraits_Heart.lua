@@ -69,6 +69,7 @@ local HC_WINDED        = 0.012   -- x the Endurance moodle level (1..4)
 local HC_PANIC_AT      = 0.5     -- panic (0..1 of its range) over this...
 local HC_PANIC         = 0.05    -- ...builds up to this at full panic
 local HC_LOAD          = 0.02    -- carrying more than the character can
+local HC_LIFT          = 0.02    -- a minute of heavy lifting or burpees (DanTraits_Fitness.lua): bearing down
 local HC_COLD_C        = 5       -- air under this, outdoors...
 local HC_COLD          = 0.01    -- ...builds this
 -- strain drained a minute
@@ -185,6 +186,10 @@ local function strainBuild(player, d, spent, level, moving)
     local panic = fraction(player:getStats(), CharacterStat.PANIC)
     if panic > HC_PANIC_AT then build = build + HC_PANIC * (panic - HC_PANIC_AT) / (1 - HC_PANIC_AT) end
     if overloaded(player) then build = build + HC_LOAD end
+    if DanTraits_FitTrainingNow then
+        local _, spec = DanTraits_FitTrainingNow(player)
+        if spec and ((spec.intensity or 1) > 1 or spec.improvised) then build = build + HC_LIFT end
+    end
     if DanTraits_AirTemp and flag(player, "isOutside") then
         local temp = DanTraits_AirTemp(player)
         if temp and temp < HC_COLD_C then build = build + HC_COLD end

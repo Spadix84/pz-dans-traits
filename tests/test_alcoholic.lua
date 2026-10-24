@@ -40,11 +40,15 @@ run(w, 0, 1); assert(md(w).alcWithdrawing, "craving by 18.5 h")
 assert(halo[#halo] == "UI_DanTraits_DependentCraving", "craving notice")
 local s = w._st.stress; ten(); near(w._st.stress - s, 0.02 * md(w).alcMeter, 1e-9, "stress 0.02 x meter")
 assert(w._st.unhappy > 0, "low mood")
+assert(w._st.anger > 0 and w._st.anger <= 0.3 * md(w).alcW + 0.003, "short-tempered: anger up to 0.3 x w while craving")
+w._st.anger = 0; H.frame(w); assert(w._st.anger >= md(w).alcAnger, "every frame holds it against vanilla's drain")
 assert(H.pain(w) == 0, "no pain yet")
 run(w, 0, 20); H.minute(); assert(H.pain(w) > 0, "pain by 38 h (48 x 0.76)")
 assert(halo[#halo] == "UI_DanTraits_AlcoholicShakes" and md(w).alcStage == 2, "the shakes")
 assert(w._st.foodsick > 0 and w._st.foodsick <= 40 * 0.5, "nausea floor 40 x w")
 near(DanTraits_RunHooks("swingDrop", 1, w), 1 + 10 * md(w).alcW, 1e-9, "shaking hands: swing drop chance")
+near(md(w).alcAnger, 0.6 * md(w).alcW, 1e-6, "the shakes: the temper floor rises to 0.6 x w")
+assert(w._st.anger >= md(w).alcAnger, "and the anger stat with it")
 near(DanTraits_RunHooks("sleepWake", 1, w, md(w)), 1 + 2 * md(w).alcW, 1e-9, "light sleep")
 near(DanTraits_RunHooks("nightQuality", 1, w, md(w)), 1 - 0.4 * md(w).alcW, 1e-9, "poor sleep")
 run(w, 0, 60); assert(md(w).alcStage == 2, "meter under 0.6: never delirium")
@@ -66,7 +70,9 @@ run(dt, 0, 240 - md(dt).alcDryHours)
 near(md(dt).alcW, md(dt).alcMeter * 0.2, 1e-3, "lingering at a fifth")
 assert(md(dt).alcW < wPeak * 0.25, "well down from the peak")
 local ok = pcall(function() H.roll = 0; ten() end); H.roll = 9999; assert(ok, "no hallucination set loaded: nothing breaks")
+local angerBefore = dt._st.anger
 run(dt, 50, 1 / 6); assert(not md(dt).alcWithdrawing and md(dt).alcStage == 0 and md(dt).alcShakes == 0, "a drink ends it all")
+assert(md(dt).alcAnger == 0 and dt._st.anger < angerBefore, "and takes the held temper back off")
 assert(DanTraits_RunHooks("swingDrop", 1, dt) == 1, "steady hands again")
 
 -- 5. at the starting meter a little tipsy is enough; a full meter needs a real drink
@@ -109,5 +115,15 @@ near(DanTraits_AlcoholWithdrawal(dry), 0.7, 1e-12, "alcWithdrawing: the strength
 dry._md.DanTraits.alcWithdrawing = false
 assert(DanTraits_AlcoholWithdrawal(dry) == 0, "not alcWithdrawing: 0")
 assert(DanTraits_AlcoholWithdrawal(H.player({ traits = { "dependent" } })) == 0, "nothing tracked: 0")
+
+-- a character without the trait gets no temper hold written into their mod data every ten
+-- minutes; one whose trait just went has the hold taken off, once
+local plain = H.player({}); H.current = plain
+H.ten(); H.ten()
+assert(plain._md.DanTraits.alcAnger == nil, "no trait: no alcAnger key")
+local gone = H.player({}); H.current = gone
+gone._md.DanTraits = { alcAnger = 0.3 }; gone._st.anger = 0.5
+H.ten()
+assert(gone._md.DanTraits.alcAnger == 0 and gone._st.anger < 0.5, "the trait gone: the hold comes off the stat")
 
 H.pass()

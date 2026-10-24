@@ -109,9 +109,12 @@ ten(); assert(M(q).migAuraLeft, "no second roll during an aura")
 for _ = 1, 20 do minute() end
 assert(M(q).migActive and halo[#halo] == "UI_DanTraits_MigraineStart", "attack started")
 near(M(q).migHoursLeft, 6, 1e-9, "six hours")
-for _ = 1, 40 do minute() end
-near(H.pain(q), 40, 1.0, "pain ramping toward 60 at 1 a minute (40 minutes in)")
-near(q._st.foodsick, 40, 1.0, "nausea ramping toward 50 (40 minutes in)"); near(q._st.unhappy, 15, 1.0, "mood floor 15")
+for _ = 1, 10 do minute() end
+near(H.pain(q), 80, 1.0, "pain ramping toward 90 at 8 a minute (10 minutes in)")
+near(q._st.foodsick, 20, 1.0, "nausea ramping toward 50 at 2 a minute (10 minutes in)"); near(q._st.unhappy, 10, 1.0, "mood ramping at 1 a minute")
+for _ = 1, 30 do minute() end
+near(H.pain(q), 90, 1.0, "pain at its floor of 90 (40 minutes in): past the head's 100, the rest on the neck")
+near(q._st.foodsick, 50, 1.0, "nausea at its floor (40 minutes in)"); near(q._st.unhappy, 15, 1.0, "mood floor 15")
 assert(q._st.stress > 0, "stress creeps")
 near(M(q).migHoursLeft, 6 - 40 / 60, 1e-9, "clock at full rate")
 
@@ -120,17 +123,17 @@ q._outside = true; H.climate.night = 0
 local before = M(q).migHoursLeft
 H.setPain(q, 0); for _ = 1, 10 do minute() end
 near(M(q).migHoursLeft, before - 5 / 60, 1e-9, "half rate in the glare")
-assert(H.pain(q) == 10, "pain climbing toward 75 (60 + 15 glare)")
+assert(H.pain(q) == 80, "pain climbing toward 105 (90 + 15 glare) at 8 a minute: " .. H.pain(q))
 assert(M(q).migGlare == 1, "full sun: the moodle at its worst")
 q._outside = false; H.climate.night = 1
 before = M(q).migHoursLeft
 q._painFx = 1; H.setPain(q, 0); minute()
 near(M(q).migHoursLeft, before * 0.9 - 1 / 60, 1e-9, "painkillers barely touch it: remaining time x 0.9")
-assert(H.pain(q) == 1, "the painkiller timer alone does not stop the floor (it ramps 1 a minute)")
--- the head climbs to the full 60 at 1 a minute and the game takes the 30 off
+assert(H.pain(q) == 8, "the painkiller timer alone does not stop the floor (it ramps 8 a minute): " .. H.pain(q))
+-- the head climbs to the full 90 at 8 a minute and the game takes the 30 off
 q._pr = 30; H.setPain(q, 0); for _ = 1, 60 do minute() end
-assert(H.pain(q) == 30, "a pain reduction of 30 lowers the floor 60 to 30, not to 0: " .. H.pain(q))
-q._pr = 70; H.setPain(q, 0); minute(); assert(H.pain(q) == 0, "a reduction above the floor does nothing"); q._pr = 0
+assert(H.pain(q) == 60, "a pain reduction of 30 lowers the floor 90 to 60, not to 0: " .. H.pain(q))
+q._pr = 70; H.setPain(q, 0); minute(); assert(H.pain(q) == 0, "a reduction above the first minute's pain leaves nothing"); q._pr = 0
 before = M(q).migHoursLeft; minute(); near(M(q).migHoursLeft, before - 1 / 60, 1e-9, "the cut happens once")
 q._painFx = 0
 
@@ -154,11 +157,11 @@ local kept = M(q).migHoursLeft
 q._light = 0.8; before = M(q).migHoursLeft
 H.setPain(q, 0); for _ = 1, 80 do minute() end
 near(M(q).migHoursLeft, before - 80 * 0.75 / 60, 1e-9, "three-quarter rate in a lit room")
-assert(H.pain(q) == 70, "lit room: floor 60 + 10: " .. H.pain(q))
+assert(H.pain(q) == 100, "lit room: floor 90 + 10: " .. H.pain(q))
 q._light = 0.1; before = M(q).migHoursLeft
 H.setPain(q, 0); for _ = 1, 80 do minute() end
 near(M(q).migHoursLeft, before - 80 * 1.25 / 60, 1e-9, "a quarter faster in the dark")
-assert(H.pain(q) == 60, "dark room: the plain floor: " .. H.pain(q))
+assert(H.pain(q) == 90, "dark room: the plain floor: " .. H.pain(q))
 assert(M(q).migGlare == nil, "dark room: the light adds nothing, no moodle")
 q._light = 0.5125; before = M(q).migHoursLeft; minute()
 near(M(q).migHoursLeft, before - (1 - 0.25 * 0.5) / 60, 1e-9, "half-lit: halfway")
@@ -169,14 +172,14 @@ kept = M(q).migHoursLeft
 q._light = 0.8
 q._worn = { { type = "Base.Glasses_Sun", name = "Sunglasses" } }
 H.setPain(q, 0); for _ = 1, 80 do minute() end
-assert(H.pain(q) == 65, "lit room in sunglasses: 60 + 10 x 0.5: " .. H.pain(q))
+assert(H.pain(q) == 95, "lit room in sunglasses: 90 + 10 x 0.5: " .. H.pain(q))
 near(M(q).migGlare, 5 / 15, 1e-9, "the Light Too Bright moodle reads the light's 5 against the sun's 15")
 q._worn = { { type = "OtherMod.CoolShades", name = "Cool Shades" } }
 H.setPain(q, 0); for _ = 1, 80 do minute() end
-assert(H.pain(q) == 65, "another mod's shades count by name: " .. H.pain(q))
+assert(H.pain(q) == 95, "another mod's shades count by name: " .. H.pain(q))
 q._worn = { { type = "Base.Glasses_Normal", name = "Prescription Glasses" } }
 H.setPain(q, 0); for _ = 1, 80 do minute() end
-assert(H.pain(q) == 70, "clear glasses do nothing: " .. H.pain(q))
+assert(H.pain(q) == 100, "clear glasses do nothing: " .. H.pain(q))
 near(M(q).migGlare, 10 / 15, 1e-9, "a lit room: 10 of the sun's 15")
 q._worn = {}; q._light = 0.425; M(q).migHoursLeft = kept
 
@@ -188,6 +191,16 @@ assert(not q._traits[SS] and M(q).migBlur == false, "glasses put on: flipped off
 q._glasses = false; minute(); assert(q._traits[SS], "glasses off again: back on")
 kept = M(q).migHoursLeft; M(q).migHoursLeft = 1 / 60; minute()
 assert(not M(q).migActive and not q._traits[SS] and M(q).migBlur == nil, "attack over: the character's own state is back")
+ten(); assert(M(q).migSight == false, "outside an attack the character's own Short Sighted is noted, every ten minutes")
+-- 2026-10-18: migBlur gone mid-attack (the mod-data table swapped for an older copy) left Short Sighted on
+M(q).migActive, M(q).migHoursLeft, M(q).migSinceEnd = true, kept, 0
+minute(); assert(q._traits[SS] and M(q).migBlur == false, "flipped on again")
+M(q).migBlur = nil
+q._glasses = true; minute()
+assert(not q._traits[SS] and M(q).migBlur == false, "glasses on with migBlur lost: the noted state, not the flipped one, is kept")
+q._glasses = false; minute(); M(q).migBlur = nil
+M(q).migHoursLeft = 1 / 60; minute()
+assert(not q._traits[SS] and M(q).migBlur == nil, "attack over with migBlur lost: Short Sighted comes off all the same")
 M(q).migActive, M(q).migHoursLeft, M(q).migSinceEnd = true, kept, 0
 local ss = newPlayer({ traits = { "migraine" }, vanilla = { SS } }); H.current = ss
 ss._md.DanTraits = { migActive = true, migHoursLeft = 3, migSeverity = 0.5, migSinceEnd = 0, migStrong = { "sleep", "thirst", "stress" } }
@@ -266,7 +279,7 @@ near(M(s1).migHoursLeft, 3 + 3 * 0.5 - 1 / 60, 1e-6, "no second use in the attac
 local moodleValue
 MF = { getMoodle = function() return { setThresholds = function() end, setValue = function(_, v) moodleValue = v end } end }
 H.setPain(s1, 0); for _ = 1, 60 do minute() end
-assert(H.pain(s1) == 30, "taken in the aura: pain floor 60 x 0.5 severity, not halved again: " .. H.pain(s1))
+assert(H.pain(s1) == 45, "taken in the aura: pain floor 90 x 0.5 severity, not halved again: " .. H.pain(s1))
 M(s1).migSeverity = 0.3; minute()
 assert(moodleValue <= 0.5 * (1 - 0.5), "a halved attack still shows as Migraine, not Aura: " .. tostring(moodleValue))
 -- an aura cleared from outside (the 2026-10-15 stuck Aura): the moodle follows the state off
@@ -285,7 +298,7 @@ assert(M(s2).migActive, "attack on"); near(M(s2).migHoursLeft, 6, 1e-6, "six hou
 covered = true; minute()
 near(M(s2).migHoursLeft, 2 - 1 / 60, 1e-9, "in the attack: two hours left")
 H.setPain(s2, 0); for _ = 1, 60 do minute() end
-assert(H.pain(s2) == 30, "pain floor halved to 30: " .. H.pain(s2))
+assert(H.pain(s2) == 45, "pain floor halved to 45: " .. H.pain(s2))
 near(s2._st.foodsick, 25, 1.0, "nausea halved to 25")
 covered = false
 DanTraits_MedCovered = nil

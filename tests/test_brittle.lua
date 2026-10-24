@@ -145,4 +145,18 @@ assert(DanTraits_ExtraCommands.brittle(b, { "bone", "0.75" }):find("fracture cha
 local other = newPlayer({ traits = {}, parts = limbs() }); H.current = other
 H.minute(); assert(other._md.DanTraits == nil or other._md.DanTraits.brBone == nil, "no trait: no score")
 
+-- the fitness link (DanTraits_Fitness.lua): twenty minutes on the legs today puts 0.02 a day more back
+local legs = newPlayer({ parts = limbs() }); H.current = legs
+H.minute()
+local ld = legs._md.DanTraits
+local start = ld.brBone
+DanTraits_FitLegMinutes = function() return 25 end
+H.minute()
+H.near(ld.brBone, start - 0.02 / 1440 + 0.02 / 1440, 1e-12, "a leg day holds the bones")
+DanTraits_FitLegMinutes = function() return 10 end
+local held = ld.brBone
+H.minute()
+H.near(ld.brBone, held - 0.02 / 1440, 1e-12, "ten minutes is not enough")
+DanTraits_FitLegMinutes = nil
+
 H.pass()

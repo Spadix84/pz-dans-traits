@@ -13,7 +13,7 @@ require "DanTraits"
 -- character zeroes the game's antidepressant timer every minute anyway, so a
 -- happy salt does nothing for them.
 --
--- Two things this file does:
+-- Three things this file does:
 --
 -- A bath or a shower washes sun block off. Take A Bath fires
 -- OnBathingEnd(character) when either ends (its client files load after this
@@ -32,10 +32,47 @@ require "DanTraits"
 -- as a wash (the washed clock, Fresh Clothes and the laundryWashed hook stay
 -- with the sink and the machine; plans/laundry.md). Its own objects (the
 -- tub's water, the towel) and the body are untouched.
+--
+-- It tells the other systems when you are in the water: DanTraits_BathingMode
+-- (player) is "BATH" or "SHOWER" while that mod's tabas_IsBathing flag is
+-- set (the mode from its OnBathingStart(player, mode)), and
+-- DanTraits_BathingWet(player) is true from then until it calls you dry
+-- (its tabas_HasBathingWet flag, cleared on OnBathingStateFinished).
+-- Sensory Issues drains faster in the water and does not count the bath's
+-- soaking as a touch trigger (DanTraits_Sensory.lua).
 local installed = false
+
+local bathMode = {}   -- player -> "BATH" / "SHOWER", from OnBathingStart
+
+local function modFlag(player, key)
+    local value
+    pcall(function() value = player:getModData()[key] end)
+    return value
+end
+
+function DanTraits_BathingMode(player)
+    if not player then return nil end
+    if not modFlag(player, "tabas_IsBathing") then
+        bathMode[player] = nil
+        return nil
+    end
+    return bathMode[player] or "BATH"
+end
+
+function DanTraits_BathingWet(player)
+    if not player then return false end
+    return modFlag(player, "tabas_IsBathing") == true or modFlag(player, "tabas_HasBathingWet") == true
+end
+
+local function onBathingStart(player, mode)
+    if not player then return end
+    bathMode[player] = (mode == "SHOWER") and "SHOWER" or "BATH"
+end
+DanTraits_BathingStarted = onBathingStart   -- tests
 
 local function onBathingEnd(player)
     if not player then return end
+    bathMode[player] = nil
     local local0 = getSpecificPlayer and getSpecificPlayer(0)
     if local0 and player ~= local0 then return end
     if not DanTraits_SunblockLeft or DanTraits_SunblockLeft(player) <= 0 then return end
@@ -97,6 +134,8 @@ local function install()
     if type(ev) ~= "table" or type(ev.Add) ~= "function" then return end
     installed = true
     ev.Add(onBathingEnd)
+    local start = Events.OnBathingStart
+    if type(start) == "table" and type(start.Add) == "function" then start.Add(onBathingStart) end
     print("[DanTraits] Take A Bath And Shower found: a bath washes sun block off")
 end
 

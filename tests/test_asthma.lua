@@ -291,4 +291,18 @@ local bfg = newPlayer({ worn = { maskeyes = { getType = function() return "Hat_G
 assert(not DanTraits_AsthmaFumes(bfg, 0.08), "a gas mask stops them")
 assert(not DanTraits_AsthmaFumes(H.player({}), 0.08), "no asthma: nothing")
 
+-- the fitness link (DanTraits_Fitness.lua): burpees in place build irritation like a run
+H.climate.temp = 20
+local bp = newPlayer({}); H.current = bp
+for _ = 1, 5 do minute() end
+assert(irritation(bp) == 0, "standing in warm air: nothing")
+DanTraits_FitTrainingNow = function() return "burpees", { breathless = true } end
+for _ = 1, 5 do minute() end
+assert(irritation(bp) > 0, "burpees build irritation")
+local after = irritation(bp)
+DanTraits_FitTrainingNow = function() return "situp", {} end
+minute()
+assert(irritation(bp) <= after, "sit-ups do not")
+DanTraits_FitTrainingNow = nil
+
 H.pass()

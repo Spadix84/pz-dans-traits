@@ -11,7 +11,9 @@ function ISDiabetesAction:isValid()
     local inv = self.character:getInventory()
     if not inv:contains(self.item) then return false end
     if self.kind == "inject" then
+        -- a vial also needs a syringe carried (DanTraits_InsulinSyringeFor: true for a pen)
         return DanTraits_IsInsulin and DanTraits_IsInsulin(self.item) and uses(self.item) > 0
+            and DanTraits_InsulinSyringeFor(self.character, self.item) ~= nil
     elseif self.kind == "test" then
         return DanTraits_IsMeter and DanTraits_IsMeter(self.item) and self.strips ~= nil and inv:contains(self.strips) and uses(self.strips) > 0
     elseif self.kind == "pill" then
@@ -77,7 +79,7 @@ function ISDiabetesAction:perform()
     ISBaseTimedAction.perform(self)
 end
 
--- kind: "inject" (item = pen, doses), "test" (item = meter, strips = strips), "pill" (item = metformin)
+-- kind: "inject" (item = pen or vial, doses), "test" (item = meter, strips = strips), "pill" (item = metformin)
 function ISDiabetesAction:new(character, item, kind, doses, strips)
     local o = ISBaseTimedAction.new(self, character)
     o.item = item
