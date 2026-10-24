@@ -16,7 +16,7 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 MEDIA = os.path.join(HERE, "..", "..", "DanTraits", "42", "media")
 EN = os.path.join(MEDIA, "lua", "shared", "Translate", "EN")
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 
 RETIRED = {"jinxed", "ironstomach", "bouncesback"}
 AGE = ["age20s", "age30s", "age40s", "age50s"]
@@ -27,7 +27,7 @@ AGE_ONLY = [("green", "20s"), ("quickstudy", "20s"), ("bottomlesspit", "20s"),
             ("oldinjury", "50s"), ("setinways", "50s"), ("seenitall", "50s"),
             ("castiron", "50s"), ("oldbones", "50s")]
 # vanilla traits the mod reworks: they keep the game's own icon, so they are named, not drawn
-REWORKED = "Smoker, Fear of Blood, Resilient, Iron Gut, Keen Cook, Outdoorsman and Cat's Eyes"
+REWORKED = "Smoker, Fear of Blood, Resilient, Iron Gut, Keen Cook, Outdoorsy and Cat's Eyes"
 # moodle icon -> the name of what it tracks (the levels say how bad)
 MOODLE_TITLES = {"AirwayIrritation": "Asthma", "BloodLoss": "Blood loss", "BloodSugar": "Blood sugar",
                  "ChestPain": "Heart", "Filthy": "Grime (Germaphobe)", "Infection": "Wound infection",
@@ -51,7 +51,8 @@ def icon_url(*parts):
 
 
 def lines(text):
-    return [l.strip() for l in (text or "").split("<br>") if l.strip()]
+    # the game's text has %% for a percent sign
+    return [l.strip().replace("%%", "%") for l in (text or "").split("<br>") if l.strip()]
 
 
 def traits():
@@ -141,17 +142,17 @@ def main():
     neg = sorted((v for k, v in t.items() if v["cost"] < 0 and k not in age_ids), key=lambda v: (v["cost"], v["name"]))
     pos = sorted((v for k, v in t.items() if v["cost"] > 0 and k not in age_ids), key=lambda v: (-v["cost"], v["name"]))
 
-    write("conditions", title="Conditions", cols=3, gap=12, box=60, img=54, ds=15,
+    write("conditions", title="Conditions", cols=4, gap=10, box=56, img=50, ds=14,
           h1="The conditions <span>you can start with</span>",
           sub="Every one plugs into the health systems: blood, infection, pain, medication, sleep and Vitality.",
           cells="\n".join(trait_cell(v) for v in neg),
           note="Also reworked from vanilla: Smoker and Fear of Blood.")
 
-    write("perks", title="Perks", cols=3, gap=12, box=60, img=54, ds=15,
+    write("perks", title="Perks", cols=3, gap=10, box=60, img=54, ds=15,
           h1="The perks <span>that pay for them</span>",
           sub="Some fold a vanilla trait in; most lean on the same health systems the conditions do.",
           cells="\n".join(trait_cell(v) for v in pos),
-          note="Also reworked from vanilla: Resilient, Iron Gut, Keen Cook, Outdoorsman and Cat's Eyes.")
+          note="Also reworked from vanilla: Resilient, Iron Gut, Keen Cook, Outdoorsy and Cat's Eyes.")
 
     cells = ['<div class="head">Pick a decade first</div>']
     cells += [trait_cell(t[a], n=1) for a in AGE]
@@ -187,7 +188,7 @@ def main():
         else:
             desc = "  |  ".join(" → ".join(levels) for levels in sides)
         moodles.append((title, desc, f))
-    write("moodles", title="Moodles", cols=3, gap=6, box=50, img=44, ds=14,
+    write("moodles", title="Moodles", cols=4, gap=4, box=46, img=40, ds=13,
           h1="%d new moodles <span>so you always know why</span>" % len(moodles),
           sub="Every lasting effect shows up beside the game's own, level by level. Moodle Framework draws them.",
           cells="\n".join(cell(icon_url("ui", f), title, desc=desc) for title, desc, f in moodles),
@@ -206,9 +207,9 @@ def main():
         while n < len(tip) and tip[n - 1].endswith(","):
             n += 1
         items.append(cell(icon_url("textures", f), name, desc=ITEM_DESC.get(iid) or " ".join(tip[:n])))
-    write("items", title="Items", cols=3, gap=26, box=64, img=54, ds=16,
-          h1="The pharmacy <span>and what to carry it in</span>",
-          sub="Medicine you have to find, ration and keep on you. Found in pharmacies, cabinets, hospitals and bathrooms.",
+    write("items", title="Items", cols=4, gap=4, box=50, img=46, ds=13,
+          h1="The pharmacy <span>and the rest of the kit</span>",
+          sub="Medicine you have to find, ration and keep on you, and what you need for insulin, laundry, training and a quiet head.",
           cells="\n".join(items),
           note="Every vanilla medicine works through the same system: build-up, wearing off, side effects and overdoses.")
 

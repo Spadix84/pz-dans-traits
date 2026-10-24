@@ -3,7 +3,7 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
-## Unreleased
+## 1.4.0 - 2026-10-24
 
 ### New
 
