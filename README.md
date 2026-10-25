@@ -25,6 +25,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Alcoholic](#alcoholic--6) | -6 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
 | [Smoker](#smoker--5-vanilla-reworked) | -5 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
+| [Straight Edge](#straight-edge--3) | -3 | Refuses alcohol and tobacco, and so their relief from strain. |
 | [Can't Switch Off](#cant-switch-off--4) | -4 | Strain eases 0.67x as fast; a full day off needs five comforts. |
 | [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
 | [Germaphobe](#germaphobe--8) | -8 | Dirty skin and clothes build stress; clean is a relief. |
@@ -44,7 +45,6 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [In Their 40s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -2 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
 | [Inflexible](#inflexible--2) | -2 | Stretching does half; stiffness lingers; stiff joints ache more. |
 | [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
-| [Straight Edge](#straight-edge--1) | -1 | Refuses alcohol and tobacco. |
 | [Cat's Eyes](#cats-eyes-1-vanilla-re-costed) | 1 | Vanilla night vision, re-costed; light wakes you more easily. |
 | [Early Riser](#early-riser-1) | +1 | Starts rested; every night scores a little better. |
 | [Gym Regular](#gym-regular-1) | +1 | Every exercise starts with a Fitness Instructor's head start. |
@@ -340,9 +340,9 @@ Attacks that cost you hours.
 - Dairy, and milk from a carton, brings a mild flare: cramps, queasiness, low mood, gone in about six hours.
 - Moodle: Gut Flare, topping out at the second level.
 
-#### Straight Edge (-1)
+#### Straight Edge (-3)
 
-- Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief. Covers I Don't Need A Lighter's stove, fire and car-lighter smoking too.
+- Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief, from [strain](#strain) too. Covers I Don't Need A Lighter's stove, fire and car-lighter smoking too.
 - Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day.
 
 #### Lingering Soreness (-3)
@@ -606,6 +606,8 @@ Fighting wears on you over days. Stress empties itself in an afternoon; strain i
 - **Breaking Point:** strain holds at 100 until the first safe moment (ten minutes without a fight, no zombie within 12 tiles); then you sit down where you are for about half a minute and can do nothing else. Walking away or a zombie within 4 tiles stops it, and it comes again. Finished, strain drops to 60.
 - The first week counts half (both sandbox options). Desensitized takes 0.6 of combat strain. The health panel shows the tier and whether it is easing.
 - Sandbox: Strain, Strain Gained %, Strain Eased %, Lowest Combat Experience % (15), Strain Grace Days (7), Strain During Grace % (50), Breaking Point.
+- **What else it touches:** Major Depressive Disorder episodes, Hallucinations, migraine attacks, MS flares and seizures all come more often the higher strain is (x1.33 Frayed, x2 Burnt Out). Burnt Out brings an ex-smoker's cravings back and holds Vitality under Thriving; At Ease lifts it a little. A sensory meltdown or shutdown adds 5. Panic counts only with a zombie within 15 tiles.
+- **Trait links:** Endorphin Junkie's Pumped eases twice as much; Homemaker's fresh clothes twice as much, and Line-Dried is a comfort of its own; Keen Cook's meals count a tier up; in a depressive episode every comfort but a meal or a workout does half; a Nomad gets the home bonus in any bed slept in twice of the last seven nights.
 - Console: `strain`, `strain set <n>`, `strain kill [n]`, `strain comfort <kind>`.
 
 ### Blood

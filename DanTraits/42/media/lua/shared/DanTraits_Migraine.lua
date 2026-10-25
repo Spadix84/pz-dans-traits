@@ -356,7 +356,7 @@ local function migraineChance(player)
         chance = chance + weighted
         if isPersonal(key) and weighted > most then cause, most = key, weighted end
     end
-    return chance, cause
+    return chance * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1), cause   -- a hard week (DanTraits_Strain.lua)
 end
 DanTraits_MigraineChance = migraineChance
 

@@ -691,7 +691,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:straightedge,
-        Cost = -1,
+        Cost = -3,
         UIName = UI_trait_DanStraightEdge,
         UIDescription = UI_trait_DanStraightEdgedesc,
         MutuallyExclusiveTraits = DanTraits:dependent;base:smoker;DanTraits:hollowlegs;DanTraits:badday,

@@ -240,7 +240,7 @@ local function flareRate(player, d)
     rate = rate * (1 + MS_FLARE_FEVER * DanTraits_Strength("DanTraits_InfectionFever", player))
     rate = rate * (1 + MS_FLARE_STRESS * fraction(player:getStats(), CharacterStat.STRESS))
     if spoonsOn() and DanTraits_SpoonDebt then rate = rate * (1 + MS_SPOON_DEBT_FLARE * DanTraits_SpoonDebt(player)) end
-    return rate
+    return rate * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1)   -- a hard week (DanTraits_Strain.lua)
 end
 DanTraits_MSFlareRate = flareRate
 

@@ -246,6 +246,7 @@ local function updateMddTen(player, d)
     if d.mddOutside < 60 then chance = chance * (1 + MDD_INDOORS_WEIGHT) end
     if DanTraits_SleepDebt then chance = chance * (1 + MDD_SLEEP_DEBT_WEIGHT * DanTraits_SleepDebt(player)) end
     chance = chance * (1 - MDD_MED_ONSET_CUT * benefit)
+    chance = chance * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1)   -- a hard week (DanTraits_Strain.lua)
     if DanTraits_VitalityMddOnset then chance = chance * DanTraits_VitalityMddOnset(player) end
     if ZombRand(100000) >= chance * 100000 then return end
     d.mddEpisode = true

@@ -104,12 +104,29 @@ DanTraits_StrainAdd(p, "test", 10, false)
 near(strain(p), 20, 1e-9, "sandbox StrainGain 200")
 SandboxVars.DanTraits.StrainGain = nil
 
--- 3. panic over 40 costs 0.1 a minute and counts as a fight
+-- 3. panic over 40 with a zombie within 15 tiles costs 0.1 a minute and counts as a fight
+local cellBefore = getCell
+local nearZombies = {}
+getCell = function()
+  return { getZombieList = function()
+    return { size = function() return #nearZombies end, get = function(_, i) return nearZombies[i + 1] end }
+  end }
+end
+local function zed(x, y)
+  return { getX = function() return x end, getY = function() return y end, getZ = function() return 0 end, isDead = function() return false end }
+end
 p = fresh({ panic = 50 })
 at(H.hours + 5); data(p).stFightH = H.hours - 5
 minute()
-near(strain(p), 0.1, 1e-6, "a panicked minute")
+near(strain(p), 0, 1e-9, "panic with no zombie about (asthma, a hallucination): nothing")
+nearZombies = { zed(20, 10) }
+minute()
+near(strain(p), 0.1, 1e-6, "a panicked minute in a fight")
 near(data(p).stFightH, H.hours, 1e-9, "panic is a fight")
+nearZombies = { zed(40, 10) }
+minute()
+near(strain(p), 0.1, 1e-6, "the nearest zombie 30 tiles off: not this fight")
+getCell = cellBefore
 
 -- 4. wounds: only new ones, and not on the first look
 local function part(name)
@@ -421,7 +438,60 @@ near(outing(25, 10, { "scratch" }), 4.8, 0.05, "quiet supply run: about +5")
 near(outing(75, 30, { "scratch", "scratch", "cut" }), 17.35, 0.05, "busy day: about +17")
 near(outing(150, 60, { "scratch", "scratch", "scratch", "cut", "cut", "knock" }), 40.8, 0.05, "horde day: about +41")
 
--- 19. the health panel's summary: the tier and the last hour's way
+-- 19. phase 2: the links
+-- the conditions' factor
+p = fresh()
+near(DanTraits_StrainFactor(p), 1, 1e-9, "no strain: x1")
+setStrain(p, 75)
+near(DanTraits_StrainFactor(p), 2, 1e-9, "Burnt Out: x2")
+SandboxVars.DanTraits.StrainEnabled = false
+near(DanTraits_StrainFactor(p), 1, 1e-9, "strain off: x1")
+SandboxVars.DanTraits.StrainEnabled = nil
+-- Endorphin Junkie's Pumped, Homemaker's fresh clothes and Line-Dried, Keen Cook's meal
+p = fresh({ traits = { "endorphinjunkie" } }); setStrain(p, 50)
+near(DanTraits_StrainComfort(p, "pumped"), 4, 1e-9, "Endorphin Junkie: Pumped x2")
+p = fresh({ traits = { "homemaker" } }); setStrain(p, 50)
+near(DanTraits_StrainComfort(p, "laundry"), 4, 1e-9, "Homemaker: fresh clothes x2")
+data(p).lnMoodle = 0; minute()
+data(p).lnMoodle = -2; minute()
+near(data(p).stToday["comfort:linedried"] or 0, -2, 1e-9, "Homemaker: Line-Dried, a comfort of its own")
+p = fresh(); setStrain(p, 50); data(p).lnMoodle = 0; minute(); data(p).lnMoodle = -2; minute()
+assert(not (data(p).stToday["comfort:linedried"]), "anyone else: Line-Dried is just fresh clothes")
+p = fresh({ vanilla = { "base:cook" } }); setStrain(p, 50)
+data(p).ckGlow = { tier = 1, min = 180, max = 180 }; minute()
+near(strain(p), 47, 1e-9, "Keen Cook: a Home-cooked meal counts as Hearty (3)")
+-- a depressive episode: comforts at half, but not a meal or a workout
+p = fresh({ traits = { "spiraling" } }); setStrain(p, 50); data(p).mddEpisode = true
+near(DanTraits_StrainComfort(p, "shower"), 1, 1e-9, "an episode: a shower at half")
+near(DanTraits_StrainComfort(p, "pumped"), 2, 1e-9, "an episode: a workout in full")
+near(DanTraits_StrainComfort(p, "meal", 3), 3, 1e-9, "an episode: a meal in full")
+-- a Nomad: a bed slept in twice is home for comforts
+DanTraits_HomePlaceOf = function(q) return { x = q._x or 10, y = 10 } end
+DanTraits_HomeSamePlace = function(a, b) return a and b and a.x == b.x and a.y == b.y end
+DanTraits_HomeAtPlace = function(home, x, y) return home.x == x and home.y == y end
+p = fresh({ traits = { "nomad" } }); setStrain(p, 80)
+p.getX = function() return p._x or 10 end
+local function nightHere()
+  p._bed = {}; p._asleep = true; minute(); p._asleep = false
+  DanTraits_RunHooks("nightScored", nil, p, data(p), 1, 8, 1, false); minute()
+end
+nightHere()
+near(DanTraits_StrainComfort(p, "shower"), 2, 1e-9, "a Nomad, one night here: no home bonus")
+nightHere()
+at(H.hours + 24)
+near(DanTraits_StrainComfort(p, "shower"), 3, 1e-9, "two nights in this bed: x1.5")
+p._x = 50
+near(DanTraits_StrainComfort(p, "laundry"), 2, 1e-9, "somewhere else: no bonus")
+DanTraits_HomePlaceOf, DanTraits_HomeSamePlace, DanTraits_HomeAtPlace = nil, nil, nil
+-- Vitality's target
+p = fresh(); setStrain(p, 80)
+near(DanTraits_RunHooks("vitalityTarget", 0.9, p, data(p)), 0.79, 1e-9, "Burnt Out: under Thriving")
+setStrain(p, 30)
+near(DanTraits_RunHooks("vitalityTarget", 0.9, p, data(p)), 0.9, 1e-9, "Frayed: left alone")
+setStrain(p, 5)
+near(DanTraits_RunHooks("vitalityTarget", 0.5, p, data(p)), 0.55, 1e-9, "At Ease: lifted")
+
+-- 20. the health panel's summary: the tier and the last hour's way
 p = fresh()
 DanTraits_StrainAdd(p, "test", 30, false)
 data(p).stMarkMin, data(p).stMark = 59, 20
@@ -429,7 +499,7 @@ minute()
 local sum = DanTraits_StrainSummary(p)
 assert(sum.moodle == 1 and sum.way == "rising", "summary: Frayed and rising")
 
--- 20. the console
+-- 21. the console
 DanTraits_StrainLevel(p)
 local out = DanTraits_ExtraCommands.strain(p, { "set", "42" })
 assert(out:find("strain 42.0", 1, true), "console: set and report (" .. out .. ")")

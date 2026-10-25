@@ -1,7 +1,7 @@
 # Strain: the cumulative cost of fighting
 
 Design note, 2026-10-24. Talked through with the user the same day. Phase 1 built the same
-day (see "As built" at the end); phase 2 not started.
+day (see "As built" at the end); phase 2 built 2026-10-25.
 
 ## Why
 
@@ -295,3 +295,34 @@ section in the health panel, the four traits, six sandbox options,
 - **Unverified in game**: `zombie:getAttackedBy()` naming the player for
   melee and car kills, `isKnockedDown`, `ISWashYourself`'s method, the sit
   animation, and the breakdown's length in real seconds.
+
+## As built (phase 2, 2026-10-25)
+
+A survey of every stress and unhappiness touch came first (40-odd sites).
+Its main finding: nothing double-counts in the way the design feared.
+Stress and unhappiness are the moment, strain is the week; a comfort that
+eases both is two different tanks, by design. What did need fixing was
+panic: asthma attacks, hallucinated panic bouts, bleeding and diabetic lows
+all push panic over 40, which counted as combat strain and reset the calm
+clock.
+
+Decided by the user: conditions about x2 at Burnt Out, panic only with
+zombies near, Straight Edge gives 3.
+
+- `DanTraits_StrainFactor(player)` = 1 + 4/3 x strain/100, multiplied onto
+  the whole chance or rate in MDD, Hallucinations, Migraine, MS and Epilepsy
+  (Epilepsy was not in the table above; the survey found it reads stress the
+  same way). A Burnt Out ex-smoker gets the cue cravings.
+- Panic costs strain only with a zombie within 15 tiles.
+- Sensory: an overload starting adds 5.
+- Vitality: a new `vitalityTarget` hook; Burnt Out holds the target at 0.79
+  (Thriving is 0.8), At Ease adds 0.05.
+- Comforts: Endorphin Junkie's Pumped x2, Homemaker's fresh clothes x2 and
+  Line-Dried as a comfort of its own, Keen Cook (and `base:cook2`) a meal
+  tier up, a depressive episode x0.5 on everything but a meal or Pumped,
+  Nomad's home bonus in any bed slept in twice of the last seven nights.
+- Not done, on purpose: the comfort watchers stay in `DanTraits_Strain.lua`
+  rather than moving into Cooking, Fitness, Laundry and Hangover. They work,
+  they are tested, and moving them buys tidiness only.
+- Still open: Desensitized nightmares could add strain; the stress and
+  unhappiness the conditions add themselves are unchanged.

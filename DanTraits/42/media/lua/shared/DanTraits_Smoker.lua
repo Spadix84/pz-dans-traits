@@ -491,7 +491,9 @@ local function updateSmokerMinute(player, d)
         local strength = 1 - d.nicExHours / NIC_CUE_H
         local stress = 0
         pcall(function() stress = fraction(stats, CharacterStat.STRESS) end)
-        local cue = strength > 0 and not asleep and (drunk or stress >= NIC_CUE_STRESS)
+        -- Burnt Out on strain counts as a bad moment too (DanTraits_Strain.lua)
+        local burnt = DanTraits_StrainTier ~= nil and DanTraits_StrainTier(player) >= 3
+        local cue = strength > 0 and not asleep and (drunk or stress >= NIC_CUE_STRESS or burnt)
         if cue and not d.nicCue and d.nicCueGapH <= 0 then
             d.nicCueMin, d.nicCueGapH = NIC_CUE_MIN, NIC_CUE_GAP_H
             notify(player, "UI_DanTraits_SmokerCue")

@@ -538,6 +538,7 @@ local function setTier(player, d, tier, ch)
         d.siOver = DanTraits_Roll(S.MELTDOWN) and "meltdown" or "shutdown"
         notify(player, d.siOver == "meltdown" and "UI_DanTraits_SensoryMeltdown" or "UI_DanTraits_SensoryShutdown")
         if (d.siToll or 0) > 0 then notify(player, "UI_DanTraits_SensoryWornThin") end
+        if DanTraits_StrainAdd then DanTraits_StrainAdd(player, "overload", DanTraits_StrainST.OVERLOAD, false) end   -- DanTraits_Strain.lua
         d.siToll = math.min(S.TOLL_MAX, (d.siToll or 0) + 1)
         d.siTold = 3
     elseif tier < 3 then

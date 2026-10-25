@@ -61,10 +61,22 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   rare, likeliest in an ambulance (3) or a doctor's bag (1.5), 0.1 in a bathroom cabinet, 0.01
   in a handbag. Console: `adrenaline`, `adrenaline shot | crash | clear`. Tests: test_adrenaline.
 
+- **Strain, phase 2: the links** (2026-10-25). `DanTraits_StrainFactor` = 1 + 4/3 x strain/100
+  (x2 at Burnt Out) multiplies MDD's episode chance, Hallucinations' episode chance, Migraine's
+  attack chance, MS's flare rate and Epilepsy's seizure rate. A Burnt Out ex-smoker gets the cue
+  cravings (Smoker). A sensory overload starting adds 5 (Sensory). New `vitalityTarget` hook in
+  Vitality: Burnt Out caps the target at 0.79 (under Thriving), At Ease adds 0.05. Panic over 40
+  costs strain only with a zombie within 15 tiles. Comforts: Pumped x2 for Endorphin Junkie,
+  fresh clothes x2 for Homemaker plus Line-Dried (the laundry moodle at -2) as its own comfort,
+  a Good Meal a tier up for Keen Cook (`base:cook`, `base:cook2`), x0.5 for everything but a
+  meal or Pumped during a depressive episode; a Nomad's home bonus is any bed slept in twice of
+  the last seven nights (Home's place helpers, `d.stNomadNights`).
+
 ### Changed
 
 - Alcoholic gives 6 points (was 4) and Smoker 5 (was 4): both now add strain while dry and
   ease only a quarter as much with a drink or a cigarette.
+- Straight Edge gives 3 points (was 1): it loses both of strain's outlets.
 - **Cyclobenzaprine folded into baclofen** (2026-10-24): two muscle relaxants in the loot pool
   was one too many. Baclofen is now also the relaxant for anyone (`DanTraits_Relaxant.lua`
   reads `baclofen`'s cover): one covers about 12 hours (its half-life) with the same relief

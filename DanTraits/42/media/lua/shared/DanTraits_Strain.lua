@@ -52,6 +52,18 @@
 -- Easily (every drain x1.5), Can't Switch Off (every drain x0.67, the variety
 -- bonus needs five).
 --
+-- The links (phase 2). Panic counts only with a zombie within
+-- ST.PANIC_ZOMBIE_TILES (an asthma attack, a hallucination or bleeding has
+-- its own costs). MDD episodes, hallucinations, migraines, MS flares and
+-- seizures come x DanTraits_StrainFactor (x2 Burnt Out); a Burnt Out
+-- ex-smoker gets the cue cravings; a sensory overload starting adds
+-- ST.OVERLOAD (DanTraits_Sensory.lua). Vitality's target (the vitalityTarget
+-- hook) is held under Thriving while Burnt Out and lifted At Ease. Comforts:
+-- Pumped x2 for an Endorphin Junkie, fresh clothes x2 and Line-Dried a
+-- comfort of its own for a Homemaker, a Good Meal a tier up for Keen Cook,
+-- every comfort but a meal or a workout at half in a depressive episode; a
+-- Nomad's home bonus is any bed slept in twice of the last seven nights.
+--
 -- The API, for every system that feeds it (phase 2 of the design moves the
 -- comfort watchers below into their own systems):
 --   DanTraits_StrainAdd(player, source, amount, combat)   returns what was added
@@ -134,6 +146,17 @@ local ST = {
     BREAK_RESET = 60,
     BREAK_RETRY_MIN = 5,     -- queued and not started: try again after this
     BREAK_SAD = 50,
+    -- the links (phase 2)
+    CONDITION = 4 / 3,       -- MDD, Hallucinations, Migraine, MS, Epilepsy: chance x (1 + this x strain/100)
+    PANIC_ZOMBIE_TILES = 15, -- panic counts only with a zombie this close
+    EPISODE_COMFORT = 0.5,   -- a depressive episode: comforts x this, but not a meal or a workout
+    ENDORPHIN = 2,           -- Endorphin Junkie: Pumped
+    HOMEMAKER = 2,           -- Homemaker: fresh clothes; and Line-Dried is a comfort of its own
+    LINE_DRIED = 2,
+    OVERLOAD = 5,            -- Sensory Issues: a meltdown or a shutdown starting
+    NOMAD_WINDOW = 7, NOMAD_NIGHTS = 2,   -- Nomad: a bed slept in twice of the last seven nights is home
+    VIT_CAP = 0.79,          -- Burnt Out: Vitality's target held under Thriving
+    VIT_EASE = 0.05,         -- At Ease: Vitality's target this much higher
 }
 DanTraits_StrainST = ST   -- tests
 
@@ -214,6 +237,12 @@ function DanTraits_StrainTier(player)
     return tierOf(DanTraits_StrainLevel(player))
 end
 
+-- the conditions' multiplier on an episode or attack chance: x1 at no
+-- strain, about x1.33 Frayed, x2 Burnt Out, x2.33 at breaking point
+function DanTraits_StrainFactor(player)
+    return 1 + ST.CONDITION * DanTraits_StrainLevel(player) / 100
+end
+
 -- strain gained: amount before the multipliers; combat marks a fight (the
 -- calm clock starts over) and takes the Desensitized cut
 function DanTraits_StrainAdd(player, source, amount, combat)
@@ -260,9 +289,38 @@ function DanTraits_StrainEase(player, source, amount)
     return off
 end
 
+-- a Nomad: no home, but a bed slept in twice of the last seven nights does
+-- for comforts (DanTraits_Home.lua's place helpers)
+local function nomadAtHome(player, d)
+    local nights = d.stNomadNights
+    if not nights or not DanTraits_HomeSamePlace or not DanTraits_HomeAtPlace then return false end
+    local x, y = nil, nil
+    pcall(function() x, y = player:getX(), player:getY() end)
+    if not x then return false end
+    for i = 1, #nights do
+        if DanTraits_HomeAtPlace(nights[i], x, y) then
+            local n = 0
+            for j = 1, #nights do if DanTraits_HomeSamePlace(nights[i], nights[j]) then n = n + 1 end end
+            if n >= ST.NOMAD_NIGHTS then return true end
+        end
+    end
+    return false
+end
+
 local function atHomeMult(player, d)
+    if hasTrait(player, "nomad") then return nomadAtHome(player, d) and ST.HOME or 1 end
     if not d.hmAtHome or not DanTraits_HomeStrength or DanTraits_HomeStrength(player) <= 0 then return 1 end
     return hasTrait(player, "homebody") and ST.HOMEBODY or ST.HOME
+end
+
+-- what the traits and conditions make of one comfort
+local function comfortMult(player, d, kind)
+    local k = 1
+    if kind == "pumped" and hasTrait(player, "endorphinjunkie") then k = k * ST.ENDORPHIN end
+    if kind == "laundry" and hasTrait(player, "homemaker") then k = k * ST.HOMEMAKER end
+    -- a depressive episode: comforts feel hollow, but food and exercise still reach it
+    if d.mddEpisode and kind ~= "meal" and kind ~= "pumped" and hasTrait(player, "spiraling") then k = k * ST.EPISODE_COMFORT end
+    return k
 end
 
 -- a comfort: the first today in full, the second at half, then nothing (the
@@ -283,7 +341,7 @@ function DanTraits_StrainComfort(player, kind, amount)
     d.stUsed[kind] = uses
     local share = ST.REPEAT[uses] or 0
     if share <= 0 then return 0 end
-    local base = amount * share * atHomeMult(player, d)
+    local base = amount * share * atHomeMult(player, d) * comfortMult(player, d, kind)
     local need = hasTrait(player, "cantswitchoff") and ST.CANT_SWITCH_VARIETY or ST.VARIETY_N
     local kinds = 0
     for _, n in pairs(d.stUsed) do if n > 0 then kinds = kinds + 1 end end
@@ -428,6 +486,23 @@ end
 DanTraits_AddHook("nightScored", function(_, player, d, quality, hours, wakes, isNap)
     if not d or isNap or not strainOn() then return nil end
     sleepEase(player, d, quality or 0)
+    -- a Nomad's beds, for nomadAtHome
+    if d.stSleepLoc and d.stBed then
+        local nights = d.stNomadNights or {}
+        d.stNomadNights = nights
+        nights[#nights + 1] = d.stSleepLoc
+        while #nights > ST.NOMAD_WINDOW do table.remove(nights, 1) end
+    end
+    d.stSleepLoc = nil
+    return nil
+end)
+
+-- Vitality: Burnt Out holds its target under Thriving; At Ease lifts it a little
+DanTraits_AddHook("vitalityTarget", function(target, player, d)
+    if not d or not strainOn() then return nil end
+    local s = d.strain or 0
+    if tierOf(s) >= 3 then return math.min(target, ST.VIT_CAP) end
+    if s < ST.AT_EASE then return target + ST.VIT_EASE end
     return nil
 end)
 
@@ -441,7 +516,10 @@ end
 local function trackSleep(player, d)
     local asleep = DanTraits_Asleep(player)
     if asleep then
-        if not d.stAsleep then d.stBed, d.stSleptMin = inBed(player), 0 end
+        if not d.stAsleep then
+            d.stBed, d.stSleptMin = inBed(player), 0
+            d.stSleepLoc = DanTraits_HomePlaceOf and DanTraits_HomePlaceOf(player) or nil
+        end
         d.stAsleep = true
         d.stSleptMin = (d.stSleptMin or 0) + 1
         return true
@@ -465,7 +543,10 @@ local function watchComforts(player, d, asleep)
     local g = d.ckGlow
     local gmin = g and tonumber(g.min) or nil
     if gmin and not first and (d.stGlowMin == nil or gmin > d.stGlowMin) then
-        DanTraits_StrainComfort(player, "meal", ST.MEAL[math.max(1, math.min(3, tonumber(g.tier) or 1))])
+        -- Keen Cook (and the cooks' profession version) eats a tier up
+        local tier = tonumber(g.tier) or 1
+        if hasVanillaTrait(player, "base:cook") or hasVanillaTrait(player, "base:cook2") then tier = tier + 1 end
+        DanTraits_StrainComfort(player, "meal", ST.MEAL[math.max(1, math.min(3, tier))])
     end
     d.stGlowMin = gmin
     -- Pumped starts (DanTraits_Fitness.lua)
@@ -476,6 +557,10 @@ local function watchComforts(player, d, asleep)
     local fresh = (tonumber(d.lnMoodle) or 0) < 0
     if fresh and not first and not d.stFresh then DanTraits_StrainComfort(player, "laundry") end
     d.stFresh = fresh or nil
+    -- Homemaker: clothes off the line are a comfort of their own
+    local dried = (tonumber(d.lnMoodle) or 0) <= -2
+    if dried and not first and not d.stDried and hasTrait(player, "homemaker") then DanTraits_StrainComfort(player, "linedried", ST.LINE_DRIED) end
+    d.stDried = dried or nil
     -- an hour of reading
     if not asleep then
         local reading = false
@@ -630,7 +715,8 @@ local function updateStrainMinute(player, d)
     -- fights and shocks
     local panic = 0
     pcall(function() panic = stats:get(CharacterStat.PANIC) or 0 end)
-    if panic > ST.PANIC_AT then DanTraits_StrainAdd(player, "panic", ST.PANIC, true) end
+    -- only the fight's panic: an asthma attack, a hallucination or bleeding has its own costs
+    if panic > ST.PANIC_AT and zombieWithin(player, ST.PANIC_ZOMBIE_TILES) then DanTraits_StrainAdd(player, "panic", ST.PANIC, true) end
     scanWounds(player, d)
     local health = 100
     pcall(function() health = player:getBodyDamage():getOverallBodyHealth() or 100 end)

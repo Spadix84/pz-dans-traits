@@ -92,7 +92,7 @@ local function seizureRate(player, d)
     rate = rate * (1 + EP_LOW_SUGAR * strength("DanTraits_DiaLow", player))
     if DanTraits_InBrightLight and DanTraits_InBrightLight(player) then rate = rate * EP_BRIGHT end
     rate = rate * medsCut(player)
-    return rate
+    return rate * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1)   -- a hard week (DanTraits_Strain.lua)
 end
 DanTraits_SeizureRate = seizureRate
 

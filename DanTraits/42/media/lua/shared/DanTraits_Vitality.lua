@@ -364,6 +364,7 @@ local function updateVitalityMinute(player, d)
         for _, key in ipairs(VIT_NO_GRACE_TRAITS) do if hasTrait(player, key) then grace = false end end
         if grace then target = math.max(target, 0.5) end
     end
+    target = clamp01(DanTraits_RunHooks("vitalityTarget", target, player, d))   -- Strain: Burnt Out caps it, At Ease lifts it
     d.vitTarget = target
     local before = tierOf(d.vitality)
     d.vitality = clamp01(d.vitality + (target - d.vitality) * VIT_SMOOTH)
