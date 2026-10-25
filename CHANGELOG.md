@@ -110,6 +110,35 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   for bottles already in a save and its tablet is a dose of baclofen; a save's
   `meds.cyclobenzaprine` level carries across to baclofen.
 
+## Map Legend 0.1.0 - 2026-10-25 (separate mod, not yet play-tested)
+
+- **Map Legend** (`MapLegend/`, deploy with `python deploy.py --legend`): a legend in the
+  bottom-left corner of the world map, a child of `ISWorldMap` added by wrapping its
+  `createChildren`. Each entry is a vanilla map symbol (`MapSymbolDefinitions` id) in one pen
+  colour plus what it means; the same symbol in another colour is another entry. Colours match
+  within 0.03 per channel (the game returns 0.65 as 0.6499999; black pen and pencil are 0.07
+  apart). Each row shows the symbol tinted, the meaning and how many of it the players drew
+  (`isUserDefined` texture symbols, recounted every 30 frames or on an edit), plus a line for
+  placed symbols the legend does not cover. Hover a row to outline those symbols
+  (`renderOutline`, called after `ISWorldMap:prerender`, where vanilla draws its own outlines);
+  click to keep them outlined. The fold button keeps only the title. It sits above the joypad
+  prompts when a pad has focus.
+- **Editor** (the legend's Edit button): the entries (reorder, remove, click to edit), then the
+  form: symbol by the vanilla tabs, pen colour (the live symbols panel's pens, so modded pens
+  show; the five vanilla ones otherwise), and the meaning typed or picked from 24 presets. An
+  edit that lands on another entry's symbol and colour replaces it, so one mark never has two
+  rows.
+- **Profile or character:** the legend is kept in `Zomboid/Lua/MapLegend.txt` (tab-separated,
+  versioned header; bad lines are skipped) and shared by every save. Tick "This character keeps
+  its own legend" to give a character its own in player mod data, starting from the profile;
+  unticking goes back to the profile, and ticking again brings back what it had. "Copy to
+  profile" (confirmed) makes a character's legend the profile.
+- **Symbols panel:** picking a symbol the legend has switches to the legend's pen for it when
+  the character carries that pen (wraps `ISWorldMapSymbols:onButtonClick`), and each symbol
+  button's tooltip lists its meanings by pen (wraps `checkInventory`; vanilla's "cannot write"
+  reason stays).
+- Tests: `tests/test_maplegend.lua`; the lint and the API check scan `MapLegend/` too.
+
 ## 1.4.0 - 2026-10-24
 
 ### New
