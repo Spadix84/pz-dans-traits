@@ -402,8 +402,6 @@
     "UI_DanTraits_MedOver_nicotinegum": "Too much nicotine gum: you feel sick and dizzy",
     "UI_DanTraits_MedOver_painkillers": "Too many painkillers: you feel very sick",
     "UI_DanTraits_MedOver_sumatriptan": "Too much sumatriptan: your chest feels tight",
-    "UI_DanTraits_MedOver_cyclobenzaprine": "Too much cyclobenzaprine: your heart is racing",
-    "UI_DanTraits_MedSide_cyclobenzaprine": "Cyclobenzaprine: heavy-headed and dizzy today",
     "UI_DanTraits_RelaxantLapse": "The muscle relaxant is wearing off",
     "UI_DanTraits_MedOver_nitroglycerin": "Too much nitroglycerin: the room swims",
     "UI_DanTraits_MedOver_sleepingtablets": "Too many sleeping tablets: you can barely stay awake",
@@ -543,5 +541,9 @@
     "UI_DanTraits_health_Strain4": "At breaking point",
     "UI_DanTraits_health_Strainrising": "getting worse",
     "UI_DanTraits_health_Straineasing": "easing",
-    "UI_DanTraits_health_Strainsteady": "steady"
+    "UI_DanTraits_health_Strainsteady": "steady",
+    "UI_DanTraits_AdrenalineShot": "Your heart is hammering. You're wide awake",
+    "UI_DanTraits_AdrenalineAgain": "Another shot. Your heart is pounding in your ears",
+    "UI_DanTraits_AdrenalineCrash": "The adrenaline is wearing off. Here comes the crash",
+    "UI_DanTraits_AdrenalineCleared": "The crash has passed"
 }

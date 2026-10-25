@@ -119,8 +119,11 @@ DanTraits_Drugs = {
         over = { stress = 0.001, hunger = 0.0004 },
         lapse = "UI_DanTraits_MSPredLapse", lapseTrait = { "ms", "arthritis" },
     },
+    -- also the muscle relaxant for anyone (DanTraits_Relaxant.lua reads the
+    -- cover): a sore back, a pulled muscle, stiffness. An old cyclobenzaprine
+    -- bottle (no longer found, 2026-10-24) is a dose of it.
     baclofen = {
-        items = { "baclofen" }, treats = { "ms" }, kind = "daily", everyH = 12, item = "DanTraits.Baclofen",
+        items = { "baclofen", "cyclobenzaprine" }, treats = { "ms" }, kind = "daily", everyH = 12, item = "DanTraits.Baclofen",
         halfH = 12, onAt = 0.5, overAt = 3, buildDays = 2, fadeDays = 2,
         taking = { fatigue = 0.0001 },
         side = { regen = 0.85 }, sideH = 8,
@@ -134,17 +137,6 @@ DanTraits_Drugs = {
         side = { sick = 30 }, sideH = 6,
         over = { stress = 0.0015 },
         lapse = "UI_DanTraits_MSAmanLapse", lapseTrait = "ms",
-    },
-    -- the muscle relaxant, for anyone (DanTraits_Relaxant.lua reads the cover):
-    -- a sore back, a pulled muscle, stiffness; drowsy and a dry mouth while it works
-    cyclobenzaprine = {
-        items = { "cyclobenzaprine" }, treats = { "pain" }, kind = "rescue",
-        halfH = 8, onAt = 0.5, overAt = 2.5,   -- one covers about 8 hours; three close together is too many
-        taking = { fatigue = 0.0003, thirst = 0.0001 },
-        side = { fatigue = 0.0006 }, sideH = 6,   -- a heavy, dizzy day
-        overH = 6,   -- the overdose lasts at least this long after the level falls back
-        over = { fatigue = 0.0015, faint = 0.003, heart = true },   -- a racing heart, like the tricyclics it is kin to
-        lapse = "UI_DanTraits_RelaxantLapse",
     },
     -- Everything else that is taken. The trait files still do what each one is
     -- for (the inhaler's relief, the gum's craving, the game's own painkiller,
@@ -261,6 +253,15 @@ local function migrate(d)
     if d.diaMedMinutes ~= nil then
         if d.diaMedMinutes > 0 then carry("metformin", d.diaMedMinutes / 1440) end
         d.diaMedMinutes = nil
+    end
+    -- cyclobenzaprine was folded into baclofen (2026-10-24): what is in the system carries across
+    if d.meds and d.meds.cyclobenzaprine then
+        local lvl = tonumber(d.meds.cyclobenzaprine.lvl) or 0
+        d.meds.cyclobenzaprine = nil
+        if lvl > 0 then
+            local s = stateOf(d, "baclofen")
+            s.lvl = math.max(s.lvl or 0, lvl)
+        end
     end
 end
 
@@ -594,7 +595,7 @@ end
 local SPAWN_TYPES = {
     ["DanTraits.Anticonvulsants"] = true, ["DanTraits.Metformin"] = true, ["DanTraits.IronPills"] = true,
     ["DanTraits.Diazepam"] = true, ["DanTraits.NicotineGum"] = true, ["DanTraits.Inhaler"] = true,
-    ["DanTraits.Sumatriptan"] = true, ["DanTraits.Nitroglycerin"] = true, ["DanTraits.Cyclobenzaprine"] = true,
+    ["DanTraits.Sumatriptan"] = true, ["DanTraits.Nitroglycerin"] = true,
 }
 
 function DanTraits_MedRandomFill(item)

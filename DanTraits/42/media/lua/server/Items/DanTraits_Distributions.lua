@@ -187,11 +187,10 @@ local ITEMS = {
     },
     prescription("DanTraits.Anticonvulsants", 1),   -- Epilepsy: like metformin, a little rarer
     prescription("DanTraits.Prednisone", 1.25),     -- MS: an everyday steroid, more common than most prescriptions
-    prescription("DanTraits.Baclofen", 1),          -- MS
+    prescription("DanTraits.Baclofen", 1.3),        -- MS, and the muscle relaxant for anyone (took in cyclobenzaprine's share, 2026-10-24)
     prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
     prescription("DanTraits.Sumatriptan", 0.8),     -- Migraines: new in the early 90s, a little rarer
     prescription("DanTraits.Nitroglycerin", 0.9),   -- Heart Condition: an old, common heart tablet
-    prescription("DanTraits.Cyclobenzaprine", 0.3), -- the muscle relaxant, anyone's: rare
     {
         -- anti-anxiety pills: the vanilla beta blocker's old job, found where
         -- prescriptions are, a little more often in a drug shack
@@ -212,6 +211,23 @@ local ITEMS = {
         },
         bags = { HandbagsAndPurses = 0.03 },
         clutter = { ClosetItems = 0.01 },
+    },
+    {
+        -- the adrenaline auto-injector: rare, where emergencies are handled
+        -- (ambulances, doctors' bags, hospitals), now and then where someone
+        -- with an allergy kept one (a bathroom cabinet, a handbag)
+        name = "DanTraits.AdrenalineInjector",
+        procedural = {
+            BathroomCabinet = 0.1, MedicalCabinet = 0.5, MedicalClinicDrugs = 1, MedicalStorageDrugs = 2,
+            HospitalRoomShelves = 1, DoctorTools = 1.5, NurseTools = 1, AmbulanceDriverTools = 3,
+            StoreShelfMedical = 0.5, SafehouseMedical = 1, SafehouseMedical_Mid = 0.5, ArmyStorageMedical = 1,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 0.2 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 0.5 },
+        },
+        bags = { HandbagsAndPurses = 0.01 },
+        clutter = {},
     },
     {
         -- common, like the other toiletries (for scale: toothpaste is 10 in a
@@ -435,9 +451,8 @@ local CADDY_CONTENTS = {
         "DanTraits.Sumatriptan", 2,
         "DanTraits.Nitroglycerin", 2,
         "DanTraits.Prednisone", 1,
-        "DanTraits.Baclofen", 1,
+        "DanTraits.Baclofen", 2,
         "DanTraits.Amantadine", 1,
-        "DanTraits.Cyclobenzaprine", 1,
     },
 }
 

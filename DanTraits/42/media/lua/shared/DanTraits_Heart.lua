@@ -8,7 +8,7 @@
 -- meter), caffeine working, a Run Down body (Vitality), a stimulant overdose
 -- (too many inhaler puffs or caffeine pills), blood lost (half the volume
 -- gone: half as fast again), an anaemic's iron deficit, a wound infection's
--- fever and every heart attack already survived make it build faster; beta
+-- fever, an adrenaline shot's rush (DanTraits_Adrenaline.lua) and every heart attack already survived make it build faster; beta
 -- blockers make it build slower. A cold body (soaked, or a night without a
 -- fire) builds strain like cold air does, indoors or out. The
 -- strain shows on the Chest Pain moodle from 0.4 (working hard) and 0.75
@@ -81,6 +81,7 @@ local HC_ENDURANCE_AT  = { 0.75, 0.5, 0.25, 0.1 }  -- endurance under which each
 local HC_SMOKER        = 0.5     -- x (1 + this x nicotine meter)
 local HC_CAFFEINE      = 1.3     -- while caffeine is working (Sleep's six-hour clock)
 local HC_STIM_OVER     = 2       -- while too many inhaler puffs or caffeine pills are in the system (DanTraits_Meds.lua)
+local HC_ADRENALINE    = 3       -- during an adrenaline shot's rush (DanTraits_Adrenaline.lua)
 local HC_VITALITY      = 0.3     -- x (1 - this x Vitality effect, -1..1)
 local HC_SCAR          = 0.2     -- x (1 + this x heart attacks survived)
 local HC_BLOOD         = 1.0     -- x (1 + this x the share of blood volume lost): half the blood gone, x1.5 (DanTraits_Blood.lua)
@@ -157,6 +158,7 @@ local function strainRate(player, d)
     if DanTraits_IsSmoker and DanTraits_IsSmoker(player) then rate = rate * (1 + HC_SMOKER * clamp01(d.nicMeter or 0)) end
     if (d.slCaffeineHours or 0) > 0 then rate = rate * HC_CAFFEINE end
     if DanTraits_MedHeartStrain and DanTraits_MedHeartStrain(player) then rate = rate * HC_STIM_OVER end
+    if DanTraits_AdrenalineRush and DanTraits_AdrenalineRush(player) then rate = rate * HC_ADRENALINE end
     if DanTraits_VitalityEffect then rate = rate * (1 - HC_VITALITY * (tonumber(DanTraits_VitalityEffect(player)) or 0)) end   -- -1..1, so not DanTraits_Strength
     -- a heart racing to make up for what the blood cannot carry: volume lost, red cells short, a fever
     if DanTraits_BloodActive and DanTraits_BloodActive() and d.bloodVol then rate = rate * (1 + HC_BLOOD * clamp01(1 - d.bloodVol)) end
@@ -251,6 +253,13 @@ local function heartAttack(player, d)
     if DanTraits_PassOut then
         DanTraits_PassOut(player, randRange(HC_ATTACK_OUT[1], HC_ATTACK_OUT[2]), "UI_DanTraits_HeartComeRound", true)
     end
+end
+
+-- anyone's heart can give out (the adrenaline shot, DanTraits_Adrenaline.lua):
+-- the same attack, and the week of recovery runs with or without the trait
+function DanTraits_HeartAttack(player)
+    if not player then return end
+    heartAttack(player, DanTraits_Data(player))
 end
 
 -- what the character did this minute: how much endurance went, whether they

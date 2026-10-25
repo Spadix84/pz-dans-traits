@@ -3,10 +3,12 @@
 [list]
 [*][b]Strain.[/b] Fighting wears on you over days. Kills (more each one the longer the day goes on), panic, wounds, bites, illness and withdrawal build strain; sleep, calm hours, a wash, fresh clothes, a good meal, a book, a workout, a drink and a smoke ease it, and comforts count half again at home. Strain never makes you fight worse: it slows what fighting teaches, down to 15% when you are burnt out, while a rested character learns a little more. Push to breaking point and you will sit down and fall apart at the first quiet moment. Two horde days in a row are fine; the third is not. New moodle: Strain.
 [*][b]Four strain traits:[/b] Level Headed (+8), Unwinds Easily (+4), High Strung (-6), Can't Switch Off (-4).
+[*][b]Adrenaline auto-injector[/b] (new rare item, anyone): two hours with no tiredness and full stamina for an emergency. The tiredness is only borrowed: when it wears off it comes back with interest, then hours of comedown. Every shot carries a 1 in 4 chance of a heart attack sometime in the first 40 minutes, and each shot within a day adds another 1 in 4. Beta blockers blunt it. New moodle: Adrenaline.
 [/list]
 [h2]Changed[/h2]
 [list]
 [*]Alcoholic gives 6 points (was 4) and Smoker 5 (was 4): going without now adds strain, and a drink or a cigarette eases it only a quarter as much.
+[*][b]Cyclobenzaprine is folded into baclofen.[/b] Baclofen now also eases a strain, a pulled muscle or a Bad Back for anyone, for about 12 hours, and turns up a little more often. With MS it is still the daily pill, without the training penalty. Old cyclobenzaprine bottles still work.
 [/list]
 
 [h1]1.4.0: Training, cooking and two new conditions[/h1]

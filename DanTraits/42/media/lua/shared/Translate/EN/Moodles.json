@@ -657,5 +657,21 @@
     "Moodles_Strain_Good_lvl3": "",
     "Moodles_Strain_Good_desc_lvl3": "",
     "Moodles_Strain_Good_lvl4": "",
-    "Moodles_Strain_Good_desc_lvl4": ""
+    "Moodles_Strain_Good_desc_lvl4": "",
+    "Moodles_Adrenaline_Bad_lvl1": "Comedown",
+    "Moodles_Adrenaline_Bad_desc_lvl1": "The adrenaline is gone. Stamina comes back at half speed, your mood is low and your head aches. Sleep it off: it passes four times as fast asleep.",
+    "Moodles_Adrenaline_Bad_lvl2": "Crashing",
+    "Moodles_Adrenaline_Bad_desc_lvl2": "Everything the shot held off is coming back, and more. Shaking hands, slow stamina, low mood, a headache. Another shot only puts it off and makes it worse.",
+    "Moodles_Adrenaline_Bad_lvl3": "",
+    "Moodles_Adrenaline_Bad_desc_lvl3": "",
+    "Moodles_Adrenaline_Bad_lvl4": "",
+    "Moodles_Adrenaline_Bad_desc_lvl4": "",
+    "Moodles_Adrenaline_Good_lvl1": "Wearing Off",
+    "Moodles_Adrenaline_Good_desc_lvl1": "The rush is fading. The crash is close.",
+    "Moodles_Adrenaline_Good_lvl2": "Adrenaline Rush",
+    "Moodles_Adrenaline_Good_desc_lvl2": "Wide awake, stamina full and coming back fast. Your heart is pounding and your hands shake. It is borrowed: the tiredness comes back when it wears off.",
+    "Moodles_Adrenaline_Good_lvl3": "",
+    "Moodles_Adrenaline_Good_desc_lvl3": "",
+    "Moodles_Adrenaline_Good_lvl4": "",
+    "Moodles_Adrenaline_Good_desc_lvl4": ""
 }

@@ -43,11 +43,39 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 - **Four strain traits:** Level Headed (+8, strain gained x0.5), High Strung (-6, x1.5),
   Unwinds Easily (+4, every drain x1.5), Can't Switch Off (-4, every drain x0.67, the variety
   bonus needs five). Each pair mutually exclusive.
+- **Adrenaline auto-injector** (2026-10-24, `DanTraits_Adrenaline.lua` at minute order 35,
+  item `DanTraits.AdrenalineInjector`, one use, its own "Inject adrenaline" option through
+  `ISVitalityPillAction`, 40 ticks). For anyone. The rush, 120 minutes: tiredness taken off and
+  held there (`adHold`), endurance filled, endurance recovery x1.5, stress floor 0.3 (ramp 0.02),
+  `swingDrop` +3%, Heart Condition strain x3 (`HC_ADRENALINE`, read through
+  `DanTraits_AdrenalineRush`). The heart: chance `min(1, 0.25 x shots in the last 24 hours)`,
+  rolled at the jab and landing 5 to 40 minutes in (`adAttackIn`) as Heart Condition's own
+  attack, now `DanTraits_HeartAttack` for anyone (the week of recovery already ran without the
+  trait). Beta blockers, by how built up: the tiredness taken off, the missing endurance given
+  back and the risk all x(1 - 0.5 x built). The crash: what the shot took off is owed
+  (`adDebt`); at the end of the rush it comes back over 30 minutes as `debt x 1.25 + 0.15`
+  (capped at 1), then 6 hours Crashing (endurance recovery x0.5, unhappiness floor 20, a pain
+  floor of 10, `swingDrop` +3% for the first hour), 4x as fast asleep. A shot during the crash
+  owes again what had still to come back. Moodle: Adrenaline (good: Adrenaline Rush, Wearing Off
+  in the last 20 minutes; bad: Crashing while it comes back and shakes, then Comedown). Loot:
+  rare, likeliest in an ambulance (3) or a doctor's bag (1.5), 0.1 in a bathroom cabinet, 0.01
+  in a handbag. Console: `adrenaline`, `adrenaline shot | crash | clear`. Tests: test_adrenaline.
 
 ### Changed
 
 - Alcoholic gives 6 points (was 4) and Smoker 5 (was 4): both now add strain while dry and
   ease only a quarter as much with a drink or a cigarette.
+- **Cyclobenzaprine folded into baclofen** (2026-10-24): two muscle relaxants in the loot pool
+  was one too many. Baclofen is now also the relaxant for anyone (`DanTraits_Relaxant.lua`
+  reads `baclofen`'s cover): one covers about 12 hours (its half-life) with the same relief
+  (stiffness fades x2, a pull's pain and held stiffness x0.5, a Bad Back x0.5 / x0.65 thrown
+  out), baclofen's own drowsiness (0.0001 a minute, was 0.0003) and overdose (limp, barely
+  awake; no racing heart), the drink drowsiness as before. Training on it (x0.85 Fitness and
+  Strength experience, a pull x1.5 as likely) only for those without MS, whose daily pill it
+  is. The lapse notice (`rxOn`) only for those without MS (MS has its own). Cyclobenzaprine no
+  longer spawns (baclofen's commonness 1 to 1.3, its pill-caddy weight 1 to 2); the item stays
+  for bottles already in a save and its tablet is a dose of baclofen; a save's
+  `meds.cyclobenzaprine` level carries across to baclofen.
 
 ## 1.4.0 - 2026-10-24
 

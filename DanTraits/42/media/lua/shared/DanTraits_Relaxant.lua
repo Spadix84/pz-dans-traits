@@ -1,9 +1,11 @@
--- Project Zomboid Vitality Project: the muscle relaxant (DanTraits.Cyclobenzaprine,
--- 1993's usual prescription for a strain or a bad back). Not a trait: anyone
--- can take it. The dose, the drowsiness and dry mouth while it works, the
--- side effects and too many at once are the shared medication list's
--- (DanTraits_Meds.lua, "cyclobenzaprine": one covers about 8 hours). While
--- covered, this file does what it is for:
+-- Project Zomboid Vitality Project: the muscle relaxant. Baclofen
+-- (DanTraits.Baclofen), Multiple Sclerosis' daily pill, is also the relaxant
+-- for anyone with a strain or a bad back (cyclobenzaprine was its own item
+-- until 2026-10-24; an old bottle of it is a dose of baclofen). Not a trait:
+-- anyone can take it. The dose, the drowsiness while it works, the side
+-- effects and too many at once are the shared medication list's
+-- (DanTraits_Meds.lua, "baclofen": one covers about 12 hours). While covered,
+-- this file does what it is for:
 --   * stiffness anywhere fades twice as fast (Age's stiffFade hook), so
 --     sore muscles hurt less;
 --   * a pulled muscle hurts and stiffens half as much (strainRelief,
@@ -14,12 +16,15 @@
 -- and what comes with it:
 --   * training on it: Fitness and Strength experience x0.85 (the muscles
 --     will not push), and a pull is half as likely again (the warning ache is
---     masked);
+--     masked). Not for Multiple Sclerosis: it is their daily pill, and the
+--     body is used to it;
 --   * drink on top: much drowsier (RX_DRUNK_FATIGUE a minute awake, at any
---     level of the Drunk moodle).
+--     level of the Drunk moodle);
+--   * worn off: a notice for anyone without MS (MS has its own lapse notice).
+-- Mod data: rxOn (covered at the last minute, for the notice).
 require "DanTraits"
 
-local RX_ID            = "cyclobenzaprine"
+local RX_ID            = "baclofen"
 local RX_STIFF_FADE    = 2       -- stiffness fades x this
 local RX_STRAIN        = 0.5     -- a pulled muscle's pain and held stiffness x this
 local RX_BACK          = 0.5     -- a Bad Back's pain and stiffness x this...
@@ -32,6 +37,11 @@ local function covered(player)
     return player ~= nil and DanTraits_MedCovered ~= nil and DanTraits_MedCovered(player, RX_ID)
 end
 DanTraits_RelaxantOn = covered
+
+-- the training cost: anyone but Multiple Sclerosis, whose daily pill it is
+local function training(player)
+    return covered(player) and not DanTraits_HasTrait(player, "ms")
+end
 
 DanTraits_AddHook("stiffFade", function(k, player)
     if covered(player) then return k * RX_STIFF_FADE end
@@ -49,17 +59,20 @@ DanTraits_AddHook("backRelief", function(k, player, d, out)
 end)
 
 DanTraits_AddHook("fitnessXp", function(k, player)
-    if covered(player) then return k * RX_XP end
+    if training(player) then return k * RX_XP end
     return nil
 end)
 
 DanTraits_AddHook("fitnessStrain", function(risk, player)
-    if covered(player) then return risk * RX_STRAIN_RISK end
+    if training(player) then return risk * RX_STRAIN_RISK end
     return nil
 end)
 
 local function updateRelaxantMinute(player, d)
-    if not covered(player) or DanTraits_Asleep(player) then return end
+    local on = covered(player)
+    if d.rxOn and not on and not DanTraits_HasTrait(player, "ms") then DanTraits_Notify(player, "UI_DanTraits_RelaxantLapse") end
+    d.rxOn = on or nil
+    if not on or DanTraits_Asleep(player) then return end
     local drunk = 0
     pcall(function() drunk = player:getMoodles():getMoodleLevel(MoodleType.DRUNK) or 0 end)
     if drunk > 0 then DanTraits_StatAdd(player:getStats(), CharacterStat.FATIGUE, RX_DRUNK_FATIGUE) end

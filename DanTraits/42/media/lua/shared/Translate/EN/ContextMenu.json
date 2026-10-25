@@ -38,5 +38,6 @@
     "ContextMenu_DanTraits_SensoryHold": "Hold it close",
     "ContextMenu_DanTraits_FitWorkOut": "Work Out",
     "ContextMenu_DanTraits_HwbApply": "Hold on sore muscles",
-    "ContextMenu_DanTraits_HwbGroup": "%1 (%2)"
+    "ContextMenu_DanTraits_HwbGroup": "%1 (%2)",
+    "ContextMenu_DanTraits_UseAdrenaline": "Inject adrenaline"
 }

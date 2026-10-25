@@ -73,6 +73,9 @@
 --                      sandbox option hides it)
 --   Strain             anyone (DanTraits_Strain.lua): Frayed, Worn Down, Burnt
 --                      Out, then Breaking Point; good side At Ease
+--   Adrenaline         anyone (DanTraits_Adrenaline.lua): good side Adrenaline
+--                      Rush, then Wearing Off; bad side Comedown, then Crashing
+--                      (the tiredness coming back and the shakes)
 --
 -- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
 -- range, not which way; the meter is how you find out. Hallucinations has
@@ -247,6 +250,10 @@ local SPECS = {
     end },
     -- strain (DanTraits_Strain.lua keeps stMoodle: -1 at ease; 1 frayed, 2 worn down, 3 burnt out, 4 breaking point)
     { name = "Strain", level = function(player, d) return d.stMoodle or 0 end },
+    -- an adrenaline shot (DanTraits_Adrenaline.lua): -2 the rush, -1 wearing off; 1 comedown, 2 crashing
+    { name = "Adrenaline", level = function(player, d)
+        return DanTraits_AdrenalineMoodle and DanTraits_AdrenalineMoodle(player, d) or 0
+    end },
 }
 
 DanTraits_MoodleNames = {}

@@ -1341,14 +1341,11 @@ module DanTraits {
         Tags = base:consumable,
     }
 
-    /* Cyclobenzaprine, the muscle relaxant (1993: the usual prescription for a
-       strain or a bad back, sold as Flexeril): 20 tablets, one covers about 8
-       hours. Eases a pulled muscle's pain and stiffness, a Bad Back, stiffness
-       anywhere; drowsy and a dry mouth while it works, far drowsier with drink.
-       Anyone can take it (media/lua/shared/DanTraits_Relaxant.lua, on the
-       shared medication list). Swallowed with the game's own Take Pills
-       option, like sumatriptan. Rare: under a third as common as the other
-       prescriptions. */
+    /* Cyclobenzaprine: retired 2026-10-24, folded into baclofen (the muscle
+       relaxant for anyone, media/lua/shared/DanTraits_Relaxant.lua). Kept so
+       bottles already in a save stay; it no longer spawns, and a tablet is a
+       dose of baclofen (DanTraits_Meds.lua). Swallowed with the game's own
+       Take Pills option. */
     item Cyclobenzaprine
     {
         DisplayCategory = FirstAid,
@@ -1363,6 +1360,27 @@ module DanTraits {
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
         Tags = base:consumable,
+    }
+
+    /* Adrenaline auto-injector: one shot into the thigh, for anyone
+       (media/lua/shared/DanTraits_Adrenaline.lua). Two hours without
+       tiredness and full endurance, then the crash, and a 1 in 4 chance of a
+       heart attack (more for each shot within a day). Its own action
+       (ISVitalityPillAction). Rare: hospitals, ambulances, doctors' bags, the
+       odd handbag (media/lua/server/Items/DanTraits_Distributions.lua). */
+    item AdrenalineInjector
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Adrenaline Auto-Injector,
+        Weight = 0.1,
+        Icon = AdrenalineInjector,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_AdrenalineInjector,
+        UseDelta = 1,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
     }
 
     item Nitroglycerin

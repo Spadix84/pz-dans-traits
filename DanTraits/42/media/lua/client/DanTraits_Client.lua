@@ -270,7 +270,25 @@ local function sunblockMenu(playerNum, context, items)
     if usesOf(bottle) <= 0 then greyOut(option, "Tooltip_DanTraits_SunblockEmpty") end
 end
 
+-- The adrenaline auto-injector (anyone) -------------------------------------------
+local ADRENALINE_TIME = 40
+
+local function onUseAdrenaline(injector, playerObj)
+    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, injector)
+    ISTimedActionQueue.add(ISVitalityPillAction:new(playerObj, injector, "ContextMenu_DanTraits_UseAdrenaline", nil, ADRENALINE_TIME))
+end
+
+local function adrenalineMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or not DanTraits_IsAdrenaline then return end
+    local injector = findFirst(items, DanTraits_IsAdrenaline)
+    if not injector then return end
+    pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+    context:addOption(getText("ContextMenu_DanTraits_UseAdrenaline"), injector, onUseAdrenaline, playerObj)
+end
+
 Events.OnFillInventoryObjectContextMenu.Add(onFillInventoryObjectContextMenu)
+Events.OnFillInventoryObjectContextMenu.Add(adrenalineMenu)
 Events.OnFillInventoryObjectContextMenu.Add(sunblockMenu)
 Events.OnFillInventoryObjectContextMenu.Add(anticonvulsantMenu)
 Events.OnFillInventoryObjectContextMenu.Add(msMedMenu)
