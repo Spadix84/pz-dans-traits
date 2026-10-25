@@ -45,7 +45,7 @@ then here.
 | Smoker, full nicotine withdrawal | 0.1 an hour awake | Scaled by the withdrawal stat |
 | A hangover | 2 | The morning after a night past Drunk 2 |
 
-**The first week counts half** (days 1-7, sandbox `StrainEarlyDays`), for the
+**The first week counts half** (days 1-7, sandbox `StrainEarlyDays` and `StrainEarlyRate`), for the
 supply rush before there is a home to rest in.
 
 The outing targets, from 0 (with the scratches and panic a day like that
@@ -229,7 +229,7 @@ bookkeeping, with a small API so every system feeds one place:
 - **Telemetry:** log each source's daily total, so play-tests can tune the
   table from real days instead of guesses.
 - Sandbox: `StrainEnabled`, `StrainGain` (%), `StrainEase` (%), `StrainXpFloor`
-  (the lowest combat multiplier, default 15%), `StrainEarlyDays` (7),
+  (the lowest combat multiplier, default 15%), `StrainEarlyDays` (7), `StrainEarlyRate` (50%),
   `StrainBreakdown` (on).
 - MP: strain lives in the player's mod data and runs where the player runs,
   like sleep debt. Nothing to relay until a doctor needs to see it.

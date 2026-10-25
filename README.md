@@ -604,8 +604,8 @@ Fighting wears on you over days. Stress empties itself in an afternoon; strain i
 - **Tiers** (moodle: Strain): At Ease (under 10: combat experience x1.1), Frayed (25), Worn Down (50: unhappiness held at 15), Burnt Out (75: at 30), Breaking Point (100).
 - **Experience:** combat skills (weapons, Aiming, Reloading, Strength, Fitness) x1 at 25, x0.75 at 50, x0.4 at 75, x0.15 at 100. Other skills take half that penalty, only over 50.
 - **Breaking Point:** strain holds at 100 until the first safe moment (ten minutes without a fight, no zombie within 12 tiles); then you sit down where you are for about half a minute and can do nothing else. Walking away or a zombie within 4 tiles stops it, and it comes again. Finished, strain drops to 60.
-- The first week counts half. Desensitized takes 0.6 of combat strain. The health panel shows the tier and whether it is easing.
-- Sandbox: Strain, Strain Gained %, Strain Eased %, Lowest Combat Experience % (15), Strain Grace Days (7), Breaking Point.
+- The first week counts half (both sandbox options). Desensitized takes 0.6 of combat strain. The health panel shows the tier and whether it is easing.
+- Sandbox: Strain, Strain Gained %, Strain Eased %, Lowest Combat Experience % (15), Strain Grace Days (7), Strain During Grace % (50), Breaking Point.
 - Console: `strain`, `strain set <n>`, `strain kill [n]`, `strain comfort <kind>`.
 
 ### Blood

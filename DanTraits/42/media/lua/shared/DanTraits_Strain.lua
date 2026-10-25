@@ -30,7 +30,7 @@
 --                     ST.CIG_CAP); an Alcoholic's drink and a Smoker's cigarette a quarter
 -- A fever halves what calm hours and sleep take off. Combat strain (kills,
 -- panic, wounds, knockdowns) is x0.6 for the Desensitized. The first week
--- counts half (sandbox StrainEarlyDays).
+-- counts half (sandbox StrainEarlyDays for how long, StrainEarlyRate for how much).
 --
 -- Tiers: At Ease (under 10, combat experience x1.1), Frayed (25), Worn Down
 -- (50, unhappiness held at 15), Burnt Out (75, at 30), Breaking Point (100).
@@ -116,7 +116,6 @@ local ST = {
     CIG = 0.75, CIG_CAP = 3,
     ADDICT = 0.25,           -- an Alcoholic's drink, a Smoker's cigarette
     -- who
-    EARLY = 0.5,             -- strain gained x this in the first week
     DESENSITIZED = 0.6,      -- combat strain
     LEVEL_HEADED = 0.5, HIGHLY_STRUNG = 1.5,
     UNWINDS = 1.5, CANT_SWITCH = 0.67, CANT_SWITCH_VARIETY = 5,
@@ -223,7 +222,7 @@ function DanTraits_StrainAdd(player, source, amount, combat)
     local d = DanTraits_Data(player)
     newDay(d)
     local k = DanTraits_SandboxNum("StrainGain", 100) / 100
-    if early(player) then k = k * ST.EARLY end
+    if early(player) then k = k * DanTraits_SandboxNum("StrainEarlyRate", 50) / 100 end
     if hasTrait(player, "levelheaded") then k = k * ST.LEVEL_HEADED end
     if hasTrait(player, "highlystrung") then k = k * ST.HIGHLY_STRUNG end
     if combat then

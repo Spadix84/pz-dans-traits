@@ -93,6 +93,9 @@ option DanTraits.StrainXpFloor
 option DanTraits.StrainEarlyDays
 {type = integer, min = 0, max = 60, default = 7, page = DanTraitsLife, translation = DanTraitsStrainEarlyDays,}
 
+option DanTraits.StrainEarlyRate
+{type = integer, min = 0, max = 100, default = 50, page = DanTraitsLife, translation = DanTraitsStrainEarlyRate,}
+
 option DanTraits.StrainBreakdown
 {type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsStrainBreakdown,}
 

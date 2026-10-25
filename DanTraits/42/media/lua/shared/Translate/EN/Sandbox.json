@@ -127,7 +127,9 @@
     "Sandbox_DanTraitsStrainXpFloor": "Lowest Combat Experience (%%)",
     "Sandbox_DanTraitsStrainXpFloor_tooltip": "The least combat experience a strained character still gets, as a share of normal. 100: strain never slows experience.",
     "Sandbox_DanTraitsStrainEarlyDays": "Strain Grace Days",
-    "Sandbox_DanTraitsStrainEarlyDays_tooltip": "For this many days after the character starts, strain builds at half the rate: the supply rush before there is a home to rest in.",
+    "Sandbox_DanTraitsStrainEarlyDays_tooltip": "For this many days after the character starts, strain builds slower (Strain During Grace): the supply rush before there is a home to rest in. 0: no grace period.",
+    "Sandbox_DanTraitsStrainEarlyRate": "Strain During Grace (%%)",
+    "Sandbox_DanTraitsStrainEarlyRate_tooltip": "How much strain counts during the grace days, as a share of normal. 50: half. 0: none at all until the grace days are over. 100: no grace.",
     "Sandbox_DanTraitsStrainBreakdown": "Breaking Point",
     "Sandbox_DanTraitsStrainBreakdown_tooltip": "At full strain the character breaks down at the first safe moment: sits down where they are for a while, then strain drops to 60. Walking away or a zombie coming close stops it, and it comes again.<br>Off: full strain only slows experience the most."
 }

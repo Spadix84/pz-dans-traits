@@ -78,6 +78,15 @@ assert(data(p).stToday.kill and data(p).stToday.vehicleKill, "the day's tally na
 p = fresh({ hours = 24 })
 DanTraits_StrainAdd(p, "test", 10, true)
 near(strain(p), 5, 1e-9, "day two: half")
+SandboxVars.DanTraits.StrainEarlyRate = 0
+p = fresh({ hours = 24 })
+DanTraits_StrainAdd(p, "test", 10, true)
+near(strain(p), 0, 1e-9, "grace at 0%: nothing")
+SandboxVars.DanTraits.StrainEarlyDays = 0
+p = fresh({ hours = 24 })
+DanTraits_StrainAdd(p, "test", 10, true)
+near(strain(p), 10, 1e-9, "no grace days: in full")
+SandboxVars.DanTraits.StrainEarlyRate, SandboxVars.DanTraits.StrainEarlyDays = nil, nil
 p = fresh({ traits = { "levelheaded" } })
 DanTraits_StrainAdd(p, "test", 10, false)
 near(strain(p), 5, 1e-9, "Level Headed: half")

@@ -10,7 +10,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 - **Strain** (2026-10-24, `DanTraits_Strain.lua` at minute order 45 plus the frame system
   `StrainKnock`, `ISStrainBreakdownAction`; design and tuning in `plans/strain.md` and
   `plans/strain_sim.py`; sandbox `StrainEnabled`, `StrainGain`, `StrainEase`, `StrainXpFloor`,
-  `StrainEarlyDays`, `StrainBreakdown`). A slow 0-100 tank (`d.strain`) for everyone. Fills: a
+  `StrainEarlyDays`, `StrainEarlyRate`, `StrainBreakdown`). A slow 0-100 tank (`d.strain`) for everyone. Fills: a
   kill `0.1 x (1 + k/100)`, k the kills since the last night's sleep (`OnZombieDead`,
   `getAttackedBy`; from a vehicle a third, cost and count), a minute with panic over 40 `0.1`, a
   new scratch / laceration / deep wound `1 / 2 / 3` (a per-part scan each minute, so NPC mods'
@@ -26,7 +26,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   fresh clothes (Laundry's moodle going fresh) `2`, a Good Meal by tier `2 / 3 / 4`, an hour of
   reading `2`, Pumped starting `2`; Drunk 2+ `2` an hour, Drunk 1 `0.75`, up to `8` a day; a
   cigarette `0.75`, up to `3`; an Alcoholic's drink and a Smoker's cigarette a quarter. A fever
-  halves calm hours and sleep. The first week x0.5; Desensitized x0.6 on combat strain.
+  halves calm hours and sleep. The first week x0.5 (`StrainEarlyDays` 7, `StrainEarlyRate` 50%); Desensitized x0.6 on combat strain.
   Tiers: At Ease (under 10), Frayed (25), Worn Down (50, unhappiness floor 15), Burnt Out (75,
   30), Breaking Point (100). Experience (`Events.AddXP`, taken back through
   `DanTraits_AgeXpAdjust`, Age's own top-ups skipped): weapon skills, Aiming, Reloading,
