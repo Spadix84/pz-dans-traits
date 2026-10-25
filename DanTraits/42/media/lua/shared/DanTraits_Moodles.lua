@@ -71,6 +71,8 @@
 --                      (DanTraits_Meds.lua): Medication Due, then Missed
 --                      Medication once it has worn off (the MedReminderMoodle
 --                      sandbox option hides it)
+--   Strain             anyone (DanTraits_Strain.lua): Frayed, Worn Down, Burnt
+--                      Out, then Breaking Point; good side At Ease
 --
 -- Diabetes feeds its own (BloodSugar, from DanTraits_Diabetes.lua): out of
 -- range, not which way; the meter is how you find out. Hallucinations has
@@ -243,6 +245,8 @@ local SPECS = {
         if not DanTraits_MedDueLevel or not DanTraits_SandboxOn("MedReminderMoodle") then return 0 end
         return DanTraits_MedDueLevel(player)
     end },
+    -- strain (DanTraits_Strain.lua keeps stMoodle: -1 at ease; 1 frayed, 2 worn down, 3 burnt out, 4 breaking point)
+    { name = "Strain", level = function(player, d) return d.stMoodle or 0 end },
 }
 
 DanTraits_MoodleNames = {}

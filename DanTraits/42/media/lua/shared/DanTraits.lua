@@ -489,6 +489,8 @@ end
 --               SensitiveSkin (LaundryTraits: reads the garment state Laundry left at 40),
 --               Sensory (reads Germaphobe's grime, Laundry's itch and Tinnitus from 40, Home from 11)
 --           42  Knox (the Resilient roll against the zombie infection)
+--           45  Strain (reads the fever, withdrawal, the Good Meal, Pumped, fresh
+--               clothes and the hangover the systems above left; its unhappiness floors)
 --           90  Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --           96  Moodles (reads what every system above left in mod data; changes nothing)
@@ -499,7 +501,8 @@ end
 --               Anemia, Concussion, Asthma, Heart, Dehydration, Age subscribe; the cuts multiply)
 --           20  Blood        22  WoundCare (movement sampling)    24  Concussion
 --           40  AgeTraits (Bad Knees, Pace Yourself), Alcohol (panic decay), Arthritis, ArthritisGrip,
---               Dependent (held anger), Heart (the angina surcharge), Meds (diazepam), Smoker (held anger)
+--               Dependent (held anger), Heart (the angina surcharge), Meds (diazepam), Smoker (held anger),
+--               StrainKnock (knocked down)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
 --   are still registered by their own files.)
 local drivers = { minute = {}, ten = {}, frame = {} }

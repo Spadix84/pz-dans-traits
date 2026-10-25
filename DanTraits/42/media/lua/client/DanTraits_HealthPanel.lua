@@ -39,6 +39,9 @@
 -- due, red once it has worn off. The body part list moves down to make room
 -- for both. Not shown for another player in multiplayer: their mod data is not
 -- sent to the doctor.
+--
+-- Strain: under that, your own character's strain tier (DanTraits_Strain.lua)
+-- and whether it got worse or eased over the last hour. Yourself only.
 require "XpSystem/ISUI/ISHealthPanel"
 
 local HP_VAGUE_BELOW   = 3       -- levels under this see only what anyone can see
@@ -371,6 +374,19 @@ local function medLines(patient)
 end
 DanTraits_HealthMedLines = medLines
 
+-- strain (DanTraits_Strain.lua): the tier as the moodle shows it, and which
+-- way it went over the last hour; never the number
+local STRAIN_COLOUR = { [-1] = GREEN, [0] = GREY, [1] = ORANGE, [2] = ORANGE, [3] = RED, [4] = RED }
+local function strainLines(patient)
+    if not DanTraits_StrainSummary then return {} end
+    local s = DanTraits_StrainSummary(patient)
+    if not s then return {} end
+    local level = math.max(-1, math.min(4, tonumber(s.moodle) or 0))
+    local name = t(level < 0 and "StrainEase" or ("Strain" .. level))
+    return { { name .. ", " .. t("Strain" .. s.way), STRAIN_COLOUR[level] or GREY } }
+end
+DanTraits_HealthStrainLines = strainLines
+
 local function wrapRender()
     if not ISHealthPanel or not ISHealthPanel.render then return end
     if ISHealthPanel.render == ISHealthPanel.DanTraitsRender then return end
@@ -394,6 +410,8 @@ local function wrapRender()
         if #blood > 0 then sections[#sections + 1] = { t("BloodHeader"), blood } end
         local meds = here and medLines(patient) or {}
         if #meds > 0 then sections[#sections + 1] = { t("MedHeader"), meds } end
+        local strain = here and strainLines(patient) or {}
+        if #strain > 0 then sections[#sections + 1] = { t("StrainHeader"), strain } end
         if #sections == 0 then return end
         local tm = getTextManager()
         local fontHgt = tm:getFontHeight(UIFont.Small)

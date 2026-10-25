@@ -78,6 +78,24 @@ option DanTraits.SleepClothesEnabled
 option DanTraits.HomeEnabled
 {type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsHomeEnabled,}
 
+option DanTraits.StrainEnabled
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsStrainEnabled,}
+
+option DanTraits.StrainGain
+{type = integer, min = 0, max = 500, default = 100, page = DanTraitsLife, translation = DanTraitsStrainGain,}
+
+option DanTraits.StrainEase
+{type = integer, min = 10, max = 500, default = 100, page = DanTraitsLife, translation = DanTraitsStrainEase,}
+
+option DanTraits.StrainXpFloor
+{type = integer, min = 0, max = 100, default = 15, page = DanTraitsLife, translation = DanTraitsStrainXpFloor,}
+
+option DanTraits.StrainEarlyDays
+{type = integer, min = 0, max = 60, default = 7, page = DanTraitsLife, translation = DanTraitsStrainEarlyDays,}
+
+option DanTraits.StrainBreakdown
+{type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsStrainBreakdown,}
+
 option DanTraits.FitnessEnabled
 {type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsFitnessEnabled,}
 

@@ -79,3 +79,8 @@ DanTraitsRegistry.injuryprone       = CharacterTrait.register("DanTraits:injuryp
 DanTraitsRegistry.exerciseaverse    = CharacterTrait.register("DanTraits:exerciseaverse")
 DanTraitsRegistry.inflexible        = CharacterTrait.register("DanTraits:inflexible")
 DanTraitsRegistry.endorphinjunkie   = CharacterTrait.register("DanTraits:endorphinjunkie")
+-- strain traits (DanTraits_Strain.lua)
+DanTraitsRegistry.levelheaded       = CharacterTrait.register("DanTraits:levelheaded")
+DanTraitsRegistry.highlystrung      = CharacterTrait.register("DanTraits:highlystrung")
+DanTraitsRegistry.unwindseasily     = CharacterTrait.register("DanTraits:unwindseasily")
+DanTraitsRegistry.cantswitchoff     = CharacterTrait.register("DanTraits:cantswitchoff")

@@ -117,5 +117,17 @@
     "Sandbox_DanTraitsReadingMoodleScale": "Good Read Duration",
     "Sandbox_DanTraitsReadingMoodleScale_tooltip": "Multiplies how long the Good Read moodle and its genre buff last after finishing a book: at 1, two days for a novel, half a day for a comic or magazine.",
     "Sandbox_DanTraitsReadingRereadComfort": "Re-read Comfort",
-    "Sandbox_DanTraitsReadingRereadComfort_tooltip": "A book you have finished still gives a fifth of its relief when it is in your liked genre: comfort reading. Off: a finished book gives nothing, as in vanilla. Other genres give nothing either way."
+    "Sandbox_DanTraitsReadingRereadComfort_tooltip": "A book you have finished still gives a fifth of its relief when it is in your liked genre: comfort reading. Off: a finished book gives nothing, as in vanilla. Other genres give nothing either way.",
+    "Sandbox_DanTraitsStrainEnabled": "Strain",
+    "Sandbox_DanTraitsStrainEnabled_tooltip": "Fighting wears on you over days: kills (each costs more the more you have made since you slept), panic, wounds, bites, illness and withdrawal build strain; sleep, calm hours, showers, fresh clothes, good meals, reading, workouts, a drink and a smoke ease it. Strain slows the experience fighting gives (other skills a little, once it is high), never the fighting itself. Rested, combat experience is x1.1.<br>Off: nothing is tracked and the four strain traits do nothing.",
+    "Sandbox_DanTraitsStrainGain": "Strain Gained (%%)",
+    "Sandbox_DanTraitsStrainGain_tooltip": "Multiplies all strain gained. 50 halves it, 200 doubles it.",
+    "Sandbox_DanTraitsStrainEase": "Strain Eased (%%)",
+    "Sandbox_DanTraitsStrainEase_tooltip": "Multiplies everything that takes strain off: sleep, calm hours, comforts, drink and smoke.",
+    "Sandbox_DanTraitsStrainXpFloor": "Lowest Combat Experience (%%)",
+    "Sandbox_DanTraitsStrainXpFloor_tooltip": "The least combat experience a strained character still gets, as a share of normal. 100: strain never slows experience.",
+    "Sandbox_DanTraitsStrainEarlyDays": "Strain Grace Days",
+    "Sandbox_DanTraitsStrainEarlyDays_tooltip": "For this many days after the character starts, strain builds at half the rate: the supply rush before there is a home to rest in.",
+    "Sandbox_DanTraitsStrainBreakdown": "Breaking Point",
+    "Sandbox_DanTraitsStrainBreakdown_tooltip": "At full strain the character breaks down at the first safe moment: sits down where they are for a while, then strain drops to 60. Walking away or a zombie coming close stops it, and it comes again.<br>Off: full strain only slows experience the most."
 }

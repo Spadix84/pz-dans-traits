@@ -641,5 +641,21 @@
     "Moodles_MedsDue_Good_lvl3": "",
     "Moodles_MedsDue_Good_desc_lvl3": "",
     "Moodles_MedsDue_Good_lvl4": "",
-    "Moodles_MedsDue_Good_desc_lvl4": ""
+    "Moodles_MedsDue_Good_desc_lvl4": "",
+    "Moodles_Strain_Bad_lvl1": "Frayed",
+    "Moodles_Strain_Bad_desc_lvl1": "The fighting is starting to wear on you. Sleep, calm hours, a shower, fresh clothes, a good meal, a book and a workout bring it down over days.",
+    "Moodles_Strain_Bad_lvl2": "Worn Down",
+    "Moodles_Strain_Bad_desc_lvl2": "Too many fights, too little rest. Fighting teaches you less, other skills come a little slower and your mood stays low.",
+    "Moodles_Strain_Bad_lvl3": "Burnt Out",
+    "Moodles_Strain_Bad_desc_lvl3": "Running on empty. Fighting teaches you almost nothing and your mood stays low. A few days at home doing the things you like is what it takes.",
+    "Moodles_Strain_Bad_lvl4": "Breaking Point",
+    "Moodles_Strain_Bad_desc_lvl4": "You can't take any more. At the first quiet moment it all comes out: you will sit down where you are for a while. Until then nothing eases it.",
+    "Moodles_Strain_Good_lvl1": "At Ease",
+    "Moodles_Strain_Good_desc_lvl1": "Rested and steady. Fighting teaches you a little more.",
+    "Moodles_Strain_Good_lvl2": "",
+    "Moodles_Strain_Good_desc_lvl2": "",
+    "Moodles_Strain_Good_lvl3": "",
+    "Moodles_Strain_Good_desc_lvl3": "",
+    "Moodles_Strain_Good_lvl4": "",
+    "Moodles_Strain_Good_desc_lvl4": ""
 }

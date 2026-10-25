@@ -5,7 +5,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:dependent,
-        Cost = -4,
+        Cost = -6,
         UIName = UI_trait_DanDependent,
         UIDescription = UI_trait_DanDependentdesc,
         MutuallyExclusiveTraits = DanTraits:straightedge,
@@ -523,14 +523,15 @@ module DanTraits {
        after a game update compare with media/scripts/generated/characters/
        character_traits.txt in the game folder. Vanilla fields copied (game
        42.21.0, Steam build 25485521): IsProfessionTrait, DisabledInMultiplayer,
-       CharacterTrait, Cost (-3, changed to -4), UIName, UIDescription,
-       MutuallyExclusiveTraits. */
+       CharacterTrait, Cost (-3, changed to -4, then -5 with strain:
+       withdrawal adds strain and a cigarette eases a quarter), UIName,
+       UIDescription, MutuallyExclusiveTraits. */
     character_trait_definition base:smoker
     {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = base:smoker,
-        Cost = -4,
+        Cost = -5,
         UIName = UI_trait_Smoker,
         UIDescription = UI_trait_SmokerDesc,
         MutuallyExclusiveTraits = base:athletic,
@@ -1022,6 +1023,55 @@ module DanTraits {
         UIDescription = UI_trait_DanMSdesc,
         XPBoosts = Fitness=-1;Strength=-1,
         MutuallyExclusiveTraits = base:athletic;base:strong;base:fit;base:stout,
+    }
+
+    /* Strain traits (media/lua/shared/DanTraits_Strain.lua; they do nothing
+       with the sandbox option StrainEnabled off). Level Headed (+8): strain
+       gained x0.5. Highly Strung (-6): x1.5. Unwinds Easily (+4): every
+       drain x1.5. Can't Switch Off (-4): every drain x0.67, and the variety
+       bonus needs five different comforts in a day. */
+    character_trait_definition DanTraits:levelheaded
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:levelheaded,
+        Cost = 8,
+        UIName = UI_trait_DanLevelHeaded,
+        UIDescription = UI_trait_DanLevelHeadeddesc,
+        MutuallyExclusiveTraits = DanTraits:highlystrung,
+    }
+
+    character_trait_definition DanTraits:highlystrung
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:highlystrung,
+        Cost = -6,
+        UIName = UI_trait_DanHighlyStrung,
+        UIDescription = UI_trait_DanHighlyStrungdesc,
+        MutuallyExclusiveTraits = DanTraits:levelheaded,
+    }
+
+    character_trait_definition DanTraits:unwindseasily
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:unwindseasily,
+        Cost = 4,
+        UIName = UI_trait_DanUnwindsEasily,
+        UIDescription = UI_trait_DanUnwindsEasilydesc,
+        MutuallyExclusiveTraits = DanTraits:cantswitchoff,
+    }
+
+    character_trait_definition DanTraits:cantswitchoff
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:cantswitchoff,
+        Cost = -4,
+        UIName = UI_trait_DanCantSwitchOff,
+        UIDescription = UI_trait_DanCantSwitchOffdesc,
+        MutuallyExclusiveTraits = DanTraits:unwindseasily,
     }
 
     /* Rescue inhaler for Asthma: 10 puffs, each halves airway

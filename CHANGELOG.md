@@ -3,6 +3,52 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Next (in progress)
+
+### New
+
+- **Strain** (2026-10-24, `DanTraits_Strain.lua` at minute order 45 plus the frame system
+  `StrainKnock`, `ISStrainBreakdownAction`; design and tuning in `plans/strain.md` and
+  `plans/strain_sim.py`; sandbox `StrainEnabled`, `StrainGain`, `StrainEase`, `StrainXpFloor`,
+  `StrainEarlyDays`, `StrainBreakdown`). A slow 0-100 tank (`d.strain`) for everyone. Fills: a
+  kill `0.1 x (1 + k/100)`, k the kills since the last night's sleep (`OnZombieDead`,
+  `getAttackedBy`; from a vehicle a third, cost and count), a minute with panic over 40 `0.1`, a
+  new scratch / laceration / deep wound `1 / 2 / 3` (a per-part scan each minute, so NPC mods'
+  wounds count too), knocked down `1.5`, a bite `50`, overall health under 25 `50` once a day,
+  an hour of full fever `0.25`, sepsis `0.5`, full food sickness `0.15`, full pain `0.15`, an
+  Alcoholic sober `0.15 / 0.3 / 0.5` an hour by stage, a Smoker `0.1` an hour at full
+  withdrawal, a hangover starting `2`. Drains: an hour awake two hours after the last fight
+  `0.375` (anywhere), a night `4` in a bed or `2` rough x Vitality's quality (the `nightScored`
+  hook; naps nothing; with Vitality off a sleep of 3 hours+ counts by its length), comforts
+  `DanTraits_StrainComfort` once a day in full, the second half, then nothing, the same one
+  within half an hour ignored, x1.5 at home (x2 Homebody), the fourth different one in a day
+  makes the day's x1.25: a wash (`ISWashYourself`) or Take A Bath And Shower's bath `2`, into
+  fresh clothes (Laundry's moodle going fresh) `2`, a Good Meal by tier `2 / 3 / 4`, an hour of
+  reading `2`, Pumped starting `2`; Drunk 2+ `2` an hour, Drunk 1 `0.75`, up to `8` a day; a
+  cigarette `0.75`, up to `3`; an Alcoholic's drink and a Smoker's cigarette a quarter. A fever
+  halves calm hours and sleep. The first week x0.5; Desensitized x0.6 on combat strain.
+  Tiers: At Ease (under 10), Frayed (25), Worn Down (50, unhappiness floor 15), Burnt Out (75,
+  30), Breaking Point (100). Experience (`Events.AddXP`, taken back through
+  `DanTraits_AgeXpAdjust`, Age's own top-ups skipped): weapon skills, Aiming, Reloading,
+  Strength and Fitness x1.1 at ease, x1 to 25, x0.75 at 50, x0.4 at 75, x0.15 at 100 (never
+  under `StrainXpFloor`); other skills half the penalty, only over 50. Breaking Point: strain
+  holds at 100 (nothing eases it) until ten minutes without a fight and no zombie within 12
+  tiles, then `ISStrainBreakdownAction` (sit down, about 30 seconds, a line said, unhappiness
+  floor 50) ends with strain at 60; walking or a zombie within 4 tiles stops it and it comes
+  again. Moodle: Strain. Health panel: a Strain section (the tier and the last hour's way,
+  never the number). Console: `strain`, `strain set <n>`, `strain kill [n]`,
+  `strain comfort <kind>`. API: `DanTraits_StrainAdd`, `DanTraits_StrainEase`,
+  `DanTraits_StrainComfort`, `DanTraits_StrainLevel`, `DanTraits_StrainTier`,
+  `DanTraits_StrainXpMult`.
+- **Four strain traits:** Level Headed (+8, strain gained x0.5), Highly Strung (-6, x1.5),
+  Unwinds Easily (+4, every drain x1.5), Can't Switch Off (-4, every drain x0.67, the variety
+  bonus needs five). Each pair mutually exclusive.
+
+### Changed
+
+- Alcoholic gives 6 points (was 4) and Smoker 5 (was 4): both now add strain while dry and
+  ease only a quarter as much with a drink or a cigarette.
+
 ## 1.4.0 - 2026-10-24
 
 ### New
@@ -462,6 +508,39 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   window scanned, hidden and off-limits ones too (`BU.clearTagsOf`, `BU_Window:clearAllTags`).
   Containers in other bases, type assignments and the remembered "same categories as last" set
   are left alone.
+- **The base is the zones you draw** (2026-10-24, user asked: runs kept going into the houses next
+  door): base zones within reach of the source (sandbox Zone Reach, default 40 tiles) are the base,
+  and only containers inside them are listed and used. The zones are Base Unloader's own
+  (`store.zones`, `BaseUnloader_Zones.lua`), drawn with the game's click-and-drag zone tool
+  (`BU_ZoneDraw` derives `ISAddDesignationAnimalZoneUI` and saves the rectangle itself, so nothing
+  becomes an animal zone and pens never count). A first version read the animal zones; the user
+  chose own zones after reading Home Inventory Improved. **Base zones...** on the world menu and a
+  **Zones** button in the unloader window open the zone window: every piece listed with its size,
+  floor and distance, Draw / Rename / Walk there / Remove, all pieces lit on the ground with their
+  zone's name. Pieces with the same name are one zone (an L-shaped house is two rectangles), each
+  side 1 to 60 tiles (`BU.ZONE_MAX`). A zone counts on its own floor and Floors Searched above and
+  below, so one drawn round the ground floor takes in the upstairs; a zone drawn on a floor wins
+  there (`BU.areaAt`). Two far-apart pieces with one name stay apart: only the pieces in reach come
+  along (`BU.nearAreas`). With no zone in reach, the old building-plus-radius search is used, under
+  a "no zone drawn" heading that says to draw one.
+- **Base inventory** (2026-10-24, from Home Inventory Improved, `BaseUnloader_Stock.lua`): **Base
+  inventory...** on the world menu opens a window of everything stored in every base zone
+  (containers, bags in them three deep, the floor), one row per type per container with its icon,
+  category, count, zone and container. Search in everything or one field, click a header to sort
+  (again to reverse), Refresh to count again. Hover a row to light its container up, double-click to
+  walk to it. Counts are kept per piece in the save (`store.stock`, `S.refreshStock`), so a zone out
+  of range keeps its last count, shown grey with its age. Counted when the window opens and when a
+  run ends.
+- **How many at base** (2026-10-24, from Home Inventory Improved): right-click items of one type and
+  the item's menu says "At base: 12 (House 8, Shed 4)", or "None of these at base", from the kept
+  counts; click it for the base inventory searched for that item. Only once a base zone exists.
+- **Smarter Storage names** (2026-10-24): a container with no name of ours or the game's takes the
+  name Smarter Storage gave it (`SmarterStorage_Name` in the object's mod data).
+- **Zones and tags in the window** (2026-10-24, user asked): the container list goes zone by zone,
+  nearest first, each a strong band with its container count, then "Tagged (n)" in blue and "Not
+  tagged (n)" in grey under it (the room headings went: the room is on each row's second line). A
+  tagged row has a blue stripe and tint and its categories in blue; an untagged one reads "no
+  categories".
 
 ## 1.3.0 - 2026-10-17
 
@@ -508,39 +587,6 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
     comes down to 40% without soap, 20% with soap or cleaning liquid; a carried **washboard** (new
     item; loot, a carpentry recipe or a Carving 2 recipe) makes it 25% / 10% for a scrub half as
     long again. A wash with nothing to gain is refused with the reason. Only a washing machine gets
-- **The base is the zones you draw** (2026-10-24, user asked: runs kept going into the houses next
-  door): base zones within reach of the source (sandbox Zone Reach, default 40 tiles) are the base,
-  and only containers inside them are listed and used. The zones are Base Unloader's own
-  (`store.zones`, `BaseUnloader_Zones.lua`), drawn with the game's click-and-drag zone tool
-  (`BU_ZoneDraw` derives `ISAddDesignationAnimalZoneUI` and saves the rectangle itself, so nothing
-  becomes an animal zone and pens never count). A first version read the animal zones; the user
-  chose own zones after reading Home Inventory Improved. **Base zones...** on the world menu and a
-  **Zones** button in the unloader window open the zone window: every piece listed with its size,
-  floor and distance, Draw / Rename / Walk there / Remove, all pieces lit on the ground with their
-  zone's name. Pieces with the same name are one zone (an L-shaped house is two rectangles), each
-  side 1 to 60 tiles (`BU.ZONE_MAX`). A zone counts on its own floor and Floors Searched above and
-  below, so one drawn round the ground floor takes in the upstairs; a zone drawn on a floor wins
-  there (`BU.areaAt`). Two far-apart pieces with one name stay apart: only the pieces in reach come
-  along (`BU.nearAreas`). With no zone in reach, the old building-plus-radius search is used, under
-  a "no zone drawn" heading that says to draw one.
-- **Base inventory** (2026-10-24, from Home Inventory Improved, `BaseUnloader_Stock.lua`): **Base
-  inventory...** on the world menu opens a window of everything stored in every base zone
-  (containers, bags in them three deep, the floor), one row per type per container with its icon,
-  category, count, zone and container. Search in everything or one field, click a header to sort
-  (again to reverse), Refresh to count again. Hover a row to light its container up, double-click to
-  walk to it. Counts are kept per piece in the save (`store.stock`, `S.refreshStock`), so a zone out
-  of range keeps its last count, shown grey with its age. Counted when the window opens and when a
-  run ends.
-- **How many at base** (2026-10-24, from Home Inventory Improved): right-click items of one type and
-  the item's menu says "At base: 12 (House 8, Shed 4)", or "None of these at base", from the kept
-  counts; click it for the base inventory searched for that item. Only once a base zone exists.
-- **Smarter Storage names** (2026-10-24): a container with no name of ours or the game's takes the
-  name Smarter Storage gave it (`SmarterStorage_Name` in the object's mod data).
-- **Zones and tags in the window** (2026-10-24, user asked): the container list goes zone by zone,
-  nearest first, each a strong band with its container count, then "Tagged (n)" in blue and "Not
-  tagged (n)" in grey under it (the room headings went: the room is on each row's second line). A
-  tagged row has a blue stripe and tint and its categories in blue; an untagged one reads "no
-  categories".
     clothes fully clean. Take A Bath And Shower's bath wash keeps the same floors.
   - Wringing stops at 50% wet (shoes 70%). Worn clothes keep 25% of the game's drying each minute
     (sandbox Drying on the Body; the game dries a soaked shirt on the body in about 20 minutes,

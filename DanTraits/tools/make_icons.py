@@ -230,6 +230,25 @@ knk..kkkkkkkk...
 .....kkkkkkkk...
 """,
     # the sun, burning
+    # a head with a crack running down it (Strain: frayed to breaking point; good side at ease)
+    "ui/Strain": """
+................
+.....kkkkkk.....
+....kssksssk....
+...ksssksssssk..
+...kssskksssk...
+..ksssssksssssk.
+..kssssskkssssk.
+..kskssssksskk..
+..kssssskssssk..
+..ksssssksssk...
+...kssskkssk....
+....ksssksk.....
+.....kssssk.....
+......kssk......
+......kkkk......
+................
+""",
     # a house (Home: at home, or missing it)
     "ui/Home": """
 ................
@@ -1136,6 +1155,53 @@ o.....kkkk.....o
 ..kwwwwwkkkwwk..
 ..kwwwwwknnwwk..
 ..kkkkkkkkkkkk..
+""",
+    # Level Headed: a spirit level, the bubble dead centre
+    "levelheaded": """
+kkkkkkkkkkkkkkkk
+kyyyykkkkkkyyyyk
+kyyyykgwwgkyyyyk
+kyyyykggggkyyyyk
+kyyyykkkkkkyyyyk
+kkkkkkkkkkkkkkkk
+""",
+    # Highly Strung: a wire pulled taut between two pegs, humming
+    "highlystrung": """
+kk............kk
+kdk..........kdk
+kdkr.r.r.r.r.kdk
+kdk.r.r.r.r.rkdk
+kdkr.r.r.r.r.kdk
+kdk..........kdk
+kk............kk
+""",
+    # Unwinds Easily: a hot drink, steaming
+    "unwindseasily": """
+...l..l..l....
+..l..l..l.....
+...l..l..l....
+..............
+.kkkkkkkkkk...
+.kwwwwwwwwkkk.
+.kwnnnnnnwk.k.
+.kwnnnnnnwk.k.
+.kwnnnnnnwkkk.
+.kwwwwwwwwk...
+..kkkkkkkk....
+""",
+    # Can't Switch Off: a wall switch stuck on, the lever up and lit
+    "cantswitchoff": """
+.kkkkkkkkkk.
+.kwwwwwwwwk.
+.kwwkkkkwwk.
+.kwwkrrkwwk.
+.kwwkrrkwwk.
+.kwwkrrkwwk.
+.kwwkddkwwk.
+.kwwkddkwwk.
+.kwwkkkkwwk.
+.kwwwwwwwwk.
+.kkkkkkkkkk.
 """,
     # Nomad: a tent under the stars
     "nomad": """

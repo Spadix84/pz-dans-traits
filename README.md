@@ -21,13 +21,15 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
 | [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
 | [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
+| [Highly Strung](#highly-strung--6) | -6 | Strain builds half again as fast. |
+| [Alcoholic](#alcoholic--6) | -6 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
-| [Alcoholic](#alcoholic--4) | -4 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
+| [Smoker](#smoker--5-vanilla-reworked) | -5 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
+| [Can't Switch Off](#cant-switch-off--4) | -4 | Strain eases a third slower; a day off takes five comforts. |
 | [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
 | [Germaphobe](#germaphobe--8) | -8 | Dirty skin and clothes build stress; clean is a relief. |
 | [Sensory Issues](#sensory-issues--8) | -8 | Scratchy clothes, grime, noise, crowds, sun and smells add up to overload; safe and disliked foods. |
 | [Gluten Intolerance](#gluten-intolerance--4) | -4 | Wheat brings a gut flare. |
-| [Smoker](#smoker--4-vanilla-reworked) | -4 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
 | [Vegetarian](#vegetarian--4) | -4 | Refuses meat, fish and anything cooked with them. |
 | [Lingering Soreness](#lingering-soreness--3) | -3 | Muscles take much longer to recover after training. |
 | [Injury Prone](#injury-prone--3) | -3 | Twice the pulled-muscle risk; a pull lasts 54 hours. |
@@ -58,6 +60,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Nomad](#nomad-3) | +3 | No home, nothing missed; sleeps as well under the sky. |
 | [Regimented](#regimented-3) | +3 | Twice the plan bonus; one missed day a week forgiven. |
 | [Natural Runner](#natural-runner-3) | +3 | Jogging is easy on the legs and counts double; running XP +25%. |
+| [Unwinds Easily](#unwinds-easily-4) | +4 | Strain eases half again as fast. |
 | [Homemaker](#homemaker-4) | +4 | Washes cleaner by hand with half the wear; loves line-dried clothes. |
 | [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
 | [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
@@ -67,6 +70,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
 | [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
 | [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | +6 | No bonus profession level; recovers, heals and trains faster. |
+| [Level Headed](#level-headed-8) | +8 | Strain builds half as fast. |
 | [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
 | [Grit](#grit-8) | +8 | Feels pain a third less. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
@@ -220,7 +224,7 @@ Attacks that cost you hours.
 - The flare ramps up: cramps, nausea, low mood. It takes about ten hours to clear; a second meal during one adds to it.
 - Moodle: Gut Flare.
 
-#### Smoker (-4, vanilla reworked)
+#### Smoker (-5, vanilla reworked)
 
 - Cravings build at half vanilla's pace for a typical smoker, faster the heavier the habit. Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), hunger and restless sleep.
 - A cigarette relieves only the craving it answers. To anyone else it is a buzz that fades as tolerance builds.
@@ -229,6 +233,7 @@ Attacks that cost you hours.
 - Smoking speeds up caffeine clearance, lets a wound infection climb faster and slows a deep wound's healing.
 - Rare nicotine gum (new item) eases quitting.
 - Moodle: Nicotine Craving. The sandbox option Nicotine Craving Moodle hides it, so the craving has to be read from irritability and stress.
+- [Strain](#strain): withdrawal adds strain, and a cigarette eases only a quarter as much as it does for anyone else.
 
 #### Vegetarian (-4)
 
@@ -260,13 +265,24 @@ Attacks that cost you hours.
 - An overload is a migraine trigger, the load makes MS spoons cost up to half as much again, and falling asleep overwhelmed scores the night 15% lower.
 - Moodle: Sensory Load (On Edge, Overwhelmed, Meltdown, Shutdown). Console: `sensory`, `sensory load <n>`, `sensory foods`, `sensory reroll`.
 
-#### Alcoholic (-4)
+#### Alcoholic (-6)
 
 - Withdrawal after a day without a drink: craving, low mood, irritability (the vanilla Angry moodle, which has [effects of its own](#anger)) and poor sleep, then pain, nausea, the shakes and a worse temper. Heavy drinkers get hallucinations and seizures, and a seizure can concuss.
 - The deeper the habit, the sooner and harder it comes. Feeling tipsy ends the craving at a normal habit.
 - Anyone who drinks too often gains the trait. A month without alcohol loses it, and any drink after that is a coin flip to relapse.
 - The habit is tolerance too: more drink to feel it, hangovers a little milder.
 - Moodle: Alcohol Withdrawal (craving, the shakes, delirium).
+- [Strain](#strain): being sober adds strain by stage (craving, shakes, delirium), and a drink eases only a quarter as much as it does for anyone else.
+
+#### Highly Strung (-6)
+
+- Every fight stays with you: [strain](#strain) builds half again as fast.
+- Not with Level Headed.
+
+#### Can't Switch Off (-4)
+
+- Even at rest your mind is still out there: everything that eases [strain](#strain) does a third less, and a proper day off takes five different comforts.
+- Not with Unwinds Easily.
 
 #### Caffeine Dependent (-2)
 
@@ -400,6 +416,16 @@ Attacks that cost you hours.
 #### Blacksmith Knowledge (7, vanilla reworked)
 
 - Vanilla's forging recipes, +2 Metalworking and +1 Maintenance, plus +1 Short Blunt (hammer work). Re-costed from 6 to 7. The occupation's own Blacksmith Knowledge is vanilla's.
+
+#### Level Headed (+8)
+
+- Takes the fighting in stride: [strain](#strain) builds half as fast.
+- Not with Highly Strung.
+
+#### Unwinds Easily (+4)
+
+- Everything that eases [strain](#strain) does half again as much: sleep, calm hours, comforts, a drink, a smoke.
+- Not with Can't Switch Off.
 
 #### Homemaker (+4)
 
@@ -567,6 +593,20 @@ Where you sleep most nights becomes home, and home does you good. Vanilla gives 
 - **Away** two days and you miss it: over the next day the Missing Home, then Homesick, moodle rises and an unhappiness floor of 15 comes up with it. Walking back in lifts it at once, with 15 unhappiness and a tenth of stress off, and a notice.
 - Homebody doubles the good and misses home after a day, harder; Nomad has none of it. Sandbox option Home turns it all off.
 - Moodle: Home (Settling In, At Home; Missing Home, Homesick).
+
+### Strain
+
+Fighting wears on you over days. Stress empties itself in an afternoon; strain is the memory of the week. It never makes you fight worse: it slows what the fighting teaches, so grinding stops paying and going home does. Design and tuning: `plans/strain.md`, `plans/strain_sim.py`.
+
+- **Builds with** kills (0.1 each, more as the day goes on: kill k since you last slept costs 0.1 x (1 + k/100); from a car a third), minutes panicking (0.1), new wounds (scratch 1, laceration 2, deep wound 3), being knocked down (1.5), a bite (50), health under 25 (50, once a day), fever and sepsis, food sickness, pain, withdrawal for an Alcoholic or Smoker, and a hangover (2).
+- **Eases with** calm hours (0.375 an hour awake, two hours after the last fight, anywhere), a night's sleep (4 in a bed, 2 rough, by the night's quality), comforts (a wash or bath, fresh clothes, a Good Meal 2-4 by tier, an hour of reading, Pumped: 2 each, the second the same day half, then nothing; x1.5 at home, x2 for a Homebody; four different ones in a day make the day's comforts x1.25), being drunk (2 an hour, up to 8 a day) and a smoke (0.75, up to 3). A fever halves what rest and sleep take off.
+- Rough numbers: a supply run of 25 kills is +5, a busy day of 75 is +17, a horde day of 150 is +41; a full day off at home is about -30, a lazy one or a calm day out about -10. Two horde days in a row are fine; the third breaks you.
+- **Tiers** (moodle: Strain): At Ease (under 10: combat experience x1.1), Frayed (25), Worn Down (50: unhappiness held at 15), Burnt Out (75: at 30), Breaking Point (100).
+- **Experience:** combat skills (weapons, Aiming, Reloading, Strength, Fitness) x1 at 25, x0.75 at 50, x0.4 at 75, x0.15 at 100. Other skills take half that penalty, only over 50.
+- **Breaking Point:** strain holds at 100 until the first safe moment (ten minutes without a fight, no zombie within 12 tiles); then you sit down where you are for about half a minute and can do nothing else. Walking away or a zombie within 4 tiles stops it, and it comes again. Finished, strain drops to 60.
+- The first week counts half. Desensitized takes 0.6 of combat strain. The health panel shows the tier and whether it is easing.
+- Sandbox: Strain, Strain Gained %, Strain Eased %, Lowest Combat Experience % (15), Strain Grace Days (7), Breaking Point.
+- Console: `strain`, `strain set <n>`, `strain kill [n]`, `strain comfort <kind>`.
 
 ### Blood
 
@@ -775,6 +815,7 @@ A separate mod in this repo (`BaseUnloader/`, its own Workshop item once uploade
 - Right-click the car (**Unload trunk to base**), any container, or items in a loot window (**Unload to base**), or your own items (**Put away what I am carrying**). A window opens: left, what is in the source grouped by type with where each type goes; right, every container in the base with its name, kind, room, floor, distance from you and how full it is, zone by zone, with each zone's tagged containers (blue stripe, under "Tagged") apart from the rest (under "Not tagged"). The base is the base zones you draw (**Base zones...** on the world right-click menu, or **Zones** in the window) within Zone Reach (40 tiles) of the source. Drawing uses the game's click-and-drag zone tool, but the zones are Base Unloader's own, never animal zones. Pieces with the same name are one zone, each side up to 60 tiles, and a zone takes in Floors Searched (3) above and below its floor. With no zone drawn nearby, the base is the building you are in or next to plus a margin, together with a circle round the source (sandbox: Building Margin 4, Nearby Radius 12).
 - Drag a type onto a container to say that type lives there; the rule is remembered for the save, so the next run needs almost no dragging. Items dragged straight out of the vanilla inventory windows onto a container row do the same. Ctrl while dropping sends just those items, this run only. **Suggest** fills the gaps from what the base already holds (the container with most of that type, then the fridge or freezer for perishables, then the category, then a container of a suitable kind). Right-click a type to unassign it or its whole category; right-click a container to send everything unassigned there or clear its assignments.
 - Hover a container row and it lights up in the world. Double-click it (or right-click, in the world too) to rename it; the loot window shows the name as well, since it is the game's own container name with a copy kept in the save.
+- **Base inventory...** (world right-click menu) lists everything stored in all your base zones, containers, bags and floor, by type and container: search, sort by any column, hover to light the container up, double-click to walk there. Zones out of range keep their last count, shown grey with its age. Right-click items of one type and their menu says how many are at base ("At base: 12 (House 8, Shed 4)"); click that for the inventory searched for them. Containers named with Smarter Storage show that name. Ideas from Home Inventory Improved.
 - **Start**: the character walks to the source, loads a trip's worth into worn bags (then hands) within the carry weight, walks round the base nearest-container first putting things down, and goes back for more until the source holds nothing with a home. Favourites and anything worn or held are never touched. A closed trunk lid is opened on the way. Each step is planned from what is actually in the source and the bags, so a zombie, a key press or a reload only pauses it: **Resume unloading** is on every right-click menu while a plan is saved, **Forget the unfinished run** drops it. If two steps in a row move nothing (a container that refuses the item) the run stops rather than loop.
 - Files: `shared/BaseUnloader_Core.lua` (keys, saved data in `ModData.getOrCreate("BaseUnloader")`, rules, grouping, suggestions, trip planning: pure, tested), `client/BaseUnloader_Scan.lua` (zone, container rows, names, places, item records, sources), `client/BaseUnloader_Run.lua` (the step machine over `luautils.walkToContainer` and `ISInventoryTransferAction`, one destination per step because walkToContainer clears the queue, a marker action ending each step), `client/BaseUnloader_UI.lua` (the window), `client/BaseUnloader_Zones.lua` (drawing base zones and the zone window), `client/BaseUnloader_Stock.lua` (the base inventory window), `client/BaseUnloader_Menu.lua` (the menus; the vehicle menu is a wrapped `ISVehicleMenu.FillMenuOutsideVehicle`). Deploy with `python deploy.py --unloader`; test with `python tests/run_tests.py baseunloader`. Singleplayer only for now (the saved data is not transmitted).
 
@@ -815,7 +856,6 @@ Version 1.4.0, Build 42, singleplayer only (multiplayer is untested and not supp
 - **A Really Bad Day** is not balanced yet. Its glass shard killed even a character with no other traits, so for now the wound is an infected cut and the trait gives 8 points instead of 12, until a proper balance is found.
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
-- **Base inventory...** (world right-click menu) lists everything stored in all your base zones, containers, bags and floor, by type and container: search, sort by any column, hover to light the container up, double-click to walk there. Zones out of range keep their last count, shown grey with its age. Right-click items of one type and their menu says how many are at base ("At base: 12 (House 8, Shed 4)"); click that for the inventory searched for them. Containers named with Smarter Storage show that name. Ideas from Home Inventory Improved.
 - **Take A Bath And Shower** is supported: a bath or shower washes sun block off (`DanTraits_Bathing.lua`), Sensory Issues calms down three times as fast in a bath and twice in a shower (and being wet from it does not count against you), and laundry's hand-wash floors apply to the clothes you bathe in (the same file); both do nothing when it is not loaded. Its gradual body wash is what Germaphobe reads anyway, a wet body cools Multiple Sclerosis as it should, a hot bath warms an MS character (by design on both sides), and its bath salts keep their effects (a calming salt is the game's beta-blocker effect, a happy one its antidepressant effect, which an MDD character's own regimen overrides).
 - **Project A-Life** (NPCs on zombie bodies) is supported: its NPCs and its zombie steering leave a Hallucinations phantom alone (`DanTraits_ALife.lua`, which does nothing when A-Life is not loaded). NPC wounds are ordinary wounds, so blood, infection and wound care apply to them, and an NPC's blow, shot or graze counts as a weapon hit for Concussion and Brittle (the game itself does not report those). A house alarm no longer floods the error log through A-Life's NPC hearing (the alarm is not a game object, so it reaches A-Life as a sound with no source).
 - **Bandits** (and its add-ons) is supported: bandits, hostile or friendly, leave a Hallucinations phantom alone, and a bandit's hit counts as a weapon hit for Concussion (all of its damage on the head for a head hit) and Brittle (`DanTraits_Bandits.lua`, which does nothing when Bandits is not loaded). A bandit's head shot knocks a helmet off before the concussion roll, so the helmet does not help against that one.

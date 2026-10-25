@@ -16,11 +16,11 @@ local d = DanTraits_Data(p)
 local function level(name, who, data) return DanTraits_MoodleLevels(who or p, data or d)[name] end
 
 -- 0. the list the client creates them from
-assert(#DanTraits_MoodleNames == 30, "thirty moodles")
+assert(#DanTraits_MoodleNames == 31, "thirty-one moodles")
 local listed = {}
 for _, name in ipairs(DanTraits_MoodleNames) do listed[name] = true end
 for _, name in ipairs({ "ChestPain", "Seizure", "Tinnitus", "GutFlare", "Filthy", "Sunburn", "Dehydration",
-                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons", "LightTooBright", "TriptanAfter", "Antidepressants", "WeakHeart", "Home", "StaleClothes", "SensoryLoad", "SoreMuscles", "Pumped", "Overtrained", "BackStrain", "Hyperfocus", "GoodMeal", "MedsDue" }) do
+                        "CaffeineWithdrawal", "AlcoholWithdrawal", "NicotineCraving", "Depression", "LowIron", "StiffJoints", "MSHeat", "MSFlare", "Spoons", "LightTooBright", "TriptanAfter", "Antidepressants", "WeakHeart", "Home", "StaleClothes", "SensoryLoad", "SoreMuscles", "Pumped", "Overtrained", "BackStrain", "Hyperfocus", "GoodMeal", "MedsDue", "Strain" }) do
   assert(listed[name], name .. " is listed")
 end
 for name, l in pairs(DanTraits_MoodleLevels(p, d)) do assert(l == 0, name .. ": nothing to show on a well character") end
@@ -156,7 +156,7 @@ d.gluten = 1                 -- bad 3
 H.minute()
 local n = 0
 for _ in pairs(set) do n = n + 1 end
-assert(n == 30, "all thirty set")
+assert(n == 31, "all thirty-one set")
 near(set.ChestPain.value, 0.65, 1e-9, "good 1 sits between 0.6 and 0.7")
 near(set.Seizure.value, 0.25, 1e-9, "bad 2 sits between 0.2 and 0.3")
 near(set.GutFlare.value, 0.15, 1e-9, "bad 3")

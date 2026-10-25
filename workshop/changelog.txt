@@ -1,3 +1,14 @@
+[h1]Next update (in progress)[/h1]
+[h2]New[/h2]
+[list]
+[*][b]Strain.[/b] Fighting wears on you over days. Kills (more each one the longer the day goes on), panic, wounds, bites, illness and withdrawal build strain; sleep, calm hours, a wash, fresh clothes, a good meal, a book, a workout, a drink and a smoke ease it, and comforts count half again at home. Strain never makes you fight worse: it slows what fighting teaches, down to 15% when you are burnt out, while a rested character learns a little more. Push to breaking point and you will sit down and fall apart at the first quiet moment. Two horde days in a row are fine; the third is not. New moodle: Strain.
+[*][b]Four strain traits:[/b] Level Headed (+8), Unwinds Easily (+4), Highly Strung (-6), Can't Switch Off (-4).
+[/list]
+[h2]Changed[/h2]
+[list]
+[*]Alcoholic gives 6 points (was 4) and Smoker 5 (was 4): going without now adds strain, and a drink or a cigarette eases it only a quarter as much.
+[/list]
+
 [h1]1.4.0: Training, cooking and two new conditions[/h1]
 Safe mid-save: your muscles start rested, your medication clock starts from your next pill, and the new sandbox options start at their defaults. Every detail is in CHANGELOG.md on GitHub.
 
