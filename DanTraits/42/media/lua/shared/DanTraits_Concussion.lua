@@ -8,7 +8,10 @@
 --   severe    (CC_SEVERE and over) all of it worse; the blow itself knocks
 --             you out for 5 to 15 game minutes (DanTraits_Faint.lua)
 -- Rest heals it, sleep twice as fast; running, sprinting and fighting
--- stop it healing and make it a little worse. A second knock while still
+-- stop it healing and make it a little worse. Screen time (a handheld
+-- console, DanTraits_SpiffBoy.lua's DanTraits_ScreenTime) heals it at
+-- CC_SCREEN_HEAL and, moderate and worse or in the headache that comes back,
+-- adds CC_SCREEN_PAIN. A second knock while still
 -- concussed lands on top of the first. It brings on migraine attacks
 -- (Migraines) and makes light wake you more easily (sleep and light).
 --
@@ -22,7 +25,8 @@
 -- Concussion moodle shows Dazed while it lasts.
 --
 -- Mod data: ccScore, ccTier, ccLastImpact; ccLate = { wait = hours to go,
--- s } before the headache, { left, total, s } while it lasts.
+-- s } before the headache, { left, total, s, screen } while it lasts;
+-- ccScreen (a screen is hurting: told once until it stops).
 --
 -- What counts as a knock (the game's own damage reports, OnPlayerGetDamage):
 --   FALLDOWN       a fall: the amount is the health it cost (vanilla
@@ -92,6 +96,8 @@ local CC_HEAL_ASLEEP   = 2       -- x asleep
 local CC_STRAIN        = 0.0005  -- score added a minute running, sprinting or fighting
 local CC_PAIN          = { 15, 35 }  -- head pain floor: this, plus this x score
 local CC_LIGHT_PAIN    = 10      -- more in bright daylight (moderate and worse)
+local CC_SCREEN_HEAL   = 0.5     -- healing x this a minute of screen time
+local CC_SCREEN_PAIN   = 5       -- head pain a screen adds (moderate and worse, and the headache that comes back)
 local CC_SICK          = 0.3     -- food sickness floor x score (moderate and worse)
 local CC_FATIGUE       = 0.0003  -- tiredness a minute awake x score
 local CC_ENDURANCE     = 0.3     -- endurance recovery x (1 - this x score)
@@ -297,6 +303,15 @@ local function inBright(player)
     return DanTraits_InBrightLight ~= nil and DanTraits_InBrightLight(player) == true
 end
 
+-- looking at a screen (a handheld console); told once a session when it hurts
+local function onScreen(player)
+    return DanTraits_ScreenTime ~= nil and DanTraits_ScreenTime(player) ~= nil
+end
+local function screenHurts(player, d, hurts)
+    if hurts and not d.ccScreen then notify(player, "UI_DanTraits_ConcussionScreen") end
+    d.ccScreen = hurts or nil
+end
+
 -- 0..1 where the headache that came back is in its course: building, at its worst, fading
 local function lateShape(late)
     if not late or not late.left or not late.total then return 0 end
@@ -334,6 +349,12 @@ local function updateLate(player, d, asleep)
     local shape = lateShape(late)
     local pain = shape * (CC_LATE_PAIN[1] + CC_LATE_PAIN[2] * (late.s or 0))
     if inBright(player) then pain = pain + CC_LIGHT_PAIN * shape end
+    if shape > 0 and onScreen(player) then
+        pain = pain + CC_SCREEN_PAIN * shape
+        late.screen = true
+    else
+        late.screen = nil
+    end
     DanTraits_HeadPainAtLeast(player, pain)
     return shape * (late.s or 0)
 end
@@ -358,15 +379,18 @@ local function updateConcussionMinute(player, d)
     local lateNow = updateLate(player, d, DanTraits_Asleep(player))
     local s = d.ccScore or 0
     if s <= 0 then
+        screenHurts(player, d, (d.ccLate and d.ccLate.screen) or false)
         if d.ccTier and d.ccTier > 0 then d.ccTier = 0 end
         updateMoodle(player, lateNow > 0 and CC_TIER[1] or 0)
         return
     end
     local asleep = DanTraits_Asleep(player)
+    local screen = not asleep and onScreen(player)
     if strained then
         s = s + CC_STRAIN
     else
-        s = s - DanTraits_RunHooks("concussionHeal", CC_HEAL_DAY / 1440 * (asleep and CC_HEAL_ASLEEP or 1), player, d)
+        local heal = CC_HEAL_DAY / 1440 * (asleep and CC_HEAL_ASLEEP or 1) * (screen and CC_SCREEN_HEAL or 1)
+        s = s - DanTraits_RunHooks("concussionHeal", heal, player, d)
     end
     s = clamp01(s)
     if s < 0.005 then s = 0 end
@@ -380,6 +404,8 @@ local function updateConcussionMinute(player, d)
     -- the headache
     local pain = CC_PAIN[1] + CC_PAIN[2] * s
     if s >= CC_MODERATE and inBright(player) then pain = pain + CC_LIGHT_PAIN end
+    if s >= CC_MODERATE and screen then pain = pain + CC_SCREEN_PAIN end
+    screenHurts(player, d, screen and (s >= CC_MODERATE or (d.ccLate and d.ccLate.screen)) or false)
     DanTraits_HeadPainAtLeast(player, pain)
     local stats = player:getStats()
     if s >= CC_MODERATE then

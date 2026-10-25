@@ -489,6 +489,7 @@ end
 --               SensitiveSkin (LaundryTraits: reads the garment state Laundry left at 40),
 --               Sensory (reads Germaphobe's grime, Laundry's itch and Tinnitus from 40, Home from 11)
 --           42  Knox (the Resilient roll against the zombie infection)
+--           44  SpiffBoy (the hours on each cartridge; puts the console away asleep)
 --           45  Strain (reads the fever, withdrawal, the Good Meal, Pumped, fresh
 --               clothes and the hangover the systems above left; its unhappiness floors)
 --           90  Vitality (reads everything above, scores the night, applies lifts)

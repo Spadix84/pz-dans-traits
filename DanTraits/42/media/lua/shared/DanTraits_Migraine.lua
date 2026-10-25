@@ -13,6 +13,8 @@
 -- pain (a DanTraits_PainFloor floor), nausea, low mood and stress. Daylight
 -- outdoors slows the recovery to half and adds to the pain; awake indoors (or
 -- out of the sun), a lit room adds pain and slows it, a dark one speeds it;
+-- a handheld console's screen (DanTraits_ScreenTime) counts as a room lit
+-- MIG_SCREEN_LIT, and never a dark one;
 -- sleeping it off is twice as fast, in the dark (a lit room loses the
 -- benefit), and during an attack light wakes you twice as easily.
 -- Sunglasses (MIG_SHADES, or any worn item named sunglasses or shades) halve
@@ -115,6 +117,7 @@ local MIG_LIGHT_RATE    = 0.5     -- recovery rate in daylight outdoors...
 local MIG_SLEEP_RATE    = 2.0     -- ...and asleep in the dark (fully lit room: 1)
 local MIG_LIT_RATE      = 0.75    -- awake, out of the sun: in a fully lit room...
 local MIG_DARK_RATE     = 1.25    -- ...and a fully dark one
+local MIG_SCREEN_LIT    = 0.6     -- looking at a screen: lit at least this much, not dark
 local MIG_SLEEP_WAKE    = 2       -- during an attack, light wakes you this much more easily
 local MIG_NIGHT         = 0.3     -- night strength under this is day
 local MIG_CLOUD         = 0.5     -- cloud cover under this is bright
@@ -404,6 +407,7 @@ local function endAttack(player, d)
     d.migActive = false
     d.migHoursLeft = 0
     d.migSinceEnd = 0
+    d.migScreen = nil
     updateMoodle(player, 0)
     DanTraits_NotifyGood(player, "UI_DanTraits_MigraineEnd")
     learnCause(player, d)
@@ -542,6 +546,12 @@ local function updateMigraineMinute(player, d)
     asleep = DanTraits_Asleep(player)
     local lit, dark = 0, 0
     if not asleep and not bright then lit, dark = roomLight(player) end
+    local screen = not asleep and not bright and DanTraits_ScreenTime ~= nil and DanTraits_ScreenTime(player) ~= nil
+    if screen then
+        lit, dark = math.max(lit, MIG_SCREEN_LIT), 0
+        if not d.migScreen then notify(player, "UI_DanTraits_MigraineScreen") end
+    end
+    d.migScreen = screen or nil
     local rate = 1
     if asleep then rate = MIG_SLEEP_RATE - (MIG_SLEEP_RATE - 1) * sleepLit(player)
     elseif bright then rate = MIG_LIGHT_RATE

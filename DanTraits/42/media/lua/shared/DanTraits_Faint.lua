@@ -33,6 +33,8 @@
 --                                                  deep: an attack doesn't wake you
 --   DanTraits_Collapse(player)                    just the fall
 --   DanTraits_IsPassedOut(player)
+-- Hook offered: passingOut (nil, player), at every fall and every pass-out,
+-- before anything else happens (SpiffBoy puts the console away).
 -- Console: faint fall | faint out [game minutes]
 require "DanTraits"
 
@@ -61,6 +63,7 @@ end
 
 function DanTraits_Collapse(player)
     if not player or player:isDead() then return false end
+    DanTraits_RunHooks("passingOut", nil, player)
     local front = true
     if ZombRand then front = ZombRand(2) == 0 end
     return pcall(function()
@@ -169,6 +172,7 @@ end
 
 function DanTraits_PassOut(player, minutes, textKey, deep)
     if not player or player:isDead() or hold then return false end
+    DanTraits_RunHooks("passingOut", nil, player)
     local car = vehicleOf(player)
     if car then stopCar(player, car) else DanTraits_Collapse(player) end
     minutes = tonumber(DanTraits_RunHooks("passOutMinutes", minutes or 5, player, deep)) or minutes or 5   -- Thick Skull

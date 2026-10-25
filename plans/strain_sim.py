@@ -29,7 +29,7 @@ P = {
     # rest of the day
     "calm_hour": 0.375,     # an hour awake with no fight in the last two, anywhere
     "sleep": {"bed": 4, "rough": 2},   # x the night's quality in game (Vitality)
-    "comfort": {"shower": 2, "laundry": 2, "meal1": 2, "meal2": 3, "meal3": 4, "read": 2, "pumped": 2},
+    "comfort": {"shower": 2, "laundry": 2, "meal1": 2, "meal2": 3, "meal3": 4, "read": 2, "pumped": 2, "game": 2},
     "home": 1.5,            # comforts at home count this much
     "variety_n": 4,         # this many different comforts in a day...
     "variety": 1.25,        # ...multiply the day's comforts by this

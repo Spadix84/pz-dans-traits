@@ -72,6 +72,27 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   meal or Pumped during a depressive episode; a Nomad's home bonus is any bed slept in twice of
   the last seven nights (Home's place helpers, `d.stNomadNights`).
 
+- **SpiffBoy compatibility** (2026-10-25, `DanTraits_SpiffBoy.lua`, minute order 44; does
+  nothing unless SpiffBoy, Workshop 3825220364, is loaded: it installs at game start when
+  `SpiffBoyHandheldWindow` exists). SpiffBoy turns vanilla's `Base.VideoGame` into a playable
+  handheld; every real second it is on screen and powered, its `SpiffBoy.Mood.applySecond` takes
+  0.04 boredom and 0.02 unhappiness off. `DanTraits_ScreenTime(player)` reads its window
+  (`SpiffBoyHandheldWindow.forPlayer`): nil (none, put away, closing, switched off), `"screen"`
+  (the boot logo, a crash, a frozen or missing game, no cartridge) or `"game"`.
+  Old games: each cartridge keeps the game hours played on it (`d.sbPlayed[itemType] = { h, at }`,
+  the 40 most played kept), 2 rested off a day it is not played; `applySecond` is wrapped to scale
+  SpiffBoy's own two constants (put back after, so its PlayingEasesMood switch still decides) by
+  the freshness: 1 up to 3 hours, falling linearly to 0.3 at 20. ADHD: x1.5 for the first 1.5
+  hours ("A new game. Nothing else exists"), both spans halved. Put away (its own `putAway`, as a
+  hit does: powered, it stays running in the pocket) on Vitality's collapse and pass-out (new
+  `passingOut` hook in `DanTraits_Faint.lua`, so seizures, shock and knockouts too) and asleep.
+  Strain: an hour of a game is a comfort, `game = 2` (`ST.GAME_MIN` 60, `d.stGameMin`; added to
+  `plans/strain_sim.py`). Concussion: screen time heals at x0.5 (`CC_SCREEN_HEAL`), and at
+  moderate or worse, or in the headache that comes back, adds 5 head pain (`CC_SCREEN_PAIN`), told
+  once (`d.ccScreen`). Migraine: in an attack the screen is a room lit at least 0.6 and never a dark
+  one (`MIG_SCREEN_LIT`; recovery x0.85 in a dim room), told once (`d.migScreen`). Five new notices.
+  Tests: test_spiffboy.
+
 ### Changed
 
 - Alcoholic gives 6 points (was 4) and Smoker 5 (was 4): both now add strain while dry and
