@@ -1,8 +1,10 @@
--- Base Unloader: reading the world. The zone (the building you are in or next
--- to, plus a margin, plus a circle round the container being unloaded), every
--- container in it as a plain record for the core, what to call a container and
--- where it is, the items of a source container as records, and finding a
--- container again from its key or a vehicle from its id when a run resumes.
+-- Base Unloader: reading the world. The zone (the base zones drawn near the
+-- container being unloaded; with none drawn, the building you are in or next
+-- to, plus a margin, plus a circle round the container), every container in
+-- it as a plain record for the core, what to call a container and where it
+-- is, what every base zone holds (the stock, kept for when you are away), the
+-- items of a source container as records, and finding a container again from
+-- its key or a vehicle from its id when a run resumes.
 
 require "BaseUnloader_Core"
 
@@ -27,6 +29,7 @@ function S.pad() return sandbox("Pad", 4) end
 function S.floors() return sandbox("Floors", 3) end
 function S.laundryOn() return sandbox("Laundry", true) end
 function S.maxLoad() return sandbox("MaxLoad", BU.MAX_LOAD_LEVEL) end
+function S.zoneReach() return sandbox("ZoneReach", 40) end
 
 -- squares -----------------------------------------------------------------------------
 
@@ -54,13 +57,24 @@ function S.buildingBounds(sq)
     return b
 end
 
--- The zone to list: the building the source (or the player) is in or stands
--- next to, grown by the margin, united with a circle of the radius round the
--- source. Floors: the source's floor and `floors` above and below.
+-- the base zones drawn (BaseUnloader_Zones), as areas for the core: one per name
+function S.drawnAreas()
+    return BU.zoneAreas(BU.store().zones)
+end
+
+-- The zone to list. With base zones drawn within reach of the source, those zones
+-- and nothing else (each on its floor and `floors` above and below). With
+-- none, the building the source (or the player) is in or stands next to,
+-- grown by the margin, united with a circle of the radius round the source;
+-- floors: the source's floor and `floors` above and below.
 function S.zone(player, sourceSq)
     local sq = sourceSq or S.squareOf(player)
     if not sq then return nil end
     local cx, cy, cz = sq:getX(), sq:getY(), sq:getZ()
+    local areas = BU.nearAreas(S.drawnAreas(), cx, cy, S.zoneReach())
+    if #areas > 0 then
+        return { cx = cx, cy = cy, cz = cz, areas = areas, floors = S.floors() }
+    end
     local r, pad = S.radius(), S.pad()
     local zone = { x1 = cx - r, y1 = cy - r, x2 = cx + r, y2 = cy + r, cx = cx, cy = cy, cz = cz,
                    z1 = cz - S.floors(), z2 = cz + S.floors(), r = r, pad = pad }
@@ -143,8 +157,21 @@ function S.kindLabel(kind)
     return t or tostring(kind)
 end
 
+-- the name Smarter Storage (steam 3290232938) gave the container's object, if any
+function S.smarterStorageName(container)
+    local name
+    pcall(function()
+        local parent = container:getParent()
+        local data = parent and parent.getModData and parent:getModData() or nil
+        name = data and data.SmarterStorage_Name or nil
+    end)
+    if type(name) == "string" and name ~= "" then return name end
+    return nil
+end
+
 -- what to call a container: the name on it, else the name saved for its key
--- (put back on it, in case the game did not keep it), else its kind
+-- (put back on it, in case the game did not keep it), else the one Smarter
+-- Storage gave it, else its kind
 function S.nameOf(container, key)
     local custom
     pcall(function() custom = container:getCustomName() end)
@@ -154,6 +181,8 @@ function S.nameOf(container, key)
         pcall(function() container:setCustomName(saved) end)
         return saved, true
     end
+    local smarter = S.smarterStorageName(container)
+    if smarter then return smarter, true end
     return S.kindLabel(container:getType()), false
 end
 
@@ -285,12 +314,43 @@ local function rowsOnSquare(sq, zone, out, skipContainer, player)
     end
 end
 
+-- every loaded square of some areas (each piece on its floor and `floors`
+-- above and below), once each: fn(square, index of the area it belongs to)
+function S.eachAreaSquare(areas, floors, fn)
+    local cell = getCell()
+    local seen = {}
+    for _, area in ipairs(areas) do
+        for _, r in ipairs(area.rects) do
+            for z = r.z - floors, r.z + floors do
+                for y = r.y1, r.y2 do
+                    for x = r.x1, r.x2 do
+                        local at = x .. "," .. y .. "," .. z
+                        local sq = not seen[at] and cell:getGridSquare(x, y, z) or nil
+                        seen[at] = true
+                        if sq then fn(sq, BU.areaAt(areas, x, y, z, floors)) end
+                    end
+                end
+            end
+        end
+    end
+end
+
 -- every container in the zone, as records, sorted by room then name; the
--- source's own container is left out (it gets its own row)
+-- source's own container is left out (it gets its own row). In drawn zones a
+-- record carries `area`, the index of its zone in zone.areas.
 function S.containers(zone, skipContainer, player)
     local out = {}
     if not zone then return out end
     local cell = getCell()
+    if zone.areas then
+        S.eachAreaSquare(zone.areas, zone.floors, function(sq, which)
+            local first = #out + 1
+            rowsOnSquare(sq, zone, out, skipContainer, player)
+            for k = first, #out do out[k].area = which end
+        end)
+        S.sort(out)
+        return out
+    end
     for z = zone.z1, zone.z2 do
         for y = zone.y1, zone.y2 do
             for x = zone.x1, zone.x2 do
@@ -303,6 +363,105 @@ function S.containers(zone, skipContainer, player)
     end
     S.sort(out)
     return out
+end
+
+-- stock ----------------------------------------------------------------------------------------
+
+function S.worldHours()
+    local h
+    pcall(function() h = getGameTime():getWorldAgeHours() end)
+    return h
+end
+
+-- a piece is counted only while it is all loaded: its four corners on the
+-- ground floor (upstairs a corner may be open air, with no square at all)
+function S.pieceLoaded(zone)
+    local cell = getCell()
+    for _, c in ipairs({ { zone.x1, zone.y1 }, { zone.x2, zone.y1 }, { zone.x1, zone.y2 }, { zone.x2, zone.y2 } }) do
+        if not cell:getGridSquare(c[1], c[2], 0) then return false end
+    end
+    return true
+end
+
+-- the items of a container as stock records, bags opened three deep, all
+-- counted at the container they sit in
+local function stockOfContainer(inv, depth, key, name, out)
+    local items = inv:getItems()
+    for i = 0, items:size() - 1 do
+        local it = items:get(i)
+        pcall(function()
+            out[#out + 1] = { fullType = it:getFullType(), name = it:getDisplayName(), category = it:getDisplayCategory(),
+                              containerKey = key, containerName = name }
+        end)
+        if depth < 3 and instanceof(it, "InventoryContainer") and it:getInventory() then
+            stockOfContainer(it:getInventory(), depth + 1, key, name, out)
+        end
+    end
+end
+
+-- everything on a square: in its containers, and lying on the floor
+function S.stockOnSquare(sq, out)
+    local x, y, z = sq:getX(), sq:getY(), sq:getZ()
+    local objs = sq:getObjects()
+    for i = 0, objs:size() - 1 do
+        local obj = objs:get(i)
+        local n = 0
+        pcall(function()
+            if obj:getContainer() then n = obj.getContainerCount and obj:getContainerCount() or 1 end
+        end)
+        for ci = 0, n - 1 do
+            local c
+            pcall(function() c = ci == 0 and obj:getContainer() or obj:getContainerByIndex(ci) end)
+            if c and not SKIP_KINDS[c:getType()] then
+                local key = BU.key(x, y, z, c:getType(), ci)
+                pcall(function() stockOfContainer(c, 0, key, (S.nameOf(c, key)), out) end)
+            end
+        end
+    end
+    pcall(function()
+        local floor = sq:getWorldObjects()
+        local label = getText("IGUI_BU_OnFloor")
+        for i = 0, floor:size() - 1 do
+            local it = floor:get(i):getItem()
+            if it then
+                out[#out + 1] = { fullType = it:getFullType(), name = it:getDisplayName(), category = it:getDisplayCategory(),
+                                  containerKey = nil, containerName = label }
+            end
+        end
+    end)
+end
+
+-- Count every loaded piece of every base zone again, into store.stock; a
+-- piece out of range keeps its last count. Returns { [piece key] = true } for
+-- the pieces counted now.
+function S.refreshStock(store)
+    store = store or BU.store()
+    BU.dropStaleStock(store)
+    local cell = getCell()
+    local floors = S.floors()
+    local now = S.worldHours()
+    local fresh, seen = {}, {}
+    for _, zone in ipairs(store.zones) do
+        if S.pieceLoaded(zone) then
+            local records = {}
+            for z = zone.z - floors, zone.z + floors do
+                for y = zone.y1, zone.y2 do
+                    for x = zone.x1, zone.x2 do
+                        local at = x .. "," .. y .. "," .. z
+                        if not seen[at] then
+                            seen[at] = true
+                            local sq = cell:getGridSquare(x, y, z)
+                            if sq then S.stockOnSquare(sq, records) end
+                        end
+                    end
+                end
+            end
+            local key = BU.pieceKey(zone)
+            store.stock[key] = { zone = zone.name, at = now, items = BU.stockOf(records) }
+            fresh[key] = true
+        end
+    end
+    return fresh
 end
 
 function S.sort(rows)

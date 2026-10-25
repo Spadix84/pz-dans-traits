@@ -6,5 +6,9 @@
     "ContextMenu_BU_RenameContainer": "Rename container",
     "ContextMenu_BU_Resume": "Resume unloading",
     "ContextMenu_BU_Stop": "Stop unloading",
-    "ContextMenu_BU_Forget": "Forget the unfinished run"
+    "ContextMenu_BU_Forget": "Forget the unfinished run",
+    "ContextMenu_BU_Zones": "Base zones...",
+    "ContextMenu_BU_Stock": "Base inventory...",
+    "ContextMenu_BU_AtBase": "At base: %1 (%2)",
+    "ContextMenu_BU_AtBaseNone": "None of these at base"
 }

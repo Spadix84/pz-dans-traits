@@ -56,6 +56,12 @@ end
 --   lastTags             the last set of categories given by hand, sorted, for "apply to this one
 --                        too"; forgotten when a game starts (it is for the container after this one,
 --                        not for next week)
+--   zones                the base zones drawn: { { name, x1, y1, x2, y2, z } }, corners inclusive;
+--                        pieces with the same name are one zone
+--   stock[piece key]     what one piece of zone held when last looked at (BU.pieceKey): { zone =
+--                        its name, at = world hours, items = { { t = fullType, n = name, c = category,
+--                        k = container key, cn = container name, q = how many } } }, so the counts
+--                        hold while you are away
 function BU.store()
     if BU._store then return BU._store end
     local d
@@ -69,6 +75,8 @@ function BU.store()
     d.hidden = d.hidden or {}
     d.offLimits = d.offLimits or {}
     d.tags = d.tags or {}
+    d.zones = d.zones or {}
+    d.stock = d.stock or {}
     -- rules keyed by category are from before the tags; the resolver never reads
     -- them, and left in place they muted the suggestions for that whole category
     local stale = {}
@@ -747,6 +755,220 @@ function BU.deliveryOrder(carried, containers, from, back)
         stops[#stops + 1] = { key = c.key, items = byDest[c.key] }
     end
     return stops, lost
+end
+
+-- zones ---------------------------------------------------------------------------------------
+
+-- The base zones the player drew (store.zones), as areas: { name, rects =
+-- { { x1, y1, x2, y2, z } } }, the corners inclusive. A rect counts on its own
+-- floor and `floors` above and below (a zone round the ground floor takes in
+-- the upstairs).
+
+BU.ZONE_MAX = 60        -- the longest side a piece of zone may have, in tiles
+
+-- a drawn piece may be saved: 1 to ZONE_MAX tiles each way
+function BU.zoneSizeOk(w, h)
+    return w >= 1 and h >= 1 and w <= BU.ZONE_MAX and h <= BU.ZONE_MAX
+end
+
+-- a new piece from two corners in any order; returns it
+function BU.addZone(store, name, ax, ay, bx, by, z)
+    local zone = { name = name, x1 = math.min(ax, bx), y1 = math.min(ay, by), x2 = math.max(ax, bx), y2 = math.max(ay, by), z = z or 0 }
+    table.insert(store.zones, zone)
+    return zone
+end
+
+function BU.removeZone(store, zone)
+    for i = #store.zones, 1, -1 do
+        if store.zones[i] == zone then table.remove(store.zones, i) end
+    end
+    BU.dropStaleStock(store)
+end
+
+-- a piece renamed: it joins the zone of that name, or starts its own
+function BU.renameZone(store, zone, name)
+    if not name or name == "" then return end
+    zone.name = name
+    BU.dropStaleStock(store)
+end
+
+-- a piece's key in store.stock: its name and corners, so a renamed or moved piece counts afresh
+function BU.pieceKey(zone)
+    return string.format("%s|%d,%d,%d,%d,%d", zone.name, zone.x1, zone.y1, zone.x2, zone.y2, zone.z)
+end
+
+-- counts kept for a piece that is gone (removed, renamed) are dropped
+function BU.dropStaleStock(store)
+    local keys = {}
+    for _, z in ipairs(store.zones) do keys[BU.pieceKey(z)] = true end
+    local gone = {}
+    for key in pairs(store.stock) do
+        if not keys[key] then gone[#gone + 1] = key end
+    end
+    for _, key in ipairs(gone) do store.stock[key] = nil end
+end
+
+-- the name offered for a new piece: the last one drawn (to add to it), else "Base"
+function BU.nextZoneName(store, base)
+    local last = store.zones[#store.zones]
+    return last and last.name or base or "Base"
+end
+
+-- the drawn pieces as areas, one per name, in the order first drawn
+function BU.zoneAreas(zones)
+    local out, byName = {}, {}
+    for _, z in ipairs(zones or {}) do
+        local area = byName[z.name]
+        if not area then
+            area = { name = z.name, rects = {} }
+            byName[z.name] = area
+            out[#out + 1] = area
+        end
+        area.rects[#area.rects + 1] = { x1 = z.x1, y1 = z.y1, x2 = z.x2, y2 = z.y2, z = z.z }
+    end
+    return out
+end
+
+-- how far (x, y) is from the nearest edge of an area, 0 inside it
+function BU.areaDistance(area, x, y)
+    local best
+    for _, r in ipairs(area.rects) do
+        local dx = math.max(r.x1 - x, 0, x - r.x2)
+        local dy = math.max(r.y1 - y, 0, y - r.y2)
+        local d = math.sqrt(dx * dx + dy * dy)
+        if not best or d < best then best = d end
+    end
+    return best or math.huge
+end
+
+-- which area a square is in: the index, nil outside them all. A zone drawn on
+-- the square's own floor beats one drawn on another floor; then the first.
+function BU.areaAt(areas, x, y, z, floors)
+    local near
+    for i, area in ipairs(areas) do
+        for _, r in ipairs(area.rects) do
+            if x >= r.x1 and x <= r.x2 and y >= r.y1 and y <= r.y2 then
+                if r.z == z then return i end
+                if not near and math.abs(r.z - z) <= (floors or 0) then near = i end
+            end
+        end
+    end
+    return near
+end
+
+-- the areas within reach of (x, y), nearest first, each with only its pieces
+-- in reach (two bases both called "Base" stay apart)
+function BU.nearAreas(areas, x, y, reach)
+    local out = {}
+    for _, area in ipairs(areas) do
+        local near = { name = area.name, rects = {} }
+        for _, r in ipairs(area.rects) do
+            if BU.areaDistance({ rects = { r } }, x, y) <= reach then near.rects[#near.rects + 1] = r end
+        end
+        if #near.rects > 0 then
+            near.distance = BU.areaDistance(near, x, y)
+            out[#out + 1] = near
+        end
+    end
+    table.sort(out, function(a, b)
+        if a.distance ~= b.distance then return a.distance < b.distance end
+        return (a.name or "") < (b.name or "")
+    end)
+    return out
+end
+
+-- stock --------------------------------------------------------------------------------------
+
+-- What a zone holds, from item records each carrying the container they sit in
+-- (key and name): one entry per container and type, with how many.
+function BU.stockOf(records)
+    local byKey, items = {}, {}
+    for _, r in ipairs(records) do
+        local k = (r.containerKey or "?") .. "|" .. r.fullType
+        local e = byKey[k]
+        if not e then
+            e = { t = r.fullType, n = r.name or r.fullType, c = r.category or "", k = r.containerKey, cn = r.containerName or "", q = 0 }
+            byKey[k] = e
+            items[#items + 1] = e
+        end
+        e.q = e.q + 1
+    end
+    return items
+end
+
+-- how many of a type the base holds, by every zone's last count: the total
+-- and { { zone, q } } most first
+function BU.stockCount(stock, fullType)
+    local total, sums = 0, {}
+    for _, s in pairs(stock or {}) do
+        local q = 0
+        for _, e in ipairs(s.items or {}) do
+            if e.t == fullType then q = q + e.q end
+        end
+        if q > 0 and s.zone then
+            total = total + q
+            sums[s.zone] = (sums[s.zone] or 0) + q
+        end
+    end
+    local byZone = {}
+    for zone, q in pairs(sums) do byZone[#byZone + 1] = { zone = zone, q = q } end
+    table.sort(byZone, function(a, b)
+        if a.q ~= b.q then return a.q > b.q end
+        return a.zone < b.zone
+    end)
+    return total, byZone
+end
+
+-- every piece's entries in one list for the inventory window, each with its
+-- zone and how old the count is (hours; nil for a piece just looked at, a key
+-- in `fresh`). The same type in the same container is one row.
+function BU.stockRows(stock, now, fresh)
+    local out, byKey = {}, {}
+    for pieceKey, s in pairs(stock or {}) do
+        local age = nil
+        if not (fresh and fresh[pieceKey]) and now and s.at then age = math.max(0, now - s.at) end
+        for _, e in ipairs(s.items or {}) do
+            local k = (s.zone or "?") .. "|" .. tostring(e.k) .. "|" .. e.t
+            local row = byKey[k]
+            if row then
+                row.count = row.count + e.q
+                if age and (not row.age or age > row.age) then row.age = age end
+            else
+                row = { fullType = e.t, name = e.n, category = e.c, key = e.k, container = e.cn, count = e.q, zone = s.zone or "?", age = age }
+                byKey[k] = row
+                out[#out + 1] = row
+            end
+        end
+    end
+    return out
+end
+
+-- the inventory window's order: by a field, then name, then zone, then container
+function BU.sortStock(rows, field, desc)
+    field = field or "name"
+    table.sort(rows, function(a, b)
+        local fa, fb = a[field], b[field]
+        if fa ~= fb then
+            if desc then return fa > fb end
+            return fa < fb
+        end
+        if a.name ~= b.name then return a.name < b.name end
+        if a.zone ~= b.zone then return a.zone < b.zone end
+        return (a.container or "") < (b.container or "")
+    end)
+    return rows
+end
+
+-- a row matches the search: in one field, or in any of them
+function BU.stockMatch(row, text, field)
+    if not text or text == "" then return true end
+    text = string.lower(text)
+    local fields = field and field ~= "all" and { field } or { "name", "category", "zone", "container" }
+    for _, f in ipairs(fields) do
+        local v = row[f]
+        if v and string.find(string.lower(tostring(v)), text, 1, true) then return true end
+    end
+    return false
 end
 
 -- labels -------------------------------------------------------------------------------------

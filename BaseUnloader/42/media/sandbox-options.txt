@@ -1,5 +1,8 @@
 VERSION = 1,
 
+option BaseUnloader.ZoneReach
+{type = integer, min = 5, max = 200, default = 40, page = BaseUnloader, translation = BaseUnloaderZoneReach,}
+
 option BaseUnloader.Radius
 {type = integer, min = 3, max = 60, default = 12, page = BaseUnloader, translation = BaseUnloaderRadius,}
 

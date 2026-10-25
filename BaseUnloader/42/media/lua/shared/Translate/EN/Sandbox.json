@@ -1,13 +1,15 @@
 {
     "Sandbox_BaseUnloader": "Base Unloader",
+    "Sandbox_BaseUnloaderZoneReach": "Zone Reach",
+    "Sandbox_BaseUnloaderZoneReach_tooltip": "Base zones (drawn with the Zones button) within this many tiles of what you are unloading are the base, and only the containers inside them are listed and used. With no zone that close, the building and the nearby radius below are used instead.",
     "Sandbox_BaseUnloaderRadius": "Nearby Radius",
-    "Sandbox_BaseUnloaderRadius_tooltip": "Containers within this many tiles of the one you are unloading count as part of the base, even outside the building. The whole building you are unloading in or next to always counts.",
+    "Sandbox_BaseUnloaderRadius_tooltip": "With no zone drawn: containers within this many tiles of the one you are unloading count as part of the base, even outside the building. The whole building you are unloading in or next to always counts.",
     "Sandbox_BaseUnloaderPad": "Building Margin",
-    "Sandbox_BaseUnloaderPad_tooltip": "Tiles around the building's footprint that still count as the base: the porch, the shed by the door, the car on the drive.",
+    "Sandbox_BaseUnloaderPad_tooltip": "With no zone drawn: tiles around the building's footprint that still count as the base: the porch, the shed by the door, the car on the drive.",
     "Sandbox_BaseUnloaderLaundry": "Dirty Clothes to the Laundry",
     "Sandbox_BaseUnloaderLaundry_tooltip": "Dirty or bloody clothing goes to a container tagged Laundry, else the laundry cart, else the washer, whatever its type's rule says. A drop with Ctrl still sends those very items wherever you put them.",
     "Sandbox_BaseUnloaderFloors": "Floors Searched",
-    "Sandbox_BaseUnloaderFloors_tooltip": "How many floors above and below the one you are on are searched for containers.",
+    "Sandbox_BaseUnloaderFloors_tooltip": "How many floors above and below are searched for containers: above and below the floor a zone was drawn on (a zone round the ground floor takes in the upstairs), or with no zone drawn, the floor you are on.",
     "Sandbox_BaseUnloaderMaxLoad": "Heaviest Load",
     "Sandbox_BaseUnloaderMaxLoad_tooltip": "The highest level of the Heavy Load moodle a run will carry you to: 0 never over your carry weight, 1 up to 1.25 times it, 2 up to 1.5 times, 3 up to 1.75 times, 4 up to twice it. Worn bags fill first, at their weight reduction; the hands take the rest."
 }

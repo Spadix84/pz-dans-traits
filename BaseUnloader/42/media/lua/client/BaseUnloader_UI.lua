@@ -1,6 +1,8 @@
 -- Base Unloader: the window. Left, what is in the source grouped by type, with
 -- where each type goes; right, every container in the base with its name,
--- kind, room, floor, distance and how full it is. Drag a type onto a
+-- kind, room, floor, distance and how full it is, zone by zone (the zones
+-- drawn with the game's zone tool), the tagged ones apart from the rest in
+-- each. Drag a type onto a
 -- container (or drag items straight out of the vanilla inventory windows)
 -- to say that type lives there; Ctrl while dropping sends just those items,
 -- this run only. Suggest guesses homes from what the base already holds;
@@ -17,6 +19,7 @@ require "ISUI/ISContextMenu"
 require "ISUI/ISInventoryPane"
 require "BaseUnloader_Scan"
 require "BaseUnloader_Run"
+require "BaseUnloader_Zones"
 
 local BU = BaseUnloader
 local S = BU_Scan
@@ -29,6 +32,8 @@ local DRAG_START = 5     -- pixels the mouse moves before a press becomes a drag
 local MAX_NAME = 40
 local ICON = ROW_HGT - 10
 local BOX = FONT_HGT_SMALL + 2
+local TAG_BAR = 4           -- the stripe down the left of a tagged container
+local TAG_COLOR = { r = 0.55, g = 0.8, b = 0.9 }
 
 -- the picture the loot window gives a container of this kind, else its shelf
 local function containerIcon(row)
@@ -205,12 +210,31 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     local row = item.item
     local win = self.window
     if row.header then
-        self:drawRect(0, y, self:getWidth(), item.height, 0.35, 0.25, 0.3, 0.4)
-        self:drawText(row.text, PAD, y + 4, 0.9, 0.9, 0.95, 1, UIFont.Small)
+        if row.style == "zone" then
+            -- a zone: the strongest band, its note (no zone drawn) under it
+            self:drawRect(0, y, self:getWidth(), item.height, 0.6, 0.2, 0.32, 0.22)
+            self:drawRectBorder(0, y, self:getWidth(), item.height, 0.8, 0.45, 0.7, 0.45)
+            self:drawText(row.text, PAD, y + 4, 1, 1, 1, 1, UIFont.Small)
+            if row.note then self:drawText(row.note, PAD, y + 6 + FONT_HGT_SMALL, 0.85, 0.75, 0.5, 1, UIFont.Small) end
+        elseif row.style == "tagged" then
+            self:drawRect(0, y, self:getWidth(), item.height, 0.25, TAG_COLOR.r * 0.4, TAG_COLOR.g * 0.4, TAG_COLOR.b * 0.4)
+            self:drawRect(0, y, TAG_BAR, item.height, 0.9, TAG_COLOR.r, TAG_COLOR.g, TAG_COLOR.b)
+            self:drawText(row.text, PAD * 3, y + 4, TAG_COLOR.r, TAG_COLOR.g, TAG_COLOR.b, 1, UIFont.Small)
+        elseif row.style == "untagged" then
+            self:drawRect(0, y, self:getWidth(), item.height, 0.2, 0.2, 0.2, 0.2)
+            self:drawText(row.text, PAD * 3, y + 4, 0.65, 0.65, 0.65, 1, UIFont.Small)
+        else
+            self:drawRect(0, y, self:getWidth(), item.height, 0.35, 0.25, 0.3, 0.4)
+            self:drawText(row.text, PAD, y + 4, 0.9, 0.9, 0.95, 1, UIFont.Small)
+        end
         return y + item.height
     end
     if alt then self:drawRect(0, y, self:getWidth(), item.height, 0.06, 1, 1, 1) end
     self:drawRectBorder(0, y, self:getWidth(), item.height, 0.3, self.borderColor.r, self.borderColor.g, self.borderColor.b)
+    if row.tagged then
+        self:drawRect(0, y, self:getWidth(), item.height, 0.07, TAG_COLOR.r, TAG_COLOR.g, TAG_COLOR.b)
+        self:drawRect(0, y, TAG_BAR, item.height, 0.9, TAG_COLOR.r, TAG_COLOR.g, TAG_COLOR.b)
+    end
     local over = self:isMouseOver() and self.mouseoverselected == item.index
     if over then dim(self, 1, y + 1, self:getWidth() - 2, item.height - 2) end
     if over and (win.drag or ISMouseDrag.dragging) then
@@ -240,15 +264,17 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     local right = row.pinned and getText("IGUI_BU_Source") or getText("IGUI_BU_Fill", BU.fmtWeight(row.used), BU.fmtWeight(row.capacity))
     local rw = getTextManager():MeasureStringX(UIFont.Small, right)
     self:drawText(right, self.width - rw - PAD - 14, line1, 0.7, 0.7, 0.7, 1, UIFont.Small)
-    -- second line: how far, and outdoors which way (the room is the header)
-    local place = win:distanceLabel(row) or ""
-    if not row.room and row.offset then place = row.offset .. ", " .. place end
-    if row.tagged and row.room then place = row.room .. ", " .. place end
+    -- second line: the room (outdoors, which way), the floor, how far; then the categories
+    local place = row.place or ""
+    local away = win:distanceLabel(row)
+    if away then place = place .. ", " .. away end
     self:drawText(place, tx, line2, 0.6, 0.6, 0.6, 1, UIFont.Small)
+    local px = tx + getTextManager():MeasureStringX(UIFont.Small, place) + 10
     local tagText = win:tagLabel(row)
     if tagText then
-        local px = tx + getTextManager():MeasureStringX(UIFont.Small, place) + 10
-        self:drawText(tagText, px, line2, 0.55, 0.8, 0.9, 1, UIFont.Small)
+        self:drawText(tagText, px, line2, TAG_COLOR.r, TAG_COLOR.g, TAG_COLOR.b, 1, UIFont.Small)
+    elseif not row.pinned then
+        self:drawText(getText("IGUI_BU_NoTags"), px, line2, 0.42, 0.42, 0.42, 1, UIFont.Small)
     end
     if n > 0 and not row.pinned then
         local t = getText("IGUI_BU_Rules", n)
@@ -414,6 +440,15 @@ function BU_Window:createChildren()
     self.autoTagBtn:setAnchorRight(true)
     self.autoTagBtn:setTooltip(getText("IGUI_BU_AutoTagTip"))
     self:addChild(self.autoTagBtn)
+
+    local zonesW = math.max(70, getTextManager():MeasureStringX(UIFont.Small, getText("IGUI_BU_Zones")) + 20)
+    self.zonesBtn = ISButton:new(self.autoTagBtn:getX() - zonesW - PAD, th + PAD, zonesW, barH, getText("IGUI_BU_Zones"), self, BU_Window.onZones)
+    self.zonesBtn:initialise()
+    self.zonesBtn:instantiate()
+    self.zonesBtn:setAnchorLeft(false)
+    self.zonesBtn:setAnchorRight(true)
+    self.zonesBtn:setTooltip(getText("IGUI_BU_ZonesTip"))
+    self:addChild(self.zonesBtn)
 
     local top = self.filterBox:getBottom() + PAD + FONT_HGT_SMALL + PAD
     local leftW = math.floor((self.width - PAD * 3) * 0.42)
@@ -602,41 +637,63 @@ function BU_Window:fill()
     scroll = self.containerList:getYScroll()
     local list = self.containerList
     list:clear()
-    local lastHeader = nil
     self.hiddenCount = 0
     local tags = BU.store().tags
-    local function header(text)
-        if text == lastHeader then return end
-        local h = list:addItem(text, { header = true, text = text })
-        list:setScrollHeight(list:getScrollHeight() - h.height + HEADER_HGT)
-        h.height = HEADER_HGT
-        lastHeader = text
+    local function header(text, style, note)
+        local h = list:addItem(text, { header = true, text = text, style = style, note = note })
+        local height = HEADER_HGT
+        if style == "zone" then height = HEADER_HGT + 2 + (note and FONT_HGT_SMALL or 0) end
+        list:setScrollHeight(list:getScrollHeight() - h.height + height)
+        h.height = height
     end
     local function shown(row, hidden)
         local text = string.lower(row.name .. " " .. (row.place or "") .. " " .. row.kindLabel .. " " .. (self:tagLabel(row) or ""))
         return (row.pinned or filter == "" or string.find(text, filter, 1, true)) and (self.showHidden or not hidden)
     end
-    -- the source, then the tagged containers, then everything else by room
+    -- the source, then zone by zone (nearest first) its tagged containers and
+    -- then the rest; with no zone drawn, one heading for what is round about
+    local areas = self.zone and self.zone.areas or nil
+    local byArea = {}
     for _, row in ipairs(self.rows) do
         local hidden = not row.pinned and self:isHidden(row)
         if hidden then self.hiddenCount = self.hiddenCount + 1 end
         row.tagged = not row.pinned and tags[row.key] ~= nil
-        if row.pinned and shown(row, hidden) then
-            header(getText("IGUI_BU_Source"))
-            list:addItem(row.name, row)
+        if row.pinned then
+            if shown(row, hidden) then
+                header(getText("IGUI_BU_Source"))
+                list:addItem(row.name, row)
+            end
+        else
+            local a = areas and row.area or 0
+            local split = byArea[a] or { tagged = {}, untagged = {}, total = 0 }
+            byArea[a] = split
+            split.total = split.total + 1
+            if shown(row, hidden) then
+                local into = row.tagged and split.tagged or split.untagged
+                into[#into + 1] = row
+            end
         end
     end
-    for _, row in ipairs(self.rows) do
-        if row.tagged and shown(row, self:isHidden(row)) then
-            header(getText("IGUI_BU_Tagged"))
-            list:addItem(row.name, row)
+    local function section(split, title, note)
+        if not split or #split.tagged + #split.untagged == 0 then return end
+        header(title, "zone", note)
+        if #split.tagged > 0 then
+            header(getText("IGUI_BU_Tagged", #split.tagged), "tagged")
+            for _, row in ipairs(split.tagged) do list:addItem(row.name, row) end
+        end
+        if #split.untagged > 0 then
+            header(getText("IGUI_BU_Untagged", #split.untagged), "untagged")
+            for _, row in ipairs(split.untagged) do list:addItem(row.name, row) end
         end
     end
-    for _, row in ipairs(self.rows) do
-        if not row.pinned and not row.tagged and shown(row, self:isHidden(row)) then
-            header((row.room or getText("IGUI_BU_Outside")) .. ", " .. S.floorLabel(row.z))
-            list:addItem(row.name, row)
+    if areas then
+        for i, area in ipairs(areas) do
+            local split = byArea[i]
+            section(split, getText("IGUI_BU_Zone", area.name or "?", split and split.total or 0))
         end
+    else
+        local split = byArea[0]
+        section(split, getText("IGUI_BU_NoZone", split and split.total or 0), getText("IGUI_BU_NoZoneNote"))
     end
     list:setYScroll(scroll)
 end
@@ -776,6 +833,17 @@ function BU_Window:onRescan()
     self:scan()
 end
 
+function BU_Window:onZones()
+    BU_ZoneWindow.open(self.character)
+end
+
+-- the base zones changed: every open window lists afresh
+function BU_Window.rescanAll()
+    for _, win in pairs(BU_Window.instances) do
+        pcall(function() win:scan() end)
+    end
+end
+
 function BU_Window:onStart()
     local oneOffs = {}
     for id, key in pairs(self.oneOffs) do oneOffs[tostring(id)] = key end
@@ -868,7 +936,7 @@ function BU_Window:new(x, y, width, height, character, source)
     o.byKey = {}
     o.groups = {}
     o.ruleCounts = {}
-    o.minimumWidth = 560
+    o.minimumWidth = 640
     o.minimumHeight = 320
     return o
 end

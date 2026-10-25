@@ -508,6 +508,39 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
     comes down to 40% without soap, 20% with soap or cleaning liquid; a carried **washboard** (new
     item; loot, a carpentry recipe or a Carving 2 recipe) makes it 25% / 10% for a scrub half as
     long again. A wash with nothing to gain is refused with the reason. Only a washing machine gets
+- **The base is the zones you draw** (2026-10-24, user asked: runs kept going into the houses next
+  door): base zones within reach of the source (sandbox Zone Reach, default 40 tiles) are the base,
+  and only containers inside them are listed and used. The zones are Base Unloader's own
+  (`store.zones`, `BaseUnloader_Zones.lua`), drawn with the game's click-and-drag zone tool
+  (`BU_ZoneDraw` derives `ISAddDesignationAnimalZoneUI` and saves the rectangle itself, so nothing
+  becomes an animal zone and pens never count). A first version read the animal zones; the user
+  chose own zones after reading Home Inventory Improved. **Base zones...** on the world menu and a
+  **Zones** button in the unloader window open the zone window: every piece listed with its size,
+  floor and distance, Draw / Rename / Walk there / Remove, all pieces lit on the ground with their
+  zone's name. Pieces with the same name are one zone (an L-shaped house is two rectangles), each
+  side 1 to 60 tiles (`BU.ZONE_MAX`). A zone counts on its own floor and Floors Searched above and
+  below, so one drawn round the ground floor takes in the upstairs; a zone drawn on a floor wins
+  there (`BU.areaAt`). Two far-apart pieces with one name stay apart: only the pieces in reach come
+  along (`BU.nearAreas`). With no zone in reach, the old building-plus-radius search is used, under
+  a "no zone drawn" heading that says to draw one.
+- **Base inventory** (2026-10-24, from Home Inventory Improved, `BaseUnloader_Stock.lua`): **Base
+  inventory...** on the world menu opens a window of everything stored in every base zone
+  (containers, bags in them three deep, the floor), one row per type per container with its icon,
+  category, count, zone and container. Search in everything or one field, click a header to sort
+  (again to reverse), Refresh to count again. Hover a row to light its container up, double-click to
+  walk to it. Counts are kept per piece in the save (`store.stock`, `S.refreshStock`), so a zone out
+  of range keeps its last count, shown grey with its age. Counted when the window opens and when a
+  run ends.
+- **How many at base** (2026-10-24, from Home Inventory Improved): right-click items of one type and
+  the item's menu says "At base: 12 (House 8, Shed 4)", or "None of these at base", from the kept
+  counts; click it for the base inventory searched for that item. Only once a base zone exists.
+- **Smarter Storage names** (2026-10-24): a container with no name of ours or the game's takes the
+  name Smarter Storage gave it (`SmarterStorage_Name` in the object's mod data).
+- **Zones and tags in the window** (2026-10-24, user asked): the container list goes zone by zone,
+  nearest first, each a strong band with its container count, then "Tagged (n)" in blue and "Not
+  tagged (n)" in grey under it (the room headings went: the room is on each row's second line). A
+  tagged row has a blue stripe and tint and its categories in blue; an untagged one reads "no
+  categories".
     clothes fully clean. Take A Bath And Shower's bath wash keeps the same floors.
   - Wringing stops at 50% wet (shoes 70%). Worn clothes keep 25% of the game's drying each minute
     (sandbox Drying on the Body; the game dries a soaked shirt on the body in about 20 minutes,

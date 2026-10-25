@@ -153,6 +153,11 @@ local function Sq(x, y, z, room)
   function sq:getBuildingDef() return self._def end
   function sq:getBuilding() return nil end
   function sq:getVehicleContainer() return self._vehicle end
+  function sq:getWorldObjects()
+    local wobs = {}
+    for _, it in ipairs(self._floor or {}) do wobs[#wobs + 1] = { getItem = function() return it end } end
+    return list(wobs)
+  end
   squares[x .. "," .. y .. "," .. z] = sq
   return sq
 end
@@ -1068,16 +1073,21 @@ ISTextEntryBox = class("ISTextEntryBox")
 ISTextBox = class("ISTextBox")
 ISContextMenu = class("ISContextMenu")
 ISTickBox = class("ISTickBox")
+ISComboBox = class("ISComboBox")
+ISModalDialog = class("ISModalDialog")
+ISAddDesignationAnimalZoneUI = class("ISAddDesignationAnimalZoneUI")
 ISInventoryPane = { getActualItems = function(items) return items end }
 local vanillaBackpackMenu = 0
 ISInventoryPage = { onBackpackRightMouseDown = function() vanillaBackpackMenu = vanillaBackpackMenu + 1 end }
 local playerMenu
 getPlayerContextMenu = function() return playerMenu end
 ISVehicleMenu = { FillMenuOutsideVehicle = function() return "vanilla" end }
-UIFont = { Small = "small" }
+UIFont = { Small = "small", Medium = "medium" }
 getTextManager = function() return { getFontHeight = function() return 12 end, MeasureStringX = function() return 40 end } end
 ISMouseDrag = {}
 getSoundManager = function() return { playUISound = function() end } end
+load("client/BaseUnloader_Zones.lua")
+load("client/BaseUnloader_Stock.lua")
 load("client/BaseUnloader_UI.lua")
 load("client/BaseUnloader_Menu.lua")
 local M = BU_Menu
@@ -1100,7 +1110,7 @@ do
   M.onWorldMenu(0, menu, { squares["10,10,0"]._objs[1] }, false)
   assert(menu.names[1] == "ContextMenu_BU_Title", "a Base Unloader entry")
   local sub = menu.subs["ContextMenu_BU_Title"]
-  assert(sub.names[1] == "ContextMenu_BU_Unload" and sub.names[2] == "ContextMenu_BU_RenameContainer" and sub.names[3] == "IGUI_BU_TagFromContents" and sub.names[4] == "IGUI_BU_Categories" and sub.names[5] == "IGUI_BU_OffLimitsOn" and #sub.names == 5, "unload, rename, from-contents, categories and off limits, no plan: " .. table.concat(sub.names, ","))
+  assert(sub.names[1] == "ContextMenu_BU_Unload" and sub.names[2] == "ContextMenu_BU_RenameContainer" and sub.names[3] == "IGUI_BU_TagFromContents" and sub.names[4] == "IGUI_BU_Categories" and sub.names[5] == "IGUI_BU_OffLimitsOn" and sub.names[6] == "ContextMenu_BU_Zones" and sub.names[7] == "ContextMenu_BU_Stock" and #sub.names == 7, "unload, rename, from-contents, categories, off limits, then zones and inventory, no plan: " .. table.concat(sub.names, ","))
   -- with a plan saved, Resume and Forget join
   BU.store().plans["dan"] = { source = { kind = "self" }, oneOffs = {}, carried = {} }
   menu = Menu()
@@ -1283,6 +1293,170 @@ do
   assert(BU.store().rules["Base.Saw"] == wr.key and BU.store().rules["Base.Hammer"] == wr.key, "assignGroups sets a rule per type")
   win:unassignGroups({ g, g2 })
   assert(BU.store().rules["Base.Saw"] == nil and BU.store().rules["Base.Hammer"] == nil, "unassignGroups clears them")
+end
+
+-- base zones: the core's area helpers
+do
+  local house = { name = "House", rects = { { x1 = 0, y1 = 0, x2 = 9, y2 = 9, z = 0 } } }
+  local loft = { name = "Loft", rects = { { x1 = 0, y1 = 0, x2 = 4, y2 = 4, z = 1 } } }
+  assert(BU.areaDistance(house, 5, 5) == 0 and BU.areaDistance(house, 12, 9) == 3 and BU.areaDistance(house, 12, 13) == 5, "distance to the nearest edge")
+  local areas = { house, loft }
+  assert(BU.areaAt(areas, 2, 2, 0, 3) == 1, "the ground floor zone on the ground floor")
+  assert(BU.areaAt(areas, 2, 2, 1, 3) == 2, "a zone drawn on this floor beats one drawn below")
+  assert(BU.areaAt(areas, 8, 8, 1, 3) == 1, "upstairs of the house zone, outside the loft, is the house")
+  assert(BU.areaAt(areas, 8, 8, 1, 0) == nil, "with no floors searched the house zone stays on its floor")
+  assert(BU.areaAt(areas, 20, 2, 0, 3) == nil, "outside every zone")
+  local near = BU.nearAreas({ { name = "Far", rects = { { x1 = 50, y1 = 0, x2 = 55, y2 = 5, z = 0 } } }, loft, house }, 12, 2, 10)
+  assert(#near == 2 and near[1].name == "House" and near[2].name == "Loft", "within reach, nearest first")
+  -- two bases both called "Base": only the piece in reach comes along
+  local split = BU.nearAreas({ { name = "Base", rects = { { x1 = 0, y1 = 0, x2 = 3, y2 = 3, z = 0 }, { x1 = 200, y1 = 0, x2 = 203, y2 = 3, z = 0 } } } }, 1, 1, 40)
+  assert(#split == 1 and #split[1].rects == 1 and split[1].rects[1].x1 == 0, "the far piece of the same name stays behind")
+
+  -- drawing, naming, renaming, removing
+  local store = { zones = {}, stock = {} }
+  assert(BU.nextZoneName(store, "Base") == "Base", "the first zone is offered as Base")
+  local a = BU.addZone(store, "House", 5, 9, 1, 2, 0)
+  assert(a.x1 == 1 and a.y1 == 2 and a.x2 == 5 and a.y2 == 9 and a.z == 0, "corners put in order")
+  assert(BU.nextZoneName(store, "Base") == "House", "the next piece is offered the last name, to add to it")
+  local b = BU.addZone(store, "House", 6, 2, 8, 4, 0)
+  local c = BU.addZone(store, "Shed", 20, 20, 22, 22, 0)
+  local za = BU.zoneAreas(store.zones)
+  assert(#za == 2 and za[1].name == "House" and #za[1].rects == 2 and za[2].name == "Shed", "pieces of one name are one zone, in the order drawn")
+  assert(BU.zoneSizeOk(1, 1) and BU.zoneSizeOk(BU.ZONE_MAX, 3) and not BU.zoneSizeOk(BU.ZONE_MAX + 1, 3) and not BU.zoneSizeOk(0, 4), "size limits")
+  store.stock[BU.pieceKey(c)] = { zone = "Shed", at = 1, items = {} }
+  BU.renameZone(store, c, "House")
+  assert(#BU.zoneAreas(store.zones) == 1 and store.stock["Shed|20,20,22,22,0"] == nil, "a renamed piece joins that zone; its old count goes")
+  BU.renameZone(store, c, "")
+  assert(c.name == "House", "an empty name changes nothing")
+  BU.removeZone(store, b)
+  assert(#store.zones == 2 and store.zones[1] == a and store.zones[2] == c, "removed")
+
+  -- the stock helpers
+  local recs = { { fullType = "Base.Axe", name = "Axe", category = "Weapon", containerKey = "k1", containerName = "Crate" },
+                 { fullType = "Base.Axe", name = "Axe", category = "Weapon", containerKey = "k1", containerName = "Crate" },
+                 { fullType = "Base.Axe", name = "Axe", category = "Weapon", containerKey = "k2", containerName = "Shelf" },
+                 { fullType = "Base.Saw", name = "Saw", category = "Tool", containerKey = nil, containerName = "On the floor" } }
+  local items = BU.stockOf(recs)
+  assert(#items == 3 and items[1].q == 2 and items[1].cn == "Crate" and items[2].q == 1 and items[3].k == nil, "one entry per container and type")
+  local stock = {
+    ["House|1"] = { zone = "House", at = 10, items = items },
+    ["House|2"] = { zone = "House", at = 4, items = { { t = "Base.Axe", n = "Axe", c = "Weapon", k = "k9", cn = "Box", q = 5 } } },
+    ["Shed|1"] = { zone = "Shed", at = 2, items = { { t = "Base.Axe", n = "Axe", c = "Weapon", k = "k3", cn = "Bin", q = 1 } } },
+  }
+  local total, byZone = BU.stockCount(stock, "Base.Axe")
+  assert(total == 9 and byZone[1].zone == "House" and byZone[1].q == 8 and byZone[2].zone == "Shed", "counted across pieces, by zone, most first")
+  assert(BU.stockCount(stock, "Base.Hammer") == 0, "none")
+  local rows = BU.stockRows(stock, 50, { ["House|1"] = true })
+  assert(#rows == 5, "a row per zone, container and type: " .. #rows)
+  local fresh, stale = 0, 0
+  for _, r in ipairs(rows) do if r.age then stale = stale + 1 else fresh = fresh + 1 end end
+  assert(fresh == 3 and stale == 2, "pieces counted now have no age, the rest their age")
+  BU.sortStock(rows, "count", true)
+  assert(rows[1].count == 5, "sorted by count, most first")
+  BU.sortStock(rows, "zone")
+  assert(rows[#rows].zone == "Shed", "sorted by zone")
+  assert(BU.stockMatch({ name = "Axe", category = "Weapon", zone = "House", container = "Crate" }, "crat", "all"), "matches any field")
+  assert(not BU.stockMatch({ name = "Axe", category = "Weapon", zone = "House", container = "Crate" }, "crat", "name"), "or just the one")
+  assert(BU.stockMatch({ name = "Axe" }, "", "name"), "an empty search matches")
+end
+
+-- the scan with base zones: only what is inside them, each row knowing its zone
+do
+  local store = BU.store()
+  BU.addZone(store, "House", 11, 10, 12, 10, 0)     -- the medicine cabinet and the fridge
+  BU.addZone(store, "House", 14, 12, 14, 12, 0)     -- the wardrobe: a second piece of the house
+  BU.addZone(store, "Shed", 13, 7, 13, 7, 0)
+  BU.addZone(store, "Far", 30, 30, 30, 30, 0)       -- out of reach
+  SandboxVars.BaseUnloader.ZoneReach = 15
+  local zone = S.zone(player, crateSq)
+  assert(zone.areas and #zone.areas == 2, "two areas within reach: " .. tostring(zone.areas and #zone.areas))
+  assert(zone.areas[1].name == "House" and #zone.areas[1].rects == 2 and zone.areas[2].name == "Shed", "pieces of one name are one zone, nearest first")
+  local rows = S.containers(zone, source, player)
+  local byKey = {}
+  for _, row in ipairs(rows) do byKey[row.key] = row end
+  assert(#rows == 5, "the medicine cabinet, fridge, freezer, wardrobe and shed crate: " .. #rows)
+  assert(byKey["11,10,0:medicine:0"].area == 1 and byKey["12,10,0:freezer:1"].area == 1 and byKey["14,12,0:wardrobe:0"].area == 1, "in the house area")
+  assert(byKey["13,7,0:crate:0"].area == 2, "the shed crate in the shed area")
+  assert(not byKey["30,30,0:crate:0"], "the far zone is out of reach")
+
+  -- the window: zone by zone, tagged apart from the rest
+  local added, win_c = {}, nil
+  local function fakeList()
+    return { clear = function() added = {} end, getYScroll = function() return 0 end, setYScroll = function() end,
+             getScrollHeight = function() return 0 end, setScrollHeight = function() end,
+             addItem = function(self, text, item) local it = { height = 10, item = item }; if self == win_c then added[#added + 1] = item end; return it end }
+  end
+  local win = setmetatable({ character = player, playerNum = 0, oneOffs = {}, groups = {}, ruleCounts = {}, source = { kind = "object" } }, BU_Window)
+  win_c = fakeList()
+  win.containerList = win_c
+  win.itemList = fakeList()
+  win.filterBox = { getInternalText = function() return "" end }
+  win.zone, win.rows = zone, rows
+  BU.store().tags["14,12,0:wardrobe:0"] = { Clothing = true }
+  win:fill()
+  local seq = {}
+  for _, it in ipairs(added) do seq[#seq + 1] = it.header and it.text or it.key end
+  local text = table.concat(seq, " | ")
+  assert(seq[1] == "IGUI_BU_Zone:House" and seq[2] == "IGUI_BU_Tagged:1" and seq[3] == "14,12,0:wardrobe:0" and seq[4] == "IGUI_BU_Untagged:3", "house: tagged first: " .. text)
+  assert(seq[8] == "IGUI_BU_Zone:Shed" and seq[9] == "IGUI_BU_Untagged:1" and seq[10] == "13,7,0:crate:0" and #seq == 10, "then the shed: " .. text)
+  assert(added[1].style == "zone" and added[2].style == "tagged" and added[4].style == "untagged", "header styles")
+  -- no zone drawn: one heading with the note
+  local saved = store.zones
+  store.zones = {}
+  win.zone = S.zone(player, crateSq)
+  win.rows = S.containers(win.zone, source, player)
+  win:fill()
+  assert(added[1].text == "IGUI_BU_NoZone:" .. #win.rows and added[1].note == "IGUI_BU_NoZoneNote" and added[2].style == "tagged", "no zone: the old search under one heading: " .. tostring(added[1].text))
+  BU.store().tags["14,12,0:wardrobe:0"] = nil
+  store.zones = saved
+
+  -- the stock: what every loaded piece holds, the floor too, kept per piece
+  local floorSaw = Item({ type = "Base.Saw", cat = "Tool", name = "Saw" })
+  squares["11,10,0"]._floor = { floorSaw }
+  local counted = S.refreshStock(store)
+  assert(counted[BU.pieceKey(store.zones[1])] and counted[BU.pieceKey(store.zones[3])], "the loaded pieces were counted")
+  local bandages = BU.stockCount(store.stock, "Base.Bandage")
+  local shirts, byZone = BU.stockCount(store.stock, "Base.Shirt")
+  local function held(c, t) local n = 0; for _, it in ipairs(c._items) do if it:getFullType() == t then n = n + 1 end end; return n end
+  local wantB, wantS = held(medicine, "Base.Bandage"), held(wardrobe, "Base.Shirt")
+  assert(wantB > 0 and bandages == wantB and shirts == wantS and byZone[1].zone == "House", "the medicine cabinet's bandages and the wardrobe's shirts: " .. bandages .. "/" .. wantB .. " " .. shirts .. "/" .. wantS)
+  assert(BU.stockCount(store.stock, "Base.Saw") == 1, "the saw on the floor counts")
+  -- the house out of range: its count stands
+  local savedSq = squares["11,10,0"]
+  squares["11,10,0"] = nil
+  local counted2 = S.refreshStock(store)
+  assert(not counted2[BU.pieceKey(store.zones[1])] and BU.stockCount(store.stock, "Base.Bandage") == wantB, "a piece out of range keeps its last count")
+  squares["11,10,0"] = savedSq
+  squares["11,10,0"]._floor = nil
+
+  -- the item menu says how many are at base, and opens the inventory searched for it
+  local opened
+  local realOpen = BU_StockWindow.open
+  BU_StockWindow.open = function(_, search) opened = search end
+  local menu = Menu()
+  M.addStockLine(menu, player, wardrobe._items[1])
+  assert(menu.names[1] == "ContextMenu_BU_AtBase:" .. wantS, "the shirts at base: " .. tostring(menu.names[1]))
+  menu = Menu()
+  M.addStockLine(menu, player, Item({ type = "Base.Hammer", cat = "Tool" }))
+  assert(menu.names[1] == "ContextMenu_BU_AtBaseNone", "none of these")
+  menu = Menu()
+  M.onInventoryMenu(0, menu, { wardrobe._items[1] })
+  assert(menu.names[1] == "ContextMenu_BU_AtBase:" .. wantS and menu.names[2] == "ContextMenu_BU_Title", "the at-base line on the item's own menu, first")
+  menu = Menu()
+  M.onInventoryMenu(0, menu, { wardrobe._items[1], Item({ type = "Base.Hammer", cat = "Tool" }) })
+  assert(menu.names[1] == "ContextMenu_BU_Title", "no at-base line for two types")
+  M.onStock(player, "Shirt")
+  assert(opened == "Shirt", "the line opens the base inventory searched for the item")
+  BU_StockWindow.open = realOpen
+  -- the world menu always offers the zones and the inventory
+  menu = Menu()
+  M.onWorldMenu(0, menu, {}, false)
+  local sub = menu.subs["ContextMenu_BU_Title"]
+  assert(sub and sub.names[#sub.names - 1] == "ContextMenu_BU_Zones" and sub.names[#sub.names] == "ContextMenu_BU_Stock", "zones and inventory at the foot")
+
+  for i = #store.zones, 1, -1 do table.remove(store.zones, i) end
+  store.stock = {}
+  SandboxVars.BaseUnloader.ZoneReach = nil
 end
 
 H.pass("baseunloader")

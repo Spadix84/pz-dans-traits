@@ -191,6 +191,8 @@ local function finish(state)
     if (state.noRoom or 0) > 0 then say(state.player, false, getText("IGUI_BU_NoRoom", state.noRoom)) end
     if (state.tooHeavy or 0) > 0 then say(state.player, false, getText("IGUI_BU_TooHeavy", state.tooHeavy)) end
     BU.store().plans[state.who] = nil
+    -- the base just took a load: the counts "how many at base" reads are counted again
+    pcall(function() S.refreshStock() end)
     R.active[state.playerNum] = nil
 end
 
