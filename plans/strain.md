@@ -153,7 +153,7 @@ is kills x the multiplier at the day's peak: what the fighting actually taught.
 | Busy every day + drinking every night | 100 | 2 | 1575 | x0.50 | 793 |
 | Horde every day, Level Headed | 100 | 5 | 3150 | x0.36 | 1144 |
 | Rough week, Level Headed | 66 | 0 | 1800 | x0.79 | 1418 |
-| Rough week, Highly Strung | 100 | 9 | 1800 | x0.26 | 469 |
+| Rough week, High Strung | 100 | 9 | 1800 | x0.26 | 469 |
 
 What it means:
 
@@ -169,7 +169,7 @@ What it means:
   Down by day 5 even at half strain, and Burnt Out on day 8 when the full
   rate starts. Clearing a town in week one is still possible; doing it every
   day is not.
-- Highly Strung at x1.5 breaks every rough week three times. x1.33 may be
+- High Strung at x1.5 breaks every rough week three times. x1.33 may be
   kinder; settle in play.
 
 ## Traits
@@ -179,7 +179,7 @@ New (display sign: -N costs N points):
 | Trait | Price | Effect |
 |---|---|---|
 | **Level Headed** | -8 | Gains strain half as fast (user, 2026-10-24) |
-| **Highly Strung** | +6 | Gains strain x1.5 (or x1.33). Excludes Level Headed |
+| **High Strung** | +6 | Gains strain x1.5 (or x1.33). Excludes Level Headed |
 | **Unwinds Easily** | -4 | Everything that takes strain off counts x1.5 |
 | **Can't Switch Off** | +4 | Everything that takes strain off counts x0.67, and the variety bonus needs five comforts |
 
@@ -251,7 +251,7 @@ unhappiness touch (about 40 modules) so nothing double-counts.
 - Whether calm hours should pause while hungry, thirsty or soaked.
 - The per-kill escalator resets on sleep; a nap could reset it. Reset on a
   night's sleep only (4 hours+)?
-- Highly Strung x1.5 or x1.33.
+- High Strung x1.5 or x1.33.
 - Prices for Alcoholic, Smoker and Straight Edge once strain is in.
 - Panic over 40 is a guess at "surrounded"; check in play how many minutes a
   real horde day gives.

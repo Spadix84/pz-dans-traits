@@ -21,11 +21,11 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
 | [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
 | [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
-| [Highly Strung](#highly-strung--6) | -6 | Strain builds half again as fast. |
+| [High Strung](#high-strung--6) | -6 | Strain builds 1.5x as fast. |
 | [Alcoholic](#alcoholic--6) | -6 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
 | [Smoker](#smoker--5-vanilla-reworked) | -5 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
-| [Can't Switch Off](#cant-switch-off--4) | -4 | Strain eases a third slower; a day off takes five comforts. |
+| [Can't Switch Off](#cant-switch-off--4) | -4 | Strain eases 0.67x as fast; a full day off needs five comforts. |
 | [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
 | [Germaphobe](#germaphobe--8) | -8 | Dirty skin and clothes build stress; clean is a relief. |
 | [Sensory Issues](#sensory-issues--8) | -8 | Scratchy clothes, grime, noise, crowds, sun and smells add up to overload; safe and disliked foods. |
@@ -60,7 +60,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Nomad](#nomad-3) | +3 | No home, nothing missed; sleeps as well under the sky. |
 | [Regimented](#regimented-3) | +3 | Twice the plan bonus; one missed day a week forgiven. |
 | [Natural Runner](#natural-runner-3) | +3 | Jogging is easy on the legs and counts double; running XP +25%. |
-| [Unwinds Easily](#unwinds-easily-4) | +4 | Strain eases half again as fast. |
+| [Unwinds Easily](#unwinds-easily-4) | +4 | Strain eases 1.5x as fast. |
 | [Homemaker](#homemaker-4) | +4 | Washes cleaner by hand with half the wear; loves line-dried clothes. |
 | [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
 | [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
@@ -274,14 +274,14 @@ Attacks that cost you hours.
 - Moodle: Alcohol Withdrawal (craving, the shakes, delirium).
 - [Strain](#strain): being sober adds strain by stage (craving, shakes, delirium), and a drink eases only a quarter as much as it does for anyone else.
 
-#### Highly Strung (-6)
+#### High Strung (-6)
 
-- Every fight stays with you: [strain](#strain) builds half again as fast.
+- Every fight stays with you: [strain](#strain) builds 1.5x as fast.
 - Not with Level Headed.
 
 #### Can't Switch Off (-4)
 
-- Even at rest your mind is still out there: everything that eases [strain](#strain) does a third less, and a proper day off takes five different comforts.
+- Everything that eases [strain](#strain) works 0.67x as fast, and a full day off needs five different comforts, not four.
 - Not with Unwinds Easily.
 
 #### Caffeine Dependent (-2)
@@ -420,11 +420,11 @@ Attacks that cost you hours.
 #### Level Headed (+8)
 
 - Takes the fighting in stride: [strain](#strain) builds half as fast.
-- Not with Highly Strung.
+- Not with High Strung.
 
 #### Unwinds Easily (+4)
 
-- Everything that eases [strain](#strain) does half again as much: sleep, calm hours, comforts, a drink, a smoke.
+- [Strain](#strain) eases 1.5x as fast: sleep, calm hours, comforts, a drink, a smoke.
 - Not with Can't Switch Off.
 
 #### Homemaker (+4)

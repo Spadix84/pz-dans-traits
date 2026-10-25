@@ -193,7 +193,7 @@ PATTERNS = [
     ("Horde every day, Level Headed", [HORDE], ("levelheaded",)),
     ("Horde every day, Desensitized", [HORDE], ("desensitized",)),
     ("Rough week, Level Headed", [HORDE, HORDE, HORDE, HORDE, DAY_OFF, DAY_OFF, DAY_OFF], ("levelheaded",)),
-    ("Rough week, Highly Strung", [HORDE, HORDE, HORDE, HORDE, DAY_OFF, DAY_OFF, DAY_OFF], ("highlystrung",)),
+    ("Rough week, High Strung", [HORDE, HORDE, HORDE, HORDE, DAY_OFF, DAY_OFF, DAY_OFF], ("highlystrung",)),
 ]
 
 

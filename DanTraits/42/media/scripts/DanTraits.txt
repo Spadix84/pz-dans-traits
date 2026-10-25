@@ -1027,7 +1027,7 @@ module DanTraits {
 
     /* Strain traits (media/lua/shared/DanTraits_Strain.lua; they do nothing
        with the sandbox option StrainEnabled off). Level Headed (+8): strain
-       gained x0.5. Highly Strung (-6): x1.5. Unwinds Easily (+4): every
+       gained x0.5. High Strung (-6): x1.5. Unwinds Easily (+4): every
        drain x1.5. Can't Switch Off (-4): every drain x0.67, and the variety
        bonus needs five different comforts in a day. */
     character_trait_definition DanTraits:levelheaded

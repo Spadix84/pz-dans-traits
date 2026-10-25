@@ -1165,7 +1165,7 @@ kyyyykggggkyyyyk
 kyyyykkkkkkyyyyk
 kkkkkkkkkkkkkkkk
 """,
-    # Highly Strung: a wire pulled taut between two pegs, humming
+    # High Strung: a wire pulled taut between two pegs, humming
     "highlystrung": """
 kk............kk
 kdk..........kdk

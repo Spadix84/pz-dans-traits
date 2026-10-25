@@ -40,7 +40,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `strain comfort <kind>`. API: `DanTraits_StrainAdd`, `DanTraits_StrainEase`,
   `DanTraits_StrainComfort`, `DanTraits_StrainLevel`, `DanTraits_StrainTier`,
   `DanTraits_StrainXpMult`.
-- **Four strain traits:** Level Headed (+8, strain gained x0.5), Highly Strung (-6, x1.5),
+- **Four strain traits:** Level Headed (+8, strain gained x0.5), High Strung (-6, x1.5),
   Unwinds Easily (+4, every drain x1.5), Can't Switch Off (-4, every drain x0.67, the variety
   bonus needs five). Each pair mutually exclusive.
 

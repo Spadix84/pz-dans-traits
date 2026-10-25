@@ -48,7 +48,7 @@
 -- unfinished, and it comes again at the next safe moment. Finished, strain
 -- drops to ST.BREAK_RESET.
 --
--- Traits: Level Headed (strain gained x0.5), Highly Strung (x1.5), Unwinds
+-- Traits: Level Headed (strain gained x0.5), High Strung (x1.5), Unwinds
 -- Easily (every drain x1.5), Can't Switch Off (every drain x0.67, the variety
 -- bonus needs five).
 --
