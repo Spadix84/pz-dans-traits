@@ -7,7 +7,9 @@
 -- objects into the plain records this file works on:
 --
 --   an item       { id, fullType, category, name, weight, favorite, equipped, food, perishable, longLife }
---   a container   { key, kind, x, y, z, free, contents = { [fullType] = n }, cats = { [category] = n } }
+--   a container   { key, kind, x, y, z, free, contents = { [fullType] = n }, cats = { [category] = n },
+--                   roomId (the game's room name, lower case; nil outdoors or in a base you built),
+--                   touched (the player has put something in it) }
 --
 -- so every rule here can be tested offline.
 
@@ -26,6 +28,12 @@ BU.LAUNDRY_KINDS = { clothingdryerbasic = 1, clothingwasher = 2 }   -- the laund
 BU.GARBAGE_TAG = "Garbage"
 BU.GARBAGE_KINDS = { bin = true, dumpster = true, composter = true }
 BU.COLD_KINDS = { freezer = 1, icecream = 1, fridge = 2 }           -- fresh food: a freezer, else a fridge
+-- kinds a run never picks by itself, matched as a substring of the container type:
+-- cooking and heating, shop fittings, post, and the animals' troughs and hutches
+BU.APPLIANCE_WORDS = { "stove", "oven", "microwave", "toaster", "coffeemaker", "barbecue", "bbq", "grill",
+    "fireplace", "campfire", "kiln", "furnace", "forge", "smoker", "vending", "cashregister", "postbox",
+    "mailbox", "trough", "hutch", "feeder" }
+BU.APPLIANCE_KINDS = { clothingdryer = true }                       -- exact: the dryer, not the laundry cart
 
 -- keys ------------------------------------------------------------------------------
 
@@ -62,6 +70,8 @@ end
 --                        its name, at = world hours, items = { { t = fullType, n = name, c = category,
 --                        k = container key, cn = container name, q = how many } } }, so the counts
 --                        hold while you are away
+--   touched[key]         containers the player (or a run) has put something in: what they hold is
+--                        the player's own arrangement, not the house's loot
 function BU.store()
     if BU._store then return BU._store end
     local d
@@ -77,6 +87,7 @@ function BU.store()
     d.tags = d.tags or {}
     d.zones = d.zones or {}
     d.stock = d.stock or {}
+    d.touched = d.touched or {}
     -- rules keyed by category are from before the tags; the resolver never reads
     -- them, and left in place they muted the suggestions for that whole category
     local stale = {}
@@ -220,6 +231,14 @@ function BU.applyLastTags(store, key)
     return true
 end
 
+-- the player (or a run) put something in this container: from now on what it
+-- holds is their own arrangement, not the house's loot
+function BU.touch(store, key)
+    if not key then return end
+    store.touched = store.touched or {}
+    store.touched[key] = true
+end
+
 -- Where dirty or bloody clothing goes: a container tagged Laundry, else the
 -- laundry cart, else the washer; the one with most room. nil with none about.
 -- hidden (optional, a set of keys): containers never picked by their kind
@@ -259,12 +278,106 @@ function BU.tagDestination(item, tags, containers)
     return best and best.key or nil
 end
 
+-- fit: the room and the kind of container a category suits ---------------------------------------
+
+-- Where a category is at home in a house the game built, by the room's name
+-- (substrings of the room id, lower case): `rooms` suit it, `clash` do not
+-- (tools in the kitchen, food in the bedroom). A room in neither list, the
+-- outdoors and a base you built yourself (no rooms there) are neutral.
+BU.ROOM_FIT = {
+    { cats = { "Tool", "Material", "Mechanics", "VehicleMaintenance", "Paint", "Gardening", "Explosives" },
+      rooms = { "garage", "shed", "storage", "basement", "workshop", "tool", "warehouse", "mechanic", "barn", "farm",
+                "greenhouse", "utility" },
+      clash = { "kitchen", "bathroom", "bedroom", "living", "dining" } },
+    { cats = { "Camping", "Fishing", "Trapping" },
+      rooms = { "garage", "shed", "storage", "basement", "barn", "utility" },
+      clash = { "kitchen", "bathroom", "dining" } },
+    { cats = { "Food", "Cooking", "WaterContainer" },
+      rooms = { "kitchen", "pantry", "dining", "restaurant", "grocery" },
+      clash = { "bathroom", "bedroom", "laundry" } },
+    { cats = { "Clothing", "Accessory", "Bag" },
+      rooms = { "bedroom", "closet", "laundry", "dressing" },
+      clash = { "kitchen", "dining" } },
+    { cats = { "FirstAid" },
+      rooms = { "bathroom", "medical", "pharmacy", "clinic", "hospital" },
+      clash = {} },
+    { cats = { "Literature", "Entertainment", "Instrument", "Memento" },
+      rooms = { "living", "bedroom", "office", "library", "study" },
+      clash = { "kitchen", "bathroom", "garage", "shed" } },
+    { cats = { "Electronics", "Communications", "LightSource" },
+      rooms = { "office", "living", "garage", "storage", "shed" },
+      clash = { "bathroom" } },
+    { cats = { "Weapon", "Ammo", "WeaponPart", "Security" },
+      rooms = { "bedroom", "garage", "storage", "closet", "gun", "armory", "police" },
+      clash = { "kitchen", "bathroom", "dining" } },
+    { cats = { "Household" },
+      rooms = { "kitchen", "bathroom", "laundry", "closet", "storage" },
+      clash = {} },
+}
+
+-- container kinds that suit a category, matched as a substring of the container type, lower case
+BU.KIND_HINTS = {
+    Food = { "fridge", "freezer", "counter", "shelves" },
+    Cooking = { "counter", "shelves" },
+    Household = { "counter", "shelves", "sidetable" },
+    Clothing = { "wardrobe", "dresser", "clothingrack", "locker" },
+    Accessory = { "dresser", "sidetable", "wardrobe" },
+    Bag = { "wardrobe", "clothingrack", "locker" },
+    FirstAid = { "medicine", "counter" },
+    Literature = { "shelves", "bookcase", "bookshelf", "desk" },
+    Weapon = { "guncase", "gun", "locker", "wardrobe" },
+    Ammo = { "guncase", "gun", "locker", "desk" },
+    Tool = { "toolcabinet", "crate", "metal_shelves", "shelves" },
+    Material = { "crate", "metal_shelves", "shelves" },
+    Mechanics = { "toolcabinet", "metal_shelves", "crate" },
+    VehicleMaintenance = { "toolcabinet", "metal_shelves", "crate" },
+    Paint = { "metal_shelves", "crate", "shelves" },
+    Gardening = { "crate", "metal_shelves", "shelves" },
+    Camping = { "crate", "wardrobe" },
+    Electronics = { "desk", "shelves", "crate" },
+}
+
+local roomFitOf = nil      -- category -> { rooms, clash }, built on first use
+local function hit(s, words)
+    for _, w in ipairs(words) do
+        if string.find(s, w, 1, true) then return true end
+    end
+    return false
+end
+
+-- 1 when the room suits the category, -1 when it clashes, 0 when it says nothing
+function BU.roomFit(category, roomId)
+    if not category or not roomId or roomId == "" then return 0 end
+    if not roomFitOf then
+        roomFitOf = {}
+        for _, g in ipairs(BU.ROOM_FIT) do
+            for _, cat in ipairs(g.cats) do roomFitOf[cat] = g end
+        end
+    end
+    local g = roomFitOf[category]
+    if not g then return 0 end
+    local room = string.lower(roomId)
+    if hit(room, g.rooms) then return 1 end
+    if hit(room, g.clash) then return -1 end
+    return 0
+end
+
+-- does the kind of container suit the category
+function BU.kindFit(category, kind)
+    local hints = category and BU.KIND_HINTS[category] or nil
+    return hints ~= nil and hit(string.lower(kind or ""), hints)
+end
+
 -- the resolver ---------------------------------------------------------------------------------
 
 local function lowerKind(c) return string.lower(c.kind or "") end
 local function isBin(c) return BU.GARBAGE_KINDS[lowerKind(c)] == true end
 local function isLaundryKind(c) return BU.LAUNDRY_KINDS[lowerKind(c)] ~= nil end
 local function isColdKind(c) return BU.COLD_KINDS[lowerKind(c)] ~= nil end
+local function isAppliance(c)
+    local k = lowerKind(c)
+    return BU.APPLIANCE_KINDS[k] == true or hit(k, BU.APPLIANCE_WORDS)
+end
 -- any fridge or freezer, a modded one too (its type names it)
 local function isCold(c)
     local k = lowerKind(c)
@@ -307,14 +420,23 @@ end
 --   laundry   dirty or bloody clothing: a Laundry-tagged container, the cart, the washer
 --   garbage   stale or rotten perishable food: a Garbage-tagged container or a bin
 --   rule      the type's assigned container (the player's word beats every inference below)
---   contains  a container that already holds that very item type
+--   contains  a container that already holds that very item type: one the player has used,
+--             else one whose room does not clash with the category
 --   freezer   fresh perishable food (not long-life): a freezer, else a fridge
 --   tag       a container tagged with the item's category
---   category  a container that already holds that category
---   nearest   the closest container nothing points at (no rule, no tag, not cold, not a bin, not laundry)
--- A freezer or fridge is only ever picked by contains or category for food that
--- wants the cold (BU.wantsCold); a can, a bag of chips or a hammer goes there
--- only by a rule or a tag.
+--   category  a container the player has used that holds that category
+--   room / category / kind / nearest
+--             the best fit among containers whose room does not clash: a room that suits
+--             the category (a garage for tools), then the house's own loot of the category,
+--             then a kind that suits it (a tool cabinet), then the closest; the reason is
+--             the best of those it has
+--   last      nothing that fits has room: the closest container nothing points at
+-- Inference never picks a bin, an appliance (stove, microwave, dryer...) or the
+-- laundry; a freezer or fridge only for food that wants the cold
+-- (BU.wantsCold): a can, a bag of chips or a hammer goes there, or in a bin,
+-- only by a rule or a tag. A container nothing was put in yet holds the
+-- house's loot: it is not the player's arrangement, so it counts only where its
+-- room suits (BU.roomFit) and touched containers count first.
 -- Every stage but oneoff only considers containers with room for the item, so a
 -- full shelf hands on to the next stage; nothing with room anywhere returns nil.
 -- An off-limits container is left out of every stage but oneoff and rule: only
@@ -356,14 +478,24 @@ function BU.resolve(item, ctx)
     -- come first still: a rule for shirts is for clean ones
     if ruleOpen then return rule, "rule" end
     local cold = BU.wantsCold(item)
-    local matchable = shown
-    if not cold then
-        matchable = {}
-        for _, c in ipairs(shown) do
-            if not isCold(c) then matchable[#matchable + 1] = c end
+    local category = item.category
+    -- what inference may pick: never a bin, an appliance or the laundry, and the
+    -- cold only for food that wants it. `mine` are the containers the player has
+    -- used; `fits` are those whose room does not clash with the category
+    local plain, mine, fits, clashes = {}, {}, {}, {}
+    for _, c in ipairs(shown) do
+        if not isBin(c) and not isAppliance(c) and not isLaundryKind(c) and (cold or not isCold(c)) then
+            plain[#plain + 1] = c
+            if c.touched then mine[#mine + 1] = c end
+            if BU.roomFit(category, c.roomId) >= 0 then fits[#fits + 1] = c else clashes[#clashes + 1] = c end
         end
     end
-    local holds = most(matchable, function(c) return c.contents and item.fullType and c.contents[item.fullType] or 0 end)
+    -- what a container holds is the player's word once they have used it; before
+    -- that it is the house's own loot, and counts only where the room suits the
+    -- category (a screwdriver in a kitchen drawer says nothing about tools)
+    local function heldType(c) return c.contents and item.fullType and c.contents[item.fullType] or 0 end
+    local function heldCat(c) return c.cats and category and c.cats[category] or 0 end
+    local holds = most(mine, heldType) or most(fits, heldType)
     if holds then return holds.key, "contains" end
     if cold then
         local cold = most(shown, function(c)
@@ -376,15 +508,37 @@ function BU.resolve(item, ctx)
     end
     local tagged = BU.tagDestination(item, ctx.tags, open)
     if tagged then return tagged, "tag" end
-    local cat = most(matchable, function(c) return c.cats and item.category and c.cats[item.category] or 0 end)
-    if cat then return cat.key, "category" end
+    local own = most(mine, heldCat)
+    if own then return own.key, "category" end
+    -- The best fit among the rest: a room that suits the category, then the
+    -- house's loot of that category, then a kind of container that suits it, then
+    -- the nearest. A container a rule or tag points at is for those, so it only
+    -- comes in here when it already holds the category.
+    local function pointed(c)
+        return (ctx.ruleCounts and ctx.ruleCounts[c.key] or 0) > 0 or (ctx.tags and ctx.tags[c.key] ~= nil)
+    end
+    local best, bestScore, bestD, why = nil, -1, nil, nil
+    for _, c in ipairs(fits) do
+        local held = heldCat(c) > 0
+        if held or not pointed(c) then
+            local room = BU.roomFit(category, c.roomId) > 0
+            local kind = BU.kindFit(category, c.kind)
+            local score = (room and 4 or 0) + (held and 2 or 0) + (kind and 1 or 0)
+            local d = ctx.pos and BU.dist(ctx.pos, c) or 0
+            if score > bestScore or (score == bestScore and d < bestD) then
+                best, bestScore, bestD = c, score, d
+                why = room and "room" or held and "category" or kind and "kind" or "nearest"
+            end
+        end
+    end
+    if best then return best.key, why end
+    -- nothing that fits has room: the nearest free container, clash or not, sooner than the car
     local free = {}
-    for _, c in ipairs(shown) do
-        local pointed = (ctx.ruleCounts and ctx.ruleCounts[c.key] or 0) > 0 or (ctx.tags and ctx.tags[c.key] ~= nil)
-        if not pointed and not isCold(c) and not isBin(c) and not isLaundryKind(c) then free[#free + 1] = c end
+    for _, c in ipairs(clashes) do
+        if not pointed(c) then free[#free + 1] = c end
     end
     local near = nearest(free, ctx.pos)
-    if near then return near.key, "nearest" end
+    if near then return near.key, "last" end
     return nil
 end
 
@@ -493,72 +647,21 @@ local function containerByKey(containers)
     return byKey
 end
 
--- container kinds that suit a display category, when nothing in the base says
--- otherwise; matched as a substring of the container type, lower case
-BU.KIND_HINTS = {
-    Food = { "fridge", "freezer", "counter", "shelves" },
-    Clothing = { "wardrobe", "dresser", "clothingrack", "locker" },
-    FirstAid = { "medicine", "counter" },
-    Literature = { "shelves", "bookcase", "bookshelf", "desk" },
-    Weapon = { "guncase", "gun", "locker", "wardrobe" },
-    Ammo = { "guncase", "gun", "locker", "desk" },
-    Tool = { "toolcabinet", "crate", "metal_shelves", "shelves" },
-    Material = { "crate", "metal_shelves", "shelves" },
-    Camping = { "crate", "wardrobe" },
-    Electronics = { "desk", "shelves", "crate" },
-}
+-- the resolver's reasons that say something about the type, worth a rule
+local SUGGESTED = { contains = true, freezer = true, category = true, room = true, kind = true }
 
-local function kindMatches(c, hints)
-    local k = string.lower(c.kind or "")
-    for i, h in ipairs(hints) do
-        if string.find(k, h, 1, true) then return i end
-    end
-    return nil
-end
-
--- A home for each group that has no rule yet: the container already holding
--- most of that type; else, for perishable food, the fridge or freezer with
--- most room; else the container holding most of the category; else the first
--- container of a kind that suits the category. Fridges and freezers only for
--- food that wants the cold (BU.wantsCold). Returns { [fullType] = key }.
+-- A home for each group that has no rule yet, by the resolver's own reading of
+-- the base (what is held, the cold for fresh food, the room, the kind), with no
+-- tags and no one-offs; nearest-free and last-resort picks are not suggested.
+-- Returns { [fullType] = key }.
 function BU.suggest(groups, containers, rules)
     local out = {}
     for _, g in ipairs(groups) do
-        local probe = { fullType = g.fullType, category = g.category }
+        local probe = { fullType = g.fullType, category = g.category, food = g.food, perishable = g.perishable,
+                        longLife = g.longLife }
         if not BU.destinationOf(probe, rules, nil) then
-            local cold = BU.wantsCold({ perishable = g.perishable, longLife = g.longLife })
-            local cands = containers
-            if not cold then
-                cands = {}
-                for _, c in ipairs(containers) do
-                    if not isCold(c) then cands[#cands + 1] = c end
-                end
-            end
-            local best, bestN = nil, 0
-            for _, c in ipairs(cands) do
-                local n = c.contents and c.contents[g.fullType] or 0
-                if n > bestN then best, bestN = c, n end
-            end
-            if not best and cold then
-                local room = -1
-                for _, c in ipairs(containers) do
-                    if isCold(c) and (c.free or 0) > room then best, room = c, c.free or 0 end
-                end
-            end
-            if not best then
-                for _, c in ipairs(cands) do
-                    local n = c.cats and g.category and c.cats[g.category] or 0
-                    if n > bestN then best, bestN = c, n end
-                end
-            end
-            if not best and g.category and BU.KIND_HINTS[g.category] then
-                local rank = 99
-                for _, c in ipairs(cands) do
-                    local r = kindMatches(c, BU.KIND_HINTS[g.category])
-                    if r and r < rank then best, rank = c, r end
-                end
-            end
-            if best then out[g.fullType] = best.key end
+            local key, how = BU.resolve(probe, { containers = containers })
+            if key and SUGGESTED[how] then out[g.fullType] = key end
         end
     end
     return out

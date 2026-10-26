@@ -12,6 +12,7 @@
 -- clears the queue before it walks.
 
 require "TimedActions/ISBaseTimedAction"
+require "TimedActions/ISInventoryTransferAction"
 require "BaseUnloader_Scan"
 
 local BU = BaseUnloader
@@ -282,7 +283,7 @@ local function deliverStep(state, carried)
         if fits then
             local from = r.item:getContainer()
             ISTimedActionQueue.add(ISInventoryTransferAction:new(state.player, r.item, from, row.container))
-            state.expect[#state.expect + 1] = { record = r, from = from, delivering = true }
+            state.expect[#state.expect + 1] = { record = r, from = from, delivering = true, key = stop.key }
             use[stop.key] = (use[stop.key] or 0) + (r.weight or 0)
         else
             -- full after all: somewhere else tagged for it, or it stays in the bag
@@ -394,6 +395,8 @@ local function afterStep(state)
             if e.delivering then
                 state.delivered = (state.delivered or 0) + 1
                 state.plan.carried[idKey(e.record.id)] = nil
+                -- the run put it there: that container is in use now
+                BU.touch(BU.store(), e.key)
             end
         elseif not e.delivering then
             -- did not leave the source: not carried after all
@@ -480,6 +483,19 @@ end
 function R.stop(player)
     local state = R.active[player:getPlayerNum()]
     if state then R.pause(state) end
+end
+
+-- Whatever the player puts in a base container by hand marks it as used, so
+-- its contents count as their arrangement (BU.resolve). transferItem is the
+-- step that moves each item; new() is left alone (MP reads its parameter names).
+if ISInventoryTransferAction and ISInventoryTransferAction.transferItem and not R.transferHooked then
+    R.transferHooked = true
+    local transferItem = ISInventoryTransferAction.transferItem
+    ISInventoryTransferAction.transferItem = function(self, item, ...)
+        local result = transferItem(self, item, ...)
+        pcall(S.noteTouched, self.destContainer)
+        return result
+    end
 end
 
 Events.OnTick.Add(R.onTick)

@@ -635,6 +635,24 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   tagged (n)" in grey under it (the room headings went: the room is on each row's second line). A
   tagged row has a blue stripe and tint and its categories in blue; an untagged one reads "no
   categories".
+- **Smarter default placement** (2026-10-25, user: tools and materials went into kitchen cabinets,
+  random things into bins). One-offs, rules and tags are unchanged; what changed is what `BU.resolve`
+  infers when nothing says. Bins, dumpsters and composters, appliances (`BU.APPLIANCE_WORDS`: stoves,
+  ovens, microwaves, toasters, coffee makers, barbecues, fireplaces, vending machines, tills, post
+  boxes, troughs and hutches; the dryer) and the washer and laundry cart are never inferred into, so
+  "already has some" and "has the category" no longer read a town bin's junk. Rooms count now
+  (`BU.ROOM_FIT`, row `roomId`): each category has rooms that suit it (tools: garage, shed, storage,
+  basement...) and rooms that clash (tools: kitchen, bathroom, bedroom, living and dining room). The
+  last stages became one best fit: a suiting room, then the house's own loot of the category, then a
+  kind of container that suits it (`BU.KIND_HINTS`, now also for Cooking, Household, Mechanics,
+  Paint, Gardening and others), then the nearest; the window says "suits the room" or "suits the
+  container". A container nothing was put in yet holds the house's loot, so its contents count only
+  where the room does not clash (a screwdriver in a kitchen drawer no longer pulls every tool there).
+  Containers the player has used (`store.touched`, set by a run's deliveries and by any drop by hand
+  into a base container, via a wrap of `ISInventoryTransferAction.transferItem`) count first: their
+  contents are the player's own arrangement, clashing room or not. In a base you built (no rooms) the
+  kind of container decides. When only clashing rooms have space, the nearest of them takes it
+  ("nowhere better") sooner than it staying in the car. Suggest reads the base the same way.
 
 ## 1.3.0 - 2026-10-17
 

@@ -95,7 +95,8 @@ function BU_ItemList:doDrawItem(y, item, alt)
         if how == "oneoff" then r, gg, b = 0.6, 0.75, 0.95 end
         if how == "mixed" then r, gg, b = 0.85, 0.8, 0.5 end
         if how == "laundry" or how == "garbage" or how == "freezer" then r, gg, b = 0.75, 0.7, 0.95 end
-        if how == "nearest" or how == "category" or how == "contains" then r, gg, b = 0.65, 0.8, 0.8 end
+        if how == "nearest" or how == "category" or how == "contains" or how == "room" or how == "kind" then r, gg, b = 0.65, 0.8, 0.8 end
+        if how == "last" then r, gg, b = 0.85, 0.8, 0.5 end
         local why = getTextOrNull("IGUI_BU_Why_" .. tostring(how))
         local text = getText("IGUI_BU_GoesTo", dest)
         if why then text = text .. "  (" .. why .. ")" end

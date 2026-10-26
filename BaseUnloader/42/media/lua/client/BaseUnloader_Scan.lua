@@ -197,7 +197,9 @@ function S.rename(container, key, name)
     end
 end
 
-function S.roomName(sq)
+-- the game's name for the room a square is in ("kitchen", "garagestorage"), lower
+-- case; nil outdoors and in a base you built (the game gives those no rooms)
+function S.roomId(sq)
     local name
     pcall(function()
         local room = sq:getRoom()
@@ -206,7 +208,41 @@ function S.roomName(sq)
             if (not name or name == "") and room.getRoomDef and room:getRoomDef() then name = room:getRoomDef():getName() end
         end
     end)
-    return BU.roomWords(name)
+    if not name or name == "" then return nil end
+    return string.lower(name)
+end
+
+function S.roomName(sq)
+    return BU.roomWords(S.roomId(sq))
+end
+
+-- the key of a world object's container, nil for a character's, a bag's or a vehicle's
+function S.keyOf(container)
+    local key
+    pcall(function()
+        if container:getContainingItem() or container:getVehiclePart() then return end
+        local obj = container:getParent()
+        if not obj or instanceof(obj, "IsoGameCharacter") or instanceof(obj, "BaseVehicle") then return end
+        local sq = obj:getSquare()
+        if not sq then return end
+        local n = obj.getContainerCount and obj:getContainerCount() or 1
+        for ci = 0, n - 1 do
+            local c = ci == 0 and obj:getContainer() or obj:getContainerByIndex(ci)
+            if c == container then key = BU.key(sq:getX(), sq:getY(), sq:getZ(), container:getType(), ci) end
+        end
+    end)
+    return key
+end
+
+-- a container got something put in by hand or by a run: remembered as used,
+-- inside a base zone (anywhere while no zone is drawn)
+function S.noteTouched(container)
+    local key = container and S.keyOf(container) or nil
+    local k = key and BU.parseKey(key) or nil
+    if not k or k.kind == "floor" then return end
+    local store = BU.store()
+    if #store.zones > 0 and not BU.areaAt(BU.zoneAreas(store.zones), k.x, k.y, k.z, S.floors()) then return end
+    BU.touch(store, key)
 end
 
 function S.floorLabel(z)
@@ -277,10 +313,11 @@ function S.row(obj, container, index, sq, zone, player)
     local contents, cats, count = histograms(container)
     local capacity, used = S.capacity(container, player), 0
     pcall(function() used = container:getCapacityWeight() end)
+    local roomId = S.roomId(sq)
     local row = { key = key, container = container, object = obj, x = x, y = y, z = z, kind = kind,
-                  kindLabel = S.kindLabel(kind), name = name, named = named, room = S.roomName(sq),
+                  kindLabel = S.kindLabel(kind), name = name, named = named, roomId = roomId, room = BU.roomWords(roomId),
                   contents = contents, cats = cats, count = count, capacity = capacity, used = used,
-                  free = math.max(0, capacity - used) }
+                  free = math.max(0, capacity - used), touched = BU.store().touched[key] == true }
     row.place = S.placeLabel(row, zone)
     if not row.room and zone then
         local dx, dy = x - zone.cx, y - zone.cy
