@@ -3,9 +3,12 @@
 --
 -- The legend lists each entry with its symbol in its pen colour, what it
 -- means and how many are on the map. Hovering a row outlines those symbols on
--- the map; clicking it keeps them outlined until clicked again. Edit opens
--- the editor (MapLegend_Editor), the small button folds the legend down to
--- its title.
+-- the map. Clicking it picks that symbol and pen in the symbols panel, ready
+-- to draw (the cursor carries the symbol, as when it is picked in the panel),
+-- and keeps those symbols outlined; clicking it again puts the pen down. With
+-- no pen, or not the entry's pen, the row only outlines and a line under the
+-- rows says which pen it needs. Edit opens the editor (MapLegend_Editor), the
+-- small button folds the legend down to its title.
 --
 -- In the symbols panel: picking a symbol the legend has switches to the
 -- legend's pen for it (when the character carries that pen), and each symbol
@@ -29,6 +32,7 @@ local ROW_HGT = ICON + 4
 local MIN_WIDTH = 180
 local RECOUNT_FRAMES = 30
 local HIGHLIGHT = { r = 1.0, g = 0.85, b = 0.2 }
+local NOTE_MS = 4000
 
 MapLegendPanel = ISPanel:derive("MapLegendPanel")
 
@@ -187,6 +191,8 @@ function MapLegendPanel:layout(entries, collapsed)
             local w = PAD + ICON + PAD + tm:MeasureStringX(UIFont.Small, e.text) + PAD + tm:MeasureStringX(UIFont.Small, countText) + PAD
             width = math.max(width, w)
         end
+        local note = self:note()
+        if note then width = math.max(width, PAD + tm:MeasureStringX(UIFont.Small, note) + PAD) end
     end
     width = math.max(MIN_WIDTH, math.min(width, self.mapUI.width * 0.4))
     local height = self:headerHeight()
@@ -194,6 +200,7 @@ function MapLegendPanel:layout(entries, collapsed)
         local extra = 0
         if #entries == 0 or #entries > rows then extra = FONT_HGT_SMALL + 4 end
         if self.unlisted and self.unlisted > 0 then extra = extra + FONT_HGT_SMALL + 4 end
+        if self:note() then extra = extra + FONT_HGT_SMALL + 4 end
         height = height + rows * ROW_HGT + extra + PAD / 2
     end
     self.rows = rows
@@ -270,21 +277,48 @@ function MapLegendPanel:render()
     end
     if self.unlisted and self.unlisted > 0 then
         self:drawText(getText("IGUI_ML_Unlisted", self.unlisted), PAD, y + 2, 0.6, 0.6, 0.6, 1, UIFont.Small)
+        y = y + FONT_HGT_SMALL + 4
+    end
+    local note = self:note()
+    if note then
+        self:drawText(note, PAD, y + 2, HIGHLIGHT.r, HIGHLIGHT.g, HIGHLIGHT.b, 1, UIFont.Small)
     end
 end
 
--- A click on a row pins its outline (again unpins it). The panel takes the
--- click either way, so the map underneath does not start a drag.
+-- a line for a few seconds under the rows: how to draw, or which pen is missing
+function MapLegendPanel:say(key, arg)
+    self.noteText = key and getText(key, arg) or nil
+    self.noteTime = getTimestampMs()
+end
+
+function MapLegendPanel:note()
+    if self.noteText and getTimestampMs() - (self.noteTime or 0) < NOTE_MS then return self.noteText end
+    return nil
+end
+
+-- A click on a row picks its symbol and pen to draw with and pins its
+-- outline. Again while that pen is still in hand puts it down and unpins; a
+-- pinned row that cannot be drawn (no pen) unpins. The panel takes the click
+-- either way, so the map underneath does not start a drag.
 function MapLegendPanel:onMouseDown(x, y)
     local i = not ML.profile().collapsed and self:rowAt(y)
     if i then
         local e = self:entries()[i]
         local p = self.pinned
-        if p and p.sym == e.sym and ML.sameColor(p.r, p.g, p.b, e.r, e.g, e.b) then
+        local same = p and p.sym == e.sym and ML.sameColor(p.r, p.g, p.b, e.r, e.g, e.b)
+        if same and self:isArmed(e) then
+            self:disarm()
+            self.pinned = nil
+            self:say(nil)
+            return true
+        end
+        local key, arg = self:arm(e)
+        if key and same then
             self.pinned = nil
         else
             self.pinned = { sym = e.sym, r = e.r, g = e.g, b = e.b }
         end
+        self:say(key or "IGUI_ML_Armed", arg)
     end
     return true
 end
@@ -346,6 +380,52 @@ function ISWorldMapSymbols:onButtonClick(button)
         local ok, err = pcall(matchColor, self, button.tex, vanillaClick)
         if not ok then print("[MapLegend] " .. tostring(err)) end
     end
+end
+
+-- The legend row clicked: the symbols panel's place tool with that symbol
+-- and pen, as if both were clicked in the panel. Returns nothing when it is
+-- ready to draw, else why not (a translation key and its argument).
+function MapLegendPanel:arm(e)
+    local ui = self.mapUI.symbolsUI
+    if not ui or not ui.tools then return "IGUI_ML_NoSymbol" end
+    local symBtn
+    for _, b in ipairs(ui.buttonList or {}) do
+        if b.symbol and b.tex == e.sym then symBtn = b end
+    end
+    -- a symbol from a mod that is no longer loaded
+    if not symBtn then return "IGUI_ML_NoSymbol" end
+    -- vanilla turns every symbol off when the character carries nothing to write with
+    if not symBtn.enable then return "IGUI_ML_NeedPen" end
+    local penBtn
+    for _, b in ipairs(ui.colorButtons or {}) do
+        local c = b.buttonInfo.colorInfo
+        if ML.sameColor(e.r, e.g, e.b, c:getR(), c:getG(), c:getB()) then penBtn = b end
+    end
+    if not penBtn or not penBtn.enable then
+        local pen = ML.colorName(e, panelColors(ui))
+        if pen == "" then return "IGUI_ML_NeedPen" end
+        return "IGUI_ML_NeedThisPen", pen
+    end
+    vanillaClick(ui, penBtn)
+    -- a second click on the picked symbol would put it down
+    if ui.selectedSymbol ~= symBtn then vanillaClick(ui, symBtn) end
+    -- the panel shows the symbol's tab, so its picked border is in view
+    pcall(function() ui.panel:activateView(getText("IGUI_Map_Tab" .. symBtn.tab)) end)
+    return nil
+end
+
+-- the place tool is out with this entry's symbol and pen
+function MapLegendPanel:isArmed(e)
+    local ui = self.mapUI.symbolsUI
+    if not ui or not ui.tools or ui.currentTool ~= ui.tools.AddSymbol then return false end
+    local sel, c = ui.selectedSymbol, ui.currentColor
+    return sel ~= nil and sel.tex == e.sym and c ~= nil and ML.sameColor(e.r, e.g, e.b, c:getR(), c:getG(), c:getB())
+end
+
+function MapLegendPanel:disarm()
+    local ui = self.mapUI.symbolsUI
+    ui:setCurrentTool(nil)
+    ui.selectedSymbol = nil
 end
 
 local vanillaCheckInventory = ISWorldMapSymbols.checkInventory

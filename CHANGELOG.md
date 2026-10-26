@@ -120,9 +120,13 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   apart). Each row shows the symbol tinted, the meaning and how many of it the players drew
   (`isUserDefined` texture symbols, recounted every 30 frames or on an edit), plus a line for
   placed symbols the legend does not cover. Hover a row to outline those symbols
-  (`renderOutline`, called after `ISWorldMap:prerender`, where vanilla draws its own outlines);
-  click to keep them outlined. The fold button keeps only the title. It sits above the joypad
-  prompts when a pad has focus.
+  (`renderOutline`, called after `ISWorldMap:prerender`, where vanilla draws its own outlines).
+  Click a row to draw with it: the symbols panel's place tool comes out with that symbol and pen
+  (vanilla's own colour and symbol clicks, so the cursor carries the symbol, even with the panel
+  closed; the panel shows the symbol's tab), and its symbols stay outlined. Click it again to put
+  the pen down. Without that pen (or any), the row only outlines and a line under the rows says
+  which pen it needs ("You need a Red Pen to draw this one."). The fold button keeps only the
+  title. It sits above the joypad prompts when a pad has focus.
 - **Editor** (the legend's Edit button): the entries (reorder, remove, click to edit), then the
   form: symbol by the vanilla tabs, pen colour (the live symbols panel's pens, so modded pens
   show; the five vanilla ones otherwise), and the meaning typed or picked from 24 presets. An
