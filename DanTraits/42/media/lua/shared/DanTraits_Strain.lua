@@ -1,4 +1,6 @@
 -- Project Zomboid Vitality Project: strain, the cumulative cost of fighting.
+-- Players see it as Burnout (renamed 2026-10-27: the game has a muscle strain
+-- of its own); the code, sandbox keys and mod data keep "strain".
 -- Not a trait: every character has it (sandbox option StrainEnabled; off:
 -- nothing is tracked, the moodle shows nothing, experience is the game's and
 -- the four strain traits do nothing). Design: plans/strain.md; the numbers were
@@ -12,7 +14,9 @@
 --
 -- Fills:
 --   a kill            ST.KILL x (1 + k / ST.KILL_RAMP), k the kills since the last
---                     night's sleep; a kill from a vehicle counts ST.VEHICLE of one
+--                     night's sleep; a kill from a vehicle counts ST.VEHICLE of one,
+--                     a kill from a distance less (ST.NEAR_TILES full, down to
+--                     ST.FAR_SHARE at ST.FAR_TILES: a shot from across the street)
 --   panic over 40     ST.PANIC a minute
 --   a new wound       scratch, laceration, deep wound (ST.WOUND); knocked down ST.KNOCK
 --   a bite            ST.BITE; health under 25: ST.LOW_HEALTH once a day (shocks)
@@ -33,6 +37,10 @@
 -- A fever halves what calm hours and sleep take off. Combat strain (kills,
 -- panic, wounds, knockdowns) is x0.6 for the Desensitized. The first week
 -- counts half (sandbox StrainEarlyDays for how long, StrainEarlyRate for how much).
+-- Hardened (2026-10-27, from a Workshop comment): you get used to it. Combat
+-- strain falls with the character's lifetime kills (up to ST.HARDEN_KILL_CUT
+-- off at ST.HARDEN_KILLS) and the days survived (up to ST.HARDEN_DAY_CUT off at
+-- ST.HARDEN_DAYS), the two multiplied; the health panel says how far along.
 --
 -- Tiers: At Ease (under 10, combat experience x1.1), Frayed (25), Worn Down
 -- (50, unhappiness held at 15), Burnt Out (75, at 30), Breaking Point (100).
@@ -97,6 +105,9 @@ local ST = {
     KILL = 0.1,              -- a melee kill...
     KILL_RAMP = 100,         -- ...x (1 + kills since the last night / this)
     VEHICLE = 1 / 3,         -- a kill from a vehicle counts this share of one (cost and count)
+    NEAR_TILES = 3,          -- a kill this close counts in full (melee, a spear's reach)...
+    FAR_TILES = 12,          -- ...falling to this share at this far and beyond (cost and count)
+    FAR_SHARE = 0.4,
     PANIC_AT = 40,           -- panic (0..100) over this...
     PANIC = 0.1,             -- ...costs this a minute
     WOUND = { scratch = 1, cut = 2, deep = 3 },
@@ -133,6 +144,8 @@ local ST = {
     ADDICT = 0.25,           -- an Alcoholic's drink, a Smoker's cigarette
     -- who
     DESENSITIZED = 0.6,      -- combat strain
+    HARDEN_KILLS = 2000, HARDEN_KILL_CUT = 0.4,   -- combat strain off by lifetime kills...
+    HARDEN_DAYS = 90, HARDEN_DAY_CUT = 0.2,       -- ...and by days survived (multiplied)
     LEVEL_HEADED = 0.5, HIGHLY_STRUNG = 1.5,
     UNWINDS = 1.5, CANT_SWITCH = 0.67, CANT_SWITCH_VARIETY = 5,
     -- tiers
@@ -247,8 +260,28 @@ function DanTraits_StrainFactor(player)
     return 1 + ST.CONDITION * DanTraits_StrainLevel(player) / 100
 end
 
+-- hardened: the combat strain multiplier from lifetime kills and days survived
+-- (1 for a new character, ST's cuts multiplied at the full counts)
+function DanTraits_StrainHardening(player)
+    if not player then return 1 end
+    local kills, hours = 0, 0
+    pcall(function() kills = player:getZombieKills() or 0 end)
+    pcall(function() hours = player:getHoursSurvived() or 0 end)
+    local byKills = 1 - ST.HARDEN_KILL_CUT * math.min(1, (tonumber(kills) or 0) / ST.HARDEN_KILLS)
+    local byDays = 1 - ST.HARDEN_DAY_CUT * math.min(1, (tonumber(hours) or 0) / 24 / ST.HARDEN_DAYS)
+    return byKills * byDays
+end
+
+-- a kill's share by how far away the zombie was (nil: in full)
+function DanTraits_StrainDistanceShare(dist)
+    dist = tonumber(dist)
+    if not dist or dist <= ST.NEAR_TILES then return 1 end
+    local t = math.min(1, (dist - ST.NEAR_TILES) / (ST.FAR_TILES - ST.NEAR_TILES))
+    return 1 - (1 - ST.FAR_SHARE) * t
+end
+
 -- strain gained: amount before the multipliers; combat marks a fight (the
--- calm clock starts over) and takes the Desensitized cut
+-- calm clock starts over) and takes the Desensitized and hardened cuts
 function DanTraits_StrainAdd(player, source, amount, combat)
     amount = tonumber(amount) or 0
     if not player or amount <= 0 or not strainOn() then return 0 end
@@ -261,6 +294,7 @@ function DanTraits_StrainAdd(player, source, amount, combat)
     if combat then
         d.stFightH = nowHours()
         if hasVanillaTrait(player, "base:desensitized") then k = k * ST.DESENSITIZED end
+        k = k * DanTraits_StrainHardening(player)
     end
     local add = amount * k
     if add <= 0 then return 0 end
@@ -411,10 +445,10 @@ if Events and Events.AddXP then Events.AddXP.Add(onStrainAddXP) end
 
 -- kills -------------------------------------------------------------------------------
 
-function DanTraits_StrainKill(player, fromVehicle)
+function DanTraits_StrainKill(player, fromVehicle, dist)
     if not player or not strainOn() then return 0 end
     local d = DanTraits_Data(player)
-    local share = fromVehicle and ST.VEHICLE or 1
+    local share = fromVehicle and ST.VEHICLE or DanTraits_StrainDistanceShare(dist)
     d.stKills = (d.stKills or 0) + share
     return DanTraits_StrainAdd(player, fromVehicle and "vehicleKill" or "kill", ST.KILL * share * (1 + d.stKills / ST.KILL_RAMP), true)
 end
@@ -427,9 +461,10 @@ local function onZombieDead(zombie)
     for i = 0, 3 do
         local player = getSpecificPlayer(i)
         if player and player == killer then
-            local inCar = false
+            local inCar, dist = false, nil
             pcall(function() inCar = player:getVehicle() ~= nil end)
-            DanTraits_StrainKill(player, inCar)
+            pcall(function() dist = zombie:DistTo(player) end)
+            DanTraits_StrainKill(player, inCar, dist)
             return
         end
     end

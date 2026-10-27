@@ -135,6 +135,17 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Changed
 
+- **Strain is Burnout to players; hardening and distance** (2026-10-27, from Workshop
+  comments; `plans/strain.md` "Burnout, hardening and distance"). The game has a muscle strain
+  of its own, so every player-facing string says Burnout (sandbox labels, trait descriptions,
+  the health panel header, README, Steam notes); code, sandbox keys and mod data keep
+  `strain`. **Hardened:** combat strain x (1 - 0.4 x kills/2000) x (1 - 0.2 x days/90), each
+  capped, lifetime kills from `getZombieKills`, days from `getHoursSurvived`
+  (`DanTraits_StrainHardening`, `ST.HARDEN_*`); the health panel shows "Hardened: N% less" from
+  5%. **Distance:** a kill counts in full within 3 tiles, down to 0.4 at 12+, cost and count
+  (`DanTraits_StrainDistanceShare`, `ST.NEAR_TILES` / `FAR_TILES` / `FAR_SHARE`, read with
+  `zombie:DistTo`). `plans/strain_sim.py` models both and has a three-month table.
+
 - **Fabric protector lasts longer and keeps clothes fresh** (2026-10-27,
   `DanTraits_LaundryGear.lua`, `DanTraits_Laundry.lua` `L.sweat`). `PROTECT_PER_WASH` 0.34 -> 0.2
   (five washes), `PROTECT_WEAR` 0.02 -> 0.005 a hit minute (about 200 minutes of fighting); new

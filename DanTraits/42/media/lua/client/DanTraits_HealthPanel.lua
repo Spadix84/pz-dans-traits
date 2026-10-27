@@ -40,11 +40,12 @@
 -- due, red once it has worn off. Not shown for another player in multiplayer:
 -- their mod data is not sent to the doctor.
 --
--- Strain: under that, your own character's strain tier (DanTraits_Strain.lua)
--- and whether it got worse or eased over the last hour. Yourself only, and
--- only from Frayed or while it is getting worse (the moodle covers the rest).
+-- Burnout (strain in the code): under that, your own character's tier
+-- (DanTraits_Strain.lua) and whether it got worse or eased over the last hour,
+-- then how hardened they are once that takes 5% or more off. Yourself only,
+-- and only from Frayed or while it is getting worse (the moodle covers the rest).
 --
--- Blood and Strain are one status each: the header and the first line share
+-- Blood and Burnout are one status each: the header and the first line share
 -- a row, any further lines sit under the first. Medication is a list of
 -- drugs, so it keeps a header row of its own. The body part list moves down
 -- to make room. What the character has learned about themselves (migraine
@@ -396,7 +397,12 @@ local function strainLines(patient)
     local level = math.max(-1, math.min(4, tonumber(s.moodle) or 0))
     if level <= 0 and s.way ~= "rising" then return {} end
     local name = t(level < 0 and "StrainEase" or ("Strain" .. level))
-    return { { name .. ", " .. t("Strain" .. s.way), STRAIN_COLOUR[level] or GREY } }
+    local out = { { name .. ", " .. t("Strain" .. s.way), STRAIN_COLOUR[level] or GREY } }
+    -- hardened: how much less the fighting wears on you now
+    local hard = DanTraits_StrainHardening and DanTraits_StrainHardening(patient) or 1
+    local off = math.floor((1 - hard) * 100 + 0.5)
+    if off >= 5 then out[#out + 1] = { getText("UI_DanTraits_health_StrainHardened", tostring(off)), GREY } end
+    return out
 end
 DanTraits_HealthStrainLines = strainLines
 

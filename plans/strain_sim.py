@@ -1,4 +1,4 @@
-"""Strain day simulator (plans/strain.md).
+"""Strain day simulator (plans/strain.md). Players see it as Burnout (2026-10-27).
 
 Runs play patterns day by day so the strain numbers can be tuned before any
 Lua is written. Every number lives in P; change one and run again:
@@ -16,6 +16,7 @@ P = {
     "kill": 0.1,            # per melee kill
     "kill_ramp": 100,       # kill k of the day costs kill x (1 + k / kill_ramp); resets on sleep
     "vehicle_kill": 1 / 3,  # a vehicle kill counts as this share of a kill (cost and count)
+    "far_share": 0.4,       # a kill 12+ tiles away counts this share (full within 3; linear between)
     "panic_min": 0.1,       # per minute with panic over 40
     "hit": {"scratch": 1, "laceration": 2, "deep": 3, "grab": 1.5},
     "bite": 50,             # each bite
@@ -47,7 +48,17 @@ P = {
     "early_days": 7,        # strain gained x early_mult for the first week
     "early_mult": 0.5,
     "break_reset": 60,      # Breaking Point: shutdown, then strain drops to this
+    # hardened (2026-10-27): combat strain x (1 - kill_cut x min(1, kills / kills_full))
+    #                                       x (1 - day_cut x min(1, days / days_full))
+    "harden_kills": 2000, "harden_kill_cut": 0.4,
+    "harden_days": 90, "harden_day_cut": 0.2,
 }
+
+
+def hardening(lifetime_kills, days_survived):
+    by_kills = 1 - P["harden_kill_cut"] * min(1, lifetime_kills / P["harden_kills"])
+    by_days = 1 - P["harden_day_cut"] * min(1, days_survived / P["harden_days"])
+    return by_kills * by_days
 
 TRAITS = {
     "levelheaded": {"gain": 0.5},
@@ -86,20 +97,22 @@ def tier(s):
     return "-"
 
 
-def outing_cost(day, traits):
+def outing_cost(day, traits, harden=1.0):
     t = {k: 1.0 for k in ("gain", "combat")}
     for name in traits:
         for k, v in TRAITS[name].items():
             if k in t:
                 t[k] *= v
-    kills = day.get("kills", 0) + day.get("vkills", 0) * P["vehicle_kill"]
+    # "far": the share of the day's kills made from 12+ tiles (a shooter)
+    far = day.get("far", 0)
+    kills = day.get("kills", 0) * (1 - far + far * P["far_share"]) + day.get("vkills", 0) * P["vehicle_kill"]
     k_cost = 0.0
     n = int(round(kills))
     for k in range(1, n + 1):
         k_cost += P["kill"] * (1 + k / P["kill_ramp"])
     combat = k_cost + day.get("panic", 0) * P["panic_min"]
     combat += sum(P["hit"][h] for h in day.get("hits", []))
-    combat *= t["combat"]
+    combat *= t["combat"] * harden
     shock = day.get("bites", 0) * P["bite"] + (P["low_health"] if day.get("low_health") else 0)
     ill = 24 * (day.get("fever", 0) * P["fever"] + day.get("sepsis", 0) * P["sepsis"]
                 + day.get("food_sick", 0) * P["food_sick"] + day.get("pain", 0) * P["pain"])
@@ -139,13 +152,15 @@ def withdrawal_gain(day, alcoholic, smoker):
     return g
 
 
-def run(pattern, days=21, start_day=8, traits=(), alcoholic=False, smoker=False, s=0.0):
+def run(pattern, days=21, start_day=8, traits=(), alcoholic=False, smoker=False, s=0.0, lifetime=0, harden=True):
     rows, breaks = [], 0
     prev_drunk = False
     for i in range(days):
         day = pattern[i % len(pattern)]
         game_day = start_day + i
-        gain = outing_cost(day, traits) + withdrawal_gain(day, alcoholic, smoker)
+        h = hardening(lifetime, game_day) if harden else 1.0
+        gain = outing_cost(day, traits, h) + withdrawal_gain(day, alcoholic, smoker)
+        lifetime += day.get("kills", 0)
         if prev_drunk:
             gain += P["hangover"]
         if game_day <= P["early_days"]:
@@ -170,6 +185,7 @@ HORDE = {"name": "horde day", "kills": 150, "panic": 60,
 ROUTINE = ["shower", "meal2", "read"]
 BUSY_R = dict(BUSY, name="busy + evening routine", comforts=ROUTINE)
 HORDE_R = dict(HORDE, name="horde + shower, meal", comforts=["shower", "meal2"])
+HORDE_GUN = dict(HORDE, name="horde, half the kills shot from range", far=0.5)
 DAY_OFF = {"name": "full day off at home", "calm": 16,
            "comforts": ["shower", "laundry", "meal2", "read", "pumped"]}
 LAZY = {"name": "lazy day at home", "calm": 16}
@@ -194,6 +210,7 @@ PATTERNS = [
     ("Horde every day, Desensitized", [HORDE], ("desensitized",)),
     ("Rough week, Level Headed", [HORDE, HORDE, HORDE, HORDE, DAY_OFF, DAY_OFF, DAY_OFF], ("levelheaded",)),
     ("Rough week, High Strung", [HORDE, HORDE, HORDE, HORDE, DAY_OFF, DAY_OFF, DAY_OFF], ("highlystrung",)),
+    ("Horde every day, half shot from range", [HORDE_GUN], ()),
 ]
 
 
@@ -241,8 +258,24 @@ def alcoholic_week():
     print()
 
 
+def long_run():
+    print("## Hardened: three months from day 8 (lifetime kills from 0)" + chr(10))
+    print("| Pattern | Day 30 | Day 60 | Day 98 | Peak after day 60 | Breaks | Kills | Hardening at the end |")
+    print("|---|---|---|---|---|---|---|---|")
+    for name, pat in (("Busy every day, nothing after", [BUSY]),
+                      ("Horde every day, shower + meal", [HORDE_R]),
+                      ("Rough week: 4 horde days, then home", [HORDE, HORDE, HORDE, HORDE, DAY_OFF, DAY_OFF, DAY_OFF])):
+        rows, breaks = run(pat, days=91)
+        end = lambda d: f"{next(r[3] for r in rows if r[0] == d):.0f}"
+        kills = sum(r[5] for r in rows)
+        late = max(r[2] for r in rows if r[0] > 60)
+        print(f"| {name} | {end(30)} | {end(60)} | {end(98)} | {late:.0f} | {breaks} | {kills} | x{hardening(kills, 98):.2f} |")
+    print()
+
+
 if __name__ == "__main__":
     standard_days()
     patterns()
+    long_run()
     first_week()
     alcoholic_week()

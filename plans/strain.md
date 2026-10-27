@@ -326,3 +326,39 @@ zombies near, Straight Edge gives 3.
   they are tested, and moving them buys tidiness only.
 - Still open: Desensitized nightmares could add strain; the stress and
   unhappiness the conditions add themselves are unchanged.
+
+## Burnout, hardening and distance (2026-10-27)
+
+From Workshop comments. One commenter pointed out the game already has a muscle strain, so
+players now see the system as **Burnout**: the moodle's section in the health panel, the
+sandbox labels, the trait descriptions, the README and the Steam notes. The code, sandbox keys
+(`Strain*`) and mod data (`strain`, `st*`) keep the old name, so settings and saves carry over.
+
+Another (Arkantos Eli) argued that killing gets easier with practice and that a shot from
+across the street is not a brawl. Two changes, both on the Lua side and in `strain_sim.py`:
+
+- **Hardened.** Combat strain (kills, panic, wounds, knockdowns; not bites, low health,
+  illness or withdrawal) is x (1 - 0.4 x min(1, lifetime kills / 2000)) x (1 - 0.2 x
+  min(1, days survived / 90)): x0.48 at both. Lifetime kills are the game's own count
+  (`getZombieKills`), days survived `getHoursSurvived`. `DanTraits_StrainHardening`; the
+  health panel adds "Hardened: the fighting wears on you N% less" under the tier once it is
+  5% or more.
+- **Distance.** A kill counts in full within 3 tiles (melee, a spear), falling linearly to
+  0.4 at 12 tiles and beyond, cost and count, like a vehicle kill
+  (`DanTraits_StrainDistanceShare`, `zombie:DistTo(player)` in `OnZombieDead`). Panic and
+  hits are unchanged, so a shooter mostly saves on the kills themselves.
+
+Skill level reducing strain was suggested and left out: strain exists to slow what grinding
+teaches, and a skill discount would make grinding pay again.
+
+What the simulator says now (lifetime kills from 0 at day 8):
+
+| Pattern, three weeks | Before | After |
+|---|---|---|
+| Horde every day, no routine: breaks | 10 | 8 |
+| Busy every day + evening routine: peak | 29 | 17 |
+| Rough week (4 horde days, 3 home): breaks | 3 | 2 |
+
+Over three months, a horde every day with a shower and a meal still breaks 19 times and a
+busy day with nothing after 7 times, at full hardening (x0.48). Hardening helps the paced
+player and the veteran; it does not make the grind free.

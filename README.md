@@ -21,12 +21,12 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
 | [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
 | [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
-| [High Strung](#high-strung--6) | -6 | Strain builds 1.5x as fast. |
+| [High Strung](#high-strung--6) | -6 | Burnout builds 1.5x as fast. |
 | [Alcoholic](#alcoholic--6) | -6 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
 | [Smoker](#smoker--5-vanilla-reworked) | -5 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
-| [Straight Edge](#straight-edge--3) | -3 | Refuses alcohol and tobacco, and so their relief from strain. |
-| [Can't Switch Off](#cant-switch-off--4) | -4 | Strain eases 0.67x as fast; a full day off needs five comforts. |
+| [Straight Edge](#straight-edge--3) | -3 | Refuses alcohol and tobacco, and so their relief from burnout. |
+| [Can't Switch Off](#cant-switch-off--4) | -4 | Burnout eases 0.67x as fast; a full day off needs five comforts. |
 | [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
 | [Germaphobe](#germaphobe--8) | -8 | Dirty skin and clothes build stress; clean is a relief. |
 | [Sensory Issues](#sensory-issues--8) | -8 | Scratchy clothes, grime, noise, crowds, sun and smells add up to overload; safe and disliked foods. |
@@ -60,7 +60,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Nomad](#nomad-3) | +3 | No home, nothing missed; sleeps as well under the sky. |
 | [Regimented](#regimented-3) | +3 | Twice the plan bonus; one missed day a week forgiven. |
 | [Natural Runner](#natural-runner-3) | +3 | Jogging is easy on the legs and counts double; running XP +25%. |
-| [Unwinds Easily](#unwinds-easily-4) | +4 | Strain eases 1.5x as fast. |
+| [Unwinds Easily](#unwinds-easily-4) | +4 | Burnout eases 1.5x as fast. |
 | [Homemaker](#homemaker-4) | +4 | Washes cleaner by hand with half the wear; loves line-dried clothes. |
 | [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
 | [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
@@ -70,7 +70,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
 | [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
 | [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | +6 | No bonus profession level; recovers, heals and trains faster. |
-| [Level Headed](#level-headed-8) | +8 | Strain builds half as fast. |
+| [Level Headed](#level-headed-8) | +8 | Burnout builds half as fast. |
 | [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
 | [Grit](#grit-8) | +8 | Feels pain a third less. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
@@ -233,7 +233,7 @@ Attacks that cost you hours.
 - Smoking speeds up caffeine clearance, lets a wound infection climb faster and slows a deep wound's healing.
 - Rare nicotine gum (new item) eases quitting.
 - Moodle: Nicotine Craving. The sandbox option Nicotine Craving Moodle hides it, so the craving has to be read from irritability and stress.
-- [Strain](#strain): withdrawal adds strain, and a cigarette eases only a quarter as much as it does for anyone else.
+- [Burnout](#burnout): withdrawal adds burnout, and a cigarette eases only a quarter as much as it does for anyone else.
 
 #### Vegetarian (-4)
 
@@ -272,16 +272,16 @@ Attacks that cost you hours.
 - Anyone who drinks too often gains the trait. A month without alcohol loses it, and any drink after that is a coin flip to relapse.
 - The habit is tolerance too: more drink to feel it, hangovers a little milder.
 - Moodle: Alcohol Withdrawal (craving, the shakes, delirium).
-- [Strain](#strain): being sober adds strain by stage (craving, shakes, delirium), and a drink eases only a quarter as much as it does for anyone else.
+- [Burnout](#burnout): being sober adds burnout by stage (craving, shakes, delirium), and a drink eases only a quarter as much as it does for anyone else.
 
 #### High Strung (-6)
 
-- Every fight stays with you: [strain](#strain) builds 1.5x as fast.
+- Every fight stays with you: [burnout](#burnout) builds 1.5x as fast.
 - Not with Level Headed.
 
 #### Can't Switch Off (-4)
 
-- Everything that eases [strain](#strain) works 0.67x as fast, and a full day off needs five different comforts, not four.
+- Everything that eases [burnout](#burnout) works 0.67x as fast, and a full day off needs five different comforts, not four.
 - Not with Unwinds Easily.
 
 #### Caffeine Dependent (-2)
@@ -342,7 +342,7 @@ Attacks that cost you hours.
 
 #### Straight Edge (-3)
 
-- Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief, from [strain](#strain) too. Covers I Don't Need A Lighter's stove, fire and car-lighter smoking too.
+- Refuses alcohol (drinks and alcoholic food) and tobacco (cigarettes, cigars, pipes, packs, chewing tobacco), and so their relief, from [burnout](#burnout) too. Covers I Don't Need A Lighter's stove, fire and car-lighter smoking too.
 - Not with Alcoholic, Smoker, Hollow Legs or A Really Bad Day.
 
 #### Lingering Soreness (-3)
@@ -419,12 +419,12 @@ Attacks that cost you hours.
 
 #### Level Headed (+8)
 
-- Takes the fighting in stride: [strain](#strain) builds half as fast.
+- Takes the fighting in stride: [burnout](#burnout) builds half as fast.
 - Not with High Strung.
 
 #### Unwinds Easily (+4)
 
-- [Strain](#strain) eases 1.5x as fast: sleep, calm hours, comforts, a drink, a smoke.
+- [Burnout](#burnout) eases 1.5x as fast: sleep, calm hours, comforts, a drink, a smoke.
 - Not with Can't Switch Off.
 
 #### Homemaker (+4)
@@ -594,19 +594,20 @@ Where you sleep most nights becomes home, and home does you good. Vanilla gives 
 - Homebody doubles the good and misses home after a day, harder; Nomad has none of it. Sandbox option Home turns it all off.
 - Moodle: Home (Settling In, At Home; Missing Home, Homesick).
 
-### Strain
+### Burnout
 
-Fighting wears on you over days. Stress empties itself in an afternoon; strain is the memory of the week. It never makes you fight worse: it slows what the fighting teaches, so grinding stops paying and going home does. Design and tuning: `plans/strain.md`, `plans/strain_sim.py`.
+Fighting wears on you over days. Stress empties itself in an afternoon; burnout is the memory of the week. (The code calls it strain: `DanTraits_Strain.lua`, the `Strain*` sandbox keys.) It never makes you fight worse: it slows what the fighting teaches, so grinding stops paying and going home does. Design and tuning: `plans/strain.md`, `plans/strain_sim.py`.
 
-- **Builds with** kills (0.1 each, more as the day goes on: kill k since you last slept costs 0.1 x (1 + k/100); from a car a third), minutes panicking (0.1), new wounds (scratch 1, laceration 2, deep wound 3), being knocked down (1.5), a bite (50), health under 25 (50, once a day), fever and sepsis, food sickness, pain, withdrawal for an Alcoholic or Smoker, and a hangover (2).
+- **Builds with** kills (0.1 each, more as the day goes on: kill k since you last slept costs 0.1 x (1 + k/100); from a car a third; from a distance less, in full within 3 tiles down to 0.4 at 12 or more), minutes panicking (0.1), new wounds (scratch 1, laceration 2, deep wound 3), being knocked down (1.5), a bite (50), health under 25 (50, once a day), fever and sepsis, food sickness, pain, withdrawal for an Alcoholic or Smoker, and a hangover (2).
 - **Eases with** calm hours (0.375 an hour awake, two hours after the last fight, anywhere), a night's sleep (4 in a bed, 2 rough, by the night's quality), comforts (a wash or bath, fresh clothes, a Good Meal 2-4 by tier, an hour of reading, Pumped: 2 each, the second the same day half, then nothing; x1.5 at home, x2 for a Homebody; four different ones in a day make the day's comforts x1.25), being drunk (2 an hour, up to 8 a day) and a smoke (0.75, up to 3). A fever halves what rest and sleep take off.
 - Rough numbers: a supply run of 25 kills is +5, a busy day of 75 is +17, a horde day of 150 is +41; a full day off at home is about -30, a lazy one or a calm day out about -10. Two horde days in a row are fine; the third breaks you.
-- **Tiers** (moodle: Strain): At Ease (under 10: combat experience x1.1), Frayed (25), Worn Down (50: unhappiness held at 15), Burnt Out (75: at 30), Breaking Point (100).
+- **Tiers** (moodle: Burnout): At Ease (under 10: combat experience x1.1), Frayed (25), Worn Down (50: unhappiness held at 15), Burnt Out (75: at 30), Breaking Point (100).
 - **Experience:** combat skills (weapons, Aiming, Reloading, Strength, Fitness) x1 at 25, x0.75 at 50, x0.4 at 75, x0.15 at 100. Other skills take half that penalty, only over 50.
-- **Breaking Point:** strain holds at 100 until the first safe moment (ten minutes without a fight, no zombie within 12 tiles); then you sit down where you are for about half a minute and can do nothing else. Walking away or a zombie within 4 tiles stops it, and it comes again. Finished, strain drops to 60.
-- The first week counts half (both sandbox options). Desensitized takes 0.6 of combat strain. The health panel shows the tier and which way it is going from Frayed, or while it is getting worse.
-- Sandbox: Strain, Strain Gained %, Strain Eased %, Lowest Combat Experience % (15), Strain Grace Days (7), Strain During Grace % (50), Breaking Point.
-- **What else it touches:** Major Depressive Disorder episodes, Hallucinations, migraine attacks, MS flares and seizures all come more often the higher strain is (x1.33 Frayed, x2 Burnt Out). Burnt Out brings an ex-smoker's cravings back and holds Vitality under Thriving; At Ease lifts it a little. A sensory meltdown or shutdown adds 5. Panic counts only with a zombie within 15 tiles.
+- **Breaking Point:** burnout holds at 100 until the first safe moment (ten minutes without a fight, no zombie within 12 tiles); then you sit down where you are for about half a minute and can do nothing else. Walking away or a zombie within 4 tiles stops it, and it comes again. Finished, burnout drops to 60.
+- The first week counts half (both sandbox options). Desensitized takes 0.6 of combat burnout.
+- **Hardened:** you get used to it. Combat burnout (kills, panic, wounds, knockdowns) falls with your lifetime kills, up to 40% less at 2,000, and with the days survived, up to 20% less at 90; the two multiply (0.48 at both). The health panel shows the tier and which way it is going from Frayed, or while it is getting worse, and how hardened you are once that is 5% or more.
+- Sandbox: Burnout, Burnout Gained %, Burnout Eased %, Lowest Combat Experience % (15), Burnout Grace Days (7), Burnout During Grace % (50), Breaking Point.
+- **What else it touches:** Major Depressive Disorder episodes, Hallucinations, migraine attacks, MS flares and seizures all come more often the higher burnout is (x1.33 Frayed, x2 Burnt Out). Burnt Out brings an ex-smoker's cravings back and holds Vitality under Thriving; At Ease lifts it a little. A sensory meltdown or shutdown adds 5. Panic counts only with a zombie within 15 tiles.
 - **Trait links:** Endorphin Junkie's Pumped eases twice as much; Homemaker's fresh clothes twice as much, and Line-Dried is a comfort of its own; Keen Cook's meals count a tier up; in a depressive episode every comfort but a meal or a workout does half; a Nomad gets the home bonus in any bed slept in twice of the last seven nights.
 - Console: `strain`, `strain set <n>`, `strain kill [n]`, `strain comfort <kind>`.
 
