@@ -48,7 +48,8 @@
 -- (half or more of it dried on a line in daylight since it was washed) twice
 -- as much. A dryer sheet in the dryer (DryerSheets, one per load) scents
 -- every garment the run leaves dry: worn, it gathers odour at LN.SHEET_ODOUR
--- of the rate until its next wash. Clothes put away never gather odour here,
+-- of the rate until its next wash; fabric protector halves it again while it
+-- holds (L.PROTECT_ODOUR). Clothes put away never gather odour here,
 -- so they stay fresh until worn with or without one. Blood left on a part for LaundryStainDays sets in: half of it,
 -- capped at LN.STAIN_CAP, which keeps a washed stain under the game's bloody
 -- line. Bleach (DanTraits_LaundryWash.lua) clears stains.
@@ -357,6 +358,7 @@ function L.sweat(item, rate, hours)
     end
     if rate <= 0 then return end
     if L.sheeted(s) then rate = rate * LN.SHEET_ODOUR end
+    if (s.pr or 0) > 0 and L.gearOn and L.gearOn() then rate = rate * (L.PROTECT_ODOUR or 1) end
     s.o = math.min(100, (s.o or 0) + rate * layer * hours)
 end
 
@@ -460,7 +462,7 @@ local function washed(item, s)
     s.n = (s.n or 0) + 1
     s.sun, s.sh = nil, nil
     s.sw = nil
-    if s.pr then s.pr = math.max(0, s.pr - (L.PROTECT_PER_WASH or 0.34)); if s.pr <= 0 then s.pr = nil end end
+    if s.pr then s.pr = math.max(0, s.pr - (L.PROTECT_PER_WASH or 0.2)); if s.pr <= 0 then s.pr = nil end end
     s.pb = nil
 end
 

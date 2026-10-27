@@ -1654,8 +1654,8 @@ module DanTraits {
     }
 
     /* Fabric protector: a spray can, 5 garments. Treated, a garment keeps
-       only half of the blood and dirt that lands on it, for about three
-       washes (DanTraits_LaundryGear.lua). Cleaning shelves, laundry rooms,
+       only half of the blood and dirt that lands on it and gathers odour at
+       half the rate, for about five washes (DanTraits_LaundryGear.lua). Cleaning shelves, laundry rooms,
        shoe and clothing stores. The spray paint model stands in. */
     item FabricProtector
     {

@@ -15,7 +15,8 @@ local intoxOf = DanTraits_Intoxication  -- 0..1 intoxication (the raw stat is 0.
 -- minutes and then the floor reasserts itself. What actually lowers the
 -- floor is a drink (which quietly deepens the episode), a cigarette, a
 -- comforting meal, regular exercise and time outdoors; the last two also
--- shorten the episode.
+-- shorten the episode. Being at home and a pup to look after (SpiffBoy's
+-- Spiffo Pup cartridge, DanTraits_PupCare) lower it too.
 -- What counts as a drink is the same for the relief and for the deepening:
 -- intoxication above the tipsy line plus MDD_TOLERANCE_NEEDS x the drinker's
 -- tolerance (DanTraits_AlcoholTolerance: an Alcoholic's meter, 0 for anyone
@@ -47,6 +48,7 @@ local MDD_FOOD_MINUTES      = 180
 local MDD_RELIEF_EXERCISE   = 15      -- floor reduction at full exercise regularity
 local MDD_RELIEF_OUTDOORS   = 15      -- floor reduction at four hours outside in the last day
 local MDD_RELIEF_HOME       = 10      -- floor reduction at home, at the home's full strength (DanTraits_Home.lua; Homebody doubles it)
+local MDD_RELIEF_PET        = 8       -- floor reduction while the Spiffo Pup cartridge's pup is looked after (DanTraits_SpiffBoy.lua)
 local MDD_OUTDOORS_FULL_MIN = 240
 local MDD_RECOVERY_BONUS    = 1.0     -- exercise and outdoors together shorten an episode by up to this (x2 speed)
 -- Antidepressants (Base.PillsAntiDep) are a regimen, not a dose. Each pill
@@ -115,6 +117,8 @@ local function mddRelief(player, d)
     if DanTraits_HomeAtPlace and DanTraits_HomeAtPlace(player) then
         relief = relief + MDD_RELIEF_HOME * DanTraits_Strength("DanTraits_HomeStrength", player) * (hasTrait(player, "homebody") and 2 or 1)
     end
+    -- a pup to look after (SpiffBoy's Spiffo Pup cartridge): not a habit either
+    relief = relief + MDD_RELIEF_PET * DanTraits_Strength("DanTraits_PupCare", player)
     habits = (regular + outdoors) / 2
     return relief, habits
 end

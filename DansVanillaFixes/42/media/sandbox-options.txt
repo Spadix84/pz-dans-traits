@@ -8,3 +8,6 @@ option DansVanillaFixes.ItemInfoTooltips
 
 option DansVanillaFixes.ItemInfoWeaponSkill
 {type = boolean, default = true, page = DansVanillaFixesItemInfo, translation = DansVanillaFixesItemInfoWeaponSkill,}
+
+option DansVanillaFixes.RarityColours
+{type = boolean, default = true, page = DansVanillaFixesItemInfo, translation = DansVanillaFixesRarityColours,}

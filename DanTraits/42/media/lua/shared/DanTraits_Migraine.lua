@@ -651,6 +651,18 @@ DanTraits_StartingKit({
     end,
 })
 
+-- the strong triggers worked out so far, in the list's order, and how many are
+-- still to find (the Notes tab, DanTraits_Notes.lua); nil without the trait
+function DanTraits_MigraineTriggerSummary(player)
+    if not player or not hasTrait(player, "migraine") then return nil end
+    local d = DanTraits_Data(player)
+    local known = {}
+    for _, k in ipairs(MIG_PERSONAL) do
+        if d.migKnown and d.migKnown[k] then known[#known + 1] = k end
+    end
+    return { known = known, left = math.max(0, MIG_STRONG_N - #known) }
+end
+
 -- console: migraine | migraine start | migraine triggers
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.migraine = function(player, args)

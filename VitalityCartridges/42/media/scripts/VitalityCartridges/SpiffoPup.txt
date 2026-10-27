@@ -1,0 +1,20 @@
+module VitalityCartridges
+{
+    item Cartridge_SpiffoPup
+    {
+        DisplayCategory = Entertainment,
+        ItemType = base:normal,
+        Weight = 0.1,
+        Icon = VitalityCartridges_Cartridge_SpiffoPup,
+        MetalValue = 1.0,
+        Tags = base:hasmetal;spiffboy:cartridge,
+        WorldStaticModel = VitalityCartridges.Cartridge_SpiffoPup,
+    }
+
+    model Cartridge_SpiffoPup
+    {
+        mesh = SpiffBoy/Cartridge,
+        texture = VitalityCartridges/VitalityCartridgesCartridge_SpiffoPup,
+        scale = 0.3,
+    }
+}

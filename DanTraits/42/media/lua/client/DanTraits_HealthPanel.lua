@@ -32,16 +32,23 @@
 -- Yourself, or another player in split-screen: read from their mod data. Another
 -- player in multiplayer: their client is asked through the server
 -- (DanTraits_BloodRelay.lua), so it shows a moment after the panel opens.
+-- Left out while there is nothing to tell: full, not bleeding, red cells whole.
 --
 -- Daily medication: under that, your own character's
 -- scheduled drugs (DanTraits_Meds.lua: the ones for traits you have), each
 -- with when it was last taken and when the next is due; orange when it is
--- due, red once it has worn off. The body part list moves down to make room
--- for both. Not shown for another player in multiplayer: their mod data is not
--- sent to the doctor.
+-- due, red once it has worn off. Not shown for another player in multiplayer:
+-- their mod data is not sent to the doctor.
 --
 -- Strain: under that, your own character's strain tier (DanTraits_Strain.lua)
--- and whether it got worse or eased over the last hour. Yourself only.
+-- and whether it got worse or eased over the last hour. Yourself only, and
+-- only from Frayed or while it is getting worse (the moodle covers the rest).
+--
+-- Blood and Strain are one status each: the header and the first line share
+-- a row, any further lines sit under the first. Medication is a list of
+-- drugs, so it keeps a header row of its own. The body part list moves down
+-- to make room. What the character has learned about themselves (migraine
+-- triggers, safe foods) is in the Notes tab (DanTraits_Notes.lua), not here.
 require "XpSystem/ISUI/ISHealthPanel"
 
 local HP_VAGUE_BELOW   = 3       -- levels under this see only what anyone can see
@@ -51,6 +58,7 @@ local HP_RED_L         = 3       -- a layperson sees an infection from this leve
 local HP_SPREAD_L      = 5       -- the infection is in the body from here (as DanTraits_Infection.lua)
 local HP_THIN_LIFE     = 1       -- a dressing is wearing thin under this life
 local HP_GAP           = 4       -- px under each section above the body part list
+local HP_INDENT        = 8       -- px a list section's lines sit in from its header
 local HP_BLEED_SLOW    = 0.001   -- blood volume a minute: bleeding slowly under this (6% an hour)...
 local HP_BLEED_HEAVY   = 0.004   -- ...heavily from this (24% an hour)
 local HP_BLOOD_SLIGHT  = 0.05    -- volume lost: "a little blood" from this (First Aid 3-5)
@@ -259,6 +267,9 @@ end
 -- the blood lines for a DanTraits_BloodState at the examiner's First Aid level: { text, colour }
 local function bloodLinesOf(s, level)
     if not s then return {} end
+    -- nothing to tell: full, not bleeding, red cells whole
+    if s.tier == 0 and s.loss <= 0 and s.weak <= 0
+        and 1 - s.vol < HP_BLOOD_FULL and 1 - s.cells < HP_BLOOD_FULL then return {} end
     local out = {}
     local function add(text, colour) out[#out + 1] = { text, colour } end
     local lost = math.max(0, 1 - s.vol)
@@ -375,13 +386,15 @@ end
 DanTraits_HealthMedLines = medLines
 
 -- strain (DanTraits_Strain.lua): the tier as the moodle shows it, and which
--- way it went over the last hour; never the number
+-- way it went over the last hour; never the number. Nothing while it is under
+-- Frayed and not getting worse.
 local STRAIN_COLOUR = { [-1] = GREEN, [0] = GREY, [1] = ORANGE, [2] = ORANGE, [3] = RED, [4] = RED }
 local function strainLines(patient)
     if not DanTraits_StrainSummary then return {} end
     local s = DanTraits_StrainSummary(patient)
     if not s then return {} end
     local level = math.max(-1, math.min(4, tonumber(s.moodle) or 0))
+    if level <= 0 and s.way ~= "rising" then return {} end
     local name = t(level < 0 and "StrainEase" or ("Strain" .. level))
     return { { name .. ", " .. t("Strain" .. s.way), STRAIN_COLOUR[level] or GREY } }
 end
@@ -405,27 +418,38 @@ local function wrapRender()
         pcall(function() doctor = self:getDoctor() end)
         local level = self.doctorLevel or 0
         pcall(function() level = doctor:getPerkLevel(Perks.Doctor) end)
+        -- { header, lines, inline }: an inline section's header shares its first line's row
         local sections = {}
         local blood = bloodLines(patient, level, doctor)
-        if #blood > 0 then sections[#sections + 1] = { t("BloodHeader"), blood } end
+        if #blood > 0 then sections[#sections + 1] = { t("BloodHeader"), blood, true } end
         local meds = here and medLines(patient) or {}
-        if #meds > 0 then sections[#sections + 1] = { t("MedHeader"), meds } end
+        if #meds > 0 then sections[#sections + 1] = { t("MedHeader"), meds, false } end
         local strain = here and strainLines(patient) or {}
-        if #strain > 0 then sections[#sections + 1] = { t("StrainHeader"), strain } end
+        if #strain > 0 then sections[#sections + 1] = { t("StrainHeader"), strain, true } end
         if #sections == 0 then return end
         local tm = getTextManager()
         local fontHgt = tm:getFontHeight(UIFont.Small)
         local border = UI_BORDER_SPACING or 10
         local x, y = self.listbox:getX(), self.listbox:getY()
         local widest = 0
-        local function line(str, c)
-            self:drawText(str, x, y, c[1], c[2], c[3], 1, UIFont.Small)
-            widest = math.max(widest, tm:MeasureStringX(UIFont.Small, str))
-            y = y + fontHgt
+        local function draw(str, dx, c)
+            self:drawText(str, x + dx, y, c[1], c[2], c[3], 1, UIFont.Small)
+            widest = math.max(widest, dx + tm:MeasureStringX(UIFont.Small, str))
         end
         for _, section in ipairs(sections) do
-            line(section[1], { 1, 1, 1 })
-            for _, l in ipairs(section[2]) do line(l[1], l[2]) end
+            local dx = HP_INDENT
+            if section[3] then
+                local head = getText("UI_DanTraits_health_Inline", section[1]) .. " "   -- the space here: a translation may lose a trailing one
+                draw(head, 0, { 1, 1, 1 })
+                dx = tm:MeasureStringX(UIFont.Small, head)
+            else
+                draw(section[1], 0, { 1, 1, 1 })
+                y = y + fontHgt
+            end
+            for _, l in ipairs(section[2]) do
+                draw(l[1], dx, l[2])
+                y = y + fontHgt
+            end
             y = y + HP_GAP
         end
         -- the list moves down; the panel grows to fit on the next update

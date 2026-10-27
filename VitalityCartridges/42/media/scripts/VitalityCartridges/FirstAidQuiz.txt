@@ -1,0 +1,20 @@
+module VitalityCartridges
+{
+    item Cartridge_FirstAidQuiz
+    {
+        DisplayCategory = Entertainment,
+        ItemType = base:normal,
+        Weight = 0.1,
+        Icon = VitalityCartridges_Cartridge_FirstAidQuiz,
+        MetalValue = 1.0,
+        Tags = base:hasmetal;spiffboy:cartridge,
+        WorldStaticModel = VitalityCartridges.Cartridge_FirstAidQuiz,
+    }
+
+    model Cartridge_FirstAidQuiz
+    {
+        mesh = SpiffBoy/Cartridge,
+        texture = VitalityCartridges/VitalityCartridgesCartridge_FirstAidQuiz,
+        scale = 0.3,
+    }
+}

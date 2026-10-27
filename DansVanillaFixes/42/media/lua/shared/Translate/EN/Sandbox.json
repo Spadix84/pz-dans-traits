@@ -6,5 +6,7 @@
     "Sandbox_DansVanillaFixesItemInfoTooltips": "Item Info in Tooltips",
     "Sandbox_DansVanillaFixesItemInfoTooltips_tooltip": "Extra lines under an item's tooltip: the read time left on skill books and novels, uses left on drainables (a charge in percent for batteries), weapon numbers, and for clothing the body parts it covers and how it compares with what you wear in that slot.",
     "Sandbox_DansVanillaFixesItemInfoWeaponSkill": "Weapon Numbers Need Skill",
-    "Sandbox_DansVanillaFixesItemInfoWeaponSkill_tooltip": "On: a weapon shows more of its numbers as you level the skill it uses (damage at 1, critical chance at 2, speed and reach at 3, knockback and endurance at 4; Aiming for firearms), and Maintenance shows its condition and wear.<br>Off: every number shows from the start."
+    "Sandbox_DansVanillaFixesItemInfoWeaponSkill_tooltip": "On: a weapon shows more of its numbers as you level the skill it uses (damage at 1, critical chance at 2, speed and reach at 3, knockback and endurance at 4; Aiming for firearms), and Maintenance shows its condition and wear.<br>Off: every number shows from the start.",
+    "Sandbox_DansVanillaFixesRarityColours": "Rarity Colours",
+    "Sandbox_DansVanillaFixesRarityColours_tooltip": "Item names in the inventory take a colour for how rare the item is, worked out from the loot lists when the game starts (modded items too): orange Legendary, purple Epic, blue Rare, green Uncommon, grey Common, teal Crafted. The tooltip names the tier."
 }

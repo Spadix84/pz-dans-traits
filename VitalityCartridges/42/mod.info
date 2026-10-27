@@ -1,0 +1,9 @@
+name=Vitality Cartridges
+id=VitalityCartridges
+url=https://github.com/Spadix84/pz-dans-traits
+modversion=0.1.0
+versionMin=42.0
+require=\SpiffBoy
+poster=poster.png
+icon=poster.png
+description=Game cartridges for the SpiffBoy handheld console, from the Vitality Project. Still Water: paced breathing on a quiet pond (4-6, box, 4-7-8). Steady: keep a cross on a drifting ring for 20 seconds. Spiffo Walk: a pedometer pet for your pocket that hatches, grows and finds hats as you walk. First Aid Quiz: 40 questions on wounds, infection and medicine. Spiffo Pup: a pet to feed, play with and clean up after, that gets hungry even while the console is off. With the Vitality Project loaded they also reach your character: Still Water calms a sensory overload, stress and panic; Steady shows how drink, shakes, a sugar low or a concussion are affecting you; Spiffo Walk's daily goal and a looked-after pup ease strain, and the pup lifts a depressive episode's low mood; a good quiz round teaches a little First Aid.

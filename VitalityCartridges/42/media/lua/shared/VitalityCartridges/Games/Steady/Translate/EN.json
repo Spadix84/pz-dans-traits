@@ -1,0 +1,21 @@
+{
+    "UI": {
+        "Title": "STEADY",
+        "Subtitle": "KEEP THE CROSS ON THE RING",
+        "Play": "PLAY",
+        "SoundOn": "SOUND: ON",
+        "SoundOff": "SOUND: OFF",
+        "Best": "BEST %1%%",
+        "Ready": "READY",
+        "HintRound": "ARROWS: FOLLOW THE RING",
+        "Go": "GO!",
+        "Time": "TIME %1",
+        "OnShare": "ON %1%%",
+        "VerdictSteady": "STEADY",
+        "VerdictShaky": "SHAKY",
+        "VerdictAllOver": "ALL OVER THE PLACE",
+        "Score": "ON TARGET %1%%",
+        "NewBest": "NEW BEST!",
+        "HintSave": "A: SAVE"
+    }
+}

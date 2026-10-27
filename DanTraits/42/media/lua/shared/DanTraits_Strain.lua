@@ -23,9 +23,11 @@
 --   a calm hour       awake, no fight in the last ST.CALM_AFTER_H hours, anywhere
 --   a night           ST.SLEEP_BED in a bed, ST.SLEEP_ROUGH without, x the night's quality
 --   comforts          a shower or bath, fresh clothes, a Good Meal (by tier), an hour
---                     of reading or of a handheld game (SpiffBoy), Pumped: once a
---                     day full, the second half, then nothing; x1.5 at home (Homebody
---                     x2); four different ones in a day make that day's comforts x1.25
+--                     of reading or of a handheld game (SpiffBoy), a quarter hour of
+--                     Still Water's even breathing, Spiffo Walk's daily goal, a
+--                     Spiffo Pup looked after, Pumped: once a day full, the
+--                     second half, then nothing; x1.5 at home (Homebody x2); four
+--                     different ones in a day make that day's comforts x1.25
 --   drink and smoke   being drunk (up to ST.DRINK_CAP a day), a cigarette (up to
 --                     ST.CIG_CAP); an Alcoholic's drink and a Smoker's cigarette a quarter
 -- A fever halves what calm hours and sleep take off. Combat strain (kills,
@@ -76,7 +78,7 @@
 -- stKills (since the last night), stFightH (world hours of the last fight),
 -- stUsed (comfort uses today), stLastAt (game hours each comfort last
 -- counted), stComfort (comforts eased today, before the variety bonus),
--- stVariety, stDrink, stCigs, stReadMin, stGameMin, stLowDay, stToday / stYesterday
+-- stVariety, stDrink, stCigs, stReadMin, stGameMin, stBreatheMin, stLowDay, stToday / stYesterday
 -- (each source's total, + gained, - eased), stTold (the tier last told),
 -- stBreak ("pending" | "active"), stBreakTry, stAsleep, stBed, stSleptMin,
 -- stMark / stMarkMin / stTrend (the last hour's change), stWounds (per part:
@@ -116,7 +118,7 @@ local ST = {
     SLEEP_BED = 4,           -- a night x its quality
     SLEEP_ROUGH = 2,
     SLEEP_MIN_H = 3,         -- shorter is a nap (Vitality off: the fallback counts its own)
-    COMFORT = { shower = 2, laundry = 2, read = 2, pumped = 2, game = 2 },
+    COMFORT = { shower = 2, laundry = 2, read = 2, pumped = 2, game = 2, breathe = 2, walk = 2, pet = 2 },
     MEAL = { 2, 3, 4 },      -- a Good Meal by the dish's tier
     REPEAT = { 1, 0.5 },     -- the first and second of a comfort in a day; then nothing
     DEBOUNCE_H = 0.5,        -- the same comfort again this soon is the same one
@@ -124,6 +126,7 @@ local ST = {
     VARIETY_N = 4, VARIETY = 1.25,
     READ_MIN = 60,           -- minutes of reading for one comfort
     GAME_MIN = 60,           -- minutes of a handheld game for one (DanTraits_SpiffBoy.lua)
+    BREATHE_MIN = 15,        -- minutes of Still Water at its calm (SB.SW_CALM) for one
     DRUNK = 2, TIPSY = 0.75, -- an hour at Drunk 2+, at Drunk 1
     DRINK_CAP = 8,
     CIG = 0.75, CIG_CAP = 3,
@@ -184,7 +187,7 @@ local function newDay(d)
     if d.stDay == day then return end
     d.stDay = day
     d.stUsed, d.stLastAt, d.stComfort, d.stVariety = {}, {}, 0, nil
-    d.stDrink, d.stCigs, d.stReadMin, d.stGameMin = 0, 0, 0, 0
+    d.stDrink, d.stCigs, d.stReadMin, d.stGameMin, d.stBreatheMin = 0, 0, 0, 0, 0
     d.stYesterday, d.stToday = d.stToday, {}
 end
 
@@ -574,10 +577,18 @@ local function watchComforts(player, d, asleep)
             d.stReadMin = (d.stReadMin or 0) + 1
             if d.stReadMin % ST.READ_MIN == 0 then DanTraits_StrainComfort(player, "read") end
         end
-        -- an hour of a handheld game
-        if DanTraits_ScreenTime and DanTraits_ScreenTime(player) == "game" then
+        -- an hour of a handheld game; Still Water is practice, not play: a quarter
+        -- hour of it breathing evenly is a comfort of its own
+        local screen, cartridge = nil, nil
+        if DanTraits_ScreenTime then screen, cartridge = DanTraits_ScreenTime(player) end
+        if screen == "game" and cartridge ~= DanTraits_StillWaterItem then
             d.stGameMin = (d.stGameMin or 0) + 1
             if d.stGameMin % ST.GAME_MIN == 0 then DanTraits_StrainComfort(player, "game") end
+        end
+        local calm = DanTraits_StillWaterCalm and DanTraits_StillWaterCalm(player) or 0
+        if calm >= ((DanTraits_SpiffBoySB and DanTraits_SpiffBoySB.SW_CALM) or 1) then
+            d.stBreatheMin = (d.stBreatheMin or 0) + 1
+            if d.stBreatheMin % ST.BREATHE_MIN == 0 then DanTraits_StrainComfort(player, "breathe") end
         end
     end
     -- a hangover starts (DanTraits_Hangover.lua)

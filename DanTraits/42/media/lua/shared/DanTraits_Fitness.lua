@@ -24,7 +24,10 @@
 --
 -- Jogging, carrying a heavy load and hard work (chopping, digging, fighting)
 -- count by themselves (DanTraits_FitnessData's hidden exercises, with their
--- own regularity). A plan (DanTraits_FIT_PLANS) sets each day a target; every
+-- own regularity). Everyday activity loads a quarter as much as training,
+-- never past Sore (only the window's exercises overwork a group), and never
+-- pulls a muscle (2026-10-26: a looting trip and five kills left every group
+-- Overworked, a game minute being a few real seconds). A plan (DanTraits_FIT_PLANS) sets each day a target; every
 -- target day of the last seven done is On Plan: experience and recovery
 -- x1.15, Vitality's exercise score +0.1. Magazines add a lasting bonus to all
 -- Fitness and Strength experience.
@@ -117,6 +120,8 @@ local FIT_IMPROV_MAX_K   = 1.2
 -- the counted-by-themselves exercises
 local FIT_WORK_MET       = 5        -- metabolic rate for hard work
 local FIT_REG_STEPS      = { dtjog = 2, dtcarry = 2, dtwork = 1 }   -- incRegularity calls a minute
+-- everyday activity (the hidden exercises): load x this, never past max (Sore at most)
+local EVERYDAY = { keys = { dtjog = true, dtcarry = true, dtwork = true }, load = 0.25, max = FIT_OVER_LOAD }
 local FIT_LOG_DAYS       = 8
 -- the fitness traits (scripts/DanTraits.txt, "Fitness traits"), one table to
 -- keep the file's upvalues down:
@@ -230,7 +235,13 @@ function DanTraits_FitTargetProgress(log, target)
     local t = DanTraits_FIT_TARGETS[target]
     if not t then return 0, 0, false end
     if t.rest then
-        local hard = hardMinutes(log)
+        -- only the window's exercises break a rest day: running, carrying and
+        -- fighting are everyday life (2026-10-26)
+        local trained = {}
+        for key, minutes in pairs(log or {}) do
+            if not EVERYDAY.keys[key] then trained[key] = minutes end
+        end
+        local hard = hardMinutes(trained)
         return hard, DanTraits_FIT_REST_MAX, hard < DanTraits_FIT_REST_MAX
     end
     local minutes
@@ -559,7 +570,8 @@ local function addEffort(player, d, key, spec, amount, today)
     end
     -- Bad Back: a two-handed lift of something awkward goes on the back's load
     if key == "dtimprovcurl" and DanTraits_BadBackStrain then DanTraits_BadBackStrain(player, TR.bbLift * amount) end
-    local intensity = (spec.intensity or 1) * (runner and TR.nrJogLoad or 1)
+    local everyday = EVERYDAY.keys[key]
+    local intensity = (spec.intensity or 1) * (runner and TR.nrJogLoad or 1) * (everyday and EVERYDAY.load or 1)
     sess.carried, sess.ready, sess.load = sess.carried or {}, sess.ready or {}, sess.load or {}
     for g, share in pairs(spec.load or {}) do
         if sess.carried[g] == nil then
@@ -567,11 +579,12 @@ local function addEffort(player, d, key, spec, amount, today)
             sess.carried[g] = d.ftLoad[g] or 0
         end
         local add = FIT_LOAD_MIN * amount * share * intensity / (runner and TR.nrJogCount or 1)
+        if everyday then add = math.max(0, math.min(add, EVERYDAY.max - (d.ftLoad[g] or 0))) end
         d.ftLoad[g] = (d.ftLoad[g] or 0) + add
         sess.load[g] = (sess.load[g] or 0) + add
         d.ftLast[g] = now
     end
-    if strainOn() and not d.ftStrain and not work then rollStrain(player, d, spec, amount) end
+    if strainOn() and not d.ftStrain and not everyday then rollStrain(player, d, spec, amount) end
 end
 
 -- a session: a new one after FIT_SESSION_GAP minutes without training

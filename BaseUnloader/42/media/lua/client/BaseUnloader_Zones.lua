@@ -106,12 +106,18 @@ function BU_ZoneDraw:prerender()
     self:updateButtons()
 end
 
--- the mouse came up (or the joypad said done): name the piece, then keep it
+-- The mouse came up (or the joypad said done): name the piece, then keep it.
+-- The corners are taken now: the click on the name box's OK reaches this
+-- panel too, as a mouse-up outside it, and must not clear them (2026-10-24,
+-- "__lt not defined" in corners()); mouse-ups while the box is open are ignored.
 function BU_ZoneDraw:askCreateZone()
+    if self.waitingConfirm then return end
     if not self.drawTileMouse or not self.startingX or not self.widthCorrect or not self.heightCorrect then
         self:undisplay()
         return
     end
+    local x1, y1, x2, y2, z = self:corners()
+    self.picked = { x1 = x1, y1 = y1, x2 = x2, y2 = y2, z = z }
     self.drawTileMouse = false
     self.waitingConfirm = true
     local modal = ISTextBox:new(0, 0, 300, 180, getText("IGUI_BU_ZoneNameAsk"), self.titleEntry.name, self, BU_ZoneDraw.onNamed, self.playerNum)
@@ -130,12 +136,13 @@ function BU_ZoneDraw:onNamed(button)
     self.cancel.enable = true
     local name = button.internal == "OK" and (button.parent.entry:getText() or "") or ""
     name = string.gsub(name, "^%s*(.-)%s*$", "%1")
-    if name == "" then
+    local p = self.picked
+    self.picked = nil
+    if name == "" or not p then
         self:undisplay()
         return
     end
-    local x1, y1, x2, y2, z = self:corners()
-    BU.addZone(BU.store(), name, x1, y1, x2, y2, z)
+    BU.addZone(BU.store(), name, p.x1, p.y1, p.x2, p.y2, p.z)
     ISWorldObjectContextMenu.disableWorldMenu = false
     self:undisplay()
     self.parentUI:populateList()

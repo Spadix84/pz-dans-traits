@@ -15,9 +15,11 @@
 --
 -- Fabric protector (a spray, found with cleaning supplies) and fabric wax
 -- (made from candles) treat one garment per use: while it holds, only
--- L.PROTECT_KEEP of the blood and dirt that lands on it stays. It wears off:
--- L.PROTECT_PER_WASH a wash (three washes) and L.PROTECT_WEAR each minute it
--- takes a hit.
+-- L.PROTECT_KEEP of the blood and dirt that lands on it stays, and worn it
+-- gathers odour at L.PROTECT_ODOUR of the rate (DanTraits_Laundry.lua, L.sweat).
+-- It wears off: L.PROTECT_PER_WASH a wash (five washes) and L.PROTECT_WEAR
+-- each minute it takes a hit (about 200 minutes of fighting). Both were
+-- shorter until 2026-10-27: the user found it ran out too soon.
 --
 -- Both work the same way: each worn garment keeps its last reading per part
 -- (DTL.pb); a rise since then is the hit, and the poncho or the protector
@@ -27,8 +29,9 @@ require "DanTraits_Laundry"
 local L = DanTraits_Laundry
 
 L.PROTECT_KEEP     = 0.5
-L.PROTECT_PER_WASH = 0.34
-L.PROTECT_WEAR     = 0.02
+L.PROTECT_PER_WASH = 0.2
+L.PROTECT_WEAR     = 0.005
+L.PROTECT_ODOUR    = 0.5
 L.TEAR_HIT         = 0.2
 L.TEAR_WORK        = 0.1
 L.HIT_EPS          = 0.0001

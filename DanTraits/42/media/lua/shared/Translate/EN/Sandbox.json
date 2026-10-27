@@ -100,7 +100,7 @@
     "Sandbox_DanTraitsLaundryLineDryRate": "Clothesline Drying Speed (%%)",
     "Sandbox_DanTraitsLaundryLineDryRate_tooltip": "How fast clothes dry on a clothesline, in percent.",
     "Sandbox_DanTraitsLaundryPoncho": "Garbage Bag Poncho and Fabric Protector",
-    "Sandbox_DanTraitsLaundryPoncho_tooltip": "A garbage bag poncho can be made and worn over your clothes: it takes the blood and dirt for the parts it covers and tears as it is used. Fabric protector and fabric wax make a garment shrug off some of the blood and dirt for a few washes.",
+    "Sandbox_DanTraitsLaundryPoncho_tooltip": "A garbage bag poncho can be made and worn over your clothes: it takes the blood and dirt for the parts it covers and tears as it is used. Fabric protector and fabric wax make a garment shrug off some of the blood and dirt and stay fresh longer, for a few washes.",
     "Sandbox_DanTraitsLaundryWear_option1": "Off",
     "Sandbox_DanTraitsLaundryWear_option2": "Gentle",
     "Sandbox_DanTraitsLaundryWear_option3": "Normal",

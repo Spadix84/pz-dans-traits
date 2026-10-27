@@ -35,5 +35,12 @@
     "IGUI_DVF_Info_Wind": "  Wind resistance %1",
     "IGUI_DVF_Info_Water": "  Water resistance %1",
     "IGUI_DVF_Info_RunSpeed": "  Running speed %1",
-    "IGUI_DVF_Info_CombatSpeed": "  Combat speed %1"
+    "IGUI_DVF_Info_CombatSpeed": "  Combat speed %1",
+    "IGUI_DVF_Rarity_Line": "Rarity: %1",
+    "IGUI_DVF_Rarity_Legendary": "Legendary",
+    "IGUI_DVF_Rarity_Epic": "Epic",
+    "IGUI_DVF_Rarity_Rare": "Rare",
+    "IGUI_DVF_Rarity_Uncommon": "Uncommon",
+    "IGUI_DVF_Rarity_Common": "Common",
+    "IGUI_DVF_Rarity_Crafted": "Crafted"
 }

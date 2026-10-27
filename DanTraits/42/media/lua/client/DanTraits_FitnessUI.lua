@@ -140,12 +140,25 @@ function DanTraitsFitnessSection:onPlan(combo)
     DanTraits_FitSetPlan(self.player, combo:getOptionData(combo.selected))
 end
 
+-- OK, Cancel and Close along the window's bottom edge
+function DanTraitsFitnessSection.placeButtons(window)
+    local y = window:getHeight() - BUTTON_HGT - PAD - 1
+    for _, b in ipairs({ window.ok, window.cancel, window.close }) do
+        if b then b:setY(y) end
+    end
+end
+
 function DanTraitsFitnessSection:prerender()
     -- as wide as the window allows
     local parent = self.parent
     if parent then
         local w = math.max(SECTION_W, parent:getWidth() - self:getX() * 2)
         if w ~= self:getWidth() then self:setWidth(w) end
+        -- and the buttons never left outside it (a click there does nothing)
+        local b = parent.ok
+        if b and b.getBottom and b:getBottom() > parent:getHeight() then
+            DanTraitsFitnessSection.placeButtons(parent)
+        end
     end
     ISPanel.prerender(self)
 end
@@ -393,10 +406,15 @@ local function wrapWindow()
             section:initialise()
             self:addChild(section)
             self.dtSection = section
-            self:setHeight(self:getHeight() + section:getHeight() + PAD)
+            -- the buttons are anchored to the bottom, so the game moves them by the
+            -- height change itself; placing them as well put them that far below
+            -- the window, out of sight and out of reach (2026-10-25). Unanchored
+            -- first, then placed once.
             for _, b in ipairs({ self.ok, self.cancel, self.close }) do
-                if b then b:setY(self:getHeight() - BUTTON_HGT - PAD - 1) end
+                if b then b:setAnchorBottom(false); b:setAnchorTop(true) end
             end
+            self:setHeight(self:getHeight() + section:getHeight() + PAD)
+            DanTraitsFitnessSection.placeButtons(self)
         end)
         return res
     end)

@@ -93,7 +93,78 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   one (`MIG_SCREEN_LIT`; recovery x0.85 in a dim room), told once (`d.migScreen`). Five new notices.
   Tests: test_spiffboy.
 
+- **Still Water bridge** (2026-10-25, `DanTraits_SpiffBoy.lua`). Still Water is the breathing
+  cartridge of the new Vitality Cartridges mod (`VitalityCartridges/`, `plans/still-water.md`);
+  its game keeps `self.vitality = { active, calm }` and `DanTraits_StillWaterCalm(player)` reads
+  it off the window's running game (`w.runtime.game`): 0 unless a session of that cartridge is
+  on screen. A game minute at calm c: stress `-0.004 c`, panic `-2 c`; Sensory drains x(1 + c)
+  (`S.CALM_BREATHE` 2 in `calmOf`); Strain counts minutes at calm 0.6 or more toward a new comfort
+  `breathe = 2` every 15 (`ST.BREATHE_MIN`, `d.stBreatheMin`; in `plans/strain_sim.py`), and
+  Still Water no longer counts toward `game`. `DanTraits_ScreenTime` also returns the cartridge.
+  Tests: test_spiffboy, test_sensory.
+
+- **Four more cartridges bridged** (2026-10-25, `DanTraits_SpiffBoy.lua`,
+  `plans/cartridges-batch-2.md`). `gameOf(player, item)` reads a cartridge's `vitality` table
+  while its game runs, shown or in the pocket, and the minute runs before the asleep put-away so
+  pocket games keep going through sleep. **Steady**: `vitality.tremor` = 1 - product(1 - each) of
+  intoxication x0.8, withdrawal shakes 0.7, a diabetic low, an MS flare 0.5, panic x0.5, an
+  adrenaline rush 0.4, caffeine withdrawal x0.3 (Steady Hands x0.5 unless shakes or a low);
+  `vitality.slow` the same of concussion, intoxication x0.6, tiredness x0.5, a hangover x0.4,
+  sumatriptan's day after 0.3 (`DanTraits_SteadyTremor`, `DanTraits_SteadySlow`). **Spiffo
+  Walk**: tiles walked on foot x1.5 a minute while it runs (`d.cwSteps`; none in a vehicle or over
+  60 tiles a minute), the day; its `goalMet` (read before the new day is written) is the Strain
+  comfort `walk` once a day (`d.cwGoalDay`). **First Aid Quiz**: a new round of 8+, once a game day,
+  First Aid 20 experience under level 3 (`d.fqDay`). **Spiffo Pup**: `vitality.hours`; a new care
+  action is the Strain comfort `pet`; `DanTraits_PupCare` (care 0.5+ seen in the last 24 hours)
+  takes 8 off MDD's floor (`MDD_RELIEF_PET`); running away +15 unhappiness, once (`d.ppGone`).
+  Counts already taken are kept in the game's own table (`dtRounds`, `dtCared`). Comforts `walk`
+  and `pet` (2 each) also in `plans/strain_sim.py`. Three new notices. Tests: test_spiffboy.
+- **Notes tab in the character window** (2026-10-26, `client/DanTraits_Notes.lua`): what the
+  character has worked out about themselves, out of the health panel. Added in
+  `ISCharacterInfoWindow:createChildren` (`DanTraits_Wrap`, tag `notes-tab`) after vanilla's five,
+  only for a character with Migraines or Sensory Issues. Sections (`NOTES_SECTIONS`, a header and
+  lines each): **Migraine triggers**, each strong trigger worked out (caught twice, `MIG_LEARN`)
+  in orange in `MIG_PERSONAL` order and how many of the three are left, or before the first "None
+  worked out yet" and how one gives itself away (`DanTraits_MigraineTriggerSummary`,
+  `DanTraits_NotesMigraineLines`); **Food**, Sensory Issues' groups (`DanTraits_NotesFoodLines`,
+  was the health panel's Food section). The view sizes the window as vanilla's protection tab does
+  and passes the shoulder buttons on. Neat Rocco gives every mod tab the same spanner icon, set
+  after the window's build; ours gets `Item_Notebook` a frame later (`tabButtons`/`subPanels`
+  matched by view). Both trait descriptions point at the tab. Tests: test_notes, test_migraine 8b,
+  test_sensory 12b.
+
 ### Changed
+
+- **Fabric protector lasts longer and keeps clothes fresh** (2026-10-27,
+  `DanTraits_LaundryGear.lua`, `DanTraits_Laundry.lua` `L.sweat`). `PROTECT_PER_WASH` 0.34 -> 0.2
+  (five washes), `PROTECT_WEAR` 0.02 -> 0.005 a hit minute (about 200 minutes of fighting); new
+  `PROTECT_ODOUR` 0.5: a protected garment gathers odour at half the rate while it holds
+  (stacks with a dryer sheet to a quarter; only with `LaundryPoncho` on). Fabric wax the same.
+  Tooltips, item script note, sandbox tooltip, README. Tests: test_laundry 14.
+- **The health panel is shorter** (2026-10-26, `DanTraits_HealthPanel.lua`). Blood and Strain
+  are one status each, so the header and the first line share a row and any more sit under the
+  first (`UI_DanTraits_health_Inline`); Daily Medication is a list of drugs and keeps its header
+  row, lines in 8 px. Blood is left out while there is nothing to tell (tier 0, not bleeding, not
+  weak, volume and red cells within `HP_BLOOD_FULL`), Strain under Frayed unless rising. The
+  migraine triggers and safe foods moved to the Notes tab. Tests: test_healthpanel 12, 13.
+
+- **Everyday activity is light training** (2026-10-26, from a Workshop comment: a looting trip
+  and five kills left arms, core and legs Overworked). Jogging, moving with a Heavy Load and
+  hard work (`dtjog`, `dtcarry`, `dtwork`) load the muscles a quarter as much as before
+  (`EVERYDAY.load` 0.25), never past the Overworked line (`EVERYDAY.max` = `FIT_OVER_LOAD`: Sore
+  at most), and never roll a pulled muscle (hard work already did not). A game minute is a few
+  real seconds, so at full rate about four real minutes of walking overloaded overworked the
+  legs and core, with nothing capping it and about a day's recovery per full load. The
+  exercise window is unchanged: its sets still overwork and still pull. Their minutes still
+  count toward plans, regularity and Pumped as before. The Sore Muscles and Overworked
+  descriptions now say the cost is exercise experience and the pull risk of a set, and that
+  walking, running, carrying and fighting are fine (Overworked said "Rest them").
+- **Rest days ignore everyday activity** (2026-10-26). A plan's rest day is broken only by 20
+  hard minutes of the window's exercises; jogging, carrying and hard work no longer count
+  toward it (`DanTraits_FitTargetProgress` leaves out the `EVERYDAY` keys). Forty game minutes
+  of either (about 2.5 real minutes) used to show "rest (trained hard anyway)" after a looting
+  run. A rest day never affected the plan bonus; this is what the window says. Hard minutes
+  for Overtrained and the Full Body target are unchanged.
 
 - Alcoholic gives 6 points (was 4) and Smoker 5 (was 4): both now add strain while dry and
   ease only a quarter as much with a drink or a cigarette.
@@ -109,6 +180,55 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   longer spawns (baclofen's commonness 1 to 1.3, its pill-caddy weight 1 to 2); the item stays
   for bottles already in a save and its tablet is a dose of baclofen; a save's
   `meds.cyclobenzaprine` level carries across to baclofen.
+
+### Fixed
+
+- **Undress and Sleep dresses you properly again** (2026-10-25, `client/DanTraits_SleepMenu.lua`),
+  reworked after Take A Bath And Shower's outfit handling. Taking off a belt or holster made the
+  game drop what hung on its slots, and putting it back on added the slot at the end, so the
+  morning left the knife in the bag and the hotbar shuffled; bags stayed on the floor; a
+  favourite bag never went down (the game will not drop a favourite); and a re-dress cut short
+  by moving lost the list. Now `ISDanTraitsUndressAction`, queued after the walk, writes the
+  outfit down by the bed (`d.slUndressed` = clothes in worn order, bags with their hand and
+  favourite flag, the hotbar's items and `modData.hotbar` slot order, the square), takes the
+  bags down (favourite flag off for the drop) and the clothes off outer layer first, then
+  queues the sleep. The morning's `ISDanTraitsDressAction` runs in three steps: a walk back if
+  needed and the bags picked up from the 3x3 round that square (`ISGrabItemAction`, the game's
+  transfer in MP), the clothes inner layer first and the bags worn or back in hand
+  (`ISEquipWeaponAction`), then the hotbar refreshed, its slots put back in the old order and
+  every item hung back on its slot, favourites restored. The record stays until everything that
+  can still be found is back (dressing by hand counts); the morning try runs once by itself,
+  then a world-menu **Get Dressed** option does it, for 12 game hours. An older save's ID list
+  is read as a record. Tests: `test_sleepmenu` rewritten for the new queue, 94/94.
+- **Undress and Sleep leaves it all on the floor** (2026-10-27, play report: a character with a
+  Bad Back slept with every garment in his inventory, over-encumbered, and threw his back out).
+  As Take A Bath And Shower does, nothing stays carried: the clothes go through the game's own
+  `dropItem` (unequip, then onto the floor where you stand) like the bags, and whatever hung on
+  a slot the clothes or bags give (`getAttachmentsProvided`: the knife on the belt) is taken off
+  the hotbar first (`removeItem`, so it does not come back up still marked attached) and dropped
+  too. Favourites of all three kinds lose the flag for the drop (`rec.favs`) and get it back. In
+  the morning the character gets up off the bed (`ISWaitWhileGettingUp`), walks onto the pile's
+  square and picks everything up, the hotbar items included, before dressing; a hotbar item
+  still on the floor keeps the record open. Tooltip: "Takes off and leaves by the bed". 95/95.
+
+### Dan's Vanilla Fixes: rarity colours of its own (2026-10-25)
+
+- **Item Rarity UI no longer needed** (`DansVanillaFixes_ItemRarity.lua`, global `DVF_Rarity`,
+  was `ItemRarityModdedItems`): at OnGameStart every item script gets a tier from the loot lists
+  as they stand then, vanilla and modded alike, by Item Rarity UI's method (the same scan and
+  thresholds the gap-filler used; no static table). The inventory list draws the name in the
+  tier's colour (Legendary orange, Epic purple, Rare blue, Uncommon green, Common vanilla grey,
+  Crafted teal) by wrapping `renderdetails` on `ISInventoryPane` and both of CleanUI's pane
+  classes (`CleanUI_Clean_ISInventoryPane`, `CleanUI_Vanilla_ISInventoryPane`, which CleanUI swaps
+  the global between). Text drawn in the name column while the row just added to `pane.items` is
+  a stack's table is that stack's name, whatever position, colour or "..." the pane uses; Common
+  keeps the pane's own colour, Unwanted (collected) items stay greyed, the drag red stays red,
+  dragged names are left alone. No Rarity column. The tooltip strip leads with "Rarity: Epic" in the tier's
+  colour (`DanShared_Tooltip.add("rarity", 5, ...)`). Keys and key rings are Common by override;
+  other mods can set `DVF_Rarity.overrides["Module.Item"]`. No loot lists in reach: nothing is
+  coloured. Sandbox Rarity Colours (Item Info page) turns names and tooltip off.
+- With Item Rarity UI still on, DVF draws nothing of its own and fills the items its table lacks,
+  as before.
 
 ## Map Legend 0.1.0 - 2026-10-25 (separate mod, not yet play-tested)
 
@@ -142,6 +262,21 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   button's tooltip lists its meanings by pen (wraps `checkInventory`; vanilla's "cannot write"
   reason stays).
 - Tests: `tests/test_maplegend.lua`; the lint and the API check scan `MapLegend/` too.
+
+### Fixed (2026-10-25, from a Workshop comment)
+
+- **Fitness window buttons out of reach.** OK, Cancel and Close are anchored to the bottom of
+  vanilla's window, so the game already moves them when our section grows it; placing them as
+  well moved them that far again, below the window, where they could not be seen or clicked.
+  Now they are unanchored before the window grows and placed once, and the section's
+  `prerender` pulls them back if anything leaves them below the window
+  (`DanTraitsFitnessSection.placeButtons`). Missed in testing because Neat Rocco's window
+  restacks them itself.
+- **Sensory Issues: which foods are safe.** The two safe and two can't-stand groups were told
+  once, two minutes in, and only food tooltips said it after that. The Notes tab of the character
+  window now lists both pairs and how many foods have been learned as safe
+  (`DanTraits_SensoryFoodSummary`, `DanTraits_NotesFoodLines`), and the trait description says
+  where to look.
 
 ## 1.4.0 - 2026-10-24
 

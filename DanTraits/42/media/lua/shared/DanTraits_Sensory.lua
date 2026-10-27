@@ -121,6 +121,7 @@ local S = {
     CALM_ASLEEP   = 4,
     CALM_BATH     = 3,       -- in a bath (Take A Bath And Shower)
     CALM_SHOWER   = 2,       -- in a shower
+    CALM_BREATHE  = 2,       -- Still Water at full calm (DanTraits_SpiffBoy.lua): x (1 + (this - 1) x calm)
     ASLEEP_TOUCH  = 0.5,     -- asleep, only the touch channel counts, at this
     -- effects by tier
     STRESS_FLOOR  = { 0.25, 0.5, 0.75 },
@@ -506,6 +507,8 @@ local function calmOf(player, d, asleep)
     pcall(function() if player:isSitOnGround() then k = k * S.CALM_SITTING end end)
     local bath = DanTraits_BathingMode and DanTraits_BathingMode(player)
     if bath == "BATH" then k = k * S.CALM_BATH elseif bath == "SHOWER" then k = k * S.CALM_SHOWER end
+    local breathe = DanTraits_StillWaterCalm and DanTraits_StillWaterCalm(player) or 0
+    if breathe > 0 then k = k * (1 + (S.CALM_BREATHE - 1) * breathe) end
     return k
 end
 
@@ -841,6 +844,21 @@ function DanTraits_SensoryTellFoods(player)
     rollFoods(d)
     DanTraits_NotifyFmtGood(player, "UI_DanTraits_SensorySafe", groupName(d.siSafe[1]), groupName(d.siSafe[2]))
     DanTraits_NotifyFmt(player, "UI_DanTraits_SensoryHate", groupName(d.siHate[1]), groupName(d.siHate[2]))
+end
+
+-- the safe and disliked groups by name and how many foods were learned, for
+-- the health panel (the notice above is easily missed); nil without the trait
+function DanTraits_SensoryFoodSummary(player)
+    if not player or not hasTrait(player, "sensory") then return nil end
+    local d = DanTraits_Data(player)
+    rollFoods(d)
+    local learned = 0
+    for _ in pairs(d.siLearned or {}) do learned = learned + 1 end
+    return {
+        safe = { groupName(d.siSafe[1]), groupName(d.siSafe[2]) },
+        hate = { groupName(d.siHate[1]), groupName(d.siHate[2]) },
+        learned = learned,
+    }
 end
 
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}

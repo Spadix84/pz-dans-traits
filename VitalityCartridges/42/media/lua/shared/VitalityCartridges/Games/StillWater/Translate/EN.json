@@ -1,0 +1,25 @@
+{
+    "UI": {
+        "Title": "STILL WATER",
+        "Breathe": "BREATHE",
+        "Pace": "PACE: %1",
+        "PaceCalm": "4-6",
+        "PaceBox": "BOX",
+        "Pace478": "4-7-8",
+        "SoundOn": "SOUND: ON",
+        "SoundOff": "SOUND: OFF",
+        "Totals": "%1 BREATHS, %2 MIN",
+        "In": "BREATHE IN",
+        "HoldIn": "HOLD",
+        "Out": "BREATHE OUT",
+        "HoldOut": "REST",
+        "HintSession": "HOLD A TO BREATHE IN",
+        "HintEnd": "START: END",
+        "Even": "EVEN",
+        "Done": "WELL DONE",
+        "Time": "%1 MIN %2 SEC",
+        "EvenBreaths": "%1 EVEN BREATHS",
+        "LongestRun": "LONGEST RUN %1",
+        "HintSave": "A: SAVE"
+    }
+}
