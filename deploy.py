@@ -17,6 +17,8 @@
                                 mod; mirror, like the default)
     python deploy.py --cartridges repo -> ~/Zomboid/mods/VitalityCartridges  (the SpiffBoy
                                 cartridges, Still Water; mirror, like the default)
+    python deploy.py --challenges repo -> ~/Zomboid/mods/VitalityChallenges  (the challenge
+                                scenarios, Pile-Up; mirror, like the default)
 
 The game only reads the mod folder, so edit here, deploy, then restart the
 game (registries and item scripts are read at boot; Lua is reloaded too).
@@ -37,6 +39,8 @@ REPO_LEGEND = os.path.join(HERE, "MapLegend")
 GAME_LEGEND = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "MapLegend")
 REPO_CARTRIDGES = os.path.join(HERE, "VitalityCartridges")
 GAME_CARTRIDGES = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "VitalityCartridges")
+REPO_CHALLENGES = os.path.join(HERE, "VitalityChallenges")
+GAME_CHALLENGES = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "VitalityChallenges")
 REPO_WORKSHOP = os.path.join(HERE, "workshop")
 GAME_WORKSHOP = os.path.join(os.path.expanduser("~"), "Zomboid", "Workshop", "DanTraits")
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}
@@ -134,12 +138,13 @@ def main():
     ap.add_argument("--unloader", action="store_true", help="deploy the Base Unloader mod instead")
     ap.add_argument("--legend", action="store_true", help="deploy the Map Legend mod instead")
     ap.add_argument("--cartridges", action="store_true", help="deploy the Vitality Cartridges mod instead")
+    ap.add_argument("--challenges", action="store_true", help="deploy the Vitality Challenges mod instead")
     a = ap.parse_args()
     if not a.pull:
         for rel in SHARED:
             if not filecmp.cmp(os.path.join(REPO_MOD, rel), os.path.join(REPO_PATCH, rel), shallow=False):
                 raise SystemExit("%s differs between DanTraits and DansVanillaFixes: make them the same first" % rel)
-    if a.workshop and (a.patch or a.unloader or a.legend or a.cartridges or a.pull):
+    if a.workshop and (a.patch or a.unloader or a.legend or a.cartridges or a.challenges or a.pull):
         ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --patch or --pull")
     if a.workshop:
         copied, removed, same = build_workshop(a.dry_run)
@@ -157,6 +162,8 @@ def main():
         repo, game = REPO_LEGEND, GAME_LEGEND
     if a.cartridges:
         repo, game = REPO_CARTRIDGES, GAME_CARTRIDGES
+    if a.challenges:
+        repo, game = REPO_CHALLENGES, GAME_CHALLENGES
     src, dst = (game, repo) if a.pull else (repo, game)
     if not os.path.isdir(src):
         raise SystemExit("missing: " + src)
@@ -171,7 +178,7 @@ def main():
     # The game loads ~/Zomboid/Workshop/DanTraits/Contents/mods/DanTraits in preference to
     # ~/Zomboid/mods/DanTraits while the upload folder exists, so a deploy that left it
     # stale looked like it did nothing. Keep the two identical.
-    if not a.pull and not a.patch and not a.unloader and not a.legend and not a.cartridges and os.path.isdir(GAME_WORKSHOP):
+    if not a.pull and not a.patch and not a.unloader and not a.legend and not a.cartridges and not a.challenges and os.path.isdir(GAME_WORKSHOP):
         copied, removed, same = build_workshop(a.dry_run)
         print("%s -> %s (the game loads this copy while it exists)" % (HERE, GAME_WORKSHOP))
         for rel in copied:

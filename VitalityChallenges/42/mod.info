@@ -1,0 +1,7 @@
+name=Vitality Challenges
+id=VitalityChallenges
+url=https://github.com/Spadix84/pz-dans-traits
+modversion=0.1.0
+versionMin=42.0.0
+poster=poster.png
+description=Challenge scenarios from the Vitality Project, in the game's Challenges menu. Pile-Up: you fled Muldraugh on the first night and drove into the back of a traffic jam on the highway in a thunderstorm. Your leg is broken, the car is dead, and whatever you packed is still in the trunk. No win condition: survive. Nomad: a year on, in a December blizzard at the far south-west edge of the map, walk to the top floor of the Louisville tower. No car will start, you get one life, and you carry what you need: a big hiking bag, a tent, three days of food, a map with the tower circled, and weapons by profession, better ones for some traits. Works on its own; with the Vitality Project loaded the Pile-Up crash also leaves you concussed and the Nomad starts with your medication.

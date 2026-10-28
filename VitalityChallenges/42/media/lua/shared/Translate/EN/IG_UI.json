@@ -1,0 +1,10 @@
+{
+    "IGUI_VC_WontStart": "It won't turn over.",
+    "IGUI_VC_EngineDies": "The engine coughs and dies.",
+    "IGUI_VC_SummaryWalk": "%1 days on the road, %2 tiles on foot.",
+    "IGUI_VC_SummaryKills": "Kills: %1. Profession: %2.",
+    "IGUI_VC_Short": "%1 tiles short of the goal.",
+    "IGUI_VC_OneLifeOver": "This challenge allows one life, and it has been spent. <LINE> <LINE> Start a new game to try again.",
+    "IGUI_VC_Nomad_Won": "You made it to the top of Louisville.",
+    "IGUI_VC_NomadMap": "Map of Kentucky (annotated)"
+}

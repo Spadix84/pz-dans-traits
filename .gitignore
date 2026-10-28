@@ -8,3 +8,6 @@ companion_link.txt
 Thumbs.db
 __pycache__/
 tests/node_modules/
+
+# archived old mods (big binaries; kept locally, not in git)
+plans/archive/
