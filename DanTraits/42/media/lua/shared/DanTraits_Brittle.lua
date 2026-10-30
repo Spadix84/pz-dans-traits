@@ -73,7 +73,7 @@ DanTraits_BrittleChance = fractureChance
 
 -- a solid hit; also how another mod's NPC hit arrives (DanTraits_OtherHit)
 function DanTraits_BrittleHit(player, damage)
-    if not player or player ~= getSpecificPlayer(0) then return end   -- the local player only (zombies come through here too)
+    if not DanTraits_IsLocalPlayer(player) then return end   -- a local player only (zombies come through here too)
     if not hasTrait(player, "brittle") then return end
     if not damage or damage < 2 then return end
     if ZombRand(100) >= DanTraits_RunHooks("brittleChance", fractureChance(player), player) then return end   -- Age: likelier in the 40s
@@ -88,7 +88,7 @@ end
 
 -- a fall or crash, with the chance Concussion gives it (0 under its scale's floor)
 DanTraits_AddHook("impact", function(_, player, chance)
-    if not player or player ~= getSpecificPlayer(0) then return nil end
+    if not DanTraits_IsLocalPlayer(player) then return nil end
     if not hasTrait(player, "brittle") or not chance or chance <= 0 then return nil end
     local pct = DanTraits_RunHooks("brittleChance", fractureChance(player), player) * IMPACT_SCALE * chance
     if ZombRand(100) >= pct then return nil end

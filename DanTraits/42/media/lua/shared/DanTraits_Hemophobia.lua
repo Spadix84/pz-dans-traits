@@ -20,7 +20,7 @@
 --   first aid on a wound takes longer, the hands shaking (HB_SLOW)
 -- The action classes are wrapped through DanTraits_Wrap (DanTraits.lua) with
 -- the tags "fear-faint" (complete), "fear-slow" (getDuration) and
--- "fear-splint-slow" (ISSplint.new).
+-- "fear-splint-slow" (ISSplint.getDuration, which returns the time its new() set).
 require "DanTraits"
 
 local hasVanillaTrait = DanTraits_HasVanillaTrait

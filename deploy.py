@@ -4,7 +4,8 @@
                                 and, while ~/Zomboid/Workshop/DanTraits exists, into its Contents too:
                                 the game loads the Workshop copy in preference to the mods one, so
                                 the two are kept identical and it does not matter which it picks
-    python deploy.py --pull     ~/Zomboid/mods/DanTraits -> repo    (for edits made in place while testing)
+    python deploy.py --pull     ~/Zomboid/mods/DanTraits -> repo    (for edits made in place while testing;
+                                adds and updates only, nothing in the repo is removed)
     python deploy.py --dry-run  show what would change, touch nothing
     python deploy.py --workshop repo  -> ~/Zomboid/Workshop/DanTraits  (the folder the
                                 in-game Workshop uploader reads: workshop.txt, preview.png,
@@ -18,7 +19,8 @@
     python deploy.py --cartridges repo -> ~/Zomboid/mods/VitalityCartridges  (the SpiffBoy
                                 cartridges, Still Water; mirror, like the default)
     python deploy.py --challenges repo -> ~/Zomboid/mods/VitalityChallenges  (the challenge
-                                scenarios, Pile-Up; mirror, like the default)
+                                scenarios; mirror, like the default)
+    One mod flag a run; any of them may go with --pull.
 
 The game only reads the mod folder, so edit here, deploy, then restart the
 game (registries and item scripts are read at boot; Lua is reloaded too).
@@ -63,7 +65,7 @@ def walk(root, skip=()):
     return out
 
 
-def sync(src, dst, dry, skip=()):
+def sync(src, dst, dry, skip=(), delete=True):
     s, d = walk(src, skip), walk(dst)
     copied, removed, same = [], [], 0
     for rel, path in sorted(s.items()):
@@ -76,7 +78,7 @@ def sync(src, dst, dry, skip=()):
             os.makedirs(os.path.dirname(target), exist_ok=True)
             shutil.copy2(path, target)
     for rel, path in sorted(d.items()):
-        if rel not in s:
+        if delete and rel not in s:
             removed.append(rel)
             if not dry:
                 os.remove(path)
@@ -133,19 +135,20 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pull", action="store_true", help="copy from the game folder into the repo")
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--workshop", action="store_true", help="build the Workshop upload folder")
-    ap.add_argument("--patch", action="store_true", help="deploy the Dan's Vanilla Fixes mod instead")
-    ap.add_argument("--unloader", action="store_true", help="deploy the Base Unloader mod instead")
-    ap.add_argument("--legend", action="store_true", help="deploy the Map Legend mod instead")
-    ap.add_argument("--cartridges", action="store_true", help="deploy the Vitality Cartridges mod instead")
-    ap.add_argument("--challenges", action="store_true", help="deploy the Vitality Challenges mod instead")
+    mode = ap.add_mutually_exclusive_group()   # one mod (or the Workshop folder) a run
+    mode.add_argument("--workshop", action="store_true", help="build the Workshop upload folder")
+    mode.add_argument("--patch", action="store_true", help="deploy the Dan's Vanilla Fixes mod instead")
+    mode.add_argument("--unloader", action="store_true", help="deploy the Base Unloader mod instead")
+    mode.add_argument("--legend", action="store_true", help="deploy the Map Legend mod instead")
+    mode.add_argument("--cartridges", action="store_true", help="deploy the Vitality Cartridges mod instead")
+    mode.add_argument("--challenges", action="store_true", help="deploy the Vitality Challenges mod instead")
     a = ap.parse_args()
     if not a.pull:
         for rel in SHARED:
             if not filecmp.cmp(os.path.join(REPO_MOD, rel), os.path.join(REPO_PATCH, rel), shallow=False):
                 raise SystemExit("%s differs between DanTraits and DansVanillaFixes: make them the same first" % rel)
-    if a.workshop and (a.patch or a.unloader or a.legend or a.cartridges or a.challenges or a.pull):
-        ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --patch or --pull")
+    if a.workshop and a.pull:
+        ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --pull")
     if a.workshop:
         copied, removed, same = build_workshop(a.dry_run)
         print("%s -> %s" % (HERE, GAME_WORKSHOP))
@@ -167,7 +170,7 @@ def main():
     src, dst = (game, repo) if a.pull else (repo, game)
     if not os.path.isdir(src):
         raise SystemExit("missing: " + src)
-    copied, removed, same = sync(src, dst, a.dry_run)
+    copied, removed, same = sync(src, dst, a.dry_run, delete=not a.pull)   # a pull adds and updates, never removes
     verb = "would copy" if a.dry_run else "copied"
     print("%s -> %s" % (src, dst))
     for rel in copied:

@@ -118,8 +118,8 @@ end
 
 local function onBloodGetDamage(character, damageType, amount)
     if damageType ~= "BLEEDING" or not sandboxOn() then return end
-    local player = getSpecificPlayer(0)
-    if not player or character ~= player then return end
+    if not DanTraits_IsLocalPlayer(character) then return end
+    local player = character
     amount = tonumber(amount) or 0
     if amount <= 0 then return end
     local d = traitData(player)

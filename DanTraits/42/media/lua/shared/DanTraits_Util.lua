@@ -57,6 +57,8 @@
 --   DanTraits_FluidName(container)         the container's main fluid, lowercase
 --                                          ("coffee", "milk"), nil when empty or unknown
 --   DanTraits_FluidRatio(container)        that fluid's share of the mix, 1 on failure
+--   DanTraits_IsLocalPlayer(character)     one of the players on this machine (any split-screen slot)
+--   DanTraits_StormComing(aheadHours, rainAt) a storm within that many hours (the forecast's rain over rainAt)
 --   DanTraits_AirTemp(player)              the air temperature around the character
 --                                          (the game's two-argument form, else one), or nil
 --   DanTraits_PanicDecay(stats, perTick)   take perTick (scaled by the frame multiplier)
@@ -64,7 +66,7 @@
 --                                          that calm you (drink, diazepam)
 --   DanTraits_ScaleActionTime(classes, tag, applies, factor)
 --                                          wrap getDuration on each class in the list
---                                          (and ISSplint.new, which sets its own time)
+--                                          (and ISSplint's getDuration, which returns the time its new() set)
 --                                          to multiply the time by factor when
 --                                          applies(character) is true
 --   DanTraits_DropHeld(player, bothHands, textKey)
@@ -777,6 +779,19 @@ function DanTraits_GrantFoldIn(player, trait, constName, flag)
 end
 
 -- Hits from other mods ------------------------------------------------------------
+-- Is this character one of the players on this machine (any split-screen
+-- slot)? The event handlers that must ignore zombies and other players'
+-- characters (hits, swings, damage) ask this, not "is it player 0": the
+-- clocks run for every local player, so the events must too.
+function DanTraits_IsLocalPlayer(character)
+    if not character then return false end
+    for i = 0, 3 do
+        local ok, p = pcall(getSpecificPlayer, i)
+        if ok and p ~= nil and p == character then return true end
+    end
+    return false
+end
+
 -- The game reports a weapon hit (OnPlayerGetDamage "WEAPONHIT") only from
 -- IsoGameCharacter.Hit. NPC mods hurt the player other ways (Project A-Life:
 -- BodyDamage.DamageFromWeapon; Bandits: ReduceGeneralHealth and wounds set by
@@ -784,7 +799,7 @@ end
 -- them. Their adapters (DanTraits_ALife.lua, DanTraits_Bandits.lua) report the
 -- hit here: damage is the health it cost, headLost how much came off the head.
 function DanTraits_OtherHit(player, damage, headLost)
-    if not player or player ~= getSpecificPlayer(0) then return end
+    if not DanTraits_IsLocalPlayer(player) then return end
     if DanTraits_HeadHit and (tonumber(headLost) or 0) > 0 then DanTraits_HeadHit(player, tonumber(headLost)) end
     if DanTraits_BrittleHit then DanTraits_BrittleHit(player, tonumber(damage) or 0) end
 end
@@ -802,7 +817,7 @@ local function bodyHealth(player)
 end
 local function packed(...) return { n = select("#", ...), ... } end
 function DanTraits_MeasureHit(player, fn, ...)
-    if measuring > 0 or not player or player ~= getSpecificPlayer(0) then return fn(...) end
+    if measuring > 0 or not DanTraits_IsLocalPlayer(player) then return fn(...) end
     local total, head = bodyHealth(player)
     measuring, gameReported = measuring + 1, false
     local results = packed(pcall(fn, ...))

@@ -153,7 +153,7 @@ function DanTraits_KnockHead(player, chance, score)
     if (not late or (late.wait and new > (late.s or 0))) and roll(CC_LATE_CHANCE[1] + CC_LATE_CHANCE[2] * new) then
         d.ccLate = { wait = (late and late.wait) or randRange(CC_LATE_WAIT[1], CC_LATE_WAIT[2]), s = new }
     end
-    if score >= CC_SEVERE or new >= CC_SEVERE and old > 0 then
+    if score >= CC_SEVERE or (new >= CC_SEVERE and old > 0) then
         local t = clamp01((new - CC_SEVERE) / (1 - CC_SEVERE))
         if DanTraits_PassOut then DanTraits_PassOut(player, CC_KO_MIN[1] + (CC_KO_MIN[2] - CC_KO_MIN[1]) * t, "UI_DanTraits_ConcussionComeTo", true) end
     elseif new >= CC_MODERATE and roll(CC_KO_MODERATE) then
@@ -167,7 +167,7 @@ end
 -- a weapon took this much off the head (CC_HEAD_SURE: certain); also how
 -- another mod's NPC hit arrives (DanTraits_OtherHit)
 function DanTraits_HeadHit(player, lost)
-    if not player or player ~= getSpecificPlayer(0) then return 0 end
+    if not DanTraits_IsLocalPlayer(player) then return 0 end
     lost = tonumber(lost) or 0
     if lost <= 0 then return 0 end
     return DanTraits_KnockHead(player, clamp01(lost / CC_HEAD_SURE), clamp01(CC_BASE + CC_HEAD_PER * lost))
@@ -248,8 +248,8 @@ end
 
 local function onConcussionDamage(character, damageType, amount)
     if not sandboxOn() and damageType == "WEAPONHIT" then return end   -- falls and crashes are still judged for the impact hook
-    local player = getSpecificPlayer(0)
-    if not player or character ~= player then return end
+    if not DanTraits_IsLocalPlayer(character) then return end
+    local player = character
     amount = tonumber(amount) or 0
     local st = stateOf(player)
     if damageType == "FALLDOWN" or damageType == "CARCRASHDAMAGE" or damageType == "CARHITDAMAGE" then
@@ -290,8 +290,7 @@ DanTraits_AddHook("enduranceRegen", function(delta, player, d)
 end)
 
 local function onConcussionSwing(character)
-    local player = getSpecificPlayer(0)
-    if player and character == player then stateOf(player).fought = true end
+    if DanTraits_IsLocalPlayer(character) then stateOf(character).fought = true end
 end
 
 local function updateMoodle(player, s)

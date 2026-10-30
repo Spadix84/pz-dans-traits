@@ -127,7 +127,7 @@ local FIT_LOG_DAYS       = 8
 -- keep the file's upvalues down:
 --   wc Well Conditioned, nr Natural Runner, pl Weightlifter, ds Regimented,
 --   ls Lingering Soreness, ip Injury Prone, ea Exercise Averse, ix Inflexible,
---   ej Endorphin Junkie; bb Bad Back (an age trait, AgeTraits.lua)
+--   ej Endorphin Junkie, ng Newbie Gains; bb Bad Back (an age trait, AgeTraits.lua)
 local TR = {
     wcRecover = 1.5, wcReady = 14, wcHeal = 2,
     lsRecover = 0.6, lsReady = 30,
@@ -140,6 +140,7 @@ local TR = {
     ixFade = 0.7,                    -- stiffness fades x this otherwise
     ixLooseRelief = 0.95, ixArthritis = 1.1,   -- Loosened Up eases half as much; the joints worse otherwise
     ejPumpMin = 360, ejLift = 2, ejRestlessH = 48, ejBoredom = 30, ejBoredomRamp = 0.5, ejStress = 0.15, ejStressRamp = 0.002,
+    ngXp = 1.3, ngLevels = 3,        -- Newbie Gains: experience x this, until a skill is this many levels above its start
     bbCore = 1.5,                    -- Bad Back: a pull in the core x this likelier
     bbLift = 0.008,                  -- Bad Back: back load a minute of a two-handed improvised lift
 }
@@ -728,6 +729,45 @@ local function rollDays(player, d, today)
     end
 end
 
+-- Newbie Gains -------------------------------------------------------------------------
+-- An untrained body answers its first levels fast. Each skill's level when the
+-- character is first seen is kept (d.ftNewbie); until the skill is TR.ngLevels
+-- above it (10 at most), its experience is x TR.ngXp, under the cap.
+
+-- levels of the bonus left on Strength or Fitness; 0 without the trait, and 0
+-- until the minute has kept the skill's starting level
+local function newbieLeft(player, d, perk)
+    if not d or not d.ftNewbie or not hasTrait(player, "newbiegains") then return 0 end
+    local name = perk == Perks.Strength and "Strength" or "Fitness"
+    local start = d.ftNewbie[name]
+    if start == nil then return 0 end
+    local level = 0
+    pcall(function() level = player:getPerkLevel(perk) or 0 end)
+    return math.max(0, math.min(start + TR.ngLevels, 10) - level)
+end
+function DanTraits_FitNewbieLeft(player, perk) return newbieLeft(player, DanTraits_Data(player), perk) end
+
+-- the starting levels kept (here, never on the experience path: that event
+-- fires after the game added, so a level crossed there would move the start),
+-- and a notice when a skill's easy levels run out
+local function newbieMinute(player, d)
+    if not hasTrait(player, "newbiegains") then return end
+    d.ftNewbie = d.ftNewbie or {}
+    for _, name in ipairs({ "Strength", "Fitness" }) do
+        local perk = Perks and Perks[name]
+        if perk then
+            if d.ftNewbie[name] == nil then
+                local ok, level = pcall(function() return player:getPerkLevel(perk) end)
+                if ok and type(level) == "number" then d.ftNewbie[name] = level end
+            end
+            if d.ftNewbie[name] ~= nil and newbieLeft(player, d, perk) <= 0 and not d.ftNewbie[name .. "Done"] then
+                d.ftNewbie[name .. "Done"] = true
+                notify(player, "UI_DanTraits_FitNewbieOver_" .. name)
+            end
+        end
+    end
+end
+
 -- the minute ---------------------------------------------------------------------------
 
 -- sandbox off: everything but the plan chosen goes (the log and the day too, or
@@ -830,6 +870,7 @@ local function updateFitnessMinute(player, d)
         d.ftRestless, d.ftLastPump = nil, nil
     end
     if (d.ftLooseMin or 0) > 0 and not d.ftStretchingNow then d.ftLooseMin = d.ftLooseMin - 1 end
+    newbieMinute(player, d)
     moodleLevels(d)
 end
 
@@ -953,18 +994,15 @@ end
 
 -- experience --------------------------------------------------------------------------
 -- A rep (DanTraits_FitnessActions marks it in DanTraits_FitRep) is scaled by
--- the training factor; any Fitness or Strength experience by the magazines
--- and the fitnessXpAll hook (Cooking), the whole capped at FIT_XP_CAP.
--- The adjustment goes through Age's quiet adjust, so neither Age nor
--- Vitality stacks on it, and Age's own top-ups are skipped here.
+-- the training factor; any Fitness or Strength experience by the magazines,
+-- the fitnessXpAll hook (Cooking) and Newbie Gains, the whole capped at FIT_XP_CAP.
+-- The factor goes through core's DanTraits_XpFactor (the event's factors
+-- multiply; the difference through Age's quiet adjust), and Age's own top-ups
+-- are skipped here.
 local xpBusy = false
-local function adjustXp(player, perk, extra)
+local function adjustXp(player, perk, amount, k)
     xpBusy = true
-    if DanTraits_AgeXpAdjust then
-        DanTraits_AgeXpAdjust(player, perk, extra)
-    elseif extra > 0 then
-        pcall(function() player:getXp():AddXP(perk, extra, false, false, false, false) end)
-    end
+    DanTraits_XpFactor(player, perk, amount, k)
     xpBusy = false
 end
 
@@ -986,12 +1024,14 @@ local function onFitnessAddXP(player, perk, amount)
     end
     -- every gain, the window's or not (Cooking: Fuelled, the diet goals)
     k = k * (tonumber(DanTraits_RunHooks("fitnessXpAll", 1, player, d, perk)) or 1)
+    -- Newbie Gains: the first levels above where the character started
+    if newbieLeft(player, d, perk) > 0 then k = k * TR.ngXp end
     -- the boosts together top out here; the sandbox's pace is on top
     k = math.min(k, FIT_XP_CAP)
     -- the sandbox's pace for training: all Fitness and Strength experience x this
     k = k * math.max(0, DanTraits_SandboxNum("FitnessXp", 100)) / 100
     if math.abs(k - 1) < 0.001 then return end
-    adjustXp(player, perk, amount * (k - 1))
+    adjustXp(player, perk, amount, k)
 end
 Events.AddXP.Add(onFitnessAddXP)
 

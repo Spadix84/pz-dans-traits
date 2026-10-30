@@ -627,7 +627,7 @@
     "Moodles_GoodMeal_Good_lvl4": "",
     "Moodles_GoodMeal_Good_desc_lvl4": "",
     "Moodles_MedsDue_Bad_lvl1": "Medication Due",
-    "Moodles_MedsDue_Bad_desc_lvl1": "Time for your next dose of a daily medication. The health panel shows when you last took each one.",
+    "Moodles_MedsDue_Bad_desc_lvl1": "Time for your next dose of a daily medication. The Medication button on the health panel shows when you last took each one.",
     "Moodles_MedsDue_Bad_lvl2": "Missed Medication",
     "Moodles_MedsDue_Bad_desc_lvl2": "A daily medication has worn off. Its effect slips away the longer you go without: take a dose.",
     "Moodles_MedsDue_Bad_lvl3": "",

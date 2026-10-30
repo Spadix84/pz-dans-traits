@@ -367,9 +367,10 @@ local function wrapMood()
         if k == 1 then return original(playerObj, ...) end
         local b, u = mood.BOREDOM_PER_SECOND, mood.UNHAPPINESS_PER_SECOND
         mood.BOREDOM_PER_SECOND, mood.UNHAPPINESS_PER_SECOND = (b or 0) * k, (u or 0) * k
-        local ok, err = pcall(original, playerObj, ...)
+        local res = { pcall(original, playerObj, ...) }
         mood.BOREDOM_PER_SECOND, mood.UNHAPPINESS_PER_SECOND = b, u
-        if not ok then error(err) end
+        if not res[1] then error(res[2], 0) end
+        return unpack(res, 2)
     end)
 end
 

@@ -172,12 +172,14 @@ function C.packChanging(chill, place, temp, max)
 end
 
 -- Packs in one cooler drain together, smallest first, dt hours of budget in
--- all. states: their state tables (changed in place). Returns the hours the
--- cooler was cold.
+-- all. states: their state tables (changed in place; the list keeps its order,
+-- so states[i] is still pack i's after). Returns the hours the cooler was cold.
 function C.drainPool(states, dt)
-    table.sort(states, function(a, b) return a.c < b.c end)
+    local order = {}
+    for i, s in ipairs(states) do order[i] = s end
+    table.sort(order, function(a, b) return a.c < b.c end)
     local left = dt
-    for _, s in ipairs(states) do
+    for _, s in ipairs(order) do
         local take = math.min(s.c, left)
         s.c = s.c - take
         left = left - take

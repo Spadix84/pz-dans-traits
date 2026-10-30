@@ -38,16 +38,22 @@ BU.APPLIANCE_KINDS = { clothingdryer = true }                       -- exact: th
 -- keys ------------------------------------------------------------------------------
 
 -- A world container has no stable id, so it is keyed by where it is, what it
--- is and which of its object's containers it is (a fridge has two).
-function BU.key(x, y, z, kind, index)
-    return string.format("%d,%d,%d:%s:%d", x, y, z, kind or "?", index or 0)
+-- is, which of its object's containers it is (a fridge has two) and, when more
+-- than one object of that kind shares the square (crates stack three high),
+-- which of them it is: "x,y,z:kind:index" for the first, "x,y,z:kind:index#1"
+-- for the second, so every key saved before the ordinal still parses.
+function BU.key(x, y, z, kind, index, ordinal)
+    local key = string.format("%d,%d,%d:%s:%d", x, y, z, kind or "?", index or 0)
+    if (ordinal or 0) > 0 then key = key .. "#" .. tostring(ordinal) end
+    return key
 end
 
 function BU.parseKey(key)
     if type(key) ~= "string" then return nil end
-    local x, y, z, kind, index = string.match(key, "^(-?%d+),(-?%d+),(-?%d+):([^:]*):(%d+)$")
+    local x, y, z, kind, index, ordinal = string.match(key, "^(-?%d+),(-?%d+),(-?%d+):([^:#]*):(%d+)#?(%d*)$")
     if not x then return nil end
-    return { x = tonumber(x), y = tonumber(y), z = tonumber(z), kind = kind, index = tonumber(index) }
+    return { x = tonumber(x), y = tonumber(y), z = tonumber(z), kind = kind, index = tonumber(index),
+             ordinal = tonumber(ordinal) or 0 }
 end
 
 -- the saved data ----------------------------------------------------------------------
@@ -499,9 +505,10 @@ function BU.resolve(item, ctx)
     if holds then return holds.key, "contains" end
     if cold then
         local cold = most(shown, function(c)
-            local rank = BU.COLD_KINDS[lowerKind(c)]
-            if rank == 1 then return 2 end
-            if rank == 2 then return 1 end
+            local k = lowerKind(c)
+            local rank = BU.COLD_KINDS[k]   -- a modded one by its name, as isCold reads it
+            if rank == 1 or (not rank and string.find(k, "freezer", 1, true)) then return 2 end
+            if rank == 2 or (not rank and string.find(k, "fridge", 1, true)) then return 1 end
             return 0
         end)
         if cold then return cold.key, "freezer" end
@@ -610,17 +617,19 @@ function BU.route(pool, ctx)
     return items, nowhere
 end
 
--- the items grouped by type, each group with its count and weight, sorted by name
+-- the items grouped by type (dirty laundry and spoiled food apart from the rest
+-- of their type: they go elsewhere), each group with its count and weight, sorted by name
 function BU.groups(items)
     local byType, list = {}, {}
     for _, item in ipairs(items) do
         if BU.movable(item) then
-            local gkey = item.fullType .. (item.laundry and "|laundry" or "")
+            local spoiled = item.rotten == true or item.stale == true
+            local gkey = item.fullType .. (item.laundry and "|laundry" or "") .. (spoiled and "|spoiled" or "")
             local g = byType[gkey]
             if not g then
                 g = { fullType = item.fullType, name = item.name, category = item.category, count = 0, weight = 0,
                       items = {}, food = item.food, perishable = item.perishable, longLife = item.longLife,
-                      laundry = item.laundry == true }
+                      laundry = item.laundry == true, spoiled = spoiled }
                 byType[gkey] = g
                 list[#list + 1] = g
             end
@@ -631,7 +640,10 @@ function BU.groups(items)
     end
     table.sort(list, function(a, b)
         if a.name == b.name then
-            if a.fullType == b.fullType then return (a.laundry and 1 or 0) < (b.laundry and 1 or 0) end
+            if a.fullType == b.fullType then
+                if a.laundry ~= b.laundry then return (a.laundry and 1 or 0) < (b.laundry and 1 or 0) end
+                return (a.spoiled and 1 or 0) < (b.spoiled and 1 or 0)
+            end
             return a.fullType < b.fullType
         end
         return a.name < b.name
@@ -658,7 +670,7 @@ function BU.suggest(groups, containers, rules)
     local out = {}
     for _, g in ipairs(groups) do
         local probe = { fullType = g.fullType, category = g.category, food = g.food, perishable = g.perishable,
-                        longLife = g.longLife }
+                        longLife = g.longLife, weight = g.items and g.items[1] and g.items[1].weight or nil }
         if not BU.destinationOf(probe, rules, nil) then
             local key, how = BU.resolve(probe, { containers = containers })
             if key and SUGGESTED[how] then out[g.fullType] = key end

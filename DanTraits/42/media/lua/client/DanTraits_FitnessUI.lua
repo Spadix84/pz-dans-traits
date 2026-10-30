@@ -143,8 +143,9 @@ end
 -- OK, Cancel and Close along the window's bottom edge
 function DanTraitsFitnessSection.placeButtons(window)
     local y = window:getHeight() - BUTTON_HGT - PAD - 1
-    for _, b in ipairs({ window.ok, window.cancel, window.close }) do
-        if b then b:setY(y) end
+    -- (Neat Rocco's window clears its Close button, so `close` is the window's method there, not a button)
+    for _, b in ipairs({ window.ok, window.cancel, window.close, window.closeBtn }) do
+        if type(b) == "table" and b.setY then b:setY(y) end
     end
 end
 
@@ -270,6 +271,13 @@ function DanTraitsFitnessSection:render()
     if (d.ftLooseMin or 0) > 0 then status[#status + 1] = txt("IGUI_DanTraits_FitLooseNow") end
     if d.ftOvertrained then status[#status + 1] = txt("IGUI_DanTraits_FitOvertrainedNow") end
     if d.ftBench then status[#status + 1] = txt("IGUI_DanTraits_FitBenchNow") end
+    -- Newbie Gains: the levels of it left on each skill
+    local newbie = {}
+    for _, name in ipairs({ "Strength", "Fitness" }) do
+        local left = Perks and Perks[name] and DanTraits_FitNewbieLeft(self.player, Perks[name]) or 0
+        if left > 0 then newbie[#newbie + 1] = txt("IGUI_DanTraits_FitNewbieLeft", txt("IGUI_perks_" .. name), left) end
+    end
+    if #newbie > 0 then status[#status + 1] = txt("IGUI_DanTraits_FitNewbieNow", table.concat(newbie, ", ")) end
     -- a meal (Cooking): Fuelled, and the buff from what it was mostly
     local fuel = DanTraits_CookFuelTier and DanTraits_CookFuelTier(self.player) or 0
     if fuel > 0 then
@@ -410,8 +418,8 @@ local function wrapWindow()
             -- height change itself; placing them as well put them that far below
             -- the window, out of sight and out of reach (2026-10-25). Unanchored
             -- first, then placed once.
-            for _, b in ipairs({ self.ok, self.cancel, self.close }) do
-                if b then b:setAnchorBottom(false); b:setAnchorTop(true) end
+            for _, b in ipairs({ self.ok, self.cancel, self.close, self.closeBtn }) do
+                if type(b) == "table" and b.setAnchorBottom then b:setAnchorBottom(false); b:setAnchorTop(true) end
             end
             self:setHeight(self:getHeight() + section:getHeight() + PAD)
             DanTraitsFitnessSection.placeButtons(self)

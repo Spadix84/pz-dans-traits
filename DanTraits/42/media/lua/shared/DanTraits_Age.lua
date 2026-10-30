@@ -460,7 +460,7 @@ local function onAgeAddXP(player, perk, amount)
         end
     end
     if k == 1 then return end
-    DanTraits_AgeXpAdjust(player, perk, amount * (k - 1))
+    DanTraits_XpFactor(player, perk, amount, k)
 end
 
 -- Each minute: whatever a scratch's or cut's clock, or a part's stiffness,

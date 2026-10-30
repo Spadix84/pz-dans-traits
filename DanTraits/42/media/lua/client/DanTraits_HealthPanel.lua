@@ -34,23 +34,28 @@
 -- (DanTraits_BloodRelay.lua), so it shows a moment after the panel opens.
 -- Left out while there is nothing to tell: full, not bleeding, red cells whole.
 --
--- Daily medication: under that, your own character's
--- scheduled drugs (DanTraits_Meds.lua: the ones for traits you have), each
--- with when it was last taken and when the next is due; orange when it is
--- due, red once it has worn off. Not shown for another player in multiplayer:
--- their mod data is not sent to the doctor.
---
 -- Burnout (strain in the code): under that, your own character's tier
 -- (DanTraits_Strain.lua) and whether it got worse or eased over the last hour,
 -- then how hardened they are once that takes 5% or more off. Yourself only,
 -- and only from Frayed or while it is getting worse (the moodle covers the rest).
 --
 -- Blood and Burnout are one status each: the header and the first line share
--- a row, any further lines sit under the first. Medication is a list of
--- drugs, so it keeps a header row of its own. The body part list moves down
+-- a row, any further lines sit under the first. The body part list moves down
 -- to make room. What the character has learned about themselves (migraine
 -- triggers, safe foods) is in the Notes tab (DanTraits_Notes.lua), not here.
+--
+-- Daily medication has a window of its own (DanTraitsMedWindow), raised by a
+-- pill bottle button (the inventory's icon, "Medication" on hover) beside the
+-- panel's Fitness button, a square of Fitness's height: your own character's
+-- scheduled drugs (DanTraits_Meds.lua: the ones for traits you have), each
+-- with when it was last taken and when the next is due; orange when it is
+-- due, red once it has worn off, or "No daily medication to take". The button
+-- is on your own panel only (another player's mod data is not sent to the
+-- doctor, so their panel never gets it); it toggles the window, which sizes
+-- itself to its lines each frame and closes with the X.
 require "XpSystem/ISUI/ISHealthPanel"
+require "ISUI/ISCollapsableWindow"
+require "ISUI/ISButton"
 
 local HP_VAGUE_BELOW   = 3       -- levels under this see only what anyone can see
 local HP_DETAIL        = 6       -- infection stage and stitch condition from here
@@ -60,6 +65,10 @@ local HP_SPREAD_L      = 5       -- the infection is in the body from here (as D
 local HP_THIN_LIFE     = 1       -- a dressing is wearing thin under this life
 local HP_GAP           = 4       -- px under each section above the body part list
 local HP_INDENT        = 8       -- px a list section's lines sit in from its header
+local HP_MED_PAD       = 10      -- px around the medication window's text
+local HP_MED_MIN_W     = 220     -- the medication window is at least this wide
+local HP_MED_ICON      = "Item_PillsBetablocker"   -- the button's icon: a pill bottle, as the inventory draws one
+local HP_MED_ICON_PAD  = 3       -- px between the icon and the button's edge
 local HP_BLEED_SLOW    = 0.001   -- blood volume a minute: bleeding slowly under this (6% an hour)...
 local HP_BLEED_HEAVY   = 0.004   -- ...heavily from this (24% an hour)
 local HP_BLOOD_SLIGHT  = 0.05    -- volume lost: "a little blood" from this (First Aid 3-5)
@@ -380,11 +389,119 @@ local function medLines(patient)
                 status = nextIn <= 1 and t("MedNextSoon") or getText("UI_DanTraits_health_MedNextIn", tostring(math.ceil(nextIn)))
             end
         end
-        out[#out + 1] = { medName(id) .. ": " .. when .. (status and (", " .. status) or ""), colour }
+        local detail = when .. (status and (", " .. status) or "")
+        local name = medName(id)
+        out[#out + 1] = { name .. ": " .. detail, colour, name = name, detail = detail }
     end
     return out
 end
 DanTraits_HealthMedLines = medLines
+
+-- the medication window ---------------------------------------------------------------------
+
+DanTraitsMedWindow = ISCollapsableWindow:derive("DanTraitsMedWindow")
+DanTraitsMedWindow.instances = {}
+-- a new character (a new world too): the last one's window went with the UI
+Events.OnCreatePlayer.Add(function(playerNum) DanTraitsMedWindow.instances[playerNum] = nil end)
+
+function DanTraitsMedWindow:new(x, y, character)
+    local o = ISCollapsableWindow.new(self, x, y, HP_MED_MIN_W, 100)
+    o:setTitle(t("MedHeader"))
+    o.character = character
+    o.playerNum = character:getPlayerNum()
+    o.resizable = false
+    o.drawFrame = true
+    o.pin = true   -- stays open until the X, like the fitness window
+    return o
+end
+
+-- every frame: the drugs as they stand now, the window sized to fit them
+function DanTraitsMedWindow:render()
+    ISCollapsableWindow.render(self)
+    if self.isCollapsed then return end
+    local tm = getTextManager()
+    local fontHgt = tm:getFontHeight(UIFont.Small)
+    local lines = {}
+    DanTraits_Guard("med window", function() lines = medLines(self.character) end)
+    local y, widest = self:titleBarHeight() + HP_MED_PAD, 0
+    local function draw(str, dx, c)
+        self:drawText(str, HP_MED_PAD + dx, y, c[1], c[2], c[3], 1, UIFont.Small)
+        widest = math.max(widest, dx + tm:MeasureStringX(UIFont.Small, str))
+        y = y + fontHgt
+    end
+    if #lines == 0 then draw(t("MedNone"), 0, GREY) end
+    for _, l in ipairs(lines) do
+        draw(l.name or l[1], 0, { 1, 1, 1 })
+        if l.detail then draw(l.detail, HP_INDENT, l[2]) end
+    end
+    self:setWidth(math.max(HP_MED_MIN_W, widest + HP_MED_PAD * 2))
+    self:setHeight(y + HP_MED_PAD)
+end
+
+function DanTraitsMedWindow:close()
+    DanTraitsMedWindow.instances[self.playerNum] = nil
+    ISCollapsableWindow.close(self)
+    self:removeFromUIManager()
+end
+
+-- the X and a second press of the button both close it; otherwise it opens
+-- beside the health panel (to its left when the right would be off screen)
+function DanTraitsMedWindow.toggle(character, panel)
+    local playerNum = character:getPlayerNum()
+    local win = DanTraitsMedWindow.instances[playerNum]
+    if win then win:close() return nil end
+    local x, y = 100, 100
+    pcall(function()
+        x, y = panel:getAbsoluteX() + panel:getWidth() + HP_MED_PAD, panel:getAbsoluteY()
+        if x + HP_MED_MIN_W > getCore():getScreenWidth() then x = math.max(0, panel:getAbsoluteX() - HP_MED_MIN_W - HP_MED_PAD) end
+    end)
+    win = DanTraitsMedWindow:new(x, y, character)
+    win:initialise()
+    win:instantiate()
+    win:addToUIManager()
+    DanTraitsMedWindow.instances[playerNum] = win
+    return win
+end
+
+-- the button on the panel: made the first time your own panel is drawn (the
+-- panel is built before this file wraps it), a square of Fitness's height with
+-- the pill bottle in it (the label, when the icon is missing) and the label as
+-- its tooltip; a patient's panel never gets one. It sits right of the Fitness
+-- button that is drawn: Neat Rocco stops drawing vanilla's 100 px one and puts
+-- a square of its own (_neatFitnessBtn) at the same spot, so beside that one
+-- there. Vanilla sizes the panel without us, so the button's right edge goes
+-- into tabtotalwidth, the width floor its update() reads.
+local function medButton(panel, patient, show)
+    local btn = panel.danTraitsMedButton
+    if not btn then
+        if not show then return end
+        local label = t("MedButton")
+        local side = getTextManager():getFontHeight(UIFont.Small) + 6   -- Fitness's height
+        if panel.fitness and panel.fitness.getHeight then side = panel.fitness:getHeight() end
+        local icon = getTexture(HP_MED_ICON)
+        btn = ISButton:new(0, 0, side, side, icon and "" or label, panel, function(target)
+            DanTraits_Guard("med button", function() DanTraitsMedWindow.toggle(target:getPatient(), target) end)
+        end)
+        if icon then
+            btn:setImage(icon)
+            btn:forceImageSize(side - HP_MED_ICON_PAD * 2, side - HP_MED_ICON_PAD * 2)
+        end
+        btn.tooltip = label
+        btn:initialise()
+        btn:instantiate()
+        panel:addChild(btn)
+        panel.danTraitsMedButton = btn
+    end
+    btn:setVisible(show)
+    if not show then return end
+    local beside = panel._neatFitnessBtn or panel.fitness
+    if beside then
+        btn:setX(beside:getRight() + (UI_BORDER_SPACING or 10))
+        btn:setY(beside:getY())
+    end
+    local right = btn:getRight()
+    if (panel.tabtotalwidth or 0) < right then panel.tabtotalwidth = right end
+end
 
 -- strain (DanTraits_Strain.lua): the tier as the moodle shows it, and which
 -- way it went over the last hour; never the number. Nothing while it is under
@@ -426,10 +543,10 @@ local function wrapRender()
         pcall(function() level = doctor:getPerkLevel(Perks.Doctor) end)
         -- { header, lines, inline }: an inline section's header shares its first line's row
         local sections = {}
+        -- the Medication button: your own panel only
+        DanTraits_Guard("med button", medButton, self, patient, here)
         local blood = bloodLines(patient, level, doctor)
         if #blood > 0 then sections[#sections + 1] = { t("BloodHeader"), blood, true } end
-        local meds = here and medLines(patient) or {}
-        if #meds > 0 then sections[#sections + 1] = { t("MedHeader"), meds, false } end
         local strain = here and strainLines(patient) or {}
         if #strain > 0 then sections[#sections + 1] = { t("StrainHeader"), strain, true } end
         if #sections == 0 then return end

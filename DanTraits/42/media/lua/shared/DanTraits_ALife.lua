@@ -52,7 +52,7 @@ local function wrapHit(owner, name, victimAt)
     return wrap(owner, name, function(original)
         return function(...)
             local victim = select(victimAt, ...)
-            if victim == nil or victim ~= getSpecificPlayer(0) then return original(...) end
+            if not DanTraits_IsLocalPlayer(victim) then return original(...) end
             return DanTraits_MeasureHit(victim, original, ...)
         end
     end)

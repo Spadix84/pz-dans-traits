@@ -52,6 +52,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Meal Prepper](#meal-prepper-1) | +1 | Starts on a good diet; variety counts over five days. |
 | [Night Shift](#night-shift-1) | +1 | Daylight hardly wakes you. |
 | [Endorphin Junkie](#endorphin-junkie-1) | +1 | Pumped twice as long and twice as strong; restless two days without. |
+| [Newbie Gains](#newbie-gains-2) | +2 | Strength and Fitness experience +30% for the first three levels above your start. |
 | [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
 | [Slob](#slob-2) | +2 | Stale or musty clothes are no bother, and fresh ones no joy. |
 | [Thick Skull](#thick-skull-2) | +2 | Concussed half as often and less badly; knockouts and faints half as long. |
@@ -476,6 +477,7 @@ Attacks that cost you hours.
 - Every exercise starts at regularity 50, a Fitness Instructor's head start (65 in the 20s).
 - Vitality's exercise score starts neutral instead of empty.
 - Knows the Upper/Lower training plan without its magazine.
+- Not with Newbie Gains.
 
 #### Hollow Legs (+1)
 
@@ -504,13 +506,20 @@ Attacks that cost you hours.
 
 - Pumped lasts six hours instead of three, and eases stress, low mood and boredom twice as much.
 - Two days without being Pumped and you are Restless (the Pumped moodle's bad side): boredom and stress creep up to a floor (30, 0.15) until you work out.
-- Not with Exercise Averse. Needs Fitness Training on.
+- Not with Exercise Averse or Newbie Gains. Needs Fitness Training on.
+
+#### Newbie Gains (+2)
+
+- An untrained body answers fast: every Strength and Fitness gain is +30% (exercise, running, carrying, the game's own).
+- Each skill keeps it until it is three levels above where the character started (10 at most); a notice says when it is over, and the fitness window shows the levels to go.
+- Counts with the other training boosts under their x2 cap, so it helps an ordinary routine most and a maxed-out one not at all.
+- Not with Athletic, Fit, Strong or Stout, nor with the trained habits: Well Conditioned, Weightlifter, Regimented, Gym Regular, Endorphin Junkie (Natural Runner is fine). Needs Fitness Training on.
 
 #### Regimented (+3)
 
 - The on-plan bonus doubles: experience and recovery +30%.
 - One missed target day in any seven does not break the plan.
-- Needs Fitness Training on.
+- Not with Newbie Gains. Needs Fitness Training on.
 
 #### Natural Runner (+3)
 
@@ -522,13 +531,13 @@ Attacks that cost you hours.
 
 - Muscles recover x1.5, and a recovered group is Ready 14 hours after it was trained (20 for anyone else).
 - A pulled muscle heals twice as fast.
-- Not with Lingering Soreness. Needs Fitness Training on.
+- Not with Lingering Soreness or Newbie Gains. Needs Fitness Training on.
 
 #### Weightlifter (+4)
 
 - Barbell, dumbbell and improvised-weight exercises give +20% experience.
 - Improvised weights are no likelier to pull a muscle than real ones.
-- Needs Fitness Training on.
+- Not with Newbie Gains. Needs Fitness Training on.
 
 ### Age: In Their 20s (+6), 30s, 40s (-2) and 50s (-6)
 
@@ -730,7 +739,7 @@ One list of drugs that every trait reads (`DanTraits_Meds.lua`).
 - **Side effects:** on each day a drug is taken, a small chance (3%, sandbox option Medication Side Effect Chance) of its mild side effect for a few hours. Stomach ones bring on the game's nausea moodle. Some act on anyone the whole time: prednisone's hunger, baclofen's drowsiness, amantadine's dry mouth.
 - **Wearing off:** a drug's moodle (beta blockers, anticonvulsants) is paler green while it builds up and full green once it has, and goes out when the drug leaves your system. You are told when a protecting drug lapses.
 - **Medication reminder:** a character on a daily drug for one of their traits (beta blockers, anticonvulsants, metformin, baclofen, amantadine, antidepressants) gets a Medication moodle: **Medication Due** from two hours before the next dose (once-a-day drugs every 24 hours, the others every 12), **Missed Medication** once it has worn off and the effect is slipping. Gone once the effect has faded completely. Sandbox option Medication Reminder Moodle turns it off.
-- **Health panel:** under the overall body status, a Daily Medication section lists those drugs with when each was last taken and when the next is due (green), due now (orange) or worn off (red). Your own character only.
+- **Medication window:** a pill bottle button beside Fitness on the health panel (your own; "Medication" on hover) opens a Daily Medication window that lists those drugs with when each was last taken and when the next is due (green), due now (orange) or worn off (red), kept up to date while it is open.
 - **Starting Medication** (sandbox option, on): a character who starts with a condition starts on its drug, built up, with the medication. Off, they find their own.
 - **Diazepam** (new item): the panic drop vanilla beta blockers used to give, for about an hour and a half. Beta blockers now only do what Heart Condition needs.
 - **Baclofen as a muscle relaxant** (for anyone; cyclobenzaprine was folded into it, and an old bottle of it still works as baclofen): one tablet works for about 12 hours: stiffness fades twice as fast, a pulled muscle's pain and stiffness halve (it heals no sooner), a Bad Back's pain and stiffness halve (a third off thrown out). Mild drowsiness, far drowsier with a drink. Without MS, training on it gives 15% less experience and a pull is half as likely again; with MS it is the daily pill and training is as usual. Too many at once: limp and barely awake.
@@ -784,7 +793,8 @@ Training with a body that tires, recovers and rewards a routine (`DanTraits_Fitn
 - **Weight bench**: within three tiles, barbell and dumbbell work is worth 15% more and strains less. Right-click a weight bench or treadmill: Work Out.
 - **Training plans.** Pick one in the fitness window: Full Body for everyone; Upper/Lower, Push Pull Legs, First Five Miles, Strongman and Active Recovery from magazines (a Fitness Instructor knows them all). Do a day's job and you are On Plan: +15% experience and recovery, and a better Vitality exercise score. Miss a job and you are off it for the two days after, then back (Regimented forgives one miss a week). The window shows today's job, whether you are on plan (or why not, and when it comes back) and the last seven days, with a notice when you go on or off.
 - **Magazines.** Five, in gym lockers, sports shelves and magazine racks. Each teaches its plan and adds to all experience for good: Strength +10% (the two Iron Monthly), Fitness +10% (Pavement, Limber), both +5% (Strongman Quarterly).
-- **Traits:** Well Conditioned, Weightlifter, Natural Runner, Regimented, Endorphin Junkie, Lingering Soreness, Injury Prone, Exercise Averse, Inflexible (see the trait list).
+- **Traits:** Well Conditioned, Weightlifter, Natural Runner, Regimented, Endorphin Junkie, Newbie Gains, Lingering Soreness, Injury Prone, Exercise Averse, Inflexible (see the trait list).
+- **Experience arithmetic.** Every system that changes what a gain is worth (training state, the plan, the magazines, Newbie Gains, age, Burnout, an ADHD hyperfocus) multiplies into one factor for that gain, and a penalty can never take more than the gain or drop you under the level you hold. Vitality's Thriving is an addition on top.
 - **Your other traits:** a workout lowers blood sugar with either type of Diabetes, during it and for hours after; burpees set off Asthma like a run; heavy lifting and burpees strain a Heart Condition; 20 minutes on the legs in a day helps Brittle bones; improvised two-handed lifts load a Bad Back, and a Bad Back pulls more easily in the core.
 - **Hot water bottle** (the game's own, found empty in bedside tables, closets, wardrobes and kitchen drawers): fill it with water and heat it on a stove, in a microwave or by a fire. It stays Hot for an hour and Warm to three, cold at four (in bed hot 1.5 hours and cold at six; outdoors below freezing hot half an hour and cold at two); its tooltip says how long. Right-click it, Hold on sore muscles, and pick a group: for up to 30 minutes that group recovers twice as fast Hot (1.5x Warm), its stiffness fades, a pulled muscle there heals about two hours sooner, a Bad Back eases on the core, and Arthritis's joints ache less while you hold it and for an hour after. Carried Hot or Warm while asleep, every group recovers a quarter faster (15% Warm) and a cold night (10C or below) scores a little better. Emptying it loses the heat.
 - Moodles: Sore Muscles (Sore, Overworked, Pulled Muscle), Pumped (Loosened Up, Pumped; Restless for an Endorphin Junkie), Overtrained.
@@ -857,6 +867,7 @@ The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file
 
 Version 1.4.0, Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
 
+- **Split-screen** co-op works: the clocks run for every local player, and since the 2026-10-29 review so do the damage, swing and hit events (bleeding, concussion, fractures, tinnitus, wound strain). The grants at game start (starting kits, the folded-in vanilla traits) still go to player 1 only. Multiplayer over a network is a separate matter (`plans/multiplayer.md`).
 - **A Really Bad Day** is not balanced yet. Its glass shard killed even a character with no other traits, so for now the wound is an infected cut and the trait gives 8 points instead of 12, until a proper balance is found.
 - **Invisible character** (seen once, in debug mode, after a heart-attack blackout and some console commands): the model vanished, reloading didn't fix it, and restarting the game did. Nothing in the mod touches visibility; the likeliest cause is debug mode's own invisibility toggle. If you see it, before reloading, run `print(getPlayer():isInvisible())` in the debug console and report the result and what you were doing.
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.

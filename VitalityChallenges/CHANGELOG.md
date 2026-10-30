@@ -6,6 +6,50 @@ Dan's Challenges mod (archived in `plans/archive/DanChallenges-2026-10-27.zip`, 
 
 ## 0.1.0 (in progress)
 
+- **The Last Broadcast: the walk there costs nothing** (2026-10-29, review; `B.settle`). The
+  first evening, meant as the time to reach the studio, still took 15% of the listeners and
+  said "Nobody heard you tonight"; a player airing the first show on the second evening started
+  down 6 listeners. `settle` returns "grace" for it: no loss, no word. The second evening is a
+  miss, the third the failure, as before. (The Rosewood start's rule, no deadline at all until
+  the first show, is still to build.)
+- **No station of ours in every save** (2026-10-29, review; `server/VitalityChallenges_Radio.lua`).
+  The 96.4 "Vitality Challenges" channel was registered into every save that loaded the mod,
+  challenge or not, and kept in its radio mod data, with nothing airing on it. Only LBMW is looked
+  up now; the spare comes back with the challenge that needs it.
+- **A vanilla script never talks over a line** (2026-10-29, review; `airText`): a channel script
+  that started since the hour's silencing is nulled before each line goes out.
+- **Map circles, second fix** (2026-10-29): the circle still did not show. A map item's marks
+  that are not the player's are cleared when the game loads its default annotations
+  (`WorldMapSymbols.clearDefaultAnnotations` keeps only user-defined symbols), so a game mark
+  never survives. `VC.stampMap` now draws the circle as an ordinary mark, once per map item (a
+  mod-data flag), saved with the item like a mark you drew yourself.
+- **The Last Broadcast's show window laid out again** (2026-10-29): the tick boxes were drawn
+  at the whole list's height (`ISTickBox`'s height argument is one box's size) and spilled over
+  the labels and buttons. Now, top to bottom: the title; listeners and shows aired on their own
+  lines; "Tonight's segments" with the boxes and why one cannot go in; how every show opens and
+  ends; a green "Ready" or the reason in red; the buttons. The window widens to its longest line.
+- **Map circles fixed** (2026-10-28): neither Nomad's nor The Last Broadcast's paper map showed
+  its circle. The stamp asked the map's v1 API for symbols, which it does not have (the error was
+  swallowed, the "stamped" flag set anyway). `VC.stampMap` now marks the map the way the game's own
+  annotated maps do: through the v3 API, a symbol that is not the player's, drawn each time the
+  map opens. Maps already in a save get the circle the next time they are opened.
+- **The Last Broadcast's start moved** (2026-10-28) from the lake (the map site's hover was ~20
+  tiles off) into the lakeside house's hall, from the map's own room data.
+- **The Last Broadcast, phase 2** (2026-10-28, `_LastBroadcast`, `_Broadcast`, `_OnAir`,
+  server `_Radio`; design in `plans/last-broadcast.md`): day 14 (23 July), power and water off,
+  08:00, one life. You start in a lakeside house in south Louisville (12240, 3683) with a school
+  bag, two days of food, water, a flashlight, a radio already on 93.2, a used weapon by
+  profession and a paper map with Jackie Jaye's studio circled (12482, 3912). When the studio
+  first loads: three dead inside, eight in the street, a generator outside (connected, a third
+  full, 70%) and a microphone on the desk. Right-click in the studio for tonight's show: the
+  listeners, the running order (the weather, from tomorrow's real forecast; places you have
+  been since the last show, with how far, which way and whether there is stock left) and Go on
+  air between 18:00 and 19:00 with power. Each line goes out on LBMW's own 93.2 and over your
+  head in turn. Walking off or losing power cuts the show and it does not count. On air the
+  station makes a sound every five minutes, carrying further with more listeners. Settled at
+  20:00: two evenings missed in a row fail the run (the first show is due by the third evening);
+  thirty shows win it; the game carries on either way. Vanilla's stations are switched off, so
+  the dial is quiet. Placeholder menu art (28 Minutes Later's).
 - **The frame** (2026-10-27), `VitalityChallenges_Core.lua`: `VitalityChallenges.define(spec)`
   builds the table the game's challenge code wants (`media/lua/client/Challenge/ChallengeData.lua`)
   from a plain spec: sandbox values merged into SandboxVars on every load, a start hour and

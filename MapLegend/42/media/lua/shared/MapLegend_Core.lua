@@ -225,26 +225,28 @@ end
 
 function ML.readProfile()
     local lines = {}
+    local reader
+    pcall(function() reader = getFileReader(ML.FILE, false) end)
+    if not reader then return ML.parse(lines) end
     pcall(function()
-        local reader = getFileReader(ML.FILE, false)
-        if not reader then return end
         local line = reader:readLine()
         while line ~= nil do
             lines[#lines + 1] = line
             line = reader:readLine()
         end
-        reader:close()
     end)
+    pcall(function() reader:close() end)   -- closed even when a read failed
     return ML.parse(lines)
 end
 
 function ML.writeProfile()
     local profile = ML.profile()
+    local writer
     local ok, err = pcall(function()
-        local writer = getFileWriter(ML.FILE, true, false)
+        writer = getFileWriter(ML.FILE, true, false)
         writer:write(table.concat(ML.serialize(profile), "\n") .. "\n")
-        writer:close()
     end)
+    if writer then pcall(function() writer:close() end) end   -- closed even when the write failed
     if not ok then print("[MapLegend] could not save " .. ML.FILE .. ": " .. tostring(err)) end
 end
 
@@ -299,8 +301,7 @@ function ML.copyToProfile(player)
     local d = charData(player)
     if not d or not d.own then return end
     ML.profile().entries = ML.copyEntries(d.entries)
-    ML.writeProfile()
-    ML.changed(nil)
+    ML.changed(nil)   -- writes the profile
 end
 
 -- After any edit: the profile is written out at once (a character's mod data

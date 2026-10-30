@@ -40,7 +40,8 @@
 --
 -- Mod data: wcParts[part] = { deep, badSet, poorStitch, st (the stitch time
 -- last minute, for a rough job's slower knitting) }, wcLife, wcSummary,
--- wcMoved (how much the character moved this minute, for the dashboard).
+-- wcMoved (how much the character moved last minute, for the dashboard),
+-- wcMovedNow (the minute in progress, written by the frame).
 require "DanTraits"
 
 local traitData = DanTraits_Data
@@ -217,14 +218,16 @@ function DanTraits_OnStitched(patient, part, stitched, level, setter, needle)
     return rec.poorStitch == true
 end
 
--- per frame: what the legs did this minute (false, "walk", "run", "sprint")
-local moved = false
-local function updateWoundFrame(player)
+-- per frame: what the legs did this minute (nil, "walk", "run", "sprint"), kept
+-- per character (d.wcMovedNow: split-screen players each have a minute of their own)
+local function updateWoundFrame(player, d)
+    local moved = d.wcMovedNow
     local ok, sprinting = pcall(function() return player:isSprinting() end)
     local ok2, running = pcall(function() return player:isRunning() end)
     local ok3, moving = pcall(function() return player:isPlayerMoving() end)
     if ok and sprinting then moved = "sprint" elseif (ok2 and running) and moved ~= "sprint" then moved = "run"
     elseif ok3 and moving and not moved then moved = "walk" end
+    d.wcMovedNow = moved
 end
 
 local round2 = DanTraits_Round
@@ -299,7 +302,7 @@ local function updatePart(player, d, part, name, wet, summary)
                 if part:getAdditionalPain() < WC_BADSET_PAIN then part:setAdditionalPain(WC_BADSET_PAIN) end
             end)
         end
-        if LEGS[name] and not is(part, "isSplint") and moved then
+        if LEGS[name] and not is(part, "isSplint") and d.wcMovedNow then
             local add = WC_LIMP / 60
             pcall(function() part:setFractureTime(fracture + add) end)
         end
@@ -307,6 +310,7 @@ local function updatePart(player, d, part, name, wet, summary)
         rec.badSet = nil
     end
     -- the legs' minute of strain on stitches and open deep wounds
+    local moved = d.wcMovedNow
     if moved == "sprint" or moved == "run" then
         local k = moved == "sprint" and 1 or 1 / 3
         if LEGS[name] then strain(player, part, WC_TEAR_SPRINT * k, WC_REOPEN_SPRINT * k)
@@ -321,10 +325,9 @@ end
 -- life remembered from last minute, so vanilla's own drain is no longer put
 -- back. Nothing on the body is changed.
 local function standDown(player, d)
-    moved = false
     if not d then return end
-    if d.wcParts or d.wcLife or d.wcSummary or d.wcMoved then
-        d.wcParts, d.wcLife, d.wcSummary, d.wcMoved = nil, nil, nil, nil
+    if d.wcParts or d.wcLife or d.wcSummary or d.wcMoved or d.wcMovedNow then
+        d.wcParts, d.wcLife, d.wcSummary, d.wcMoved, d.wcMovedNow = nil, nil, nil, nil, nil
     end
 end
 
@@ -336,15 +339,15 @@ local function updateWoundMinute(player, d)
     local summary = {}
     DanTraits_EachPart(player, function(part, name) updatePart(player, d, part, name, wet, summary) end, "WoundCare")
     d.wcSummary = table.concat(summary, ", ")
-    d.wcMoved = moved or nil
-    moved = false
+    d.wcMoved = d.wcMovedNow
+    d.wcMovedNow = nil
 end
 
 -- a swing: strain on the arm(s) doing it, and a little on the torso
 local function onSwing(character, weapon)
     if not sandboxOn() then return end
-    local player = getSpecificPlayer(0)
-    if not player or character ~= player then return end
+    if not DanTraits_IsLocalPlayer(character) then return end
+    local player = character
     local twoHanded = false
     pcall(function() twoHanded = weapon and weapon:isTwoHandWeapon() end)
     local k = twoHanded and WC_TWO_HANDED or 1
@@ -443,6 +446,6 @@ end
 
 DanTraits_Every("minute", "WoundCare", updateWoundMinute, 22)
 DanTraits_Every("frame", "WoundCare", function(player)
-    if sandboxOn() then updateWoundFrame(player) end
+    if sandboxOn() then updateWoundFrame(player, wcData(player)) end
 end, 22)
 Events.OnWeaponSwing.Add(onSwing)

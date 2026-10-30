@@ -71,8 +71,8 @@ local function onShot(player, radius)
 end
 
 local function onWeaponSwing(character, weapon)
-    local player = getSpecificPlayer(0)
-    if not player or character ~= player or not weapon then return end
+    if not weapon or not DanTraits_IsLocalPlayer(character) then return end
+    local player = character
     local ranged, radius = false, nil
     pcall(function() ranged = weapon:isRanged() end)
     if not ranged then return end

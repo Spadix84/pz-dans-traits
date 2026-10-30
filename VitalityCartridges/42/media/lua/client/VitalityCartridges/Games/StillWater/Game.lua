@@ -224,24 +224,24 @@ function Game:tickTitle(input)
     local pressed = input.pressed
     if pressed.up then
         self.selection = (self.selection - 2 + MENU_SIZE) % MENU_SIZE + 1
-        self.sequencer:effect(Music.MOVE)
+        self:cue(Music.MOVE)
     elseif pressed.down then
         self.selection = self.selection % MENU_SIZE + 1
-        self.sequencer:effect(Music.MOVE)
+        self:cue(Music.MOVE)
     end
     if self.selection == MENU_PACE and (pressed.left or pressed.right) then
         self:changePace(pressed.left and -1 or 1)
     end
     if pressed.a or pressed.start then
         if self.selection == MENU_BREATHE then
-            self.sequencer:effect(Music.SELECT)
+            self:cue(Music.SELECT)
             self:enterSession()
         elseif self.selection == MENU_PACE then
             self:changePace(1)
         else
             self.soundOn = not self.soundOn
             self:applySound()
-            self.sequencer:effect(Music.SELECT)
+            self:cue(Music.SELECT)
         end
     end
 end
@@ -313,7 +313,7 @@ function Game:tickSummary(input)
     self.summaryTicks = self.summaryTicks + 1
     local pressed = input.pressed
     if pressed.a or pressed.start then
-        self.sequencer:effect(Music.SELECT)
+        self:cue(Music.SELECT)
         self:saveSession()
         self:enterTitle()
     end

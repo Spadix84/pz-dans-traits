@@ -431,15 +431,16 @@ function DanTraits_StrainXpMult(player, perk)
     return 1 - (1 - m) / 2
 end
 
--- after the game adds it: the difference, through Age's quiet adjust (never
--- below the level held; while it runs, its own event is skipped here)
+-- after the game adds it: the factor, through core's DanTraits_XpFactor (the
+-- event's factors multiply; the difference through Age's quiet adjust, never
+-- below the level held; while that runs, its own event is skipped here)
 local function onStrainAddXP(player, perk, amount)
     amount = tonumber(amount) or 0
     if amount <= 0 or not player or not strainOn() then return end
-    if not DanTraits_AgeXpAdjust or (DanTraits_AgeXpBusy and DanTraits_AgeXpBusy()) then return end
+    if not DanTraits_XpFactor or (DanTraits_AgeXpBusy and DanTraits_AgeXpBusy()) then return end
     local m = DanTraits_StrainXpMult(player, perk)
     if m == 1 then return end
-    DanTraits_AgeXpAdjust(player, perk, amount * (m - 1))
+    DanTraits_XpFactor(player, perk, amount, m)
 end
 if Events and Events.AddXP then Events.AddXP.Add(onStrainAddXP) end
 

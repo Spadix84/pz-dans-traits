@@ -225,11 +225,9 @@ local function stillHere(player, d)
 end
 
 local function updateHomeMinute(player, d)
-    if not homeOn() or hasTrait(player, "nomad") then
-        -- off, or a Nomad: nothing tracked; the sleep spot is still noted
-        -- for Nomad's night under the sky
-        if not homeOn() then stillHere(player, d) return end
-    end
+    -- off: nothing tracked (a Nomad goes on to the sleep bookkeeping below,
+    -- which notes the spot for the night under the sky, then stops)
+    if not homeOn() then stillHere(player, d) return end
     local asleep = DanTraits_Asleep(player)
     if asleep then
         if not d.hmAsleep then

@@ -175,7 +175,7 @@ end
 local function onAgeTraitsAddXP(player, perk, amount)
     if not player or not perk or not amount or amount <= 0 then return end
     local k = xpFactor(player, perk)
-    if k ~= 1 then DanTraits_AgeXpAdjust(player, perk, amount * (k - 1)) end
+    if k ~= 1 then DanTraits_XpFactor(player, perk, amount, k) end
 end
 
 -- Reading Glasses ----------------------------------------------------------------

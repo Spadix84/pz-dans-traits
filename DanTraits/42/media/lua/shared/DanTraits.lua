@@ -260,8 +260,8 @@ Events.OnGameStart.Add(function() DanTraits_RetireTraits(getSpecificPlayer(0)) e
 --     spec.prepare  fn(item), optional: run on every item given (a full bottle, the
 --                   part-used pack)
 --
--- Core's one OnCreatePlayer handler (registered here, after the mod-data
--- migration and the retired traits) runs every kit in registration order
+-- Core's kit handler on OnCreatePlayer (its third: after the mod-data
+-- migration and the retired traits, before the trait cache) runs every kit in registration order
 -- for a character who has the trait, has not survived an hour yet and has
 -- not had the kit. Each kit runs under DanTraits_Guard.
 local kits = {}
@@ -438,6 +438,57 @@ function DanTraits_Wrap(class, method, tag, fn)
     return true
 end
 
+-- Experience: one event, one multiplier ------------------------------------------------------
+-- Several systems listen to Events.AddXP and adjust what the game just added (Age,
+-- AgeTraits, Fitness, Strain, ADHD). Each applies its factor k through
+-- DanTraits_XpFactor, which keeps a running product for the event in hand, so the
+-- factors multiply (x0.8 and then x0.15 is x0.12 of the gain, not a loss of half of
+-- it) and the penalties together can never take more than the gain. Core's listener
+-- below is registered first, so it opens the record before any system's handler
+-- runs; the event the game fires for the quiet adjustment itself (DanTraits_AgeXpBusy)
+-- is not a new one, and a handler called for it does nothing. A loud addition made
+-- by a handler (Vitality's Thriving) is a new event inside the first: the first's
+-- record is kept one deep, so the handlers still to run on it find it again. A
+-- handler that finds no record for its event starts one, which is the old sum
+-- behaviour for that handler.
+local xpEvent, xpOuter = nil, nil
+Events.AddXP.Add(function(player, perk, amount)
+    if DanTraits_AgeXpBusy and DanTraits_AgeXpBusy() then return end
+    xpOuter = xpEvent
+    xpEvent = { player = player, perk = perk, amount = amount, p = 1 }
+end)
+
+local function xpMatches(ev, player, perk, amount)
+    return ev ~= nil and ev.player == player and ev.perk == perk and ev.amount == amount
+end
+
+-- apply factor k to the experience this event added: the difference goes through
+-- Age's quiet adjust (never under the level held) or, without Age, a quiet AddXP
+-- of its own (a bonus only; a take-back needs the level floor)
+function DanTraits_XpFactor(player, perk, amount, k)
+    k = tonumber(k) or 1
+    amount = tonumber(amount) or 0
+    if not player or not perk or amount <= 0 or k == 1 then return end
+    if DanTraits_AgeXpBusy and DanTraits_AgeXpBusy() then return end   -- the quiet adjust's own event
+    local ev = xpEvent
+    if not xpMatches(ev, player, perk, amount) then
+        if xpMatches(xpOuter, player, perk, amount) then
+            ev = xpOuter   -- back in the event a loud addition interrupted
+        else
+            ev = { player = player, perk = perk, amount = amount, p = 1 }
+        end
+        xpEvent = ev
+    end
+    local was = ev.p
+    ev.p = was * k
+    local extra = amount * (ev.p - was)
+    if DanTraits_AgeXpAdjust then
+        DanTraits_AgeXpAdjust(player, perk, extra)
+    elseif extra > 0 then
+        pcall(function() player:getXp():AddXP(perk, extra, false, false, false, false) end)
+    end
+end
+
 -- The drivers: one minute handler, one ten-minute handler, one frame handler ----------------------------------------
 -- Every system that runs on the clock registers here instead of on
 -- Events.EveryOneMinute / EveryTenMinutes / OnPlayerUpdate:
@@ -466,12 +517,12 @@ end
 -- in the same minute, so it is written down here:
 --
 --   minute   0  the stat delta pipeline (DanTraits_DeltaHook in Util): catchCold and
---               foodSicknessRise (and boredomRise, registered by ADHD), so subscribers
+--               foodSicknessRise, hungerRise (and boredomRise, registered by ADHD), so subscribers
 --               see the game's rise, not floors written later in the same minute
 --           10  Sleep (light reading, wakes)
 --           11  Home (where the night was slept, the home's pull; before the floors of the mood systems)
 --           19  Clotting (expires clots), GoodClotter (Positives: cuts bleeding time before Blood reads it)
---           20  Blood (loss this minute, sets bloodLossMin)
+--           20  Blood (loss this minute, sets bloodLossMin), HotWaterBottle (the bottle's warmth clock)
 --           21  Hemophilia (holds bleed times)
 --           22  WoundCare (reads BloodPartRate)
 --           23  Infection
@@ -480,19 +531,22 @@ end
 --           24  Concussion
 --           25  FearOfBlood (reads bloodLossMin)
 --           30  Meds (the levels every medicated system reads this minute)
+--           35  Adrenaline (the rush, the crash and its heart risk, before Heart reads them)
 --           39  Spoons (the energy budget MS spends; reads the night Vitality scored)
---           40  ADHD, AgeTraits, Alcohol, Anemia, Anger, Arthritis, Asthma, Caffeine, Cooking, Dehydration, Diabetes,
---               Epilepsy, Germaphobe, Gluten, Hangover, Heart, Lactose, Laundry, MDD, Migraine,
+--           40  ADHD, AgeTraits, Alcohol, Anemia, Anger, Arthritis, Asthma, Brittle, Caffeine, Cooking, Dehydration, Diabetes,
+--               Epilepsy, Fitness, Germaphobe, Gluten, Hangover, Heart, Lactose, Laundry, MDD, Migraine,
 --               MS, Smoker, Sunburn, Tinnitus, Triptan (floors and rates; among themselves by label)
 --               (Iron Stomach in Positives is a foodSicknessRise pipeline hook, not a clock system)
 --           41  Grit (Positives: its share of the pain reduction, after the order-40 floors),
+--               Headphones (Sensory: the deaf swap while they are worn),
 --               SensitiveSkin (LaundryTraits: reads the garment state Laundry left at 40),
 --               Sensory (reads Germaphobe's grime, Laundry's itch and Tinnitus from 40, Home from 11)
 --           42  Knox (the Resilient roll against the zombie infection)
 --           44  SpiffBoy (the hours on each cartridge; puts the console away asleep)
 --           45  Strain (reads the fever, withdrawal, the Good Meal, Pumped, fresh
 --               clothes and the hangover the systems above left; its unhappiness floors)
---           90  Vitality (reads everything above, scores the night, applies lifts)
+--           60  Relaxant (baclofen's clock)
+--           90  SleepMenu (the outfit record for Undress and Sleep), Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --           96  Moodles (reads what every system above left in mod data; changes nothing)
 --   ten     10  Dependent
@@ -500,10 +554,11 @@ end
 --           90  Hallucinations
 --   frame    0  the stat delta pipeline: enduranceRegen (Vitality, Smoker lungs, Blood,
 --               Anemia, Concussion, Asthma, Heart, Dehydration, Age subscribe; the cuts multiply)
+--               and panicRise (Seen It All)
 --           20  Blood        22  WoundCare (movement sampling)    24  Concussion
 --           40  AgeTraits (Bad Knees, Pace Yourself), Alcohol (panic decay), Arthritis, ArthritisGrip,
---               Dependent (held anger), Heart (the angina surcharge), Meds (diazepam), Smoker (held anger),
---               StrainKnock (knocked down)
+--               Dependent (held anger), Heart (the angina surcharge), Meds (diazepam), SensoryShutdown (a shutdown's stillness),
+--               Smoker (held anger), StrainKnock (knocked down)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
 --   are still registered by their own files.)
 local drivers = { minute = {}, ten = {}, frame = {} }

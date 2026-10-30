@@ -190,17 +190,7 @@ LootMaps.Init[MAP_ID] = function(mapUI)
     MapUtils.initDefaultStyleV3(mapUI)
     mapAPI:setBoundsInSquares(MAP_BOUNDS[1], MAP_BOUNDS[2], MAP_BOUNDS[3], MAP_BOUNDS[4])
     MapUtils.overlayPaper(mapUI)
-    -- the circle goes on the paper once; after that it is the map's own symbol
-    local md = mapUI.mapObj and mapUI.mapObj:getModData()
-    if md and not md.vcStamped then
-        md.vcStamped = true
-        pcall(function()
-            local symbol = mapAPI:getSymbolsAPIv2():addTexture("Circle", TOWER_X, TOWER_Y)
-            symbol:setRGBA(0.65, 0.054, 0.054, 1.0)
-            symbol:setAnchor(0.5, 0.5)
-            symbol:setScale(ISMap.SCALE)
-        end)
-    end
+    VC.stampMap(mapUI, "Circle", TOWER_X, TOWER_Y, VC.MAP_RED)
 end
 
 local function paperMap(container)

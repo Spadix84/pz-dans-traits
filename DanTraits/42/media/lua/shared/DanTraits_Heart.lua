@@ -10,7 +10,8 @@
 -- gone: half as fast again), an anaemic's iron deficit, a wound infection's
 -- fever, an adrenaline shot's rush (DanTraits_Adrenaline.lua) and every heart attack already survived make it build faster; beta
 -- blockers make it build slower. A cold body (soaked, or a night without a
--- fire) builds strain like cold air does, indoors or out. The
+-- fire) strains it like cold air does, indoors or out; the cold adds to work
+-- but at rest only slows the drain, and a load counts only on the move. The
 -- strain shows on the Chest Pain moodle from 0.4 (working hard) and 0.75
 -- (pounding); at 1 it is chest pain (angina): 15 to 30 minutes of a pain
 -- floor, endurance recovery at a third, no running or sprinting (the game's
@@ -48,6 +49,7 @@
 --
 -- Mod data: hcStrain (0..1), hcAnginaMin (minutes of chest pain left),
 -- hcPushing (pushing on this minute), hcEndPrev (endurance a minute ago),
+-- hcEndFrame (endurance a frame ago, for the angina surcharge),
 -- hcTried (tried to run or sprint since the last minute), hcWeakH (hours of
 -- recovery left, 168 after an attack), hcAttacks (scars), hcLastAttackH
 -- (world hours at the last attack), hcNitroMin (minutes of the nitroglycerin
@@ -179,7 +181,10 @@ local function overloaded(player)
     return over
 end
 
--- the strain this minute builds (before strainRate), from what the body did
+-- the strain this minute builds (before strainRate), from what the body did,
+-- and the cold's share apart: cold air and a cold body add to work but only
+-- slow the drain at rest (2026-10-28: sitting still in a blizzard built strain
+-- to chest pain, since any build at all stopped the drain)
 local function strainBuild(player, d, spent, level, moving)
     local build = HC_SPEND * spent
     local working = spent > 1e-6 or moving.sprint or moving.run
@@ -187,23 +192,24 @@ local function strainBuild(player, d, spent, level, moving)
     if moving.sprint then build = build + HC_SPRINT elseif moving.run then build = build + HC_RUN end
     local panic = fraction(player:getStats(), CharacterStat.PANIC)
     if panic > HC_PANIC_AT then build = build + HC_PANIC * (panic - HC_PANIC_AT) / (1 - HC_PANIC_AT) end
-    if overloaded(player) then build = build + HC_LOAD end
+    if overloaded(player) and flag(player, "isPlayerMoving") then build = build + HC_LOAD end   -- the weight sat beside you is no load
     if DanTraits_FitTrainingNow then
         local _, spec = DanTraits_FitTrainingNow(player)
         if spec and ((spec.intensity or 1) > 1 or spec.improvised) then build = build + HC_LIFT end
     end
+    local chill = 0
     if DanTraits_AirTemp and flag(player, "isOutside") then
         local temp = DanTraits_AirTemp(player)
-        if temp and temp < HC_COLD_C then build = build + HC_COLD end
+        if temp and temp < HC_COLD_C then chill = chill + HC_COLD end
     end
     -- a cold body (soaked clothes, a swim, a night without a fire), indoors or out
     pcall(function()
         local t = player:getStats():get(CharacterStat.TEMPERATURE)
         if type(t) == "number" and t > 30 and t < HC_BODY_COLD_C[1] then
-            build = build + HC_BODY_COLD * clamp01((HC_BODY_COLD_C[1] - t) / (HC_BODY_COLD_C[1] - HC_BODY_COLD_C[2]))
+            chill = chill + HC_BODY_COLD * clamp01((HC_BODY_COLD_C[1] - t) / (HC_BODY_COLD_C[1] - HC_BODY_COLD_C[2]))
         end
     end)
-    return build
+    return build, chill
 end
 
 -- the week after an attack: 0 none, 1 the first days (worst), 2, 3 the last
@@ -299,11 +305,14 @@ local function updateHeartMinute(player, d)
     if DanTraits_IsPassedOut and DanTraits_IsPassedOut(player) then return end
     local asleep = DanTraits_Asleep(player)
     local strain = d.hcStrain or 0
-    local build = asleep and 0 or strainBuild(player, d, spent, level, moving)
+    local build, chill = 0, 0
+    if not asleep then build, chill = strainBuild(player, d, spent, level, moving) end
     if build > 0 then
-        strain = strain + build * strainRate(player, d)
+        strain = strain + (build + chill) * strainRate(player, d)
     else
-        strain = strain - (asleep and HC_DRAIN_ASLEEP or (resting and HC_DRAIN_REST or HC_DRAIN_LIGHT))
+        -- the cold only slows the drain: never a build at rest, whatever the rate
+        local drain = asleep and HC_DRAIN_ASLEEP or (resting and HC_DRAIN_REST or HC_DRAIN_LIGHT)
+        strain = strain - math.max(0, drain - chill * strainRate(player, d))
     end
     d.hcStrain = clamp01(strain)
     if (d.hcAnginaMin or 0) > 0 then
@@ -369,7 +378,7 @@ end
 
 -- melee does less in the week after an attack (Arthritis owns the weaken-and-restore)
 local function onHeartSwing(player, weapon)
-    if not weapon or not player or player ~= getSpecificPlayer(0) or not DanTraits_WeakenWeapon then return end
+    if not weapon or not DanTraits_IsLocalPlayer(player) or not DanTraits_WeakenWeapon then return end
     local d = DanTraits_Data(player)
     local stage = weak(player, d)
     if stage then DanTraits_WeakenWeapon(player, weapon, stage.damage) end

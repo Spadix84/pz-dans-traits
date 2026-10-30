@@ -57,7 +57,7 @@ M.TIERS = {
 
 -- every character starts with keys: the loot lists make them look rare
 M.overrides = M.overrides or {}
-for _, t in ipairs({ "Base.KeyRing", "Base.Key1", "Base.Key2", "Base.Key3", "Base.Key4", "Base.Key5", "Base.CarKey" }) do
+for _, t in ipairs({ "Base.KeyRing", "Base.Key1", "Base.CarKey" }) do
     if M.overrides[t] == nil then M.overrides[t] = "common" end
 end
 

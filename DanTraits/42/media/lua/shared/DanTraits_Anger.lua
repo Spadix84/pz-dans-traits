@@ -54,7 +54,7 @@ end
 DanTraits_AngerLevel = angerLevel
 
 local function isLocal(player)
-    return player ~= nil and player == getSpecificPlayer(0)
+    return DanTraits_IsLocalPlayer(player)
 end
 
 local function melee(weapon)

@@ -308,19 +308,15 @@ wrapHyper()
 if Events and Events.OnGameStart then Events.OnGameStart.Add(wrapHyper) end
 
 -- locked in: a little more experience (Events.AddXP fires after the game has
--- added it; the extra goes through Age's quiet adjust so nothing stacks on it)
+-- added it; the factor goes through core's DanTraits_XpFactor, so it multiplies
+-- with the other systems' factors on the same gain)
 local xpBusy = false
 local function onAdhdAddXP(player, perk, amount)
     if xpBusy or not player or not perk or not amount or amount <= 0 then return end
     if DanTraits_AgeXpBusy and DanTraits_AgeXpBusy() then return end
     if not hyper(player) then return end
     xpBusy = true
-    local extra = amount * (A.HYPER_XP - 1)
-    if DanTraits_AgeXpAdjust then
-        DanTraits_AgeXpAdjust(player, perk, extra)
-    else
-        pcall(function() player:getXp():AddXP(perk, extra, false, false, false, false) end)
-    end
+    DanTraits_XpFactor(player, perk, amount, A.HYPER_XP)
     xpBusy = false
 end
 if Events and Events.AddXP then Events.AddXP.Add(onAdhdAddXP) end

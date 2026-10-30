@@ -144,6 +144,7 @@ module DanTraits {
         Cost = 1,
         UIName = UI_trait_DanGymRegular,
         UIDescription = UI_trait_DanGymRegulardesc,
+        MutuallyExclusiveTraits = DanTraits:newbiegains,
     }
 
     /* Fumbler folded in: stiff joints, flares in the cold and damp, slower attacks, dropped weapons. */
@@ -918,7 +919,11 @@ module DanTraits {
        Injury Prone (-3): pull risk x2, a pull lasts 54 hours.
        Exercise Averse (-3): never Pumped; training bores and saddens; the on-plan bonus halved.
        Inflexible (-2): stretching does half; stiffness fades slower; Arthritis eased less, worse otherwise.
-       Endorphin Junkie (+1): Pumped twice as long and twice as strong; two days without it, Restless. */
+       Endorphin Junkie (+1): Pumped twice as long and twice as strong; two days without it, Restless.
+       Newbie Gains (+2): Strength and Fitness experience x1.3 (under the x2 cap) until each is
+       three levels above where it started; not with the four that start you trained, nor
+       the trained habits (Well Conditioned, Weightlifter, Regimented, Gym Regular, Endorphin
+       Junkie), which carry it back the other way. Natural Runner is a gift, not training: allowed. */
     character_trait_definition DanTraits:wellconditioned
     {
         IsProfessionTrait = false,
@@ -927,7 +932,7 @@ module DanTraits {
         Cost = 4,
         UIName = UI_trait_DanWellConditioned,
         UIDescription = UI_trait_DanWellConditioneddesc,
-        MutuallyExclusiveTraits = DanTraits:lingeringsoreness,
+        MutuallyExclusiveTraits = DanTraits:lingeringsoreness;DanTraits:newbiegains,
     }
 
     character_trait_definition DanTraits:naturalrunner
@@ -948,6 +953,7 @@ module DanTraits {
         Cost = 4,
         UIName = UI_trait_DanWeightlifter,
         UIDescription = UI_trait_DanWeightlifterdesc,
+        MutuallyExclusiveTraits = DanTraits:newbiegains,
     }
 
     character_trait_definition DanTraits:regimented
@@ -958,6 +964,7 @@ module DanTraits {
         Cost = 3,
         UIName = UI_trait_DanRegimented,
         UIDescription = UI_trait_DanRegimenteddesc,
+        MutuallyExclusiveTraits = DanTraits:newbiegains,
     }
 
     character_trait_definition DanTraits:lingeringsoreness
@@ -1010,7 +1017,18 @@ module DanTraits {
         Cost = 1,
         UIName = UI_trait_DanEndorphinJunkie,
         UIDescription = UI_trait_DanEndorphinJunkiedesc,
-        MutuallyExclusiveTraits = DanTraits:exerciseaverse,
+        MutuallyExclusiveTraits = DanTraits:exerciseaverse;DanTraits:newbiegains,
+    }
+
+    character_trait_definition DanTraits:newbiegains
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:newbiegains,
+        Cost = 2,
+        UIName = UI_trait_DanNewbieGains,
+        UIDescription = UI_trait_DanNewbieGainsdesc,
+        MutuallyExclusiveTraits = base:athletic;base:strong;base:fit;base:stout;DanTraits:wellconditioned;DanTraits:weightlifter;DanTraits:regimented;DanTraits:gymregular;DanTraits:endorphinjunkie,
     }
 
     character_trait_definition DanTraits:ms

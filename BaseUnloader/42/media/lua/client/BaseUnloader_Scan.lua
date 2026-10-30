@@ -216,6 +216,24 @@ function S.roomName(sq)
     return BU.roomWords(S.roomId(sq))
 end
 
+-- which object of this kind on the square obj is (0 the first, in the square's
+-- order): crates stack, and each needs a key of its own (BU.key's ordinal)
+local function sameKindBefore(sq, obj, kind, index)
+    local n = 0
+    pcall(function()
+        local objs = sq:getObjects()
+        for i = 0, objs:size() - 1 do
+            local o = objs:get(i)
+            if o == obj then return end
+            local c
+            pcall(function() c = index == 0 and o:getContainer() or o:getContainerByIndex(index) end)
+            if c and c:getType() == kind then n = n + 1 end
+        end
+    end)
+    return n
+end
+S.ordinalOf = sameKindBefore
+
 -- the key of a world object's container, nil for a character's, a bag's or a vehicle's
 function S.keyOf(container)
     local key
@@ -228,7 +246,9 @@ function S.keyOf(container)
         local n = obj.getContainerCount and obj:getContainerCount() or 1
         for ci = 0, n - 1 do
             local c = ci == 0 and obj:getContainer() or obj:getContainerByIndex(ci)
-            if c == container then key = BU.key(sq:getX(), sq:getY(), sq:getZ(), container:getType(), ci) end
+            if c == container then
+                key = BU.key(sq:getX(), sq:getY(), sq:getZ(), container:getType(), ci, sameKindBefore(sq, obj, container:getType(), ci))
+            end
         end
     end)
     return key
@@ -308,7 +328,7 @@ end
 function S.row(obj, container, index, sq, zone, player)
     local x, y, z = sq:getX(), sq:getY(), sq:getZ()
     local kind = container:getType()
-    local key = BU.key(x, y, z, kind, index)
+    local key = BU.key(x, y, z, kind, index, sameKindBefore(sq, obj, kind, index))
     local name, named = S.nameOf(container, key)
     local contents, cats, count = histograms(container)
     local capacity, used = S.capacity(container, player), 0
@@ -450,7 +470,7 @@ function S.stockOnSquare(sq, out)
             local c
             pcall(function() c = ci == 0 and obj:getContainer() or obj:getContainerByIndex(ci) end)
             if c and not SKIP_KINDS[c:getType()] then
-                local key = BU.key(x, y, z, c:getType(), ci)
+                local key = BU.key(x, y, z, c:getType(), ci, sameKindBefore(sq, obj, c:getType(), ci))
                 pcall(function() stockOfContainer(c, 0, key, (S.nameOf(c, key)), out) end)
             end
         end
@@ -517,7 +537,7 @@ function S.resolve(key)
     if not k then return nil end
     local sq = getCell():getGridSquare(k.x, k.y, k.z)
     if not sq then return nil end
-    local found
+    local found, seen = nil, 0   -- the ordinal-th object of that kind, in the square's order
     local objs = sq:getObjects()
     for i = 0, objs:size() - 1 do
         local obj = objs:get(i)
@@ -529,7 +549,10 @@ function S.resolve(key)
             else
                 pcall(function() c = obj:getContainerByIndex(k.index) end)
             end
-            if c and c:getType() == k.kind then found = { container = c, object = obj, square = sq } end
+            if c and c:getType() == k.kind then
+                if seen == (k.ordinal or 0) then found = { container = c, object = obj, square = sq } end
+                seen = seen + 1
+            end
         end
     end
     return found
@@ -591,8 +614,6 @@ function S.itemRecord(it)
     return r
 end
 
--- the items of a container as records; the player's own inventory also skips
--- the bags being worn and what is inside them
 -- every item of a container, bags opened (three deep), as records: an item in
 -- a bag carries `parent` (the bag's id) and `from` (the bag's inventory), so
 -- the run can take it out of the bag where it sits (vanilla moves items out of

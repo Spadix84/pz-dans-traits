@@ -18,6 +18,7 @@
 --                               slot types in only ({ "Back" }) when given; false if none
 --   VC.containerOf(item)        a bag's inventory
 --   VC.worn(player, type)       the worn item of that full type, or nil
+--   VC.stampMap(mapUI, id, x, y, rgb)  a mark on a paper map, from its LootMaps.Init
 
 VitalityChallenges = VitalityChallenges or {}
 local VC = VitalityChallenges
@@ -134,6 +135,33 @@ function VC.put(container, entry)
         end
     end
     return last
+end
+
+-- a mark on a paper map, from its LootMaps.Init (each time the map is opened),
+-- through the v3 API (the v1 API that sets the bounds has no symbols v2). It is
+-- drawn as the player's own mark, once per map item: a map item's marks that
+-- are not the player's are cleared when the game loads its default annotations,
+-- so a game mark never shows. Being the player's, it is saved with the item
+-- (and can be erased like any other mark).
+VC.MAP_RED = { 0.65, 0.054, 0.054 }
+function VC.stampMap(mapUI, symbolID, x, y, rgb)
+    local item = mapUI.mapObj or mapUI.mapItem
+    local md = item and try(function() return item:getModData() end)
+    local key = "vcStamp:" .. symbolID .. ":" .. x .. "," .. y
+    if md and md[key] then return true end
+    local ok, err = pcall(function()
+        local symbol = mapUI.javaObject:getAPIv3():getSymbolsAPIv2():addTexture(symbolID, x, y)
+        symbol:setRGBA(rgb[1], rgb[2], rgb[3], 1.0)
+        symbol:setAnchor(0.5, 0.5)
+        symbol:setScale(ISMap.SCALE)
+    end)
+    if not ok then
+        print("[VitalityChallenges] map stamp: " .. tostring(err))
+        return false
+    end
+    if md then md[key] = true end
+    if item then try(function() item:syncItemFields() end) end
+    return true
 end
 
 function VC.levels(player, perk, n)

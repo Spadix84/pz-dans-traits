@@ -121,6 +121,7 @@ local function dialog(text, onOk)
         box:addToUIManager()
     end)
 end
+VC.dialog = dialog
 
 -- the goal --------------------------------------------------------------------------
 

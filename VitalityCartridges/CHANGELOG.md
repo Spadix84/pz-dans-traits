@@ -5,6 +5,9 @@ the SpiffBoy SDK (3825220785). Requires SpiffBoy. Plan: `plans/still-water.md`.
 
 ## 0.1.0 (in progress)
 
+- **Menu cues honour SOUND OFF** (2026-10-29, review). Steady, Still Water, Spiffo Walk and
+  First Aid Quiz played their move, select and nope cues straight from the sequencer, past the
+  sound switch (Spiffo Pup already went through `cue`). Every cue goes through `cue` now.
 - **Still Water** (2026-10-25), item `VitalityCartridges.Cartridge_StillWater`, loot weight 1
   (SpiffBoy's own are 2). Paced breathing on a pond: a disc grows for the in-breath and shrinks
   for the out-breath; hold A to breathe in (and through the hold after), let go to breathe out

@@ -46,11 +46,13 @@ confirms it before anything is built on it.
    `getSpecificPlayer(0..3)`, so split-screen gets the clocks; before that,
    player 0 only). On a dedicated server there is no local player, so no
    system runs there. On a client they run, but see 2.
-   Raw event handlers still compare against `getSpecificPlayer(0)`: core (2,
-   the migrate and retire on game start), Anger, Attrib, BadDay, Blood,
-   Brittle, Concussion, GymRegular, Positives, Sleep, SteadyHands, Tinnitus,
-   WoundCare, Telemetry; so split-screen player 1 gets the clocks but not
-   the damage, swing and creation events. `DanTraits_FloorUp` in Util books
+   The damage, swing and hit handlers (Anger, Blood, Brittle, Concussion,
+   Heart, Tinnitus, WoundCare, the A-Life and Bandits relay in Util) accept any
+   local slot since 2026-10-29 (`DanTraits_IsLocalPlayer`). The creation and
+   game-start handlers still take player 0 only: core (the migrate and retire
+   on game start), Attrib, BadDay, GymRegular, Positives, Sleep, SteadyHands,
+   Telemetry; so split-screen player 1 gets the clocks and the events but not
+   the game-start grants. `DanTraits_FloorUp` in Util books
    its floor flag on `DanTraits_RunningFor` (the player the drivers are
    running for, set by core) and only falls back to player 0 outside a
    driver. Concussion's crash and head-reading state is per player object
@@ -105,6 +107,30 @@ confirms it before anything is built on it.
 Already handled: Telemetry and the dashboard are off in multiplayer,
 Hallucinations are off in multiplayer, Deep Sleeper has a multiplayer case,
 sandbox options come from the server.
+
+Noted in the 2026-10-29 review (`plans/review-2026-10-29.md`), for the port:
+
+- Vanilla's `ISDrinkFluidAction:update` calls `updateEat` only when not a client
+  (the server takes it through `animEvent`), so the drink wraps in Positives
+  (Hollow Legs), Alcohol and Diabetes never run on an MP client: their stat and
+  mod-data writes happen on the server's character, or not at all. The MP
+  route is a `complete`/`stop` wrap on the client reading the container before
+  and after.
+- Fitness's rep factor (`DanTraits_FitRep`) is set in the `exeLooped` wrap,
+  which only runs server-side or in SP; on an MP client only the magazines,
+  Newbie Gains and the sandbox pace reach `onFitnessAddXP`.
+- Dan's Vanilla Fixes' coolers settle client-side: pack mod data, names and
+  `food:setAge` on world containers are never transmitted, so two clients each
+  age the same cooler's food. Cheapest MP story: settle the local inventory only
+  on clients.
+- Sensory's headphones toggle the vanilla Deaf trait on the client
+  (`DanTraits_SetTrait`); the server's trait list, which owns hearing, does not
+  follow.
+- Base Unloader's whole store is client `ModData.getOrCreate`; on a client it
+  is not written to disk unless transmitted. mod.info says singleplayer only.
+- Hallucinations' door rattle flips a real door's lock on the client
+  (`episodeThump`); only the charge is SP-gated. Gate the rattle the same way
+  if `ToggleDoorActual` turns out to transmit.
 
 ## The decision: who owns the trait systems
 

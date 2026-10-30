@@ -143,6 +143,8 @@
     "IGUI_DanTraits_FitLooseNow": "Loosened up",
     "IGUI_DanTraits_FitOvertrainedNow": "Overtrained: experience -30%%",
     "IGUI_DanTraits_FitBenchNow": "Weight bench: experience +15%%",
+    "IGUI_DanTraits_FitNewbieNow": "Newbie gains +30%%, levels to go: %1",
+    "IGUI_DanTraits_FitNewbieLeft": "%1 %2",
     "IGUI_DanTraits_CookTier_Home": "Home-cooked",
     "IGUI_DanTraits_CookTier_Hearty": "Hearty",
     "IGUI_DanTraits_CookTier_Chef": "Chef's",

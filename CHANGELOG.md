@@ -7,6 +7,16 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### New
 
+- **Newbie Gains** (+2, 2026-10-29, `DanTraits:newbiegains`, `DanTraits_Fitness.lua`). Every
+  Strength and Fitness gain x1.3 (`TR.ngXp`) in `onFitnessAddXP`, after the `fitnessXpAll` hook and
+  before `FIT_XP_CAP`, so it counts under the x2 cap. Each skill's level the first minute the
+  character is seen is kept in `d.ftNewbie`; the bonus holds until the skill is `TR.ngLevels` (3)
+  above it, 10 at most, then a notice once per skill (`UI_DanTraits_FitNewbieOver_<perk>`). The
+  fitness window's status line shows the levels to go (`DanTraits_FitNewbieLeft`). Exclusive with
+  Athletic, Fit, Strong and Stout (one way, as MS) and with five positive fitness traits (both
+  ways: Well Conditioned, Weightlifter, Regimented, Gym Regular, Endorphin Junkie; Natural Runner allowed).
+  Icon `trait_newbiegains.png` (a light dumbbell under a green arrow, `make_icons.py`). Does nothing
+  with `FitnessEnabled` off.
 - **Strain** (2026-10-24, `DanTraits_Strain.lua` at minute order 45 plus the frame system
   `StrainKnock`, `ISStrainBreakdownAction`; design and tuning in `plans/strain.md` and
   `plans/strain_sim.py`; sandbox `StrainEnabled`, `StrainGain`, `StrainEase`, `StrainXpFloor`,
@@ -135,6 +145,41 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Changed
 
+- **Experience factors multiply, and a penalty never takes more than the gain** (2026-10-29,
+  review; `DanTraits.lua` `DanTraits_XpFactor`, used by Age, AgeTraits, Fitness, Strain and
+  ADHD; `tests/test_xpstack.lua`). The five `Events.AddXP` handlers each added or took back
+  their share of the original amount through Age's quiet adjust, so the shares summed: a 50s
+  character (x0.8) at Breaking Point (x0.15) gaining 10 Strength had 2 taken by Age and 8.5 by
+  Burnout, a net loss of half a point on a gain, and the Overtrained and Sore cuts could drain
+  a level already earned. Core now opens one record per event and each handler multiplies its
+  factor into it, applying only the difference, so 0.8 x 0.15 is 0.12 of the gain (never under
+  the level held, as before) and the x2 training cap and the Burnout floor mean what they say.
+  Vitality's Thriving is still a loud addition of its own, which the others see and multiply
+  (20s + Quick Study + Thriving on Fitness: 3.15x, was 2.85x; 20s + Quick Study on a new skill:
+  1.68x, was 1.6x). The game's event for the quiet adjust itself is ignored, and a loud addition
+  inside an event keeps the outer record one deep.
+- **Split-screen players get the events, not only the clocks** (2026-10-29, review;
+  `DanTraits_IsLocalPlayer` in Util). Blood's refund of vanilla's bleed damage, Concussion's
+  head hits, falls and swings, Brittle's hits and impacts, Heart's weakened swing, Tinnitus's
+  shots, Anger's local check, WoundCare's swing strain and the A-Life and Bandits hit relay all
+  compared the character with `getSpecificPlayer(0)`; player 2 in split-screen had the blood
+  drained by our model and vanilla's health loss on top. They accept any local slot now. WoundCare's
+  "how the legs moved this minute" was one flag for everyone; it is per character (`wcMovedNow`).
+- **Newbie Gains keeps the starting level from the minute only** (2026-10-29, review;
+  `DanTraits_Fitness.lua` `newbieMinute`). The first caller used to write it, the experience
+  path included, which fires after the game has added: a gain crossing a level before the first
+  minute would have set the start a level high, and a failed read would have written 0 for good.
+  Until the minute has kept it the bonus is 0 and the window shows nothing.
+- **Base Unloader: stacked containers have keys of their own** (2026-10-29, review;
+  `BU.key` / `BU.parseKey`, `S.ordinalOf` in Scan). Three crates on one square all keyed as
+  `x,y,z:crate:0`, so rules, tags, Off limits, names and the run's deliveries landed on
+  whichever won the map, and a saved name was written onto all three. The second and third
+  object of a kind on a square now carry `#1` / `#2`; keys saved before parse as the first.
+  Also from the review: the freezer stage knows a modded fridge or freezer by its name, as the
+  dry-goods exclusion already did; Suggest probes with the item's weight, so a full container
+  is not suggested; groups split spoiled food from fresh (the label said "Fridge" while the
+  rotten half went to the bin).
+
 - **Strain is Burnout to players; hardening and distance** (2026-10-27, from Workshop
   comments; `plans/strain.md` "Burnout, hardening and distance"). The game has a muscle strain
   of its own, so every player-facing string says Burnout (sandbox labels, trait descriptions,
@@ -158,6 +203,24 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   row, lines in 8 px. Blood is left out while there is nothing to tell (tier 0, not bleeding, not
   weak, volume and red cells within `HP_BLOOD_FULL`), Strain under Frayed unless rising. The
   migraine triggers and safe foods moved to the Notes tab. Tests: test_healthpanel 12, 13.
+- **Daily Medication has a window of its own** (2026-10-28, `DanTraits_HealthPanel.lua`). The
+  section is off the health panel; a pill bottle button beside Fitness (the inventory's
+  `Item_PillsBetablocker` icon inset 3 px in a square of Fitness's height, "Medication" as its
+  tooltip, the label on the button if the icon is missing; made the first time the panel is
+  drawn, since the panel is built before the file wraps it; follows Fitness's row each frame, and
+  sits beside Neat Rocco's square `_neatFitnessBtn` when that mod hides vanilla's 100 px button;
+  its right edge goes into `tabtotalwidth` so vanilla's `update()` sizes the panel to hold it,
+  which the first build missed and was clipped) toggles `DanTraitsMedWindow`, an
+  `ISCollapsableWindow` titled Daily Medication that lists each scheduled drug's name in white with
+  when it was last taken and when the next is due under it (grey not taken, green covered, orange
+  due, red worn off), sized to its lines each frame (`HP_MED_MIN_W` 220, `HP_MED_PAD` 10), one per
+  player (`DanTraitsMedWindow.instances`), closed by the X or a second press. It opens to the
+  panel's right, or its left when the right would be off screen. The button is on your own panel
+  only (never a patient's or the debug view), whatever the schedule, so it can be found: with no
+  drug to take the window says "No daily medication to take" (the first build hid the button
+  then; a tester with no daily drug saw nothing). `DanTraits_HealthMedLines` entries gain `name`
+  and `detail` beside the combined text.
+  New keys `UI_DanTraits_health_MedButton`, `MedNone`. Tests: test_healthpanel 11 (rewritten), 12.
 
 - **Everyday activity is light training** (2026-10-26, from a Workshop comment: a looting trip
   and five kills left arms, core and legs Overworked). Jogging, moving with a Heavy Load and
@@ -193,6 +256,47 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `meds.cyclobenzaprine` level carries across to baclofen.
 
 ### Fixed
+
+- **Heart Condition: the cold's slowing of the drain could still build strain at rest**
+  (2026-10-29, review; `DanTraits_Heart.lua` `updateHeartMinute`). The 2026-10-28 fix added the
+  cold's share after the rest drain, multiplied by the strain rate, so with the rate high (a
+  Smoker on caffeine walking in a blizzard, or any multiplier after an adrenaline shot) the cold
+  outweighed the drain and strain climbed while sitting still. The drain is now never less than
+  zero: the cold slows it and that is all.
+- **Fitness window: the Neat Rocco guard in the initialise wrap too** (2026-10-29, review;
+  `DanTraits_FitnessUI.lua`). The anchor loop still called `setAnchorBottom` on `self.close`,
+  the window's method under Neat Rocco, so the section was added but the window never grew.
+- **Daily Medication window after a new character** (2026-10-29, review;
+  `DanTraits_HealthPanel.lua`). The window table kept the last world's window, so the first
+  click of the pill button after a new game closed a window that was no longer there and showed
+  nothing; cleared on `OnCreatePlayer`. The drug's name is read once a line, not twice.
+- **SpiffBoy: the mood wrap returns the original's result** (2026-10-29, review;
+  `DanTraits_SpiffBoy.lua` `wrapMood`): the scaled path returned nothing.
+- **Dan's Vanilla Fixes: cold packs in a cooler could swap names** (2026-10-29, review;
+  `DansVanillaFixes_Coolers.lua` `C.drainPool`). The pool sorted the packs' states in place and
+  the labels were then written by the old index, so a spent pack could read Frozen and a frozen
+  one plain (the chill itself was right). The drain sorts a copy; `tests/test_coolers.lua`.
+- **Map Legend: the profile was written twice on Copy to profile, and a file handle leaked on
+  a failed read or write** (2026-10-29, review; `MapLegend_Core.lua`).
+- **deploy.py `--pull` removed repo files the game folder did not have** (2026-10-29, review):
+  the pull used the same mirror as a deploy. A pull adds and updates only; the mod flags are
+  mutually exclusive; the Vitality Cartridges Lua is linted and API-checked like the rest.
+- Vitality Challenges and Vitality Cartridges fixes from the same review are in their own
+  changelogs (the Last Broadcast's grace evening, the 96.4 channel, the cartridges' SOUND OFF).
+
+- **Fitness window: an error every frame with Neat Rocco** (2026-10-28, `DanTraits_FitnessUI.lua`
+  `placeButtons`). Neat Rocco's window clears its Close button, so `close` is the window's method there, not the Close
+  button, so `window.close:setY` threw on every prerender once a button sat below the window. Only
+  tables with `setY` are moved now (`closeBtn` included).
+
+- **This Is Your Life's origin screen after the 2026-10-27 game update** (2026-10-27,
+  `client/DanTraits_TIYL.lua`). `getWorld():getGameMode()` now returns a Java object, not a
+  string (vanilla `MapSpawnSelect.lua:667` calls `:toString()` on it). TIYL 3773911887's
+  `TIYL.OriginMapBoard:isSaveNameValid` (`TIYLOriginMapBoard.lua:688`) concatenates it, so it
+  threw `__concat not defined` on every `prerender` (804 traces in one session) and Confirm was
+  never set. Wrapped with `DanTraits_Wrap` (tag `tiyl-gamemode`): while the game mode is not a
+  string, a copy of the check runs with `tostring`; a string game mode calls TIYL's own. Tests in
+  `tests/test_tiyl.lua`.
 
 - **Undress and Sleep dresses you properly again** (2026-10-25, `client/DanTraits_SleepMenu.lua`),
   reworked after Take A Bath And Shower's outfit handling. Taking off a belt or holster made the

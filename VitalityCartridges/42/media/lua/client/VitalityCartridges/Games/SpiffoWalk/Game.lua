@@ -296,7 +296,7 @@ function Game:tickHome(input)
         -- any press puts the news away, one at a time
         if anyPressed(pressed) then
             table.remove(self.notices, 1)
-            self.sequencer:effect(Music.MOVE)
+            self:cue(Music.MOVE)
         end
         return
     end
@@ -304,13 +304,13 @@ function Game:tickHome(input)
         self.patTicks = PAT_TICKS
         self:cue(Music.PAT)
     elseif pressed.b then
-        self.sequencer:effect(Music.SELECT)
+        self:cue(Music.SELECT)
         self:enterHats()
     elseif pressed.start then
         self.soundOn = not self.soundOn
         self.dirty = true
         self:applySound()
-        self.sequencer:effect(Music.SELECT)
+        self:cue(Music.SELECT)
     end
 end
 
@@ -319,22 +319,22 @@ function Game:tickHats(input)
     local n = #HATS
     if pressed.left or pressed.right then
         self.selection = (self.selection - 1 + (pressed.left and -1 or 1) + n) % n + 1
-        self.sequencer:effect(Music.MOVE)
+        self:cue(Music.MOVE)
     elseif pressed.up or pressed.down then
         self.selection = (self.selection - 1 + GRID_COLS) % n + 1
-        self.sequencer:effect(Music.MOVE)
+        self:cue(Music.MOVE)
     end
     if pressed.a then
         local i = self.selection
         if self.hats[i] == 0 then
-            self.sequencer:effect(Music.NOPE)
+            self:cue(Music.NOPE)
         else
             self.hat = self.hat == i and 0 or i
             self.dirty = true
-            self.sequencer:effect(Music.SELECT)
+            self:cue(Music.SELECT)
         end
     elseif pressed.b or pressed.start then
-        self.sequencer:effect(Music.SELECT)
+        self:cue(Music.SELECT)
         self:enterHome()
     end
 end

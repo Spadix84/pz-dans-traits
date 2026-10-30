@@ -26,7 +26,8 @@
 -- endurance comes back at half speed, low mood, a dull headache, the shakes
 -- for the first hour. Asleep, the crash passes four times as fast. Another
 -- shot during the crash puts the debt off again with what was still owed
--- added, so the next crash is worse, and it rolls the heart again.
+-- added, so the next crash is worse, and it rolls the heart again (not while
+-- an attack from an earlier shot is already on its way: that timer stands).
 --
 -- Mod data: adShots (world hours of each shot in the last day), adRushMin
 -- (minutes of rush left), adHold (the tiredness held to during the rush),

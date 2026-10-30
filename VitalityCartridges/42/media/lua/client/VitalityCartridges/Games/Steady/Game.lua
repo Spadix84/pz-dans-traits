@@ -181,13 +181,13 @@ function Game:tickTitle(input)
     local pressed = input.pressed
     if pressed.up then
         self.selection = (self.selection - 2 + MENU_SIZE) % MENU_SIZE + 1
-        self.sequencer:effect(Music.MOVE)
+        self:cue(Music.MOVE)
     elseif pressed.down then
         self.selection = self.selection % MENU_SIZE + 1
-        self.sequencer:effect(Music.MOVE)
+        self:cue(Music.MOVE)
     end
     if pressed.a or pressed.start then
-        self.sequencer:effect(Music.SELECT)
+        self:cue(Music.SELECT)
         if self.selection == MENU_PLAY then
             self:enterRound()
         else
@@ -278,7 +278,7 @@ function Game:tickResult(input)
     self.resultTicks = self.resultTicks + 1
     local pressed = input.pressed
     if pressed.a or pressed.start then
-        self.sequencer:effect(Music.SELECT)
+        self:cue(Music.SELECT)
         self:saveRound()
         self:enterTitle()
     end

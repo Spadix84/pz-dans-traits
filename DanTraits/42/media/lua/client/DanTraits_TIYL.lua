@@ -29,7 +29,41 @@ require "DanTraits"
 -- Its Quick Start and poster stories skip the trait screen: those characters
 -- have no age trait and get the Default Age sandbox setting, like any
 -- character made without the creation screen.
+--
+-- Not ours, but it breaks new games: since the 2026-10-27 game update
+-- getWorld():getGameMode() returns a Java object, not a string (vanilla now
+-- calls :toString() on it). TIYL's origin postcard screen joins it into the
+-- save-folder name every frame, so the save-name check errors on every render
+-- and Confirm is never set. While the game mode is not a string, the check runs
+-- here with :toString(); a string game mode (older game, or a TIYL fix) goes
+-- back to TIYL's own check.
 local installed = false
+local boardInstalled = false
+
+local function saveNameValid(self)
+    if not self.saveNameEntry or not self.saveNameEntry:isVisible() then return true end
+    local raw = self.saveNameEntry:getText()
+    local name = sanitizeWorldName(raw)
+    if name == "" or name ~= raw or luautils.stringStarts(name, ".") or
+            luautils.stringEnds(name, ".") then return false end
+    local checkName = tostring(getWorld():getGameMode()) .. getFileSeparator() .. name
+    if checkName ~= self.checkExistsName then
+        self.checkExistsName = checkName
+        self.checkExist = checkSaveFolderExists(checkName)
+    end
+    return not self.checkExist
+end
+
+local function installBoard()
+    if boardInstalled then return end
+    local board = type(TIYL) == "table" and TIYL.OriginMapBoard
+    if type(board) ~= "table" or type(board.isSaveNameValid) ~= "function" then return end
+    boardInstalled = true
+    DanTraits_Wrap(board, "isSaveNameValid", "tiyl-gamemode", function(original, self, ...)
+        if type(getWorld():getGameMode()) == "string" then return original(self, ...) end
+        return saveNameValid(self)
+    end)
+end
 
 local function screen()
     return MainScreen.instance and MainScreen.instance.charCreationProfession
@@ -98,6 +132,7 @@ local function gateOn()
 end
 
 local function install()
+    installBoard()
     if installed then return end
     local panel = type(TIYL) == "table" and TIYL.TraitSelect
     if type(panel) ~= "table" or type(panel.populate) ~= "function" then return end
