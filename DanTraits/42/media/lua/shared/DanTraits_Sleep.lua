@@ -144,11 +144,8 @@ end
 
 -- how much warm clothes count: 0 in the cold (or while you feel it), 1 when warm
 local function clothesWarmth(player)
-    local cold = 0
-    pcall(function() cold = player:getMoodles():getMoodleLevel(MoodleType.HYPOTHERMIA) or 0 end)
-    if cold > 0 then return 0 end
-    local air = nil
-    pcall(function() air = getClimateManager():getAirTemperatureForCharacter(player, false) end)
+    if DanTraits_MoodleLevel(player, "HYPOTHERMIA") > 0 then return 0 end
+    local air = DanTraits_AirTemp(player)
     if type(air) ~= "number" then return 1 end
     return clamp01((air - CL_WARM_COLD) / (CL_WARM_FULL - CL_WARM_COLD))
 end
@@ -172,10 +169,7 @@ local function clothesCost(player)
 end
 DanTraits_SleepClothesCost = clothesCost
 
-local function isBag(item)
-    local ok, res = pcall(function() return instanceof(item, "InventoryContainer") end)
-    return ok and res == true
-end
+local function isBag(item) return DanTraits_Is(item, "InventoryContainer") end
 
 -- what Undress and Sleep (media/lua/client/DanTraits_SleepMenu.lua) takes
 -- off: every worn thing that costs sleep, except warm clothes once the cold
@@ -361,9 +355,5 @@ local function grantWakeful(player)
     DanTraits_GrantFoldIn(player, "deepsleeper", "NEEDS_LESS_SLEEP", "slWakefulGranted")
 end
 
-local function onSleepCreatePlayer(playerNum, player) grantWakeful(player) end
-local function onSleepGameStart() grantWakeful(getSpecificPlayer(0)) end
-
-Events.OnCreatePlayer.Add(onSleepCreatePlayer)
-Events.OnGameStart.Add(onSleepGameStart)
+DanTraits_OnPlayerReady("Sleep", grantWakeful, 70)
 DanTraits_Every("minute", "Sleep", updateSleepMinute, 10)

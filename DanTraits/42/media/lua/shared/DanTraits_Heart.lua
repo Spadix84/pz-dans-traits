@@ -148,6 +148,7 @@ local function betaCut(player)
     return 1 - (1 - HC_BETA_CUT) * built
 end
 
+-- one guarded boolean getter (movement comes from DanTraits_Frame instead)
 local function flag(player, method)
     local ok, res = pcall(function() return player[method](player) end)
     return ok and res == true
@@ -192,7 +193,7 @@ local function strainBuild(player, d, spent, level, moving)
     if moving.sprint then build = build + HC_SPRINT elseif moving.run then build = build + HC_RUN end
     local panic = fraction(player:getStats(), CharacterStat.PANIC)
     if panic > HC_PANIC_AT then build = build + HC_PANIC * (panic - HC_PANIC_AT) / (1 - HC_PANIC_AT) end
-    if overloaded(player) and flag(player, "isPlayerMoving") then build = build + HC_LOAD end   -- the weight sat beside you is no load
+    if overloaded(player) and DanTraits_Frame(player).moving then build = build + HC_LOAD end   -- the weight sat beside you is no load
     if DanTraits_FitTrainingNow then
         local _, spec = DanTraits_FitTrainingNow(player)
         if spec and ((spec.intensity or 1) > 1 or spec.improvised) then build = build + HC_LIFT end
@@ -233,11 +234,7 @@ local function startAngina(player, d)
     notify(player, "UI_DanTraits_HeartChestPain")
 end
 
-local function worldHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() or 0 end)
-    return h
-end
+local worldHours = DanTraits_WorldHours
 
 local function heartAttack(player, d)
     d.hcAnginaMin = 0
@@ -276,10 +273,11 @@ local function exertion(player, d)
     pcall(function() endurance = player:getStats():get(CharacterStat.ENDURANCE) or 1 end)
     local spent = math.max(0, (d.hcEndPrev or endurance) - endurance)
     d.hcEndPrev = endurance
-    local moving = { sprint = flag(player, "isSprinting") or d.hcTried == "sprint", run = flag(player, "isRunning") or d.hcTried == "run" }
+    local f = DanTraits_Frame(player)   -- the movement snapshot (DanTraits.lua)
+    local moving = { sprint = f.sprinting or d.hcTried == "sprint", run = f.running or d.hcTried == "run" }
     d.hcTried = nil
     local level = enduranceLevel(player)
-    local pushing = moving.sprint or (spent > 1e-6 and level >= HC_PUSH_LEVEL) or (d.hcAnginaMin or 0) > 0 and (moving.run or flag(player, "isAttacking"))
+    local pushing = moving.sprint or (spent > 1e-6 and level >= HC_PUSH_LEVEL) or (d.hcAnginaMin or 0) > 0 and (moving.run or f.attacking)
     local resting = spent <= 1e-6 and not moving.sprint and not moving.run
     return spent, level, moving, pushing, resting
 end
@@ -346,8 +344,9 @@ local function updateHeartFrame(player, d)
     local angina = hasTrait(player, "heart") and (d.hcAnginaMin or 0) > 0
     local stage = weak(player, d)
     if not angina and not stage then d.hcEndFrame = nil return end
+    local f = DanTraits_Frame(player)   -- this frame's movement snapshot (DanTraits.lua)
     if angina then
-        local triedSprint, triedRun = flag(player, "isSprinting"), flag(player, "isRunning")
+        local triedSprint, triedRun = f.sprinting, f.running
         if triedSprint then pcall(function() player:setSprinting(false) end) end
         if triedRun then pcall(function() player:setRunning(false) end) end
         if triedSprint or triedRun then
@@ -360,9 +359,10 @@ local function updateHeartFrame(player, d)
     if not now then return end
     local was = d.hcEndFrame
     if was and now < was then
-        local working = flag(player, "isAttacking") or flag(player, "isSprinting") or flag(player, "isRunning")
+        -- angina just stopped the sprint or run above, so only an attack counts as work then
+        local working = f.attacking or (not angina and (f.sprinting or f.running))
         if working then
-            local mult = (stage and stage.spend or 1) * (angina and flag(player, "isAttacking") and HC_PAIN_SWING or 1)
+            local mult = (stage and stage.spend or 1) * (angina and f.attacking and HC_PAIN_SWING or 1)
             if mult > 1 then
                 local extra = (was - now) * (mult - 1)
                 DanTraits_StatAdd(stats, CharacterStat.ENDURANCE, -extra)

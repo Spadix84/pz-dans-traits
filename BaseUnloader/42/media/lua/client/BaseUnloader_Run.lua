@@ -210,28 +210,21 @@ local function sourcePos(state)
     return nil
 end
 
--- the trip's tour is planned once, from where the character stands, ending
--- near the source for the next load; each step takes its first remaining stop
+-- The next stop: the core groups what is carried by destination and tours the
+-- stops (BU.deliveryOrder); the tour's order is kept as state.route from the
+-- first step of a delivery, so a stop that fell through does not reshuffle the
+-- rest, and each step takes its first remaining stop. Items for a container
+-- that is gone come back as `lost`.
 local function nextStop(state, carried, rows)
-    local byKey = rowsByKey(rows)
+    local stops, lost = BU.deliveryOrder(carried, rows, posOf(state.player), sourcePos(state))
     local byDest = {}
-    local lost = {}
-    for _, r in ipairs(carried) do
-        if r.dest and byKey[r.dest] then
-            if not byDest[r.dest] then byDest[r.dest] = {} end
-            local list = byDest[r.dest]
-            list[#list + 1] = r
-        else
-            lost[#lost + 1] = r
-        end
-    end
+    for _, s in ipairs(stops) do byDest[s.key] = s.items end
     local route = state.route
     if route then
         while #route > 0 and not byDest[route[1]] do table.remove(route, 1) end
         if #route == 0 then route = nil end
     end
     if not route then
-        local stops = BU.deliveryOrder(carried, rows, posOf(state.player), sourcePos(state))
         route = {}
         for _, s in ipairs(stops) do route[#route + 1] = s.key end
         state.route = route

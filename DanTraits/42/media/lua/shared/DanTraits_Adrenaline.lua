@@ -62,11 +62,7 @@ local AD_CRASH_RAMP    = 1       -- ...climbed to this a minute
 local AD_CRASH_PAIN    = 10      -- headache (a DanTraits_PainFloor floor)
 local AD_ASLEEP_FASTER = 4       -- crash minutes gone per minute asleep
 
-local function worldHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() or 0 end)
-    return h
-end
+local worldHours = DanTraits_WorldHours
 
 local function getStat(stats, stat)
     local v = 0

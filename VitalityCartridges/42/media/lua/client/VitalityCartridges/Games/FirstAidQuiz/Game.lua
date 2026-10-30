@@ -21,6 +21,7 @@
 -- deterministic.
 
 require "VitalityCartridges/Core"
+require "VitalityCartridges/Common"
 require "SpiffBoy/Framework/Cartridges"
 require "SpiffBoy/Framework/GameTexts"
 require "SpiffBoy/Core/GameBase"
@@ -31,7 +32,7 @@ VitalityCartridgesFirstAidQuizGame = SpiffBoyGameBase:derive("VitalityCartridges
 local Game = VitalityCartridgesFirstAidQuizGame
 local Music = VitalityCartridges.FirstAidQuiz.Music
 local gameText = SpiffBoy.GameTexts.of("FirstAidQuiz")
-local SHADES = SpiffBoy.Cartridges.SHADES
+local Common = VitalityCartridges.Common
 
 local BANK = 40                  -- questions in EN.json: Q1 .. Q40
 local ROUND = 10                 -- questions a round
@@ -66,20 +67,11 @@ local MODE_TITLE, MODE_QUESTION, MODE_ANSWER, MODE_SUMMARY = "title", "question"
 local MENU_START, MENU_SOUND, MENU_SIZE = 1, 2, 2
 local MENU_Y, MENU_STEP, MENU_BAR = 50, 16, 120
 
-local function ink(i)
-    local s = SHADES[i]
-    return s.r, s.g, s.b
-end
+local ink = Common.ink
 
-local function readNumber(v, hi)
-    if type(v) ~= "number" or v < 0 then return 0 end
-    return math.min(math.floor(v), hi)
-end
+local readNumber = Common.readNumber
 
-local function readSound(save)
-    local o = save.options
-    return type(o) ~= "table" or o.sound ~= false
-end
+local readSound = Common.readSound
 
 function Game:init()
     local art = self.context.art
@@ -204,13 +196,7 @@ end
 
 function Game:tickTitle(input)
     local pressed = input.pressed
-    if pressed.up then
-        self.selection = (self.selection - 2 + MENU_SIZE) % MENU_SIZE + 1
-        self:cue(Music.MOVE)
-    elseif pressed.down then
-        self.selection = self.selection % MENU_SIZE + 1
-        self:cue(Music.MOVE)
-    end
+    Common.moveMenu(self, MENU_SIZE, pressed.up, pressed.down, Music.MOVE)
     if pressed.a or pressed.start then
         self:cue(Music.SELECT)
         if self.selection == MENU_START then
@@ -229,13 +215,7 @@ function Game:tickQuestion(input)
         return
     end
     local n = #self.answers
-    if pressed.up then
-        self.selection = (self.selection - 2 + n) % n + 1
-        self:cue(Music.MOVE)
-    elseif pressed.down then
-        self.selection = self.selection % n + 1
-        self:cue(Music.MOVE)
-    end
+    Common.moveMenu(self, n, pressed.up, pressed.down, Music.MOVE)
     if pressed.a then
         local right = self.order[self.selection] == RIGHT
         if right then self.score = self.score + 1 end

@@ -89,11 +89,7 @@ local function woundCount(player)
     return n
 end
 
-local function worldHours()
-    local h = 0
-    pcall(function() h = GameTime.getInstance():getWorldAgeHours() end)
-    return h
-end
+local worldHours = DanTraits_WorldHours
 
 local function setBlocked(player, blocked)
     pcall(function() player:setBlockMovement(blocked) end)

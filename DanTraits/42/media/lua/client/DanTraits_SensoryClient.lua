@@ -3,14 +3,11 @@
 -- (DanShared_Tooltip.lua), and a garment's feel: soft, or scratchy, rough or tight.
 require "DanTraits"
 require "DanShared_Tooltip"
+require "DanTraits_ClientUtil"
 require "TimedActions/ISSensoryStimAction"
 
 local hasTrait = DanTraits_HasTrait
-
-local function actualItems(items)
-    if ISInventoryPane and ISInventoryPane.getActualItems then return ISInventoryPane.getActualItems(items) end
-    return items
-end
+local actualItems = DanTraits_ActualItems
 
 local function onStim(item, playerObj)
     ISInventoryPaneContextMenu.transferIfNeeded(playerObj, item)
@@ -43,12 +40,8 @@ end
 -- the lines for a food or a garment, for a character with the trait
 function DanTraits_SensoryTooltipLines(player, item)
     if not player or not item or not DanTraits_SensoryFood or not hasTrait(player, "sensory") then return nil end
-    local isClothing = false
-    pcall(function() isClothing = instanceof(item, "Clothing") end)
-    if isClothing then return garmentLines(item) end
-    local isFood = false
-    pcall(function() isFood = instanceof(item, "Food") end)
-    if not isFood then return nil end
+    if DanTraits_Is(item, "Clothing") then return garmentLines(item) end
+    if not DanTraits_Is(item, "Food") then return nil end
     local verdict, group = DanTraits_SensoryFood(player, item)
     if verdict == "safe" then
         return { { getText("Tooltip_DanTraits_SensorySafe", getText("UI_DanTraits_SensoryGroup_" .. group)), 0.45, 0.85, 0.45 } }

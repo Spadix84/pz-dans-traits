@@ -1,10 +1,13 @@
 -- Base Unloader: reading the world. The zone (the base zones drawn near the
 -- container being unloaded; with none drawn, the building you are in or next
 -- to, plus a margin, plus a circle round the container), every container in
--- it as a plain record for the core, what to call a container and where it
--- is, what every base zone holds (the stock, kept for when you are away), the
--- items of a source container as records, and finding a container again from
--- its key or a vehicle from its id when a run resumes.
+-- it as a plain record for the core, a container's key (S.identify, the one
+-- place keys are built; S.resolve finds the container again from one), what
+-- to call it and where it is, what every base zone holds (the stock, kept for
+-- when you are away), the items of a source container as records, and finding
+-- a vehicle again from its id when a run resumes. Also the two small world
+-- writes the windows and menus share: lighting a container up (S.highlight)
+-- and taking a new name from the name box (S.renamed).
 
 require "BaseUnloader_Core"
 
@@ -169,21 +172,32 @@ function S.smarterStorageName(container)
     return nil
 end
 
--- what to call a container: the name on it, else the name saved for its key
--- (put back on it, in case the game did not keep it), else the one Smarter
--- Storage gave it, else its kind
-function S.nameOf(container, key)
+local function customName(container)
     local custom
     pcall(function() custom = container:getCustomName() end)
-    if custom and custom ~= "" then return custom, true end
+    if custom and custom ~= "" then return custom end
+    return nil
+end
+
+-- what to call a container: the name on it, else the name saved for its key,
+-- else the one Smarter Storage gave it, else its kind. A getter only: the scan
+-- puts a saved name back on the container (S.restoreName)
+function S.nameOf(container, key)
+    local custom = customName(container)
+    if custom then return custom, true end
     local saved = BU.store().names[key]
-    if saved and saved ~= "" then
-        pcall(function() container:setCustomName(saved) end)
-        return saved, true
-    end
+    if saved and saved ~= "" then return saved, true end
     local smarter = S.smarterStorageName(container)
     if smarter then return smarter, true end
     return S.kindLabel(container:getType()), false
+end
+
+-- the name saved for a container's key goes back on the container, in case the
+-- game did not keep it: once per scan (S.row), not on every look at the name
+function S.restoreName(container, key)
+    if customName(container) then return end
+    local saved = BU.store().names[key]
+    if saved and saved ~= "" then pcall(function() container:setCustomName(saved) end) end
 end
 
 function S.rename(container, key, name)
@@ -195,6 +209,31 @@ function S.rename(container, key, name)
         names[key] = name
         pcall(function() container:setCustomName(name) end)
     end
+end
+
+-- The name box closed (BU_Window:rename, BU_Menu.onRenameObject): on OK the
+-- container takes the name typed (its kind's own label clears it) and the
+-- inventory windows redraw. Returns true when a name was taken.
+function S.renamed(button, playerNum, row)
+    if button.internal ~= "OK" then return false end
+    local text = button.parent.entry:getText() or ""
+    if text == row.kindLabel then text = "" end
+    S.rename(row.container, row.key, text)
+    pcall(function()
+        local pdata = getPlayerData(playerNum)
+        pdata.playerInventory:refreshBackpacks()
+        pdata.lootInventory:refreshBackpacks()
+    end)
+    return true
+end
+
+-- a world object lit up (or not) for a player, as the loot window lights its container
+function S.highlight(playerNum, obj, on)
+    if not obj then return end
+    pcall(function()
+        obj:setHighlighted(playerNum, on, false)
+        if on then obj:setHighlightColor(playerNum, getCore():getObjectHighlitedColor()) end
+    end)
 end
 
 -- the game's name for the room a square is in ("kitchen", "garagestorage"), lower
@@ -210,10 +249,6 @@ function S.roomId(sq)
     end)
     if not name or name == "" then return nil end
     return string.lower(name)
-end
-
-function S.roomName(sq)
-    return BU.roomWords(S.roomId(sq))
 end
 
 -- which object of this kind on the square obj is (0 the first, in the square's
@@ -234,6 +269,27 @@ local function sameKindBefore(sq, obj, kind, index)
 end
 S.ordinalOf = sameKindBefore
 
+-- A world object's container identified: its key (BU.key, with the ordinal
+-- among same-kind objects on the square) and which of the object's containers
+-- it is (a fridge has two). The one place keys are built; S.resolve is the
+-- inverse. nil when the container is not one of the object's, or the object
+-- has no square (sq: the object's square, looked up when not given).
+function S.identify(obj, container, sq)
+    sq = sq or obj:getSquare()
+    if not sq then return nil end
+    local index
+    pcall(function()
+        local n = obj.getContainerCount and obj:getContainerCount() or 1
+        for ci = 0, n - 1 do
+            local c = ci == 0 and obj:getContainer() or obj:getContainerByIndex(ci)
+            if c == container then index = ci end
+        end
+    end)
+    if not index then return nil end
+    local kind = container:getType()
+    return BU.key(sq:getX(), sq:getY(), sq:getZ(), kind, index, sameKindBefore(sq, obj, kind, index)), index
+end
+
 -- the key of a world object's container, nil for a character's, a bag's or a vehicle's
 function S.keyOf(container)
     local key
@@ -241,15 +297,7 @@ function S.keyOf(container)
         if container:getContainingItem() or container:getVehiclePart() then return end
         local obj = container:getParent()
         if not obj or instanceof(obj, "IsoGameCharacter") or instanceof(obj, "BaseVehicle") then return end
-        local sq = obj:getSquare()
-        if not sq then return end
-        local n = obj.getContainerCount and obj:getContainerCount() or 1
-        for ci = 0, n - 1 do
-            local c = ci == 0 and obj:getContainer() or obj:getContainerByIndex(ci)
-            if c == container then
-                key = BU.key(sq:getX(), sq:getY(), sq:getZ(), container:getType(), ci, sameKindBefore(sq, obj, container:getType(), ci))
-            end
-        end
+        key = S.identify(obj, container)
     end)
     return key
 end
@@ -271,20 +319,23 @@ function S.floorLabel(z)
     return getText("IGUI_BU_Floor_" .. which)
 end
 
+-- "12 tiles north-east" of the zone's centre (the source), nil on its very square
+function S.offsetLabel(row, zone)
+    local dx, dy = row.x - zone.cx, row.y - zone.cy
+    local dir = BU.compass(dx, dy)
+    local tiles = math.floor(math.sqrt(dx * dx + dy * dy) + 0.5)
+    if dir and tiles > 0 then return getText("IGUI_BU_Tiles", tiles, getText("IGUI_BU_Dir_" .. dir)) end
+    return nil
+end
+
 -- "Kitchen, ground floor" or, with no room, "12 tiles north-east, ground floor"
+-- (row.offset, set by S.row from S.offsetLabel; "here" on the source's square)
 function S.placeLabel(row, zone)
     local parts = {}
     if row.room then
         parts[#parts + 1] = row.room
     elseif zone then
-        local dx, dy = row.x - zone.cx, row.y - zone.cy
-        local dir = BU.compass(dx, dy)
-        local tiles = math.floor(math.sqrt(dx * dx + dy * dy) + 0.5)
-        if dir and tiles > 0 then
-            parts[#parts + 1] = getText("IGUI_BU_Tiles", tiles, getText("IGUI_BU_Dir_" .. dir))
-        else
-            parts[#parts + 1] = getText("IGUI_BU_Here")
-        end
+        parts[#parts + 1] = row.offset or getText("IGUI_BU_Here")
     end
     parts[#parts + 1] = S.floorLabel(row.z)
     return table.concat(parts, ", ")
@@ -324,11 +375,15 @@ function S.capacity(container, player)
     return capacity
 end
 
--- the record for one container of a world object
-function S.row(obj, container, index, sq, zone, player)
+-- the record for one container of a world object (sq: its square); nil when
+-- the container is not the object's (S.identify). The scan is where a saved
+-- name goes back on the container.
+function S.row(obj, container, sq, zone, player)
+    local key = S.identify(obj, container, sq)
+    if not key then return nil end
     local x, y, z = sq:getX(), sq:getY(), sq:getZ()
     local kind = container:getType()
-    local key = BU.key(x, y, z, kind, index, sameKindBefore(sq, obj, kind, index))
+    S.restoreName(container, key)
     local name, named = S.nameOf(container, key)
     local contents, cats, count = histograms(container)
     local capacity, used = S.capacity(container, player), 0
@@ -338,13 +393,8 @@ function S.row(obj, container, index, sq, zone, player)
                   kindLabel = S.kindLabel(kind), name = name, named = named, roomId = roomId, room = BU.roomWords(roomId),
                   contents = contents, cats = cats, count = count, capacity = capacity, used = used,
                   free = math.max(0, capacity - used), touched = BU.store().touched[key] == true }
+    if not row.room and zone then row.offset = S.offsetLabel(row, zone) end
     row.place = S.placeLabel(row, zone)
-    if not row.room and zone then
-        local dx, dy = x - zone.cx, y - zone.cy
-        local dir = BU.compass(dx, dy)
-        local tiles = math.floor(math.sqrt(dx * dx + dy * dy) + 0.5)
-        if dir and tiles > 0 then row.offset = getText("IGUI_BU_Tiles", tiles, getText("IGUI_BU_Dir_" .. dir)) end
-    end
     return row
 end
 
@@ -364,30 +414,38 @@ local function rowsOnSquare(sq, zone, out, skipContainer, player)
                     pcall(function() c = obj:getContainerByIndex(ci) end)
                 end
                 if c and c ~= skipContainer and not SKIP_KINDS[c:getType()] then
-                    out[#out + 1] = S.row(obj, c, ci, sq, zone, player)
+                    out[#out + 1] = S.row(obj, c, sq, zone, player)
                 end
             end
         end
     end
 end
 
--- every loaded square of some areas (each piece on its floor and `floors`
--- above and below), once each: fn(square, index of the area it belongs to)
-function S.eachAreaSquare(areas, floors, fn)
+-- every loaded square of one piece of zone ({ x1, y1, x2, y2, z }, on its
+-- floor and `floors` above and below) not yet in `seen` (shared between pieces,
+-- so a square two pieces cover is walked once): fn(square, x, y, z)
+local function eachPieceSquare(piece, floors, seen, fn)
     local cell = getCell()
+    for z = piece.z - floors, piece.z + floors do
+        for y = piece.y1, piece.y2 do
+            for x = piece.x1, piece.x2 do
+                local at = x .. "," .. y .. "," .. z
+                if not seen[at] then
+                    seen[at] = true
+                    local sq = cell:getGridSquare(x, y, z)
+                    if sq then fn(sq, x, y, z) end
+                end
+            end
+        end
+    end
+end
+
+-- every loaded square of some areas, once each: fn(square, index of the area it belongs to)
+function S.eachAreaSquare(areas, floors, fn)
     local seen = {}
     for _, area in ipairs(areas) do
         for _, r in ipairs(area.rects) do
-            for z = r.z - floors, r.z + floors do
-                for y = r.y1, r.y2 do
-                    for x = r.x1, r.x2 do
-                        local at = x .. "," .. y .. "," .. z
-                        local sq = not seen[at] and cell:getGridSquare(x, y, z) or nil
-                        seen[at] = true
-                        if sq then fn(sq, BU.areaAt(areas, x, y, z, floors)) end
-                    end
-                end
-            end
+            eachPieceSquare(r, floors, seen, function(sq, x, y, z) fn(sq, BU.areaAt(areas, x, y, z, floors)) end)
         end
     end
 end
@@ -458,7 +516,6 @@ end
 
 -- everything on a square: in its containers, and lying on the floor
 function S.stockOnSquare(sq, out)
-    local x, y, z = sq:getX(), sq:getY(), sq:getZ()
     local objs = sq:getObjects()
     for i = 0, objs:size() - 1 do
         local obj = objs:get(i)
@@ -470,8 +527,8 @@ function S.stockOnSquare(sq, out)
             local c
             pcall(function() c = ci == 0 and obj:getContainer() or obj:getContainerByIndex(ci) end)
             if c and not SKIP_KINDS[c:getType()] then
-                local key = BU.key(x, y, z, c:getType(), ci, sameKindBefore(sq, obj, c:getType(), ci))
-                pcall(function() stockOfContainer(c, 0, key, (S.nameOf(c, key)), out) end)
+                local key = S.identify(obj, c, sq)
+                if key then pcall(function() stockOfContainer(c, 0, key, (S.nameOf(c, key)), out) end) end
             end
         end
     end
@@ -494,25 +551,13 @@ end
 function S.refreshStock(store)
     store = store or BU.store()
     BU.dropStaleStock(store)
-    local cell = getCell()
     local floors = S.floors()
     local now = S.worldHours()
     local fresh, seen = {}, {}
     for _, zone in ipairs(store.zones) do
         if S.pieceLoaded(zone) then
             local records = {}
-            for z = zone.z - floors, zone.z + floors do
-                for y = zone.y1, zone.y2 do
-                    for x = zone.x1, zone.x2 do
-                        local at = x .. "," .. y .. "," .. z
-                        if not seen[at] then
-                            seen[at] = true
-                            local sq = cell:getGridSquare(x, y, z)
-                            if sq then S.stockOnSquare(sq, records) end
-                        end
-                    end
-                end
-            end
+            eachPieceSquare(zone, floors, seen, function(sq) S.stockOnSquare(sq, records) end)
             local key = BU.pieceKey(zone)
             store.stock[key] = { zone = zone.name, at = now, items = BU.stockOf(records) }
             fresh[key] = true
@@ -687,15 +732,8 @@ end
 function S.objectSource(obj, container, zone)
     local sq = obj:getSquare()
     if not sq or not container then return nil end
-    local index = 0
-    pcall(function()
-        if obj.getContainerCount then
-            for ci = 0, obj:getContainerCount() - 1 do
-                if obj:getContainerByIndex(ci) == container then index = ci end
-            end
-        end
-    end)
-    local row = S.row(obj, container, index, sq, zone)
+    local row = S.row(obj, container, sq, zone)
+    if not row then return nil end
     return { kind = "object", object = obj, container = container, key = row.key, label = row.name, row = row,
              x = row.x, y = row.y, z = row.z }
 end

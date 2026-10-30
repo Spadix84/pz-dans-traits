@@ -115,12 +115,12 @@ function BU_StockList:prerender()
     local row = self:rowUnderMouse()
     local key = row and not row.age and row.key or nil
     if key ~= self.litKey then
-        self.window:highlight(self.lit, false)
+        S.highlight(self.window.playerNum, self.lit, false)
         self.lit = nil
         if key then
             local found = S.resolve(key)
             self.lit = found and found.object or nil
-            self.window:highlight(self.lit, true)
+            S.highlight(self.window.playerNum, self.lit, true)
         end
         self.litKey = key
     end
@@ -298,14 +298,6 @@ function BU_StockWindow:setSearch(text)
     self:filter()
 end
 
-function BU_StockWindow:highlight(obj, on)
-    if not obj then return end
-    pcall(function()
-        obj:setHighlighted(self.playerNum, on, false)
-        if on then obj:setHighlightColor(self.playerNum, getCore():getObjectHighlitedColor()) end
-    end)
-end
-
 function BU_StockWindow:walkTo(row)
     local found = row and row.key and S.resolve(row.key) or nil
     if not found then
@@ -330,7 +322,7 @@ function BU_StockWindow:render()
 end
 
 function BU_StockWindow:close()
-    if self.list then self:highlight(self.list.lit, false) end
+    if self.list then S.highlight(self.playerNum, self.list.lit, false) end
     BU_StockWindow.instances[self.playerNum] = nil
     ISCollapsableWindow.close(self)
     self:removeFromUIManager()

@@ -2,11 +2,13 @@
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
 -- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, the wrap that hides Wakeful
--- (and Deep Sleeper on a no-sleep server) from the character creation list, and Age at
+-- (and Deep Sleeper on a no-sleep server, and another mod's duplicates of ours: DanTraits_HIDDEN_AT_CREATION)
+-- from the character creation list, and Age at
 -- character creation (In Their 30s hidden, age's levels shown in the Major Skills list,
 -- the body traits' extra cost in the 40s and 50s, and the traits only one age can take).
 -- Game methods are wrapped through DanTraits_Wrap (DanTraits.lua).
 require "DanTraits"
+require "DanTraits_ClientUtil"
 require "TimedActions/ISUseInhalerAction"
 require "TimedActions/ISDiabetesAction"
 require "TimedActions/ISVitalityPillAction"
@@ -26,12 +28,10 @@ if ok and MF and MF.createMoodle then
     for _, name in ipairs(DanTraits_MoodleNames or {}) do MF.createMoodle(name) end
 end
 
-local function actualItems(items)
-    if ISInventoryPane and ISInventoryPane.getActualItems then
-        return ISInventoryPane.getActualItems(items)
-    end
-    return items
-end
+-- DanTraits_ClientUtil.lua's helpers, called when a menu opens (that file
+-- loads after this one: the client files load by name, Client before ClientUtil)
+local function actualItems(items) return DanTraits_ActualItems(items) end
+local function greyOut(option, textKey) DanTraits_GreyOut(option, textKey) end
 
 local function findFirst(items, test)
     if not test then return nil end
@@ -42,13 +42,6 @@ local function findFirst(items, test)
 end
 
 local usesOf = DanTraits_ItemUses
-
-local function greyOut(option, textKey)
-    option.notAvailable = true
-    local tooltip = ISInventoryPaneContextMenu.addToolTip()
-    tooltip.description = getText(textKey)
-    option.toolTip = tooltip
-end
 
 local function onUseInhaler(item, playerObj)
     ISInventoryPaneContextMenu.transferIfNeeded(playerObj, item)
@@ -547,6 +540,10 @@ local function creationHides(screen, trait)
         for key in pairs(DanTraits_RETIRED) do
             if kind == DanTraitsRegistry[key] then return true end
         end
+    end
+    -- another mod's duplicates of ours (Dynamic Traits' Alcoholic, DanTraits_DTEM.lua)
+    if kind ~= nil and DanTraits_HIDDEN_AT_CREATION and DanTraits_HIDDEN_AT_CREATION[string.lower(tostring(kind))] then
+        return true
     end
     local ageKey = ageKeyOf(kind)
     if ageKey and ageOffAtCreation() then return true end

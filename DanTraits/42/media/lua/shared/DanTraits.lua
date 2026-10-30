@@ -7,12 +7,16 @@
 -- DanTraits_Wrap (the one way any file wraps a game method, so several files
 -- can layer on the same method), the cached vanilla trait lookup
 -- (DanTraits_HasVanillaTrait, DanTraits_TraitsChanged), the one way a file adds or takes off a
--- trait at runtime (DanTraits_SetTrait), the starting kits a new character with a
--- trait begins with (DanTraits_StartingKit), the eat and pill action hooks that several
--- traits share, the one-time rename of old mod-data keys (DanTraits_MigrateModData),
--- and the save mod-list fix. Each trait bails out immediately
--- unless the player actually has it, so an unaffected character costs a
--- handful of lookups.
+-- trait at runtime (DanTraits_SetTrait), the player-ready sequence
+-- (DanTraits_OnPlayerReady: one ordered list run by core's one OnCreatePlayer
+-- handler and, for every local player, its one OnGameStart handler: the mod-data
+-- migration, the retired traits, the trait cache, the starting kits, then each
+-- file's own create or grant), the starting kits a new character with a trait
+-- begins with (DanTraits_StartingKit), the per-frame movement snapshot
+-- (DanTraits_Frame), the eat and pill action hooks that several traits share,
+-- the one-time rename of old mod-data keys (DanTraits_MigrateModData), and the
+-- save mod-list fix. Each trait bails out immediately unless the player
+-- actually has it, so an unaffected character costs a handful of lookups.
 --
 -- Every place core runs another file's function (a clock system, a value
 -- hook, a Later job, an eat or refuse reader, a story listener, a moodle
@@ -77,6 +81,67 @@ function DanTraits_Guard(tag, fn, ...)
     end
     return ok, res
 end
+
+-- Every local player (singleplayer has one; split-screen up to four, each a
+-- distinct object: the same player reached through two indices counts once).
+local function eachLocalPlayer(fn)
+    local seen = {}
+    for i = 0, 3 do
+        local player = getSpecificPlayer(i)
+        if player and not seen[player] then
+            seen[player] = true
+            if not player:isDead() then fn(player) end
+        end
+    end
+end
+
+-- Player ready: the one ordered sequence that runs when a character is
+-- created or loaded (OnCreatePlayer, with the player the game hands over)
+-- and again once the world is up (OnGameStart, for every local player: the
+-- game fires OnCreatePlayer before some tables are in place, so each step
+-- is written to run twice without effect). Core registers the only two
+-- handlers; every file that used to have its own puts its fn(player) here:
+--
+--   DanTraits_OnPlayerReady(label, fn, order)
+--     label  the step's name for the log ("kits")
+--     fn     fn(player), run under DanTraits_Guard("ready:" .. label)
+--     order  lower runs first, default 100; equal orders in load order
+--
+--   10  migrate     the mod-data renames (DanTraits_MigrateModData), before any
+--                   step reads the new names
+--   20  retire      the retired traits swapped out (DanTraits_RetireTraits)
+--   30  traits      the vanilla trait cache dropped (DanTraits_TraitsChanged), so
+--                   the steps below see the traits as the character now has them
+--   40  kits        the starting kits (DanTraits_StartingKit), in registration order
+--   50  Age         the age band's trait and starting levels
+--   55  AgeTraits   Reading Glasses' pair
+--   60  GymRegular  the exercise regularity
+--   65  Positives   Fast Recovery's fold-in, Early Riser's and Meal Prepper's starts
+--   70  Sleep       Deep Sleeper's Wakeful
+--   75  SteadyHands Dexterous
+local ready = {}
+DanTraits_ReadyList = ready   -- read-only view for the tests
+function DanTraits_OnPlayerReady(label, fn, order)
+    if type(fn) ~= "function" then return false end
+    order = order or 100
+    local entry = { label = tostring(label or ""), fn = fn, order = order }
+    local at = #ready
+    while at >= 1 and ready[at].order > order do at = at - 1 end
+    table.insert(ready, at + 1, entry)
+    return true
+end
+
+local function runReady(player)
+    if not player then return end
+    for i = 1, #ready do
+        local entry = ready[i]
+        DanTraits_Guard("ready:" .. entry.label, entry.fn, player)
+    end
+end
+DanTraits_RunPlayerReady = runReady   -- the sequence for one player, for the tests and the console
+
+Events.OnCreatePlayer.Add(function(playerNum, player) runReady(player) end)
+Events.OnGameStart.Add(function() eachLocalPlayer(runReady) end)
 
 -- Story events: every notice is also published as the Lua event
 --   OnStoryEvent(player, { source, kind, text, tone })
@@ -143,9 +208,9 @@ local function traitData(player)
 end
 
 -- Mod-data key hygiene: every key carries its system's prefix. Keys renamed
--- for that (old -> new) are moved once per save, when the player loads
--- (OnCreatePlayer runs before the trait files' own starts read the new
--- names, OnGameStart covers the rest): copied only if the new key is not
+-- for that (old -> new) are moved once per save, when the player loads (the
+-- first player-ready step, so it runs before the trait files' own starts
+-- read the new names): copied only if the new key is not
 -- already set, then the old one is cleared. Keys no system reads any more
 -- (MODDATA_DROPPED) are cleared the same way. One log line with the count.
 -- Add a pair here whenever a saved key is renamed, a name whenever one is
@@ -184,8 +249,7 @@ function DanTraits_MigrateModData(player)
     if n > 0 then print("[DanTraits] mod data: renamed or dropped " .. n .. " old key(s)") end
     return n
 end
-Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_MigrateModData(player) end)
-Events.OnGameStart.Add(function() DanTraits_MigrateModData(getSpecificPlayer(0)) end)
+DanTraits_OnPlayerReady("migrate", DanTraits_MigrateModData, 10)
 
 -- A trait reference, as every runtime add or remove names one: a mod key
 -- ("dependent", the registry entry) or "base:" and a CharacterTrait
@@ -228,6 +292,17 @@ DanTraits_RETIRED = {
     ironstomach = "base:IRON_GUT",
     bouncesback = "thickskull",
 }
+-- Traits another mod declares that ours stand in for (Dynamic Traits'
+-- Alcoholic, DanTraits_DTEM.lua): hidden at creation by their lowercase id
+-- ("dynamictraits:alcoholic", the CharacterTrait's tostring). The creation
+-- screen filter in DanTraits_Client.lua reads the set.
+DanTraits_HIDDEN_AT_CREATION = {}
+function DanTraits_HideAtCreation(id)
+    if type(id) ~= "string" or id == "" then return false end
+    DanTraits_HIDDEN_AT_CREATION[string.lower(id)] = true
+    return true
+end
+
 function DanTraits_RetireTraits(player)
     if not player or not DanTraitsRegistry then return 0 end
     local n = 0
@@ -241,8 +316,7 @@ function DanTraits_RetireTraits(player)
     if n > 0 then print("[DanTraits] retired " .. n .. " trait(s) swapped out") end
     return n
 end
-Events.OnCreatePlayer.Add(function(playerNum, player) DanTraits_RetireTraits(player) end)
-Events.OnGameStart.Add(function() DanTraits_RetireTraits(getSpecificPlayer(0)) end)
+DanTraits_OnPlayerReady("retire", DanTraits_RetireTraits, 20)
 
 -- Starting kits: what a new character with a trait begins with (a bottle of
 -- beta blockers, an inhaler, the glucose meter). Each file registers a spec:
@@ -260,10 +334,11 @@ Events.OnGameStart.Add(function() DanTraits_RetireTraits(getSpecificPlayer(0)) e
 --     spec.prepare  fn(item), optional: run on every item given (a full bottle, the
 --                   part-used pack)
 --
--- Core's kit handler on OnCreatePlayer (its third: after the mod-data
--- migration and the retired traits, before the trait cache) runs every kit in registration order
--- for a character who has the trait, has not survived an hour yet and has
--- not had the kit. Each kit runs under DanTraits_Guard.
+-- The kits step of the player-ready sequence (order 40: after the mod-data
+-- migration, the retired traits and the trait cache, before the files' own
+-- creates) runs every kit in registration order for a character who has the
+-- trait, has not survived an hour yet and has not had the kit. Each kit runs
+-- under DanTraits_Guard.
 local kits = {}
 function DanTraits_StartingKit(spec)
     kits[#kits + 1] = spec
@@ -305,12 +380,11 @@ local function giveKit(player, spec)
 end
 DanTraits_GiveStartingKit = giveKit   -- tests
 
-Events.OnCreatePlayer.Add(function(playerNum, player)
-    if not player then return end
+DanTraits_OnPlayerReady("kits", function(player)
     for _, spec in ipairs(kits) do
         DanTraits_Guard("kit:" .. tostring(spec.flag or spec.trait), giveKit, player, spec)
     end
-end)
+end, 40)
 
 -- vanilla traits by id, as the game names them (lowercase "base:needslesssleep").
 -- Walking getKnownTraits is a Java list walk with a tostring and a lowercase
@@ -318,7 +392,7 @@ end)
 -- cached: one snapshot { player, minute, set } for the (single) local player,
 -- rebuilt when the game minute changes, when the player object changes, or
 -- when a file that adds or removes a trait at runtime calls
--- DanTraits_TraitsChanged(player) (also called on OnCreatePlayer / OnGameStart).
+-- DanTraits_TraitsChanged(player) (also a player-ready step, order 30).
 -- A trait added by anything else shows up within a game minute. If the game
 -- clock cannot be read the snapshot is never reused.
 local vanillaCache = { player = nil, minute = nil, set = nil }
@@ -351,8 +425,7 @@ end
 function DanTraits_TraitsChanged(player)
     vanillaCache.set = nil
 end
-Events.OnCreatePlayer.Add(DanTraits_TraitsChanged)
-Events.OnGameStart.Add(DanTraits_TraitsChanged)
+DanTraits_OnPlayerReady("traits", DanTraits_TraitsChanged, 30)
 
 -- shared with the trait files
 DanTraits_HasTrait = hasTrait
@@ -549,6 +622,7 @@ end
 --           90  SleepMenu (the outfit record for Undress and Sleep), Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --           96  Moodles (reads what every system above left in mod data; changes nothing)
+--          100  DTEM (Dynamic Traits and Expanded Moodles: hands the duplicated traits over, after Moodles)
 --   ten     10  Dependent
 --           40  Laundry (the wash and the washers), MDD, Migraine
 --           90  Hallucinations
@@ -617,28 +691,44 @@ local function runDrivers(list, player, d)
     DanTraits_RunningFor = nil
 end
 
--- Every local player (singleplayer has one; split-screen up to four, each a
--- distinct object: the same player reached through two indices counts once).
-local function eachLocalPlayer(fn)
-    local seen = {}
-    for i = 0, 3 do
-        local player = getSpecificPlayer(i)
-        if player and not seen[player] then
-            seen[player] = true
-            if not player:isDead() then fn(player) end
-        end
-    end
-end
-
 local function runClock(list)
     eachLocalPlayer(function(player) runDrivers(list, player, traitData(player)) end)
 end
 Events.EveryOneMinute.Add(function() runClock(drivers.minute) end)
 Events.EveryTenMinutes.Add(function() runClock(drivers.ten) end)
+
+-- The movement snapshot: what the legs and arms are doing, read once per
+-- frame per local player before the frame systems run, instead of each
+-- system (some per body part) pcall'ing the same getters.
+--
+--   DanTraits_Frame(player) -> { sprinting, running, moving, attacking }
+--
+-- Booleans, false where the game call failed. Inside the frame driver it is
+-- the frame's snapshot; anywhere else (a minute system, an event handler) it
+-- is read on the spot. Callers read it and never write to it.
+local frameSnap = { player = nil, state = nil }
+
+local function readFrame(player)
+    local f = { sprinting = false, running = false, moving = false, attacking = false }
+    pcall(function() f.sprinting = player:isSprinting() == true end)
+    pcall(function() f.running = player:isRunning() == true end)
+    pcall(function() f.moving = player:isPlayerMoving() == true end)
+    pcall(function() f.attacking = player:isAttacking() == true end)
+    return f
+end
+
+function DanTraits_Frame(player)
+    if player ~= nil and frameSnap.player == player then return frameSnap.state end
+    return readFrame(player)
+end
+
 Events.OnPlayerUpdate.Add(function(player)
     if not player or player:isDead() then return end
     if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    runDrivers(drivers.frame, player, traitData(player))
+    frameSnap.player, frameSnap.state = player, readFrame(player)
+    local ok, err = pcall(runDrivers, drivers.frame, player, traitData(player))
+    frameSnap.player, frameSnap.state = nil, nil
+    if not ok then error(err, 0) end   -- only under DanTraits_STRICT: the drivers guard every system
 end)
 
 -- The stat delta pipeline (see DanTraits_Util.lua): one place that scales how

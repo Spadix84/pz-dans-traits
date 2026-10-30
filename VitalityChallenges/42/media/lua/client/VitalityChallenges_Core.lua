@@ -98,6 +98,19 @@ function VC.current()
     return ok and id and VC.challenges[id] or nil
 end
 
+-- the clock, guarded: the hour of the day, and the world's age in hours (0 without a game)
+function VC.hour()
+    local h = 0
+    pcall(function() h = getGameTime():getHour() end)
+    return h
+end
+
+function VC.worldHours()
+    local h = 0
+    pcall(function() h = getGameTime():getWorldAgeHours() end)
+    return h
+end
+
 -- lifecycle ---------------------------------------------------------------------
 
 local function onGameStart(c)

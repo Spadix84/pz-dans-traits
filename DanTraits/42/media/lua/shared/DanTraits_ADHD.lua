@@ -96,21 +96,14 @@ local EXEMPT = {
 }
 DanTraits_AdhdExempt = EXEMPT
 
-local function now() return getGameTime():getWorldAgeHours() end
+local now = DanTraits_WorldHours
 
 local function adhdData(player)
     local md = player and player:getModData()
     return md and md.DanTraits
 end
 
-local function queueHead(player)
-    local action = nil
-    pcall(function()
-        local q = ISTimedActionQueue.getTimedActionQueue(player)
-        action = q and q.queue and q.queue[1]
-    end)
-    return action
-end
+local queueHead = DanTraits_QueueHead
 
 local function started(action)
     local ok, yes = pcall(function() return action:isStarted() end)

@@ -133,7 +133,6 @@ end
 
 function BU_ZoneDraw:onNamed(button)
     self.waitingConfirm = false
-    self.cancel.enable = true
     local name = button.internal == "OK" and (button.parent.entry:getText() or "") or ""
     name = string.gsub(name, "^%s*(.-)%s*$", "%1")
     local p = self.picked

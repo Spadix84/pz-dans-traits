@@ -222,13 +222,8 @@ local function stateOf(d, id)
     return m[id]
 end
 
-local function hoursNow()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() or 0 end)
-    return h
-end
-
-local function today() return math.floor(hoursNow() / 24) end
+local hoursNow = DanTraits_WorldHours
+local today = DanTraits_WorldDay
 
 local function sideChance() return math.max(0, DanTraits_SandboxNum("MedSideEffectChance", SIDE_CHANCE_DEFAULT)) end
 

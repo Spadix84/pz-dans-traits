@@ -59,11 +59,7 @@ local function held(player, item)
     return yes
 end
 
-local function worldMinutes()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return h * 60
-end
+local function worldMinutes() return DanTraits_WorldHours() * 60 end
 
 local function hotbarOf(player)
     local hotbar = nil
@@ -408,10 +404,7 @@ function ISDanTraitsDressAction:new(character, step)
     return o
 end
 
-local function isObject(x)
-    local ok, res = pcall(function() return instanceof(x, "IsoObject") end)
-    return ok and res == true
-end
+local function isObject(x) return DanTraits_Is(x, "IsoObject") end
 
 -- what the game's Sleep option sleeps on: (true, bed), (true, nil) for the
 -- ground, or false when it cannot be told. Sat or lying on the furniture the

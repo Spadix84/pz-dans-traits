@@ -1,26 +1,28 @@
-"""Copy the mod between this repo and the game's mod folder.
+"""Copy a mod between this repo and the game's mod folder.
 
-    python deploy.py            repo  -> ~/Zomboid/mods/DanTraits   (mirror: extra files in the game folder are removed)
-                                and, while ~/Zomboid/Workshop/DanTraits exists, into its Contents too:
-                                the game loads the Workshop copy in preference to the mods one, so
-                                the two are kept identical and it does not matter which it picks
-    python deploy.py --pull     ~/Zomboid/mods/DanTraits -> repo    (for edits made in place while testing;
-                                adds and updates only, nothing in the repo is removed)
-    python deploy.py --dry-run  show what would change, touch nothing
-    python deploy.py --workshop repo  -> ~/Zomboid/Workshop/DanTraits  (the folder the
-                                in-game Workshop uploader reads: workshop.txt, preview.png,
-                                Contents/mods/DanTraits; tools/ is left out)
-    python deploy.py --patch    repo  -> ~/Zomboid/mods/DansVanillaFixes  (the separate
-                                Dan's Vanilla Fixes mod; mirror, like the default)
-    python deploy.py --unloader repo  -> ~/Zomboid/mods/BaseUnloader  (the separate Base
-                                Unloader mod; mirror, like the default)
-    python deploy.py --legend   repo  -> ~/Zomboid/mods/MapLegend  (the separate Map Legend
-                                mod; mirror, like the default)
-    python deploy.py --cartridges repo -> ~/Zomboid/mods/VitalityCartridges  (the SpiffBoy
-                                cartridges, Still Water; mirror, like the default)
-    python deploy.py --challenges repo -> ~/Zomboid/mods/VitalityChallenges  (the challenge
-                                scenarios; mirror, like the default)
-    One mod flag a run; any of them may go with --pull.
+    python deploy.py                 repo/DanTraits -> ~/Zomboid/mods/DanTraits  (mirror: extra files in
+                                     the game folder are removed) and, while ~/Zomboid/Workshop/DanTraits
+                                     exists, into its Contents too: the game loads the Workshop copy in
+                                     preference to the mods one, so the two are kept identical and it
+                                     does not matter which it picks
+    python deploy.py --mod NAME      the same for another of the mods in MODS below (repo/NAME ->
+                                     ~/Zomboid/mods/NAME; mirror). The names, and the old flag each
+                                     one still answers to:
+                                         DanTraits                    (the default)
+                                         DansVanillaFixes  --patch    Dan's Vanilla Fixes
+                                         BaseUnloader      --unloader
+                                         MapLegend         --legend
+                                         VitalityCartridges --cartridges  the SpiffBoy cartridges
+                                         VitalityChallenges --challenges  the challenge scenarios
+    python deploy.py --pull          ~/Zomboid/mods/NAME -> repo  (for edits made in place while
+                                     testing; adds and updates only, nothing in the repo is removed).
+                                     Goes with --mod or any of the old flags.
+    python deploy.py --dry-run       show what would change, touch nothing
+    python deploy.py --workshop      repo -> ~/Zomboid/Workshop/DanTraits  (the folder the in-game
+                                     Workshop uploader reads: workshop.txt, preview.png,
+                                     Contents/mods/DanTraits; what the DanTraits row's `skip` names,
+                                     tools/, is left out)
+    One mod (or --workshop) a run.
 
 The game only reads the mod folder, so edit here, deploy, then restart the
 game (registries and item scripts are read at boot; Lua is reloaded too).
@@ -31,26 +33,43 @@ import os
 import shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_MOD = os.path.join(HERE, "DanTraits")
-GAME_MOD = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "DanTraits")
-REPO_PATCH = os.path.join(HERE, "DansVanillaFixes")
-GAME_PATCH = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "DansVanillaFixes")
-REPO_UNLOADER = os.path.join(HERE, "BaseUnloader")
-GAME_UNLOADER = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "BaseUnloader")
-REPO_LEGEND = os.path.join(HERE, "MapLegend")
-GAME_LEGEND = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "MapLegend")
-REPO_CARTRIDGES = os.path.join(HERE, "VitalityCartridges")
-GAME_CARTRIDGES = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "VitalityCartridges")
-REPO_CHALLENGES = os.path.join(HERE, "VitalityChallenges")
-GAME_CHALLENGES = os.path.join(os.path.expanduser("~"), "Zomboid", "mods", "VitalityChallenges")
+ZOMBOID = os.path.join(os.path.expanduser("~"), "Zomboid")
+# name: the folder in the repo and under ~/Zomboid/mods (the mod id); flag: the old
+# option that still selects it; skip: folders left out of the Workshop build
+MODS = [
+    {"name": "DanTraits", "flag": None, "help": "the main mod (the default)", "skip": {"tools"}},
+    {"name": "DansVanillaFixes", "flag": "--patch", "help": "the Dan's Vanilla Fixes mod"},
+    {"name": "BaseUnloader", "flag": "--unloader", "help": "the Base Unloader mod"},
+    {"name": "MapLegend", "flag": "--legend", "help": "the Map Legend mod"},
+    {"name": "VitalityCartridges", "flag": "--cartridges", "help": "the Vitality Cartridges mod"},
+    {"name": "VitalityChallenges", "flag": "--challenges", "help": "the Vitality Challenges mod"},
+]
+MAIN = MODS[0]["name"]   # the mod the Workshop folder holds
 REPO_WORKSHOP = os.path.join(HERE, "workshop")
-GAME_WORKSHOP = os.path.join(os.path.expanduser("~"), "Zomboid", "Workshop", "DanTraits")
+GAME_WORKSHOP = os.path.join(ZOMBOID, "Workshop", MAIN)
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}
 # Build 42 looks for a common/ folder beside 42/; git cannot hold an empty one
 KEEP_DIRS = {"common"}
 # the tooltip strip both mods ship at the same path; the game loads one copy,
 # so the two must not drift apart
 SHARED = [os.path.join("42", "media", "lua", "client", "DanShared_Tooltip.lua")]
+SHARED_BETWEEN = ("DanTraits", "DansVanillaFixes")
+
+
+def mod(name):
+    """The MODS row for a name, matched without regard to case."""
+    for m in MODS:
+        if m["name"].lower() == name.lower():
+            return m
+    raise SystemExit("no mod called %s; one of %s" % (name, ", ".join(m["name"] for m in MODS)))
+
+
+def repo_dir(m):
+    return os.path.join(HERE, m["name"])
+
+
+def game_dir(m):
+    return os.path.join(ZOMBOID, "mods", m["name"])
 
 
 def walk(root, skip=()):
@@ -92,14 +111,15 @@ def sync(src, dst, dry, skip=(), delete=True):
 
 
 def build_workshop(dry):
-    """Mirror the mod into Contents/mods/DanTraits and copy workshop.txt and
-    preview.png beside it. The game writes the item's id= into workshop.txt
-    after the first upload; that line is kept so later uploads update the
-    same item instead of making a new one."""
-    contents = os.path.join(GAME_WORKSHOP, "Contents", "mods", "DanTraits")
-    copied, removed, same = sync(REPO_MOD, contents, dry, skip={"tools"})
-    copied = [os.path.join("Contents", "mods", "DanTraits", c) for c in copied]
-    removed = [os.path.join("Contents", "mods", "DanTraits", r) for r in removed]
+    """Mirror the main mod into Contents/mods/DanTraits (without what its row's `skip`
+    names) and copy workshop.txt and preview.png beside it. The game writes the item's
+    id= into workshop.txt after the first upload; that line is kept so later uploads
+    update the same item instead of making a new one."""
+    main = mod(MAIN)
+    contents = os.path.join(GAME_WORKSHOP, "Contents", "mods", MAIN)
+    copied, removed, same = sync(repo_dir(main), contents, dry, skip=main.get("skip", ()))
+    copied = [os.path.join("Contents", "mods", MAIN, c) for c in copied]
+    removed = [os.path.join("Contents", "mods", MAIN, r) for r in removed]
     preview = os.path.join(REPO_WORKSHOP, "preview.png")
     target = os.path.join(GAME_WORKSHOP, "preview.png")
     if os.path.isfile(target) and filecmp.cmp(preview, target, shallow=False):
@@ -131,64 +151,52 @@ def build_workshop(dry):
     return copied, removed, same
 
 
+def show(src, dst, copied, removed, same, dry, note=""):
+    print("%s -> %s%s" % (src, dst, note))
+    for rel in copied:
+        print("  %s %s" % ("would copy" if dry else "copied", rel))
+    for rel in removed:
+        print("  %s %s" % ("would remove" if dry else "removed", rel))
+    print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pull", action="store_true", help="copy from the game folder into the repo")
     ap.add_argument("--dry-run", action="store_true")
     mode = ap.add_mutually_exclusive_group()   # one mod (or the Workshop folder) a run
+    mode.add_argument("--mod", dest="mod", metavar="NAME", default=MAIN,
+                      help="the mod to deploy: %s (default %s)" % (", ".join(m["name"] for m in MODS), MAIN))
+    for m in MODS:
+        if m["flag"]:   # the old flags, kept as aliases of --mod NAME
+            mode.add_argument(m["flag"], dest="mod", action="store_const", const=m["name"],
+                              help="deploy %s (the same as --mod %s)" % (m["help"], m["name"]))
     mode.add_argument("--workshop", action="store_true", help="build the Workshop upload folder")
-    mode.add_argument("--patch", action="store_true", help="deploy the Dan's Vanilla Fixes mod instead")
-    mode.add_argument("--unloader", action="store_true", help="deploy the Base Unloader mod instead")
-    mode.add_argument("--legend", action="store_true", help="deploy the Map Legend mod instead")
-    mode.add_argument("--cartridges", action="store_true", help="deploy the Vitality Cartridges mod instead")
-    mode.add_argument("--challenges", action="store_true", help="deploy the Vitality Challenges mod instead")
     a = ap.parse_args()
     if not a.pull:
+        first, second = (repo_dir(mod(n)) for n in SHARED_BETWEEN)
         for rel in SHARED:
-            if not filecmp.cmp(os.path.join(REPO_MOD, rel), os.path.join(REPO_PATCH, rel), shallow=False):
-                raise SystemExit("%s differs between DanTraits and DansVanillaFixes: make them the same first" % rel)
+            if not filecmp.cmp(os.path.join(first, rel), os.path.join(second, rel), shallow=False):
+                raise SystemExit("%s differs between %s and %s: make them the same first" % ((rel,) + SHARED_BETWEEN))
     if a.workshop and a.pull:
         ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --pull")
     if a.workshop:
         copied, removed, same = build_workshop(a.dry_run)
-        print("%s -> %s" % (HERE, GAME_WORKSHOP))
-        for rel in copied:
-            print("  %s %s" % ("would copy" if a.dry_run else "copied", rel))
-        for rel in removed:
-            print("  %s %s" % ("would remove" if a.dry_run else "removed", rel))
-        print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
+        show(HERE, GAME_WORKSHOP, copied, removed, same, a.dry_run)
         return
-    repo, game = (REPO_PATCH, GAME_PATCH) if a.patch else (REPO_MOD, GAME_MOD)
-    if a.unloader:
-        repo, game = REPO_UNLOADER, GAME_UNLOADER
-    if a.legend:
-        repo, game = REPO_LEGEND, GAME_LEGEND
-    if a.cartridges:
-        repo, game = REPO_CARTRIDGES, GAME_CARTRIDGES
-    if a.challenges:
-        repo, game = REPO_CHALLENGES, GAME_CHALLENGES
+    m = mod(a.mod)
+    repo, game = repo_dir(m), game_dir(m)
     src, dst = (game, repo) if a.pull else (repo, game)
     if not os.path.isdir(src):
         raise SystemExit("missing: " + src)
     copied, removed, same = sync(src, dst, a.dry_run, delete=not a.pull)   # a pull adds and updates, never removes
-    verb = "would copy" if a.dry_run else "copied"
-    print("%s -> %s" % (src, dst))
-    for rel in copied:
-        print("  %s %s" % (verb, rel))
-    for rel in removed:
-        print("  %s %s" % ("would remove" if a.dry_run else "removed", rel))
-    print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
+    show(src, dst, copied, removed, same, a.dry_run)
     # The game loads ~/Zomboid/Workshop/DanTraits/Contents/mods/DanTraits in preference to
     # ~/Zomboid/mods/DanTraits while the upload folder exists, so a deploy that left it
     # stale looked like it did nothing. Keep the two identical.
-    if not a.pull and not a.patch and not a.unloader and not a.legend and not a.cartridges and not a.challenges and os.path.isdir(GAME_WORKSHOP):
+    if not a.pull and m["name"] == MAIN and os.path.isdir(GAME_WORKSHOP):
         copied, removed, same = build_workshop(a.dry_run)
-        print("%s -> %s (the game loads this copy while it exists)" % (HERE, GAME_WORKSHOP))
-        for rel in copied:
-            print("  %s %s" % (verb, rel))
-        for rel in removed:
-            print("  %s %s" % ("would remove" if a.dry_run else "removed", rel))
-        print("%d changed, %d removed, %d unchanged" % (len(copied), len(removed), same))
+        show(HERE, GAME_WORKSHOP, copied, removed, same, a.dry_run, " (the game loads this copy while it exists)")
 
 
 if __name__ == "__main__":

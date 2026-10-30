@@ -27,12 +27,13 @@ local TAP = 4                    -- a quick tap moves this much
 local FALL, FALL_STEP = 1.0, 0.1 -- the first ball's fall a tick, and what each next adds
 local DRIFT = 0.5                -- the most a ball drifts sideways a tick
 local REACH = 2                  -- the pup's paws reach this far past its sides' fur
-local WIDTH = 180
 
-function Catch.new(random)
+-- a round on a screen of the given width, in pixels
+function Catch.new(random, width)
     return {
         random = random,
-        x = math.floor((WIDTH - Catch.PUP_W) / 2),
+        width = width,
+        x = math.floor((width - Catch.PUP_W) / 2),
         thrown = 0, caught = 0,
         ball = nil, wait = GAP,
         event = nil,             -- "throw", "catch" or "miss" on the tick it happens
@@ -43,7 +44,7 @@ end
 local function throw(c)
     c.thrown = c.thrown + 1
     c.ball = {
-        x = c.random:int(4, WIDTH - Catch.BALL - 4),
+        x = c.random:int(4, c.width - Catch.BALL - 4),
         y = Catch.TOP,
         vx = c.random:range(-DRIFT, DRIFT),
         vy = FALL + FALL_STEP * (c.thrown - 1),
@@ -55,8 +56,8 @@ local function moveBall(c, b)
     b.x = b.x + b.vx
     if b.x < 0 then
         b.x, b.vx = 0, -b.vx
-    elseif b.x > WIDTH - Catch.BALL then
-        b.x, b.vx = WIDTH - Catch.BALL, -b.vx
+    elseif b.x > c.width - Catch.BALL then
+        b.x, b.vx = c.width - Catch.BALL, -b.vx
     end
     local before = b.y + Catch.BALL
     b.y = b.y + b.vy
@@ -86,7 +87,7 @@ function Catch.tick(c, input)
         if pressed.left then move = move - TAP end
         if pressed.right then move = move + TAP end
     end
-    c.x = math.max(0, math.min(WIDTH - Catch.PUP_W, c.x + move))
+    c.x = math.max(0, math.min(c.width - Catch.PUP_W, c.x + move))
     if c.ball then
         moveBall(c, c.ball)
     elseif c.thrown >= Catch.BALLS then

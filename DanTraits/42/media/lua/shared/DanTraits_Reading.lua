@@ -104,10 +104,7 @@ R.FAMILIES = { "horror", "thrillers", "romance", "scifi", "westerns", "popular",
 R.TASTE_POOL = { "horror", "thrillers", "romance", "scifi", "westerns", "popular", "classics", "history",
                  "truestories", "sports", "faith", "fringe", "selfhelp", "science", "arts", "serious" }
 
-local function now()
-    local ok, h = pcall(function() return getGameTime():getWorldAgeHours() end)
-    return ok and tonumber(h) or 0
-end
+local now = DanTraits_WorldHours
 
 local function serverSide()
     return isServer ~= nil and isServer() == true

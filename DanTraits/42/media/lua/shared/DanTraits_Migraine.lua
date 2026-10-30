@@ -611,7 +611,7 @@ DanTraits_AddHook("prePill", function(_, player, kind)
     if tostring(kind) ~= "Pills" then return nil end
     local d = player:getModData().DanTraits
     if not d or not d.migActive or not hasTrait(player, "migraine") then return nil end
-    pcall(function() painBefore[player] = player:getPainEffect() or 0 end)
+    painBefore[player] = DanTraits_PainSnapshot(player)
     return nil
 end)
 
@@ -624,13 +624,8 @@ DanTraits_AddHook("pill", function(_, player, kind)
         return nil
     end
     if kind ~= "Pills" then return nil end
-    local before = painBefore[player]
+    DanTraits_PainKeepShare(player, painBefore[player], MIG_PILL_KEEP)
     painBefore[player] = nil
-    if not before then return nil end
-    pcall(function()
-        local after = player:getPainEffect() or 0
-        if after > before then player:setPainEffect(before + (after - before) * MIG_PILL_KEEP) end
-    end)
     return nil
 end)
 

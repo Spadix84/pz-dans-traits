@@ -578,5 +578,14 @@
     "UI_DanTraits_AdrenalineShot": "Your heart is hammering. You're wide awake",
     "UI_DanTraits_AdrenalineAgain": "Another shot. Your heart is pounding in your ears",
     "UI_DanTraits_AdrenalineCrash": "The adrenaline is wearing off. Here comes the crash",
-    "UI_DanTraits_AdrenalineCleared": "The crash has passed"
+    "UI_DanTraits_AdrenalineCleared": "The crash has passed",
+    "UI_DanTraits_DTEMAlcoholic": "Alcoholic: the Vitality Project's version takes over",
+    "UI_DanTraits_DTEMCaffeine": "Caffeine Dependent: the Vitality Project's version takes over",
+    "UI_DanTraits_guide_Tab": "Guide",
+    "UI_DanTraits_guide_Info": "An overview of the Vitality Project's systems and how they fit together.",
+    "UI_DanTraits_whatsnew_Title": "What's new in the Vitality Project %1",
+    "UI_DanTraits_whatsnew_Page": "What's new in %1",
+    "UI_DanTraits_whatsnew_Open": "Open the guide",
+    "UI_DanTraits_whatsnew_Close": "Close",
+    "UI_DanTraits_whatsnew_Never": "Don't show these again after an update"
 }

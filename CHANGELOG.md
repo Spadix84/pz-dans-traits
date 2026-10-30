@@ -7,6 +7,37 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### New
 
+- **A Guide tab in the character window** (2026-10-30, `DanTraits_Guide.lua`, pages in
+  `DanTraits_GuideData.lua`; `tests/test_guide.lua`). An in-game overview of every system and
+  how they fit together, for everyone: fourteen pages (how it fits together, Vitality, sleep and
+  home, burnout, blood and wounds, knocks and sun, medication, cooking, fitness, laundry,
+  reading, the conditions at a glance, age, the companion mods) and What's New last. Left the
+  page list, right the page as rich text; a page shows `media/ui/Guide/<id>.png` above its text
+  when the file exists (drawn 460 px wide, any aspect). Overviews and need-to-know only, in
+  plain English (the data file is not translated; the tab name and buttons are). The old field
+  guide (removed 2026-10-18 as bloated) is not revived: this is the two-paragraph version.
+  Neat Rocco's tab bar gets a book icon. `DanTraits_OpenGuide(playerNum, pageId)` opens it.
+- **What's New, once per update** (2026-10-30, `DanTraits_WhatsNew.lua`). The first game loaded
+  after the mod's version changed (`getModInfoByID("DanTraits"):getModVersion()`) shows a window
+  with the headline changes (`DanTraits_GuideData.whatsNew`), Open the guide and Close, and a
+  "Don't show these again after an update" tick box. Closing it any way remembers the version in
+  `~/Zomboid/Lua/DanTraits_whatsnew.txt`, so it is once per install, not per character or save;
+  the tick box writes "never". Player 0 only, three seconds after the game starts.
+
+- **Dynamic Traits and Expanded Moodles** (`DynamicTraits`, reported by chuchu on Steam; written
+  2026-10-09, brought into master 2026-10-29): a compatibility adapter, `DanTraits_DTEM.lua`, that
+  does nothing without DTEM. DTEM's Build 42 build re-declares the vanilla traits at boot, which
+  throws away the six definitions this mod overrides; the adapter puts them back (Keen Cook 4 with
+  Short Blade, Iron Gut 4, Resilient 10 as a plain trait, Fear of Blood -6, Smoker -5, Cat's Eyes
+  1). DTEM's Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees are hidden on the
+  creation screen (`DanTraits_HideAtCreation` in core, read by the creation filter in
+  `client/DanTraits_Client.lua`; ours stand in). When DTEM gives a character its Alcoholic or
+  Addicted to Caffeine in play, ours takes its place within a minute, with a halo, and DTEM's
+  counter starts over; when DTEM takes its own away, ours stays. One log line at boot says what
+  was done. `tests/check_dtem_overrides.py` (run by `run_tests.py`) fails when the adapter's
+  table drifts from `media/scripts/DanTraits.txt`. The findings (which DTEM folder a 42.21 game
+  loads, how its traits are keyed, what its re-declaration does) are in `docs/dynamic-traits.md`.
+  Not yet seen in the game.
 - **Newbie Gains** (+2, 2026-10-29, `DanTraits:newbiegains`, `DanTraits_Fitness.lua`). Every
   Strength and Fitness gain x1.3 (`TR.ngXp`) in `onFitnessAddXP`, after the `fitnessXpAll` hook and
   before `FIT_XP_CAP`, so it counts under the x2 cap. Each skill's level the first minute the
@@ -145,6 +176,30 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Changed
 
+- **The review's refactors** (2026-10-29/30, `plans/review-2026-10-29.md` section C; behaviour
+  unchanged, every suite green). Util gained the helpers twenty files had copied:
+  `DanTraits_WorldHours`, `DanTraits_DayIndex` (midnight to midnight) and `DanTraits_WorldDay`
+  (floor of the hours), `DanTraits_IsTipsy`, `DanTraits_InList`, `DanTraits_Is` (pcall'd
+  instanceof), `DanTraits_QueueHead`, `DanTraits_PartPainAtLeast` / `DanTraits_PartStiffAtLeast`,
+  `DanTraits_PainSnapshot` / `DanTraits_PainKeepShare` (the pill pair Migraine and Hangover
+  shared), and `DanTraits_MoodleLevel` standing in for every `getMoodleLevel(X) or 0`;
+  `DanTraits_ClientUtil.lua` holds `DanTraits_GreyOut` and `DanTraits_ActualItems` for the
+  client menus. Diabetes's 61 constants are one `DIA` table (the 52-upvalue warning is gone).
+  Core: one ordered "player ready" list (`DanTraits_OnPlayerReady`) replaces the four
+  OnCreatePlayer handlers and the per-file creates, and on game start it runs for every local
+  player, so the starting grants reach split-screen player 2; one per-frame movement snapshot
+  (`DanTraits_Frame`) replaces the per-body-part getter calls in Heart, Blood, WoundCare,
+  Concussion and Diabetes. Base Unloader: `S.identify` is the one place keys are built,
+  `S.nameOf` is a pure getter (the write-back is the scan's), the run's `nextStop` uses
+  `BU.deliveryOrder`, the tag edits live in Core and the menus share one builder. Vitality
+  Challenges: `VC.paperMap`, `VC.weaponsFor`, `VC.used`, `VC.hour` / `VC.worldHours` shared;
+  The Last Broadcast silences every station the game lists (modded ones too) instead of a fixed
+  list of eighteen; the play-test scaffolding is `VitalityChallenges_Dev.lua`. Vitality
+  Cartridges: `Common.lua` for what the five games repeated. Tools: `deploy.py --mod NAME` with
+  the old flags as aliases; `check_api.py` knows radio channels, vehicles, rooms and map symbols;
+  new `check_wraps.py` (every wrapped vanilla method exists in the installed game) and
+  `check_drivers.py` (the clock-order comment matches the registrations), both run by
+  `run_tests.py`.
 - **Experience factors multiply, and a penalty never takes more than the gain** (2026-10-29,
   review; `DanTraits.lua` `DanTraits_XpFactor`, used by Age, AgeTraits, Fitness, Strain and
   ADHD; `tests/test_xpstack.lua`). The five `Events.AddXP` handlers each added or took back
@@ -257,6 +312,10 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Fixed
 
+- **Split-screen: the starting grants reach player 2** (2026-10-30, review A2.14, with the
+  player-ready refactor). The game-start handlers (mod-data migration, retired traits, starting
+  kits, Age's levels, the folded-in vanilla traits of Positives, Sleep, Steady Hands, Gym Regular)
+  ran for slot 0 only; the one ready list now runs for every local player.
 - **Heart Condition: the cold's slowing of the drain could still build strain at rest**
   (2026-10-29, review; `DanTraits_Heart.lua` `updateHeartMinute`). The 2026-10-28 fix added the
   cold's share after the rest drain, multiplied by the strain rate, so with the rate high (a

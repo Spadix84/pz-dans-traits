@@ -5,6 +5,12 @@ the SpiffBoy SDK (3825220785). Requires SpiffBoy. Plan: `plans/still-water.md`.
 
 ## 0.1.0 (in progress)
 
+- **One Common module for the games** (2026-10-29, review C8). `ink`, `clamp`, `readNumber`,
+  `readSound` and the menu move (up/down or left/right with wrap and the move cue) lived line
+  for line in every Game.lua; they are `VitalityCartridges.Common` now
+  (`client/VitalityCartridges/Common.lua`, a plain require from each game). Spiffo Walk no
+  longer writes `save.stage` (it never read it: `init` works the stage out from the steps).
+  Spiffo Pup's catch game reads the screen width instead of a hard-coded 180. No play change.
 - **Menu cues honour SOUND OFF** (2026-10-29, review). Steady, Still Water, Spiffo Walk and
   First Aid Quiz played their move, select and nope cues straight from the sequencer, past the
   sound switch (Spiffo Pup already went through `cue`). Every cue goes through `cue` now.

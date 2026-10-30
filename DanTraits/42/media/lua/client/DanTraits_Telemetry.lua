@@ -250,11 +250,7 @@ local function parseValue(text)
     return text
 end
 
-local function modData(player)
-    local md = player:getModData()
-    md.DanTraits = md.DanTraits or {}
-    return md.DanTraits
-end
+local modData = DanTraits_Data   -- the mod-data table every trait keeps its state in (DanTraits.lua)
 
 local commands = {}
 

@@ -32,6 +32,7 @@
 -- set-in stain, fabric protector left, washes so far.
 require "ISUI/ISWorldObjectContextMenu"
 require "DanShared_Tooltip"
+require "DanTraits_ClientUtil"
 require "DanTraits_Laundry"
 require "DanTraits_LaundryWash"
 require "DanTraits_LaundryDry"
@@ -69,14 +70,7 @@ end
 
 -- helpers -----------------------------------------------------------------------------
 
-local function greyOut(option, key)
-    option.notAvailable = true
-    pcall(function()
-        local tip = ISWorldObjectContextMenu.addToolTip()
-        tip.description = getText(key)
-        option.toolTip = tip
-    end)
-end
+local greyOut = DanTraits_GreyOut   -- DanTraits_ClientUtil.lua
 
 -- the water source among the clicked objects (the game's own fetch first)
 local function waterSource(worldobjects)
@@ -249,10 +243,7 @@ Events.OnFillWorldObjectContextMenu.Add(onWorldMenu)
 
 -- the inventory menu --------------------------------------------------------------------
 
-local function actualItems(items)
-    if ISInventoryPane and ISInventoryPane.getActualItems then return ISInventoryPane.getActualItems(items) end
-    return items
-end
+local actualItems = DanTraits_ActualItems
 
 local function onProtect(playerObj, garments)
     for _, item in ipairs(garments) do

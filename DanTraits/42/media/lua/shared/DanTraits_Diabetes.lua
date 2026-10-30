@@ -9,8 +9,6 @@ local traitData = DanTraits_Data
 local floorUp = DanTraits_FloorUp
 local statAdd = DanTraits_StatAdd
 local foodTags = DanTraits_FoodTags
-local DRINK = DanTraits_DRINK           -- the named thresholds (DanTraits_Util.lua)
-local intoxOf = DanTraits_Intoxication  -- 0..1 intoxication (the raw stat is 0..100)
 
 -- Diabetes (Type 1 "diabetes1", Type 2 "diabetes2") -------------------------
 -- A hidden blood sugar value (mg/dL) lives in mod data. Carbohydrates in
@@ -36,69 +34,73 @@ local intoxOf = DanTraits_Intoxication  -- 0..1 intoxication (the raw stat is 0.
 -- Vitality drink hook, the `drink` hook and `alcoholDrunk`, each once per
 -- drink with the litres swallowed); Alcohol adds its own layer to the same
 -- method and the two chain.
-local DIA_START             = 110
-local DIA_MIN, DIA_MAX      = 20, 600
-local DIA_CARB_MGDL         = 4.0     -- mg/dL per gram of carbohydrate absorbed with nothing to meet it
-local DIA_FAST_RATE         = 2 / 30  -- per minute, fraction of pending fast carbs absorbed (most of it inside half an hour)
-local DIA_SLOW_RATE         = 2 / 120 -- per minute, slow carbs (most of it inside two hours)
-local DIA_T1_DRIFT          = 0.17    -- per minute, creep with no insulin on board (about 10 an hour)
-local DIA_T2_SETPOINT       = 100     -- where a Type 2 body settles with no resistance
-local DIA_T2_SETPOINT_RES   = 120     -- added to the setpoint at full resistance
-local DIA_T2_RATE           = 0.012   -- per minute, fraction of the gap to the setpoint the body closes at no resistance
-local DIA_T2_RATE_RES_CUT   = 0.6     -- that rate x (1 - this x resistance)
-local DIA_T2_WEIGHT_LOW     = 75      -- kg: no resistance at or below
-local DIA_T2_WEIGHT_HIGH    = 110     -- kg: full resistance at or above (before exercise and pills)
-local DIA_T2_EXERCISE_CUT   = 0.25    -- resistance removed at full exercise regularity
-local DIA_T2_PILL_CUT       = 0.35    -- resistance removed by metformin, fully built up (DanTraits_Meds.lua: a pill a day, two days to build)
-local DIA_RENAL_ABOVE       = 180
-local DIA_RENAL_RATE        = 0.002   -- per minute x (glucose - 180)
-local DIA_EXERCISE_DROP     = 0.5     -- per minute while running, sprinting or exerted
-local DIA_EXERT_ENDURANCE   = 0.6     -- "exerted" means endurance under this AND still being spent (Asthma's test)
-local DIA_TRAIN_DROP        = 1.0     -- per minute of a workout (DanTraits_Fitness.lua: the window's exercises, a loaded carry, a jog)
-local DIA_AFTER_DROP        = 0.2     -- per minute after one, x the afterglow left (Pumped, fading over its hours)
-local DIA_T2_AFTER_CUT      = 0.1     -- Type 2 resistance off, x the afterglow left
-local DIA_SLEEP_DROP        = 0.05    -- per minute asleep
-local DIA_PANIC_MIN         = 30      -- panic below this (out of 100) does nothing
-local DIA_PANIC_RISE        = 0.15    -- per minute at full panic, scaling linearly from the minimum (was 0.4: too fast in play)
-local DIA_ALCOHOL_DROP      = 0.35    -- per minute while intoxicated: the liver is busy with the drink
-local DIA_INHALER_RISE      = 15      -- a puff of a rescue inhaler
-local DIA_DOSE_MGDL         = 50      -- one pen dose lowers blood sugar by this much in total
-local DIA_INSULIN_ONSET     = 15      -- minutes before a dose starts working
-local DIA_INSULIN_PEAK      = 75      -- minutes to peak action
-local DIA_INSULIN_END       = 240     -- minutes until it is spent
-local DIA_INSULIN_RES_CUT   = 0.5     -- insulin effect x (1 - this x resistance) for Type 2
-local DIA_INSULIN_FIT_BONUS = 0.2     -- insulin effect x (1 + this x exercise regularity)
-local DIA_LOW               = { 70, 55, 40 }
-local DIA_HIGH              = { 180, 250, 350 }
-local DIA_LOW_FUMBLE        = { 4, 8, 14 }        -- percent added to every weapon swing (see Fumbler)
-local DIA_LOW_END_DRAIN     = { 0, 0.03, 0.08 }   -- endurance per minute
-local DIA_LOW_FATIGUE       = { 0.001, 0.003, 0.005 }
-local DIA_LOW_PANIC         = { 1, 2, 4 }         -- per minute (out of 100): adrenaline, which also pushes sugar back up
-local DIA_LOW_UNHAPPY_FLOOR = { 10, 25, 40 }
-local DIA_LOW_HP_DRAIN      = 0.5                 -- per minute at the worst tier, down to the floor
-local DIA_LOW_FAINT         = 0.04                -- per minute at the worst tier: a chance of blacking out
-local DIA_LOW_FAINT_MIN     = { 5, 20 }           -- game minutes out (shallow: a new wound wakes you)
-local DIA_LOW_FAINT_GAP     = 30                  -- minutes between blackouts (d.diaFaintGap)
-local DIA_NIGHT_LOW_TIER    = 2                   -- a low at this tier or worse while asleep wakes you, drenched in sweat...
-local DIA_NIGHT_CUT         = 0.3                 -- ...and that night scores x (1 - this) (nightQuality)
-local DIA_HIGH_THIRST       = { 0.002, 0.004, 0.006 }  -- per minute (0..1)
-local DIA_HIGH_FATIGUE      = { 0.0005, 0.0015, 0.003 }
-local DIA_HIGH_UNHAPPY_FLOOR = { 0, 15, 30 }
-local DIA_HIGH_SICK_FLOOR   = { 0, 20, 50 }       -- food sickness (Queasy, then Nauseous)
-local DIA_HIGH_HP_DRAIN     = 0.3                 -- per minute at the worst tier...
-local DIA_HIGH_DRAIN_AFTER  = 2                   -- ...once this many hours have been spent up there (d.diaKetoHours):
-                                                  -- a spike after a meal costs nothing, hours of it do (2026-10-08)
-local DIA_FEVER_RISE        = 0.1                 -- mg/dL per minute at full fever: illness raises blood sugar (sick day rules)
-local DIA_HEALTH_FLOOR      = 15                  -- percent: symptoms stop short of this...
-local DIA_KETO_DAYS         = 1                   -- ...and above the top threshold for hours on end the floor sinks, gone after
-                                                  -- this many days (sandbox UntreatedDiabetesDays: 0 never, 1 the old day)
-local DIA_MDD_UNHAPPY_MULT  = 1.5                 -- high-sugar mood floor during a depressive episode
-local DIA_HALO_MIN          = { 10, 5, 3 }        -- minutes between symptom messages by tier, plus up to as many again
-local DIA_MOODLE_TIER       = { 0.3, 0.6, 0.9 }   -- the BloodSugar moodle: value tier / 3, one moodle level per tier
-local DIA_STAT_RAMP         = 2                   -- per minute towards a mood/sickness floor
-local DIA_INF_HAZARD       = 1.0                 -- wound infection chance x (1 + this x t), t = 0 at DIA_HIGH[1] up to 1 at DIA_HIGH[3]
-local DIA_INF_GROWTH       = 0.5                 -- infection climb x (1 + this x t): high sugar feeds it and slows healing
+-- the numbers, one table so the minute function reads them through one upvalue
+local DIA = {
+    START                = 110,
+    MIN                  = 20,
+    MAX                  = 600,
+    CARB_MGDL            = 4.0,                    -- mg/dL per gram of carbohydrate absorbed with nothing to meet it
+    FAST_RATE            = 2 / 30,                 -- per minute, fraction of pending fast carbs absorbed (most of it inside half an hour)
+    SLOW_RATE            = 2 / 120,                -- per minute, slow carbs (most of it inside two hours)
+    T1_DRIFT             = 0.17,                   -- per minute, creep with no insulin on board (about 10 an hour)
+    T2_SETPOINT          = 100,                    -- where a Type 2 body settles with no resistance
+    T2_SETPOINT_RES      = 120,                    -- added to the setpoint at full resistance
+    T2_RATE              = 0.012,                  -- per minute, fraction of the gap to the setpoint the body closes at no resistance
+    T2_RATE_RES_CUT      = 0.6,                    -- that rate x (1 - this x resistance)
+    T2_WEIGHT_LOW        = 75,                     -- kg: no resistance at or below
+    T2_WEIGHT_HIGH       = 110,                    -- kg: full resistance at or above (before exercise and pills)
+    T2_EXERCISE_CUT      = 0.25,                   -- resistance removed at full exercise regularity
+    T2_PILL_CUT          = 0.35,                   -- resistance removed by metformin, fully built up (DanTraits_Meds.lua: a pill a day, two days to build)
+    RENAL_ABOVE          = 180,
+    RENAL_RATE           = 0.002,                  -- per minute x (glucose - 180)
+    EXERCISE_DROP        = 0.5,                    -- per minute while running, sprinting or exerted
+    EXERT_ENDURANCE      = 0.6,                    -- "exerted" means endurance under this AND still being spent (Asthma's test)
+    TRAIN_DROP           = 1.0,                    -- per minute of a workout (DanTraits_Fitness.lua: the window's exercises, a loaded carry, a jog)
+    AFTER_DROP           = 0.2,                    -- per minute after one, x the afterglow left (Pumped, fading over its hours)
+    T2_AFTER_CUT         = 0.1,                    -- Type 2 resistance off, x the afterglow left
+    SLEEP_DROP           = 0.05,                   -- per minute asleep
+    PANIC_MIN            = 30,                     -- panic below this (out of 100) does nothing
+    PANIC_RISE           = 0.15,                   -- per minute at full panic, scaling linearly from the minimum (was 0.4: too fast in play)
+    ALCOHOL_DROP         = 0.35,                   -- per minute while intoxicated: the liver is busy with the drink
+    INHALER_RISE         = 15,                     -- a puff of a rescue inhaler
+    DOSE_MGDL            = 50,                     -- one pen dose lowers blood sugar by this much in total
+    INSULIN_ONSET        = 15,                     -- minutes before a dose starts working
+    INSULIN_PEAK         = 75,                     -- minutes to peak action
+    INSULIN_END          = 240,                    -- minutes until it is spent
+    INSULIN_RES_CUT      = 0.5,                    -- insulin effect x (1 - this x resistance) for Type 2
+    INSULIN_FIT_BONUS    = 0.2,                    -- insulin effect x (1 + this x exercise regularity)
+    LOW                  = { 70, 55, 40 },
+    HIGH                 = { 180, 250, 350 },
+    LOW_FUMBLE           = { 4, 8, 14 },           -- percent added to every weapon swing (see Fumbler)
+    LOW_END_DRAIN        = { 0, 0.03, 0.08 },      -- endurance per minute
+    LOW_FATIGUE          = { 0.001, 0.003, 0.005 },
+    LOW_PANIC            = { 1, 2, 4 },            -- per minute (out of 100): adrenaline, which also pushes sugar back up
+    LOW_UNHAPPY_FLOOR    = { 10, 25, 40 },
+    LOW_HP_DRAIN         = 0.5,                    -- per minute at the worst tier, down to the floor
+    LOW_FAINT            = 0.04,                   -- per minute at the worst tier: a chance of blacking out
+    LOW_FAINT_MIN        = { 5, 20 },              -- game minutes out (shallow: a new wound wakes you)
+    LOW_FAINT_GAP        = 30,                     -- minutes between blackouts (d.diaFaintGap)
+    NIGHT_LOW_TIER       = 2,                      -- a low at this tier or worse while asleep wakes you, drenched in sweat...
+    NIGHT_CUT            = 0.3,                    -- ...and that night scores x (1 - this) (nightQuality)
+    HIGH_THIRST          = { 0.002, 0.004, 0.006 },   -- per minute (0..1)
+    HIGH_FATIGUE         = { 0.0005, 0.0015, 0.003 },
+    HIGH_UNHAPPY_FLOOR   = { 0, 15, 30 },
+    HIGH_SICK_FLOOR      = { 0, 20, 50 },          -- food sickness (Queasy, then Nauseous)
+    HIGH_HP_DRAIN        = 0.3,                    -- per minute at the worst tier...
+    HIGH_DRAIN_AFTER     = 2,                      -- ...once this many hours have been spent up there (d.diaKetoHours):
+    -- a spike after a meal costs nothing, hours of it do (2026-10-08)
+    FEVER_RISE           = 0.1,                    -- mg/dL per minute at full fever: illness raises blood sugar (sick day rules)
+    HEALTH_FLOOR         = 15,                     -- percent: symptoms stop short of this...
+    KETO_DAYS            = 1,                      -- ...and above the top threshold for hours on end the floor sinks, gone after
+    -- this many days (sandbox UntreatedDiabetesDays: 0 never, 1 the old day)
+    MDD_UNHAPPY_MULT     = 1.5,                    -- high-sugar mood floor during a depressive episode
+    HALO_MIN             = { 10, 5, 3 },           -- minutes between symptom messages by tier, plus up to as many again
+    MOODLE_TIER          = { 0.3, 0.6, 0.9 },      -- the BloodSugar moodle: value tier / 3, one moodle level per tier
+    STAT_RAMP            = 2,                      -- per minute towards a mood/sickness floor
+    INF_HAZARD           = 1.0,                    -- wound infection chance x (1 + this x t), t = 0 at DIA.HIGH[1] up to 1 at DIA.HIGH[3]
+    INF_GROWTH           = 0.5,                    -- infection climb x (1 + this x t): high sugar feeds it and slows healing
 
+}
 local INSULIN_ITEM   = "DanTraits.InsulinPen"
 local VIAL_ITEM      = "DanTraits.InsulinVial"      -- the same insulin, drawn up with a syringe
 local SYRINGE_ITEM   = "DanTraits.InsulinSyringe"   -- never used up
@@ -113,7 +115,7 @@ DanTraits_IsDiabetic = diaHas
 
 local function diaData(player)
     local d = traitData(player)
-    d.glucose = d.glucose or DIA_START
+    d.glucose = d.glucose or DIA.START
     d.diaFast = d.diaFast or 0
     d.diaSlow = d.diaSlow or 0
     d.diaInsulin = d.diaInsulin or {}
@@ -121,7 +123,7 @@ local function diaData(player)
     return d
 end
 
-local function diaClamp(g) return math.max(DIA_MIN, math.min(DIA_MAX, g)) end
+local function diaClamp(g) return math.max(DIA.MIN, math.min(DIA.MAX, g)) end
 
 -- foods whose sugar hits fast (the fastCarb tag of DanTraits_Food.lua); everything else with carbohydrates is slow
 function DanTraits_IsFastCarb(item)
@@ -133,11 +135,11 @@ local function diaResistance(player, d)
     if not hasTrait(player, "diabetes2") then return 0 end
     local weight = 80
     pcall(function() weight = player:getNutrition():getWeight() or weight end)
-    local res = (weight - DIA_T2_WEIGHT_LOW) / (DIA_T2_WEIGHT_HIGH - DIA_T2_WEIGHT_LOW)
-    res = res - DIA_T2_EXERCISE_CUT * (DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0)
-    if DanTraits_MedEffect then res = res - DIA_T2_PILL_CUT * DanTraits_MedEffect(player, "metformin") end
+    local res = (weight - DIA.T2_WEIGHT_LOW) / (DIA.T2_WEIGHT_HIGH - DIA.T2_WEIGHT_LOW)
+    res = res - DIA.T2_EXERCISE_CUT * (DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0)
+    if DanTraits_MedEffect then res = res - DIA.T2_PILL_CUT * DanTraits_MedEffect(player, "metformin") end
     if DanTraits_VitalityDiaResistance then res = res + DanTraits_VitalityDiaResistance(player) end   -- fit: lower, run down: higher
-    if DanTraits_FitAfterglow then res = res - DIA_T2_AFTER_CUT * DanTraits_FitAfterglow(player) end   -- a workout's hours after
+    if DanTraits_FitAfterglow then res = res - DIA.T2_AFTER_CUT * DanTraits_FitAfterglow(player) end   -- a workout's hours after
     res = DanTraits_RunHooks("diaResistance", res, player, d)   -- Age: higher in the 40s, lower in the 20s
     return math.max(0, math.min(1, res))
 end
@@ -145,17 +147,17 @@ DanTraits_DiaResistance = function(player) return diaResistance(player, diaData(
 
 -- fraction of a dose delivered in minute t (triangle: onset, peak, spent)
 local function diaInsulinProfile(t)
-    if t < DIA_INSULIN_ONSET or t >= DIA_INSULIN_END then return 0 end
-    local area = (DIA_INSULIN_END - DIA_INSULIN_ONSET) / 2
-    if t < DIA_INSULIN_PEAK then
-        return (t - DIA_INSULIN_ONSET) / (DIA_INSULIN_PEAK - DIA_INSULIN_ONSET) / area
+    if t < DIA.INSULIN_ONSET or t >= DIA.INSULIN_END then return 0 end
+    local area = (DIA.INSULIN_END - DIA.INSULIN_ONSET) / 2
+    if t < DIA.INSULIN_PEAK then
+        return (t - DIA.INSULIN_ONSET) / (DIA.INSULIN_PEAK - DIA.INSULIN_ONSET) / area
     end
-    return (DIA_INSULIN_END - t) / (DIA_INSULIN_END - DIA_INSULIN_PEAK) / area
+    return (DIA.INSULIN_END - t) / (DIA.INSULIN_END - DIA.INSULIN_PEAK) / area
 end
 
 -- how hard a dose hits: resistance blunts it, fitness and Vitality sharpen it
 local function diaSensitivity(player, res, fitness)
-    local k = (1 - DIA_INSULIN_RES_CUT * res) * (1 + DIA_INSULIN_FIT_BONUS * fitness)
+    local k = (1 - DIA.INSULIN_RES_CUT * res) * (1 + DIA.INSULIN_FIT_BONUS * fitness)
     if DanTraits_VitalityDiaSensitivity then k = k * DanTraits_VitalityDiaSensitivity(player) end
     return k
 end
@@ -183,7 +185,7 @@ end
 function DanTraits_DiaOnInhaler(player)
     if not diaHas(player) then return end
     local d = diaData(player)
-    d.glucose = diaClamp(d.glucose + DIA_INHALER_RISE)
+    d.glucose = diaClamp(d.glucose + DIA.INHALER_RISE)
 end
 
 -- called by the injection action; returns the doses actually injected
@@ -210,7 +212,7 @@ function DanTraits_DiaRead(player)
     local g
     if diaHas(player) then g = diaData(player).glucose else g = 85 + ZombRand(30) end
     g = math.floor(g + 0.5)
-    return g, (g < DIA_LOW[1] or g >= DIA_HIGH[1])
+    return g, (g < DIA.LOW[1] or g >= DIA.HIGH[1])
 end
 
 -- Knowing your insulin --------------------------------------------------------
@@ -224,7 +226,7 @@ end
 --   level 3 (First Aid 9-10, or the magazine at any level): the exact doses
 --     for this body (fitness and Vitality counted), and the meter adds what it
 --     takes to bring sugar back to 110: more doses, or grams of fast sugar.
--- Doses to cover a food: carbohydrates x DIA_CARB_MGDL / (DIA_DOSE_MGDL x
+-- Doses to cover a food: carbohydrates x DIA.CARB_MGDL / (DIA.DOSE_MGDL x
 -- sensitivity), about one dose per 12.5 g. Type 2 is not told doses: its own
 -- insulin covers most of a meal, so the Type 1 sum would overdose it.
 -- The forecast behind the splitting advice and the meter's correction is the
@@ -271,9 +273,7 @@ end
 -- container, all of it fast (as the drink hook counts it). Water, fuel and
 -- anything else with no sugar in it is not asked about.
 local function diaItemCarbs(item)
-    local isFood = false
-    pcall(function() isFood = instanceof(item, "Food") end)
-    if isFood then
+    if DanTraits_Is(item, "Food") then
         local carbs = 0
         pcall(function() carbs = item:getCarbohydrates() or 0 end)
         return carbs, carbs > 0 and DanTraits_IsFastCarb(item), true
@@ -291,7 +291,7 @@ function DanTraits_DiaFoodDoses(player, item)
     local carbs, fast = diaItemCarbs(item)
     if carbs <= 0 then return 0, false end
     local k = diaSensitivity(player, 0, diaFitness(player))
-    return carbs * DIA_CARB_MGDL / (DIA_DOSE_MGDL * k), fast
+    return carbs * DIA.CARB_MGDL / (DIA.DOSE_MGDL * k), fast
 end
 
 -- the next four hours if this food went in now with its doses (the header's
@@ -299,7 +299,7 @@ end
 -- insulin on board hits at this body's sensitivity k, as the live model
 -- applies it; the new doses are given for an ordinary body (DanTraits_DiaParts),
 -- so the sensitivity cancels out of their step.
-local DIA_SIM_MINUTES = DIA_INSULIN_END
+local DIA_SIM_MINUTES = DIA.INSULIN_END
 local function diaProject(d, carbs, fast, doses, k)
     local g = d.glucose
     local f = d.diaFast + (fast and carbs or 0)
@@ -309,14 +309,14 @@ local function diaProject(d, carbs, fast, doses, k)
     if doses > 0 then shots[#shots + 1] = { dose = doses, t = 0 } end
     local peak = g
     for _ = 1, DIA_SIM_MINUTES do
-        local a, b = f * DIA_FAST_RATE, s * DIA_SLOW_RATE
+        local a, b = f * DIA.FAST_RATE, s * DIA.SLOW_RATE
         f, s = f - a, s - b
-        g = g + (a + b) * DIA_CARB_MGDL + DIA_T1_DRIFT
+        g = g + (a + b) * DIA.CARB_MGDL + DIA.T1_DRIFT
         for _, shot in ipairs(shots) do
-            g = g - shot.dose * DIA_DOSE_MGDL * diaInsulinProfile(shot.t)
+            g = g - shot.dose * DIA.DOSE_MGDL * diaInsulinProfile(shot.t)
             shot.t = shot.t + 1
         end
-        if g > DIA_RENAL_ABOVE then g = g - (g - DIA_RENAL_ABOVE) * DIA_RENAL_RATE end
+        if g > DIA.RENAL_ABOVE then g = g - (g - DIA.RENAL_ABOVE) * DIA.RENAL_RATE end
         if g > peak then peak = g end
     end
     return peak, g
@@ -329,10 +329,10 @@ function DanTraits_DiaParts(player, item)
     if carbs <= 0 then return nil end
     local d = diaData(player)
     local k = diaSensitivity(player, 0, diaFitness(player))
-    local doses = carbs * DIA_CARB_MGDL / DIA_DOSE_MGDL
-    if diaProject(d, carbs, fast, doses, k) < DIA_HIGH[3] then return nil end
+    local doses = carbs * DIA.CARB_MGDL / DIA.DOSE_MGDL
+    if diaProject(d, carbs, fast, doses, k) < DIA.HIGH[3] then return nil end
     for n = 2, 4 do
-        if diaProject(d, carbs / n, fast, doses / n, k) < DIA_HIGH[3] then return n end
+        if diaProject(d, carbs / n, fast, doses / n, k) < DIA.HIGH[3] then return n end
     end
     return 5
 end
@@ -368,7 +368,7 @@ end
 local function diaInsulinLeft(d)
     local left = 0
     for _, shot in ipairs(d.diaInsulin or {}) do
-        for t = math.max(0, shot.t), DIA_INSULIN_END - 1 do left = left + shot.dose * diaInsulinProfile(t) end
+        for t = math.max(0, shot.t), DIA.INSULIN_END - 1 do left = left + shot.dose * diaInsulinProfile(t) end
     end
     return left
 end
@@ -389,12 +389,12 @@ function DanTraits_DiaMeterAdvice(player, g)
     local _, settles = diaProject({ glucose = g, diaFast = d.diaFast, diaSlow = d.diaSlow, diaInsulin = d.diaInsulin }, 0, true, 0, k)
     local gap = settles - DIA_TARGET
     -- low now: short unless the sugar already going in covers it (no waiting on the creep)
-    local lowNow = g < DIA_LOW[1]
-    if lowNow then gap = math.min(gap, g + (d.diaFast + d.diaSlow) * DIA_CARB_MGDL - DIA_TARGET) end
-    if gap <= -DIA_CARB_MGDL * 5 then
-        out[#out + 1] = { "UI_DanTraits_DiaEat", math.floor(-gap / DIA_CARB_MGDL / 5 + 0.5) * 5 }
-    elseif not lowNow and gap >= DIA_DOSE_MGDL * k * 0.5 then
-        out[#out + 1] = { "UI_DanTraits_DiaCorrect", math.floor(gap / (DIA_DOSE_MGDL * k) + 0.5) }
+    local lowNow = g < DIA.LOW[1]
+    if lowNow then gap = math.min(gap, g + (d.diaFast + d.diaSlow) * DIA.CARB_MGDL - DIA_TARGET) end
+    if gap <= -DIA.CARB_MGDL * 5 then
+        out[#out + 1] = { "UI_DanTraits_DiaEat", math.floor(-gap / DIA.CARB_MGDL / 5 + 0.5) * 5 }
+    elseif not lowNow and gap >= DIA.DOSE_MGDL * k * 0.5 then
+        out[#out + 1] = { "UI_DanTraits_DiaCorrect", math.floor(gap / (DIA.DOSE_MGDL * k) + 0.5) }
     else
         out[#out + 1] = { "UI_DanTraits_DiaSteady", nil, true }
     end
@@ -408,7 +408,7 @@ end
 function DanTraits_DiaMeterRecord(item, value, advice)
     if not item or not value then return end
     pcall(function()
-        local h = getGameTime():getWorldAgeHours()
+        local h = DanTraits_WorldHours()
         local keep = {}
         for i, line in ipairs(advice or {}) do keep[i] = { line[1], line[2], line[3] == true } end
         item:getModData().DanTraitsLast = { g = value, h = h, advice = keep }
@@ -422,7 +422,7 @@ function DanTraits_DiaMeterLines(item)
     pcall(function() last = item:getModData().DanTraitsLast end)
     if type(last) ~= "table" or not last.g then return nil end
     local ago = 0
-    pcall(function() ago = math.max(0, getGameTime():getWorldAgeHours() - (last.h or 0)) end)
+    pcall(function() ago = math.max(0, DanTraits_WorldHours() - (last.h or 0)) end)
     local line
     if ago < 1 then line = getText("Tooltip_DanTraits_MeterLastMin", last.g, math.floor(ago * 60 + 0.5))
     elseif ago < 48 then line = getText("Tooltip_DanTraits_MeterLastHours", last.g, math.floor(ago + 0.5))
@@ -436,19 +436,19 @@ end
 
 local function diaTier(g)
     local low, high = 0, 0
-    for i, threshold in ipairs(DIA_LOW) do if g < threshold then low = i end end
-    for i, threshold in ipairs(DIA_HIGH) do if g >= threshold then high = i end end
+    for i, threshold in ipairs(DIA.LOW) do if g < threshold then low = i end end
+    for i, threshold in ipairs(DIA.HIGH) do if g >= threshold then high = i end end
     return low, high
 end
 DanTraits_DiaTier = diaTier
 
 -- vague on purpose: three of the six messages are shared between low and high
--- a low in the night: at DIA_NIGHT_LOW_TIER or worse asleep you wake drenched
+-- a low in the night: at DIA.NIGHT_LOW_TIER or worse asleep you wake drenched
 -- in sweat, once per low (diaNightWoke), and the night is scored lower
 -- (diaNightLow, read once by the nightQuality hook below)
 local function diaNightLow(player, d, low, asleep)
     if low <= 0 then d.diaNightWoke = nil return end
-    if not asleep or low < DIA_NIGHT_LOW_TIER or d.diaNightWoke then return end
+    if not asleep or low < DIA.NIGHT_LOW_TIER or d.diaNightWoke then return end
     d.diaNightWoke, d.diaNightLow = true, true
     pcall(function() player:forceAwake() end)
     notify(player, "UI_DanTraits_DiaNightLow")
@@ -457,12 +457,10 @@ end
 local function diaHalo(player, d, low, high)
     local tier = math.max(low, high)
     if tier == 0 then d.diaHaloIn = nil; return end
-    local drunk = false
-    pcall(function() drunk = intoxOf(player) > DRINK.tipsy end)
-    if drunk then return end   -- too drunk to notice
-    d.diaHaloIn = (d.diaHaloIn or (DIA_HALO_MIN[tier] + ZombRand(DIA_HALO_MIN[tier]))) - 1
+    if DanTraits_IsTipsy(player) then return end   -- too drunk to notice
+    d.diaHaloIn = (d.diaHaloIn or (DIA.HALO_MIN[tier] + ZombRand(DIA.HALO_MIN[tier]))) - 1
     if d.diaHaloIn > 0 then return end
-    d.diaHaloIn = DIA_HALO_MIN[tier] + ZombRand(DIA_HALO_MIN[tier])
+    d.diaHaloIn = DIA.HALO_MIN[tier] + ZombRand(DIA.HALO_MIN[tier])
     local prefix = low > 0 and "UI_DanTraits_DiaLow" or "UI_DanTraits_DiaHigh"
     local n = 6
     if tier >= 3 then n = 7 end   -- the seventh message is the one that gives it away
@@ -475,34 +473,32 @@ end
 local function diaMoodle(player, d, low, high)
     local tier = math.max(low, high)
     if tier > 0 then
-        local drunk = false
-        pcall(function() drunk = intoxOf(player) > DRINK.tipsy end)
-        if drunk then tier = 0 end
+        if DanTraits_IsTipsy(player) then tier = 0 end
     end
     if tier == 0 and not d.diaMoodle then return end
     d.diaMoodle = tier > 0 or nil
-    DanTraits_BadMoodle(player, "BloodSugar", tier / 3, DIA_MOODLE_TIER)
+    DanTraits_BadMoodle(player, "BloodSugar", tier / 3, DIA.MOODLE_TIER)
 end
 
 -- a bad low can put you on the floor (DanTraits_Faint.lua); glucose keeps falling while out.
 -- A refused faint (already out) does not spend the gap.
 local function diaBlackout(player, d)
-    if not DanTraits_PassOut or (d.diaFaintGap or 0) > 0 or not DanTraits_Roll(DIA_LOW_FAINT) then return end
-    if DanTraits_PassOut(player, DanTraits_RandRange(DIA_LOW_FAINT_MIN[1], DIA_LOW_FAINT_MIN[2]), "UI_DanTraits_DiaBlackout") then
-        d.diaFaintGap = DIA_LOW_FAINT_GAP
+    if not DanTraits_PassOut or (d.diaFaintGap or 0) > 0 or not DanTraits_Roll(DIA.LOW_FAINT) then return end
+    if DanTraits_PassOut(player, DanTraits_RandRange(DIA.LOW_FAINT_MIN[1], DIA.LOW_FAINT_MIN[2]), "UI_DanTraits_DiaBlackout") then
+        d.diaFaintGap = DIA.LOW_FAINT_GAP
     end
 end
 
--- the health floor for hours spent above the top threshold: DIA_HEALTH_FLOOR
+-- the health floor for hours spent above the top threshold: DIA.HEALTH_FLOOR
 -- when the drain starts, sinking in a straight line to 0 at the sandbox's
 -- UntreatedDiabetesDays (1: a day, as before 2026-10-20; 0: it never sinks)
 function DanTraits_DiaHighFloor(hours)
-    local days = DanTraits_SandboxNum("UntreatedDiabetesDays", DIA_KETO_DAYS)
-    if days <= 0 then return DIA_HEALTH_FLOOR end
-    local span = days * 24 - DIA_HIGH_DRAIN_AFTER
+    local days = DanTraits_SandboxNum("UntreatedDiabetesDays", DIA.KETO_DAYS)
+    if days <= 0 then return DIA.HEALTH_FLOOR end
+    local span = days * 24 - DIA.HIGH_DRAIN_AFTER
     if span <= 0 then return 0 end
-    local t = ((hours or 0) - DIA_HIGH_DRAIN_AFTER) / span
-    return DIA_HEALTH_FLOOR * math.max(0, math.min(1, 1 - t))
+    local t = ((hours or 0) - DIA.HIGH_DRAIN_AFTER) / span
+    return DIA.HEALTH_FLOOR * math.max(0, math.min(1, 1 - t))
 end
 
 local function updateDiabetesMinute(player, d)
@@ -515,8 +511,9 @@ local function updateDiabetesMinute(player, d)
     local g = d.glucose
     local asleep, moving, drunk, endurance, panic = false, false, false, 1, 0
     asleep = DanTraits_Asleep(player)
-    pcall(function() moving = player:isSprinting() or player:isRunning() end)
-    pcall(function() drunk = intoxOf(player) > DRINK.tipsy end)
+    local f = DanTraits_Frame(player)   -- the movement snapshot (DanTraits.lua)
+    moving = f.sprinting or f.running
+    drunk = DanTraits_IsTipsy(player)
     pcall(function() endurance = stats:get(CharacterStat.ENDURANCE) or 1 end)
     -- low endurance alone is an asthma attack, angina's regen cut, blood loss or spoons
     -- holding it down for hours; exercise is endurance going down this minute
@@ -527,47 +524,47 @@ local function updateDiabetesMinute(player, d)
     local fitness = DanTraits_MddRegularity and DanTraits_MddRegularity(player) or 0
 
     -- carbohydrates being absorbed
-    local fast = d.diaFast * DIA_FAST_RATE
-    local slow = d.diaSlow * DIA_SLOW_RATE
+    local fast = d.diaFast * DIA.FAST_RATE
+    local slow = d.diaSlow * DIA.SLOW_RATE
     d.diaFast = d.diaFast - fast
     d.diaSlow = d.diaSlow - slow
     if d.diaFast < 0.01 then d.diaFast = 0 end
     if d.diaSlow < 0.01 then d.diaSlow = 0 end
-    g = g + (fast + slow) * DIA_CARB_MGDL
+    g = g + (fast + slow) * DIA.CARB_MGDL
 
     -- injected insulin on board
     local sensitivity = diaSensitivity(player, res, fitness)
     local keep = {}
     for _, shot in ipairs(d.diaInsulin) do
-        g = g - shot.dose * DIA_DOSE_MGDL * diaInsulinProfile(shot.t) * sensitivity
+        g = g - shot.dose * DIA.DOSE_MGDL * diaInsulinProfile(shot.t) * sensitivity
         shot.t = shot.t + 1
-        if shot.t < DIA_INSULIN_END then keep[#keep + 1] = shot end
+        if shot.t < DIA.INSULIN_END then keep[#keep + 1] = shot end
     end
     d.diaInsulin = keep
 
     -- the body's own regulation: none for Type 1, resistance-limited for Type 2
     if hasTrait(player, "diabetes1") then
-        g = g + DIA_T1_DRIFT
+        g = g + DIA.T1_DRIFT
     else
-        local setpoint = DIA_T2_SETPOINT + DIA_T2_SETPOINT_RES * res
-        g = g + (setpoint - g) * DIA_T2_RATE * (1 - DIA_T2_RATE_RES_CUT * res)
+        local setpoint = DIA.T2_SETPOINT + DIA.T2_SETPOINT_RES * res
+        g = g + (setpoint - g) * DIA.T2_RATE * (1 - DIA.T2_RATE_RES_CUT * res)
     end
 
     -- everything else
-    if g > DIA_RENAL_ABOVE then g = g - (g - DIA_RENAL_ABOVE) * DIA_RENAL_RATE end
+    if g > DIA.RENAL_ABOVE then g = g - (g - DIA.RENAL_ABOVE) * DIA.RENAL_RATE end
     -- a workout burns more than running about; stretching and hard work count as
     -- the exertion they are. After one, the muscles keep drawing sugar in for hours.
     local trainKey = DanTraits_FitTrainingNow and DanTraits_FitTrainingNow(player) or nil
     if trainKey and trainKey ~= "dtstretch" and trainKey ~= "dtwork" then
-        g = g - DIA_TRAIN_DROP
-    elseif moving or (spending and endurance < DIA_EXERT_ENDURANCE) then
-        g = g - DIA_EXERCISE_DROP
+        g = g - DIA.TRAIN_DROP
+    elseif moving or (spending and endurance < DIA.EXERT_ENDURANCE) then
+        g = g - DIA.EXERCISE_DROP
     end
-    if DanTraits_FitAfterglow then g = g - DIA_AFTER_DROP * DanTraits_FitAfterglow(player) end
-    if asleep then g = g - DIA_SLEEP_DROP end
-    if drunk then g = g - DIA_ALCOHOL_DROP end
-    if panic > DIA_PANIC_MIN then g = g + (panic - DIA_PANIC_MIN) / (100 - DIA_PANIC_MIN) * DIA_PANIC_RISE end
-    g = g + DIA_FEVER_RISE * DanTraits_Strength("DanTraits_InfectionFever", player)
+    if DanTraits_FitAfterglow then g = g - DIA.AFTER_DROP * DanTraits_FitAfterglow(player) end
+    if asleep then g = g - DIA.SLEEP_DROP end
+    if drunk then g = g - DIA.ALCOHOL_DROP end
+    if panic > DIA.PANIC_MIN then g = g + (panic - DIA.PANIC_MIN) / (100 - DIA.PANIC_MIN) * DIA.PANIC_RISE end
+    g = g + DIA.FEVER_RISE * DanTraits_Strength("DanTraits_InfectionFever", player)
 
     g = diaClamp(g)
     d.glucose = g
@@ -578,7 +575,7 @@ local function updateDiabetesMinute(player, d)
     diaHalo(player, d, low, high)
     diaMoodle(player, d, low, high)
     if (d.diaFaintGap or 0) > 0 then d.diaFaintGap = d.diaFaintGap - 1 end
-    d.diaFumble = low > 0 and DIA_LOW_FUMBLE[low] or 0
+    d.diaFumble = low > 0 and DIA.LOW_FUMBLE[low] or 0
     d.diaLow = low > 0 and low or nil
     diaNightLow(player, d, low, asleep)
     if low == 0 and high == 0 then return end
@@ -593,23 +590,23 @@ local function updateDiabetesMinute(player, d)
         end)
     end
     if low > 0 then
-        if DIA_LOW_END_DRAIN[low] > 0 then statAdd(stats, CharacterStat.ENDURANCE, -DIA_LOW_END_DRAIN[low]) end
-        statAdd(stats, CharacterStat.FATIGUE, DIA_LOW_FATIGUE[low])
-        statAdd(stats, CharacterStat.PANIC, DIA_LOW_PANIC[low])
-        floorUp(stats, CharacterStat.UNHAPPINESS, DIA_LOW_UNHAPPY_FLOOR[low], DIA_STAT_RAMP)
+        if DIA.LOW_END_DRAIN[low] > 0 then statAdd(stats, CharacterStat.ENDURANCE, -DIA.LOW_END_DRAIN[low]) end
+        statAdd(stats, CharacterStat.FATIGUE, DIA.LOW_FATIGUE[low])
+        statAdd(stats, CharacterStat.PANIC, DIA.LOW_PANIC[low])
+        floorUp(stats, CharacterStat.UNHAPPINESS, DIA.LOW_UNHAPPY_FLOOR[low], DIA.STAT_RAMP)
         if low >= 3 then
-            drainHealth(DIA_LOW_HP_DRAIN, DIA_HEALTH_FLOOR)
+            drainHealth(DIA.LOW_HP_DRAIN, DIA.HEALTH_FLOOR)
             if not asleep then diaBlackout(player, d) end
         end
     else
-        statAdd(stats, CharacterStat.THIRST, DIA_HIGH_THIRST[high])
-        statAdd(stats, CharacterStat.FATIGUE, DIA_HIGH_FATIGUE[high])
-        local mood = DIA_HIGH_UNHAPPY_FLOOR[high]
-        if d.mddEpisode then mood = mood * DIA_MDD_UNHAPPY_MULT end
-        floorUp(stats, CharacterStat.UNHAPPINESS, mood, DIA_STAT_RAMP)
-        floorUp(stats, CharacterStat.FOOD_SICKNESS, DIA_HIGH_SICK_FLOOR[high], DIA_STAT_RAMP)
-        if high >= 3 and d.diaKetoHours >= DIA_HIGH_DRAIN_AFTER then
-            drainHealth(DIA_HIGH_HP_DRAIN, DanTraits_DiaHighFloor(d.diaKetoHours))
+        statAdd(stats, CharacterStat.THIRST, DIA.HIGH_THIRST[high])
+        statAdd(stats, CharacterStat.FATIGUE, DIA.HIGH_FATIGUE[high])
+        local mood = DIA.HIGH_UNHAPPY_FLOOR[high]
+        if d.mddEpisode then mood = mood * DIA.MDD_UNHAPPY_MULT end
+        floorUp(stats, CharacterStat.UNHAPPINESS, mood, DIA.STAT_RAMP)
+        floorUp(stats, CharacterStat.FOOD_SICKNESS, DIA.HIGH_SICK_FLOOR[high], DIA.STAT_RAMP)
+        if high >= 3 and d.diaKetoHours >= DIA.HIGH_DRAIN_AFTER then
+            drainHealth(DIA.HIGH_HP_DRAIN, DanTraits_DiaHighFloor(d.diaKetoHours))
         end
     end
 end
@@ -618,7 +615,7 @@ end
 -- Steady Hands read it
 function DanTraits_DiaLow(player)
     if not player or not diaHas(player) then return 0 end
-    return (diaData(player).diaLow or 0) / #DIA_LOW
+    return (diaData(player).diaLow or 0) / #DIA.LOW
 end
 
 -- shakiness adds to every weapon swing, Fumbler or not
@@ -790,22 +787,22 @@ local function infectionSugar(player)
     if not diaHas(player) then return 0 end
     local d = player:getModData().DanTraits
     if not d or not d.glucose then return 0 end
-    return math.max(0, math.min(1, (d.glucose - DIA_HIGH[1]) / (DIA_HIGH[3] - DIA_HIGH[1])))
+    return math.max(0, math.min(1, (d.glucose - DIA.HIGH[1]) / (DIA.HIGH[3] - DIA.HIGH[1])))
 end
 -- a night with a low in it scores lower (Vitality scores the night; the flag is set by diaNightLow)
 DanTraits_AddHook("nightQuality", function(quality, player, d)
     if not d or not d.diaNightLow then return nil end
     d.diaNightLow = nil
-    return quality * (1 - DIA_NIGHT_CUT)
+    return quality * (1 - DIA.NIGHT_CUT)
 end)
 
 DanTraits_AddHook("infectionHazard", function(h, player)
     local t = infectionSugar(player)
     if t <= 0 then return nil end
-    return h * (1 + DIA_INF_HAZARD * t)
+    return h * (1 + DIA.INF_HAZARD * t)
 end)
 DanTraits_AddHook("infectionGrowth", function(k, player)
     local t = infectionSugar(player)
     if t <= 0 then return nil end
-    return k * (1 + DIA_INF_GROWTH * t)
+    return k * (1 + DIA.INF_GROWTH * t)
 end)

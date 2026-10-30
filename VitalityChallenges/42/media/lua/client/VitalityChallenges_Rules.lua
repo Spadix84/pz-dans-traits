@@ -36,11 +36,7 @@ local function note(player, text)
     pcall(function() HaloTextHelper.addBadText(player, text) end)
 end
 
-local function worldHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return h
-end
+local worldHours = VC.worldHours
 
 -- the walk ----------------------------------------------------------------------
 

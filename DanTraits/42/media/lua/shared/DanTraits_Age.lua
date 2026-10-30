@@ -327,8 +327,6 @@ local function onAgeCreate(player)
     end
 end
 
-local function onAgeCreatePlayer(playerNum, player) onAgeCreate(player) end
-
 -- a hook that multiplies by the band's number for `key`
 local function scales(key)
     return function(value, player)
@@ -418,12 +416,7 @@ function DanTraits_AgeXpAdjust(player, perk, extra)
     xpAdjusting = false
 end
 
-local function inList(list, perk)
-    for _, p in ipairs(list or {}) do
-        if p == perk then return true end
-    end
-    return false
-end
+local inList = DanTraits_InList
 
 local function isHandySkill(perk)
     for _, name in ipairs(HANDY_SKILLS) do
@@ -555,6 +548,6 @@ DanTraits_AddHook("fitnessRecovery", function(rate, player)
     return nil
 end)
 
-Events.OnCreatePlayer.Add(onAgeCreatePlayer)
+DanTraits_OnPlayerReady("Age", onAgeCreate, 50)   -- the age band's trait and starting levels
 Events.AddXP.Add(onAgeAddXP)
 DanTraits_Every("minute", "Age", updateAgeMinute, 23.5)

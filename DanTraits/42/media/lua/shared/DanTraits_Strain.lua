@@ -179,21 +179,10 @@ DanTraits_StrainST = ST   -- tests
 
 -- clock and data ---------------------------------------------------------------------
 
-local function nowHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return h
-end
+local nowHours = DanTraits_WorldHours
 
 -- the calendar day: midnight to midnight
-local function dayIndex()
-    local day = 0
-    pcall(function()
-        local gt = getGameTime()
-        day = math.floor((gt:getWorldAgeHours() - (gt:getTimeOfDay() or 0)) / 24 + 0.5)
-    end)
-    return day
-end
+local dayIndex = DanTraits_DayIndex
 
 local function newDay(d)
     local day = dayIndex()
@@ -605,8 +594,7 @@ local function watchComforts(player, d, asleep)
     if not asleep then
         local reading = false
         pcall(function()
-            local q = ISTimedActionQueue.getTimedActionQueue(player)
-            local a = q and q.queue and q.queue[1]
+            local a = DanTraits_QueueHead(player)
             reading = a ~= nil and a.Type == "ISReadABook"
         end)
         if reading then

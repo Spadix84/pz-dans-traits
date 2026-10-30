@@ -222,11 +222,9 @@ end
 -- per character (d.wcMovedNow: split-screen players each have a minute of their own)
 local function updateWoundFrame(player, d)
     local moved = d.wcMovedNow
-    local ok, sprinting = pcall(function() return player:isSprinting() end)
-    local ok2, running = pcall(function() return player:isRunning() end)
-    local ok3, moving = pcall(function() return player:isPlayerMoving() end)
-    if ok and sprinting then moved = "sprint" elseif (ok2 and running) and moved ~= "sprint" then moved = "run"
-    elseif ok3 and moving and not moved then moved = "walk" end
+    local f = DanTraits_Frame(player)   -- the frame's movement snapshot (DanTraits.lua)
+    if f.sprinting then moved = "sprint" elseif f.running and moved ~= "sprint" then moved = "run"
+    elseif f.moving and not moved then moved = "walk" end
     d.wcMovedNow = moved
 end
 

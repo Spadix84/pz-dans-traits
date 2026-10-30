@@ -1,8 +1,10 @@
 -- Project Zomboid Vitality Project: small shared helpers.
 --
 -- The one-liners every trait file used to carry its own copy of: clamping,
--- floor-raising and adding on a stat, dice, body-part lookups, the asleep
--- check, the sandbox toggle and the Moodle Framework updater. It requires
+-- floor-raising and adding on a stat, dice, the clock (world hours and the
+-- day), body-part lookups and aches, the action-queue head, the guarded
+-- instanceof, the asleep check, the sandbox toggle and the Moodle Framework
+-- updater. It requires
 -- nothing and is loaded by DanTraits.lua right after DanTraits_Attrib, so any
 -- file that requires "DanTraits" can read these into locals at the top
 -- (`local clamp01 = DanTraits_Clamp01`). Core sits near the 200-local limit
@@ -22,6 +24,16 @@
 --   DanTraits_StatFraction(stats, stat)    0..1 fraction of the stat's range (intoxication
 --                                          is 0..100), 0 on failure
 --   DanTraits_Intoxication(player)         intoxication as 0..1, 0 on failure
+--   DanTraits_IsTipsy(player [, plus])     intoxication over the tipsy line (plus a margin, 0..1)
+--   DanTraits_WorldHours()                 the world's age in game hours (getWorldAgeHours), 0 on failure
+--   DanTraits_DayIndex()                   the calendar day as an integer, midnight to midnight
+--                                          (world age less the time of day, so a character
+--                                          who started at 9:00 still turns a day at midnight)
+--   DanTraits_WorldDay()                   whole days of world age (floor(WorldHours / 24)):
+--                                          24-hour blocks from the start, not calendar days
+--   DanTraits_InList(list, value)          whether the value is one of the list's entries
+--   DanTraits_Is(obj, class)               instanceof under a guard, false on failure
+--   DanTraits_QueueHead(player)            the timed action at the head of the player's queue, or nil
 --   DanTraits_Strength(name, player)       another system's 0..1 by the name of its
 --                                          getter ("DanTraits_InfectionFever"), resolved
 --                                          when called: 0 when that system is not loaded
@@ -74,9 +86,20 @@
 --                                          hands) at the character's feet, every call
 --                                          guarded; the notice textKey if anything
 --                                          dropped. Returns whether anything did
+--   DanTraits_PartPainAtLeast(player, partName, value, ramp)
+--                                          raise the part's (BodyPartType name) additional
+--                                          pain toward value, by at most ramp a call (no ramp:
+--                                          straight there); never lowers it, never past 100
+--   DanTraits_PartStiffAtLeast(player, partName, floor)
+--                                          raise the part's stiffness to at least floor (the
+--                                          game eases it back by itself); never lowers it
 --   DanTraits_HeadPainAtLeast(player, value)
 --                                          raise the head's additional pain to value
 --                                          (never lower it)
+--   DanTraits_PainSnapshot(player)         the painkiller timer (getPainEffect), nil on failure
+--   DanTraits_PainKeepShare(player, before, keep)
+--                                          after a pill: the timer back to before plus keep
+--                                          (0..1) of what the pill added (nothing if it fell)
 --   DanTraits_PartNames                    short console names -> BodyPartType names
 --   DanTraits_PartOf(player, shortName)    the BodyPart for a short name, or nil
 --   DanTraits_PartNum(part, method)        a numeric BodyPart getter, 0 on failure
@@ -87,10 +110,11 @@
 --   DanTraits_SandboxNum(optionName, default)
 --                                          SandboxVars.DanTraits[option] as a number, or
 --                                          default when absent or not one
---   DanTraits_MoodleLevel(player, moodleName, stat, tiers)
+--   DanTraits_MoodleLevel(player, moodleName [, stat, tiers])
 --                                          a vanilla moodle's level 0..4 (MoodleType[name]),
 --                                          or when it cannot be read the tier of the stat
---                                          (0..1 of its range) against the ascending tiers
+--                                          (0..1 of its range) against the ascending tiers;
+--                                          0 when there is no stat to fall back on
 --   DanTraits_PartLodged(part)             glass or a bullet still in the part
 --   DanTraits_EachPart(player, fn, tag)    fn(part, name, i, n) for every body part, each
 --                                          under its own guard, so one part that cannot be
@@ -174,6 +198,68 @@ function DanTraits_Intoxication(player)
     local value = 0
     pcall(function() value = DanTraits_StatFraction(player:getStats(), CharacterStat.INTOXICATION) end)
     return value
+end
+
+-- past the tipsy line (DanTraits_DRINK.tipsy), plus a margin when a system
+-- wants more than that (MDD: the drinker's tolerance). false when the stat
+-- cannot be read
+function DanTraits_IsTipsy(player, plus)
+    return DanTraits_Intoxication(player) > DanTraits_DRINK.tipsy + (plus or 0)
+end
+
+-- The clock -----------------------------------------------------------------------
+-- The world's age in game hours, the clock every system stamps its mod data
+-- with (d.stFightH, d.ckDishes, bottle warmth...). 0 when the game time
+-- cannot be read, so arithmetic on it never throws.
+function DanTraits_WorldHours()
+    local h = 0
+    pcall(function() h = getGameTime():getWorldAgeHours() end)
+    return tonumber(h) or 0
+end
+
+-- The calendar day as an integer, midnight to midnight. World age counts from
+-- the hour the game started (9:00, say), so the time of day is taken off
+-- first; the daily logs (Fitness, Strain, SpiffBoy) turn over at midnight.
+function DanTraits_DayIndex()
+    local h, tod = 0, 0
+    pcall(function()
+        local gt = getGameTime()
+        h, tod = gt:getWorldAgeHours(), gt:getTimeOfDay()
+    end)
+    return math.floor(((tonumber(h) or 0) - (tonumber(tod) or 0)) / 24 + 0.5)
+end
+
+-- Whole days of world age: 24-hour blocks from the start, not calendar days.
+-- The daily counters that only need "a day has passed" (Brittle's bone
+-- drift, Meds' doses, Old Bones' forecast) count these.
+function DanTraits_WorldDay()
+    return math.floor(DanTraits_WorldHours() / 24)
+end
+
+-- Small lookups -------------------------------------------------------------------
+function DanTraits_InList(list, value)
+    for _, v in ipairs(list or {}) do
+        if v == value then return true end
+    end
+    return false
+end
+
+-- instanceof under a guard: false for nil, for a plain table, and when the
+-- game's instanceof is not there (the offline tests)
+function DanTraits_Is(obj, class)
+    local ok, res = pcall(function() return instanceof(obj, class) end)
+    return ok and res == true
+end
+
+-- the timed action at the head of the player's queue (what they are doing
+-- now), or nil
+function DanTraits_QueueHead(player)
+    local action = nil
+    pcall(function()
+        local q = ISTimedActionQueue.getTimedActionQueue(player)
+        action = q and q.queue and q.queue[1]
+    end)
+    return action
 end
 
 -- Another system's 0..1 reading (a fever, a hangover, a concussion, sleep
@@ -437,6 +523,7 @@ function DanTraits_MoodleLevel(player, moodleName, stat, tiers)
     local moodle = MoodleType and MoodleType[moodleName]
     if moodle then pcall(function() level = player:getMoodles():getMoodleLevel(moodle) end) end
     if type(level) == "number" then return level end
+    if not tiers then return 0 end
     local value = 0
     pcall(function() value = DanTraits_StatFraction(player:getStats(), stat) end)
     return DanTraits_TierOf(value, tiers)
@@ -515,8 +602,7 @@ local COUGH_GAME_RADIUS = 35
 function DanTraits_Cough(player, radius, why, force)
     if not player or player:isDead() then return false end
     local d = DanTraits_Data(player)
-    local now = 0
-    pcall(function() now = getGameTime():getWorldAgeHours() end)
+    local now = DanTraits_WorldHours()
     if not force and (d.coughGap or 0) > now then return false end
     local ok = false
     if not radius or radius >= COUGH_GAME_RADIUS then ok = pcall(function() player:triggerCough() end) end
@@ -692,29 +778,65 @@ end
 local PAIN_PART_RATIO = 0.79    -- stat per point of part pain (measured: 30 -> 23.5, 60 -> 47.5)
 DanTraits_PAIN_PART_RATIO = PAIN_PART_RATIO
 
-local function headPart(player)
-    local head
-    pcall(function() head = player:getBodyDamage():getBodyPart(BodyPartType.Head) end)
-    return head
+local function partNamed(player, partName)
+    local part
+    pcall(function() part = player:getBodyDamage():getBodyPart(BodyPartType[partName]) end)
+    return part
+end
+local function headPart(player) return partNamed(player, "Head") end
+
+-- the part's additional pain raised toward value, by at most ramp when one is
+-- given; never lowered, never past 100 (the part's own cap)
+local function raisePart(part, value, ramp)
+    pcall(function()
+        local now = part:getAdditionalPain() or 0
+        if now < value then part:setAdditionalPain(math.min(100, value, ramp and (now + ramp) or value)) end
+    end)
+end
+local function raiseHead(head, value) raisePart(head, value) end
+
+-- the aches (AgeTraits' back, knees and old injury; Concussion's head): a part
+-- by its BodyPartType name, its pain raised toward value by at most ramp a call
+function DanTraits_PartPainAtLeast(player, partName, value, ramp)
+    if not player or not value or value <= 0 then return end
+    local part = partNamed(player, partName)
+    if part then raisePart(part, value, ramp) end
 end
 
-local function raiseHead(head, value)
+-- a part's stiffness held at a floor (the game eases it back by itself)
+function DanTraits_PartStiffAtLeast(player, partName, floor)
+    if not player or not floor or floor <= 0 then return end
     pcall(function()
-        if (head:getAdditionalPain() or 0) < value then head:setAdditionalPain(math.min(100, value)) end
+        local part = partNamed(player, partName)
+        if part and (part:getStiffness() or 0) < floor then part:setStiffness(floor) end
+    end)
+end
+
+-- Painkillers taken while a system is already holding pain up (a migraine
+-- attack, a hangover): the timer is read before the pill and, after it, put
+-- back to that plus a share of what the pill added, so the pill works for a
+-- fraction of its time. Snapshot nil when the timer cannot be read, so the
+-- pill hook does nothing.
+function DanTraits_PainSnapshot(player)
+    local before
+    pcall(function() before = player:getPainEffect() or 0 end)
+    return before
+end
+
+function DanTraits_PainKeepShare(player, before, keep)
+    if not before then return end
+    pcall(function()
+        local after = player:getPainEffect() or 0
+        if after > before then player:setPainEffect(before + (after - before) * keep) end
     end)
 end
 
 -- a floor past what the head can carry (100 part pain, about 79 on the stat): the rest on the neck
-local function neckPart(player)
-    local neck
-    pcall(function() neck = player:getBodyDamage():getBodyPart(BodyPartType.Neck) end)
-    return neck
-end
+local function neckPart(player) return partNamed(player, "Neck") end
 
 -- a system that writes the head's pain itself (Concussion): never lowers it
 function DanTraits_HeadPainAtLeast(player, value)
-    local head = player and headPart(player)
-    if head and value and value > 0 then raiseHead(head, value) end
+    DanTraits_PartPainAtLeast(player, "Head", value)
 end
 
 function DanTraits_PainFloor(player, d, source, floor, ramp, hold)

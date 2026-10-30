@@ -154,17 +154,10 @@ function L.on() return DanTraits_SandboxOn("LaundryEnabled") end
 local function num(name, default) return DanTraits_SandboxNum(name, default) end
 L.num = num
 
-local function now()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return h
-end
+local now = DanTraits_WorldHours
 L.now = now
 
-local function is(obj, class)
-    local ok, res = pcall(function() return instanceof(obj, class) end)
-    return ok and res == true
-end
+local is = DanTraits_Is
 L.is = is
 
 -- water falling on the player now: rain outside (a drizzle counts), or Take A

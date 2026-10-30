@@ -1,12 +1,13 @@
 -- Base Unloader: the ways in. Right-click a container in the world, a vehicle,
 -- or items in a loot window for "Unload to base"; right-click your own items
 -- for "Put away what I'm carrying"; while a plan is saved, Resume and Forget
--- are on every one of those menus. The world menu always has Base zones and
--- Base inventory; an item's menu says how many of it the base holds. Any
--- world container can also be renamed
--- from here, which the loot window then shows, and its categories set (or the
--- container put off limits) from the world, its loot-window icon or any item
--- inside it.
+-- are on every one of those menus (one submenu builder serves them all, and
+-- builds nothing when it would be empty). The world menu always has Base
+-- zones and Base inventory; an item's menu says how many of it the base
+-- holds. Any world container can also be renamed from here, which the loot
+-- window then shows, and its categories set (or the container put off limits)
+-- from the world, its loot-window icon or any item inside it; those edits are
+-- the core's, shared with the window (BU_Window).
 
 require "BaseUnloader_Scan"
 require "BaseUnloader_Run"
@@ -71,48 +72,24 @@ M.onRenameObject = function(obj, playerNum)
 end
 
 M.onRenamed = function(_, button, playerNum, row)
-    if button.internal ~= "OK" then return end
-    local text = button.parent.entry:getText() or ""
-    if text == row.kindLabel then text = "" end
-    S.rename(row.container, row.key, text)
-    pcall(function()
-        local pdata = getPlayerData(playerNum)
-        pdata.playerInventory:refreshBackpacks()
-        pdata.lootInventory:refreshBackpacks()
-    end)
+    S.renamed(button, playerNum, row)
 end
 
--- categories from a menu: the container's row is built on the spot
-M.onToggleTag = function(row, playerNum, cat)
-    local store = BaseUnloader.store()
-    local on = not BaseUnloader.hasTag(store.tags, row.key, cat)
-    BaseUnloader.setTag(store.tags, row.key, cat, on)
-    -- the set remembered is the one being composed, not what a tick-off left behind
-    if on then BaseUnloader.noteTags(store, row.key) end
-    BU_Window.refresh(playerNum)
+-- Categories and off limits from a menu (the container's row is built on the
+-- spot): the edits are the core's, the same ones the window's own right-click
+-- makes (BU_Window); afterwards the window open for this player, if any, redraws.
+local function edit(fn)
+    return function(row, playerNum, arg)
+        fn(BaseUnloader.store(), row, arg)
+        BU_Window.refresh(playerNum)
+    end
 end
 
-M.onTagFromContents = function(row, playerNum)
-    local store = BaseUnloader.store()
-    BaseUnloader.tagFromContents(store.tags, row.key, row.cats)
-    BaseUnloader.noteTags(store, row.key)
-    BU_Window.refresh(playerNum)
-end
-
-M.onApplyLastTags = function(row, playerNum)
-    BaseUnloader.applyLastTags(BaseUnloader.store(), row.key)
-    BU_Window.refresh(playerNum)
-end
-
-M.onClearTags = function(row, playerNum)
-    BaseUnloader.store().tags[row.key] = nil
-    BU_Window.refresh(playerNum)
-end
-
-M.onSetOffLimits = function(row, playerNum, on)
-    BaseUnloader.store().offLimits[row.key] = on and true or nil
-    BU_Window.refresh(playerNum)
-end
+M.onToggleTag = edit(function(store, row, cat) BaseUnloader.toggleTag(store, row.key, cat) end)
+M.onTagFromContents = edit(function(store, row) BaseUnloader.tagByContents(store, row.key, row.cats) end)
+M.onApplyLastTags = edit(function(store, row) BaseUnloader.applyLastTags(store, row.key) end)
+M.onClearTags = edit(function(store, row) BaseUnloader.clearTags(store, row.key) end)
+M.onSetOffLimits = edit(function(store, row, on) BaseUnloader.setOffLimits(store, row.key, on) end)
 
 -- the Categories submenu and off limits for a world container, on any menu
 function M.addContainerOptions(menu, row, playerNum)
@@ -181,6 +158,24 @@ local function addBaseOptions(context, player)
     context:addOption(getText("ContextMenu_BU_Stock"), player, M.onStock)
 end
 
+-- The "Base Unloader" submenu, the same on every way in but for what comes
+-- first: first(sub) adds that way's own options (Unload, Rename, Put away...),
+-- then the categories and off limits of the world container `src` names, the
+-- plan's Resume / Stop / Forget, and on the world menu (`base`) the zones and
+-- the inventory. Not added at all when it would be empty: a floor or a body
+-- with no plan saved gets no submenu.
+local function addUnloaderMenu(context, player, playerNum, first, src, base)
+    if not (first or src or base or BU_Run.isRunning(player) or BU_Run.hasPlan(player)) then return nil end
+    local sub = ISContextMenu:getNew(context)
+    local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
+    context:addSubMenu(option, sub)
+    if first then first(sub) end
+    if src then M.addContainerOptions(sub, src.row, playerNum) end
+    addPlanOptions(sub, player)
+    if base then addBaseOptions(sub, player) end
+    return sub
+end
+
 -- "At base: 12 (House 8, Shed 4)" for items all of one type, from the last
 -- count of every base zone; click to open the base inventory searched for it
 function M.addStockLine(context, player, item)
@@ -214,17 +209,15 @@ function M.onWorldMenu(playerNum, context, worldobjects, test)
         local ok, has = pcall(function() return obj:getContainer() ~= nil and obj:getContainer():getType() ~= "floor" end)
         if ok and has and not found then found = obj end
     end
-    local sub = ISContextMenu:getNew(context)
-    local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
-    context:addSubMenu(option, sub)
+    local first, src = nil, nil
     if found then
-        sub:addOption(getText("ContextMenu_BU_Unload"), found, M.onUnloadObject, player)
-        sub:addOption(getText("ContextMenu_BU_RenameContainer"), found, M.onRenameObject, playerNum)
-        local src = S.objectSource(found, found:getContainer(), nil)
-        if src then M.addContainerOptions(sub, src.row, playerNum) end
+        first = function(sub)
+            sub:addOption(getText("ContextMenu_BU_Unload"), found, M.onUnloadObject, player)
+            sub:addOption(getText("ContextMenu_BU_RenameContainer"), found, M.onRenameObject, playerNum)
+        end
+        src = S.objectSource(found, found:getContainer(), nil)
     end
-    addPlanOptions(sub, player)
-    addBaseOptions(sub, player)
+    addUnloaderMenu(context, player, playerNum, first, src, true)
 end
 
 -- right-click items in an inventory window: the container they sit in
@@ -245,24 +238,20 @@ function M.onInventoryMenu(playerNum, context, items)
         end
     end)
     if oneType then M.addStockLine(context, player, first) end
-    local sub = ISContextMenu:getNew(context)
-    local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
-    context:addSubMenu(option, sub)
     local mine = false
     pcall(function() mine = container:isInCharacterInventory(player) end)
+    local own, src = nil, nil
     if mine then
-        sub:addOption(getText("ContextMenu_BU_PutAway"), player, M.onPutAway)
+        own = function(sub) sub:addOption(getText("ContextMenu_BU_PutAway"), player, M.onPutAway) end
     else
         local parent
         pcall(function() parent = container:getParent() end)
         if parent and (instanceof(parent, "BaseVehicle") or parent.getSquare) and container:getType() ~= "floor" then
-            sub:addOption(getText("ContextMenu_BU_Unload"), container, M.onUnloadContainer, player)
+            own = function(sub) sub:addOption(getText("ContextMenu_BU_Unload"), container, M.onUnloadContainer, player) end
         end
-        -- the categories of the container the item sits in
-        local src = worldSource(container)
-        if src then M.addContainerOptions(sub, src.row, playerNum) end
+        src = worldSource(container)   -- the categories of the container the item sits in
     end
-    addPlanOptions(sub, player)
+    addUnloaderMenu(context, player, playerNum, own, src, false)
 end
 
 Events.OnFillWorldObjectContextMenu.Add(M.onWorldMenu)
@@ -282,13 +271,9 @@ ISInventoryPage.onBackpackRightMouseDown = function(button, x, y)
         if not player or player:getVehicle() then return end
         local src = worldSource(container)
         if not src then return end
-        local context = getPlayerContextMenu(playerNum)
-        local sub = ISContextMenu:getNew(context)
-        local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
-        context:addSubMenu(option, sub)
-        sub:addOption(getText("ContextMenu_BU_Unload"), container, M.onUnloadContainer, player)
-        M.addContainerOptions(sub, src.row, playerNum)
-        addPlanOptions(sub, player)
+        addUnloaderMenu(getPlayerContextMenu(playerNum), player, playerNum, function(sub)
+            sub:addOption(getText("ContextMenu_BU_Unload"), container, M.onUnloadContainer, player)
+        end, src, false)
     end)
     return result
 end
@@ -300,11 +285,9 @@ ISVehicleMenu.FillMenuOutsideVehicle = function(playerNum, context, vehicle, tes
     if test then return result end
     local player = getSpecificPlayer(playerNum)
     if player and not player:getVehicle() and vehicle and S.vehiclePart(vehicle) then
-        local sub = ISContextMenu:getNew(context)
-        local option = context:addOption(getText("ContextMenu_BU_Title"), nil, nil)
-        context:addSubMenu(option, sub)
-        sub:addOption(getText("ContextMenu_BU_UnloadTrunk"), vehicle, M.onUnloadVehicle, player)
-        addPlanOptions(sub, player)
+        addUnloaderMenu(context, player, playerNum, function(sub)
+            sub:addOption(getText("ContextMenu_BU_UnloadTrunk"), vehicle, M.onUnloadVehicle, player)
+        end, nil, false)
     end
     return result
 end

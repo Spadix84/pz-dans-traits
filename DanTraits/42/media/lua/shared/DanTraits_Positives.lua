@@ -259,10 +259,6 @@ local function onPositivesCreate(player)
     end
 end
 
-local function onPositivesCreatePlayer(playerNum, player) onPositivesCreate(player) end
-local function onPositivesGameStart() onPositivesCreate(getSpecificPlayer(0)) end
-
 DanTraits_Every("minute", "GoodClotter", updateGoodClotterMinute, 19)
 DanTraits_Every("minute", "Grit", updateGritMinute, 41)
-Events.OnCreatePlayer.Add(onPositivesCreatePlayer)
-Events.OnGameStart.Add(onPositivesGameStart)
+DanTraits_OnPlayerReady("Positives", onPositivesCreate, 65)

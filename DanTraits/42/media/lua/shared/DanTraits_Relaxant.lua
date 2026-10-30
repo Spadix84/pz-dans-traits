@@ -73,9 +73,7 @@ local function updateRelaxantMinute(player, d)
     if d.rxOn and not on and not DanTraits_HasTrait(player, "ms") then DanTraits_Notify(player, "UI_DanTraits_RelaxantLapse") end
     d.rxOn = on or nil
     if not on or DanTraits_Asleep(player) then return end
-    local drunk = 0
-    pcall(function() drunk = player:getMoodles():getMoodleLevel(MoodleType.DRUNK) or 0 end)
-    if drunk > 0 then DanTraits_StatAdd(player:getStats(), CharacterStat.FATIGUE, RX_DRUNK_FATIGUE) end
+    if DanTraits_MoodleLevel(player, "DRUNK") > 0 then DanTraits_StatAdd(player:getStats(), CharacterStat.FATIGUE, RX_DRUNK_FATIGUE) end
 end
 
 DanTraits_Every("minute", "Relaxant", updateRelaxantMinute, 60)

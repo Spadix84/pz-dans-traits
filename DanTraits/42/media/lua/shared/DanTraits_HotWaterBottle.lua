@@ -62,11 +62,7 @@ local HWB_NIGHT_KEEP    = 10      -- minutes past Vitality's night gap before an
 
 -- the bottle ----------------------------------------------------------------------
 
-local function nowHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return tonumber(h) or 0
-end
+local nowHours = DanTraits_WorldHours
 
 local function isBottle(item)
     local t = nil
@@ -158,16 +154,14 @@ local function carriedRate(player, asleep)
     if asleep then return HWB_RATE_BED end
     local outside, air = false, nil
     pcall(function() outside = player:isOutside() == true end)
-    if outside then pcall(function() air = getClimateManager():getAirTemperatureForCharacter(player, false) end) end
+    if outside then air = DanTraits_AirTemp(player) end
     if outside and type(air) == "number" and air < HWB_FREEZING then return HWB_RATE_FREEZING end
     return 1
 end
 
 local function feelsCold(player)
-    local cold, air = 0, nil
-    pcall(function() cold = player:getMoodles():getMoodleLevel(MoodleType.HYPOTHERMIA) or 0 end)
-    if cold > 0 then return true end
-    pcall(function() air = getClimateManager():getAirTemperatureForCharacter(player, false) end)
+    if DanTraits_MoodleLevel(player, "HYPOTHERMIA") > 0 then return true end
+    local air = DanTraits_AirTemp(player)
     return type(air) == "number" and air <= HWB_COLD_AIR
 end
 
@@ -190,11 +184,7 @@ end
 -- held on a group ---------------------------------------------------------------
 
 local function heldBottle(player)
-    local action = nil
-    pcall(function()
-        local q = ISTimedActionQueue.getTimedActionQueue(player)
-        action = q and q.queue and q.queue[1]
-    end)
+    local action = DanTraits_QueueHead(player)
     if action and action.Type == "ISDanTraitsHeatAction" and action.item and action.group then
         return action.item, action.group
     end

@@ -6,6 +6,16 @@ Dan's Challenges mod (archived in `plans/archive/DanChallenges-2026-10-27.zip`, 
 
 ## 0.1.0 (in progress)
 
+- **Shared pieces moved into the frame** (2026-10-29, review C7). The paper map's `LootMaps.Init`
+  is one `VC.paperMap(id, bounds, stamps)` in Kit, used by Nomad and The Last Broadcast; the
+  weapon-by-profession and trait tables are Kit's `VC.weaponsFor(player)` / `VC.forged(level)`
+  (The Last Broadcast no longer depends on Nomad loading first); `VC.used`, `VC.hour` and
+  `VC.worldHours` replace the copies in each file. The Last Broadcast silences every channel the
+  radio script manager lists (`getChannelsList`, as the game's own radio debugger does) instead of
+  a hand-kept list of 18 uuids, so a station a game update adds goes quiet too. Its test
+  scaffolding (low population, one dead, the stocked studio, the step van) is now
+  `VitalityChallenges_Dev.lua`, reached through `VC.dev` hooks that do nothing without the file;
+  TEST is still on there for play-testing, off before release.
 - **The Last Broadcast: the walk there costs nothing** (2026-10-29, review; `B.settle`). The
   first evening, meant as the time to reach the studio, still took 15% of the listeners and
   said "Nobody heard you tonight"; a player airing the first show on the second evening started

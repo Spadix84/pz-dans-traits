@@ -60,8 +60,7 @@ local function strainedGroup(player, key)
 end
 
 local function stretching(player)
-    local q = ISTimedActionQueue.getTimedActionQueue(player)
-    local a = q and q.queue and q.queue[1]
+    local a = DanTraits_QueueHead(player)
     return a and a.Type == "ISDanTraitsStretchAction" and a or nil
 end
 

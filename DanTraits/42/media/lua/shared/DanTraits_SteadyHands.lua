@@ -116,5 +116,4 @@ Events.OnGameStart.Add(function() wrapReload(); wrapHolster() end)
 
 local function grant(player) DanTraits_GrantFoldIn(player, "steadyhands", "DEXTROUS", "shDexGranted") end
 
-Events.OnCreatePlayer.Add(function(playerNum, player) grant(player) end)
-Events.OnGameStart.Add(function() grant(getSpecificPlayer(0)) end)
+DanTraits_OnPlayerReady("SteadyHands", grant, 75)

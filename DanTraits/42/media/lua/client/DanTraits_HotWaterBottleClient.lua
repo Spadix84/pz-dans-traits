@@ -4,24 +4,17 @@
 -- under its tooltip saying how warm it is and for how long (DanShared_Tooltip.lua).
 require "DanTraits"
 require "DanShared_Tooltip"
+require "DanTraits_ClientUtil"
 require "TimedActions/ISDanTraitsHeatAction"
 
-local function actualItems(items)
-    if ISInventoryPane and ISInventoryPane.getActualItems then return ISInventoryPane.getActualItems(items) end
-    return items
-end
+local actualItems = DanTraits_ActualItems
 
 local function onHold(item, playerObj, group)
     ISInventoryPaneContextMenu.transferIfNeeded(playerObj, item)
     ISTimedActionQueue.add(ISDanTraitsHeatAction:new(playerObj, item, group))
 end
 
-local function greyOut(option, textKey)
-    option.notAvailable = true
-    local tooltip = ISInventoryPaneContextMenu.addToolTip()
-    tooltip.description = getText(textKey)
-    option.toolTip = tooltip
-end
+local greyOut = DanTraits_GreyOut
 
 local function groupLabel(playerObj, g)
     local name = getText("IGUI_DanTraits_FitGroup_" .. g)

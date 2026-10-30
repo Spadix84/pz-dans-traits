@@ -11,6 +11,7 @@
 --   VC.put(container, entry)    entry is a type or { type, count, uses, condition, water };
 --                               returns the last item made
 --   VC.condition(item, f)       f of the item's max condition
+--   VC.used(item, range)        a weapon from home: condition somewhere in range (VC.USED)
 --   VC.uses(item, n)            a drainable down to n uses
 --   VC.levels(player, perk, n)  n levels up (not past 10), XP at the new level
 --   VC.hold(player, item)       in the hands (both for a two-handed weapon)
@@ -18,12 +19,21 @@
 --                               slot types in only ({ "Back" }) when given; false if none
 --   VC.containerOf(item)        a bag's inventory
 --   VC.worn(player, type)       the worn item of that full type, or nil
+--   VC.weaponsFor(player)       the weapons a character brings from home: { main, belt,
+--                               mainFull, beltFull, gifts, ankle } by profession and traits
+--   VC.forged(level)            the best blade a Blacksmith level can make
+--   VC.paperMap(mapId, bounds, stamps)  a paper map of its own: the LootMaps.Init for
+--                               mapId, bounds { x1, y1, x2, y2 } in squares, each stamp
+--                               { x, y, symbol, rgb } (a red "Circle" by default)
 --   VC.stampMap(mapUI, id, x, y, rgb)  a mark on a paper map, from its LootMaps.Init
+
+require "ISUI/Maps/ISMapDefinitions"
 
 VitalityChallenges = VitalityChallenges or {}
 local VC = VitalityChallenges
 
 local MAX_LEVEL = 10
+VC.USED = { 0.6, 0.8 }   -- a weapon from home: condition between these of its max
 
 local function try(fn, ...)
     local ok, res = pcall(fn, ...)
@@ -72,6 +82,11 @@ end
 function VC.condition(item, f)
     if not item then return end
     try(function() item:setCondition(math.max(1, math.floor(item:getConditionMax() * f + 0.5))) end)
+end
+
+function VC.used(item, range)
+    range = range or VC.USED
+    VC.condition(item, range[1] + (range[2] - range[1]) * ZombRandFloat(0, 1))
 end
 
 function VC.dirty(item, lo, hi)
@@ -163,6 +178,114 @@ function VC.stampMap(mapUI, symbolID, x, y, rgb)
     if item then try(function() item:syncItemFields() end) end
     return true
 end
+
+-- a challenge's own paper map: the game calls LootMaps.Init[mapId] each time a map
+-- item with that id is opened; this sets it up like the game's own maps (its tiles,
+-- the default style, the bounds, the paper overlay) and stamps each mark
+function VC.paperMap(mapId, bounds, stamps)
+    LootMaps.Init[mapId] = function(mapUI)
+        local mapAPI = mapUI.javaObject:getAPIv1()
+        MapUtils.initDirectoryMapData(mapUI, LootMaps.DEFAULT_MAP_DIRECTORY)
+        MapUtils.initDefaultStyleV3(mapUI)
+        mapAPI:setBoundsInSquares(bounds[1], bounds[2], bounds[3], bounds[4])
+        MapUtils.overlayPaper(mapUI)
+        for _, s in ipairs(stamps or {}) do
+            VC.stampMap(mapUI, s.symbol or "Circle", s.x, s.y, s.rgb or VC.MAP_RED)
+        end
+    end
+end
+
+-- arms ---------------------------------------------------------------------------
+
+-- main / belt by profession; main goes on the back when the back slot takes it, else in the hands
+local WEAPONS = {
+    ["base:unemployed"]         = { "Base.BaseballBat", "Base.KitchenKnife" },
+    ["base:fitnessinstructor"]  = { "Base.BaseballBat", "Base.KitchenKnife" },
+    ["base:tailor"]             = { "Base.BaseballBat", "Base.Scissors" },
+    ["base:burgerflipper"]      = { "Base.MeatCleaver", "Base.KitchenKnife" },
+    ["base:chef"]               = { "Base.MeatCleaver", "Base.KitchenKnife" },
+    ["base:burglar"]            = { "Base.Crowbar", "Base.Screwdriver" },
+    ["base:carpenter"]          = { "Base.Hammer", "Base.Screwdriver" },
+    ["base:constructionworker"] = { "Base.Shovel", "Base.Hammer" },
+    ["base:doctor"]             = { "Base.BaseballBat", "Base.Scalpel" },
+    ["base:nurse"]              = { "Base.BaseballBat", "Base.Scalpel" },
+    ["base:electrician"]        = { "Base.PipeWrench", "Base.Screwdriver" },
+    ["base:repairman"]          = { "Base.PipeWrench", "Base.Screwdriver" },
+    ["base:engineer"]           = { "Base.PipeWrench", "Base.Screwdriver" },
+    ["base:mechanics"]          = { "Base.TireIron", "Base.Wrench" },
+    ["base:metalworker"]        = { "Base.Sword_Scrap", "Base.BallPeenHammer" },
+    ["base:smither"]            = { "Base.CrudeSword", "Base.BallPeenHammer" },
+    ["base:farmer"]             = { "Base.GardenFork", "Base.HandScythe" },
+    ["base:rancher"]            = { "Base.GardenFork", "Base.HandScythe" },   -- the game has no pitchfork
+    ["base:fisherman"]          = { "Base.SpearCrafted", "Base.HuntingKnife" },
+    ["base:fireofficer"]        = { "Base.Axe", "Base.HandAxe" },
+    ["base:lumberjack"]         = { "Base.WoodAxe", "Base.HandAxe" },
+    ["base:parkranger"]         = { "Base.SpearCraftedFireHardened", "Base.HuntingKnife", mainFull = true },
+    ["base:policeofficer"]      = { "Base.Nightstick", "Base.Pistol" },
+    ["base:securityguard"]      = { "Base.Nightstick", "Base.KitchenKnife" },
+    ["base:veteran"]            = { "Base.Machete", "Base.Pistol" },
+}
+local DEFAULT_WEAPONS = { "Base.BaseballBat", "Base.KitchenKnife" }   -- a modded profession
+
+-- a trait's head start, every item vanilla and at full condition: belt (a better
+-- belt weapon; into the bag when the belt holds a pistol), give (a spare in the
+-- bag), forge (the best weapon the character's Blacksmith level can make, FORGED),
+-- ankle (in an ankle holster, unloaded). Faire Geek is the Vitality Project's and
+-- never matches without it.
+local BOOSTS = {
+    { trait = "base:brawler", give = "Base.BaseballBat_Spiked" },
+    { trait = "base:baseballplayer", give = "Base.BaseballBat_Can" },
+    { trait = "base:hunter", belt = "Base.HuntingKnife" },
+    { trait = "base:handy", give = "Base.Hammer" },
+    { trait = "base:wildernessknowledge", give = "Base.HandAxe" },   -- Bushcrafter
+    { trait = "base:whittler", give = "Base.KnifePocket" },
+    { trait = "base:blacksmith", forge = true },                     -- Blacksmith Knowledge
+    { trait = "base:target_shooter", ankle = "Base.Revolver_Short" },
+    { trait = "renfaire", give = "Base.CrudeShortSword" },           -- Vitality's Renaissance Faire Geek
+}
+
+-- what a smith can make at a starting Blacksmith level, best first: the forge
+-- recipe's SkillRequired (recipes_blacksmith_blades.txt), each finished by an
+-- assembly recipe that needs Maintenance 1 (the trait gives it)
+local FORGED = {
+    { 8, "Base.CrudeSword" },           -- Forge_Crude_Sword_Blade
+    { 6, "Base.CrudeShortSword" },      -- Forge_Crude_Shortsword_Blade
+    { 5, "Base.HuntingKnifeForged" },   -- Forge_Hunting_Knife_Blade
+    { 4, "Base.HandAxeForged" },        -- Forge_Hand_Axe_Head
+    { 3, "Base.LongCrudeKnife" },       -- Forge_Long_Crude_Blade
+    { 1, "Base.SmallKnife" },           -- Forge_Small_Knife
+    { 0, "Base.CrudeKnife" },           -- Forge_Crude_Blade
+}
+
+function VC.forged(level)
+    for _, f in ipairs(FORGED) do
+        if level >= f[1] then return f[2] end
+    end
+    return FORGED[#FORGED][2]
+end
+
+-- the profession's pair, after the traits: { main, belt, mainFull, beltFull, gifts, ankle }
+function VC.weaponsFor(player)
+    local row = WEAPONS[VC.profession(player)] or DEFAULT_WEAPONS
+    local out = { main = row[1], belt = row[2], mainFull = row.mainFull == true, gifts = {} }
+    for _, b in ipairs(BOOSTS) do
+        if VC.hasTrait(player, b.trait) then
+            if b.belt then
+                if out.belt == "Base.Pistol" then out.gifts[#out.gifts + 1] = b.belt else out.belt, out.beltFull = b.belt, true end
+            end
+            if b.give then out.gifts[#out.gifts + 1] = b.give end
+            if b.forge then
+                local level = 0
+                pcall(function() level = player:getPerkLevel(Perks.Blacksmith) end)
+                out.gifts[#out.gifts + 1] = VC.forged(level)
+            end
+            if b.ankle then out.ankle = b.ankle end
+        end
+    end
+    return out
+end
+
+VC.arms = { WEAPONS = WEAPONS, BOOSTS = BOOSTS, FORGED = FORGED }   -- tests
 
 function VC.levels(player, perk, n)
     local added = 0

@@ -95,8 +95,7 @@ local function updateAngerMinute(player, d)
     local level = angerLevel(player)
     local chance = ANG_CURSE[level] or 0
     if chance <= 0 or DanTraits_Asleep(player) then return end
-    local now = 0
-    pcall(function() now = getGameTime():getWorldAgeHours() end)
+    local now = DanTraits_WorldHours()
     if (d.coughGap or 0) > now then return end
     if not DanTraits_RollPercent(chance) then return end
     curse(player, d, ANG_CURSE_RADIUS[level])

@@ -16,6 +16,7 @@
 -- the game never reads the character, so it stays deterministic.
 
 require "VitalityCartridges/Core"
+require "VitalityCartridges/Common"
 require "SpiffBoy/Framework/Cartridges"
 require "SpiffBoy/Framework/GameTexts"
 require "SpiffBoy/Core/GameBase"
@@ -26,7 +27,7 @@ VitalityCartridgesStillWaterGame = SpiffBoyGameBase:derive("VitalityCartridgesSt
 local Game = VitalityCartridgesStillWaterGame
 local Music = VitalityCartridges.StillWater.Music
 local gameText = SpiffBoy.GameTexts.of("StillWater")
-local SHADES = SpiffBoy.Cartridges.SHADES
+local Common = VitalityCartridges.Common
 
 local TICKS = 60                 -- ticks a second
 
@@ -67,16 +68,9 @@ local MODE_TITLE, MODE_SESSION, MODE_SUMMARY = "title", "session", "summary"
 local MENU_BREATHE, MENU_PACE, MENU_SOUND, MENU_SIZE = 1, 2, 3, 3
 local MENU_Y, MENU_STEP, MENU_BAR = 40, 18, 120
 
-local function ink(i)
-    local s = SHADES[i]
-    return s.r, s.g, s.b
-end
+local ink = Common.ink
 
-local function clamp(v, lo, hi)
-    if v < lo then return lo end
-    if v > hi then return hi end
-    return v
-end
+local clamp = Common.clamp
 
 -- 0..1 eased, so the disc starts and ends each breath slowly
 local function ease(t)
@@ -84,10 +78,7 @@ local function ease(t)
     return t * t * (3 - 2 * t)
 end
 
-local function readNumber(v, hi)
-    if type(v) ~= "number" or v < 0 then return 0 end
-    return math.min(math.floor(v), hi)
-end
+local readNumber = Common.readNumber
 
 local function readPace(save)
     local p = save.pace
@@ -95,10 +86,7 @@ local function readPace(save)
     return math.floor(p)
 end
 
-local function readSound(save)
-    local o = save.options
-    return type(o) ~= "table" or o.sound ~= false
-end
+local readSound = Common.readSound
 
 function Game:init()
     local art = self.context.art
@@ -222,13 +210,7 @@ end
 
 function Game:tickTitle(input)
     local pressed = input.pressed
-    if pressed.up then
-        self.selection = (self.selection - 2 + MENU_SIZE) % MENU_SIZE + 1
-        self:cue(Music.MOVE)
-    elseif pressed.down then
-        self.selection = self.selection % MENU_SIZE + 1
-        self:cue(Music.MOVE)
-    end
+    Common.moveMenu(self, MENU_SIZE, pressed.up, pressed.down, Music.MOVE)
     if self.selection == MENU_PACE and (pressed.left or pressed.right) then
         self:changePace(pressed.left and -1 or 1)
     end

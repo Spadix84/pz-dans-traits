@@ -148,21 +148,11 @@ local hasTrait = DanTraits_HasTrait
 
 -- time ----------------------------------------------------------------------------
 
-local function nowHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return tonumber(h) or 0
-end
+local nowHours = DanTraits_WorldHours
 
--- the calendar day as a number (midnight to midnight)
-local function dayIndex()
-    local h, tod = 0, 0
-    pcall(function()
-        local gt = getGameTime()
-        h, tod = gt:getWorldAgeHours(), gt:getTimeOfDay()
-    end)
-    return math.floor(((tonumber(h) or 0) - (tonumber(tod) or 0)) / 24 + 0.5)
-end
+-- the calendar day as a number (midnight to midnight): DanTraits_DayIndex, kept
+-- under the old name for Cooking (which also reads it as "Fitness is loaded"), the window and the tests
+local dayIndex = DanTraits_DayIndex
 DanTraits_FitDayIndex = dayIndex
 
 local function fitData(player)
@@ -402,14 +392,7 @@ DanTraits_FitTrainingFactor = trainingFactor
 
 -- what the character is doing --------------------------------------------------------
 
-local function queueHead(player)
-    local action = nil
-    pcall(function()
-        local q = ISTimedActionQueue.getTimedActionQueue(player)
-        action = q and q.queue and q.queue[1]
-    end)
-    return action
-end
+local queueHead = DanTraits_QueueHead
 
 -- the exercise this minute, and whether it is the window's (or stretching)
 local function currentExercise(player)
@@ -433,9 +416,7 @@ local function currentExercise(player)
     end)
     if vehicle then return nil end
     if moving and running and not sprinting then return "dtjog" end
-    local heavy = 0
-    pcall(function() heavy = player:getMoodles():getMoodleLevel(MoodleType.HEAVY_LOAD) or 0 end)
-    if moving and heavy >= 1 then return "dtcarry" end
+    if moving and DanTraits_MoodleLevel(player, "HEAVY_LOAD") >= 1 then return "dtcarry" end
     local met = 0
     pcall(function() met = player:getBodyDamage():getThermoregulator():getMetabolicRate() or 0 end)
     if met >= FIT_WORK_MET and not running and not sprinting then return "dtwork" end

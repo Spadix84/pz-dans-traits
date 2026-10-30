@@ -89,11 +89,7 @@ DanTraits_SpiffBoySB = SB   -- tests
 
 local installed = false
 
-local function nowHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return h
-end
+local nowHours = DanTraits_WorldHours
 
 local function windowOf(player)
     local W = SpiffBoyHandheldWindow
@@ -256,14 +252,7 @@ function DanTraits_SteadySlow(player, d)
     })
 end
 
-local function dayIndex()
-    local day = 0
-    pcall(function()
-        local gt = getGameTime()
-        day = math.floor((gt:getWorldAgeHours() - (gt:getTimeOfDay() or 0)) / 24 + 0.5)
-    end)
-    return day
-end
+local dayIndex = DanTraits_DayIndex   -- the calendar day, midnight to midnight
 
 local function inVehicle(player)
     local car = nil

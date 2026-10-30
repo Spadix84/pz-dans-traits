@@ -1,6 +1,7 @@
 -- Base Unloader: the part with no game objects in it. Container keys, the
 -- saved data (names, rules, plans), grouping the items to unload, the rules
--- that say where an item type goes, suggesting a home for what has none, and
+-- that say where an item type goes, the edits a menu or the window makes to
+-- a container's categories, suggesting a home for what has none, and
 -- planning one trip: what to carry and where to walk, nearest first.
 --
 -- The client files (BaseUnloader_Scan, _Run, _UI, _Menu) turn the game's
@@ -235,6 +236,34 @@ function BU.applyLastTags(store, key)
     store.tags[key] = nil
     for _, cat in ipairs(last) do BU.setTag(store.tags, key, cat, true) end
     return true
+end
+
+-- The edits a right-click makes, from the window's container list and from the
+-- context menus alike (BU_Window and BU_Menu both call these, then redraw).
+-- A category ticked on or off; returns whether it is on now. The set
+-- remembered for "same categories as last" is the one being composed, not
+-- what a tick-off left behind.
+function BU.toggleTag(store, key, category)
+    local on = not BU.hasTag(store.tags, key, category)
+    BU.setTag(store.tags, key, category, on)
+    if on then BU.noteTags(store, key) end
+    return on
+end
+
+-- the container takes the categories of what it holds, and that set is remembered
+function BU.tagByContents(store, key, cats)
+    local added = BU.tagFromContents(store.tags, key, cats)
+    BU.noteTags(store, key)
+    return added
+end
+
+function BU.clearTags(store, key)
+    store.tags[key] = nil
+end
+
+-- off limits: a run only puts there what was dragged there
+function BU.setOffLimits(store, key, on)
+    store.offLimits[key] = on and true or nil
 end
 
 -- the player (or a run) put something in this container: from now on what it

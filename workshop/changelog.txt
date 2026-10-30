@@ -1,6 +1,8 @@
 [h1]Next update (in progress)[/h1]
 [h2]New[/h2]
 [list]
+[*][b]A Guide tab in the character window[/b]: an overview of every system and how they fit together, a page each with a picture, plus What's New. Need-to-know, not numbers.
+[*][b]What's new, once per update:[/b] the first game you load after an update shows the headline changes, with a button to the guide and a box to never show it again.
 [*][b]Burnout.[/b] Fighting wears on you over days. Kills (more each one the longer the day goes on, less from a distance), panic, wounds, bites, illness and withdrawal build burnout; sleep, calm hours, a wash, fresh clothes, a good meal, a book, a workout, a drink and a smoke ease it, and comforts count half again at home. Burnout never makes you fight worse: it slows what fighting teaches, down to 15% when you are burnt out, while a rested character learns a little more. Push to breaking point and you will sit down and fall apart at the first quiet moment. Two horde days in a row are fine; the third is not. You get hardened as you go: the fighting wears on you less as your kills (up to 2,000) and days survived (up to 90) add up, about half by then. New moodle: Burnout.
 [*][b]Four burnout traits:[/b] Level Headed (+8), Unwinds Easily (+4), High Strung (-6), Can't Switch Off (-4).
 [*][b]Burnout reaches your conditions.[/b] Depressive episodes, hallucinations, migraines, MS flares and seizures come up to twice as often when you are burnt out. Endorphin Junkie, Homemaker, Keen Cook and Nomad get more out of their comforts; a depressive episode makes most comforts count half.
@@ -12,6 +14,7 @@
 [/list]
 [h2]Changed[/h2]
 [list]
+[*][b]Dynamic Traits and Expanded Moodles compatibility[/b] (thanks chuchu): with both mods on, Keen Cook, Iron Gut, Resilient, Fear of Blood, Smoker and Cat's Eyes keep this mod's costs and effects (DTEM had re-priced them at boot), DTEM's Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees are hidden on the creation screen (this mod's versions stand in), and a character DTEM makes an alcoholic or caffeine addict in play gets this mod's trait instead within a minute. Nothing changes without DTEM.
 [*][b]A shorter health panel.[/b] Blood and Burnout sit on one line with their headings, Blood only shows when something is wrong, and Burnout only from Frayed or while it is getting worse.
 [*][b]Daily Medication has its own window.[/b] The list of daily drugs is off the health panel. A pill bottle button next to Fitness ([i]Medication[/i] on hover) opens a small window that names each drug, when you last took it and when the next dose is due, and keeps itself up to date while it is open (or says you have none to take).
 [*][b]Everyday activity is lighter on the muscles.[/b] Running, carrying a heavy load and fighting now tire your muscles a quarter as much, can make them Sore but never Overworked, and never pull a muscle. Only exercise in the fitness window can overwork a muscle or pull one. The Sore Muscles moodle says what it actually costs: less experience from exercise, nothing else.
@@ -21,7 +24,7 @@
 [*][b]Fabric protector lasts longer and keeps clothes fresh.[/b] A treated garment now holds for about five washes (was three) and wears off a quarter as fast in a fight, and worn it gathers smell at half the rate (a quarter with a dryer sheet). Fabric wax the same.
 [*][b]Cyclobenzaprine is folded into baclofen.[/b] Baclofen now also eases a strain, a pulled muscle or a Bad Back for anyone, for about 12 hours, and turns up a little more often. With MS it is still the daily pill, without the training penalty. Old cyclobenzaprine bottles still work.
 [*][b]Experience bonuses and penalties now multiply.[/b] Age, Burnout, training, ADHD and the age traits each adjusted the same gain on its own, and the shares added up, so an older character who was burnt out could lose experience on a gain. The factors now multiply, and a penalty can never take more than the gain.
-[*][b]Split-screen co-op: the second player gets the damage and swing events too[/b] (bleeding, concussion, fractures, tinnitus, wound strain), not only the clocks.
+[*][b]Split-screen co-op: the second player gets the damage and swing events too[/b] (bleeding, concussion, fractures, tinnitus, wound strain), and the starting kits and age levels, not only the clocks.
 [*][b]Base Unloader: stacked crates are told apart.[/b] Three crates on one tile shared one entry, so a rule, a tag, Off limits or a name on one applied to all three. Each has its own now; old rules still work.
 [/list]
 [h2]Fixed[/h2]

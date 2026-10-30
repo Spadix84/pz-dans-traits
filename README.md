@@ -811,6 +811,10 @@ A proper cooked meal does more than fill you (`DanTraits_Cooking.lua`; design an
 - All of fitness's experience boosts together top out at double (before the Training Experience option).
 - Moodle: Good Meal (Good Meal, Great Meal; Side Stitch on the bad side).
 
+### The Guide tab and What's New
+
+The character window has a Guide tab for everyone (`DanTraits_Guide.lua`, pages in `DanTraits_GuideData.lua`): fourteen short pages on the systems above and how they fit together, overviews and need-to-know only, each with a picture when `media/ui/Guide/<id>.png` exists, and What's New last. The first time a game loads after an update, a What's New window shows the headline changes once per install (`~/Zomboid/Lua/DanTraits_whatsnew.txt` remembers the version; a tick box turns it off for good), with a button to the guide.
+
 ### Moodles
 
 Every effect that lasts has one. All of them need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
@@ -839,15 +843,28 @@ A separate mod in this repo (`BaseUnloader/`, its own Workshop item once uploade
 DanTraits/42/            the mod as the game sees it (mod.info, poster.png, media/...)
 DanTraits/common/        empty; Build 42 expects it beside 42/
   media/lua/shared/      one file per trait + DanTraits.lua (core helpers, eat/pill hooks)
-  media/lua/client/      context menus, moodles, telemetry for the companion app
+  media/lua/client/      context menus, moodles, the health panel, the Notes and Guide tabs,
+                         What's New, telemetry for the companion app; DanTraits_ClientUtil.lua
+                         holds the menu helpers the client files share
   media/scripts/         trait and item definitions
+  media/ui/Guide/        the Guide tab's pictures, <page id>.png (optional; see DanTraits_GuideData.lua)
 DanTraits/tools/         make_icons.py (draws the moodle, item and age trait icons), make_reading_icon.py
                          (Good Read), gen_reading_data.py (the reading table, from the game jar)
-tests/                   offline tests (fengari); python tests/run_tests.py
-DansVanillaFixes/        Dan's Vanilla Fixes, a separate mod (python deploy.py --patch)
-BaseUnloader/            Base Unloader, a separate mod (python deploy.py --unloader)
+tests/                   offline tests (fengari) and the checks run_tests.py runs first: lint_kahlua.py,
+                         check_api.py (Java method names against the jar), check_wraps.py (every wrapped
+                         vanilla method exists), check_drivers.py (the clock-order comment in DanTraits.lua
+                         matches the registrations); python tests/run_tests.py
+DansVanillaFixes/        Dan's Vanilla Fixes, a separate mod (python deploy.py --mod DansVanillaFixes)
+BaseUnloader/            Base Unloader, a separate mod (python deploy.py --mod BaseUnloader)
+MapLegend/               Map Legend, a separate mod (--mod MapLegend)
+VitalityCartridges/      cartridges for the SpiffBoy console mod (--mod VitalityCartridges; Common.lua is
+                         what the five games share; tools/ has their SDK tests)
+VitalityChallenges/      challenge scenarios (--mod VitalityChallenges; VitalityChallenges_Dev.lua is the
+                         play-test scaffolding behind its TEST switch)
 workshop/                workshop.txt and preview.png for the Steam Workshop page
-deploy.py                copy the mod to ~/Zomboid/mods (or --pull edits back, or --workshop)
+deploy.py                copy a mod to ~/Zomboid/mods (--mod NAME; the old flags --patch, --unloader,
+                         --legend, --cartridges, --challenges still work; --pull adds and updates only;
+                         --workshop builds the upload folder)
 ```
 
 Mod data is one table per player (`getModData().DanTraits`) with a prefix per system (`alc*`, `nic*`, `inf*`, ...); the companion app's Live tab groups it by that prefix. A renamed key is moved by `DanTraits_MigrateModData` in the core.
@@ -861,7 +878,7 @@ Mod data is one table per player (`getModData().DanTraits`) with a prefix per sy
 
 To publish: `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` (workshop.txt, preview.png and `Contents/mods/DanTraits` without the dev tools), then upload it from the game's main menu, Workshop. After the first upload the game writes the item's `id=` into that workshop.txt; the build keeps it, so later uploads update the same item.
 
-The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file's top level included, so new traits go in their own file (`require "DanTraits"` for the shared helpers). It also lacks `next`, `assert`, `xpcall`, `string.gmatch` and `string.rep`. The offline tests run on standard Lua and would not notice any of that, so `tests/lint_kahlua.py` (run first by `run_tests.py`) checks for it, and checks the translation files too: valid JSON, no duplicate keys, and no bare `%` (the game formats UI strings; write `%%` for a percent sign, `%1` for a placeholder). Calling a Java method an object doesn't have fails quietly inside `pcall` but dumps a stack trace to the log every time, and the tests' stand-ins can't notice, so `tests/check_api.py` (also run by `run_tests.py`) checks the method names called on body parts, body damage, players, stats and weapons against the installed game's jar.
+The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file's top level included, so new traits go in their own file (`require "DanTraits"` for the shared helpers). It also lacks `next`, `assert`, `xpcall`, `string.gmatch` and `string.rep`. The offline tests run on standard Lua and would not notice any of that, so `tests/lint_kahlua.py` (run first by `run_tests.py`) checks for it, and checks the translation files too: valid JSON, no duplicate keys, and no bare `%` (the game formats UI strings; write `%%` for a percent sign, `%1` for a placeholder). Calling a Java method an object doesn't have fails quietly inside `pcall` but dumps a stack trace to the log every time, and the tests' stand-ins can't notice, so `tests/check_api.py` (also run by `run_tests.py`) checks the method names called on body parts, body damage, players, stats, weapons, radio channels, vehicles, rooms and map symbols against the installed game's jar. Two more checks run with it: `tests/check_wraps.py` confirms every vanilla method the mods wrap (`DanTraits_Wrap`, `DanTraits_ScaleActionTime`) still exists in the installed game's Lua, which is what catches a game update renaming one; `tests/check_drivers.py` keeps the clock-order comment in `DanTraits.lua` honest against the `DanTraits_Every` registrations.
 
 ## Status and known issues
 
@@ -873,6 +890,7 @@ Version 1.4.0, Build 42, singleplayer only (multiplayer is untested and not supp
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
 - **Take A Bath And Shower** is supported: a bath or shower washes sun block off (`DanTraits_Bathing.lua`), Sensory Issues calms down three times as fast in a bath and twice in a shower (and being wet from it does not count against you), and laundry's hand-wash floors apply to the clothes you bathe in (the same file); both do nothing when it is not loaded. Its gradual body wash is what Germaphobe reads anyway, a wet body cools Multiple Sclerosis as it should, a hot bath warms an MS character (by design on both sides), and its bath salts keep their effects (a calming salt is the game's beta-blocker effect, a happy one its antidepressant effect, which an MDD character's own regimen overrides).
 - **Project A-Life** (NPCs on zombie bodies) is supported: its NPCs and its zombie steering leave a Hallucinations phantom alone (`DanTraits_ALife.lua`, which does nothing when A-Life is not loaded). NPC wounds are ordinary wounds, so blood, infection and wound care apply to them, and an NPC's blow, shot or graze counts as a weapon hit for Concussion and Brittle (the game itself does not report those). A house alarm no longer floods the error log through A-Life's NPC hearing (the alarm is not a game object, so it reaches A-Life as a sound with no source).
+- **Dynamic Traits and Expanded Moodles** loads alongside, with an adapter (`DanTraits_DTEM.lua`, which does nothing without it): its boot pass re-prices Keen Cook, Iron Gut, Resilient, Fear of Blood, Smoker and Cat's Eyes, and the adapter puts this mod's costs and effects back; its Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees are hidden at creation (this mod's stand in), and a character DTEM makes an alcoholic or caffeine addict in play gets this mod's trait instead. Still a poor fit: both mods have withdrawal, pass-outs and fractures, so pick one for addictions. Details and the in-game checks still owed in [docs/dynamic-traits.md](docs/dynamic-traits.md).
 - **Bandits** (and its add-ons) is supported: bandits, hostile or friendly, leave a Hallucinations phantom alone, and a bandit's hit counts as a weapon hit for Concussion (all of its damage on the head for a head hit) and Brittle (`DanTraits_Bandits.lua`, which does nothing when Bandits is not loaded). A bandit's head shot knocks a helmet off before the concussion roll, so the helmet does not help against that one.
 - **This Is Your Life** (the in-world character creator) is supported: its Personnel Assessment folder offers In Their 30s, shows only the ages until one is picked, hides the traits the chosen age cannot take, writes the age's extra cost under a trait's own, and holds Approve and Continue until an age is chosen, like the vanilla screen (`DanTraits_TIYL.lua`, which does nothing when This Is Your Life is not loaded). Its Quick Start and poster stories skip the trait screen, so those characters get the Default Age sandbox setting. Turning off its "Enable Custom Profession Screens" option brings back the vanilla trait screen, which works as normal.
 

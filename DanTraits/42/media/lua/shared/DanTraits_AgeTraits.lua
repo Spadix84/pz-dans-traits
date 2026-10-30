@@ -144,12 +144,7 @@ local OI_PAIN        = 20      -- pain on the part in the full cold and damp
 local OI_FLARE       = 0.5     -- weather factor crossing this upward: a notice, and the pain starts
 
 -- experience -------------------------------------------------------------------
-local function inList(list, perk)
-    for _, p in ipairs(list) do
-        if p == perk then return true end
-    end
-    return false
-end
+local inList = DanTraits_InList
 
 local function xpFactor(player, perk)
     local k = 1
@@ -229,7 +224,7 @@ local function wrapReading()
     end)
 end
 
-local function onAgeTraitsCreatePlayer(playerNum, player)
+local function onAgeTraitsCreate(player)
     if not player then return end
     local d = DanTraits_Data(player)
     local new = true
@@ -243,13 +238,7 @@ end
 -- aches --------------------------------------------------------------------------
 -- raise the part's additional pain toward target, by at most the ramp; never lower it
 local function hurtPart(player, name, target)
-    if target <= 0 then return end
-    pcall(function()
-        local part = player:getBodyDamage():getBodyPart(BodyPartType[name])
-        if not part then return end
-        local now = part:getAdditionalPain() or 0
-        if now < target then part:setAdditionalPain(math.min(100, target, now + ACHE_RAMP)) end
-    end)
+    DanTraits_PartPainAtLeast(player, name, target, ACHE_RAMP)
 end
 
 -- move a load and say so when it crosses a line; returns the new load
@@ -261,28 +250,12 @@ local function ache(player, before, now, startKey, badKey, easedKey)
     return now
 end
 
-local function heavyLoadLevel(player)
-    local level = 0
-    if MoodleType and MoodleType.HEAVY_LOAD then
-        pcall(function() level = player:getMoodles():getMoodleLevel(MoodleType.HEAVY_LOAD) or 0 end)
-    end
-    return level
-end
+local function heavyLoadLevel(player) return DanTraits_MoodleLevel(player, "HEAVY_LOAD") end
 
 -- raise a part's stiffness to at least this (the game eases it back by itself)
-local function stiffPart(player, name, floor)
-    if floor <= 0 then return end
-    pcall(function()
-        local part = player:getBodyDamage():getBodyPart(BodyPartType[name])
-        if part and (part:getStiffness() or 0) < floor then part:setStiffness(floor) end
-    end)
-end
+local stiffPart = DanTraits_PartStiffAtLeast
 
-local function bbDay()
-    local hours = 0
-    pcall(function() hours = getGameTime():getWorldAgeHours() or 0 end)
-    return math.floor(hours / 24)
-end
+local bbDay = DanTraits_WorldDay
 
 -- 0..1: how trained the core is this week; nothing for a while after a throw-out
 local function backConditioning(player, d)
@@ -481,11 +454,7 @@ local function updateOldInjury(player, d)
     local flaring = weather >= OI_FLARE
     if flaring and not d.oiFlare then notify(player, "UI_DanTraits_OldInjuryFlare") end
     d.oiFlare = flaring or nil
-    local floor = OI_STIFF_BASE + (OI_STIFF_FLARE - OI_STIFF_BASE) * weather
-    pcall(function()
-        local part = player:getBodyDamage():getBodyPart(BodyPartType[d.oiPart])
-        if part and (part:getStiffness() or 0) < floor then part:setStiffness(floor) end
-    end)
+    stiffPart(player, d.oiPart, OI_STIFF_BASE + (OI_STIFF_FLARE - OI_STIFF_BASE) * weather)
     if flaring then hurtPart(player, d.oiPart, OI_PAIN * weather) end
 end
 
@@ -497,8 +466,7 @@ end)
 
 local function updateBottomlessPit(player, d)
     if not hasTrait(player, "bottomlesspit") or DanTraits_Asleep(player) then return end
-    local level = 0
-    pcall(function() level = player:getMoodles():getMoodleLevel(MoodleType.HUNGRY) or 0 end)
+    local level = DanTraits_MoodleLevel(player, "HUNGRY")
     local unhappy = BP_UNHAPPY[level + 1] or 0
     if unhappy > 0 then DanTraits_StatAdd(player:getStats(), CharacterStat.UNHAPPINESS, unhappy) end
 end
@@ -593,9 +561,8 @@ end
 
 local function updateOldBones(player, d)
     if not hasTrait(player, "oldbones") or DanTraits_Asleep(player) then return end
-    local hours = 0
-    pcall(function() hours = getGameTime():getWorldAgeHours() or 0 end)
-    local today = math.floor(hours / 24)
+    local hours = DanTraits_WorldHours()
+    local today = math.floor(hours / 24)   -- DanTraits_WorldDay, from the same reading
     if d.obDay == today or hours - today * 24 < OB_HOUR then return end
     d.obDay = today
     local rain, cold = tomorrowLooks()
@@ -643,7 +610,7 @@ end
 
 wrapReading()
 Events.OnGameStart.Add(wrapReading)
-Events.OnCreatePlayer.Add(onAgeTraitsCreatePlayer)
+DanTraits_OnPlayerReady("AgeTraits", onAgeTraitsCreate, 55)   -- Reading Glasses' pair
 Events.AddXP.Add(onAgeTraitsAddXP)
 DanTraits_Every("minute", "AgeTraits", updateAgeTraitsMinute, 40)
 DanTraits_Every("frame", "AgeTraits", function(player, d) updateBadKneesFrame(player, d); updatePaceYourself(player, d); updateBadBackFrame(player, d) end, 40)

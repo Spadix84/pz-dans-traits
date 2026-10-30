@@ -14,14 +14,12 @@
 -- in for the next run (ISLaundryAction "sheet"). Greyed while it runs or
 -- once a sheet is in.
 require "DanTraits_Laundry"
+require "DanTraits_ClientUtil"
 
 DanTraits_Washer = DanTraits_Washer or {}
 local M = DanTraits_Washer
 
-local function is(obj, class)
-    local ok, res = pcall(function() return instanceof(obj, class) end)
-    return ok and res == true
-end
+local is = DanTraits_Is
 
 -- the washer among the clicked objects and the container that does the washing
 function M.washerOf(worldobjects)
@@ -74,16 +72,7 @@ local function running(obj)
     return on
 end
 
-local function greyOut(option, key)
-    option.notAvailable = true
-    pcall(function()
-        local tip = ISToolTip:new()
-        tip:initialise()
-        tip:setVisible(false)
-        tip.description = getText(key)
-        option.toolTip = tip
-    end)
-end
+local greyOut = DanTraits_GreyOut   -- DanTraits_ClientUtil.lua
 
 -- walk up, then one transfer per garment (the game's own action: room, weight, interruptions)
 function M.load(playerObj, washer, container, items)

@@ -11,8 +11,8 @@
 -- camping first aid kit with a random few things, a flashlight, a full lighter
 -- and a nearly empty bottle of fluid, two bars of soap, a tin opener, a
 -- painkiller bottle with one left, and a paper map of the whole route with
--- the tower circled. A main weapon and a belt weapon by profession (WEAPONS),
--- some traits better ones (BOOSTS). Foraging +2, First Aid +1, Lightfooted +1.
+-- the tower circled. A main weapon and a belt weapon by profession, some traits
+-- better ones (VC.weaponsFor, in VitalityChallenges_Kit.lua). Foraging +2, First Aid +1, Lightfooted +1.
 -- With the Vitality Project: its starting medication, one more of each daily
 -- drug, antidepressants and iron pills for the two traits without a kit, all
 -- in the fanny pack.
@@ -26,7 +26,6 @@
 require "VitalityChallenges_Core"
 require "VitalityChallenges_Kit"
 require "VitalityChallenges_Rules"
-require "ISUI/Maps/ISMapDefinitions"
 local VC = VitalityChallenges
 
 local START_X, START_Y = 965, 14833
@@ -35,7 +34,6 @@ local TOWER_REACH = 30                      -- tiles either side of the tower's 
 local MAP_ID = "VC_NomadMap"
 local MAP_BOUNDS = { 700, 1100, 13300, 15100 }   -- the paper map: start to tower with a margin
 
-local USED = { 0.6, 0.8 }                   -- a weapon from home: condition between these of its max
 local CLOTHES_DIRT = { 0.2, 0.35 }          -- per covered part: worn for days, not filthy
 local GLOVES_CONDITION = 0.45
 local BOOTS_CONDITION = 0.25
@@ -85,73 +83,6 @@ local FIRST_AID_EXTRAS = { "Base.Disinfectant", "Base.AlcoholWipes", "Base.Tweez
 local FIRST_AID_PICK = 3
 local ANTIBIOTICS_IN = 5                    -- one kit in five has them
 
--- main / belt by profession; main goes on the back when the back slot takes it, else in the hands
-local WEAPONS = {
-    ["base:unemployed"]         = { "Base.BaseballBat", "Base.KitchenKnife" },
-    ["base:fitnessinstructor"]  = { "Base.BaseballBat", "Base.KitchenKnife" },
-    ["base:tailor"]             = { "Base.BaseballBat", "Base.Scissors" },
-    ["base:burgerflipper"]      = { "Base.MeatCleaver", "Base.KitchenKnife" },
-    ["base:chef"]               = { "Base.MeatCleaver", "Base.KitchenKnife" },
-    ["base:burglar"]            = { "Base.Crowbar", "Base.Screwdriver" },
-    ["base:carpenter"]          = { "Base.Hammer", "Base.Screwdriver" },
-    ["base:constructionworker"] = { "Base.Shovel", "Base.Hammer" },
-    ["base:doctor"]             = { "Base.BaseballBat", "Base.Scalpel" },
-    ["base:nurse"]              = { "Base.BaseballBat", "Base.Scalpel" },
-    ["base:electrician"]        = { "Base.PipeWrench", "Base.Screwdriver" },
-    ["base:repairman"]          = { "Base.PipeWrench", "Base.Screwdriver" },
-    ["base:engineer"]           = { "Base.PipeWrench", "Base.Screwdriver" },
-    ["base:mechanics"]          = { "Base.TireIron", "Base.Wrench" },
-    ["base:metalworker"]        = { "Base.Sword_Scrap", "Base.BallPeenHammer" },
-    ["base:smither"]            = { "Base.CrudeSword", "Base.BallPeenHammer" },
-    ["base:farmer"]             = { "Base.GardenFork", "Base.HandScythe" },
-    ["base:rancher"]            = { "Base.GardenFork", "Base.HandScythe" },   -- the game has no pitchfork
-    ["base:fisherman"]          = { "Base.SpearCrafted", "Base.HuntingKnife" },
-    ["base:fireofficer"]        = { "Base.Axe", "Base.HandAxe" },
-    ["base:lumberjack"]         = { "Base.WoodAxe", "Base.HandAxe" },
-    ["base:parkranger"]         = { "Base.SpearCraftedFireHardened", "Base.HuntingKnife", mainFull = true },
-    ["base:policeofficer"]      = { "Base.Nightstick", "Base.Pistol" },
-    ["base:securityguard"]      = { "Base.Nightstick", "Base.KitchenKnife" },
-    ["base:veteran"]            = { "Base.Machete", "Base.Pistol" },
-}
-local DEFAULT_WEAPONS = { "Base.BaseballBat", "Base.KitchenKnife" }   -- a modded profession
-
--- a trait's head start, every item vanilla and at full condition: belt (a better
--- belt weapon; into the bag when the belt holds a pistol), give (a spare in the
--- bag), forge (the best weapon the character's Blacksmith level can make, FORGED),
--- ankle (in an ankle holster, unloaded). Faire Geek is the Vitality Project's and
--- never matches without it.
-local BOOSTS = {
-    { trait = "base:brawler", give = "Base.BaseballBat_Spiked" },
-    { trait = "base:baseballplayer", give = "Base.BaseballBat_Can" },
-    { trait = "base:hunter", belt = "Base.HuntingKnife" },
-    { trait = "base:handy", give = "Base.Hammer" },
-    { trait = "base:wildernessknowledge", give = "Base.HandAxe" },   -- Bushcrafter
-    { trait = "base:whittler", give = "Base.KnifePocket" },
-    { trait = "base:blacksmith", forge = true },                     -- Blacksmith Knowledge
-    { trait = "base:target_shooter", ankle = "Base.Revolver_Short" },
-    { trait = "renfaire", give = "Base.CrudeShortSword" },           -- Vitality's Renaissance Faire Geek
-}
-
--- what a smith can make at a starting Blacksmith level, best first: the forge
--- recipe's SkillRequired (recipes_blacksmith_blades.txt), each finished by an
--- assembly recipe that needs Maintenance 1 (the trait gives it)
-local FORGED = {
-    { 8, "Base.CrudeSword" },           -- Forge_Crude_Sword_Blade
-    { 6, "Base.CrudeShortSword" },      -- Forge_Crude_Shortsword_Blade
-    { 5, "Base.HuntingKnifeForged" },   -- Forge_Hunting_Knife_Blade
-    { 4, "Base.HandAxeForged" },        -- Forge_Hand_Axe_Head
-    { 3, "Base.LongCrudeKnife" },       -- Forge_Long_Crude_Blade
-    { 1, "Base.SmallKnife" },           -- Forge_Small_Knife
-    { 0, "Base.CrudeKnife" },           -- Forge_Crude_Blade
-}
-
-function VC.nomadForged(level)
-    for _, f in ipairs(FORGED) do
-        if level >= f[1] then return f[2] end
-    end
-    return FORGED[#FORGED][2]
-end
-
 local SKILLS = { PlantScavenging = 2, Doctor = 1, Lightfoot = 1 }
 
 -- with the Vitality Project: one more of each daily drug, and the two traits with no kit
@@ -184,14 +115,7 @@ local SLOTS = {
 
 -- the map ------------------------------------------------------------------------------
 
-LootMaps.Init[MAP_ID] = function(mapUI)
-    local mapAPI = mapUI.javaObject:getAPIv1()
-    MapUtils.initDirectoryMapData(mapUI, LootMaps.DEFAULT_MAP_DIRECTORY)
-    MapUtils.initDefaultStyleV3(mapUI)
-    mapAPI:setBoundsInSquares(MAP_BOUNDS[1], MAP_BOUNDS[2], MAP_BOUNDS[3], MAP_BOUNDS[4])
-    MapUtils.overlayPaper(mapUI)
-    VC.stampMap(mapUI, "Circle", TOWER_X, TOWER_Y, VC.MAP_RED)
-end
+VC.paperMap(MAP_ID, MAP_BOUNDS, { { x = TOWER_X, y = TOWER_Y } })   -- the tower circled
 
 local function paperMap(container)
     local map = VC.put(container, "Base.Map")
@@ -204,8 +128,6 @@ local function paperMap(container)
 end
 
 -- the kit ----------------------------------------------------------------------------
-
-local function used(item) VC.condition(item, USED[1] + (USED[2] - USED[1]) * ZombRandFloat(0, 1)) end
 
 local function tag(item, slot) if item then item:getModData()[TAG] = slot end end
 
@@ -246,37 +168,16 @@ local function loadPistol(gun)
     end)
 end
 
--- the profession's pair, after the traits: { main, belt, mainFull, beltFull, gifts, ankle }
-function VC.nomadWeapons(player)
-    local row = WEAPONS[VC.profession(player)] or DEFAULT_WEAPONS
-    local out = { main = row[1], belt = row[2], mainFull = row.mainFull == true, gifts = {} }
-    for _, b in ipairs(BOOSTS) do
-        if VC.hasTrait(player, b.trait) then
-            if b.belt then
-                if out.belt == "Base.Pistol" then out.gifts[#out.gifts + 1] = b.belt else out.belt, out.beltFull = b.belt, true end
-            end
-            if b.give then out.gifts[#out.gifts + 1] = b.give end
-            if b.forge then
-                local level = 0
-                pcall(function() level = player:getPerkLevel(Perks.Blacksmith) end)
-                out.gifts[#out.gifts + 1] = VC.nomadForged(level)
-            end
-            if b.ankle then out.ankle = b.ankle end
-        end
-    end
-    return out
-end
-
 local function arm(player, bag)
-    local w = VC.nomadWeapons(player)
+    local w = VC.weaponsFor(player)
     local inv = player:getInventory()
     local main = VC.put(inv, w.main)
-    if w.mainFull then VC.condition(main, 1) else used(main) end
+    if w.mainFull then VC.condition(main, 1) else VC.used(main) end
     tag(main, "main")
     VC.hold(player, main)
     if w.belt == "Base.Pistol" then VC.wear(player, "Base.HolsterSimple") end
     local belt = VC.put(inv, w.belt)
-    if w.belt == "Base.Pistol" then loadPistol(belt) elseif not w.beltFull then used(belt) end
+    if w.belt == "Base.Pistol" then loadPistol(belt) elseif not w.beltFull then VC.used(belt) end
     tag(belt, "belt")
     for _, t in ipairs(w.gifts) do VC.put(bag, t) end
     if w.ankle then
@@ -397,4 +298,4 @@ VC.define({
     end,
 })
 
-VC.nomad = { FOOD = FOOD, WEAPONS = WEAPONS, BOOSTS = BOOSTS, MED_EXTRA = MED_EXTRA, MAP_ID = MAP_ID }   -- tests
+VC.nomad = { FOOD = FOOD, MED_EXTRA = MED_EXTRA, MAP_ID = MAP_ID }   -- tests

@@ -21,6 +21,7 @@
 -- so it stays deterministic.
 
 require "VitalityCartridges/Core"
+require "VitalityCartridges/Common"
 require "SpiffBoy/Framework/Cartridges"
 require "SpiffBoy/Framework/GameTexts"
 require "SpiffBoy/Core/GameBase"
@@ -35,7 +36,7 @@ local Music = VitalityCartridges.SpiffoPup.Music
 local Pup = VitalityCartridges.SpiffoPup.Pup
 local Catch = VitalityCartridges.SpiffoPup.Catch
 local gameText = SpiffBoy.GameTexts.of("SpiffoPup")
-local SHADES = SpiffBoy.Cartridges.SHADES
+local Common = VitalityCartridges.Common
 
 local TICKS = 60                 -- ticks a second
 local OWN_TICKS = 150 * TICKS    -- the console's own clock: a game hour every 150 seconds
@@ -77,20 +78,13 @@ local EGG_X, EGG_Y = 82, 34
 
 local MODE_EGG, MODE_ROOM, MODE_CATCH, MODE_CAUGHT = "egg", "room", "catch", "caught"
 
-local function ink(i)
-    local s = SHADES[i]
-    return s.r, s.g, s.b
-end
+local ink = Common.ink
 
 local function readCount(v)
-    if type(v) ~= "number" or v < 0 then return 0 end
-    return math.min(math.floor(v), 9999)
+    return Common.readNumber(v, 9999)
 end
 
-local function readSound(save)
-    local o = save.options
-    return type(o) ~= "table" or o.sound ~= false
-end
+local readSound = Common.readSound
 
 -- the world's hours from Vitality, or nil when it gives none (or nonsense)
 local function readHours(v)
@@ -185,7 +179,7 @@ end
 
 function Game:enterCatch()
     self.mode = MODE_CATCH
-    self.catch = Catch.new(self.random)
+    self.catch = Catch.new(self.random, self.screen.width)
     self.catchTicks = 0
 end
 
@@ -284,13 +278,7 @@ end
 
 function Game:tickRoom(input)
     local pressed = input.pressed
-    if pressed.left then
-        self.selection = (self.selection - 2 + MENU_SIZE) % MENU_SIZE + 1
-        self:cue(Music.MOVE)
-    elseif pressed.right then
-        self.selection = self.selection % MENU_SIZE + 1
-        self:cue(Music.MOVE)
-    end
+    Common.moveMenu(self, MENU_SIZE, pressed.left, pressed.right, Music.MOVE)
     if pressed.a then self:act(self.selection) end
     self:wander()
 end

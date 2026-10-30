@@ -6,10 +6,7 @@ require "DanShared_Tooltip"
 
 local GREEN, GREY = { 0.45, 0.85, 0.45 }, { 0.7, 0.7, 0.7 }
 
-local function isFood(item)
-    local ok, res = pcall(instanceof, item, "Food")
-    return ok and res == true
-end
+local function isFood(item) return DanTraits_Is(item, "Food") end
 
 function DanTraits_CookTooltipLines(player, item)
     if not player or not item or not DanTraits_CookTier or not DanTraits_SandboxOn("CookingEnabled") then return nil end

@@ -92,11 +92,7 @@ local CK_DRIFT_HARD    = 20       -- hard training minutes today for the drift
 local TIER_KEYS = { "Home", "Hearty", "Chef" }
 DanTraits_CookTierKeys = TIER_KEYS
 
-local function nowHours()
-    local h = 0
-    pcall(function() h = getGameTime():getWorldAgeHours() end)
-    return tonumber(h) or 0
-end
+local nowHours = DanTraits_WorldHours
 
 local function ckData(player)
     local d = DanTraits_Data(player)
@@ -366,9 +362,8 @@ local function stitchMinute(player, d, asleep)
     if (d.ckStitch or 0) > 0 then d.ckStitch = d.ckStitch - 1 end
     if (d.ckStitchCool or 0) > 0 then d.ckStitchCool = d.ckStitchCool - 1 return end
     if asleep or not exerting(player) then return end
-    local level = 0
-    pcall(function() level = player:getMoodles():getMoodleLevel(MoodleType.FOOD_EATEN) or 0 end)
-    local chance = CK_STITCH_CHANCE[math.min(4, tonumber(level) or 0)]
+    local level = DanTraits_MoodleLevel(player, "FOOD_EATEN")
+    local chance = CK_STITCH_CHANCE[math.min(4, level)]
     if not chance or not DanTraits_Roll(chance) then return end
     pcall(function()
         local part = player:getBodyDamage():getBodyPart(BodyPartType.Torso_Lower)

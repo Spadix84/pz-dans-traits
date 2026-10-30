@@ -97,11 +97,7 @@ DanTraits_AddHook("impact", function(_, player, chance)
 end)
 
 -- the bones: a slow drift down, held by exercise; calcium puts some back
-local function worldDay()
-    local hours = 0
-    pcall(function() hours = getGameTime():getWorldAgeHours() or 0 end)
-    return math.floor(hours / 24)
-end
+local worldDay = DanTraits_WorldDay
 
 local function updateBoneMinute(player, d)
     d.brBone = d.brBone or BONE_START

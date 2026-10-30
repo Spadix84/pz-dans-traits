@@ -277,9 +277,8 @@ local function updateConcussionFrame(player)
     local st = stateOf(player)
     local head = headPart(player)
     if head then pcall(function() st.headWas = head:getHealth() end) end
-    local okS, sprinting = pcall(function() return player:isSprinting() end)
-    local okR, running = pcall(function() return player:isRunning() end)
-    if (okS and sprinting) or (okR and running) then st.ran = true end
+    local f = DanTraits_Frame(player)   -- the frame's movement snapshot (DanTraits.lua)
+    if f.sprinting or f.running then st.ran = true end
 end
 
 -- slower endurance recovery, through the stat delta pipeline (DanTraits_Util.lua)

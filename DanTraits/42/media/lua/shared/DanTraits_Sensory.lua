@@ -271,10 +271,7 @@ DanTraits_SensoryRollFoods = rollFoods
 -- only food is judged: asked about anything else (the refuseFood hook runs on
 -- every right-clicked item) a food method would be called on an item without
 -- it, which B42 logs as an error even inside pcall
-local function isFood(item)
-    local ok, res = pcall(instanceof, item, "Food")
-    return ok and res == true
-end
+local function isFood(item) return DanTraits_Is(item, "Food") end
 
 -- "safe", "disliked" or nil, and the group that decided it (or "learned")
 local function foodVerdict(player, item)
@@ -715,8 +712,7 @@ end
 function DanTraits_SensoryStim(player)
     if not player or not hasTrait(player, "sensory") then return 0 end
     local d = DanTraits_Data(player)
-    local now = 0
-    pcall(function() now = getGameTime():getWorldAgeHours() end)
+    local now = DanTraits_WorldHours()
     local k = (d.siStimAt and now - d.siStimAt < S.STIM_AGAIN_H) and 0.5 or 1
     d.siStimAt = now
     relieve(player, d, S.STIM_LOAD * k)

@@ -4,8 +4,6 @@ require "DanTraits"
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
-local DRINK = DanTraits_DRINK           -- the named thresholds (DanTraits_Util.lua)
-local intoxOf = DanTraits_Intoxication  -- 0..1 intoxication (the raw stat is 0..100)
 
 -- Major Depressive Disorder (trait id "spiraling") ---------------------------
 -- Two things run all the time: pain and stress drag mood down. On top of
@@ -98,9 +96,7 @@ DanTraits_MddRegularity = mddRegularity
 -- drinking enough to matter: past tipsy, and past what this drinker's tolerance shrugs off
 local function mddDrinking(player)
     local tolerance = DanTraits_AlcoholTolerance and DanTraits_AlcoholTolerance(player) or 0
-    local drinking = false
-    pcall(function() drinking = intoxOf(player) > DRINK.tipsy + MDD_TOLERANCE_NEEDS * tolerance end)
-    return drinking
+    return DanTraits_IsTipsy(player, MDD_TOLERANCE_NEEDS * tolerance)
 end
 
 -- floor reduction from the things that help, and a 0..1 "healthy habits" score
@@ -134,9 +130,7 @@ function DanTraits_MddOnPill(player)
     if not hasTrait(player, "spiraling") then return false end
     local d = mddData(player)
     local dose = MDD_MED_PILL_DAYS
-    pcall(function()
-        if intoxOf(player) > DRINK.tipsy then dose = dose * 0.5 end
-    end)
+    if DanTraits_IsTipsy(player) then dose = dose * 0.5 end
     d.mddMedDays = math.min(MDD_MED_MAX_DAYS, (d.mddMedDays or 0) + dose)
     -- no instant lift: the vanilla effect is cancelled for this trait
     pcall(function() player:setDepressEffect(0) end)

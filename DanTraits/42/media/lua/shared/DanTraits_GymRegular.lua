@@ -59,15 +59,7 @@ local function onGymRegularCreate(player)
     if applyGymRegular(player, target) then d.gymApplied = true end
 end
 
-local function onGymRegularCreatePlayer(playerNum, player)
-    onGymRegularCreate(player)
-end
-
--- Second chance at game start, in case the fitness tables were not ready
--- when the character was created.
-local function onGymRegularGameStart()
-    onGymRegularCreate(getSpecificPlayer(0))
-end
-
-Events.OnCreatePlayer.Add(onGymRegularCreatePlayer)
-Events.OnGameStart.Add(onGymRegularGameStart)
+-- A player-ready step (DanTraits.lua): on creation, and a second chance at
+-- game start in case the fitness tables were not ready when the character
+-- was created.
+DanTraits_OnPlayerReady("GymRegular", onGymRegularCreate, 60)

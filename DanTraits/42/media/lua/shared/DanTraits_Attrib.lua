@@ -55,8 +55,7 @@ local function copy(buf)
 end
 
 local function gameMinute()
-    local ok, h = pcall(function() return getGameTime():getWorldAgeHours() end)
-    return math.floor(((ok and h) or 0) * 60)
+    return math.floor(DanTraits_WorldHours() * 60)   -- DanTraits_Util.lua, loaded right after this file
 end
 
 -- the bucket for the current game minute; a new minute takes `start` (the

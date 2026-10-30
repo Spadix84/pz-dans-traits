@@ -10,10 +10,10 @@
 -- opens the hats, START switches the sound) and the hats (the eight
 -- treasures, how many of each; A wears one or takes it off). News (hatched,
 -- grown, a hat found, the goal met) waits on the home screen until a press.
--- Any press while there is something unsaved saves the totals, the stage,
--- the hats, today's count and the options (the console allows a save only on
--- a press): steps counted since the last save are kept only while the
--- console stays on.
+-- Any press while there is something unsaved saves the totals, the hats,
+-- today's count and the options (the console allows a save only on a press;
+-- the stage is not saved, init works it out from the steps): steps counted
+-- since the last save are kept only while the console stays on.
 --
 -- For the Vitality Project. self.vitality = {} from init. Vitality writes
 -- from outside, once a game minute, while the console is on with this game,
@@ -27,6 +27,7 @@
 -- deterministic.
 
 require "VitalityCartridges/Core"
+require "VitalityCartridges/Common"
 require "SpiffBoy/Framework/Cartridges"
 require "SpiffBoy/Framework/GameTexts"
 require "SpiffBoy/Core/GameBase"
@@ -37,7 +38,7 @@ VitalityCartridgesSpiffoWalkGame = SpiffBoyGameBase:derive("VitalityCartridgesSp
 local Game = VitalityCartridgesSpiffoWalkGame
 local Music = VitalityCartridges.SpiffoWalk.Music
 local gameText = SpiffBoy.GameTexts.of("SpiffoWalk")
-local SHADES = SpiffBoy.Cartridges.SHADES
+local Common = VitalityCartridges.Common
 
 local TICKS = 60                 -- ticks a second
 
@@ -95,15 +96,9 @@ local GRID_COLS = 4
 local MODE_HOME, MODE_HATS = "home", "hats"
 local BUTTONS = { "up", "down", "left", "right", "a", "b", "start" }
 
-local function ink(i)
-    local s = SHADES[i]
-    return s.r, s.g, s.b
-end
+local ink = Common.ink
 
-local function readNumber(v, hi)
-    if type(v) ~= "number" or v < 0 then return 0 end
-    return math.min(math.floor(v), hi)
-end
+local readNumber = Common.readNumber
 
 local function readHats(save)
     local hats = {}
@@ -343,7 +338,6 @@ end
 function Game:saveAll()
     local save = self.save
     save.steps = self.steps
-    save.stage = self.stage
     local hats = {}
     for i = 1, #HATS do hats[i] = self.hats[i] end
     save.hats = hats

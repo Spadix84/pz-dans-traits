@@ -370,8 +370,8 @@ function BU_ContainerList:prerender()
     local row = self:rowUnderMouse()
     local obj = row and row.object or nil
     if obj ~= self.lit then
-        self.window:highlight(self.lit, false)
-        self.window:highlight(obj, true)
+        S.highlight(self.window.playerNum, self.lit, false)
+        S.highlight(self.window.playerNum, obj, true)
         self.lit = obj
     end
 end
@@ -481,7 +481,7 @@ function BU_Window:scan()
     self.zone = S.zone(self.character, S.sourceSquare(src))
     self.rows = S.containers(self.zone, src.container, self.character)
     if src.kind == "object" and src.row then
-        src.row = S.row(src.object, src.container, BU.parseKey(src.key).index, src.object:getSquare(), self.zone, self.character)
+        src.row = S.row(src.object, src.container, src.object:getSquare(), self.zone, self.character) or src.row
         src.row.pinned = true
         table.insert(self.rows, 1, src.row)
     end
@@ -547,18 +547,15 @@ function BU_Window:tagLabel(row)
     return table.concat(names, ", ")
 end
 
+-- the edits to a container's categories and off-limits flag are the core's
+-- (BU.toggleTag and the rest), shared with the context menus (BaseUnloader_Menu)
 function BU_Window:toggleTag(row, cat)
-    local store = BU.store()
-    local on = not BU.hasTag(store.tags, row.key, cat)
-    BU.setTag(store.tags, row.key, cat, on)
-    if on then BU.noteTags(store, row.key) end   -- the set being composed, not what a tick-off left
+    BU.toggleTag(BU.store(), row.key, cat)
     self:fill()
 end
 
 function BU_Window:tagFromContents(row)
-    local store = BU.store()
-    BU.tagFromContents(store.tags, row.key, row.cats)
-    BU.noteTags(store, row.key)
+    BU.tagByContents(BU.store(), row.key, row.cats)
     self:fill()
 end
 
@@ -581,7 +578,7 @@ function BU_Window:autoTag()
 end
 
 function BU_Window:clearTags(row)
-    BU.store().tags[row.key] = nil
+    BU.clearTags(BU.store(), row.key)
     self:fill()
 end
 
@@ -721,7 +718,7 @@ function BU_Window:isOffLimits(row)
 end
 
 function BU_Window:setOffLimits(row, on)
-    BU.store().offLimits[row.key] = on and true or nil
+    BU.setOffLimits(BU.store(), row.key, on)
     self:fill()
 end
 
@@ -862,26 +859,7 @@ function BU_Window:rename(row)
 end
 
 function BU_Window:onRenamed(button, playerNum, row)
-    if button.internal ~= "OK" then return end
-    local text = button.parent.entry:getText() or ""
-    if text == row.kindLabel then text = "" end
-    S.rename(row.container, row.key, text)
-    pcall(function()
-        local pdata = getPlayerData(playerNum)
-        pdata.playerInventory:refreshBackpacks()
-        pdata.lootInventory:refreshBackpacks()
-    end)
-    self:scan()
-end
-
--- highlight -----------------------------------------------------------------------------------------------------
-
-function BU_Window:highlight(obj, on)
-    if not obj then return end
-    pcall(function()
-        obj:setHighlighted(self.playerNum, on, false)
-        if on then obj:setHighlightColor(self.playerNum, getCore():getObjectHighlitedColor()) end
-    end)
+    if S.renamed(button, playerNum, row) then self:scan() end
 end
 
 -- the frame --------------------------------------------------------------------------------------------------------
@@ -919,7 +897,7 @@ function BU_Window:render()
 end
 
 function BU_Window:close()
-    self:highlight(self.containerList and self.containerList.lit, false)
+    S.highlight(self.playerNum, self.containerList and self.containerList.lit, false)
     BU_Window.last[self.playerNum] = { x = self:getX(), y = self:getY(), w = self:getWidth(), h = self:getHeight() }
     ISCollapsableWindow.close(self)
     self:removeFromUIManager()
