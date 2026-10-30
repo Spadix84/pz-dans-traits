@@ -16,22 +16,29 @@ require "ISUI/ISScrollingListBox"
 require "ISUI/ISRichTextPanel"
 require "XpSystem/ISUI/ISCharacterInfoWindow"
 
-local GD_LIST_W   = 190     -- px, the page list
+local GD_LIST_MIN = 120     -- px, the page list: as wide as its longest title, within these
+local GD_LIST_MAX = 220
+local GD_TEXT_MIN = 260     -- px, the text column at least (the window widens for it;
+                            -- vanilla's tabs only ever widen the window, so keep it modest)
 local GD_GAP      = 6       -- px between the list and the text
-local GD_MIN_W    = 760     -- the window grows to at least this for the tab
-local GD_MIN_H    = 540
-local GD_IMAGE_W  = 460     -- px, a page's picture
+local GD_H        = 340     -- the window's height on this tab (exact, as vanilla's info
+                            -- and health tabs set theirs; the text scrolls). All of these
+                            -- are vanilla pixels: Neat Rocco multiplies them by its font
+                            -- factor, so a size that looks modest in vanilla stays in
+                            -- proportion with the other tabs there.
+local GD_IMAGE_W  = 460     -- px, a page's picture at most (narrower in a narrow column)
 local GD_ICON     = "Item_Book"   -- the tab's icon on Neat Rocco's bar
 local GD_HEAD_RGB = "<RGB:0.95,0.78,0.45>"
 
 local function t(key) return getText("UI_DanTraits_guide_" .. key) end
 
--- a page's lines as the rich text panel wants them
-local function richText(page)
+-- a page's lines as the rich text panel wants them; the picture no wider than imageW
+local function richText(page, imageW)
     local out = {}
     local tex = getTexture("media/ui/Guide/" .. page.id .. ".png")
     if tex then
-        local w, h = GD_IMAGE_W, GD_IMAGE_W * 9 / 16
+        local w = math.max(120, math.min(GD_IMAGE_W, imageW or GD_IMAGE_W))
+        local h = w * 9 / 16
         pcall(function()
             local tw, th = tex:getWidth(), tex:getHeight()
             if tw and th and tw > 0 then h = math.floor(w * th / tw + 0.5) end
@@ -83,7 +90,12 @@ end
 function DanTraitsGuideView:createChildren()
     ISPanelJoypad.createChildren(self)
     local fontHgt = getTextManager():getFontHeight(UIFont.Small)
-    self.list = ISScrollingListBox:new(0, 0, GD_LIST_W, self.height)
+    local widest = 0
+    for _, page in ipairs(self.pages) do
+        widest = math.max(widest, getTextManager():MeasureStringX(UIFont.Small, page.title or ""))
+    end
+    self.listW = math.max(GD_LIST_MIN, math.min(GD_LIST_MAX, widest + 16))
+    self.list = ISScrollingListBox:new(0, 0, self.listW, self.height)
     self.list:initialise()
     self.list:instantiate()
     self.list.itemheight = fontHgt + 8
@@ -92,7 +104,7 @@ function DanTraitsGuideView:createChildren()
     self.list:setOnMouseDownFunction(self, self.onPagePicked)
     for _, page in ipairs(self.pages) do self.list:addItem(page.title, page) end
     self:addChild(self.list)
-    self.text = ISRichTextPanel:new(GD_LIST_W + GD_GAP, 0, self.width - GD_LIST_W - GD_GAP, self.height)
+    self.text = ISRichTextPanel:new(self.listW + GD_GAP, 0, self.width - self.listW - GD_GAP, self.height)
     self.text:initialise()
     self.text:instantiate()
     self.text.marginLeft, self.text.marginRight = 12, 12
@@ -116,8 +128,10 @@ function DanTraitsGuideView:showPage(id)
     end
     if not page or not self.text then return end
     self.shown = page.id
+    -- the picture fits the text column (margins and the scroll bar off)
+    local imageW = (self.text.width or 0) - (self.text.marginLeft or 0) - (self.text.marginRight or 0) - 16
     DanTraits_Guard("guide page", function()
-        self.text:setText(richText(page))
+        self.text:setText(richText(page, imageW))
         self.text:paginate()
         if self.text.setYScroll then self.text:setYScroll(0) end
     end)
@@ -127,20 +141,42 @@ function DanTraitsGuideView:onPagePicked(item)
     if item then self:showPage(item.id) end
 end
 
+-- the window stays on the screen (it sits at the right edge for most players,
+-- and a wider tab would push its far side, and Neat Rocco's close button with
+-- it, off the edge). The window is the top of the parent chain: vanilla puts
+-- the view in a tab panel in the window, Neat Rocco straight in the window.
+local function keepOnScreen(view)
+    local win = view.parent
+    while win and win.parent do win = win.parent end
+    if not (win and win.getX and win.setX and getCore) then return end
+    pcall(function()
+        local core = getCore()
+        local sw, sh = core:getScreenWidth(), core:getScreenHeight()
+        local x, y = win:getX(), win:getY()
+        local nx = math.max(0, math.min(x, sw - win:getWidth()))
+        local ny = math.max(0, math.min(y, sh - win:getHeight()))
+        if nx ~= x then win:setX(nx) end
+        if ny ~= y then win:setY(ny) end
+    end)
+end
+
 -- the children follow the tab's size (the window can grow for another tab)
 function DanTraitsGuideView:prerender()
     ISPanelJoypad.prerender(self)
-    -- the window fits the tab, as vanilla's protection tab does (first, so the
-    -- children are laid out for the grown size in the same frame)
-    self:setWidthAndParentWidth(math.max(self.width, GD_MIN_W))
-    self:setHeightAndParentHeight(math.max(self.height, GD_MIN_H))
+    -- the window fits the tab, as vanilla's tabs do: wide enough for the list
+    -- and a GD_TEXT_MIN column (vanilla widens, never narrows), exactly GD_H
+    -- tall (first, so the children are laid out for that size in the same frame)
+    local listW = self.listW or GD_LIST_MIN
+    self:setWidthAndParentWidth(math.max(self.width, listW + GD_GAP + GD_TEXT_MIN))
+    self:setHeightAndParentHeight(GD_H)
     if self.list and (self.laidW ~= self.width or self.laidH ~= self.height) then
         self.laidW, self.laidH = self.width, self.height
         self.list:setHeight(self.height)
-        self.text:setX(GD_LIST_W + GD_GAP)
-        self.text:setWidth(self.width - GD_LIST_W - GD_GAP)
+        self.text:setX(listW + GD_GAP)
+        self.text:setWidth(self.width - listW - GD_GAP)
         self.text:setHeight(self.height)
-        DanTraits_Guard("guide relayout", function() self.text:paginate() end)
+        self:showPage(self.shown)       -- set again: the picture width follows the column
+        keepOnScreen(self)
     end
 end
 
@@ -187,8 +223,12 @@ function DanTraits_OpenGuide(playerNum, pageId)
     return DanTraits_Guard("open guide", function()
         local window = getPlayerInfoPanel(playerNum or 0)
         if not window or not window.panel then return end
+        -- as vanilla's toggle: closing takes the window out of the UI manager
+        if not (window.getIsVisible and window:getIsVisible()) then
+            window:setVisible(true)
+            if window.addToUIManager then window:addToUIManager() end
+        end
         window.panel:activateView(t("Tab"))
-        window:setVisible(true)
         local view = window.danTraitsGuideView
         if view and pageId then view:showPage(pageId) end
     end)

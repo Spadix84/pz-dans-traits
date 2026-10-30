@@ -13,7 +13,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   home, burnout, blood and wounds, knocks and sun, medication, cooking, fitness, laundry,
   reading, the conditions at a glance, age, the companion mods) and What's New last. Left the
   page list, right the page as rich text; a page shows `media/ui/Guide/<id>.png` above its text
-  when the file exists (drawn 460 px wide, any aspect). Overviews and need-to-know only, in
+  when the file exists (drawn to fit the text column, at most 460 px wide, any aspect). The tab keeps the window modest: the page list as wide as its longest title, a text column of at least 260 px, 340 px tall (vanilla pixels, which Neat Rocco scales with its font factor like every other tab), and it nudges the window back on screen if it would hang off the edge, Neat Rocco's close button with it. Overviews and need-to-know only, in
   plain English (the data file is not translated; the tab name and buttons are). The old field
   guide (removed 2026-10-18 as bloated) is not revived: this is the two-paragraph version.
   Neat Rocco's tab bar gets a book icon. `DanTraits_OpenGuide(playerNum, pageId)` opens it.
