@@ -34,6 +34,9 @@
 -- times from the stitch time); under a bandage the times are set directly.
 -- A splint heals a fracture at 5e-5 x splintFactor a tick, (level + 1) / 2
 -- from ISSplint; unsplinted 5e-6.
+-- The dressingWear hook: when a bandage's life fell since last minute, a
+-- subscriber returns the life to accept instead of putting it back
+-- (DanTraits_WoundExpansion.lua: a filthy wound under it, a tear); nil puts it back.
 -- ISSplint.complete is wrapped through DanTraits_Wrap (DanTraits.lua), tag
 -- "woundcare-splint-set", so Fear of Blood can layer on the splint action too;
 -- ISStitch.complete likewise, tag "woundcare-stitch".
@@ -240,7 +243,11 @@ local function updatePart(player, d, part, name, wet, summary)
         -- bandage spent in minutes) is put back; a higher life is a new bandage
         local was = d.wcLife[name]
         if was and life < was then
-            life = was
+            -- unless another mod spent or tore it on purpose: the dressingWear hook returns the life to
+            -- accept (Wound Expansion: a filthy wound spoils the dressing over it, a tear halves it)
+            local accept = tonumber(DanTraits_RunHooks("dressingWear", nil, player, part, life, was))
+            if accept and accept < was then life = math.max(life, math.min(was, accept))
+            else life = was end
             pcall(function() part:setBandageLife(life) end)
         end
         if life > 0 then
@@ -443,7 +450,7 @@ DanTraits_ExtraCommands.badset = function(player, args)
 end
 
 DanTraits_Every("minute", "WoundCare", updateWoundMinute, 22)
-DanTraits_Every("frame", "WoundCare", function(player)
-    if sandboxOn() then updateWoundFrame(player, wcData(player)) end
+DanTraits_Every("frame", "WoundCare", function(player, d)
+    if sandboxOn() then updateWoundFrame(player, d) end
 end, 22)
 Events.OnWeaponSwing.Add(onSwing)

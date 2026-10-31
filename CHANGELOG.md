@@ -306,8 +306,53 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   matched by view). Both trait descriptions point at the tab. Tests: test_notes, test_migraine 8b,
   test_sensory 12b.
 
+- **Wound Expansion compatibility** (2026-10-31, asked for on the Workshop page; `DanTraits_WoundExpansion.lua`,
+  a `dressingWear` hook in `DanTraits_WoundCare.lua`, sandbox option **Wound Expansion Compatibility**
+  (`WoundExpansionCompat`, on); `tests/test_woundexpansion.lua`). Read at Wound Expansion 1.1.3; nothing
+  happens without it. Where both mods model the same thing this mod's version runs and theirs stands down,
+  each only while the system here that takes it over is on: its Concussion (ConcussionEnabled), its Reopened
+  and PoorlyStitched (WoundCareEnabled), its SepticFever (InfectionEnabled) go into its own OFF set (its
+  minute sweep removes them and refuses new ones; its allow<Id> switches are respected, the set is only added
+  to); with InfectionEnabled its necrosis-from-infection line is put above this mod's 0..10 levels (necrosis
+  from a tourniquet or severe frostbite is still its own), its infection roll base is put out of reach (its
+  flag only ever flickered against this mod's clearing; its Inflamed warning still builds on a dirty or
+  debris wound and clears when cleaned), and its sickness minute (`WE.Effects.onMinute`) is replaced by the
+  same arithmetic without the infected-wound term (low health, necrosis, maggots and septic fever still count
+  as its own). Its reader starts its OFF set over at OnGameStart and OnServerStarted, so the settings are
+  applied there, a frame later, and at the top of its own minute (the replaced function), which also covers a
+  dedicated server. Joined up both ways: its Dirty condition zeroes a bandage's life and Torn Bandage halves
+  it, which wound care here used to put back every minute (a notice a minute from each side); the new
+  `dressingWear` hook hands wound care the life to accept (0 under a filthy wound, the halved life after a
+  tear; vanilla's own drain is still undone). Its dirt scales the infection hazard here (Filthy x3, rinsed with
+  water alone x1.5, debris of its own x2; glass and bullets were already counted as lodged). Its iodine holds
+  the part's alcohol level up for a day, which infection here reads as a day's cleaning. Its blood bag
+  (`WE_ApplyItemAction`, kind "transfusion") restores health as its own and, with Blood Loss on, puts 0.1 of
+  blood volume and red cells back. Its tourniquet and hemostatic gauze act on bleeding time, which is what
+  blood loss here reads, so they work as they are; an avulsion's bleeding time of 20 bleeds fast here as it
+  would in vanilla; its internal bleeding drains health, not blood, and is left to it. Everything else of its
+  own is left alone. Not yet play-tested with it loaded.
+
 ### Changed
 
+- **The frame path, lighter** (2026-10-31, from a Workshop performance report; `DanTraits.lua`,
+  `DanTraits_Util.lua`, `DanTraits_Concussion.lua`, and the frame systems of Blood, Wound Care, Smoker,
+  Dependent, Strain and Alcohol). The game's profiler put the mod's `OnPlayerUpdate` handler (core's
+  frame driver and the frame systems it runs; the profiler credits it to `DanTraits_Attrib.lua`, the
+  file that wraps every handler for the dashboard) at about 0.17 ms a frame standing still, the most
+  of any mod loaded. Each frame it asked the game after the same dozen traits (the Age band alone up
+  to four lookups, twice a frame), built a guard tag string for each of the twenty-odd systems and
+  hooks it ran, made a closure for every guarded game call, read each stat's maximum afresh and looked
+  the head's body part up again. Now: trait answers are kept per player while the frame driver runs,
+  refreshed at every minute tick and whenever the mod itself sets a trait (`DanTraits_SetTrait`,
+  `DanTraits_TraitsChanged`; a trait another mod gives mid-minute reaches the frame systems at most a
+  game minute late, and everything outside the frame driver still asks the game); the guard tags are
+  built once at registration (`DanTraits_Every`, `DanTraits_RunHooks`); the movement snapshot and the
+  other per-frame game calls are guarded without closures; a stat's maximum is read once
+  (`DanTraits_StatMax`); Concussion keeps the head part and reads the clock only in a car or with a
+  crash pending; Smoker's and the Alcoholic's irritability holds, and Blood's and Wound Care's frames,
+  skip the game calls they did not need. The systems themselves behave as before; the 109 offline
+  tests pass unchanged. The head of `DanTraits_Attrib.lua` now says why the profiler shows the whole
+  mod under that file. Not re-profiled in the game yet.
 - **Age 2.0: the bands** (step 2, 2026-10-31; `DanTraits_Age.lua`, `media/scripts/DanTraits.txt`;
   `tests/test_age.lua`, `test_agetraits.lua`, `test_client.lua`, `test_xpstack.lua`). After a long
   play-test: the 40s felt like the best pick, so In Their 40s costs 0 (was -2, gave 2); the 20s were

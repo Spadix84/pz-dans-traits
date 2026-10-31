@@ -266,7 +266,7 @@ DanTraits_Every("ten", "Dependent", updateDependent, 10)
 
 -- per frame: hold the irritability
 DanTraits_Every("frame", "Dependent", function(player, d)
-    if d then holdAnger(player:getStats(), d) end
+    if d and (d.alcAnger or 0) > 0 then holdAnger(player:getStats(), d) end
 end, 40)
 
 local function withdrawalOf(player, d)

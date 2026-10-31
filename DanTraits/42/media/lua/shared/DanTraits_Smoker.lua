@@ -569,10 +569,9 @@ local function updateSmokerMinute(player, d)
 end
 
 -- per frame: hold the irritability
-local function updateSmokerFrame(player)
-    local d = player:getModData().DanTraits
-    if not d then return end
-    holdAnger(player:getStats(), d)
+local function updateSmokerFrame(player, d)
+    d = d or player:getModData().DanTraits   -- the driver hands it over; the tests call this bare
+    if d and (d.nicAnger or 0) > 0 then holdAnger(player:getStats(), d) end
 end
 DanTraits_updateSmokerFrame = updateSmokerFrame
 

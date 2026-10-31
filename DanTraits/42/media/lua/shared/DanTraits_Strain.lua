@@ -493,8 +493,8 @@ end
 -- knocked down: watched every frame (it is over in seconds)
 local function updateStrainFrame(player, d)
     if not strainOn() then return end
-    local down = false
-    pcall(function() down = player:isKnockedDown() == true end)
+    local okD, down = pcall(player.isKnockedDown, player)
+    down = okD and down == true
     if down and not d.stKnocked then DanTraits_StrainAdd(player, "knocked", ST.KNOCK, true) end
     d.stKnocked = down or nil
 end

@@ -51,7 +51,16 @@ require "DanTraits_Food"
 -- trait was added (registries and scripts are read at boot): say so once
 -- and treat it as not taken. (B42 has no string HasTrait fallback; calling a
 -- missing method inside pcall still dumps a stack trace to the log.)
+--
+-- The frame systems ask after the same dozen traits every frame (the Age band
+-- alone is up to four lookups, twice a frame), and each ask is a guarded game
+-- call. While the frame driver runs (traitMemoOn) the answers are kept per
+-- player and reused until the minute driver next runs or the mod itself sets
+-- a trait (DanTraits_SetTrait, DanTraits_TraitsChanged); from anywhere else
+-- the game is asked. A trait another mod gives mid-minute reaches the frame
+-- systems at most a game minute late; the minute systems always see it.
 local missingTraitWarned = {}
+local traitMemo, traitMemoOn = {}, false   -- player -> { key = true | false }
 local function hasTrait(player, key)
     if not player then return false end
     local entry = DanTraitsRegistry and DanTraitsRegistry[key]
@@ -62,8 +71,18 @@ local function hasTrait(player, key)
         end
         return false
     end
-    local ok, res = pcall(function() return player:hasTrait(entry) end)
-    return ok and res == true
+    local memo = traitMemoOn and traitMemo[player]
+    if memo then
+        local known = memo[key]
+        if known ~= nil then return known end
+    end
+    local ok, res = pcall(player.hasTrait, player, entry)   -- the method itself: no closure a frame
+    local has = ok and res == true
+    if traitMemoOn then
+        if not memo then memo = {}; traitMemo[player] = memo end
+        memo[key] = has
+    end
+    return has
 end
 
 -- The one guarded call. Returns what pcall returns (ok, result). The first
@@ -425,6 +444,7 @@ end
 -- a trait was added or removed: the next lookup walks the list again
 function DanTraits_TraitsChanged(player)
     vanillaCache.set = nil
+    if player then traitMemo[player] = nil else traitMemo = {} end
 end
 DanTraits_OnPlayerReady("traits", DanTraits_TraitsChanged, 30)
 
@@ -453,11 +473,16 @@ function DanTraits_AddHook(name, fn, order)
     while at >= 1 and (hookOrder[list[at]] or 100) > order do at = at - 1 end
     table.insert(list, at + 1, fn)
 end
+local hookTags = {}   -- name -> { [i] = "hook:name#i" }: built once, not on every run (the frame pipeline runs hooks every frame)
 function DanTraits_RunHooks(name, value, ...)
     local list = DanTraits_Hooks[name]
     if not list then return value end
-    for i, fn in ipairs(list) do
-        local ok, res = DanTraits_Guard("hook:" .. name .. "#" .. i, fn, value, ...)
+    local tags = hookTags[name]
+    if not tags then tags = {}; hookTags[name] = tags end
+    for i = 1, #list do
+        local tag = tags[i]
+        if not tag then tag = "hook:" .. name .. "#" .. i; tags[i] = tag end
+        local ok, res = DanTraits_Guard(tag, list[i], value, ...)
         if ok and res ~= nil then value = res end
     end
     return value
@@ -647,6 +672,9 @@ function DanTraits_Every(cadence, label, fn, order, opts)
     label = tostring(label or "")
     order = order or 100
     local entry = { cadence = cadence, label = label, fn = fn, order = order }
+    -- the guard tags, built once here rather than on every run (the frame driver runs each entry every frame)
+    entry.tag = label .. " (" .. cadence .. ")"
+    entry.tagHas, entry.tagClear = entry.tag .. " trait", entry.tag .. " clear"
     local trait = opts and opts.trait
     if type(trait) == "string" then
         local key = trait
@@ -667,18 +695,17 @@ end
 -- one registration for one player: the system while its trait holds, its
 -- clear once when that stops (see opts above)
 local function runEntry(entry, track, player, d)
-    local tag = entry.label .. " (" .. entry.cadence .. ")"
     if not entry.has then
-        DanTraits_Guard(tag, track, entry.label, entry.fn, player, d)
+        DanTraits_Guard(entry.tag, track, entry.label, entry.fn, player, d)
         return
     end
-    local ok, has = DanTraits_Guard(tag .. " trait", entry.has, player, d)
+    local ok, has = DanTraits_Guard(entry.tagHas, entry.has, player, d)
     if ok and has == true then
         entry.had[player] = true
-        DanTraits_Guard(tag, track, entry.label, entry.fn, player, d)
+        DanTraits_Guard(entry.tag, track, entry.label, entry.fn, player, d)
     elseif entry.had[player] ~= false then
         entry.had[player] = false
-        if entry.clear then DanTraits_Guard(tag .. " clear", track, entry.label, entry.clear, player, d) end
+        if entry.clear then DanTraits_Guard(entry.tagClear, track, entry.label, entry.clear, player, d) end
     end
 end
 
@@ -697,7 +724,10 @@ end
 local function runClock(list)
     eachLocalPlayer(function(player) runDrivers(list, player, traitData(player)) end)
 end
-Events.EveryOneMinute.Add(function() runClock(drivers.minute) end)
+Events.EveryOneMinute.Add(function()
+    traitMemo = {}   -- the frame systems' trait answers (hasTrait above) are good for a game minute
+    runClock(drivers.minute)
+end)
 Events.EveryTenMinutes.Add(function() runClock(drivers.ten) end)
 
 -- The movement snapshot: what the legs and arms are doing, read once per
@@ -710,13 +740,16 @@ Events.EveryTenMinutes.Add(function() runClock(drivers.ten) end)
 -- the frame's snapshot; anywhere else (a minute system, an event handler) it
 -- is read on the spot. Callers read it and never write to it.
 local frameSnap = { player = nil, state = nil }
+local frameState = { sprinting = false, running = false, moving = false, attacking = false }   -- the driver's own, reused every frame
 
-local function readFrame(player)
-    local f = { sprinting = false, running = false, moving = false, attacking = false }
-    pcall(function() f.sprinting = player:isSprinting() == true end)
-    pcall(function() f.running = player:isRunning() == true end)
-    pcall(function() f.moving = player:isPlayerMoving() == true end)
-    pcall(function() f.attacking = player:isAttacking() == true end)
+-- into f (a fresh table without one); the methods themselves are guarded, no closures a frame
+local function readFrame(player, f)
+    f = f or { sprinting = false, running = false, moving = false, attacking = false }
+    local ok, v
+    ok, v = pcall(player.isSprinting, player);    f.sprinting = ok and v == true
+    ok, v = pcall(player.isRunning, player);      f.running = ok and v == true
+    ok, v = pcall(player.isPlayerMoving, player); f.moving = ok and v == true
+    ok, v = pcall(player.isAttacking, player);    f.attacking = ok and v == true
     return f
 end
 
@@ -728,8 +761,10 @@ end
 Events.OnPlayerUpdate.Add(function(player)
     if not player or player:isDead() then return end
     if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    frameSnap.player, frameSnap.state = player, readFrame(player)
+    frameSnap.player, frameSnap.state = player, readFrame(player, frameState)
+    traitMemoOn = true
     local ok, err = pcall(runDrivers, drivers.frame, player, traitData(player))
+    traitMemoOn = false
     frameSnap.player, frameSnap.state = nil, nil
     if not ok then error(err, 0) end   -- only under DanTraits_STRICT: the drivers guard every system
 end)

@@ -15,6 +15,12 @@
 -- tracked stat per handler call, so it only runs while switched on: the
 -- dashboard switches it on when it opens ("attrib on" / "attrib off").
 -- Single player only; nothing is installed on a server.
+--
+-- The game's performance profiler credits a handler to the file its closure
+-- was made in, so with every DanTraits handler wrapped here it shows the whole
+-- mod under this file: its "OnPlayerUpdate" row is core's frame driver
+-- (DanTraits.lua) and every frame system it runs, not this file's own work,
+-- which is a flag test per call while attribution is off.
 
 local STATS = { "UNHAPPINESS", "STRESS", "ANGER", "BOREDOM", "PANIC", "FATIGUE", "ENDURANCE", "PAIN", "HUNGER", "THIRST",
     "FOOD_SICKNESS", "SICKNESS", "INTOXICATION", "WETNESS" }

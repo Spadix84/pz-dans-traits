@@ -346,8 +346,7 @@ end)
 
 -- per frame: an endurance ceiling in shock (not a delta, so not the pipeline's),
 -- no sprinting when light-headed
-local function updateBloodFrame(player)
-    local d = player:getModData().DanTraits
+local function updateBloodFrame(player, d)
     if not d or d.bloodVol == nil then return end
     local tier = d.bloodTier or 0
     if tier > 0 then
@@ -457,8 +456,8 @@ DanTraits_Every("minute", "Blood", function(player, d)
     updateBloodMinute(player, d)
     updateBloodDebug(player, d)
 end, 20)
-DanTraits_Every("frame", "Blood", function(player)
+DanTraits_Every("frame", "Blood", function(player, d)
     if not sandboxOn() then return end
-    updateBloodFrame(player)
+    updateBloodFrame(player, d)
     if not woundDamageOn() then refundWoundDamage(player) end
 end, 20)

@@ -127,9 +127,9 @@ end
 
 -- Panic: decay each tick at (level / 4) of the beta-blocker rate ------------
 local function updateAlcoholFrame(player)
+    if not DanTraits_SandboxOn("DrinkReliefEnabled") then return end
     local level = drunkLevel(player)
-    if level <= 0 or not DanTraits_SandboxOn("DrinkReliefEnabled") then return end
-    if DanTraits_Asleep(player) then return end
+    if level <= 0 or DanTraits_Asleep(player) then return end
     DanTraits_PanicDecay(player:getStats(), ALC_PANIC_RATE * (level / 4))
 end
 

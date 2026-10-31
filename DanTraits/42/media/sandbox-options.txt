@@ -39,6 +39,9 @@ option DanTraits.InfectionEnabled
 option DanTraits.WoundCareEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsWoundCareEnabled,}
 
+option DanTraits.WoundExpansionCompat
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsWoundExpansionCompat,}
+
 option DanTraits.ConcussionEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsConcussionEnabled,}
 

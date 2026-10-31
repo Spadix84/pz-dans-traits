@@ -175,10 +175,14 @@ DanTraits_NIGHT = { dark = 0.25, bright = 0.60, qualityDark = 0.10, qualityBrigh
 
 function DanTraits_Clamp01(x) return math.max(0, math.min(1, x)) end
 
+local statMaxMemo = {}   -- a stat's maximum never changes: the game is asked once (the frame pipeline reads it every frame)
 function DanTraits_StatMax(stat)
-    local max = 1
+    local max = stat ~= nil and statMaxMemo[stat]
+    if max then return max end
+    max = 1
     pcall(function() max = stat:getMaximumValue() or 1 end)
     if not max or max <= 0 then max = 1 end
+    if stat ~= nil then statMaxMemo[stat] = max end
     return max
 end
 

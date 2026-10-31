@@ -228,10 +228,15 @@ end
 
 local function trackSpeed(player)
     local kmh = nil
-    pcall(function() local v = player:getVehicle(); if v then kmh = math.abs(v:getCurrentSpeedKmHour() or 0) end end)
-    local now = nowMs()
+    local okV, v = pcall(player.getVehicle, player)
+    if okV and v then
+        local okS, s = pcall(v.getCurrentSpeedKmHour, v)
+        kmh = math.abs(okS and tonumber(s) or 0)
+    end
     local st = stateOf(player)
     local crash = st.crash
+    if not crash and not kmh then return end   -- on foot with no crash pending: the usual frame, and nothing to read
+    local now = nowMs()
     if crash then
         if kmh then crash.low = math.min(crash.low or kmh, kmh) end
         crash.frames = crash.frames + 1
@@ -275,8 +280,12 @@ end
 -- per frame: the head's health (for the next weapon hit), whether the player ran
 local function updateConcussionFrame(player)
     local st = stateOf(player)
-    local head = headPart(player)
-    if head then pcall(function() st.headWas = head:getHealth() end) end
+    local head = st.head   -- the part object lives as long as the character: looked up once (the state is per player object)
+    if not head then head = headPart(player); st.head = head end
+    if head then
+        local ok, h = pcall(head.getHealth, head)
+        if ok then st.headWas = h end
+    end
     local f = DanTraits_Frame(player)   -- the frame's movement snapshot (DanTraits.lua)
     if f.sprinting or f.running then st.ran = true end
 end

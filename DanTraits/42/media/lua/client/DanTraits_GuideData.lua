@@ -345,6 +345,7 @@ DanTraits_GuideData.whatsNew = {
         "- A Notes tab in the character window for what your character has worked out, and this Guide tab.",
         "- Daily medication has its own window behind a pill-bottle button on the health panel.",
         "- With the SpiffBoy console mod: screen time counts, and five Vitality Cartridges to find.",
+        "- With Wound Expansion: its stitches, concussion and infection stand down for this mod's; its dirt, tears and blood bags count here.",
         "",
         "## Changed",
         "- Everyday running, carrying and fighting are lighter on the muscles; only exercise can overwork or pull one.",
