@@ -1,6 +1,7 @@
 [h1]Next update (in progress)[/h1]
 [h2]Changed[/h2]
 [list]
+[*][b]Smoker cravings ease off.[/b] A cigarette now holds the craving off for an hour and a half (a drag for its share; sooner in your 20s), the craving takes a third longer to build after that, and full withdrawal leaves you Annoyed rather than Angry, so no more cursing out loud from a craving alone (still Angry in your 20s or with Hot-Headed). A new smoker turns Irritated about three and a half hours after a cigarette (was one) and Annoyed after six and a half (was two and a half).
 [*][b]Pace Yourself[/b] reads a swing from the game's swing events instead of every frame, and checks for a sprint only while you are sprinting. Same refund, less work each frame.
 [/list]
 

@@ -23,8 +23,9 @@
 -- Dependence. Everyone carries a nicotine meter (0..1, nicMeter). Tobacco
 -- fills it, but only so much a day, so it is the habit that counts; it
 -- drains over a month. Past NIC_GAIN the character becomes a Smoker, in
--- about a week of four or more a day. The meter sets how fast cravings
--- build: half vanilla's pace for a Smoker taken at creation, slower for a
+-- about a week of four or more a day. A cigarette holds the craving off for
+-- an hour and a half; then the meter sets how fast it builds: a full
+-- craving in eight hours for a Smoker taken at creation, slower for a
 -- light smoker, nearly twice as fast for a heavy one, and faster again while
 -- drunk. Three weeks without tobacco breaks the trait; the withdrawal
 -- peaks in the first three days and eases over the rest. An ex-smoker
@@ -86,14 +87,16 @@ local NIC_CURE_H        = 504     -- hours without tobacco to lose the trait (21
 local NIC_SESSION_H     = 12      -- tobacco after this long without starts a new session
 local NIC_RELAPSE_ODDS  = 50      -- percent chance per session for an ex-smoker to relapse
 -- craving
-local NIC_RISE_H        = 3       -- hours from no craving to a full one at pace 1 (the stat's range)...
+local NIC_GRACE_H       = 1.5     -- hours after a whole cigarette before the craving builds (a drag: its share),
+                                  -- divided by the cravingOnset hook (2026-10-31: it built from the first minute)
+local NIC_RISE_H        = 4       -- hours from no craving to a full one at pace 1 (the stat's range; 3 until 2026-10-31)...
 local NIC_RATE_BASE     = 0.125   -- ...x (this + NIC_RATE_METER x meter): half pace for a Smoker taken at creation
 local NIC_RATE_METER    = 0.75
 local NIC_RATE_DRUNK    = 1.5     -- and x this at Drunk level 2 or more
 local NIC_DRUNK_LEVEL   = 2
 local NIC_FADE_FROM_H   = 72      -- withdrawal peaks for three days...
 local NIC_FADE_FLOOR    = 0.25    -- ...then its ceiling eases to this by the time the trait goes
-local NIC_ANGER         = 0.6     -- irritability floor (0..1) at full withdrawal
+local NIC_ANGER         = 0.4     -- irritability floor (0..1) at full withdrawal: Annoyed, not Angry (0.6 until 2026-10-31)
 local NIC_ANGER_RAMP    = 0.01    -- per minute
 local NIC_ANGER_MARGIN  = 0.002   -- held this far above the floor, clear of vanilla's per-tick drain
 local NIC_CRAVE_ANGER   = 0.25    -- irritability that counts as showing, if the Angry moodle cannot be read
@@ -314,6 +317,8 @@ local function applyDose(player, dose, smoked, pre)
     local newSession = (d.nicDryHours == nil) or d.nicDryHours >= NIC_SESSION_H
     d.nicDryHours = 0
     d.nicStimH = math.max(d.nicStimH or 0, NIC_STIM_H * one)
+    local onset = tonumber(DanTraits_RunHooks("cravingOnset", 1, player)) or 1   -- Age: sooner young
+    d.nicGraceH = math.max(d.nicGraceH or 0, NIC_GRACE_H * one / onset)
     if smoked then
         d.nicSmokeHours = 0
         d.nicLungs = math.min(1, d.nicLungs + LUNG_PER_CIG * dose)
@@ -474,6 +479,8 @@ local function updateSmokerMinute(player, d)
         if d.nicInduce < 0.001 then d.nicInduce = 0 end
     end
     if (d.nicStimH or 0) > 0 then d.nicStimH = math.max(0, d.nicStimH - MIN_H) end
+    local grace = (d.nicGraceH or 0) > MIN_H / 2   -- clear of the float left after the last minute
+    d.nicGraceH = grace and d.nicGraceH - MIN_H or nil
 
     local asleep = DanTraits_Asleep(player)
     if asleep then
@@ -497,14 +504,17 @@ local function updateSmokerMinute(player, d)
     local angerFloor = 0
     if smoker and ws then
         -- the craving builds at the habit's pace (the stat is this file's: the game
-        -- only moves it for its own Smoker), capped as the habit winds down
+        -- only moves it for its own Smoker) once a smoke's grace is over, capped as
+        -- the habit winds down
         pcall(function()
             local max = statMax(ws)
             local w = stats:get(ws) or 0   -- as it stands: the gum and a cigarette move it too
-            local rate = NIC_RATE_BASE + NIC_RATE_METER * d.nicMeter
-            if drunk then rate = rate * NIC_RATE_DRUNK end
-            rate = rate * (tonumber(DanTraits_RunHooks("cravingOnset", 1, player)) or 1)   -- Age: sooner young
-            w = w + max * rate * MIN_H / NIC_RISE_H
+            if not grace then
+                local rate = NIC_RATE_BASE + NIC_RATE_METER * d.nicMeter
+                if drunk then rate = rate * NIC_RATE_DRUNK end
+                rate = rate * (tonumber(DanTraits_RunHooks("cravingOnset", 1, player)) or 1)   -- Age: sooner young
+                w = w + max * rate * MIN_H / NIC_RISE_H
+            end
             w = math.min(w, max * fadeCeiling(d.nicDryHours or 0), max)
             stats:set(ws, w)
             d.nicLastW = w

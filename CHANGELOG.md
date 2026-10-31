@@ -7,6 +7,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Changed
 
+- **Smoker cravings eased** (`DanTraits_Smoker.lua`): they built from the first minute after a cigarette and a craving alone held anger at Angry (cursing out loud). A whole cigarette now gives `NIC_GRACE_H` 1.5 h before the craving builds (a drag its share, divided by the `cravingOnset` hook, so the 20s' grace is 1.2 h); `NIC_RISE_H` 3 -> 4 h to full at pace 1; `NIC_ANGER` 0.6 -> 0.4, so full withdrawal is Annoyed (Angry moodle 2) in the 30s-50s (0.5 Angry in the 20s, 0.6 with Hot-Headed, 0.75 Furious with both). A new 40s smoker: Angry moodle 1 at about 3.5 h after a cigarette (was 1 h), 2 at 6.5 h (was 2.5 h); a full-meter smoker 2.6 h and 4.4 h (were 34 min and 1.4 h).
 - **Pace Yourself off the frame path** (`DanTraits_AgeTraits.lua`): a swing's refund is read from OnWeaponSwing (endurance at the start) and OnPlayerAttackFinished (what went by the end; the game charges it at the hit point between them), so the frame no longer reads endurance on every frame for a swing. Sprinting has no event: the frame reads endurance only while sprinting and not swinging, from the shared frame snapshot. A swing starts a fresh sprint baseline, so a swing mid-sprint is refunded once. Same tenth back.
 
 ## 1.5.0 - 2026-10-31

@@ -274,7 +274,7 @@ Attacks that cost you hours.
 
 The mod's own Smoker since Age 2.0 (2026-10-31). The game's Smoker is left alone and hidden on the creation screen; the sandbox option *Show Vanilla Smoker* brings it back beside this one, tagged "vanilla", and a character can take one or the other. A character from an older save with the game's Smoker and a habit behind it is switched over once, with a notice.
 
-- Cravings build with the habit (the stat's range in three hours at full pace; half that pace for a Smoker taken at creation, faster the heavier the habit, faster drunk). Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), stress, a low mood, hunger and restless sleep.
+- A cigarette holds the craving off for an hour and a half (a drag for its share); then it builds with the habit (the stat's range in four hours at full pace; half that pace for a Smoker taken at creation, faster the heavier the habit, faster drunk). Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), stress, a low mood, hunger and restless sleep.
 - A cigarette relieves only the craving it answers, and clears it. To anyone else it is a buzz that fades as tolerance builds (and the game's nausea, which a Smoker never feels).
 - Damaged lungs recover endurance slower and cough, worse on exertion and in the morning. How much smoke is on the lungs at the start depends on age: a 20s Smoker starts nearly clean, a 50s one with over half gone.
 - Anyone who smokes regularly gains the trait; three weeks without tobacco loses it. After that, drink and stress bring cravings back, and a smoke is a coin flip to relapse.
@@ -794,7 +794,7 @@ Shock, a concussion and Fear of Blood can all put you on the floor.
 
 ### Anger
 
-The vanilla Angry moodle does nothing in the base game. Here it costs you, from Annoyed up; Irritated is only the warning. A smoker's withdrawal raises it (up to Angry at full withdrawal), and so does an Alcoholic's (up to Annoyed while craving and Angry once the shakes start, at the deepest habit; a drink or sleep takes it back off). Anger from another mod counts the same.
+The vanilla Angry moodle does nothing in the base game. Here it costs you, from Annoyed up; Irritated is only the warning. A smoker's withdrawal raises it (up to Annoyed at full withdrawal; Angry in the 20s or with Hot-Headed), and so does an Alcoholic's (up to Annoyed while craving and Angry once the shakes start, at the deepest habit; a drink or sleep takes it back off). Anger from another mod counts the same.
 
 - **Rough:** every melee hit has an extra chance to wear the weapon: half as much again at Annoyed, double at Angry, two and a half times at Furious. Anger never takes a weapon's last point. Furious swings cost extra endurance.
 - **Loud:** from Angry up the character curses out loud now and then (about once an hour, more often and louder at Furious), and zombies nearby hear it. Never asleep, and never within three minutes of a cough.
