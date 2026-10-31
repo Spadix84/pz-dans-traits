@@ -17,23 +17,23 @@ Diet, exercise and sleep roll into one slow score that takes about three days to
 [*][b]40s (0):[/b] +2 levels in your occupation's main skill, +1 in the others. You recover, heal and train a little slower.
 [*][b]50s (-6):[/b] +3 and +2. Slower still, and hangovers hit harder.
 [/list]
-Each decade has traits and small wants of its own (itchy feet at 25, the same bed at 55), the conditions of later life are not for the 20s, and Strong, Athletic, Fit and the daily habits cost more as you get older.
+Each decade has traits and wants of its own, the conditions of later life are not for the 20s, and Strong, Athletic, Fit and the daily habits cost more with age.
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-age.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/sheet-age.png[/img][/url]
 
 [h2]Daily life[/h2]
 [list]
 [*][b]Training.[/b] Arms, chest, core and legs tire and recover. A rested group pays more; a sore one can pull a muscle. Improvised weights, stretching, training plans.
 [*][b]Cooking.[/b] A proper cooked meal eases low mood and stress for hours and fuels your training: protein for recovery, carbs for stamina, fat against hunger.
-[*][b]Burnout.[/b] Fighting wears on you over days: kills, panic, wounds and withdrawal build it; sleep, calm hours and comforts ease it. It never makes you fight worse, it slows what fighting teaches; at breaking point you fall apart at the first quiet moment.
+[*][b]Burnout.[/b] Fighting wears on you over days: kills, panic, wounds and withdrawal build it; sleep, calm hours and comforts ease it. It never makes you fight worse, only slows what fighting teaches.
 [*][b]Sleep.[/b] Sleeping dressed means shallower sleep (warm clothes are free in the cold). A hot water bottle eases sore muscles and warms a cold bed.
 [*][b]Home.[/b] Where you sleep most nights becomes home: boredom, low mood and stress ease there and nights score better. Two days away and you miss it.
 [*][b]Laundry.[/b] Hand washing only gets clothes so clean, damp clothes go musty, sweat makes them stale, old blood sets in. Fresh clothes lift your mood.
-[*][b]Reading for pleasure.[/b] Novels, comics and magazines have genres and real pages; each page eases stress and low mood, and a finished book gives a Good Read bonus.
+[*][b]Reading for pleasure.[/b] Novels, comics and magazines have genres and real pages; each page eases stress and low mood.
 [/list]
 [h2]Traits that change how you play[/h2]
 [list]
 [*][b]Multiple Sclerosis (-16):[/b] a day's energy in spoons, set by last night's sleep and spent faster in the heat. Run out and you hit the wall; push on and you borrow from tomorrow. Monthly flares.
-[*][b]Type 1 Diabetes (-10):[/b] a hidden blood sugar, a meter and insulin pens. Your First Aid level tells you what a meal will take: a rough guess at 3, the exact dose at 9. A bad low can knock you out.
+[*][b]Type 1 Diabetes (-10):[/b] a hidden blood sugar, a meter and insulin pens. First Aid tells you what a meal will take. A bad low can knock you out.
 [*][b]Heart Condition (-12):[/b] effort, panic, a heavy pack and the cold strain the heart. Chest pain stops you running; push on and it gives out. Beta blockers and nitroglycerin help.
 [*][b]Gout (-8):[/b] rich food, drink and thirst build up until a flare takes a foot for days. Allopurinol keeps it down, colchicine cuts a flare short.
 [*][b]Sensory Issues (-8):[/b] scratchy clothes, noise, crowds, glare and smells build a load that ends in a meltdown or a shutdown. Quiet, the dark and headphones bring it down.
@@ -56,8 +56,8 @@ Each decade has traits and small wants of its own (itchy feet at 25, the same be
 [*][b]Point signs?[/b] Minus means a flaw and plus a perk. The creation screen shows the sign the other way round.
 [*][b]Too hard?[/b] Most systems have a sandbox switch, and the conditions are traits you choose.
 [*][b]Lost?[/b] The character window has a Guide tab: a page on every system, and What's New.
-[*][b]A wound still takes health?[/b] As in vanilla, an open wound hurts its body part until dressed. Turn off Wound Damage (Vitality: Health) and wounds cost only blood.
-[*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandits, This Is Your Life, SpiffBoy and Dynamic Traits and Expanded Moodles (its duplicate traits are hidden, its addictions become this mod's) are supported.
+[*][b]A wound still takes health?[/b] As in vanilla, until dressed. Turn off Wound Damage (Vitality: Health) and wounds cost only blood.
+[*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandits, This Is Your Life, SpiffBoy, Wound Expansion and Dynamic Traits and Expanded Moodles (its duplicate traits are hidden, its addictions become this mod's) are supported.
 [*][b]Bugs?[/b] Leave a comment, or open an issue on GitHub. Your console.txt helps.
 [/list]
 
