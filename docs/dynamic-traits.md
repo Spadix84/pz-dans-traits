@@ -68,13 +68,15 @@ red halo each time), so taking its trait off has to start the counter over too.
 Nothing unless `getActivatedMods():contains("DynamicTraits")`. No dependency either way.
 Runs at boot, at the main menu and at game start, each time idempotent, and logs one line:
 
-    [DanTraits] Dynamic Traits found: overrides re-applied (base:cook, ...)/skipped (already ours), duplicates hidden, addiction swap on
+    [DanTraits] Dynamic Traits found: duplicates hidden, addiction swap on
 
-1. **Overrides re-applied.** For each of the six, if the definition's cost is not ours or
-   it has become a profession trait, the definition is re-added with our cost and UI keys,
-   then our XP boosts, granted recipes and exclusions. The table in the Lua file mirrors
-   the script; `tests/check_dtem_overrides.py` fails when they drift apart. A definition
-   already at our cost is left as it is (the main-menu and game-start passes after boot).
+1. **Nothing to re-apply** (since Age 2.0, 2026-10-31). The mod's script no longer redefines
+   any vanilla trait: the re-pricing of Keen Cook, Iron Gut, Resilient, Fear of Blood and
+   Cat's Eyes is a flat delta drawn beside the cost on the creation screen and taken off
+   Points to Spend (`DanTraits_VanillaPrices.lua`), which applies whatever DTEM does to a
+   definition, and Smoker is the mod's own trait (`DanTraits:smoker`). Until then the adapter
+   re-added the six definitions DTEM's boot pass had replaced, from a table
+   `tests/check_dtem_overrides.py` kept in step with the script; both are gone.
 2. **Duplicates hidden** at creation: `dynamictraits:alcoholic`,
    `dynamictraits:addictedtocaffeine`, `base:asthmatic` and `dynamictraits:brittleknees`
    go into `DanTraits_HIDDEN_AT_CREATION` (core), which the creation screen filter in
@@ -87,8 +89,9 @@ Runs at boot, at the main menu and at game start, each time idempotent, and logs
    halo). Addicted to Caffeine becomes our Caffeine Dependent the same way. When DTEM takes
    its own trait away, ours stays: ours are never removed by this file.
 
-Not handled: DTEM also gives `base:resilient` free in play by body condition, which gives
-the Knox roll for nothing. Its pass-out from exhaustion, anger from drunkenness, fractures
+DTEM also gives `base:resilient` free in play by body condition. Since Age 2.0 the Knox roll
+belongs to a Resilient chosen at creation (`d.knoxResilient`, DanTraits_Knox.lua), so that
+gives nothing. Its pass-out from exhaustion, anger from drunkenness, fractures
 under load and smoker cough all stack with ours (see the Workshop FAQ: pick one mod for
 addictions).
 
@@ -97,11 +100,11 @@ addictions).
 With both mods on (DTEM loaded, in either order):
 
 1. The console at boot shows `DT B42 compat` lines (the `42.20` folder loaded) and our one
-   `Dynamic Traits found` line naming the re-applied overrides.
-2. On the character creation screen: Resilient costs 10 and sits in the positive list, Keen
-   Cook costs 4 and its tooltip lists Short Blade, Iron Gut 4, Fear of Blood -6, Smoker -5,
-   Cat's Eyes 1. One Alcoholic (ours, -4), one Caffeine Dependent, one Asthma, one Bad Knees (with an
-   age picked).
+   `Dynamic Traits found` line.
+2. On the character creation screen: Resilient at DTEM's price with "+6 Vitality" beside it,
+   Keen Cook with "+1 Vitality", Iron Gut "+2", Fear of Blood "-1", Cat's Eyes "-2"; one
+   Smoker (ours, -5; vanilla's hidden unless the sandbox shows it). One Alcoholic (ours, -6),
+   one Caffeine Dependent, one Asthma, one Bad Knees (with an age picked).
 3. In play, give a character DTEM's Alcoholic (console: `getPlayer():getModData().DTEMalcoholicTrait = -45000`,
    then wait a minute for DTEM to add it). Within the next minute it should be gone, our
    Alcoholic on, the halo shown, and `getPlayer():getModData().DTEMalcoholicTrait` back at 0.

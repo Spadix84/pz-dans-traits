@@ -1,12 +1,21 @@
 -- Project Zomboid Vitality Project: the traits only one age can take.
--- DanTraits_AgeOnly says which bands may take each; the creation screen
--- (DanTraits_Client.lua) offers a trait only to those bands and drops it if
--- the age changes. Nothing here checks the band again after creation: a
--- character who has the trait has it. docs/age.md lists them.
+-- Which bands may take each is a row of DanTraits_AgeRules
+-- (DanTraits_AgeRules.lua, which also builds DanTraits_AgeOnly from them);
+-- the creation screen (DanTraits_Client.lua) offers a trait only to those
+-- bands and drops it if the age changes. Nothing here checks the band again
+-- after creation: a character who has the trait has it. docs/age.md lists them.
 --
---   20s      Green (-4)           every skill the occupation boosts starts a level
---                                 lower (DanTraits_AgeLevels in DanTraits_Age.lua)
---            Quick Study (+4)     a skill below level 5 gains experience x1.4
+--   20s      Quick Study (+4)     a skill below level 5 gains experience x1.4
+--            Natural (+3)         the weapon skills, Aiming and Reloading gain
+--                                 experience x1.25 (Age 2.0, 2026-10-31)
+--            Hot-Headed (-3)      anger builds x1.5 (the angerFloor hook the
+--                                 cravings' irritability reads) and falls x0.7
+--                                 (the angerFall hook, DanTraits_Anger.lua)
+--            Restless (-3)        the Itchy Feet want builds x2 and bites x2
+--                                 (DanTraits_AgeWants.lua)
+--            (Green, -4, every skill the occupation boosts a level lower, was
+--            the 20s flaw until Age 2.0, 2026-10-31: the band takes the levels
+--            itself now. Retired: DanTraits_RETIRED in DanTraits.lua.)
 --   40s 50s  Reading Glasses (-2) starts with a pair; without glasses on, reading
 --                                 takes x1.5 as long and needs a properly lit room
 --            Bad Back (-8)        a heavy load builds lower-back pain and stiff legs
@@ -45,33 +54,21 @@
 -- stChecked, stInHouse, stNewBed, stLastBed; obDay.
 require "DanTraits"
 require "DanTraits_Age"
+require "DanTraits_AgeRules"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify
 local notifyGood = DanTraits_NotifyGood
 local clamp01 = DanTraits_Clamp01
 
-DanTraits_AgeOnly = {
-    green          = { [20] = true },
-    quickstudy     = { [20] = true },
-    bottomlesspit  = { [20] = true },
-    readingglasses = { [40] = true, [50] = true },
-    badback        = { [40] = true, [50] = true },
-    badknees       = { [40] = true, [50] = true },
-    oldhand        = { [40] = true, [50] = true },
-    delicatestomach = { [40] = true, [50] = true },
-    paceyourself   = { [40] = true },
-    settled        = { [40] = true },
-    oldinjury      = { [50] = true },
-    setinways      = { [50] = true },
-    seenitall      = { [50] = true },
-    castiron       = { [50] = true },
-    oldbones       = { [50] = true },
-}
+-- (DanTraits_AgeOnly, the bands by registry key, is built in DanTraits_AgeRules.lua)
 
 -- experience
 local QS_BELOW       = 5       -- Quick Study: skills under this level...
-local QS_XP          = 1.4     -- ...gain experience x this (on top of the 20s band's x1.2 under level 3)
+local QS_XP          = 1.4     -- ...gain experience x this (on top of the 20s band's x1.3 under level 3)
+local NT_XP          = 1.25    -- Natural: the weapon skills, Aiming and Reloading x this
+local HH_RISE        = 1.5     -- Hot-Headed: the irritability a craving holds x this...
+local HH_FALL        = 0.7     -- ...and anger falls x this
 -- Bottomless Pit
 local BP_HUNGER      = 1.3     -- hunger builds x this (on top of the 20s band's x1.15)
 local BP_UNHAPPY     = { 0, 0, 0.1, 0.2, 0.2 }   -- unhappiness a minute awake by the Hungry moodle's level
@@ -155,6 +152,7 @@ local function xpFactor(player, perk)
     end
     -- Fitness and Strength are the body's, and age has its own say on them
     if Perks and (perk == Perks.Fitness or perk == Perks.Strength) then return k end
+    if hasTrait(player, "natural") and DanTraits_AgeIsCombatPerk and DanTraits_AgeIsCombatPerk(perk) then k = k * NT_XP end
     local old, set = hasTrait(player, "oldhand"), hasTrait(player, "setinways")
     if old or set then
         local main, rest = DanTraits_AgeProfessionSkills(player)
@@ -172,6 +170,16 @@ local function onAgeTraitsAddXP(player, perk, amount)
     local k = xpFactor(player, perk)
     if k ~= 1 then DanTraits_XpFactor(player, perk, amount, k) end
 end
+
+-- Hot-Headed: the irritability a craving holds, and how fast anger falls
+DanTraits_AddHook("angerFloor", function(k, player)
+    if not hasTrait(player, "hotheaded") then return nil end
+    return k * HH_RISE
+end)
+DanTraits_AddHook("angerFall", function(k, player)
+    if not hasTrait(player, "hotheaded") then return nil end
+    return k * HH_FALL
+end)
 
 -- Reading Glasses ----------------------------------------------------------------
 -- anything worn that corrects sight: reading glasses and the prescription kinds
@@ -373,7 +381,7 @@ local function kneeRest(player)
         local props = player:getSitOnFurnitureObject():getProperties()
         comfy = props:get("BedType") ~= nil or (IsoFlagType and props:has(IsoFlagType.bed) == true)
     end end)
-    if comfy then return BK_EASE_COMFY end
+    if comfy then return tonumber(DanTraits_RunHooks("kneeRest", BK_EASE_COMFY, player, true)) or BK_EASE_COMFY end   -- Comfort matters more (the 50s want)
     if sitting or DanTraits_Asleep(player) then return BK_EASE_SIT end
     pcall(function() moving = player:isPlayerMoving() == true end)
     return moving and 0 or 1

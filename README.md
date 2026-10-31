@@ -22,12 +22,19 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Robbed](#robbed--10) | -10 | Shot, with the bullet still in; naked; the house stripped bare. |
 | [Hunted](#hunted--8) | -8 | A horde on your house a few hours in, a helicopter, a pack at dawn for three days. |
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
-| [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
-| [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
+| [Fear of Blood](#fear-of-blood--6-vanilla-re-priced) | -6 | Vanilla's, one point more: slower first aid, and fainting at the sight of a wound. |
+| [In Their 50s](#age-in-their-20s-5-30s-40s-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
 | [High Strung](#high-strung--6) | -6 | Burnout builds 1.5x as fast. |
 | [Alcoholic](#alcoholic--6) | -6 | Withdrawal after a day dry; gained by drinking, lost by a sober month. |
 | [Diabetes Type 2](#diabetes-type-1--10-and-type-2--5) | -5 | The same sugar model with the body's own insulin and metformin. |
-| [Smoker](#smoker--5-vanilla-reworked) | -5 | Cravings by habit, withdrawal, damaged lungs; quit or relapse. |
+| [Smoker](#smoker--5) | -5 | The mod's own Smoker: cravings by habit, withdrawal, damaged lungs; quit or relapse. |
+| [Gout](#gout--8) | -8 | Rich food and drink build to a flare: a foot on fire for days, slow walking, no running. Allopurinol, colchicine. 40s and 50s. |
+| [Essential Tremor](#essential-tremor--3) | -3 | Shaky hands: rough stitches, slips, slow reloads and reading; a drink or beta blockers steady them. |
+| [Underactive Thyroid](#underactive-thyroid--3) | -3 | Tired, low, cold and gaining weight until the daily levothyroxine. 40s and 50s. |
+| [Hay Fever](#hay-fever--2) | -2 | March to August: sneezing fits zombies hear; antihistamines. |
+| [Carpal Tunnel](#carpal-tunnel--2) | -2 | Hours of the same hand work bring numb, clumsy hands; rest, a splint, a change of job. |
+| [Hot-Headed](#age-in-their-20s-5-30s-40s-and-50s--6) | -3 | A craving's irritability is half again as strong, and anger fades slower. 20s. |
+| [Restless](#age-in-their-20s-5-30s-40s-and-50s--6) | -3 | Days in one place weigh twice as heavy; new ground lifts twice as high. 20s. |
 | [Straight Edge](#straight-edge--3) | -3 | Refuses alcohol and tobacco, and so their relief from burnout. |
 | [Can't Switch Off](#cant-switch-off--4) | -4 | Burnout eases 0.67x as fast; a full day off needs five comforts. |
 | [Anaemic](#anaemic--4) | -4 | Needs iron; short of it you tire, chill and rebuild blood slowly. |
@@ -45,10 +52,10 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Sensitive Skin](#sensitive-skin--2) | -2 | Damp, musty or never-washed clothes itch, and so does dryer-sheet perfume. |
 | [Sweaty](#sweaty--2) | -2 | Clothes go stale nearly twice as fast. |
 | [ADHD](#adhd--2) | -2 | Bored faster and drifts off mid-task, but sticks with a job long enough and hyperfocuses; coffee helps, somewhere new thrills. |
-| [In Their 40s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -2 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
+| [In Their 40s](#age-in-their-20s-5-30s-40s-and-50s--6) | 0 | Two levels in the main skill, one in the rest of the trade; a body a little slower to recover. |
 | [Inflexible](#inflexible--2) | -2 | Stretching does half; stiffness lingers; stiff joints ache more. |
 | [Lactose Intolerance](#lactose-intolerance--1) | -1 | Dairy brings a mild gut flare. |
-| [Cat's Eyes](#cats-eyes-1-vanilla-re-costed) | 1 | Vanilla night vision, re-costed; light wakes you more easily. |
+| [Cat's Eyes](#cats-eyes-1-vanilla-re-priced) | 1 | Vanilla night vision, two points cheaper; light wakes you more easily. |
 | [Early Riser](#early-riser-1) | +1 | Starts rested; every night scores a little better. |
 | [Gym Regular](#gym-regular-1) | +1 | Every exercise starts with a Fitness Instructor's head start. |
 | [Hollow Legs](#hollow-legs-1) | +1 | Drink hits less; hangovers milder and shorter. |
@@ -56,9 +63,10 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Night Shift](#night-shift-1) | +1 | Daylight hardly wakes you. |
 | [Endorphin Junkie](#endorphin-junkie-1) | +1 | Pumped twice as long and twice as strong; restless two days without. |
 | [Newbie Gains](#newbie-gains-2) | +2 | Strength and Fitness experience +30% for the first three levels above your start. |
-| [Outdoorsman](#outdoorsman-2-vanilla-reworked) | 2 | Vanilla weather resistance; burns half as fast. |
+| [Outdoorsman](#outdoorsman-2-vanilla) | 2 | Vanilla weather resistance; burns half as fast. |
 | [Slob](#slob-2) | +2 | Stale or musty clothes are no bother, and fresh ones no joy. |
 | [Thick Skull](#thick-skull-2) | +2 | Concussed half as often and less badly; knockouts and faints half as long. |
+| [Natural](#age-in-their-20s-5-30s-40s-and-50s--6) | +3 | Weapon skills, Aiming and Reloading train a quarter faster. 20s. |
 | [Good Clotter](#good-clotter-3) | +3 | Bleeds run down twice as fast and lose less blood. |
 | [Cool Customer](#cool-customer-3) | +3 | Clothes stay fresh twice as long. |
 | [Nomad](#nomad-3) | +3 | No home, nothing missed; sleeps as well under the sky. |
@@ -66,19 +74,19 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Natural Runner](#natural-runner-3) | +3 | Jogging is easy on the legs and counts double; running XP +25%. |
 | [Unwinds Easily](#unwinds-easily-4) | +4 | Burnout eases 1.5x as fast. |
 | [Homemaker](#homemaker-4) | +4 | Washes cleaner by hand with half the wear; loves line-dried clothes. |
-| [Iron Gut](#iron-gut-4-vanilla-reworked) | 4 | Vanilla's lower food illness chance; rotten and burnt food does half the harm. |
-| [Keen Cook](#keen-cook-4-vanilla-reworked) | 4 | Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade. |
+| [Iron Gut](#iron-gut-4-vanilla-re-priced) | 4 | Vanilla's lower food illness chance, two points dearer: rotten and burnt food does half the harm. |
+| [Keen Cook](#keen-cook-4-vanilla-re-priced) | 4 | Vanilla's, a point dearer: +1 Short Blade at the start. |
 | [Well Conditioned](#well-conditioned-4) | +4 | Muscles recover x1.5 and are Ready sooner; pulls heal twice as fast. |
 | [Weightlifter](#weightlifter-4) | +4 | Weights give +20% XP; improvised weights no riskier. |
-| [Blacksmith Knowledge](#blacksmith-knowledge-7-vanilla-reworked) | 7 | Vanilla's recipes, +2 Metalworking and +1 Maintenance, plus +1 Short Blunt. |
-| [Steady Hands](#steady-hands-5) | +5 | Dexterous folded in; stitches and splints go right more often; quicker with a gun. |
-| [Deep Sleeper](#deep-sleeper-6) | +6 | Wakeful folded in; light rarely wakes you. |
-| [In Their 20s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | +6 | No bonus profession level; recovers, heals and trains faster. |
+| [Blacksmith Knowledge](#blacksmith-knowledge-7-vanilla-re-priced) | 7 | Vanilla's, a point dearer: +1 Short Blunt at the start. |
+| [Steady Hands](#steady-hands-5) | +5 | Quick hands (transfers x0.5); stitches and splints go right more often; quicker with a gun. |
+| [Deep Sleeper](#deep-sleeper-6) | +6 | Needs less sleep; light rarely wakes you. |
+| [In Their 20s](#age-in-their-20s-5-30s-40s-and-50s--6) | +5 | Two levels off the main skill, one off the rest; learns fast, recovers fast, a head that panics, angers and gets hooked. |
 | [Level Headed](#level-headed-8) | +8 | Burnout builds half as fast. |
-| [Fast Recovery](#fast-recovery-8) | +8 | Fast Healer folded in; blood comes back faster. |
+| [Fast Recovery](#fast-recovery-8) | +8 | Wounds close half as fast again; blood comes back faster. |
 | [Grit](#grit-8) | +8 | Feels pain a third less. |
 | [Renaissance Faire Geek](#renaissance-faire-geek-10) | +10 | +1 Spear, Long Blade, Axe and Blacksmithing. |
-| [Resilient](#resilient-10-vanilla-reworked) | 10 | Vanilla's disease resistance, plus a 10% chance (by default, and once) to beat the Knox infection. |
+| [Resilient](#resilient-10-vanilla-re-priced) | 10 | Vanilla's disease resistance, six points dearer: a 10% chance (by default, and once) to beat the Knox infection. |
 
 ### Negative traits
 
@@ -239,8 +247,9 @@ Attacks that cost you hours.
 - Anticonvulsants (new item, on the [medication system](#medication)), one every 12 hours, build up over five days to cut seizures to a tenth. You are told when they wear off. Starts on them, built up, with a bottle.
 - Moodle: Seizure (the aura before, the hour after), with a good side while the pills work.
 
-#### Fear of Blood (-6, vanilla reworked)
+#### Fear of Blood (-6, vanilla, re-priced)
 
+- Vanilla's trait, untouched; the mod charges one point more for what it adds (shown beside the cost, "-1 Vitality", and in the description).
 - Vanilla's panic at your own bleeding and stress when bloody stay.
 - Treating a wound takes a quarter longer.
 - Stitching (25%), pulling out a bullet (35%) or glass (20%), or dressing a bleeding wound (10%) can make you faint: about eight seconds, woken by anything that wounds you. So can losing blood fast.
@@ -261,16 +270,59 @@ Attacks that cost you hours.
 - The flare ramps up: cramps, nausea, low mood. It takes about ten hours to clear; a second meal during one adds to it.
 - Moodle: Gut Flare.
 
-#### Smoker (-5, vanilla reworked)
+#### Smoker (-5)
 
-- Cravings build at half vanilla's pace for a typical smoker, faster the heavier the habit. Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), hunger and restless sleep.
-- A cigarette relieves only the craving it answers. To anyone else it is a buzz that fades as tolerance builds.
-- Damaged lungs recover endurance slower and cough, worse on exertion and in the morning.
+The mod's own Smoker since Age 2.0 (2026-10-31). The game's Smoker is left alone and hidden on the creation screen; the sandbox option *Show Vanilla Smoker* brings it back beside this one, tagged "vanilla", and a character can take one or the other. A character from an older save with the game's Smoker and a habit behind it is switched over once, with a notice.
+
+- Cravings build with the habit (the stat's range in three hours at full pace; half that pace for a Smoker taken at creation, faster the heavier the habit, faster drunk). Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), stress, a low mood, hunger and restless sleep.
+- A cigarette relieves only the craving it answers, and clears it. To anyone else it is a buzz that fades as tolerance builds (and the game's nausea, which a Smoker never feels).
+- Damaged lungs recover endurance slower and cough, worse on exertion and in the morning. How much smoke is on the lungs at the start depends on age: a 20s Smoker starts nearly clean, a 50s one with over half gone.
 - Anyone who smokes regularly gains the trait; three weeks without tobacco loses it. After that, drink and stress bring cravings back, and a smoke is a coin flip to relapse.
 - Smoking speeds up caffeine clearance, lets a wound infection climb faster and slows a deep wound's healing.
 - Rare nicotine gum (new item) eases quitting.
 - Moodle: Nicotine Craving. The sandbox option Nicotine Craving Moodle hides it, so the craving has to be read from irritability and stress.
 - [Burnout](#burnout): withdrawal adds burnout, and a cigarette eases only a quarter as much as it does for anyone else.
+- In the 20s the habit takes hold x1.3 faster and cravings come x1.25 sooner ([Age](#age-in-their-20s-5-30s-40s-and-50s--6)).
+- Not with Athletic (as the game's Smoker) or Straight Edge; the game's Smoker and this one exclude each other.
+
+#### Gout (-8)
+
+The 40s and 50s. A urate meter rich food and drink fill and plain food and water drain.
+
+- **The meter** rises with every protein- or fat-heavy meal (the Cooking overhaul's reading of the dish, by the portion), with drink (by how drunk you are, every minute), with thirst and with crash dieting (a day on Cut). It drains on its own over about four days, faster with water.
+- **Allopurinol** (new daily bottle) cuts every rise to x0.4 and speeds the drain x1.6 at full effect, reached after three days. It is the only real control.
+- **A flare** can start once the meter is past 0.7: a chance adding up to one in ten a day at a full meter (every ten days eating like a king, a month or more eating carefully, nearly never on allopurinol). One foot for three to five days: severe pain, the leg stiff so walking is slow, no running or sprinting. A second flare within a month has a one-in-four chance of taking the knee too.
+- **Colchicine** (new, rarer bottle) in the first 12 hours ends a flare within a day; later it halves what is left. Painkillers take the pain down a step while they last.
+- Starts with a bottle of each of allopurinol (already in the system) and painkillers. Moodle: Gout Flare (urate high / treated / raw). Console `gout [flare|end|urate n]`.
+
+#### Essential Tremor (-3)
+
+- Hands that shake, more on caffeine, tired, stressed or in cold air. A drink steadies them for an hour (and that is a trap for the Dependent); beta blockers (the game's, the real first-line drug) damp them while they last.
+- Stitches come out rough and splints go wrong more often, weapons slip from the hand a little more, reloading and racking run slower, reading takes longer. The game's aiming is Java and cannot be reached, so the gun hand pays through the reload.
+- Not with Steady Hands. Starts with a bottle of beta blockers. Moodle: Shaky Hands / Tremor.
+
+#### Underactive Thyroid (-3)
+
+The 40s and 50s. The purest "find your medication" condition.
+
+- Untreated: tiredness builds faster, the mood sits low, the cold bites (both worse under 12 C), and weight comes on easier.
+- **Levothyroxine** (new daily bottle): one a day, a week to build up, and all of it is gone; running out brings it back over a week.
+- Starts with a full bottle, already in the system. Moodle: Sluggish / Underactive Thyroid.
+
+#### Hay Fever (-2)
+
+- March to August the pollen is out, peaking in May and June: worst on dry, windy days, washed out by rain, a third as bad indoors.
+- Sneezing fits (zombies hear them, and they interrupt whatever you were doing), more the heavier the pollen.
+- **Antihistamines** (new bottle, common in bathrooms) take it away for hours and make you drowsy while they do. From autumn to spring nothing happens.
+- Starts with a bottle. Moodle: Hay Fever / Streaming. Console `hayfever [sneeze|load n]`.
+
+#### Carpal Tunnel (-2)
+
+Annoying, never crippling.
+
+- Long runs of the same hand work (crafting, building, sawing, chopping, washing, repairs, vehicle parts) build a wrist load: fifteen minutes of one task before it starts, then two hours to the halfway line. A change of task starts the run over, so alternating work never builds it. Rest drains it, twice as fast asleep, twice as fast again with a splint on a forearm.
+- Past the line a numb, tingling spell: inventory transfers, crafting, stitching, pulling glass or bullets and splinting take a fifth longer, bad splints and rough stitches come half again as often, and with the load high the numb hands wake you at night. No weapon penalty and no pain beyond the nag.
+- Moodle: Tingling Hands / Numb Hands. Console `carpal [load n]`.
 
 #### Vegetarian (-4)
 
@@ -411,9 +463,9 @@ Attacks that cost you hours.
 
 - +1 Spear, Long Blade, Axe and Blacksmithing.
 
-#### Resilient (10, vanilla reworked)
+#### Resilient (10, vanilla, re-priced)
 
-- Less prone to disease and slower to turn, as vanilla. Re-costed from 4 to 10.
+- Vanilla's trait, untouched: less prone to disease and slower to turn. The mod charges six points more ("+6 Vitality" beside the cost) for what it adds, and the roll belongs to a Resilient chosen at creation, not one another mod hands out in play.
 - A 10% chance to beat the Knox infection (sandbox option Resilient: Knox Survival Chance, 10 by default); a Run Down body (Vitality) has down to half of it. Once only: a second infection runs its course in six hours, with a notice. The roll is hidden: you get sick like anyone else, and if you are lucky the fever breaks partway through and the infection is gone. Every new infection rolls again.
 
 #### Grit (+8)
@@ -422,37 +474,37 @@ Attacks that cost you hours.
 
 #### Fast Recovery (+8)
 
-- Fast Healer folded in (granted; not with Fast Healer or Slow Healer).
+- The mod's own Fast Healer: scratches and cuts close half as fast again, and so does an unstitched deep wound. Not with Fast Healer or Slow Healer (the same effect). A character the old version granted Fast Healer to has it taken off once.
 - After a bleed, blood volume and red cells come back half as fast again.
 - Not with Hemophilia.
 
 #### Deep Sleeper (+6)
 
-- Wakeful folded in (granted; hidden at character creation).
+- Needs less sleep: tiredness builds x0.7 awake (vanilla Wakeful's figure) and Vitality's five-hour night is a full one. Not with Wakeful, Sleepyhead or Restless Sleeper. A character the old version granted Wakeful to has it taken off once.
 - Light rarely wakes you and costs half the rest; the dark does more good.
 
 #### Steady Hands (+5)
 
-- Dexterous folded in (granted; not with Dexterous or All Thumbs).
+- Quick hands: inventory transfers, drops, pick-ups and grabs take half the time (the same x0.5 the game gives Dexterous). Not with Dexterous (the same effect), All Thumbs or Essential Tremor. A character the old version granted Dexterous to has it taken off once.
 - Splints you set go wrong and stitches you put in come out rough half as often. Your fresh stitches tear half as often.
 - Stitching, pulling glass or bullets, and splinting take a quarter less time.
 - Reloading and racking run a quarter faster (an ammo strap stacks), and a weapon goes to and from the belt a quarter faster.
 - Not while your hands shake (alcohol withdrawal, a diabetic low).
 
-#### Iron Gut (4, vanilla reworked)
+#### Iron Gut (4, vanilla, re-priced)
 
-- Less chance of food illness, as vanilla. Re-costed from 2 to 4, with the old Iron Stomach folded in:
+- Vanilla's trait, untouched: less chance of food illness. The mod charges two points more ("+2 Vitality") for the old Iron Stomach's effects:
 - Rotten and burnt food does half the harm.
 - Food sickness climbs half as fast.
 - A character with Iron Stomach from an older save gets Iron Gut in its place.
 
-#### Keen Cook (4, vanilla reworked)
+#### Keen Cook (4, vanilla, re-priced)
 
-- Vanilla's recipes, +2 Cooking and +1 Butchering, plus +1 Short Blade (knife work). Re-costed from 3 to 4.
+- Vanilla's trait, untouched (its recipes, +2 Cooking and +1 Butchering). The mod charges a point more ("+1 Vitality") and gives +1 Short Blade (knife work) at the start, shown on the creation screen's skills list as "(+1 trait)".
 
-#### Blacksmith Knowledge (7, vanilla reworked)
+#### Blacksmith Knowledge (7, vanilla, re-priced)
 
-- Vanilla's forging recipes, +2 Metalworking and +1 Maintenance, plus +1 Short Blunt (hammer work). Re-costed from 6 to 7. The occupation's own Blacksmith Knowledge is vanilla's.
+- Vanilla's trait, untouched (its forging recipes, +2 Metalworking and +1 Maintenance). The mod charges a point more ("+1 Vitality") and gives +1 Short Blunt (hammer work) at the start.
 
 #### Level Headed (+8)
 
@@ -493,14 +545,14 @@ Attacks that cost you hours.
 - Stale and musty clothes cost no mood, and fresh ones give none: the laundry moodle is not shown. Musty clothes over a wound still count for infection.
 - Not with Germaphobe or Homemaker. Needs laundry on.
 
-#### Outdoorsman (2, vanilla reworked)
+#### Outdoorsman (2, vanilla)
 
-- Less affected by harsh weather, as vanilla.
+- Vanilla's trait, untouched: less affected by harsh weather. The mod adds (and says so in the description):
 - Takes twice as long to get sunburnt.
 
-#### Cat's Eyes (1, vanilla re-costed)
+#### Cat's Eyes (1, vanilla, re-priced)
 
-- Better vision at night, as vanilla. Re-costed from 3 to 1.
+- Vanilla's trait, untouched: better vision at night. The mod charges two points less ("-2 Vitality") because of the line below.
 - Light wakes you more easily; see [Sleep and light](#sleep-and-light).
 
 #### Early Riser (+1)
@@ -575,11 +627,11 @@ Attacks that cost you hours.
 - Improvised weights are no likelier to pull a muscle than real ones.
 - Not with Newbie Gains. Needs Fitness Training on.
 
-### Age: In Their 20s (+6), 30s, 40s (-2) and 50s (-6)
+### Age: In Their 20s (+5), 30s, 40s and 50s (-6)
 
-Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Younger bodies recover and train faster; older characters start with more skill. The 30s are the game as it is. The creation screen asks for the age first: until one of the four is chosen nothing else is offered and Next is greyed. In Their 30s costs nothing, the 20s cost 6 points, the 40s give 2 and the 50s 6. The whole system, with every number, is in [docs/age.md](docs/age.md).
+Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. The young start barely trained and learn fast, and their bodies forgive everything; the old arrive knowing their trade and recover slowly. The 30s are the game as it is. The creation screen asks for the age first: until one of the four is chosen nothing else is offered and Next is greyed. In Their 30s and In Their 40s cost nothing, the 20s cost 5 points and the 50s give 6 (Age 2.0, 2026-10-31; the 20s cost 6 and the 40s gave 2 before). The whole system, with every number, is in [docs/age.md](docs/age.md).
 
-- **Profession:** extra levels in the profession's main skill at the start: 0 / 0 / 2 / 3 (the 30s get none: they are the game as it is). Every skill tied for the top boost gets them. Each other skill the profession boosts gets +1 in the 40s and +2 in the 50s. Fitness and Strength never get any; the Unemployed get Maintenance. The creation screen shows them in blue in the Major Skills list.
+- **Profession:** the levels in the profession's main skill move by age: -2 / 0 / +2 / +3. Every skill tied for the top boost moves. Each other skill the profession boosts moves -1 / 0 / +1 / +2. Nothing goes under 0, and the profession's XP rate is kept, so a 20s Carpenter at Carpentry 1 still trains it at +125%. Fitness and Strength never move; the Unemployed get Maintenance (nothing to lose young). The creation screen shows the levels in blue, and the lost ones greyed.
 - **Every day (20s / 40s / 50s against the 30s):**
   - Endurance recovery x1.25 / x0.92 / x0.85.
   - Fitness and Strength experience x1.5 / x0.9 / x0.8.
@@ -587,18 +639,20 @@ Every character is in their 20s, 30s, 40s or 50s and carries one Age trait. Youn
   - Stiffness fades x1.5 / x0.85 / x0.7.
   - Night wakes count x0.8 / x1.15 / x1.3 in the sleep score.
   - Red cells rebuild x1.15 / x0.8 / x0.65; a concussion heals x1.2 / x0.75 / x0.6; hangovers x0.85 / x1.25 / x1.5.
-  - **The mind:** any skill under level 3 trains x1.2 / x1 / x0.9; the profession's own skills train x1 / x1.1 / x1.15.
-  - **The metabolism:** hunger builds x1.15 / x0.95 / x0.9; caffeine, drink, food sickness and daily or course medication clear x1.2 / x0.9 / x0.8 (a daily pill holds a fifth longer in the 50s, and so does everything bad).
-- **In Their 20s:** cannot take Arthritis; Handy gives none of its four starting levels and trains those skills x1.5 instead; Gym Regular starts at 65; Type 2 resistance a little lower; a Heart Condition acts up less (x0.8).
-- **In Their 40s and 50s:** Handy gives +1 Carpentry more; Arthritis flares sooner (x1.3 / x1.6); Brittle bones snap more often (x1.25 / x1.5); a Heart Condition acts up more (x1.25 / x1.5); Type 2 resistance is higher.
-- **Age pricing:** a trait can cost more or fewer points in a band, shown beside its cost on the creation screen (red dearer, green cheaper). Strong and Athletic +2 / +4 in the 40s / 50s, Stout +1 / +2, Fit -1 in the 20s then +1 / +2; Fast Learner -1 in the 20s and +1 in the 50s; Slow Learner gives a point fewer in the 20s and the 50s; Hearty Appetite gives a point fewer in the 20s and one more in the 50s. The conditions the 20s band softens give fewer points young: Multiple Sclerosis and Heart Condition 3 fewer, Asthma and Hemophilia 2, Type 2, Anaemic, Smoker and Alcoholic 1. Gym Regular, Meal Prepper and Early Riser cost 2 in the 40s and 3 in the 50s.
+  - **Learning:** in the 20s every skill trains x1.15, anything under level 3 x1.3, the weapon skills x1.15 (they multiply: a fresh weapon skill x1.72); the 50s train new skills x0.9; the profession's own skills train x1.1 / x1.15 in the 40s / 50s.
+  - **The head (the 20s only):** panic builds x1.15; smoking and drinking habits take hold x1.3 faster; cravings come x1.25 sooner (a Smoker's withdrawal, an Alcoholic's dry hours, a coffee drinker's twelve hours become under ten); a craving's irritability is x1.25; depressive episodes x1.3 and psychotic ones x1.25 as often.
+  - **The metabolism:** hunger builds x1.15 / x0.95 / x0.9; caffeine, drink, food sickness and daily or course medication clear x1.2 / x0.9 / x0.8.
+- **What an age cannot take** (one table, `DanTraits_AgeRules`; the description says "Age: 30s, 40s, 50s"): the 20s cannot take Arthritis, Brittle, Type 2 Diabetes, Gout, Underactive Thyroid or Hard of Hearing. The 50s are locked out of nothing.
+- **Age pricing:** a trait can cost more or fewer points in a band, shown beside its cost (red dearer, green cheaper). Strong and Athletic +2 / +4 in the 40s / 50s, Stout +1 / +2, Fit -1 in the 20s then +1 / +2; Fast Learner -1 in the 20s and +1 in the 50s; Slow Learner gives a point fewer in the 20s and the 50s; Hearty Appetite gives a point fewer in the 20s and one more in the 50s. The conditions the 20s band softens give fewer points young: Multiple Sclerosis and Heart Condition 3 fewer, Asthma and Hemophilia 2, Anaemic 1. Gym Regular, Meal Prepper and Early Riser cost 2 in the 40s and 3 in the 50s.
+- **In Their 20s:** Handy gives none of its starting levels and trains those skills x1.5 instead; Gym Regular starts at 65; a Heart Condition acts up less (x0.8); a Smoker starts with nearly clean lungs.
+- **In Their 40s and 50s:** Handy gives +1 Carpentry more; Arthritis flares sooner (x1.3 / x1.6); Brittle bones snap more often (x1.25 / x1.5); a Heart Condition acts up more (x1.25 / x1.5); Type 2 resistance is higher; a Smoker starts with a third / over half of the lungs gone.
 - **Traits only one age can take:**
-  - 20s: **Green (-4)**, every occupation skill starts a level lower; **Quick Study (+4)**, skills under level 5 gain experience x1.4; **Bottomless Pit (-6)**, hunger a third faster again and going hungry drags the mood down.
+  - 20s: **Quick Study (+4)**, skills under level 5 gain experience x1.4; **Natural (+3)**, the weapon skills, Aiming and Reloading train x1.25; **Hot-Headed (-3)**, a craving's irritability x1.5 and anger fades x0.7; **Restless (-3)**, Itchy Feet builds and bites twice as hard (not with Homebody); **Bottomless Pit (-6)**, hunger a third faster again and going hungry drags the mood down. (Green, every occupation skill a level lower, is retired: the band does that now.)
   - 40s: **Pace Yourself (+4)**, a tenth of the stamina a swing or sprint spends comes back; **Settled (-4)**, sleeps badly off a house bed and the first night in any new one.
   - 40s and 50s: **Reading Glasses (-2)**, reading is slow and needs good light without glasses on; **Bad Back (-8)**, a heavy load builds back pain and stiff legs (slower walking), a sore back under load can be thrown out (four hours of severe pain and no running), and a trained core eases it; **Bad Knees (-5)**, running, sprinting, climbing and stomping build knee pain, walking never rests it, sitting rests it twice as fast and a sofa or armchair three times; **Old Hand (+4)**, every skill the occupation boosts gains experience x1.25; **Delicate Stomach (-2)**, junk food and a drink on an empty stomach bring a queasy stomach.
   - 50s: **Old Injury (-3)**, one limb always a little stiff, worse and sore in the cold and damp; **Set in Their Ways (-4)**, skills outside the occupation gain experience x0.85; **Seen It All (+3)**, panic builds a fifth slower, Fear of Blood faints and filth stress halved; **Cast Iron (+2)**, medication side effects half as often and the overdose line a pill higher; **Old Bones Know Rain (+1)**, tomorrow's storm or freezing night announced the morning before.
-- **Green** takes the levels away only; it does not change how fast anything trains.
-- **Sandbox:** turn age off, set the default decade, set the profession levels per decade.
+- **What each age wants** (sandbox option *Age Wants*, one switch for the lot): the 20s get **itchy feet** after three days in the same patch of map (bored faster, a little low; somewhere new lifts them at once) and are **slow to wake** for an hour after a night that ends before seven unless there is coffee; the 40s get a touch of mood from a morning coffee and a meal at the usual hour; the 50s keep a **routine** (the same bed, a meal at yesterday's hour, a morning drink: three broken days in a row put them out of it, low and sleeping worse, until two kept days), **feel the cold** (the joints' weather x1.2 under 15 C, a low mood out in the cold, a cold night sleeps worse unless a hot water bottle was in the bed) and get more from **comfort** (stiffness fades x1.2 asleep in a house bed, a comfy chair rests Bad Knees x1.2). The health panel names your age and the want that is up.
+- **Sandbox:** turn age off, set the default decade, the wants switch, the profession levels per decade (the 20s' can go negative: -2 by default).
 
 ## For everyone
 
@@ -680,7 +734,7 @@ Replaces vanilla's one-roll infection.
 - **Level 5, spread:** disinfectant and garlic stop working and only antibiotics do. The fever (temperature, the Sick moodle, tiredness, thirst) follows hours to a day or two later. Past that, sepsis drains health, faster the worse it gets. Untreated it kills in a couple of days.
 - **Antibiotics** are the game's own pills, one a dose. Each tops up a level in the blood that halves every six hours; while it is high enough the infection falls back. A dose every eight hours keeps it there; ten doses finish a course (a box holds 12). Stop early once it is gone and it has a coin flip to come back. Vanilla's one-pill cure is gone.
 - A fever makes for a bad night, brings on migraines, raises blood sugar and irritates asthma. Sepsis brings delirium.
-- Zombie infection is untouched, except for [Resilient](#resilient-10-vanilla-reworked)'s chance to beat it.
+- Zombie infection is untouched, except for [Resilient](#resilient-10-vanilla-re-priced)'s chance to beat it.
 - Moodle: Infection. A sandbox option turns it off.
 
 ### Wound care
@@ -918,7 +972,7 @@ The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file
 
 ## Status and known issues
 
-Version 1.4.0, Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
+Version 1.5.0, Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
 
 - **Split-screen** co-op works: the clocks run for every local player, and since the 2026-10-29 review so do the damage, swing and hit events (bleeding, concussion, fractures, tinnitus, wound strain). The grants at game start (starting kits, the folded-in vanilla traits) still go to player 1 only. Multiplayer over a network is a separate matter (`plans/multiplayer.md`).
 - **A Really Bad Day** is not balanced yet. Its glass shard killed even a character with no other traits, so for now the wound is an infected cut and the trait gives 8 points instead of 12, until a proper balance is found.
@@ -926,7 +980,7 @@ Version 1.4.0, Build 42, singleplayer only (multiplayer is untested and not supp
 - Other health overhauls (anything that replaces bleeding, infection or the health panel) will likely conflict.
 - **Take A Bath And Shower** is supported: a bath or shower washes sun block off (`DanTraits_Bathing.lua`), Sensory Issues calms down three times as fast in a bath and twice in a shower (and being wet from it does not count against you), and laundry's hand-wash floors apply to the clothes you bathe in (the same file); both do nothing when it is not loaded. Its gradual body wash is what Germaphobe reads anyway, a wet body cools Multiple Sclerosis as it should, a hot bath warms an MS character (by design on both sides), and its bath salts keep their effects (a calming salt is the game's beta-blocker effect, a happy one its antidepressant effect, which an MDD character's own regimen overrides).
 - **Project A-Life** (NPCs on zombie bodies) is supported: its NPCs and its zombie steering leave a Hallucinations phantom alone (`DanTraits_ALife.lua`, which does nothing when A-Life is not loaded). NPC wounds are ordinary wounds, so blood, infection and wound care apply to them, and an NPC's blow, shot or graze counts as a weapon hit for Concussion and Brittle (the game itself does not report those). A house alarm no longer floods the error log through A-Life's NPC hearing (the alarm is not a game object, so it reaches A-Life as a sound with no source).
-- **Dynamic Traits and Expanded Moodles** loads alongside, with an adapter (`DanTraits_DTEM.lua`, which does nothing without it): its boot pass re-prices Keen Cook, Iron Gut, Resilient, Fear of Blood, Smoker and Cat's Eyes, and the adapter puts this mod's costs and effects back; its Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees are hidden at creation (this mod's stand in), and a character DTEM makes an alcoholic or caffeine addict in play gets this mod's trait instead. Still a poor fit: both mods have withdrawal, pass-outs and fractures, so pick one for addictions. Details and the in-game checks still owed in [docs/dynamic-traits.md](docs/dynamic-traits.md).
+- **Dynamic Traits and Expanded Moodles** loads alongside, with an adapter (`DanTraits_DTEM.lua`, which does nothing without it): since Age 2.0 this mod redefines no vanilla trait (its re-pricing of Keen Cook, Iron Gut, Resilient, Fear of Blood and Cat's Eyes is a flat delta drawn beside the cost, and Smoker is the mod's own trait), so DTEM may re-price those as it likes and nothing has to be put back; its Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees are hidden at creation (this mod's stand in), and a character DTEM makes an alcoholic or caffeine addict in play gets this mod's trait instead; the Resilient it hands out in play brings no Knox roll (the roll belongs to a Resilient chosen at creation). Still a poor fit: both mods have withdrawal, pass-outs and fractures, so pick one for addictions. Details and the in-game checks still owed in [docs/dynamic-traits.md](docs/dynamic-traits.md).
 - **Bandits** (and its add-ons) is supported: bandits, hostile or friendly, leave a Hallucinations phantom alone, and a bandit's hit counts as a weapon hit for Concussion (all of its damage on the head for a head hit) and Brittle (`DanTraits_Bandits.lua`, which does nothing when Bandits is not loaded). A bandit's head shot knocks a helmet off before the concussion roll, so the helmet does not help against that one.
 - **This Is Your Life** (the in-world character creator) is supported: its Personnel Assessment folder offers In Their 30s, shows only the ages until one is picked, hides the traits the chosen age cannot take, writes the age's extra cost under a trait's own, and holds Approve and Continue until an age is chosen, like the vanilla screen (`DanTraits_TIYL.lua`, which does nothing when This Is Your Life is not loaded). Its Quick Start and poster stories skip the trait screen, so those characters get the Default Age sandbox setting. Turning off its "Enable Custom Profession Screens" option brings back the vanilla trait screen, which works as normal.
 

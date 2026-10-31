@@ -3,9 +3,100 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
-## Next (in progress)
+## 1.5.0 - 2026-10-31
 
 ### New
+
+- **What each age wants** (Age 2.0 step 7, 2026-10-31; `DanTraits_AgeWants.lua`; `tests/test_agewants.lua`).
+  Seven small wants behind one sandbox switch, **Age Wants** (`AgeWants`, on; off: nothing ticks, no want
+  moodle, no mood or stress moves, Restless does nothing; the bands' own effects are untouched). The
+  20s: **Itchy Feet** (the map cell, 256 tiles square, is noted each minute; three days in one and the
+  want builds over a day: boredom x(1 + 0.5 x want) through the `boredomRise` pipeline, a mood dip each
+  waking minute; a cell never visited clears it, takes 10 unhappiness and 0.05 stress off and says so;
+  Restless doubles the days, the boredom, the dip and the lift; a character who is not itchy gets
+  nothing from fresh country) and the **late sleeper** (a night ending before 7:
+  tiredness held at 0.62 for an hour unless half a mug of caffeine is in the system, the night's sleep
+  debt x1.25). The 40s: **routine, lightly** (a coffee or tea before 11 and a meal, 0.2 hunger or more,
+  within an hour of yesterday's main meal: 2 unhappiness off each, once a day). The 50s: **Creature of
+  Habit** (the same bed as last night, a meal at yesterday's hour, a morning drink: a sliver of mood
+  each; the day is scored when the night is, kept when two of three held; three broken days in a row
+  bring Out of Routine, a mood sink each waking minute and the night 0.1 worse, until two kept days),
+  **Feels the cold** (the joints' weather reading x1.2 under 15 C through `arthritisJoint`, the mood
+  sinks out in air under 10 C, a cold night scores 0.05 worse unless the hot water bottle was in the
+  bed) and **Comfort matters more** (stiffness fades x1.2 asleep in a bed in a house through
+  `stiffFade`; a seat you could sleep on rests Bad Knees x1.2 through a new `kneeRest` hook). The
+  health panel gets an Age line: the band, and the want that is up. Two moodles: Itchy Feet / Stir
+  Crazy, Out of Routine.
+- **Five conditions** (Age 2.0 step 6, 2026-10-31; `tests/test_diseases.lua`), each a file of its own with
+  a moodle, a notice and (all but Carpal Tunnel) a starting bottle (Starting Medication), four new bottles in the shared medication
+  system (`DanTraits_Meds.lua`: allopurinol daily 3 days to build, colchicine rescue, levothyroxine daily
+  a week to build and fade, antihistamines rescue that make you drowsy while they work; found as
+  prescriptions, antihistamines in every other bathroom) with a context-menu option each
+  (`DanTraits_Client.lua`), icons from `make_icons.py`:
+  - **Gout** (-8; the 40s and 50s; `DanTraits_Gout.lua`). A urate meter (`gtUrate`) rich meals (the
+    Cooking macro protein or fat, by portion), drink (by intoxication a minute), thirst and a Cut diet
+    raise; it drains over four days, faster with water; allopurinol cuts rises and hurries the drain
+    (rises x0.4, drain x1.6 at full effect). Past 0.7 a flare can start (a chance adding to 0.1 a day at a full meter):
+    one foot (the knee too, one in four, within a month of the last) for three to five days, pain 65
+    on the part (severe), the leg's thigh and shin held stiff (slow walking), no running or sprinting
+    (per frame, as Bad Back's thrown-out back). Colchicine in the first 12 hours ends it within a day,
+    later halves what is left; painkillers take the pain x0.6. Moodle Gout Flare (urate high / treated
+    / raw). Console `gout [flare|end|urate n]`.
+  - **Essential Tremor** (-3; any age; not with Steady Hands; `DanTraits_Tremor.lua`). A shake
+    (`etShake`: 0.4 base, +0.25 at a coffee's caffeine, +0.2 at full tiredness, +0.2 at full stress,
+    +0.2 under 10 C; x0.5 for an hour after a drink raises intoxication; x(1 - 0.6 x beta blockers'
+    effect)). Rough stitches and bad splints x(1 + shake), swing drop +1% x shake, reload speed
+    x(1 - 0.25 x shake), reading x(1 + 0.2 x shake). The game's aiming is Java and has no seam. Moodle
+    Tremor. Starts with vanilla Beta Blockers.
+  - **Underactive Thyroid** (-3; the 40s and 50s; `DanTraits_Thyroid.lua`). Untreated = 1 minus
+    levothyroxine's effect: tiredness builds x(1 + 0.15u) (the `fatigueRise` pipeline), unhappiness
+    0.0004 of the range a waking minute x u, both worse below 12 C, weight drifts up 0.05 kg a day x u
+    under 95 kg. Moodle Sluggish / Underactive Thyroid. Starts with a bottle, already in the system.
+  - **Hay Fever** (-2; any age; `DanTraits_HayFever.lua`). Pollen by month (March 0.3 to May and June
+    1 to August 0.4), x(0.7 to 1.3) by wind, x0.2 in rain, x0.3 indoors, x(1 - antihistamine effect);
+    the load follows it (5% a minute). Sneezing fits (3% a waking minute at a full load) through the
+    one shared cough (radius 12, zombies hear) and clear the action queue. Moodle Hay Fever /
+    Streaming. Console `hayfever [sneeze|load n]`.
+  - **Carpal Tunnel** (-2; any age; `DanTraits_CarpalTunnel.lua`). The action at the head of the queue
+    each minute: a repetitive kind (crafting, building, sawing, chopping, washing, repairs, vehicle
+    parts) the same as the minute before grows a run; from 15 minutes the load rises 0.004 a minute;
+    rest eases 0.002 (x2 asleep, x2 with a splint on a forearm); a change of task resets the run. A
+    numb spell from 0.5 until under 0.3: inventory transfers and crafting x1.2 (`adjustMaxTime`),
+    stitching, glass, bullets and splints x1.2 (`getDuration`), bad splints and rough stitches x1.5,
+    light wakes you x1.5 while the load is 0.7 or more. Moodle Tingling Hands / Numb Hands. Console
+    `carpal [load n]`.
+- **Natural (+3), Hot-Headed (-3), Restless (-3)**, the 20s' traits in Green's place (Age 2.0 step 5,
+  2026-10-31, `DanTraits_AgeTraits.lua`, `DanTraits_Anger.lua`; `tests/test_agetraits.lua`,
+  `test_anger.lua`). Natural: the weapon skills, Aiming and Reloading gain experience x1.25
+  (`NT_XP`, on top of the band's x1.15; Burnout's parent-based combat check through
+  `DanTraits_AgeIsCombatPerk`). Hot-Headed: the irritability a craving holds is x1.5 (`HH_RISE`, the
+  `angerFloor` hook the Smoker and Dependent floors read) and anger falls x0.7 (`HH_FALL`, a new
+  `angerFall` hook: `DanTraits_Anger.lua` now puts part of every fall back each frame for a character
+  the hook speaks for, order 45, after the cravings' holds; rises untouched, nothing tracked for
+  anyone else). Restless: the Itchy Feet want builds x2 and bites x2 (the effect lands with the wants
+  suite in step 7); not with Homebody; does nothing with the Age Wants switch off. All three are 20s
+  only (`DanTraits_AgeRules`). Icons in `make_icons.py` (a target, a steaming red face, a boot).
+- **Vitality's own Smoker** (`DanTraits:smoker`, -5; Age 2.0 step 1, 2026-10-31, `DanTraits_Smoker.lua`;
+  `tests/test_smoker.lua`). The nicotine system (habit meter, withdrawal, lungs, the cough, the Strain
+  rows, Straight Edge's exclusion) now hangs off a trait of the mod's own instead of a re-costed
+  vanilla Smoker. The craving is the file's: it owns the NICOTINE_WITHDRAWAL rise (`NIC_RISE_H` 3 h
+  to full at pace 1, scaled by the habit as before: half pace for a Smoker taken at creation), clears
+  the stat when a Smoker smokes (a whole cigarette all of it, a drag its share, and the game's
+  smoke clock with it), and adds nothing else: the game's Stress moodle reads the withdrawal stat
+  on top of stress for everyone (`Stats.getNicotineStress`), so the craving already shows and
+  counts as stress, as it did for vanilla's Smoker (a pre-release review took off the stress and
+  unhappiness the file had added on top). A vanilla Smoker the sandbox option shows never gains
+  this mod's Smoker on top. The game still sees a non-smoker when they smoke and adds its nausea; that
+  is taken straight back off, by tolerance, as a regular smoker's always was. The lungs a Smoker
+  taken at creation starts with follow the age band (`LUNG_START_BAND`: 20s 0.05, 30s 0.15, 40s
+  0.33, 50s 0.55; 0.35 with Age off). Vanilla's Smoker is hidden on the creation screen unless the
+  new sandbox option **Show Vanilla Smoker** (`SmokerVanillaShown`, off) shows it, tagged
+  "vanilla" on its row; the two exclude each other, and a vanilla Smoker is then a plain vanilla
+  smoker to the mod. A save from before: a character with vanilla Smoker and the mod's smoker data
+  (the habit meter, or the craving stat above zero) is converted once on load, vanilla off and ours
+  on, with a notice (`UI_DanTraits_SmokerConverted`, `d.nicConverted`); one with vanilla Smoker
+  and no data is left alone. The Smoker row of the age price table (the 20s gave one fewer) is gone
+  with the trait key.
 
 - **A Guide tab in the character window** (2026-10-30, `DanTraits_Guide.lua`, pages in
   `DanTraits_GuideData.lua`; `tests/test_guide.lua`). An in-game overview of every system and
@@ -27,16 +118,16 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 - **Dynamic Traits and Expanded Moodles** (`DynamicTraits`, reported by chuchu on Steam; written
   2026-10-09, brought into master 2026-10-29): a compatibility adapter, `DanTraits_DTEM.lua`, that
   does nothing without DTEM. DTEM's Build 42 build re-declares the vanilla traits at boot, which
-  throws away the six definitions this mod overrides; the adapter puts them back (Keen Cook 4 with
-  Short Blade, Iron Gut 4, Resilient 10 as a plain trait, Fear of Blood -6, Smoker -5, Cat's Eyes
-  1). DTEM's Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees are hidden on the
+  threw away the six definitions this mod's script used to override; until Age 2.0 (2026-10-31) the
+  adapter put them back. The script overrides no vanilla trait now (the price changes are flat
+  deltas, `DanTraits_VanillaPrices.lua`, which apply whatever DTEM does to a definition), so that
+  job is gone. DTEM's Alcoholic, Addicted to Caffeine, Asthmatic and Brittle Knees are hidden on the
   creation screen (`DanTraits_HideAtCreation` in core, read by the creation filter in
   `client/DanTraits_Client.lua`; ours stand in). When DTEM gives a character its Alcoholic or
   Addicted to Caffeine in play, ours takes its place within a minute, with a halo, and DTEM's
   counter starts over; when DTEM takes its own away, ours stays. One log line at boot says what
-  was done. `tests/check_dtem_overrides.py` (run by `run_tests.py`) fails when the adapter's
-  table drifts from `media/scripts/DanTraits.txt`. The findings (which DTEM folder a 42.21 game
-  loads, how its traits are keyed, what its re-declaration does) are in `docs/dynamic-traits.md`.
+  was done. The findings (which DTEM folder a 42.21 game loads, how its traits are keyed, what its
+  re-declaration does) are in `docs/dynamic-traits.md`.
   Not yet seen in the game.
 - **Newbie Gains** (+2, 2026-10-29, `DanTraits:newbiegains`, `DanTraits_Fitness.lua`). Every
   Strength and Fitness gain x1.3 (`TR.ngXp`) in `onFitnessAddXP`, after the `fitnessXpAll` hook and
@@ -216,6 +307,97 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   test_sensory 12b.
 
 ### Changed
+
+- **Age 2.0: the bands** (step 2, 2026-10-31; `DanTraits_Age.lua`, `media/scripts/DanTraits.txt`;
+  `tests/test_age.lua`, `test_agetraits.lua`, `test_client.lua`, `test_xpstack.lua`). After a long
+  play-test: the 40s felt like the best pick, so In Their 40s costs 0 (was -2, gave 2); the 20s were
+  too generous, so In Their 20s costs 5 (was 6) and **starts barely trained**: two levels off the
+  profession's main skill and one off each of its other skills (`AGE[20].levels` -2, `side` -1; never
+  under 0; the Unemployed have nothing to lose), shown greyed on the creation screen's Major Skills
+  list as "(-2 age)". The profession's XP rate (its XPBoostMap) is never touched, so a 20s Carpenter
+  at Carpentry 1 still trains it at +125%. In exchange the 20s **learn faster across the board**:
+  every skill x1.15 (new `learn` row), under level 3 x1.3 (`learn3`, was 1.2), the weapon skills,
+  Aiming and Reloading x1.15 (new `combat` row; Burnout's parent-based check when it is loaded, else
+  the vanilla list), Fitness and Strength x1.5 as before; the factors multiply, so a fresh weapon
+  skill trains at x1.72 until level 3. **Green is retired** (`DanTraits_RETIRED`: the band takes the
+  levels itself; a save with it has the trait taken off and nothing put back; `DanTraits_AgeLevels`
+  loses its `green` argument). Sandbox **Profession Levels (20s)** now runs -3..5 and defaults to -2
+  (negative takes levels); a save made under the old default keeps its stored 0 until changed. Every
+  Age trait at cost 0 (the 30s, now the 40s too) is put into the positive list by hand on both the
+  vanilla screen and This Is Your Life's.
+- **Age 2.0: the head rows** (step 3, 2026-10-31; `DanTraits_Age.lua` and the readers;
+  `tests/test_headrows.lua`). The body forgives, the head does not: six new band values, the 20s
+  only, each a hook the systems read. Panic builds x1.15 (`panic`, the `panicRise` pipeline; Seen It
+  All's 50s x0.8 is the mirror). The smoking and drinking habit meters build x1.3 and their daily caps
+  stretch with them (`habit`, new `habitGain` hook in `DanTraits_Smoker.lua` and
+  `DanTraits_Dependent.lua`). Cravings come sooner (`craving` 1.25, new `cravingOnset` hook): a
+  Smoker's withdrawal builds x1.25, an Alcoholic's dry hours to craving, shakes and delirium are
+  divided (24/48/72 become 19.2/38.4/57.6 at an empty meter), a Caffeine Dependent's onset falls
+  from 12 dry hours to 9.6 (`DanTraits_Caffeine.lua`, `withdrawal(hours, onset)`). The irritability
+  a craving holds is x1.25 (`anger`, new `angerFloor` hook on the Smoker and Dependent floors, capped
+  at 1; vanilla never raises ANGER, so a floor hook rather than a stat pipeline). Spiraling's episode
+  chance x1.3 (`episode`, new `mddEpisode` hook; the chance is now `DanTraits_MddEpisodeChance`) and
+  Schizophrenia's x1.25 (`schizo`, new `schizoChance` hook on `DanTraits_SchizoChance`). With the
+  habits harsher young, the Dependent 20s price row (a point fewer) goes the way the Smoker row did.
+- **Age 2.0: one rules table** (step 4, 2026-10-31; `DanTraits_AgeRules.lua`; `tests/test_age.lua`,
+  `test_agetraits.lua`, `test_client.lua`). The three ways age gated traits (the script's exclusion of
+  Arthritis against In Their 20s, the age-only table `DanTraits_AgeOnly`, the price table
+  `AGE_PRICE`) are one table, `DanTraits_AgeRules`: a row per trait with the bands that may take it
+  (`only`) and its extra per band (`price`), keyed by registry key or vanilla id.
+  `DanTraits_AgeRuleFor(kind)` resolves a creation-screen type, a key or an id; `DanTraits_AgeOnly`
+  and `DanTraits_AgePrices()` are built from it for the readers that remain. New 20s lock-outs, as
+  the user ticked: **Arthritis** (the script exclusion, now a row), **Brittle**, **Type 2 Diabetes**
+  (its +1 price row is gone) and vanilla **Hard of Hearing**; Heart Condition, MS, Asthma,
+  Hemophilia and Anaemic stay priced, not locked out; the 50s are locked out of nothing. The
+  creation screen hides what the chosen band cannot take and takes it back off when the age changes,
+  on the vanilla screen and This Is Your Life's alike, and each gated trait's description gets an
+  "Age: 40s, 50s" line at boot (`UI_DanTraits_AgeOnlyLine`).
+- **Vanilla traits left alone** (Age 2.0 step 1, 2026-10-31; `DanTraits_VanillaPrices.lua`,
+  `tests/test_vanillaprices.lua`). `media/scripts/DanTraits.txt` no longer redefines any vanilla
+  trait: the seven whole-block overrides (Cat's Eyes 3 to 1, Fear of Blood -5 to -6, Smoker -3 to
+  -5, Iron Gut 2 to 4, Resilient 4 to 10, Keen Cook 3 to 4 with +1 Short Blade and the recipe list
+  copied, Blacksmith Knowledge 6 to 7 with +1 Short Blunt and 80-odd recipes copied) are gone, so
+  another mod can rewrite a vanilla trait without breaking this one and a field a game update adds
+  is never lost. The price changes are flat deltas (`DanTraits_PriceDelta`: Fear of Blood -1, Iron
+  Gut +2, Resilient +6, Keen Cook +1, Blacksmith +1, Cat's Eyes -2; the game's sign) drawn beside the
+  trait's own cost on the creation screen ("+6 Vitality", `UI_DanTraits_PriceDelta`) and taken off
+  Points to Spend with the age surcharge (`DanTraits_TraitExtra`; `DanTraits_Client.lua`,
+  `DanTraits_TIYL.lua`), with or without an age chosen. The reason is appended to each trait's
+  description at boot (`CharacterTraitDefinition:setDescription`, once; "Vitality: +6, a chance to
+  beat the Knox infection"), which also replaces the vanilla description keys the translation files
+  overrode (Cat's Eyes, Smoker, Fear of Blood, Iron Gut, Resilient, Outdoorsman: removed from EN and
+  RU; Outdoorsman gets a sunburn line with no price). Keen Cook's +1 Short Blade and Blacksmith
+  Knowledge's +1 Short Blunt are given at spawn through Age's level code (`DanTraits_AddLevels`,
+  `d.vanLevelsApplied`, new characters only) and shown on the Major Skills list as "(+1 trait)"
+  (`UI_DanTraits_TraitLevels`). The Dynamic Traits adapter's re-apply of the six overrides goes with
+  them (`DanTraits_DTEM.lua`; `tests/check_dtem_overrides.py` deleted): DTEM may re-price those
+  traits as it likes, the deltas apply on top.
+- **The fold-in traits carry their own effects** (2026-10-31). Steady Hands, Fast Recovery and
+  Deep Sleeper no longer grant Dexterous, Fast Healer and Wakeful (`DanTraits_GrantFoldIn` retired).
+  Steady Hands halves the inventory transfer, drop, pick-up and grab actions itself
+  (`SH_TRANSFER` 0.5 on each action's `adjustMaxTime`, which `ISBaseTimedAction:create` runs once:
+  `ISInventoryTransferAction`, `ISDropWorldItemAction`, `ISDropVehicleItemAction`,
+  `ISPickUpGroundCoverItem`, `ISGrabItemAction`; the same x0.5 vanilla's Lua gives Dexterous; not
+  doubled for a character who somehow has both; the rest of a multi-item drag, which the transfer
+  action merges into its `queueList` with `new()`'s time, is halved as it is merged, after
+  `checkQueueList`). Fast Recovery closes scratches and cuts half as fast
+  again and heals an unstitched deep wound the same (`FR_HEAL` 1.5: the new `healPace` hook on Age's
+  wound-clock pacing, and `woundHeal`; vanilla's Fast Healer is Java with no published number, so
+  this stands in for "recovers quickly from injuries"). Deep Sleeper tires x0.7 awake (`DS_FATIGUE`,
+  vanilla Wakeful's figure, through a new `fatigueRise` stat delta hook on FATIGUE; Vitality's
+  sleep-debt tiredness is remembered so it is not scaled) and Vitality's five-hour night is a full
+  one for it (`DanTraits_VitalitySleepNeed`); Wakeful is offered on the creation screen again and
+  Deep Sleeper excludes it in the script (with Sleepyhead and Restless Sleeper). A character the old
+  version granted the twin to has it taken off once, the first time this version sees them
+  (`DanTraits_UngrantFoldIn`: the flag says the mod gave it, so only what the mod added comes off).
+- **The Knox roll belongs to a Resilient chosen at creation** (2026-10-31, `DanTraits_Knox.lua`).
+  The flag is read once, the first time the character is seen (`d.knoxResilient`; an older save
+  counts what it holds then), so a Resilient another mod hands out in play (Dynamic Traits gives it
+  for a fit body) brings no roll, and one taken off in play keeps it.
+- **Handy's skill list is read from its definition** (2026-10-31, `DanTraits_Age.lua`,
+  `DanTraits_AgeHandyPerks`): the 20s' "Handy's levels come off, the skills train faster" rule
+  (`handyAll` in the band table) follows whatever Handy boosts, so a mod that changes Handy is
+  followed; the four vanilla names are the fallback when the definition cannot be read.
 
 - **The review's refactors** (2026-10-29/30, `plans/review-2026-10-29.md` section C; behaviour
   unchanged, every suite green). Util gained the helpers twenty files had copied:

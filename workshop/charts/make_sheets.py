@@ -16,18 +16,23 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 MEDIA = os.path.join(HERE, "..", "..", "DanTraits", "42", "media")
 EN = os.path.join(MEDIA, "lua", "shared", "Translate", "EN")
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
-RETIRED = {"jinxed", "ironstomach", "bouncesback"}
+RETIRED = {"jinxed", "ironstomach", "bouncesback", "green"}
+# items kept in the script for old saves only
+RETIRED_ITEMS = {"Cyclobenzaprine"}
+# the game's own icon folder, for a trait of ours that shares a vanilla icon name (Smoker)
+GAME_UI = r"C:/Program Files (x86)/Steam/steamapps/common/ProjectZomboid/media/ui"
 AGE = ["age20s", "age30s", "age40s", "age50s"]
-AGE_ONLY = [("green", "20s"), ("quickstudy", "20s"), ("bottomlesspit", "20s"),
+AGE_ONLY = [("quickstudy", "20s"), ("bottomlesspit", "20s"), ("natural", "20s"), ("hotheaded", "20s"),
+            ("restless", "20s"),
             ("paceyourself", "40s"), ("settled", "40s"),
             ("readingglasses", "40s, 50s"), ("badback", "40s, 50s"), ("badknees", "40s, 50s"),
             ("oldhand", "40s, 50s"), ("delicatestomach", "40s, 50s"),
             ("oldinjury", "50s"), ("setinways", "50s"), ("seenitall", "50s"),
             ("castiron", "50s"), ("oldbones", "50s")]
-# vanilla traits the mod reworks: they keep the game's own icon, so they are named, not drawn
-REWORKED = "Smoker, Fear of Blood, Resilient, Iron Gut, Keen Cook, Outdoorsy and Cat's Eyes"
+# vanilla traits the mod re-prices (Age 2.0: no longer redefined): they keep the game's own icon, so they are named, not drawn
+REWORKED = "Fear of Blood, Resilient, Iron Gut, Keen Cook, Blacksmith Knowledge, Outdoorsy and Cat's Eyes"
 # moodle icon -> the name of what it tracks (the levels say how bad)
 MOODLE_TITLES = {"AirwayIrritation": "Asthma", "BloodLoss": "Blood loss", "BloodSugar": "Blood sugar",
                  "ChestPain": "Heart", "Filthy": "Grime (Germaphobe)", "Infection": "Wound infection",
@@ -126,8 +131,15 @@ def cell(icon, name, cost=None, band=None, desc=""):
             '<div class="ds">%s</div></div></div>' % (icon, esc(name), tag, esc(desc)))
 
 
+def trait_icon(tid):
+    name = "trait_%s.png" % tid
+    if os.path.exists(os.path.join(MEDIA, "ui", "Traits", name)):
+        return icon_url("ui", "Traits", name)
+    return "file:///" + os.path.join(GAME_UI, "Traits", name).replace("\\", "/")
+
+
 def trait_cell(t, band=None, n=2):
-    return cell(icon_url("ui", "Traits", "trait_%s.png" % t["id"]), t["name"], t["cost"], band, " ".join(t["desc"][:n]))
+    return cell(trait_icon(t["id"]), t["name"], t["cost"], band, " ".join(t["desc"][:n]))
 
 
 def write(slug, **kw):
@@ -142,17 +154,17 @@ def main():
     neg = sorted((v for k, v in t.items() if v["cost"] < 0 and k not in age_ids), key=lambda v: (v["cost"], v["name"]))
     pos = sorted((v for k, v in t.items() if v["cost"] > 0 and k not in age_ids), key=lambda v: (-v["cost"], v["name"]))
 
-    write("conditions", title="Conditions", cols=4, gap=10, box=56, img=50, ds=14,
+    write("conditions", title="Conditions", cols=5, gap=6, box=44, img=40, ds=12,
           h1="The conditions <span>you can start with</span>",
           sub="Every one plugs into the health systems: blood, infection, pain, medication, sleep and Vitality.",
-          cells="\n".join(trait_cell(v) for v in neg),
-          note="Also reworked from vanilla: Smoker and Fear of Blood.")
+          cells="\n".join(trait_cell(v, n=1) for v in neg),
+          note="Fear of Blood is re-priced from vanilla. Arthritis, Brittle, Type 2 Diabetes, Gout and Underactive Thyroid are for the 30s and up.")
 
     write("perks", title="Perks", cols=3, gap=10, box=60, img=54, ds=15,
           h1="The perks <span>that pay for them</span>",
           sub="Some fold a vanilla trait in; most lean on the same health systems the conditions do.",
           cells="\n".join(trait_cell(v) for v in pos),
-          note="Also reworked from vanilla: Resilient, Iron Gut, Keen Cook, Outdoorsy and Cat's Eyes.")
+          note="Also re-priced from vanilla: Resilient (the Knox roll), Iron Gut, Keen Cook, Blacksmith Knowledge and Cat's Eyes; Outdoorsy shrugs off sunburn.")
 
     cells = ['<div class="head">Pick a decade first</div>']
     cells += [trait_cell(t[a], n=1) for a in AGE]
@@ -188,7 +200,7 @@ def main():
         else:
             desc = "  |  ".join(" → ".join(levels) for levels in sides)
         moodles.append((title, desc, f))
-    write("moodles", title="Moodles", cols=4, gap=4, box=46, img=40, ds=13,
+    write("moodles", title="Moodles", cols=5, gap=4, box=40, img=36, ds=12,
           h1="%d new moodles <span>so you always know why</span>" % len(moodles),
           sub="Every lasting effect shows up beside the game's own, level by level. Moodle Framework draws them.",
           cells="\n".join(cell(icon_url("ui", f), title, desc=desc) for title, desc, f in moodles),
@@ -201,13 +213,15 @@ def main():
         if not m:
             continue
         iid = m.group(1)
+        if iid in RETIRED_ITEMS:
+            continue
         name = names.get("DanTraits." + iid, iid)
         tip = lines(tips.get("Tooltip_DanTraits_" + iid, ""))
         n = 2
         while n < len(tip) and tip[n - 1].endswith(","):
             n += 1
         items.append(cell(icon_url("textures", f), name, desc=ITEM_DESC.get(iid) or " ".join(tip[:n])))
-    write("items", title="Items", cols=4, gap=4, box=50, img=46, ds=13,
+    write("items", title="Items", cols=5, gap=4, box=44, img=40, ds=12,
           h1="The pharmacy <span>and the rest of the kit</span>",
           sub="Medicine you have to find, ration and keep on you, and what you need for insulin, laundry, training and a quiet head.",
           cells="\n".join(items),

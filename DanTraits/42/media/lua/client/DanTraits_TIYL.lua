@@ -84,10 +84,14 @@ local function drawWithSurcharge(original)
         local yy = original(list, y, item, alt)
         pcall(function()
             local band = DanTraits_Creation.band(screen())
-            local extra = band and DanTraits_AgeSurcharge(band, item.item:getType()) or 0
+            local extra, age = 0, 0
+            if DanTraits_TraitExtra then extra, age = DanTraits_TraitExtra(band, item.item:getType())
+            elseif band then extra = DanTraits_AgeSurcharge(band, item.item:getType()); age = extra end
             if extra == 0 then return end
             local hc = extra > 0 and getCore():getBadHighlitedColor() or getCore():getGoodHighlitedColor()
-            local label = extra > 0 and getText("UI_DanTraits_AgeSurcharge", extra) or getText("UI_DanTraits_AgeDiscount", extra)
+            local label
+            if DanTraits_TraitExtraLabel then label = DanTraits_TraitExtraLabel(extra, age)
+            else label = extra > 0 and getText("UI_DanTraits_AgeSurcharge", extra) or getText("UI_DanTraits_AgeDiscount", extra) end
             list:drawTextRight(label, list.width - 18, y + 21, hc:getR(), hc:getG(), hc:getB(), 0.9, UIFont.NewSmall)
         end)
         return yy
@@ -114,15 +118,21 @@ local function fixLists(panel)
             end
         end
     end
-    if DanTraits_Creation.ageOff() or not DanTraitsRegistry or not DanTraitsRegistry.age30s then return end
-    local def = CharacterTraitDefinition.getCharacterTraitDefinition(DanTraitsRegistry.age30s)
-    if not def or def:isFree() or def:getCost() ~= 0 then return end
-    for _, row in pairs(panel.goodList.items) do
-        if row.item == def then return end
-    end
-    if chosen(vanilla, def) or vanilla:isTraitEnabled(def) then
-        local row = panel.goodList:insertItem(1, def:getLabel(), def)
-        row.tooltip = def:getDescription()
+    if DanTraits_Creation.ageOff() or not DanTraitsRegistry then return end
+    -- the Age traits at cost 0 (the 30s; the 40s since Age 2.0), which the folder never lists: on top, in order
+    for _, key in ipairs({ "age50s", "age40s", "age30s", "age20s" }) do
+        local trait = DanTraitsRegistry[key]
+        local def = trait and CharacterTraitDefinition.getCharacterTraitDefinition(trait)
+        if def and not def:isFree() and def:getCost() == 0 then
+            local listed = false
+            for _, row in pairs(panel.goodList.items) do
+                if row.item == def then listed = true end
+            end
+            if not listed and (chosen(vanilla, def) or vanilla:isTraitEnabled(def)) then
+                local row = panel.goodList:insertItem(1, def:getLabel(), def)
+                row.tooltip = def:getDescription()
+            end
+        end
     end
 end
 

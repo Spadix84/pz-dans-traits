@@ -163,7 +163,7 @@ local function withdrawal(player, d, stats, intox, meter)
 
     local dry = (d.alcDryHours or 0) + TICK_H
     d.alcDryHours = dry
-    local onset = 1 - DEP_TOL_ONSET_CUT * meter
+    local onset = (1 - DEP_TOL_ONSET_CUT * meter) / (tonumber(DanTraits_RunHooks("cravingOnset", 1, player)) or 1)   -- Age: sooner young
     local stage = 0
     if dry >= DRY_HOURS_STRESS * onset then stage = 1 end
     if dry >= DRY_HOURS_PAIN * onset then stage = 2 end
@@ -214,7 +214,9 @@ local function updateDependent(player, d)
 
     local drinking = intox >= DRINK.any
     if drinking then
-        local gain = math.min(intox * TICK_H / ALC_BUILD_H, ALC_DAY_CAP - (d.alcDayGain or 0))
+        -- the habitGain hook (Age: the young get hooked faster) scales the gain and the day's cap alike
+        local habitK = tonumber(DanTraits_RunHooks("habitGain", 1, player)) or 1
+        local gain = math.min(intox * TICK_H / ALC_BUILD_H * habitK, ALC_DAY_CAP * habitK - (d.alcDayGain or 0))
         if gain > 0 then
             meter = math.min(1, meter + gain)
             d.alcDayGain = (d.alcDayGain or 0) + gain
@@ -253,7 +255,8 @@ local function updateDependent(player, d)
 
     local angerFloor = 0
     if has and d.alcWithdrawing and not DanTraits_Asleep(player) then
-        angerFloor = ((d.alcStage or 0) >= 2 and ALC_ANGER or ALC_ANGER_CRAVE) * (d.alcW or 0)
+        angerFloor = math.min(1, ((d.alcStage or 0) >= 2 and ALC_ANGER or ALC_ANGER_CRAVE) * (d.alcW or 0)
+            * (tonumber(DanTraits_RunHooks("angerFloor", 1, player)) or 1))   -- Age: hotter young
     end
     -- only with the trait, or with a hold still to take off (the trait just gone): everyone
     -- else's mod data is left alone (this ran for every character, writing alcAnger = 0)

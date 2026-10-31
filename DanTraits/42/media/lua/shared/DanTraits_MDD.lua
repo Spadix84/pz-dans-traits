@@ -216,6 +216,23 @@ local function updateMddMeds(d, tickDays)
     end
 end
 
+-- the chance (per ten minutes) an episode starts now: the base, stress, pain,
+-- tiredness, days indoors, sleep debt, the medication's cover, a hard week
+-- (Burnout), Vitality, and the mddEpisode hook (Age: the young more often)
+local function episodeChance(player, d, stats, benefit)
+    local chance = MDD_EPISODE_BASE
+        * (1 + (stats:get(CharacterStat.STRESS) or 0) * MDD_STRESS_WEIGHT)
+        * (1 + (stats:get(CharacterStat.PAIN) or 0) / 100 * MDD_PAIN_WEIGHT)
+        * (1 + (stats:get(CharacterStat.FATIGUE) or 0) * MDD_FATIGUE_WEIGHT)
+    if (d.mddOutside or 0) < 60 then chance = chance * (1 + MDD_INDOORS_WEIGHT) end
+    if DanTraits_SleepDebt then chance = chance * (1 + MDD_SLEEP_DEBT_WEIGHT * DanTraits_SleepDebt(player)) end
+    chance = chance * (1 - MDD_MED_ONSET_CUT * (benefit or 0))
+    chance = chance * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1)   -- a hard week (DanTraits_Strain.lua)
+    if DanTraits_VitalityMddOnset then chance = chance * DanTraits_VitalityMddOnset(player) end
+    return chance * (tonumber(DanTraits_RunHooks("mddEpisode", 1, player)) or 1)
+end
+DanTraits_MddEpisodeChance = episodeChance
+
 local function updateMddTen(player, d)
     if not hasTrait(player, "spiraling") then return end
     d = mddData(player)
@@ -237,15 +254,7 @@ local function updateMddTen(player, d)
     end
     d.mddSinceEnd = d.mddSinceEnd + 1 / 6
     if d.mddSinceEnd < MDD_REFRACTORY_HOURS then return end
-    local chance = MDD_EPISODE_BASE
-        * (1 + (stats:get(CharacterStat.STRESS) or 0) * MDD_STRESS_WEIGHT)
-        * (1 + (stats:get(CharacterStat.PAIN) or 0) / 100 * MDD_PAIN_WEIGHT)
-        * (1 + (stats:get(CharacterStat.FATIGUE) or 0) * MDD_FATIGUE_WEIGHT)
-    if d.mddOutside < 60 then chance = chance * (1 + MDD_INDOORS_WEIGHT) end
-    if DanTraits_SleepDebt then chance = chance * (1 + MDD_SLEEP_DEBT_WEIGHT * DanTraits_SleepDebt(player)) end
-    chance = chance * (1 - MDD_MED_ONSET_CUT * benefit)
-    chance = chance * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1)   -- a hard week (DanTraits_Strain.lua)
-    if DanTraits_VitalityMddOnset then chance = chance * DanTraits_VitalityMddOnset(player) end
+    local chance = episodeChance(player, d, stats, benefit)
     if ZombRand(100000) >= chance * 100000 then return end
     d.mddEpisode = true
     d.mddSeverity = 0.4 + ZombRand(61) / 100

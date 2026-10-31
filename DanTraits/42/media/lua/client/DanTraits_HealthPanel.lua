@@ -554,6 +554,15 @@ local function wrapRender()
         if #blood > 0 then sections[#sections + 1] = { t("BloodHeader"), blood, true } end
         local strain = here and strainLines(patient) or {}
         if #strain > 0 then sections[#sections + 1] = { t("StrainHeader"), strain, true } end
+        -- the band, and the want that is up (DanTraits_AgeWants.lua): your own panel only
+        if here and DanTraits_AgeWantsLines then
+            local okA, bandKey, wantKey = pcall(DanTraits_AgeWantsLines, patient)
+            if okA and bandKey then
+                local age = { { getText(bandKey), { 1, 1, 1 } } }
+                if wantKey then age[#age + 1] = { getText(wantKey), ORANGE } end
+                sections[#sections + 1] = { t("AgeHeader"), age, true }
+            end
+        end
         if #sections == 0 then return end
         local tm = getTextManager()
         local fontHgt = tm:getFontHeight(UIFont.Small)

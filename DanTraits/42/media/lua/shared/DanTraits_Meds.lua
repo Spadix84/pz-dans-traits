@@ -168,6 +168,35 @@ DanTraits_Drugs = {
         overH = 1,   -- the overdose lasts at least this long after the level falls back
         over = { faint = 0.05, fatigue = 0.0005 },   -- the blood pressure drops
     },
+    -- the Age 2.0 conditions (2026-10-31): Gout, Underactive Thyroid, Hay Fever
+    allopurinol = {
+        items = { "allopurinol" }, treats = { "gout" }, kind = "daily", everyH = 24, item = "DanTraits.Allopurinol",
+        halfH = 24, onAt = 0.5, overAt = 3, buildDays = 3, fadeDays = 3,
+        side = { sick = 25 }, sideH = 6,
+        over = { sick = 50 },
+        lapse = "UI_DanTraits_GoutAlloLapse", lapseTrait = "gout",
+    },
+    colchicine = {
+        items = { "colchicine" }, treats = { "gout" }, kind = "rescue",
+        halfH = 12, onAt = 0.5, overAt = 2.5,
+        side = { sick = 40 }, sideH = 6,
+        overH = 6,
+        over = { sick = 70 },
+    },
+    levothyroxine = {
+        items = { "levothyroxine" }, treats = { "thyroid" }, kind = "daily", everyH = 24, item = "DanTraits.Levothyroxine",
+        halfH = 24, onAt = 0.5, overAt = 3, buildDays = 7, fadeDays = 7,
+        side = { stress = 0.0005 }, sideH = 6,
+        over = { stress = 0.001, heart = true },
+        lapse = "UI_DanTraits_ThyroidLapse", lapseTrait = "thyroid",
+    },
+    antihistamine = {
+        items = { "antihistamines" }, treats = { "hayfever" }, kind = "rescue",
+        halfH = 8, onAt = 0.5, overAt = 3,
+        taking = { fatigue = 0.0002 },   -- drowsy while it works
+        overH = 4,
+        over = { fatigue = 0.0008 },
+    },
     painkillers = {
         items = { "pills" }, treats = { "pain" }, kind = "rescue",
         halfH = 2, onAt = 0.5, overAt = 3.5,   -- four or more at once
@@ -591,6 +620,8 @@ local SPAWN_TYPES = {
     ["DanTraits.Anticonvulsants"] = true, ["DanTraits.Metformin"] = true, ["DanTraits.IronPills"] = true,
     ["DanTraits.Diazepam"] = true, ["DanTraits.NicotineGum"] = true, ["DanTraits.Inhaler"] = true,
     ["DanTraits.Sumatriptan"] = true, ["DanTraits.Nitroglycerin"] = true,
+    ["DanTraits.Allopurinol"] = true, ["DanTraits.Colchicine"] = true, ["DanTraits.Levothyroxine"] = true,
+    ["DanTraits.Antihistamines"] = true,
 }
 
 function DanTraits_MedRandomFill(item)

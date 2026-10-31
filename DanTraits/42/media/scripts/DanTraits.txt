@@ -195,7 +195,7 @@ module DanTraits {
         Cost = -12,
         UIName = UI_trait_DanArthritis,
         UIDescription = UI_trait_DanArthritisdesc,
-        MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:oldinjury;base:athletic;base:fit;base:strong;base:stout,
+        MutuallyExclusiveTraits = DanTraits:oldinjury;base:athletic;base:fit;base:strong;base:stout,
     }
 
     character_trait_definition DanTraits:caffeine
@@ -275,9 +275,9 @@ module DanTraits {
         UIDescription = UI_trait_DanMealPrepperdesc,
     }
 
-    /* Wakeful folded in (granted with it; Wakeful itself is hidden at
-       character creation): light rarely wakes you and the dark does more
-       good. media/lua/shared/DanTraits_Sleep.lua. */
+    /* Needs less sleep (the trait's own effect since Age 2.0; not with
+       Wakeful, Sleepyhead or Restless Sleeper), light rarely wakes you and
+       the dark does more good. media/lua/shared/DanTraits_Sleep.lua. */
     character_trait_definition DanTraits:deepsleeper
     {
         IsProfessionTrait = false,
@@ -286,33 +286,21 @@ module DanTraits {
         Cost = 6,
         UIName = UI_trait_DanDeepSleeper,
         UIDescription = UI_trait_DanDeepSleeperdesc,
-        MutuallyExclusiveTraits = base:needsmoresleep;base:insomniac,
+        MutuallyExclusiveTraits = base:needslesssleep;base:needsmoresleep;base:insomniac,
     }
 
-    /* Vanilla Cat's Eyes, re-costed from 3 to 1: light wakes you more
-       easily (DanTraits_Sleep.lua). Definitions are keyed by trait, so this
-       replaces the vanilla one. Whole-block override: a
-       field a game update adds to the vanilla definition is lost here, so
-       after a game update compare with media/scripts/generated/characters/
-       character_traits.txt in the game folder. Vanilla fields copied (game
-       42.21.0, Steam build 25485521): IsProfessionTrait, DisabledInMultiplayer,
-       CharacterTrait, Cost (3, changed to 1), UIName, UIDescription. */
-    character_trait_definition base:nightvision
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = base:nightvision,
-        Cost = 1,
-        UIName = UI_trait_NightVision,
-        UIDescription = UI_trait_NightVisionDesc,
-    }
 
     /* Age: every character carries one of the four, and they exclude each
        other. The 30s are the default: cost 0, hidden at creation and
-       granted at spawn to a character who picked none. The 20s cost points
-       (they recover and train faster), the 40s and 50s give points back
-       (more profession levels, a slower body). The 20s can't take
-       Arthritis; with Handy they start without its four levels and train
+       granted at spawn to a character who picked none. The 20s cost 5 (they
+       recover and train faster, and start barely trained: two levels off the
+       profession's main skill, one off its others; Age 2.0, 2026-10-31), the
+       40s cost nothing (two levels, a little slower; they gave 2 until Age
+       2.0) and the 50s give 6 back (more levels, a slower body). A trait at
+       cost 0 is listed by hand (DanTraits_Client.lua). The traits an age
+       cannot take are DanTraits_AgeRules.lua's (the 20s against Arthritis
+       was a script exclusion here until Age 2.0). The 20s with Handy start
+       without its four levels and train
        those skills x1.5 instead (DanTraits_Age.lua; they could not take it
        before 2026-10-13, and paid 2 more for it until 2026-10-16).
        media/lua/shared/DanTraits_Age.lua, docs/age.md. */
@@ -321,10 +309,10 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:age20s,
-        Cost = 6,
+        Cost = 5,
         UIName = UI_trait_DanAge20s,
         UIDescription = UI_trait_DanAge20sdesc,
-        MutuallyExclusiveTraits = DanTraits:age30s;DanTraits:age40s;DanTraits:age50s;DanTraits:arthritis,
+        MutuallyExclusiveTraits = DanTraits:age30s;DanTraits:age40s;DanTraits:age50s,
     }
 
     character_trait_definition DanTraits:age30s
@@ -343,7 +331,7 @@ module DanTraits {
         IsProfessionTrait = false,
         DisabledInMultiplayer = false,
         CharacterTrait = DanTraits:age40s,
-        Cost = -2,
+        Cost = 0,
         UIName = UI_trait_DanAge40s,
         UIDescription = UI_trait_DanAge40sdesc,
         MutuallyExclusiveTraits = DanTraits:age20s;DanTraits:age30s;DanTraits:age50s,
@@ -361,11 +349,14 @@ module DanTraits {
     }
 
     /* The traits only one age can take (media/lua/shared/DanTraits_AgeTraits.lua):
-       Green and Quick Study in the 20s; Reading Glasses, Bad Back, Bad Knees
-       and Old Hand in the 40s and 50s; Old Injury and Set in Their Ways in
-       the 50s. The creation screen does the age check in Lua
-       (DanTraits_Client.lua), because a character who picks no age has no
-       Age trait there for the script's exclusions to see. */
+       Quick Study in the 20s; Reading Glasses, Bad Back, Bad Knees and Old
+       Hand in the 40s and 50s; Old Injury and Set in Their Ways in the 50s.
+       The creation screen does the age check in Lua (DanTraits_Client.lua),
+       because a character who picks no age has no Age trait there for the
+       script's exclusions to see. Green is retired (Age 2.0, 2026-10-31: the
+       20s band itself takes the levels now); the definition stays so a save
+       that has it loads, the creation screen hides it and a loaded character
+       has it taken off (DanTraits_RETIRED, DanTraits.lua). */
     character_trait_definition DanTraits:green
     {
         IsProfessionTrait = false,
@@ -384,6 +375,44 @@ module DanTraits {
         Cost = 4,
         UIName = UI_trait_DanQuickStudy,
         UIDescription = UI_trait_DanQuickStudydesc,
+    }
+
+    /* The 20s' pair in Green's place (Age 2.0, 2026-10-31; DanTraits_AgeTraits.lua):
+       Natural, the weapon skills, Aiming and Reloading train x1.25 on top of
+       the band's x1.15; Hot-Headed, anger builds x1.5 and falls x0.7 (the
+       angerFloor hook the cravings read, and the angerFall hook in
+       DanTraits_Anger.lua). Restless rides on the Itchy Feet want
+       (DanTraits_AgeWants.lua): it builds twice as fast and bites twice as
+       hard; nothing with the Age Wants sandbox switch off. Not with Homebody. */
+    character_trait_definition DanTraits:natural
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:natural,
+        Cost = 3,
+        UIName = UI_trait_DanNatural,
+        UIDescription = UI_trait_DanNaturaldesc,
+    }
+
+    character_trait_definition DanTraits:hotheaded
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:hotheaded,
+        Cost = -3,
+        UIName = UI_trait_DanHotHeaded,
+        UIDescription = UI_trait_DanHotHeadeddesc,
+    }
+
+    character_trait_definition DanTraits:restless
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:restless,
+        Cost = -3,
+        UIName = UI_trait_DanRestless,
+        UIDescription = UI_trait_DanRestlessdesc,
+        MutuallyExclusiveTraits = DanTraits:homebody,
     }
 
     character_trait_definition DanTraits:readingglasses
@@ -535,133 +564,11 @@ module DanTraits {
         MutuallyExclusiveTraits = base:irongut,
     }
 
-    /* Vanilla Fear of Blood, re-costed from -5 to -6 for the rework
-       (fainting at first aid and heavy bleeding, slower first aid:
-       DanTraits_Hemophobia.lua); vanilla's panic and stress stay. Same
-       exclusion as vanilla: not with Desensitized. Whole-block override: a
-       field a game update adds to the vanilla definition is lost here, so
-       after a game update compare with media/scripts/generated/characters/
-       character_traits.txt in the game folder. Vanilla fields copied (game
-       42.21.0, Steam build 25485521): IsProfessionTrait, DisabledInMultiplayer,
-       CharacterTrait, Cost (-5, changed to -6), UIName, UIDescription,
-       MutuallyExclusiveTraits. */
-    character_trait_definition base:hemophobic
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = base:hemophobic,
-        Cost = -6,
-        UIName = UI_trait_Hemophobic,
-        UIDescription = UI_trait_HemophobicDesc,
-        MutuallyExclusiveTraits = base:desensitized,
-    }
 
-    /* Vanilla Smoker, re-costed from -3 to -4 for the rework (dependence,
-       irritability, damaged lungs and a cough: DanTraits_Smoker.lua). Same
-       exclusion as vanilla: not with Athletic. Whole-block override: a
-       field a game update adds to the vanilla definition is lost here, so
-       after a game update compare with media/scripts/generated/characters/
-       character_traits.txt in the game folder. Vanilla fields copied (game
-       42.21.0, Steam build 25485521): IsProfessionTrait, DisabledInMultiplayer,
-       CharacterTrait, Cost (-3, changed to -4, then -5 with strain:
-       withdrawal adds strain and a cigarette eases a quarter), UIName,
-       UIDescription, MutuallyExclusiveTraits. */
-    character_trait_definition base:smoker
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = base:smoker,
-        Cost = -5,
-        UIName = UI_trait_Smoker,
-        UIDescription = UI_trait_SmokerDesc,
-        MutuallyExclusiveTraits = base:athletic,
-    }
 
-    /* Vanilla Iron Gut, re-costed from 2 to 4 with Iron Stomach folded in
-       (rotten and burnt food hurts the diet half as much, food sickness
-       builds half as fast: DanTraits_Positives.lua); vanilla's own effect
-       stays. Same exclusion as vanilla: not with Weak Stomach. Whole-block
-       override: a field a game update adds to the vanilla definition is
-       lost here, so after a game update compare with media/scripts/
-       generated/characters/character_traits.txt in the game folder.
-       Vanilla fields copied (game 42.21.0, Steam build 25485521):
-       IsProfessionTrait, DisabledInMultiplayer, CharacterTrait, Cost (2,
-       changed to 4), UIName, UIDescription, MutuallyExclusiveTraits. */
-    character_trait_definition base:irongut
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = base:irongut,
-        Cost = 4,
-        UIName = UI_trait_IronGut,
-        UIDescription = UI_trait_IronGutDesc,
-        MutuallyExclusiveTraits = base:weakstomach,
-    }
 
-    /* Vanilla Resilient, re-costed from 4 to 10: a chance (sandbox
-       KnoxSurviveChance, 25%) that the body beats the Knox infection
-       (DanTraits_Knox.lua); vanilla's own effect stays. Same exclusion as
-       vanilla: not with Prone to Illness. Whole-block override: a field a
-       game update adds to the vanilla definition is lost here, so after a
-       game update compare with media/scripts/generated/characters/
-       character_traits.txt in the game folder. Vanilla fields copied (game
-       42.21.0, Steam build 25485521): IsProfessionTrait,
-       DisabledInMultiplayer, CharacterTrait, Cost (4, changed to 10),
-       UIName, UIDescription, MutuallyExclusiveTraits. */
-    character_trait_definition base:resilient
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = base:resilient,
-        Cost = 10,
-        UIName = UI_trait_resilient,
-        UIDescription = UI_trait_resilientdesc,
-        MutuallyExclusiveTraits = base:pronetoillness,
-    }
 
-    /* Vanilla Keen Cook, re-costed from 3 to 4 with a level of Short Blade
-       added (knife work). Same exclusion and recipes as vanilla. Whole-block
-       override: a field a game update adds to the vanilla definition is lost
-       here, so after a game update compare with media/scripts/generated/
-       characters/character_traits.txt in the game folder. Vanilla fields
-       copied (game 42.21.0, Steam build 25485521): IsProfessionTrait,
-       DisabledInMultiplayer, CharacterTrait, Cost (3, changed to 4), UIName,
-       UIDescription, MutuallyExclusiveTraits, XPBoosts (SmallBlade=1 added),
-       GrantedRecipes. */
-    character_trait_definition base:cook
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = base:cook,
-        Cost = 4,
-        UIName = UI_trait_Cook,
-        UIDescription = UI_trait_CookDesc,
-        MutuallyExclusiveTraits = base:cook2,
-        XPBoosts = Cooking=2;Butchering=1;SmallBlade=1,
-        GrantedRecipes = MakeCakeBatter;MakePieDough;MakeBreadDough;MakeBaguetteDough;MakeBiscuits;MakeChocolateChipCookieDough;MakeOatmealCookieDough;MakeShortbreadCookieDough;MakeSugarCookieDough;MakePizza;MakeFriedOnionRings;MakeFriedShrimp;MakeCabbageRolls;MakeJar;MakeGuacamole,
-    }
 
-    /* Vanilla Blacksmith Knowledge (the pickable one; the occupation's free
-       base:blacksmith2 grants no skills and is left alone), with a level of
-       Short Blunt added (hammer work), re-costed from 6 to 7. Whole-block override:
-       a field a game update adds to the vanilla definition is lost here, so
-       after a game update compare with media/scripts/generated/characters/
-       character_traits.txt in the game folder. Vanilla fields copied (game
-       42.21.0): IsProfessionTrait, DisabledInMultiplayer, CharacterTrait,
-       Cost (6, changed to 7), UIName, UIDescription, XPBoosts (SmallBlunt=1 added),
-       MutuallyExclusiveTraits, GrantedRecipes. */
-    character_trait_definition base:blacksmith
-    {
-        IsProfessionTrait = false,
-        DisabledInMultiplayer = false,
-        CharacterTrait = base:blacksmith,
-        Cost = 7,
-        UIName = UI_trait_Blacksmith,
-        UIDescription = UI_trait_BlacksmithDesc,
-        XPBoosts = Blacksmith=2;Maintenance=1;SmallBlunt=1,
-        MutuallyExclusiveTraits = base:blacksmith2,
-        GrantedRecipes = Advanced_Forge;Blast_Furnace;Charcoal_Burner_MetalDrum;Charcoal_Pit;Dome_Kiln;Forge;Smelting_Furnace;Forge_Primitive_Forge;Primitive_Furnace;Forge_Baking_Pan;Forge_Baking_Tray;Forge_Bucket;Forge_Ball_Peen_Hammer_Head;Forge_Clawhammer_Head;Forge_Cooking_Pot;Forge_Corkscrew;Forge_Crowbar;Forge_Crude_Shortsword_Blade;Forge_Crude_Sword_Blade;Forge_Door_Knob;Forge_Fine_Butter_Knives;Forge_Fine_Forks;Forge_Fine_Spoons;Forge_Fishing_Hooks;Forge_Forceps;Forge_Forks;Forge_Frying_Pan;Forge_Garden_Hoe_Head;Forge_Gardening_Trowel;Forge_Hand_Scythe_Head;Forge_Hinge;Forge_Hunting_Knife_Blade;Forge_Kettle;Forge_Kitchen_Knife_Blade;Forge_Large_Knife_Blade;Forge_Machete_Blade;Forge_Masons_Chisel;Forge_Masons_Trowel;Forge_Meat_Cleaver_Blade;Forge_Metalworking_Chisel;Forge_Metalworking_Pliers;Forge_Metalworking_Punch;Forge_File;Forge_Drill;Forge_Nails;Forge_Needle;Forge_Pick_Axe_Head;Forge_Roasting_Pan;Forge_Saucepan;Forge_Saw;Forge_Scissors;Forge_Scythe_Head;Forge_Spade_Head;Forge_Sheep_Shears;Forge_Sledgehammer_Head;Forge_Small_Knife;Forge_Small_Steel_Sheet;Forge_Smithing_Hammer_Head;Forge_Spoons;Forge_Steel_Sheet;Forge_Straight_Razor;Forge_Sword_Blade;Forge_Tongs;Forge_Tweezers;MakeCrudeWhetstone;Forge_Heading_Tool;Forge_Draw_Plate;ForgeMaceHead;MakeSpikedClub;ForgeSpearHead;ForgeLongSpearHead;Forge_Wood_Axe_Head;Forge_Old_Axe_Head;Forge_Hand_Axe_Head;Forge_Fleshing_Tool;Forge_Cup;Forge_Buckle;Forge_Lantern;Forge_Carpentry_Chisel;Forge_Wrench,
-    }
 
     /* Chest pain, and at worst a heart attack, only ever while the Endurance
        moodle shows; beta blockers are the medication. DanTraits_Heart.lua. */
@@ -734,11 +641,92 @@ module DanTraits {
         Cost = -3,
         UIName = UI_trait_DanStraightEdge,
         UIDescription = UI_trait_DanStraightEdgedesc,
-        MutuallyExclusiveTraits = DanTraits:dependent;base:smoker;DanTraits:hollowlegs;DanTraits:badday,
+        MutuallyExclusiveTraits = DanTraits:dependent;DanTraits:smoker;base:smoker;DanTraits:hollowlegs;DanTraits:badday,
     }
 
-    /* Dexterous folded in (granted with it), plus better splints, stitches
-       that hold and quicker surgery. DanTraits_SteadyHands.lua. */
+    /* The mod's own Smoker (Age 2.0, 2026-10-31; until then the mod re-costed
+       vanilla's from -3 to -5): cravings by habit, withdrawal, damaged lungs
+       and a cough, quit or relapse. DanTraits_Smoker.lua. Vanilla's Smoker is
+       hidden at creation unless the sandbox shows it (SmokerVanillaShown); the
+       two exclude each other. Not with Athletic, as vanilla's. */
+    character_trait_definition DanTraits:smoker
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:smoker,
+        Cost = -5,
+        UIName = UI_trait_DanSmoker,
+        UIDescription = UI_trait_DanSmokerdesc,
+        MutuallyExclusiveTraits = base:smoker;base:athletic;DanTraits:straightedge,
+    }
+
+    /* The Age 2.0 conditions (2026-10-31). Gout (the 40s and 50s): a urate
+       meter rich food and drink fill; past the line a flare in one foot, days
+       of severe pain, slow walking, no running; allopurinol daily, colchicine
+       for a flare. DanTraits_Gout.lua. Essential Tremor: shaky hands, worse on
+       caffeine, tired, stressed or cold, steadied for an hour by a drink and
+       by beta blockers; rough stitches, slips, slow reloads and reading. Not
+       with Steady Hands. DanTraits_Tremor.lua. Underactive Thyroid (the 40s
+       and 50s): tired, low, cold and gaining weight until the daily
+       levothyroxine is found. DanTraits_Thyroid.lua. Hay Fever: sneezing fits
+       zombies hear from March to August, worst on dry windy days;
+       antihistamines. DanTraits_HayFever.lua. Carpal Tunnel: long runs of the
+       same hand work bring a numb spell: slow, clumsy fine work; rest and a
+       splint. DanTraits_CarpalTunnel.lua. */
+    character_trait_definition DanTraits:gout
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:gout,
+        Cost = -8,
+        UIName = UI_trait_DanGout,
+        UIDescription = UI_trait_DanGoutdesc,
+    }
+
+    character_trait_definition DanTraits:tremor
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:tremor,
+        Cost = -3,
+        UIName = UI_trait_DanTremor,
+        UIDescription = UI_trait_DanTremordesc,
+        MutuallyExclusiveTraits = DanTraits:steadyhands,
+    }
+
+    character_trait_definition DanTraits:thyroid
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:thyroid,
+        Cost = -3,
+        UIName = UI_trait_DanThyroid,
+        UIDescription = UI_trait_DanThyroiddesc,
+    }
+
+    character_trait_definition DanTraits:hayfever
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:hayfever,
+        Cost = -2,
+        UIName = UI_trait_DanHayFever,
+        UIDescription = UI_trait_DanHayFeverdesc,
+    }
+
+    character_trait_definition DanTraits:carpaltunnel
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:carpaltunnel,
+        Cost = -2,
+        UIName = UI_trait_DanCarpalTunnel,
+        UIDescription = UI_trait_DanCarpalTunneldesc,
+    }
+
+    /* Dexterous's quick hands carried by the trait itself (transfers, drops and
+       pick-ups x0.5), plus better splints, stitches that hold and quicker
+       surgery. Not with Dexterous or All Thumbs. DanTraits_SteadyHands.lua. */
     character_trait_definition DanTraits:steadyhands
     {
         IsProfessionTrait = false,
@@ -747,7 +735,7 @@ module DanTraits {
         Cost = 5,
         UIName = UI_trait_DanSteadyHands,
         UIDescription = UI_trait_DanSteadyHandsdesc,
-        MutuallyExclusiveTraits = base:dextrous;base:allthumbs,
+        MutuallyExclusiveTraits = base:dextrous;base:allthumbs;DanTraits:tremor,
     }
 
     /* Sleeping by day costs little. DanTraits_Positives.lua. */
@@ -775,9 +763,9 @@ module DanTraits {
         MutuallyExclusiveTraits = DanTraits:straightedge,
     }
 
-    /* Fast Healer folded in (granted with it), and blood comes back faster
-       after a bleed. Costs 8, two over the vanilla Fast Healer it contains.
-       Not with Hemophilia. DanTraits_Positives.lua. */
+    /* The mod's own Fast Healer: wounds close half as fast again, and blood
+       comes back faster after a bleed. Costs 8. Not with Fast Healer or Slow
+       Healer (the same effect) or Hemophilia. DanTraits_Positives.lua. */
     character_trait_definition DanTraits:fastrecovery
     {
         IsProfessionTrait = false,
@@ -1340,6 +1328,69 @@ module DanTraits {
     /* Anticonvulsants for Epilepsy: 30 pills, one every 12 hours keeps
        seizures down. Its own action (ISVitalityPillAction), found with the
        other prescriptions (media/lua/server/Items/DanTraits_Distributions.lua). */
+    /* The Age 2.0 bottles (2026-10-31): allopurinol and colchicine (Gout),
+       levothyroxine (Underactive Thyroid), antihistamines (Hay Fever); the
+       shared medication system (DanTraits_Meds.lua) knows each. */
+    item Allopurinol
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Allopurinol,
+        Weight = 0.2,
+        Icon = Allopurinol,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Allopurinol,
+        UseDelta = 0.0333,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item Colchicine
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Colchicine,
+        Weight = 0.2,
+        Icon = Colchicine,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Colchicine,
+        UseDelta = 0.0833,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item Levothyroxine
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Levothyroxine,
+        Weight = 0.2,
+        Icon = Levothyroxine,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Levothyroxine,
+        UseDelta = 0.0333,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item Antihistamines
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Antihistamines,
+        Weight = 0.2,
+        Icon = Antihistamines,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Antihistamines,
+        UseDelta = 0.0500,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
     item Anticonvulsants
     {
         DisplayCategory = FirstAid,

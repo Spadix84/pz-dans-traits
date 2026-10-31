@@ -54,6 +54,11 @@ local function cafData(player)
     return d
 end
 
+-- the dry hours before withdrawal: CAF_ONSET_H, divided by the cravingOnset hook (Age: sooner young)
+local function onsetHours(player)
+    return CAF_ONSET_H / (tonumber(DanTraits_RunHooks("cravingOnset", 1, player)) or 1)
+end
+
 local function dose(player, amount, what)
     if not player or not amount or amount <= 0 then return false end
     -- anyone's sleep feels it (DanTraits_Sleep.lua); the habit is the trait's
@@ -72,7 +77,7 @@ local function dose(player, amount, what)
         end
     elseif d.cafDryHours > 0 then
         d.cafDryHours = math.max(0, d.cafDryHours - amount * CAF_SMALL_H)
-        if d.cafWithdrawing and d.cafDryHours < CAF_ONSET_H then
+        if d.cafWithdrawing and d.cafDryHours < onsetHours(player) then
             -- pushed back under the onset: the craving lifts, and comes back
             -- (with its notice) once the clock passes the onset again
             d.cafWithdrawing = false
@@ -84,10 +89,12 @@ local function dose(player, amount, what)
 end
 DanTraits_CaffeineDose = dose
 
--- 0..1 withdrawal strength from hours dry
-local function withdrawal(hours)
-    if hours < CAF_ONSET_H then return 0 end
-    if hours < CAF_FULL_H then return (hours - CAF_ONSET_H) / (CAF_FULL_H - CAF_ONSET_H) end
+-- 0..1 withdrawal strength from hours dry; `onset` the dry hours it starts at
+-- (CAF_ONSET_H, sooner where the cravingOnset hook says so: Age, the young)
+local function withdrawal(hours, onset)
+    onset = onset or CAF_ONSET_H
+    if hours < onset then return 0 end
+    if hours < CAF_FULL_H then return (hours - onset) / (CAF_FULL_H - onset) end
     if hours < CAF_FADE_FROM_H then return 1 end
     if hours < CAF_FADE_TO_H then return 1 - (hours - CAF_FADE_FROM_H) / (CAF_FADE_TO_H - CAF_FADE_FROM_H) end
     return 0
@@ -121,7 +128,7 @@ local function updateCaffeineMinute(player, d)
         return
     end
     d.cafDryHours = d.cafDryHours + 1 / 60
-    local w = withdrawal(d.cafDryHours)
+    local w = withdrawal(d.cafDryHours, onsetHours(player))
     d.cafWithdraw = w
     if w > 0 and not d.cafWithdrawing then
         d.cafWithdrawing = true

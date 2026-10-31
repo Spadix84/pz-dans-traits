@@ -439,7 +439,8 @@ local function schizoChance(player)
     chance = chance + SCHIZO_CONCUSSION_WEIGHT * strength("DanTraits_ConcussionStrength", player)
     chance = chance + SCHIZO_WITHDRAWAL_WEIGHT * strength("DanTraits_AlcoholWithdrawal", player)
     chance = chance + SCHIZO_TINNITUS_WEIGHT * strength("DanTraits_TinnitusRinging", player)
-    return chance * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1)   -- a hard week (DanTraits_Strain.lua)
+    chance = chance * (DanTraits_StrainFactor and DanTraits_StrainFactor(player) or 1)   -- a hard week (DanTraits_Strain.lua)
+    return chance * (tonumber(DanTraits_RunHooks("schizoChance", 1, player)) or 1)   -- Age: the young more often
 end
 DanTraits_SchizoChance = schizoChance
 

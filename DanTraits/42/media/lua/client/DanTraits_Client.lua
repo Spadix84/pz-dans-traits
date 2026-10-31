@@ -1,8 +1,8 @@
 -- Client side pieces for Project Zomboid Vitality Project: the Airway Irritation moodle
 -- (needs Moodle Framework; skipped without it), the inhaler context menu,
 -- the Vegetarian grey-out, the diabetes items (inject, check sugar,
--- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, the wrap that hides Wakeful
--- (and Deep Sleeper on a no-sleep server, and another mod's duplicates of ours: DanTraits_HIDDEN_AT_CREATION)
+-- take metformin), iron pills, nicotine gum, anticonvulsants, the MS pills and sun block, the wrap that hides
+-- Deep Sleeper on a no-sleep server and another mod's duplicates of ours (DanTraits_HIDDEN_AT_CREATION)
 -- from the character creation list, and Age at
 -- character creation (In Their 30s hidden, age's levels shown in the Major Skills list,
 -- the body traits' extra cost in the 40s and 50s, and the traits only one age can take).
@@ -195,6 +195,29 @@ local function ironPillsMenu(playerNum, context, items)
     if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_IronPillsEmpty") end
 end
 
+-- The Age 2.0 bottles (2026-10-31): allopurinol and colchicine (Gout), levothyroxine
+-- (Underactive Thyroid), antihistamines (Hay Fever). One option each in place of the
+-- vanilla pill option, greyed when the bottle is empty; the pill action tells the
+-- medication system (DanTraits_Meds.lua) by the item's type.
+local AGE2_PILLS = {
+    { item = "DanTraits.Allopurinol", take = "ContextMenu_DanTraits_TakeAllopurinol" },
+    { item = "DanTraits.Colchicine", take = "ContextMenu_DanTraits_TakeColchicine" },
+    { item = "DanTraits.Levothyroxine", take = "ContextMenu_DanTraits_TakeLevothyroxine" },
+    { item = "DanTraits.Antihistamines", take = "ContextMenu_DanTraits_TakeAntihistamine" },
+}
+local function age2PillsMenu(playerNum, context, items)
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj then return end
+    for _, spec in ipairs(AGE2_PILLS) do
+        local pills = findFirst(items, function(item) return DanTraits_IsItem(item, spec.item) end)
+        if pills then
+            pcall(function() context:removeOptionByName(getText("ContextMenu_Take_pills")) end)
+            local option = context:addOption(getText(spec.take), pills, onTakeIronPill, playerObj)
+            if usesOf(pills) <= 0 then greyOut(option, "Tooltip_DanTraits_PillsEmpty") end
+        end
+    end
+end
+
 -- Nicotine gum (Smoker) ----------------------------------------------------------
 local function onChewGum(gum, playerObj)
     ISInventoryPaneContextMenu.transferIfNeeded(playerObj, gum)
@@ -287,16 +310,18 @@ Events.OnFillInventoryObjectContextMenu.Add(anticonvulsantMenu)
 Events.OnFillInventoryObjectContextMenu.Add(msMedMenu)
 Events.OnFillInventoryObjectContextMenu.Add(nicotineGumMenu)
 Events.OnFillInventoryObjectContextMenu.Add(ironPillsMenu)
+Events.OnFillInventoryObjectContextMenu.Add(age2PillsMenu)
 Events.OnFillInventoryObjectContextMenu.Add(greyOutMeat)
 Events.OnFillInventoryObjectContextMenu.Add(diabetesMenu)
 
--- Character creation: Wakeful is folded into Deep Sleeper, so it is hidden
--- from the list (Deep Sleeper grants it). Deep Sleeper follows vanilla's rule
--- for the sleep traits: hidden on a server where sleep is off. The Age traits
+-- Character creation: vanilla's Smoker is hidden unless the sandbox shows it
+-- (the mod has its own, DanTraits_Smoker.lua). Deep Sleeper follows vanilla's
+-- rule for the sleep traits: hidden on a server where sleep is off. The Age traits
 -- are hidden when the sandbox switches Age off (they would do nothing).
 -- The age gate: with Age on, the lists offer nothing but the four ages until
--- one is chosen (In Their 30s at 0 points among them, put into the positive
--- list by hand since vanilla lists only a cost above or below zero); the rest
+-- one is chosen (In Their 30s and In Their 40s at 0 points among them, put
+-- into the positive list by hand since vanilla lists only a cost above or
+-- below zero); the rest
 -- unlocks then, Next is greyed until then with the reason as its tooltip and
 -- on the screen, Random picks an age first, and a saved build loads first
 -- and is gated after. Age off: no gate, no ages. A character with no Age
@@ -373,25 +398,23 @@ end
 local function creationAgeLevels(screen)
     local band = creationAgeBand(screen)
     if not band then return nil end
-    local handy, green = false, false
+    local handy = false
     for _, row in pairs(screen.listboxTraitSelected.items) do
-        local kind = row.item:getType()
-        if string.lower(tostring(kind)) == "base:handy" then handy = true end
-        if DanTraitsRegistry and kind == DanTraitsRegistry.green then green = true end
+        if string.lower(tostring(row.item:getType())) == "base:handy" then handy = true end
     end
     local boosts = nil
     if screen.profession and screen.profession:getXpBoosts() then
         boosts = transformIntoKahluaTable(screen.profession:getXpBoosts())
     end
-    return DanTraits_AgeLevels(boosts, band, handy, ageOption("AgeBonus" .. band .. "s"), green)
+    return DanTraits_AgeLevels(boosts, band, handy, ageOption("AgeBonus" .. band .. "s"))
 end
 
 -- A row with age levels: vanilla draws the row for the levels the game gives
 -- (its bars and XP rate; age gives levels, not a faster rate, so a skill only
 -- age gives is drawn like Fitness, which has no rate), then age's bars go on
 -- the end in a second colour, with vanilla's geometry.
--- Levels taken away (Green) are drawn the same way round: vanilla's row for
--- the game's levels, then the lost bars greyed out.
+-- Levels taken away (the 20s' level cut, the 20s Handy) are drawn the same
+-- way round: vanilla's row for the game's levels, then the lost bars greyed out.
 local AGE_BAR = { r = 0.45, g = 0.7, b = 1.0 }
 local AGE_BAR_LOST = { r = 0.3, g = 0.3, b = 0.3 }
 local function drawAgeXpBoost(self, y, item, alt)
@@ -414,52 +437,95 @@ local function drawAgeXpBoost(self, y, item, alt)
     return yy
 end
 
-local function addAgeLevels(screen)
-    local list = screen.listboxXpBoost
-    local levels = creationAgeLevels(screen)
-    if not list or not levels then return end
-    for perk, count in pairs(levels) do
-        local entry = nil
-        for _, row in pairs(list.items) do
-            if row.item.perk == perk then entry = row end
-        end
-        if not entry and count > 0 then entry = list:addItem(PerkFactory.getPerkName(perk), { perk = perk, level = 0 }) end
-        local add = entry and math.max(-entry.item.level, math.min(count, 10 - entry.item.level)) or 0
-        if add ~= 0 then
-            entry.item.ageLevels = add
-            entry.item.level = entry.item.level + add
-            if add > 0 then entry.text = entry.text .. " " .. getText("UI_DanTraits_AgeLevels", add)
-            else entry.text = entry.text .. " " .. getText("UI_DanTraits_AgeLevelsLost", -add) end
-        end
+-- the levels the chosen vanilla traits give at spawn (Keen Cook's Short Blade,
+-- DanTraits_VanillaPrices.lua), from the chosen list
+local function creationVanillaLevels(screen)
+    if not DanTraits_VanillaLevels or not screen.listboxTraitSelected then return nil end
+    local chosen = {}
+    for _, row in pairs(screen.listboxTraitSelected.items) do
+        chosen[string.lower(tostring(row.item:getType()))] = true
     end
-    list:sort()
+    return DanTraits_VanillaLevels(function(kind) return chosen[kind] == true end)
 end
 
--- The body traits cost more with age (Strong, Athletic, Stout, Fit:
--- DanTraits_AgeSurcharge). Vanilla works the points to spend out on demand
--- from the chosen traits (PointToSpend, the way its own negative-trait
--- penalty does), so the surcharge is taken off there: presets, the random
--- button and the Play button's check all go through it.
+-- age's levels and the traits' levels on the Major Skills list, each row
+-- saying which it has ("(+2 age)", "(+1 trait)"); the bars are drawn alike
+local function addAgeLevels(screen)
+    local list = screen.listboxXpBoost
+    if not list then return end
+    local sources = { { levels = creationAgeLevels(screen), text = "UI_DanTraits_AgeLevels", lost = "UI_DanTraits_AgeLevelsLost" },
+                      { levels = creationVanillaLevels(screen), text = "UI_DanTraits_TraitLevels", lost = "UI_DanTraits_TraitLevelsLost" } }
+    local any = false
+    for _, source in ipairs(sources) do
+        for perk, count in pairs(source.levels or {}) do
+            any = true
+            local entry = nil
+            for _, row in pairs(list.items) do
+                if row.item.perk == perk then entry = row end
+            end
+            if not entry and count > 0 then entry = list:addItem(PerkFactory.getPerkName(perk), { perk = perk, level = 0 }) end
+            local add = entry and math.max(-entry.item.level, math.min(count, 10 - entry.item.level)) or 0
+            if add ~= 0 then
+                entry.item.ageLevels = (entry.item.ageLevels or 0) + add
+                entry.item.level = entry.item.level + add
+                if add > 0 then entry.text = entry.text .. " " .. getText(source.text, add)
+                else entry.text = entry.text .. " " .. getText(source.lost, -add) end
+            end
+        end
+    end
+    if any then list:sort() end
+end
+
+-- What a trait costs on top of its own cost: the body traits cost more with
+-- age (Strong, Athletic, Stout, Fit: DanTraits_AgeSurcharge) and a few vanilla
+-- traits carry a flat delta for what this mod adds to them (Resilient's Knox
+-- roll: DanTraits_PriceDelta, DanTraits_VanillaPrices.lua). Both together, and
+-- the age part on its own (for the label).
+local function traitExtra(band, kind)
+    if DanTraits_TraitExtra then return DanTraits_TraitExtra(band, kind) end
+    local age = band and DanTraits_AgeSurcharge(band, kind) or 0
+    return age, age
+end
+
+-- Vanilla works the points to spend out on demand from the chosen traits
+-- (PointToSpend, the way its own negative-trait penalty does), so the extras
+-- are taken off there: presets, the random button and the Play button's check
+-- all go through it. A flat delta applies with no age chosen too.
 local function ageSurchargeTotal(screen)
     local band = creationAgeBand(screen)
-    if not band then return 0 end
     local total = 0
     for _, row in pairs(screen.listboxTraitSelected.items) do
-        total = total + DanTraits_AgeSurcharge(band, row.item:getType())
+        total = total + traitExtra(band, row.item:getType())
     end
     return total
 end
 
+-- the label for an extra: the age wording when any of it is age's, else the mod's
+local function extraLabel(extra, age)
+    if age ~= 0 then
+        return extra > 0 and getText("UI_DanTraits_AgeSurcharge", extra) or getText("UI_DanTraits_AgeDiscount", extra)
+    end
+    return extra > 0 and getText("UI_DanTraits_PriceDelta", extra) or getText("UI_DanTraits_PriceDiscount", extra)
+end
+DanTraits_TraitExtraLabel = extraLabel   -- the other creation screens (DanTraits_TIYL.lua)
+
 -- a trait row, in the lists to pick from and the chosen list: vanilla's row,
--- then the surcharge beside the trait's own cost
+-- then the extra beside the trait's own cost; vanilla's Smoker, when the
+-- sandbox shows it beside the mod's, is tagged so the two can be told apart
 local function drawAgeTrait(self, y, item, alt)
     local yy = CharacterCreationProfession.drawTraitMap(self, y, item, alt)
     pcall(function()
+        local kind = item.item:getType()
         local band = creationAgeBand(CharacterCreationProfession.instance)
-        local extra = band and DanTraits_AgeSurcharge(band, item.item:getType()) or 0
-        if extra == 0 then return end
+        local extra, age = traitExtra(band, kind)
+        local label = nil
+        if extra ~= 0 then
+            label = extraLabel(extra, age)
+        elseif CharacterTrait and kind == CharacterTrait.SMOKER then
+            label = getText("UI_DanTraits_VanillaTag")
+        end
+        if not label then return end
         local hc = extra > 0 and getCore():getBadHighlitedColor() or getCore():getGoodHighlitedColor()
-        local label = extra > 0 and getText("UI_DanTraits_AgeSurcharge", extra) or getText("UI_DanTraits_AgeDiscount", extra)
         local costWid = getTextManager():MeasureStringX(UIFont.Small, item.item:getRightLabel())
         self:drawTextRight(label, self:getWidth() - 30 - costWid,
             y + (self.itemheight - self.fontHgt) / 2, hc:getR(), hc:getG(), hc:getB(), 0.9, UIFont.Small)
@@ -476,14 +542,11 @@ local function setAgeDraws(screen)
     if screen.savedBuilds and screen.savedBuilds.onChange then screen.savedBuilds.onChange = CharacterCreationProfession.loadBuild end
 end
 
--- The traits only one age can take (DanTraits_AgeOnly, DanTraits_AgeTraits.lua).
+-- The traits only some ages can take (DanTraits_AgeRules, DanTraits_AgeRules.lua).
 -- The bands that may take a trait type, or nil for every other trait.
 local function ageOnlyOf(kind)
-    if kind == nil or not DanTraitsRegistry or not DanTraits_AgeOnly then return nil end
-    for key, bands in pairs(DanTraits_AgeOnly) do
-        if kind == DanTraitsRegistry[key] then return bands end
-    end
-    return nil
+    if kind == nil or not DanTraits_AgeRuleBands then return nil end
+    return DanTraits_AgeRuleBands(kind)
 end
 
 local function ageAllows(screen, kind)
@@ -531,10 +594,18 @@ end
 -- isTraitEnabled below; This Is Your Life's trait folder lists every trait
 -- and greys the ones isTraitEnabled turns down, so DanTraits_TIYL.lua asks
 -- here to take these out of it instead.
+-- vanilla's Smoker is offered only when the new game's sandbox says so
+local function vanillaSmokerShown()
+    local ok, value = pcall(function() return getSandboxOptions():getOptionByName("DanTraits.SmokerVanillaShown"):getValue() end)
+    if ok and value ~= nil then return value == true end
+    local sv = SandboxVars and SandboxVars.DanTraits   -- an option that is off by default: unset is off
+    return sv ~= nil and sv.SmokerVanillaShown == true
+end
+
 local function creationHides(screen, trait)
     local kind = nil
     pcall(function() kind = trait:getType() end)
-    if kind ~= nil and kind == CharacterTrait.NEEDS_LESS_SLEEP then return true end
+    if kind ~= nil and CharacterTrait and kind == CharacterTrait.SMOKER and not vanillaSmokerShown() then return true end
     -- retired traits (DanTraits_RETIRED in DanTraits.lua) are never offered
     if kind ~= nil and DanTraits_RETIRED and DanTraitsRegistry then
         for key in pairs(DanTraits_RETIRED) do
@@ -608,18 +679,23 @@ local function wrapTraitList()
         end)
         return result
     end)
-    -- In Their 30s costs nothing, and vanilla's lists take only a cost above or
-    -- below zero: it goes into the positive list by hand, where it is allowed
+    -- an Age trait at cost 0 (In Their 30s; In Their 40s since Age 2.0), and
+    -- vanilla's lists take only a cost above or below zero: it goes into the
+    -- positive list by hand, where it is allowed
     DanTraits_Wrap(CharacterCreationProfession, "populateTraitList", "creation-age30s", function(original, self, list, ...)
         local result = original(self, list, ...)
         pcall(function()
-            if ageOffAtCreation() or not DanTraitsRegistry or not DanTraitsRegistry.age30s then return end
-            local def = CharacterTraitDefinition.getCharacterTraitDefinition(DanTraitsRegistry.age30s)
-            if not def or def:isFree() then return end
-            local label = def:getLabel()
-            if self.listboxTraitSelected and self.listboxTraitSelected:contains(label) then return end
-            if self:isTraitEnabled(def) and not self:isTraitExcluded(def) and not list:contains(label) then
-                list:addItem(label, def, def:getDescription())
+            if ageOffAtCreation() or not DanTraitsRegistry then return end
+            for _, key in ipairs(AGE_KEYS) do
+                local trait = DanTraitsRegistry[key]
+                local def = trait and CharacterTraitDefinition.getCharacterTraitDefinition(trait)
+                if def and not def:isFree() and def:getCost() == 0 then
+                    local label = def:getLabel()
+                    if not (self.listboxTraitSelected and self.listboxTraitSelected:contains(label))
+                        and self:isTraitEnabled(def) and not self:isTraitExcluded(def) and not list:contains(label) then
+                        list:addItem(label, def, def:getDescription())
+                    end
+                end
             end
         end)
         return result

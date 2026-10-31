@@ -46,11 +46,14 @@
 -- Sleep option takes it all off, puts the bags down and sleeps
 -- (media/lua/client/DanTraits_SleepMenu.lua).
 --
--- Deep Sleeper: Wakeful folded in (the vanilla trait is granted, so the
--- shorter sleep and Vitality's five-hour night come with it; Wakeful itself
--- is hidden at character creation, see media/lua/client). On top of that,
--- light rarely wakes you, bright light costs half as much rest, and the dark
--- does you more good.
+-- Deep Sleeper: needs less sleep, carried by the trait itself since Age 2.0
+-- (it used to grant vanilla Wakeful): tiredness builds x0.7 awake (the
+-- fatigueRise stat delta pipeline, the figure vanilla's Java gives Wakeful)
+-- and Vitality's night is the five-hour one (DanTraits_VitalitySleepNeed).
+-- Not with Wakeful, Sleepyhead or Restless Sleeper. On top of that, light
+-- rarely wakes you, bright light costs half as much rest, and the dark does
+-- you more good. A character the old version granted Wakeful to has it taken
+-- off once (DanTraits_UngrantFoldIn).
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -82,6 +85,7 @@ local DES_STRESS        = 0.15
 local DES_UNHAPPY       = 10
 -- Deep Sleeper
 local DS_WAKE           = 0.25    -- light wake chance x this
+local DS_FATIGUE        = 0.7     -- Deep Sleeper: tiredness builds x this awake (vanilla Wakeful's figure)
 local DS_REST_BRIGHT    = 0.5     -- bright-light rest and score penalties x this
 local DS_REST_DARK      = 1.5     -- dark rest and score bonuses x this
 local SL_FEVER_CUT      = 0.3     -- the night's score x (1 - this x fever)
@@ -349,11 +353,16 @@ DanTraits_AddHook("nightWakes", function(wakes, player)
     return math.max(1, wakes - 1)
 end, 10)
 
--- Deep Sleeper carries Wakeful with it: granted once, whenever the trait is
--- first seen (new character, or added later)
-local function grantWakeful(player)
-    DanTraits_GrantFoldIn(player, "deepsleeper", "NEEDS_LESS_SLEEP", "slWakefulGranted")
+-- Deep Sleeper tires slower awake: the game's rise in tiredness x DS_FATIGUE
+DanTraits_AddHook("fatigueRise", function(delta, player)
+    if not hasTrait(player, "deepsleeper") or DanTraits_Asleep(player) then return nil end
+    return delta * DS_FATIGUE
+end)
+
+-- the Wakeful the old version granted comes off, once
+local function ungrantWakeful(player)
+    DanTraits_UngrantFoldIn(player, "NEEDS_LESS_SLEEP", "slWakefulGranted")
 end
 
-DanTraits_OnPlayerReady("Sleep", grantWakeful, 70)
+DanTraits_OnPlayerReady("Sleep", ungrantWakeful, 70)
 DanTraits_Every("minute", "Sleep", updateSleepMinute, 10)

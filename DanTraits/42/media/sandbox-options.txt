@@ -6,8 +6,11 @@ option DanTraits.AgeEnabled
 option DanTraits.AgeDefault
 {type = integer, min = 20, max = 59, default = 30, page = DanTraits, translation = DanTraitsAgeDefault,}
 
+option DanTraits.AgeWants
+{type = boolean, default = true, page = DanTraits, translation = DanTraitsAgeWants,}
+
 option DanTraits.AgeBonus20s
-{type = integer, min = 0, max = 5, default = 0, page = DanTraits, translation = DanTraitsAgeBonus20s,}
+{type = integer, min = -3, max = 5, default = -2, page = DanTraits, translation = DanTraitsAgeBonus20s,}
 
 option DanTraits.AgeBonus30s
 {type = integer, min = 0, max = 5, default = 0, page = DanTraits, translation = DanTraitsAgeBonus30s,}
@@ -122,6 +125,9 @@ option DanTraits.AngerEffects
 
 option DanTraits.SmokerCravingMoodle
 {type = boolean, default = true, page = DanTraitsLife, translation = DanTraitsSmokerCravingMoodle,}
+
+option DanTraits.SmokerVanillaShown
+{type = boolean, default = false, page = DanTraitsLife, translation = DanTraitsSmokerVanillaShown,}
 
 option DanTraits.LaundryEnabled
 {type = boolean, default = true, page = DanTraitsLaundry, translation = DanTraitsLaundryEnabled,}

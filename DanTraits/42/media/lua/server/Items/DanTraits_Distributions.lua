@@ -191,6 +191,29 @@ local ITEMS = {
     prescription("DanTraits.Amantadine", 0.75),     -- MS: a little rarer
     prescription("DanTraits.Sumatriptan", 0.8),     -- Migraines: new in the early 90s, a little rarer
     prescription("DanTraits.Nitroglycerin", 0.9),   -- Heart Condition: an old, common heart tablet
+    prescription("DanTraits.Allopurinol", 0.9),     -- Gout: a common daily prescription (Age 2.0, 2026-10-31)
+    prescription("DanTraits.Colchicine", 0.4),      -- Gout: the flare pill, rarer
+    prescription("DanTraits.Levothyroxine", 1.0),   -- Underactive Thyroid: one of the commonest prescriptions there is
+    {
+        -- antihistamines: over the counter, in every other bathroom (Hay Fever)
+        name = "DanTraits.Antihistamines",
+        procedural = {
+            BathroomCabinet = 3, BathroomCounter = 1.5, BathroomShelf = 1.5,
+            MedicalCabinet = 3, MedicalClinicDrugs = 3, MedicalStorageDrugs = 6, HospitalRoomShelves = 2,
+            DoctorTools = 3, NurseTools = 2, AmbulanceDriverTools = 1, StoreShelfMedical = 5,
+            SafehouseMedical = 4, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
+            DerelictHouseDrugs = 1, DrugShackDrugs = 0.5, ArmyStorageMedical = 2, TestingLab = 1,
+            KitchenRandom = 0.2,
+        },
+        suburbs = {
+            { { "all", "medicine", "items" }, 2 },
+            { { "all", "inventoryfemale", "items" }, 0.2 },
+            { { "all", "inventorymale", "items" }, 0.15 },
+            { { "MedicalCache1", "MedicalBox", "items" }, 4 },
+        },
+        bags = { HandbagsAndPurses = 0.05 },
+        clutter = { ClosetItems = 0.02, GloveBoxItems = 0.3 },
+    },
     {
         -- anti-anxiety pills: the vanilla beta blocker's old job, found where
         -- prescriptions are, a little more often in a drug shack

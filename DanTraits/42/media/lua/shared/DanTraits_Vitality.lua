@@ -163,7 +163,10 @@ end
 local hasVanillaTrait = DanTraits_HasVanillaTrait
 
 local function sleepNeed(player)
-    if hasVanillaTrait(player, "base:needslesssleep") then return VIT_SLEEP_LESS_HOURS end
+    -- Deep Sleeper needs less sleep itself (DanTraits_Sleep.lua), like Wakeful
+    if hasVanillaTrait(player, "base:needslesssleep") or (DanTraits_HasTrait and DanTraits_HasTrait(player, "deepsleeper")) then
+        return VIT_SLEEP_LESS_HOURS
+    end
     if hasVanillaTrait(player, "base:needsmoresleep") then return VIT_SLEEP_MORE_HOURS end
     return VIT_SLEEP_FULL_HOURS
 end
@@ -355,6 +358,8 @@ local function updateVitalityMinute(player, d)
         DanTraits_FloorUp(stats, CharacterStat.UNHAPPINESS, VIT_DEBT_MOOD_FLOOR * debt, VIT_MOOD_RAMP)
         DanTraits_StatAdd(stats, CharacterStat.STRESS, VIT_DEBT_STRESS * debt)
         DanTraits_StatAdd(stats, CharacterStat.FATIGUE, VIT_DEBT_FATIGUE * debt)
+        -- the debt's tiredness is the mod's, not the game's: told to the fatigueRise pipeline
+        pcall(function() DanTraits_DeltaRemember(d, "fatigueRise", stats:get(CharacterStat.FATIGUE)) end)
     end
 
     -- combine, slowly

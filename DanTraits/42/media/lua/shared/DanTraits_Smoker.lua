@@ -1,10 +1,24 @@
--- Project Zomboid Vitality Project: Smoker (the vanilla trait, reworked).
+-- Project Zomboid Vitality Project: Smoker, the mod's own trait (DanTraits:smoker).
 -- Not only for Smokers: anyone who smokes carries the nicotine meter.
 --
--- Vanilla keeps the parts that already work: a Smoker's nicotine
--- withdrawal stat builds between cigarettes and feeds the Stress moodle and
--- morale, and a cigarette clears it; a non-smoker gets nauseous and coughs.
--- On top of that:
+-- Until Age 2.0 (2026-10-31) this reworked vanilla's Smoker: the script
+-- re-costed it and the file leaned on the game's Java for the craving (the
+-- NICOTINE_WITHDRAWAL stat rising between cigarettes and a cigarette clearing
+-- it for a Smoker, with stress and unhappiness from it). The mod now leaves
+-- vanilla's trait alone and has its own: vanilla's Smoker is hidden at
+-- creation unless the sandbox shows it (SmokerVanillaShown; the two exclude
+-- each other, and a vanilla Smoker is then a plain vanilla smoker to this
+-- file). The craving is this file's: it owns the stat's rise (NIC_RISE_H at
+-- pace 1, scaled by the habit as before), it clears the stat when a Smoker
+-- smokes, and it adds the stress and unhappiness withdrawal brings. The game
+-- still treats the character as a non-smoker when they smoke (it has no flag
+-- to see): the nausea it adds is taken straight back off, by tolerance, as a
+-- regular smoker's always was. A save from before: a character with vanilla
+-- Smoker and this file's data (the habit meter, or the craving stat above
+-- zero) is converted once on load, vanilla off and ours on, with a notice;
+-- one with vanilla Smoker and no data (made with the mod off) is left alone.
+--
+-- What the mod adds to the habit:
 --
 -- Dependence. Everyone carries a nicotine meter (0..1, nicMeter). Tobacco
 -- fills it, but only so much a day, so it is the habit that counts; it
@@ -31,7 +45,8 @@
 --
 -- Lungs (nicLungs, 0..1): every cigarette, cigar or pipe adds a little,
 -- chewing tobacco and gum nothing. A Smoker taken at creation starts with
--- years of it. Damaged lungs recover endurance slower (through the
+-- years of it, by age (LUNG_START_BAND, from the Age band: a 20s smoker is
+-- nearly clean, a 50s one starts with over half; 0.35 with Age off). Damaged lungs recover endurance slower (through the
 -- enduranceRegen hook of the stat delta pipeline), and cough, more
 -- often the worse the lungs and the stronger the habit, on exertion and
 -- in the first hour after waking. Smoke gets into your clothes too: for
@@ -53,6 +68,7 @@
 -- lungs' recovery goes through the lungHeal hook (Vitality speeds it).
 require "DanTraits"
 
+local hasTrait = DanTraits_HasTrait
 local hasVanillaTrait = DanTraits_HasVanillaTrait
 local notify = DanTraits_Notify
 local traitData = DanTraits_Data
@@ -70,7 +86,8 @@ local NIC_CURE_H        = 504     -- hours without tobacco to lose the trait (21
 local NIC_SESSION_H     = 12      -- tobacco after this long without starts a new session
 local NIC_RELAPSE_ODDS  = 50      -- percent chance per session for an ex-smoker to relapse
 -- craving
-local NIC_RATE_BASE     = 0.125   -- vanilla withdrawal build-up x (this + NIC_RATE_METER x meter)
+local NIC_RISE_H        = 3       -- hours from no craving to a full one at pace 1 (the stat's range)...
+local NIC_RATE_BASE     = 0.125   -- ...x (this + NIC_RATE_METER x meter): half pace for a Smoker taken at creation
 local NIC_RATE_METER    = 0.75
 local NIC_RATE_DRUNK    = 1.5     -- and x this at Drunk level 2 or more
 local NIC_DRUNK_LEVEL   = 2
@@ -103,7 +120,8 @@ local NIC_CUE_MIN       = 60
 local NIC_CUE_GAP_H     = 4
 -- lungs
 local LUNG_PER_CIG      = 0.0004  -- a pack a day: about 0.25 a month
-local LUNG_START        = 0.35    -- a Smoker taken at creation has years behind them
+local LUNG_START        = 0.35    -- a Smoker taken at creation has years behind them (Age off)...
+local LUNG_START_BAND   = { [20] = 0.05, [30] = 0.15, [40] = 0.33, [50] = 0.55 }   -- ...or by age band
 local LUNG_HEAL_AFTER_H = 24      -- no healing within a day of the last smoke
 local LUNG_HEAL_H       = 2880    -- hours to heal fully damaged lungs (120 days)
 local LUNG_ENDURANCE    = 0.3     -- endurance recovery x (1 - this x lungs)
@@ -136,10 +154,19 @@ local MIN_H = 1 / 60
 
 local clamp01 = DanTraits_Clamp01
 
-local function isSmoker(player) return hasVanillaTrait(player, "base:smoker") end
+local function isSmoker(player) return hasTrait(player, "smoker") end
 DanTraits_IsSmoker = isSmoker
 
-local function setSmoker(player, on) return DanTraits_SetTrait(player, "base:SMOKER", on) end
+local function setSmoker(player, on) return DanTraits_SetTrait(player, "smoker", on) end
+
+-- the lungs a Smoker taken at creation starts with: by age band when Age is on
+local function lungStart(player)
+    if DanTraits_AgeBand and DanTraits_SandboxOn("AgeEnabled") then
+        local band = LUNG_START_BAND[DanTraits_AgeBand(player)]
+        if band then return band end
+    end
+    return LUNG_START
+end
 
 local statMax = DanTraits_StatMax
 
@@ -293,6 +320,8 @@ local function applyDose(player, dose, smoked, pre)
         d.nicInduce = math.min(1, (d.nicInduce or 0) + CAF_INDUCE_PER_CIG * dose)
     end
     local kindling = (d.nicEx and not pre.smoker) and NIC_EX_GAIN or 1
+    -- the habitGain hook (Age: the young get hooked faster) scales the gain and the day's cap alike
+    kindling = kindling * (tonumber(DanTraits_RunHooks("habitGain", 1, player)) or 1)
     local gain = math.min(NIC_PER_CIG * dose * kindling, NIC_DAY_CAP * kindling - (d.nicDayGain or 0))
     if gain > 0 then
         d.nicMeter = math.min(1, d.nicMeter + gain)
@@ -302,7 +331,8 @@ local function applyDose(player, dose, smoked, pre)
     if smoked and DanTraits_AsthmaSmoked then DanTraits_AsthmaSmoked(player, dose) end
     if DanTraits_MddOnSmoke then DanTraits_MddOnSmoke(player, dose, smoked) end   -- MDD's relief (not the vanilla smoke clock)
 
-    if not isSmoker(player) then
+    -- a vanilla Smoker (shown by the sandbox option) is a plain vanilla smoker: never ours on top
+    if not isSmoker(player) and not hasVanillaTrait(player, "base:smoker") then
         if d.nicEx and newSession and roll(NIC_RELAPSE_ODDS) then
             if becomeSmoker(player, d, "UI_DanTraits_SmokerRelapse") then
                 d.nicMeter = math.max(d.nicMeter, NIC_RELAPSE)
@@ -312,12 +342,19 @@ local function applyDose(player, dose, smoked, pre)
         end
     end
 
-    -- vanilla has just cleared (or not) the withdrawal: start the next craving from here
+    -- a Smoker's cigarette clears the craving (a whole one all of it, a drag its
+    -- share); the next craving starts from here
     local ws = withdrawalStat()
     if ws then
         pcall(function()
-            d.nicLastW = stats:get(ws) or 0
-            d.nicWithdraw = isSmoker(player) and clamp01(d.nicLastW / statMax(ws)) or 0
+            local w = stats:get(ws) or 0
+            if pre.smoker or isSmoker(player) then
+                w = math.max(0, w * (1 - one))
+                stats:set(ws, w)
+                wakeWithdrawalClock(player)
+            end
+            d.nicLastW = w
+            d.nicWithdraw = isSmoker(player) and clamp01(w / statMax(ws)) or 0
         end)
     end
     return true
@@ -418,7 +455,7 @@ local function updateSmokerMinute(player, d)
     if smoker and not d.nicInit then
         d.nicInit = true
         d.nicMeter = math.max(d.nicMeter, NIC_START)
-        d.nicLungs = math.max(d.nicLungs, LUNG_START)
+        d.nicLungs = math.max(d.nicLungs, lungStart(player))
         d.nicDryHours = d.nicDryHours or 0
     end
 
@@ -456,26 +493,29 @@ local function updateSmokerMinute(player, d)
     end
 
     local drunk = drunkLevel(player) >= NIC_DRUNK_LEVEL
+    local angerK = tonumber(DanTraits_RunHooks("angerFloor", 1, player)) or 1   -- Age: hotter young
     local angerFloor = 0
     if smoker and ws then
-        -- the craving builds at the habit's pace, capped as the habit winds down
+        -- the craving builds at the habit's pace (the stat is this file's: the game
+        -- only moves it for its own Smoker), capped as the habit winds down
         pcall(function()
-            local w = stats:get(ws) or 0
-            local last = d.nicLastW or w
-            if w > last then
-                local rate = NIC_RATE_BASE + NIC_RATE_METER * d.nicMeter
-                if drunk then rate = rate * NIC_RATE_DRUNK end
-                w = last + (w - last) * rate
-            end
             local max = statMax(ws)
+            local w = stats:get(ws) or 0   -- as it stands: the gum and a cigarette move it too
+            local rate = NIC_RATE_BASE + NIC_RATE_METER * d.nicMeter
+            if drunk then rate = rate * NIC_RATE_DRUNK end
+            rate = rate * (tonumber(DanTraits_RunHooks("cravingOnset", 1, player)) or 1)   -- Age: sooner young
+            w = w + max * rate * MIN_H / NIC_RISE_H
             w = math.min(w, max * fadeCeiling(d.nicDryHours or 0), max)
             stats:set(ws, w)
             d.nicLastW = w
             d.nicWithdraw = clamp01(w / max)
         end)
         if not asleep and (d.nicWithdraw or 0) > 0 then
-            angerFloor = NIC_ANGER * d.nicWithdraw
+            angerFloor = math.min(1, NIC_ANGER * d.nicWithdraw * angerK)
             addFrac(stats, CharacterStat.HUNGER, NIC_HUNGER * d.nicWithdraw)
+            -- no stress or mood of the mod's own: the game's Stress moodle reads the
+            -- withdrawal stat on top of STRESS for everyone (Stats.getNicotineStress), so
+            -- the craving already shows and counts as stress, as it did for vanilla's Smoker
             -- told to the stat delta pipeline, or next minute it reads the rise as the
             -- game's and Age and Bottomless Pit scale it again (the shape Pace Yourself uses)
             pcall(function() DanTraits_DeltaRemember(d, "hungerRise", stats:get(CharacterStat.HUNGER)) end)
@@ -501,7 +541,7 @@ local function updateSmokerMinute(player, d)
         d.nicCue = cue
         if (d.nicCueMin or 0) > 0 then
             d.nicCueMin = d.nicCueMin - 1
-            if strength > 0 and not asleep then angerFloor = math.max(angerFloor, NIC_CUE_ANGER * strength) end
+            if strength > 0 and not asleep then angerFloor = math.max(angerFloor, math.min(1, NIC_CUE_ANGER * strength * angerK)) end
         end
     end
     setAngerFloor(stats, d, angerFloor)
@@ -594,6 +634,23 @@ DanTraits_AddHook("laundryOdour", function(k, player)
     if not d or not d.nicSmokeHours or d.nicSmokeHours >= NIC_ODOUR_H then return nil end
     return k * NIC_ODOUR
 end)
+
+-- a save from before the mod's own Smoker: vanilla's trait with this file's
+-- data behind it becomes ours, once; vanilla's with no data is a plain vanilla smoker
+local function convertOldSmoker(player)
+    if not player then return end
+    local d = traitData(player)
+    if d.nicConverted then return end
+    d.nicConverted = true
+    if isSmoker(player) or not hasVanillaTrait(player, "base:smoker") then return end
+    local w = 0
+    local ws = withdrawalStat()
+    if ws then pcall(function() w = player:getStats():get(ws) or 0 end) end
+    if not (d.nicInit or (d.nicMeter or 0) > 0 or w > 0) then return end
+    DanTraits_SetTrait(player, "base:SMOKER", false)
+    if setSmoker(player, true) then notify(player, "UI_DanTraits_SmokerConverted") end
+end
+DanTraits_OnPlayerReady("SmokerConvert", convertOldSmoker, 35)
 
 DanTraits_Every("minute", "Smoker", updateSmokerMinute, 40)
 DanTraits_Every("frame", "Smoker", updateSmokerFrame, 40)

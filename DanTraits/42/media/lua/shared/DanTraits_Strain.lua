@@ -659,7 +659,7 @@ local function onTobacco(player, kind, item, portion)
     local amount = math.min(ST.CIG_CAP - (d.stCigs or 0), ST.CIG * cigs * (tonumber(portion) or 1))
     if amount <= 0 then return end
     d.stCigs = (d.stCigs or 0) + amount
-    if hasVanillaTrait(player, "base:smoker") then amount = amount * ST.ADDICT end
+    if DanTraits_IsSmoker and DanTraits_IsSmoker(player) then amount = amount * ST.ADDICT end
     DanTraits_StrainEase(player, "smoke", amount)
 end
 DanTraits_AddHook("eat", function(_, player, item, portion)
@@ -783,7 +783,7 @@ local function updateStrainMinute(player, d)
             DanTraits_StrainAdd(player, "withdrawal", rate / 60, false)
         end
         local nic = DanTraits_NicotineWithdrawal and (tonumber(DanTraits_NicotineWithdrawal(player)) or 0) or 0
-        if nic > 0 and hasVanillaTrait(player, "base:smoker") then DanTraits_StrainAdd(player, "withdrawal", nic * ST.NIC / 60, false) end
+        if nic > 0 and DanTraits_IsSmoker and DanTraits_IsSmoker(player) then DanTraits_StrainAdd(player, "withdrawal", nic * ST.NIC / 60, false) end
 
         -- calm
         if (now - (d.stFightH or -1000)) >= ST.CALM_AFTER_H then

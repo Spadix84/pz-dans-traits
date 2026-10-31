@@ -117,6 +117,9 @@ perk and one flaw, both of the head frame:
 - **Restless** (flaw, gives 3): the Itchy Feet want (below) builds twice as
   fast and the mood dip is doubled. Only if Itchy Feet is built.
 
+Picked (the user, 2026-10-30, "do them"): all three. Natural and Hot-Headed
+fill Green's slot; Restless rides on Itchy Feet, which is in.
+
 ## Lock-outs, one table
 
 Today the gating is split three ways: script exclusions (the 20s against
@@ -128,14 +131,15 @@ trait the band cannot take (the age-only code already does this) and the
 description names the bands. The two-way exclusion wrap stays for the
 trait-to-trait exclusions that are not about age.
 
-### Proposed rows (the user ticks)
+### Rows (ticked by the user 2026-10-30; all of them go in)
 
 | Trait | Not in | Why | Replaces |
 |---|---|---|---|
 | Arthritis (ours) | 20s | built | script exclusion |
 | Type 2 Diabetes (ours) | 20s | decided 2026-10-30 | the "+1" price row |
-| Hard of Hearing (vanilla) | 20s | age-related hearing loss | nothing |
-| Brittle (ours) | 20s | bone density is a later-life loss | nothing; the x1.25 / x1.5 rows stay |
+| Hard of Hearing (vanilla) | 20s | age-related hearing loss; ticked | nothing |
+| Brittle (ours) | 20s | bone density is a later-life loss; ticked | nothing; the x1.25 / x1.5 rows stay |
+| Gout, Underactive Thyroid (new) | 20s | decided with the disease picks | new |
 | Reading Glasses, Bad Back, Bad Knees, Old Hand, Delicate Stomach | 20s, 30s | built | age-only table |
 | Old Injury, Set in Their Ways, Seen It All, Cast Iron, Old Bones Know Rain | not 50s | built | age-only table |
 | Pace Yourself, Settled | not 40s | built | age-only table |
@@ -297,28 +301,49 @@ menu, with a size and my recommendation:
 | 50s | **Weight.** Harder to lose, easier to gain | would need a calories-to-weight hook the mod does not have | L | park |
 | all | **Show the band**: a line on the health panel, the Chronicle's diary voice, Life Story's decade decks | small UI; Chronicle and Life Story are their own projects | S | the panel line yes |
 
-Recommended set for this pass: Itchy Feet, Late sleeper, Creature of Habit,
-Feels the cold, the panel line. The two optionals are cheap and can ride
-along if the Routine record is built for Creature of Habit anyway.
+Picked (the user, 2026-10-30): **all seven** (Itchy Feet, Late sleeper,
+Routine lightly, Creature of Habit, Feels the cold, Comfort matters more,
+the panel line). Weight stays parked.
+
+**One sandbox switch for the whole suite** (the user: toggleable, not
+individually). `DanTraits.AgeWants` = On (default) / Off. Off means no want
+ticks, no want moodles, no mood or stress effects from any of the six
+wants, and Restless does nothing (its tooltip says so). The panel's band
+line is display, not a want, and stays on either way. The band effects
+(levels, recovery, head rows) are not behind this switch; they are the age
+system itself.
+
+**The Guide** (the user: update the new user guide): the `age` page in
+`DanTraits_GuideData.lua` is rewritten for 2.0 (the four bands in a line
+each, the level cut and the untouched XP rate, the wants and their switch,
+the disease traits by band, the lock-outs), and What's New gets an entry.
+A `media/ui/Guide/age.png` picture if one is wanted; the page shows it
+when the file exists.
 
 ## Build order
 
-1. **Decoupling** (approved 2026-10-30; independent of every number). The
+1. **Decoupling** (approved 2026-10-30; BUILT 2026-10-31, 106/106 tests, deployed; not yet seen in the game). The
    seven redefinitions out and the flat price table in, Cook's and
    Blacksmith's levels at spawn, the DTEM mirror down to the delta; then the
    fold-ins (own effect, exclusive, one-time removal on load); then the
    side findings. `tests/test_dtem.lua` and `test_client.lua` change with it.
-2. **Bands**: the 40s to 0, the 20s to 5, the level cut, Green retired, the
+2. **Bands** (BUILT 2026-10-31): the 40s to 0, the 20s to 5, the level cut, Green retired, the
    learning rows. Tests pin the Carpenter, Veteran and Fitness Instructor
    examples and that the XPBoostMap is never written.
-3. **Head rows**: the five band effects, the two price rows out, the
+3. **Head rows** (BUILT 2026-10-31): the five band effects, the two price rows out, the
    `habitGain` / `cravingOnset`, `angerRise`, `mddEpisode`, `schizoChance`
    hooks named in `plans/age-v2.md`.
-4. **The rules table**: `DanTraits_AgeRules` replacing the age-only table,
+4. **The rules table** (BUILT 2026-10-31): `DanTraits_AgeRules` replacing the age-only table,
    the script exclusion and the price table; the ticked lock-out rows.
-5. **The 20s traits**: Natural and Hot-Headed (or whatever is picked).
-6. **Needs and wants**: the picked set.
-7. **Docs** with each step: `docs/age.md`, README, the Guide's age page,
+5. **The 20s traits** (BUILT 2026-10-31; Restless's effect lands with step 7): Natural, Hot-Headed, Restless.
+6. **Disease traits** (BUILT 2026-10-31; Smoker's Lungs tuning still open): Gout, Essential Tremor, Underactive Thyroid, Hay
+   Fever, Carpal Tunnel (five traits, three new bottles: allopurinol,
+   colchicine, levothyroxine, plus antihistamines); Smoker's Lungs lands
+   with the Smoker clone in step 1 and is tuned here.
+7. **Needs and wants** (BUILT 2026-10-31): all seven, behind the one `AgeWants` sandbox switch;
+   Restless with them.
+8. **Docs** (DONE 2026-10-31; workshop/description.txt untouched, at its 8000-character limit): `docs/age.md`, README, the Guide's age page
+   (rewritten, the user asked) and What's New,
    CHANGELOG, `workshop/changelog.txt`. Deploy after each step; the user
    plays as we go.
 
@@ -398,7 +423,7 @@ chronotype. Grouped by how much they add for what they cost.
 - Grey hair or an appearance nudge at creation: the player's own choice.
 - Ageing during play, exact ages, a 60s band: as decided in `plans/age-v2.md`.
 
-## Diseases that could be traits (2026-10-30, candidates, none decided)
+## Diseases that could be traits (2026-10-30; the user picked the same day)
 
 The user asked which other conditions could be reflected accurately. The
 mod already has MS, Heart Condition, Asthma, Hemophilia, Type 1 and Type 2,
@@ -414,16 +439,16 @@ older bands get these as *choices*, never as band effects.
 
 | Trait | Who | What it does in play | Builds on | Points | Size |
 |---|---|---|---|---|---|
-| **Gout** | 40s, 50s; men more | Rich meals (the meat-heavy and fatty Vitality grades), alcohol and dehydration raise a urate meter; past the line a flare in one foot: two to four days of severe pain, slow walking, no running. Daily allopurinol holds the meter down; NSAIDs shorten a flare; water and plain food lower it. | meal grades, alcohol tracking, thirst, part pain (Bad Knees' legs), the daily-meds system | gives 4 | M |
-| **High Blood Pressure** | 40s, 50s | Salt-heavy and junk meals, stress, panic, caffeine and smoking raise it; it adds to Heart Condition's strain if present and gives a plain character a small heart-attack risk of its own after weeks untreated. Daily medication (a new amlodipine or the beta blockers we have) brings it down; there is no moodle until it is high, which is the point: a First Aid 6+ health-panel line shows the number. | Heart's strain, Blood panel, meds, stress and panic pipelines | gives 3 | M |
-| **Essential Tremor** | 50s mostly; any age | Hands shake: aiming x0.85, stitching and fine work fail more often, slower careful reading. Caffeine, stress, cold and fatigue worsen it; a drink steadies it for an hour (true, and a trap for Dependent builds); propranolol (the beta blockers) damps it. Not with Steady Hands. | Steady Hands' success rolls, aiming hooks, the Diabetes and Dependent shake code | gives 3 | S |
-| **Sleep Apnoea** | 40s, 50s; Overweight and Obese worse | Nights score worse (x0.8), wakes x1.5, and daytime drowsiness returns mid-afternoon; sleeping on your side is not in the game, but weight loss below Overweight halves it and alcohol before bed doubles it. No machine in Knox Country. | Sleep's night score and wake hooks, weight, alcohol | gives 4 | S |
-| **Smoker's Lungs (COPD)** | 50s; needs Smoker | Endurance cap like Asthma's tier two, a cough that makes noise in cold air and on exertion (draws zombies, as Sensory's sound rows do), worse every week still smoking; quitting stops the slide, never reverses it; an inhaler eases a bad spell. | Asthma's cap, Smoker's meter, sound events | gives 5 | M |
-| **Underactive Thyroid** | 40s, 50s; women more | Fatigue builds x1.15, feels the cold (comfort temperature a few degrees up), weight gain easier, mood a little low. One daily pill (levothyroxine, new item in medicine cabinets) removes all of it; running out brings it back over a week. The purest "find your medication" condition. | fatigue, warmth, weight, the daily-meds and reminder system | gives 3 | S |
-| **Hay Fever** | any age | Spring and summer (pollen by month and weather: dry, windy days worst, rain clears the air): sneezing fits that make noise and interrupt actions, itchy eyes (sight a touch shorter), poor sleep with windows open. Antihistamines fix it and make you drowsy, the non-drowsy kind is rarer. Seasonal, so it is a different game in July than in January. | weather and season reads, sound events, Sleep, meds | gives 2 | M |
-| **Bad Teeth** | any age; worse old | Sugar and sweets raise a decay meter; past the line a toothache: head pain for a day, hard food hurts to eat, sleep suffers. Painkillers and clove oil (new) mask it; an abscess (a second line) brings fever and needs antibiotics; with First Aid 4 and pliers you can pull the tooth (one less future ache). No dentists after the fall. | eat hooks, part pain, fever owner, antibiotics, the First Aid gating | gives 3 | M |
-| **Bad Wrists (RSI)** | 40s, 50s; trades | Long stretches of the same work (chopping, sawing, crafting, washing) build wrist pain and a fine-work penalty; rest and a splint ease it; alternating tasks resets the run. The mirror of Bad Back for the hands. | the work-minute counters Bad Back and Laundry already keep, part pain | gives 2 | S |
-| **Nerve Damage** | not a trait: a progression | Type 2 left untreated for weeks numbs the feet: foot wounds are not felt (no pain, no moodle, found only on the health panel), tripping on rough ground more often. Reversible early, permanent late. Makes "untreated diabetes" a story rather than a number. | Diabetes' untreated-days counter, wound events | none | M |
+| **Gout** (IN, gives 8) | 40s, 50s; men more | Rich meals (the meat-heavy and fatty Vitality grades), alcohol and dehydration raise a urate meter; past the line a flare in one foot: two to four days of severe pain, slow walking, no running. Daily allopurinol holds the meter down; NSAIDs shorten a flare; water and plain food lower it. | meal grades, alcohol tracking, thirst, part pain (Bad Knees' legs), the daily-meds system | gives 8 (the user) | M |
+| **High Blood Pressure** (OUT) | 40s, 50s | Salt-heavy and junk meals, stress, panic, caffeine and smoking raise it; it adds to Heart Condition's strain if present and gives a plain character a small heart-attack risk of its own after weeks untreated. Daily medication (a new amlodipine or the beta blockers we have) brings it down; there is no moodle until it is high, which is the point: a First Aid 6+ health-panel line shows the number. | Heart's strain, Blood panel, meds, stress and panic pipelines | gives 3 | M |
+| **Essential Tremor** (IN, with a pill) | 50s mostly; any age | Hands shake: aiming x0.85, stitching and fine work fail more often, slower careful reading. Caffeine, stress, cold and fatigue worsen it; a drink steadies it for an hour (true, and a trap for Dependent builds); propranolol (the beta blockers) damps it. Not with Steady Hands. | Steady Hands' success rolls, aiming hooks, the Diabetes and Dependent shake code | gives 3 | S |
+| **Sleep Apnoea** (OUT) | 40s, 50s; Overweight and Obese worse | Nights score worse (x0.8), wakes x1.5, and daytime drowsiness returns mid-afternoon; sleeping on your side is not in the game, but weight loss below Overweight halves it and alcohol before bed doubles it. No machine in Knox Country. | Sleep's night score and wake hooks, weight, alcohol | gives 4 | S |
+| **Smoker's Lungs (COPD)** (IN, inside the Smoker clone) | every Smoker; worse by band | Endurance cap like Asthma's tier two, a cough that makes noise in cold air and on exertion (draws zombies, as Sensory's sound rows do), worse every week still smoking; quitting stops the slide, never reverses it; an inhaler eases a bad spell. | Asthma's cap, Smoker's meter, sound events | gives 5 | M |
+| **Underactive Thyroid** (IN) | 40s, 50s; women more | Fatigue builds x1.15, feels the cold (comfort temperature a few degrees up), weight gain easier, mood a little low. One daily pill (levothyroxine, new item in medicine cabinets) removes all of it; running out brings it back over a week. The purest "find your medication" condition. | fatigue, warmth, weight, the daily-meds and reminder system | gives 3 | S |
+| **Hay Fever** (IN, cheap) | any age | Spring and summer (pollen by month and weather: dry, windy days worst, rain clears the air): sneezing fits that make noise and interrupt actions, itchy eyes (sight a touch shorter), poor sleep with windows open. Antihistamines fix it and make you drowsy, the non-drowsy kind is rarer. Seasonal, so it is a different game in July than in January. | weather and season reads, sound events, Sleep, meds | gives 2 | M |
+| **Bad Teeth** (OUT) | any age; worse old | Sugar and sweets raise a decay meter; past the line a toothache: head pain for a day, hard food hurts to eat, sleep suffers. Painkillers and clove oil (new) mask it; an abscess (a second line) brings fever and needs antibiotics; with First Aid 4 and pliers you can pull the tooth (one less future ache). No dentists after the fall. | eat hooks, part pain, fever owner, antibiotics, the First Aid gating | gives 3 | M |
+| **Bad Wrists (RSI)** (OUT; became Carpal Tunnel below) | 40s, 50s; trades | Long stretches of the same work (chopping, sawing, crafting, washing) build wrist pain and a fine-work penalty; rest and a splint ease it; alternating tasks resets the run. The mirror of Bad Back for the hands. | the work-minute counters Bad Back and Laundry already keep, part pain | gives 2 | S |
+| **Nerve Damage** (OUT) | not a trait: a progression | Type 2 left untreated for weeks numbs the feet: foot wounds are not felt (no pain, no moodle, found only on the health panel), tripping on rough ground more often. Reversible early, permanent late. Makes "untreated diabetes" a story rather than a number. | Diabetes' untreated-days counter, wound events | none | M |
 
 Thought about and left out for now: menopause (women, 40s to 50s: warmth
 swings, broken sleep, mood) is accurate and would use systems the mod has,
@@ -434,18 +459,99 @@ late; irritable bowel and prostate trouble need a bathroom the game does not
 have; chronic fatigue overlaps MS and Arthritis; Parkinson's begins too late
 for a 50s band and Essential Tremor covers the tremor players would see.
 
-If I were to pick four for this pass: **Gout** (the meal and drink systems
-finally bite somewhere new), **Essential Tremor** (cheap, distinct, the
-alcohol twist), **Underactive Thyroid** (the daily-pill game at its
-cleanest), and **Hay Fever** (a season you can hear). High Blood Pressure
-is the most realistic and the least visible; it earns its place once the
-Blood panel can show the number. Smoker's Lungs waits for the Smoker clone.
+The user picked (2026-10-30): **Gout**, **Essential Tremor**, **Underactive
+Thyroid**, **Hay Fever** and **Carpal Tunnel** (in place of Bad Wrists) as
+traits; **Smoker's Lungs** rolled into the Smoker clone rather than a trait
+of its own; **Bad Teeth**, **Nerve Damage**, **High Blood Pressure** and
+**Sleep Apnoea** out (the last two on a second ask).
+
+### The five, as picked
+
+**Gout, gives 8.** The user: make a flare hard to deal with and price it
+for that. The urate meter rises with meat-heavy and fatty meals (the
+Vitality grades), beer and spirits, dehydration (any thirst moodle) and,
+accurately, crash dieting (a day of Cut or starving). Past the line a flare
+starts in one foot and runs three to five days untreated:
+
+- severe pain in the foot (part pain at the Bad Knees ceiling, so sleep
+  suffers and the pain moodle sits at severe);
+- walking slowed as a sprained ankle slows it, no running or sprinting, slow
+  through windows and over fences;
+- the foot cannot bear a boot's weight: shoes off or the pain climbs a step
+  (a nudge, not a rule the game enforces);
+- a second flare within a month has a one-in-four chance of taking the other
+  foot or a knee as well.
+
+Daily allopurinol (new bottle, medicine cabinets and pharmacies, uncommon)
+lowers the meter and is the only real control; colchicine (new, rare) cuts a
+flare to a day; vanilla painkillers ease the pain one step; water and plain
+meals lower the meter slowly. A careless diet flares every ten to fourteen
+days, a careful one every month or more, allopurinol kept up nearly never.
+A 50s trait that gives 8 and is survivable only by eating and drinking like
+a patient: that is the point of it.
+
+**Essential Tremor, gives 3, with a pill.** The user asked which pill. The
+real first-line drug is propranolol, which the game already has as **Beta
+Blockers** (`Base.PillsBeta`, used by Heart Condition and for panic): one
+steadies the hands for about six hours, with its normal panic effect on top.
+The second-line drug is **primidone**, which would be a new daily-medication
+bottle like levothyroxine. Recommendation: Beta Blockers only. It is
+accurate, it is a vanilla item, and a tremor character now competes with
+their own panic management for the same bottle, which is a real trade-off
+without a new item. Primidone can be added later if Beta Blockers prove too
+scarce for a daily user. Alcohol's one-hour steadying stays.
+
+**Smoker's Lungs, inside the Smoker clone.** The user: roll it into Smoker;
+it will need tweaking. `dantraits:smoker` gains a lung meter (pack-years):
+set at creation by band (20s 0, 30s a little, 40s a third, 50s over half),
+raised by every cigarette, never lowered. Thresholds bring Asthma's
+endurance cap tier one then tier two, and a cough in cold air and on
+exertion that makes a sound zombies hear. Quitting freezes the meter; an
+inhaler eases a bad spell. So a 20s smoker is a clean smoker who will ruin
+their lungs over a long game, and a 50s smoker starts with the cough. Price:
+the clone gives 5; the 50s may need a surcharge row (gives 6 or 7) because
+they start damaged. Open for tweaking once played: the starting damage by
+band, the thresholds, the cough's sound radius, how fast a heavy smoker
+climbs.
+
+**Underactive Thyroid, gives 3.** As in the table. Levothyroxine is a new
+daily-medication bottle on the reminder system; running out brings the
+fatigue, the cold and the weight gain back over a week.
+
+**Hay Fever, gives 2.** The user: cheap. Two is the floor any trait in the
+mod or vanilla sits at, and Hay Fever earns no more: antihistamines (new,
+common in bathrooms) fix it for the day at the cost of drowsiness, and from
+autumn to spring it does nothing. Sneezing fits still make noise, which is
+why it is not free. If 2 still feels too dear in play, the rules table can
+price it 1.
+
+**Carpal Tunnel, gives 2** (replaces Bad Wrists; the user: annoying, not
+crippling). Any age, more in the 40s and 50s. Long runs of repetitive hand
+work (crafting, sawing, chopping, washing, sewing, mechanics) build a wrist
+meter; past the line a numb, tingling spell:
+
+- fine actions slower (transfer, stitching, mechanics, electrical: the mirror
+  of Dextrous, x1.2 time);
+- a small chance that a fine-work roll fails outright and has to be redone;
+- when the meter is high it wakes you once in the night with numb hands
+  (one extra wake, sleep score a touch down);
+- never a weapon penalty and never pain beyond mild: it should nag, not stop
+  you.
+
+Rest drains the meter; a vanilla Splint worn while sleeping drains it twice
+as fast; alternating kinds of work resets the run so it never builds. Size S.
+
+### Not picked
+
+Bad Teeth, Nerve Damage, High Blood Pressure and Sleep Apnoea (the user:
+no to all four). High Blood Pressure stays in this table as the natural
+candidate if the Blood panel ever wants a second number to show.
 
 ## Open
 
-- The user's ticks on the lock-out rows and the needs-and-wants set.
-- Whether Natural and Hot-Headed are the right pair for the 20s' free slot.
 - The fold-in effect numbers (Fast Recovery's healing, Deep Sleeper's sleep need) from vanilla's descriptions.
 - Whether the 30s need their +1 back after the free 40s is played.
-- Which of the disease traits below join the pass, and which are age-gated.
-- Build start: waits for the user's go-ahead; a review session is patching bugs on 2026-10-30.
+- Smoker's Lungs tuning after play (starting damage by band, thresholds, cough radius, 50s surcharge).
+- Build start: the user said "do them" on the evening of 2026-10-30 after the
+  review session went idle; to confirm whether that is the whole pass (decoupling
+  first) or the wants suite ahead of the rest.

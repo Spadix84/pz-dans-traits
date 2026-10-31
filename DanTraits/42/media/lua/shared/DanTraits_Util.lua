@@ -886,18 +886,20 @@ function DanTraits_PainBurst(player, amount)
 end
 
 -- Fold-ins ------------------------------------------------------------------------
--- A mod trait that carries a vanilla one grants it once, the first time the
--- mod trait is seen (a new character, or the trait added later). Returns
--- whether it is granted now. Deep Sleeper's Wakeful predates this and keeps
--- its own copy in DanTraits_Sleep.lua.
-function DanTraits_GrantFoldIn(player, trait, constName, flag)
-    if not player or not DanTraits_HasTrait or not DanTraits_HasTrait(player, trait) then return false end
+-- Until Age 2.0 (2026-10-31) a mod trait that carried a vanilla one (Steady
+-- Hands and Dexterous, Fast Recovery and Fast Healer, Deep Sleeper and
+-- Wakeful) granted the vanilla trait once and noted it under a flag. The mod
+-- traits now carry the effect themselves and exclude the vanilla twin, so a
+-- character the old version granted the twin to has it taken off, once, the
+-- first time this version sees them: the flag says the mod gave it, so the
+-- mod only ever removes what it added. Returns whether anything came off.
+function DanTraits_UngrantFoldIn(player, constName, flag)
+    if not player then return false end
     local d = DanTraits_Data(player)
-    if d[flag] then return true end
+    if not d[flag] then return false end
+    d[flag] = nil
     if not DanTraits_SetTrait then return false end
-    local ok = DanTraits_SetTrait(player, "base:" .. tostring(constName), true)
-    if ok then d[flag] = true end
-    return ok
+    return DanTraits_SetTrait(player, "base:" .. tostring(constName), false)
 end
 
 -- Hits from other mods ------------------------------------------------------------

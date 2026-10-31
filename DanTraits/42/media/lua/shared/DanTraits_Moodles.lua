@@ -103,6 +103,9 @@ local NICOTINE_TIER    = { 0.15, 0.5, 0.8 }
 local MDD_TIER         = { 0.01, 0.6, 0.85 }
 local IRON_TIER        = { 0.1, 0.5, 0.9 }
 local JOINT_TIER       = { 0.25, 0.5, 0.8 }
+local TREMOR_TIER      = { 0.35, 0.65 }        -- Essential Tremor: the shake
+local THYROID_TIER     = { 0.3, 0.7 }          -- Underactive Thyroid: how untreated
+local HAYFEVER_TIER    = { 0.2, 0.6 }          -- Hay Fever: the pollen load
 local MS_HEAT_TIER     = { 0.25, 0.5, 0.8 }   -- MS's own heat tiers
 local GLARE_TIER       = { 0.01, 0.5, 0.9 }   -- the light's pain against full sun: a lit room is 0.67, the sun 1
 
@@ -255,6 +258,33 @@ local SPECS = {
         return DanTraits_AdrenalineMoodle and DanTraits_AdrenalineMoodle(player, d) or 0
     end },
 }
+
+-- the Age 2.0 conditions (2026-10-31)
+SPECS[#SPECS + 1] = { name = "GoutFlare", level = function(player, d)
+    return DanTraits_GoutMoodle and DanTraits_GoutMoodle(player, d) or 0
+end }
+SPECS[#SPECS + 1] = { name = "Tremor", level = function(player, d)
+    if not hasTrait(player, "tremor") then return 0 end
+    return tierOf(d.etShake, TREMOR_TIER)
+end }
+SPECS[#SPECS + 1] = { name = "Thyroid", level = function(player, d)
+    if not hasTrait(player, "thyroid") then return 0 end
+    return tierOf(d.thUntreated, THYROID_TIER)
+end }
+SPECS[#SPECS + 1] = { name = "HayFever", level = function(player, d)
+    if not hasTrait(player, "hayfever") then return 0 end
+    return tierOf(d.hfLoad, HAYFEVER_TIER)
+end }
+SPECS[#SPECS + 1] = { name = "NumbHands", level = function(player, d)
+    return DanTraits_CarpalMoodle and DanTraits_CarpalMoodle(player, d) or 0
+end }
+-- the age wants (DanTraits_AgeWants.lua)
+SPECS[#SPECS + 1] = { name = "ItchyFeet", level = function(player, d)
+    return DanTraits_AgeWantsMoodle and DanTraits_AgeWantsMoodle(player, d, "ItchyFeet") or 0
+end }
+SPECS[#SPECS + 1] = { name = "OutOfRoutine", level = function(player, d)
+    return DanTraits_AgeWantsMoodle and DanTraits_AgeWantsMoodle(player, d, "OutOfRoutine") or 0
+end }
 
 DanTraits_MoodleNames = {}
 for i, spec in ipairs(SPECS) do DanTraits_MoodleNames[i] = spec.name end

@@ -1,8 +1,11 @@
 -- Project Zomboid Vitality Project: Steady Hands.
 --
--- Vanilla Dexterous folded in (granted with it, like Deep Sleeper's Wakeful:
--- faster inventory transfers), plus a surgeon's hands for the wound care
--- overhaul (DanTraits_WoundCare.lua):
+-- Dexterous's quick hands, carried by the trait itself (the inventory
+-- transfer, drop, pick-up and grab actions take half the time: the same
+-- x0.5 vanilla's Lua gives Dexterous, applied through each action's
+-- adjustMaxTime, which ISBaseTimedAction:create runs once; what the game's
+-- Java reads Dexterous for is not copied), plus a surgeon's hands for the
+-- wound care overhaul (DanTraits_WoundCare.lua):
 --   splints you set go wrong half as often (the splintBadSet hook, read for
 --     whoever sets it, patient or not)
 --   stitches you put in come out rough half as often (the stitchPoor hook,
@@ -21,7 +24,8 @@
 -- (DanTraits_Dependent.lua) or a diabetic low does (DanTraits_Diabetes.lua),
 -- the work done then gets none of it (the splint and the speed; stitches
 -- already in hold as well as they were sewn).
--- Not with Dexterous (it is already in here) or All Thumbs.
+-- Not with Dexterous (the same effect) or All Thumbs. A character the old
+-- version granted Dexterous to has it taken off once (DanTraits_UngrantFoldIn).
 require "DanTraits"
 
 local hasTrait = DanTraits_HasTrait
@@ -33,6 +37,10 @@ local SH_FAST_ACTIONS  = { "ISStitch", "ISRemoveGlass", "ISRemoveBullet" }
 local SH_RELOAD        = 1.25    -- ReloadSpeed x this (reloading and racking)
 local SH_HOLSTER       = 1.25    -- hotbar draw and holster speed x this
 local SH_HOLSTER_ACTIONS = { "ISEquipWeaponAction", "ISUnequipAction", "ISAttachItemHotbar", "ISDetachItemHotbar" }
+local SH_TRANSFER      = 0.5     -- transfers, drops, pick-ups and grabs take x this (vanilla Dexterous's x0.5)
+-- the actions vanilla's Lua halves for Dexterous; the grab is client-only
+local SH_TRANSFER_ACTIONS = { "ISInventoryTransferAction", "ISDropWorldItemAction", "ISDropVehicleItemAction",
+                              "ISPickUpGroundCoverItem", "ISGrabItemAction" }
 
 local function has(player) return player ~= nil and hasTrait(player, "steadyhands") end
 
@@ -110,10 +118,56 @@ local function wrapHolster()
     end
 end
 
+-- quick hands: the time each action settles on (adjustMaxTime, run once by
+-- ISBaseTimedAction:create) halved; a character with vanilla Dexterous too
+-- (another mod's doing: the two exclude each other here) is not halved twice
+local function wrapTransfers()
+    for _, name in ipairs(SH_TRANSFER_ACTIONS) do
+        DanTraits_Wrap(_G[name], "adjustMaxTime", "steady-transfer", function(original, self, ...)
+            local t = original(self, ...)
+            if type(t) == "number" and t > 1 and steady(self.character)
+                and not DanTraits_HasVanillaTrait(self.character, "base:dextrous") then
+                t = t * SH_TRANSFER
+            end
+            return t
+        end)
+    end
+end
+
+-- the rest of a drag: the inventory pane queues one transfer action per item and
+-- ISInventoryTransferAction:checkQueueList merges the others into the first's
+-- queueList, each with the time its own new() computed; the reset for each next
+-- item takes that time straight, never through adjustMaxTime. Each merged entry
+-- is halved once, as it is merged (a flag on the entry; the entry in hand has
+-- already been through create)
+local function scaleQueue(self)
+    local list = self and self.queueList
+    if type(list) ~= "table" or not steady(self.character)
+        or DanTraits_HasVanillaTrait(self.character, "base:dextrous") then return end
+    for _, q in ipairs(list) do
+        if type(q) == "table" and not q.danSteady then
+            q.danSteady = true
+            if type(q.time) == "number" and q.time > 1 then q.time = q.time * SH_TRANSFER end
+        end
+    end
+end
+
+local function wrapQueue()
+    DanTraits_Wrap(ISInventoryTransferAction, "checkQueueList", "steady-queue", function(original, self, ...)
+        local r = original(self, ...)
+        pcall(scaleQueue, self)
+        return r
+    end)
+end
+DanTraits_SteadyScaleQueue = scaleQueue   -- tests
+
 wrapReload()
 wrapHolster()
-Events.OnGameStart.Add(function() wrapReload(); wrapHolster() end)
+wrapTransfers()
+wrapQueue()
+Events.OnGameStart.Add(function() wrapReload(); wrapHolster(); wrapTransfers(); wrapQueue() end)
 
-local function grant(player) DanTraits_GrantFoldIn(player, "steadyhands", "DEXTROUS", "shDexGranted") end
+-- the Dexterous the old version granted comes off, once
+local function ungrant(player) DanTraits_UngrantFoldIn(player, "DEXTROUS", "shDexGranted") end
 
-DanTraits_OnPlayerReady("SteadyHands", grant, 75)
+DanTraits_OnPlayerReady("SteadyHands", ungrant, 75)

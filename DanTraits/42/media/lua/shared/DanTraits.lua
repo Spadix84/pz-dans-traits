@@ -291,6 +291,7 @@ DanTraits_RETIRED = {
     jinxed      = false,
     ironstomach = "base:IRON_GUT",
     bouncesback = "thickskull",
+    green       = false,   -- Age 2.0 (2026-10-31): the 20s band takes the levels itself; the lost levels are not given back
 }
 -- Traits another mod declares that ours stand in for (Dynamic Traits'
 -- Alcoholic, DanTraits_DTEM.lua): hidden at creation by their lowercase id
@@ -606,9 +607,9 @@ end
 --           30  Meds (the levels every medicated system reads this minute)
 --           35  Adrenaline (the rush, the crash and its heart risk, before Heart reads them)
 --           39  Spoons (the energy budget MS spends; reads the night Vitality scored)
---           40  ADHD, AgeTraits, Alcohol, Anemia, Anger, Arthritis, Asthma, Brittle, Caffeine, Cooking, Dehydration, Diabetes,
---               Epilepsy, Fitness, Germaphobe, Gluten, Hangover, Heart, Lactose, Laundry, MDD, Migraine,
---               MS, Smoker, Sunburn, Tinnitus, Triptan (floors and rates; among themselves by label)
+--           40  ADHD, AgeTraits, Alcohol, Anemia, Anger, Arthritis, Asthma, Brittle, Caffeine, CarpalTunnel, Cooking, Dehydration, Diabetes,
+--               Epilepsy, Fitness, Germaphobe, Gluten, Gout, Hangover, HayFever, Heart, Lactose, Laundry, MDD, Migraine,
+--               MS, Smoker, Sunburn, Thyroid, Tinnitus, Tremor, Triptan (floors and rates; among themselves by label)
 --               (Iron Stomach in Positives is a foodSicknessRise pipeline hook, not a clock system)
 --           41  Grit (Positives: its share of the pain reduction, after the order-40 floors),
 --               Headphones (Sensory: the deaf swap while they are worn),
@@ -618,6 +619,7 @@ end
 --           44  SpiffBoy (the hours on each cartridge; puts the console away asleep)
 --           45  Strain (reads the fever, withdrawal, the Good Meal, Pumped, fresh
 --               clothes and the hangover the systems above left; its unhappiness floors)
+--           50  AgeWants (what each age wants: the cell, the slow morning, the routine's day; reads Home from 11)
 --           60  Hunted (the horde, the house's call, the helicopter, the dawn packs), Relaxant (baclofen's clock)
 --           90  SleepMenu (the outfit record for Undress and Sleep), Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
@@ -631,8 +633,9 @@ end
 --               and panicRise (Seen It All)
 --           20  Blood        22  WoundCare (movement sampling)    24  Concussion
 --           40  AgeTraits (Bad Knees, Pace Yourself), Alcohol (panic decay), Arthritis, ArthritisGrip,
---               Dependent (held anger), Heart (the angina surcharge), Meds (diazepam), SensoryShutdown (a shutdown's stillness),
---               Smoker (held anger), StrainKnock (knocked down)
+--               Dependent (held anger), Gout (no running in a flare), Heart (the angina surcharge), Meds (diazepam),
+--               SensoryShutdown (a shutdown's stillness), Smoker (held anger), StrainKnock (knocked down)
+--           45  Anger (part of every fall put back where the angerFall hook says so: Hot-Headed)
 --   (Faint stays on OnTick; OnTick, OnWeaponSwing and OnPlayerGetDamage handlers
 --   are still registered by their own files.)
 local drivers = { minute = {}, ten = {}, frame = {} }
@@ -742,6 +745,7 @@ DanTraits_DeltaHook(nil, "catchCold", "minute", {
 DanTraits_DeltaHook(CharacterStat and CharacterStat.FOOD_SICKNESS, "foodSicknessRise", "minute")
 DanTraits_DeltaHook(CharacterStat and CharacterStat.HUNGER, "hungerRise", "minute")   -- Age: a metabolism
 DanTraits_DeltaHook(CharacterStat and CharacterStat.PANIC, "panicRise", "frame")      -- Seen It All
+DanTraits_DeltaHook(CharacterStat and CharacterStat.FATIGUE, "fatigueRise", "minute")  -- Deep Sleeper
 -- and the pain floors (Util): systems register floors, this applies the largest once
 DanTraits_Every("minute", "PainFloor", DanTraits_ApplyPainFloors, 95)
 

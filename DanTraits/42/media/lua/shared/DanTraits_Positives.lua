@@ -16,11 +16,16 @@
 --   drink adds, through the drink action; so it takes more to dull pain too,
 --   since drink relief follows the Drunk moodle), and a hangover is milder
 --   (x0.6) and shorter (x0.7). Not with Straight Edge.
--- Fast Recovery (6, the same as vanilla Fast Healer, which it contains): vanilla
---   Fast Healer folded in (granted with it), and after
---   blood loss the volume and the red cells come back half as fast again
---   (the bloodVolRefill and bloodCellRebuild hooks of DanTraits_Blood.lua).
---   Not with Fast Healer (it is already in here) or Slow Healer.
+-- Fast Recovery (8): the mod's own Fast Healer. Scratches and cuts close
+--   half as fast again and an unstitched deep wound heals the same (the
+--   healPace hook on Age's wound clocks and the woundHeal hook of
+--   DanTraits_WoundCare.lua; vanilla's Fast Healer is Java and its number is
+--   not published, so x1.5 stands in for "recovers quickly from injuries"),
+--   and after blood loss the volume and the red cells come back half as fast
+--   again (the bloodVolRefill and bloodCellRebuild hooks of
+--   DanTraits_Blood.lua). Not with Fast Healer (the same effect) or Slow
+--   Healer. A character the old version granted Fast Healer to has it taken
+--   off once (DanTraits_UngrantFoldIn).
 -- Good Clotter: blood clots quickly. A bleed's clock (the game's bleeding
 --   time) runs down twice as fast: each minute the fall vanilla made since
 --   the last minute is taken off again. Not while a shard or bullet is still
@@ -63,6 +68,7 @@ local HL_INTOX          = 0.8     -- Hollow Legs: intoxication a drink adds x th
 local HL_SEVERITY       = 0.6     -- hangover severity x this
 local HL_HOURS          = 0.7     -- hangover length x this
 local FR_BLOOD          = 1.5     -- Fast Recovery: blood volume and red cells come back x this
+local FR_HEAL           = 1.5     -- wounds close x this (scratch and cut clocks, deep wounds)
 local GC_CLOT           = 2       -- Good Clotter: bleeding time runs down x this
 local GC_BLOOD          = 0.75    -- blood lost from a bleed x this
 local GC_FLOOR          = 0.01    -- never cut a bleed below this: the game ends it and clears its flags
@@ -165,6 +171,15 @@ DanTraits_AddHook("bloodCellRebuild", function(rate, player)
     if not hasTrait(player, "fastrecovery") then return nil end
     return rate * FR_BLOOD
 end)
+-- wounds: the pace Age sets on the scratch and cut clocks (1 for the 30s), and the deep wound rate
+DanTraits_AddHook("healPace", function(pace, player)
+    if not hasTrait(player, "fastrecovery") then return nil end
+    return pace * FR_HEAL
+end)
+DanTraits_AddHook("woundHeal", function(rate, player)
+    if not hasTrait(player, "fastrecovery") then return nil end
+    return rate * FR_HEAL
+end)
 
 -- Good Clotter ---------------------------------------------------------------
 DanTraits_AddHook("bloodBleed", function(rate, player)
@@ -241,10 +256,10 @@ local function updateGritMinute(player, d)
     end)
 end
 
--- the one-shot starts, and the vanilla trait Fast Recovery carries
+-- the one-shot starts; the Fast Healer the old version granted comes off, once
 local function onPositivesCreate(player)
     if not player then return end
-    DanTraits_GrantFoldIn(player, "fastrecovery", "FAST_HEALER", "frHealerGranted")
+    DanTraits_UngrantFoldIn(player, "FAST_HEALER", "frHealerGranted")
     local hours = 0
     pcall(function() hours = player:getHoursSurvived() or 0 end)
     if hours > 0 then return end

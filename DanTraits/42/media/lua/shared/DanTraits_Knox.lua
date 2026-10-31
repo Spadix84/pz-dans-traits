@@ -1,7 +1,11 @@
 -- Project Zomboid Vitality Project: Resilient against the Knox virus.
--- Vanilla Resilient, re-costed from 4 to 10 (scripts/DanTraits.txt), keeps
--- its own effect and gains a chance (sandbox KnoxSurviveChance, 10% by
--- default) that the body beats a zombie infection, once. The roll is
+-- Vanilla Resilient, 6 points dearer (DanTraits_VanillaPrices.lua; the
+-- definition itself is vanilla's), keeps its own effect and gains a chance
+-- (sandbox KnoxSurviveChance, 10% by default) that the body beats a zombie
+-- infection, once. The chance belongs to a Resilient chosen at creation: the
+-- flag is read once, the first time the character is seen (mod data
+-- knoxResilient), so a trait another mod hands out in play (Dynamic Traits
+-- gives Resilient for a fit body) does not bring the roll with it. The roll is
 -- made, hidden, the first minute the body is seen infected, and a Run Down
 -- body has less of a chance (Vitality's effect, -1..1: down to half at the
 -- bottom; a fit body gets the full chance, never more). A lucky character
@@ -72,12 +76,18 @@ local function cure(player)
     end)
 end
 
+-- Resilient as chosen at creation (or as held when this version first saw an older save)
+local function resilient(player, d)
+    if d.knoxResilient == nil then d.knoxResilient = hasVanillaTrait(player, "base:resilient") == true end
+    return d.knoxResilient
+end
+
 local function updateKnoxMinute(player, d)
     if not infected(player) then
         d.knox = nil
         return
     end
-    if not hasVanillaTrait(player, "base:resilient") then return end
+    if not resilient(player, d) then return end
     if not d.knox then
         if d.knoxBeaten then secondInfection(player, d) else d.knox = rollKnox(player) end
     end
@@ -117,10 +127,11 @@ DanTraits_ExtraCommands.knox = function(player, args)
     end
     local k = d.knox
     return "knox: infected " .. tostring(infected(player)) .. ", progress " .. string.format("%.2f", progress(player))
-        .. ", resilient " .. tostring(hasVanillaTrait(player, "base:resilient"))
+        .. ", resilient " .. tostring(resilient(player, d))
         .. (k and (", lucky " .. tostring(k.lucky) .. ", breaks at " .. string.format("%.2f", k.breakAt or 0)) or ", not rolled")
         .. (k and k.second and " (a second infection)" or "")
         .. ", chance " .. string.format("%.1f", chance(player)) .. "%" .. (d.knoxBeaten and ", beaten once already" or "")
 end
 
+DanTraits_OnPlayerReady("Knox", function(player) resilient(player, traitData(player)) end, 60)
 DanTraits_Every("minute", "Knox", updateKnoxMinute, 42)

@@ -27,7 +27,12 @@
 --
 -- The AngerEffects sandbox option turns all of it off.
 --
--- Mod data: angCurses (count, for the console and tests); shares coughGap.
+-- How fast anger falls can be slowed (the angerFall hook: Hot-Headed, x0.7):
+-- each frame, whatever the stat fell by since the last look is partly put
+-- back. A rise is never touched, and nothing is tracked for a character the
+-- hook says nothing about.
+--
+-- Mod data: angCurses (count, for the console and tests), angLast; shares coughGap.
 require "DanTraits"
 
 local sandboxOn = DanTraits_SandboxOn
@@ -148,6 +153,22 @@ DanTraits_ExtraCommands.anger = function(player, args)
     return "anger " .. tostring(value) .. " (the game drains it; a Smoker's craving and an Alcoholic's withdrawal hold their own floors)"
 end
 
+-- slower to cool: part of every fall put back (after the cravings' floors, order 40)
+local function updateAngerFrame(player, d)
+    local k = tonumber(DanTraits_RunHooks("angerFall", 1, player)) or 1
+    if k == 1 then d.angLast = nil return end
+    local stats = player:getStats()
+    local now = 0
+    pcall(function() now = stats:get(CharacterStat.ANGER) or 0 end)
+    local last = d.angLast
+    if last and now < last then
+        now = math.max(0, last - (last - now) * k)
+        pcall(function() stats:set(CharacterStat.ANGER, now) end)
+    end
+    d.angLast = now
+end
+
 Events.OnWeaponHitXp.Add(onWeaponHit)
 Events.OnWeaponSwing.Add(onWeaponSwing)
 DanTraits_Every("minute", "Anger", updateAngerMinute, 40)
+DanTraits_Every("frame", "Anger", updateAngerFrame, 45)
