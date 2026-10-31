@@ -279,6 +279,7 @@ local function weakenWeapon(weapon, scale)
         if pending[i].weapon == weapon then table.remove(pending, i) end
     end
     pending[#pending + 1] = { weapon = weapon, at = now() + SLIP_RESTORE_MS }
+    if DanTraits_FrameWake then DanTraits_FrameWake() end   -- the frames restore it (restoreDue): into the frame set now
 end
 -- other systems weaken a swing the same way (Heart Condition: the week after an attack)
 function DanTraits_WeakenWeapon(player, weapon, scale)
@@ -327,7 +328,7 @@ end
 
 Events.OnWeaponSwing.Add(onWeaponSwing)
 Events.OnPlayerAttackFinished.Add(onAttackFinished)
-DanTraits_Every("frame", "ArthritisGrip", restoreDue, 40)
+DanTraits_Every("frame", "ArthritisGrip", restoreDue, 40, { active = function() return #pending > 0 end })   -- frames only with a weapon to restore
 -- getting up from a night's sleep (not a nap) starts the morning stiffness (Vitality scores the night)
 DanTraits_AddHook("nightScored", function(_, player, d, quality, hours, wakes, isNap)
     if isNap or not d or not hasTrait(player, "arthritis") then return nil end

@@ -662,4 +662,4 @@ end
 DanTraits_OnPlayerReady("SmokerConvert", convertOldSmoker, 35)
 
 DanTraits_Every("minute", "Smoker", updateSmokerMinute, 40)
-DanTraits_Every("frame", "Smoker", updateSmokerFrame, 40)
+DanTraits_Every("frame", "Smoker", updateSmokerFrame, 40, { active = function(player, d) return d ~= nil and (d.nicAnger or 0) > 0 end })   -- frames only while anger is held

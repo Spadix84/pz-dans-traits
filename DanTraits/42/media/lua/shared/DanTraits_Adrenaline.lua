@@ -126,6 +126,7 @@ local function shot(player)
     setStat(stats, CharacterStat.ENDURANCE, endurance + (1 - endurance) * cut)
     d.adRushMin = AD_RUSH_MIN
     d.adCrashMin, d.adRetFrom, d.adRetTo, d.adRetMin = nil, nil, nil, nil
+    if DanTraits_FrameWake then DanTraits_FrameWake(player) end   -- the stamina pipeline reads the rush on the frames: into the frame set now
     if not d.adAttackIn and DanTraits_Roll(DanTraits_AdrenalineRisk(shots, beta)) then
         d.adAttackIn = math.floor(DanTraits_RandRange(AD_ATTACK_IN[1], AD_ATTACK_IN[2]))
     end

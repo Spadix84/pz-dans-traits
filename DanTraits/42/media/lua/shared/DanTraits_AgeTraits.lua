@@ -407,22 +407,34 @@ local function updateBadKnees(player, d)
 end
 
 -- per frame: each climb counts once, when it starts
+-- the climb states are singletons: looked up once, not three static calls a frame
+local climbStates = nil
+local function climbStateList()
+    if climbStates then return climbStates end
+    climbStates = {}
+    local classes = { ClimbOverFenceState, ClimbThroughWindowState, ClimbOverWallState }
+    for i = 1, 3 do
+        local class = classes[i]
+        if class ~= nil then
+            local ok, inst = pcall(function() return class.instance() end)
+            if ok and inst ~= nil then climbStates[#climbStates + 1] = inst end
+        end
+    end
+    return climbStates
+end
 local function isClimbing(player)
-    local climbing = false
-    pcall(function()
-        local state = player:getCurrentState()
-        if not state then return end
-        climbing = (ClimbOverFenceState ~= nil and state == ClimbOverFenceState.instance())
-            or (ClimbThroughWindowState ~= nil and state == ClimbThroughWindowState.instance())
-            or (ClimbOverWallState ~= nil and state == ClimbOverWallState.instance())
-    end)
-    return climbing
+    local ok, state = pcall(player.getCurrentState, player)
+    if not ok or state == nil then return false end
+    local list = climbStateList()
+    for i = 1, #list do
+        if state == list[i] then return true end
+    end
+    return false
 end
 
 local function isStomping(player)
-    local stomping = false
-    pcall(function() stomping = player:isPerformingStompAnimation() == true end)
-    return stomping
+    local ok, v = pcall(player.isPerformingStompAnimation, player)
+    return ok and v == true
 end
 
 -- per frame: each climb and each stomp counts once, when it starts
@@ -641,6 +653,10 @@ Events.OnGameStart.Add(wrapReading)
 DanTraits_OnPlayerReady("AgeTraits", onAgeTraitsCreate, 55)   -- Reading Glasses' pair
 Events.AddXP.Add(onAgeTraitsAddXP)
 DanTraits_Every("minute", "AgeTraits", updateAgeTraitsMinute, 40)
-DanTraits_Every("frame", "AgeTraits", function(player, d) updateBadKneesFrame(player, d); updatePaceYourself(player, d); updateBadBackFrame(player, d) end, 40)
+DanTraits_Every("frame", "AgeTraits", function(player, d) updateBadKneesFrame(player, d); updatePaceYourself(player, d); updateBadBackFrame(player, d) end, 40, {
+    -- frames only for the traits that watch them: Bad Knees (climbs, stomps), Pace Yourself (sprints), a Bad Back that is out
+    active = function(player, d)
+        return hasTrait(player, "badknees") or hasTrait(player, "paceyourself") or ((d.bbOutMin or 0) > 0 and hasTrait(player, "badback"))
+    end })
 Events.OnWeaponSwing.Add(onPaceSwing)
 Events.OnPlayerAttackFinished.Add(onPaceSwingFinished)

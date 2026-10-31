@@ -534,6 +534,7 @@ DanTraits_SensoryStep = step
 local function setTier(player, d, tier, ch)
     local was = d.siTier or 0
     d.siTier = tier
+    if tier ~= was and DanTraits_FrameWake then DanTraits_FrameWake(player) end   -- the frames hold a shutdown still and scale stamina by the tier
     if tier == 3 and was < 3 then
         d.siOver = DanTraits_Roll(S.MELTDOWN) and "meltdown" or "shutdown"
         notify(player, d.siOver == "meltdown" and "UI_DanTraits_SensoryMeltdown" or "UI_DanTraits_SensoryShutdown")
@@ -658,7 +659,7 @@ local function updateShutdownFrame(player, d)
     pcall(function() player:setSprinting(false) end)
     pcall(function() player:setMoodleCantSprint(true) end)
 end
-DanTraits_Every("frame", "SensoryShutdown", updateShutdownFrame, 40, { trait = "sensory" })
+DanTraits_Every("frame", "SensoryShutdown", updateShutdownFrame, 40, { trait = "sensory", active = function(player, d) return d.siOver == "shutdown" end })   -- frames only in a shutdown
 
 -- 0..1 for the other systems (Migraine's trigger): how far into an overload,
 -- and only during one (the meltdown or shutdown, including its hold down to

@@ -134,4 +134,8 @@ local function updateAlcoholFrame(player)
 end
 
 DanTraits_Every("minute", "Alcohol", updateAlcoholMinute, 40)
-DanTraits_Every("frame", "Alcohol", updateAlcoholFrame, 40)
+-- frames only while drunk (read when the frame set is built, once a game minute: a
+-- drink's first minute of panic decay can come a minute late)
+DanTraits_Every("frame", "Alcohol", updateAlcoholFrame, 40, { active = function(player)
+    return DanTraits_SandboxOn("DrinkReliefEnabled") and drunkLevel(player) > 0
+end })

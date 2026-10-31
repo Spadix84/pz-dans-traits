@@ -1,6 +1,8 @@
-[h1]Next update (in progress)[/h1]
+[h1]1.5.1: the frame, properly[/h1]
 [h2]Changed[/h2]
 [list]
+[*][b]Lighter on the frame, properly this time.[/b] The 1.5.0 trim did not show in the profiler, and two of you said so. The cost was not what the systems did but the asking: seventeen of them checked every frame, each through its own guard, for a dozen "nothing to do". The mod's per-frame work now runs only the systems that have something to do right now (a craving's anger, an angina, a gout flare, a shutdown, a crash to judge), decided once a game minute and again the moment something starts; standing still with nothing going on, a frame costs three calls (measured: 35 microseconds a frame the old way, 1.5 with nothing to do, under 18 with a smoker's craving, a concussion watch and two more live). If you profile mods: the OnPlayerUpdate row under DanTraits_Attrib.lua is the one to watch, and I would be glad of a before-and-after.
+[*][b]With Bandits loaded:[/b] the guard that keeps a hallucinated phantom out of Bandits' lists ran for every zombie every frame from game start, phantom or not. It now runs only while a phantom is out (a 90 s profile had it at 218,000 calls for nothing).
 [*][b]Smoker cravings ease off.[/b] A cigarette now holds the craving off for an hour and a half (a drag for its share; sooner in your 20s), the craving takes a third longer to build after that, and full withdrawal leaves you Annoyed rather than Angry, so no more cursing out loud from a craving alone (still Angry in your 20s or with Hot-Headed). A new smoker turns Irritated about three and a half hours after a cigarette (was one) and Annoyed after six and a half (was two and a half).
 [*][b]Pace Yourself[/b] reads a swing from the game's swing events instead of every frame, and checks for a sprint only while you are sprinting. Same refund, less work each frame.
 [/list]

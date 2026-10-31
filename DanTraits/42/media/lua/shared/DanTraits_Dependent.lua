@@ -267,7 +267,7 @@ DanTraits_Every("ten", "Dependent", updateDependent, 10)
 -- per frame: hold the irritability
 DanTraits_Every("frame", "Dependent", function(player, d)
     if d and (d.alcAnger or 0) > 0 then holdAnger(player:getStats(), d) end
-end, 40)
+end, 40, { active = function(player, d) return d ~= nil and (d.alcAnger or 0) > 0 end })   -- frames only while anger is held
 
 local function withdrawalOf(player, d)
     if not d or not d.alcWithdrawing or not hasTrait(player, "dependent") then return 0 end

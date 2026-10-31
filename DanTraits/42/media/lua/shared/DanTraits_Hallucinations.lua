@@ -285,6 +285,9 @@ function DanTraits_IsPhantom(zombie)
     end
     return false
 end
+-- how many are out; DanTraits_PhantomsChanged(count) is told after every spawn and
+-- release (DanTraits_Bandits.lua keeps its guard on the zombie update only while one is)
+function DanTraits_PhantomCount() return #schizoPhantoms end
 
 local function chargeSpawnSquare(player)
     local found
@@ -343,6 +346,7 @@ local function phantomApplyAlpha(ph)
 end
 
 phantomsOnTick = function()
+    local before = #schizoPhantoms
     for i = #schizoPhantoms, 1, -1 do
         local ph = schizoPhantoms[i]
         ph.frames = ph.frames + 1
@@ -374,6 +378,7 @@ phantomsOnTick = function()
             phantomRunAt(ph)
         end
     end
+    if #schizoPhantoms ~= before and DanTraits_PhantomsChanged then DanTraits_PhantomsChanged(#schizoPhantoms) end
 end
 
 local function phantomsOnRender()
@@ -410,6 +415,7 @@ local function episodeCharge(player)
     local ph = { zombie = zombie, player = player, playerNum = player:getPlayerNum(), frames = 0 }
     phantomRunAt(ph)
     schizoPhantoms[#schizoPhantoms + 1] = ph
+    if DanTraits_PhantomsChanged then DanTraits_PhantomsChanged(#schizoPhantoms) end
     addPanic(player, SCHIZO_CHARGE_PANIC)
     return true
 end

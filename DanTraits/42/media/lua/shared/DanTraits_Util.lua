@@ -661,6 +661,27 @@ function DanTraits_DeltaHook(stat, name, cadence, access)
         if access then return access.get(player) end
         return player:getStats():get(stat)
     end
+    -- Frame cadence: the subscribers all scale the delta by a factor that holds for
+    -- a game minute (a tier, a trait, a pill), so the factor is read once when the
+    -- frame set is built (DanTraits.lua) and the frames only need it while it is
+    -- not 1; a frame with nothing to scale runs nothing. While off, the last
+    -- reading is dropped, so the minutes away are not scaled as one frame's rise
+    -- when it comes back on (a baseline DanTraits_DeltaRemember hands it just
+    -- before is kept: the systems that do so are the ones that put it on).
+    local kOf = nil
+    local opts = nil
+    if cadence == "frame" then
+        kOf = setmetatable({}, { __mode = "k" })
+        opts = { active = function(player, d)
+            local k = tonumber(DanTraits_RunHooks(name, 1, player, d)) or 1
+            kOf[player] = k
+            if k == 1 then
+                if d.deltaLast then d.deltaLast[name] = nil end
+                return false
+            end
+            return true
+        end }
+    end
     return DanTraits_Every(cadence, "Delta:" .. name, function(player, d)
         -- the read is a game-object call (a stat, the body's catch-a-cold), so it is
         -- guarded like the write below; nothing to read, nothing to do
@@ -670,7 +691,9 @@ function DanTraits_DeltaHook(stat, name, cadence, access)
         d.deltaLast = d.deltaLast or {}
         local last = d.deltaLast[name]
         if last and now > last then
-            local delta = tonumber(DanTraits_RunHooks(name, now - last, player, d)) or (now - last)
+            local delta
+            if kOf then delta = (now - last) * (kOf[player] or 1)
+            else delta = tonumber(DanTraits_RunHooks(name, now - last, player, d)) or (now - last) end
             local max = access and access.max or (stat and DanTraits_StatMax(stat)) or nil
             local new = last + math.max(0, delta)
             if max and new > max then new = max end
@@ -683,7 +706,7 @@ function DanTraits_DeltaHook(stat, name, cadence, access)
         end
         d.deltaLast[name] = now
         if d.floorsThisMinute then d.floorsThisMinute[name] = nil end
-    end, 0)
+    end, 0, opts)
 end
 
 function DanTraits_DeltaRemember(d, name, value)

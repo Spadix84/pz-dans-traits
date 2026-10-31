@@ -452,5 +452,9 @@ end
 DanTraits_Every("minute", "WoundCare", updateWoundMinute, 22)
 DanTraits_Every("frame", "WoundCare", function(player, d)
     if sandboxOn() then updateWoundFrame(player, d) end
-end, 22)
+end, 22, {
+    -- the movement sampling only matters with something on the body to strain or limp
+    -- on: the minute's summary is empty otherwise, and until the first minute has looked
+    -- the body is sampled (a fresh wound's first minute after that goes unsampled)
+    active = function(player, d) return sandboxOn() and d ~= nil and d.wcSummary ~= "" end })
 Events.OnWeaponSwing.Add(onSwing)

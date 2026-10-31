@@ -460,4 +460,10 @@ DanTraits_Every("frame", "Blood", function(player, d)
     if not sandboxOn() then return end
     updateBloodFrame(player, d)
     if not woundDamageOn() then refundWoundDamage(player) end
-end, 20)
+end, 20, {
+    -- frames only in a loss tier (the ceiling, no sprinting), or every frame with
+    -- Wound Damage off (the game's wound damage is put back as it lands)
+    active = function(player, d)
+        if not sandboxOn() or not d then return false end
+        return (d.bloodVol ~= nil and (d.bloodTier or 0) > 0) or not woundDamageOn()
+    end })

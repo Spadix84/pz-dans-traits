@@ -841,7 +841,7 @@ function DanTraits_StrainSummary(player)
 end
 
 DanTraits_Every("minute", "Strain", updateStrainMinute, 45)
-DanTraits_Every("frame", "StrainKnock", updateStrainFrame, 40)
+DanTraits_Every("frame", "StrainKnock", updateStrainFrame, 40, { active = strainOn })   -- one knocked-down read a frame while strain is on
 
 -- console: strain | strain set <0..100> | strain kill [n] | strain comfort <kind>
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}

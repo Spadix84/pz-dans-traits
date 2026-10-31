@@ -229,6 +229,7 @@ end
 
 local function startAngina(player, d)
     d.hcAnginaMin = randRange(HC_ANGINA_MIN[1], HC_ANGINA_MIN[2])
+    if DanTraits_FrameWake then DanTraits_FrameWake(player) end   -- the frames stop the sprint: into the frame set now
     d.hcStrain = math.min(d.hcStrain or 0, HC_PAIN_RESET)
     d.hcEpisodes = (d.hcEpisodes or 0) + 1
     notify(player, "UI_DanTraits_HeartChestPain")
@@ -444,5 +445,7 @@ DanTraits_StartingKit({
 })
 
 DanTraits_Every("minute", "Heart", updateHeartMinute, 40)
-DanTraits_Every("frame", "Heart", updateHeartFrame, 40)
+DanTraits_Every("frame", "Heart", updateHeartFrame, 40, { active = function(player, d)   -- frames only in angina or the weak weeks
+    return (hasTrait(player, "heart") and (d.hcAnginaMin or 0) > 0) or weak(player, d) ~= nil
+end })
 Events.OnWeaponSwing.Add(onHeartSwing)

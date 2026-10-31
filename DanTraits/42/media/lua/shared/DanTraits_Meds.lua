@@ -445,6 +445,7 @@ function DanTraits_MedTake(player, id, amount)
     rollSide(player, d, id)
     local s = stateOf(d, id)
     s.lastH = hoursNow()
+    if DanTraits_FrameWake then DanTraits_FrameWake(player) end   -- a pill can put a system onto the frames (diazepam, a stamina side effect)
     if not drug.halfH then return 0 end
     s.lvl = (s.lvl or 0) + (amount or 1)
     return s.lvl
@@ -676,6 +677,8 @@ DanTraits_ExtraCommands.meds = function(player, args)
 end
 
 DanTraits_Every("minute", "Meds", updateMedsMinute, 30)
-DanTraits_Every("frame", "Meds", updateMedsFrame, 40)
+DanTraits_Every("frame", "Meds", updateMedsFrame, 40, { active = function(player, d)   -- frames only under diazepam
+    return d ~= nil and d.meds ~= nil and d.meds.diazepam ~= nil and DanTraits_MedCovered(player, "diazepam")
+end })
 Events.OnGameBoot.Add(DanTraits_MedPatchScripts)
 Events.OnFillContainer.Add(onMedsFillContainer)

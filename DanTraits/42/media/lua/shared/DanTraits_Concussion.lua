@@ -227,13 +227,14 @@ local function judgeCrash(player)
 end
 
 local function trackSpeed(player)
+    local st = stateOf(player)
+    if not st.inVehicle and not st.crash then return end   -- on foot with no crash pending: no game call this frame
     local kmh = nil
     local okV, v = pcall(player.getVehicle, player)
     if okV and v then
         local okS, s = pcall(v.getCurrentSpeedKmHour, v)
         kmh = math.abs(okS and tonumber(s) or 0)
     end
-    local st = stateOf(player)
     local crash = st.crash
     if not crash and not kmh then return end   -- on foot with no crash pending: the usual frame, and nothing to read
     local now = nowMs()
@@ -264,6 +265,7 @@ local function onConcussionDamage(character, damageType, amount)
             -- judged once the speed after it is read (trackSpeed); a second report in that window joins the first
             if st.crash then st.crash.top = math.max(st.crash.top, top)
             else st.crash = { top = top, note = note, at = nowMs(), frames = 0 } end
+            if DanTraits_FrameWake then DanTraits_FrameWake(player) end   -- the frames judge it (trackSpeed): into the frame set now
         else
             traitData(player).ccLastImpact = note
             if damageType == "FALLDOWN" then impactKnock(player, amount, CC_FALL, "fall")
@@ -274,20 +276,34 @@ local function onConcussionDamage(character, damageType, amount)
         local now = nil
         pcall(function() now = head:getHealth() end)
         if now and st.headWas and now < st.headWas then DanTraits_HeadHit(player, st.headWas - now) end
+        if now then st.headWas = now end   -- the next hit is judged from here, not from the last quarter-second read
     end
 end
 
 -- per frame: the head's health (for the next weapon hit), whether the player ran
-local function updateConcussionFrame(player)
+-- The head's health is read every CC_HEAD_EVERY frames (a quarter second at
+-- 60 fps), not every frame: a weapon hit is judged against the last read, and
+-- the read after a hit is the hit's own (onConcussionDamage). The strain of
+-- running counts only with a concussion in progress, so the movement snapshot
+-- is only asked for then.
+local CC_HEAD_EVERY = 15
+local function updateConcussionFrame(player, d)
     local st = stateOf(player)
-    local head = st.head   -- the part object lives as long as the character: looked up once (the state is per player object)
-    if not head then head = headPart(player); st.head = head end
-    if head then
-        local ok, h = pcall(head.getHealth, head)
-        if ok then st.headWas = h end
+    local tick = (st.headTick or 0) + 1
+    if tick >= CC_HEAD_EVERY or st.headWas == nil then
+        tick = 0
+        local head = st.head   -- the part object lives as long as the character: looked up once (the state is per player object)
+        if not head then head = headPart(player); st.head = head end
+        if head then
+            local ok, h = pcall(head.getHealth, head)
+            if ok then st.headWas = h end
+        end
     end
-    local f = DanTraits_Frame(player)   -- the frame's movement snapshot (DanTraits.lua)
-    if f.sprinting or f.running then st.ran = true end
+    st.headTick = tick
+    if d and (d.ccScore or 0) > 0 then
+        local f = DanTraits_Frame(player)   -- the frame's movement snapshot (DanTraits.lua)
+        if f.sprinting or f.running then st.ran = true end
+    end
 end
 
 -- slower endurance recovery, through the stat delta pipeline (DanTraits_Util.lua)
@@ -460,8 +476,19 @@ end
 
 Events.OnPlayerGetDamage.Add(onConcussionDamage)
 DanTraits_Every("minute", "Concussion", updateConcussionMinute, 24)
-DanTraits_Every("frame", "Concussion", function(player)
+DanTraits_Every("frame", "Concussion", function(player, d)
     trackSpeed(player)   -- the crash speeds feed the impact hook even with Concussion off
-    if sandboxOn() then updateConcussionFrame(player) end
-end, 24)
+    if sandboxOn() then updateConcussionFrame(player, d) end
+end, 24, {
+    -- frames while Concussion is on (the head's health for the weapon hits, cheap), and
+    -- with it off only in a vehicle or with a crash to judge (OnEnterVehicle wakes the set)
+    active = function(player)
+        local st = stateOf(player)
+        local ok, v = pcall(player.getVehicle, player)
+        st.inVehicle = ok and v ~= nil   -- trackSpeed's early return; the vehicle events keep it between minutes
+        if sandboxOn() then return true end
+        return st.inVehicle or st.crash ~= nil
+    end })
+if Events.OnEnterVehicle then Events.OnEnterVehicle.Add(function(ch) if DanTraits_IsLocalPlayer(ch) then stateOf(ch).inVehicle = true end end) end
+if Events.OnExitVehicle then Events.OnExitVehicle.Add(function(ch) if DanTraits_IsLocalPlayer(ch) then stateOf(ch).inVehicle = false end end) end
 Events.OnWeaponSwing.Add(onConcussionSwing)

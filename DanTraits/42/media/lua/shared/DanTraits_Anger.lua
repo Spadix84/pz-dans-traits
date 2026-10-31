@@ -171,4 +171,6 @@ end
 Events.OnWeaponHitXp.Add(onWeaponHit)
 Events.OnWeaponSwing.Add(onWeaponSwing)
 DanTraits_Every("minute", "Anger", updateAngerMinute, 40)
-DanTraits_Every("frame", "Anger", updateAngerFrame, 45)
+DanTraits_Every("frame", "Anger", updateAngerFrame, 45, { active = function(player)
+    return (tonumber(DanTraits_RunHooks("angerFall", 1, player)) or 1) ~= 1   -- frames only while a hook slows the fall (Hot-Headed)
+end })

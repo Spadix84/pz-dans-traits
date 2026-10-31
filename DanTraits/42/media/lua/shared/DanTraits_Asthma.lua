@@ -104,6 +104,7 @@ local function asthmaSetIrritation(player, d, value, quiet)
     value = math.max(0, math.min(1, value))
     local before = asthmaTierOf(d.asthma or 0)
     d.asthma = value
+    if DanTraits_FrameWake and asthmaTierOf(value) ~= before then DanTraits_FrameWake(player) end   -- the stamina pipeline reads the tier on the frames (an inhaler, smoke)
 
     -- attack state with hysteresis
     if not d.asthmaAttack and value >= ASTHMA_TIER[4] then

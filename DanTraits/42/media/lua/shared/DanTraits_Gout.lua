@@ -239,6 +239,6 @@ DanTraits_ExtraCommands.gout = function(player, args)
 end
 
 DanTraits_Every("minute", "Gout", updateGoutMinute, 40, { trait = "gout", clear = clearGout })
-DanTraits_Every("frame", "Gout", updateGoutFrame, 40, { trait = "gout" })
+DanTraits_Every("frame", "Gout", updateGoutFrame, 40, { trait = "gout", active = function(player, d) return inFlare(d) end })   -- frames only in a flare
 
 DanTraits_StartingKit({ trait = "gout", flag = "gtKitGiven", items = { GT_START_ALLO, GT_START_PILLS }, meds = { "allopurinol" } })

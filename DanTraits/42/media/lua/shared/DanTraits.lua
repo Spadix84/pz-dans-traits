@@ -89,15 +89,16 @@ end
 -- failure under each tag is printed; later ones are quiet. Under
 -- DanTraits_STRICT (the offline tests) the error is raised again instead.
 local guardFailed = {}
+local function guardFail(tag, res)
+    if not guardFailed[tag] then
+        guardFailed[tag] = true
+        print("[DanTraits] " .. tostring(tag) .. " failed: " .. tostring(res))
+    end
+    if DanTraits_STRICT then error(tostring(tag) .. " failed: " .. tostring(res), 0) end
+end
 function DanTraits_Guard(tag, fn, ...)
     local ok, res = pcall(fn, ...)
-    if not ok then
-        if not guardFailed[tag] then
-            guardFailed[tag] = true
-            print("[DanTraits] " .. tostring(tag) .. " failed: " .. tostring(res))
-        end
-        if DanTraits_STRICT then error(tostring(tag) .. " failed: " .. tostring(res), 0) end
-    end
+    if not ok then guardFail(tag, res) end
     return ok, res
 end
 
@@ -607,6 +608,13 @@ end
 --              its moodle, its floors on the parts, the attack in progress.
 --              Blood, Infection, Concussion and WoundCare stand down on their
 --              sandbox switch and hand-roll the same thing.
+--              opts.active (frame cadence): fn(player, d) -> bool, whether the
+--              system needs frames right now (a held anger, an angina, a flare,
+--              a crash to judge). Asked when the player's frame set is built: at
+--              the first frame, once a game minute right after the minute
+--              systems that set the flags it reads, and after
+--              DanTraits_FrameWake. A frame system without it (and without
+--              opts.trait) runs every frame; see the frame set below.
 --
 -- Core registers the only three handlers. Each does the preamble once (every
 -- local player, the dead check; the frame one also skips non-local players), then
@@ -686,6 +694,11 @@ function DanTraits_Every(cadence, label, fn, order, opts)
         entry.clear = opts.clear
         entry.had = {}   -- per player: whether the trait held the last time this ran
     end
+    local active = opts and opts.active
+    if type(active) == "function" then
+        entry.active = active
+        entry.tagActive = entry.tag .. " active"
+    end
     local at = #list
     while at >= 1 and (list[at].order > order or (list[at].order == order and list[at].label > label)) do at = at - 1 end
     table.insert(list, at + 1, entry)
@@ -724,15 +737,17 @@ end
 local function runClock(list)
     eachLocalPlayer(function(player) runDrivers(list, player, traitData(player)) end)
 end
+local frameStamp = 0   -- bumped when every player's frame set is to be rebuilt (below)
 Events.EveryOneMinute.Add(function()
     traitMemo = {}   -- the frame systems' trait answers (hasTrait above) are good for a game minute
     runClock(drivers.minute)
+    frameStamp = frameStamp + 1   -- the frame sets are rebuilt at the next frame, from what this minute left
 end)
 Events.EveryTenMinutes.Add(function() runClock(drivers.ten) end)
 
 -- The movement snapshot: what the legs and arms are doing, read once per
--- frame per local player before the frame systems run, instead of each
--- system (some per body part) pcall'ing the same getters.
+-- frame per local player, on the first ask, instead of each system (some per
+-- body part) pcall'ing the same getters; a frame where no system asks reads nothing.
 --
 --   DanTraits_Frame(player) -> { sprinting, running, moving, attacking }
 --
@@ -754,20 +769,135 @@ local function readFrame(player, f)
 end
 
 function DanTraits_Frame(player)
-    if player ~= nil and frameSnap.player == player then return frameSnap.state end
+    if player ~= nil and frameSnap.player == player then
+        local s = frameSnap.state
+        if not s then s = readFrame(player, frameState); frameSnap.state = s end
+        return s
+    end
     return readFrame(player)
 end
 
-Events.OnPlayerUpdate.Add(function(player)
+-- The frame set: which frame systems a player needs right now ------------------------------------------------------
+-- Most frame systems have nothing to do most of the time (a held anger, an
+-- angina, a flare, a shutdown, a crash to judge), and the ask itself was the
+-- cost: seventeen guarded calls a frame, every frame, for a dozen early
+-- returns (a Workshop profile of 1.5.0 put this handler at 0.17 ms a frame
+-- with the character standing still). Each frame system says when it needs
+-- frames (opts.active; a trait-gated one, opts.trait, while the trait holds);
+-- the answers are collected into a list per player once a game minute, right
+-- after the minute systems that set the flags they read, and again after
+-- DanTraits_FrameWake. A frame runs that list and nothing else; with the list
+-- empty it returns after three game calls (dead, local, mod data). The
+-- trait-gated systems' clear (opts.clear) runs when the set is built, as the
+-- minute systems' does.
+local frameSets = setmetatable({}, { __mode = "k" })   -- player -> { list = { entry... }, stamp = frameStamp when built }
+
+-- Rebuild the frame sets at the next frame: one player's, or everyone's (nil).
+-- For a system whose need for frames changed between minutes (a shot taken, a
+-- crash to judge, a weapon to restore, a pill): the minute tick does it for all.
+function DanTraits_FrameWake(player)
+    if player == nil then frameStamp = frameStamp + 1 return end
+    local set = frameSets[player]
+    if set then set.stamp = nil end
+end
+
+local function buildFrameSet(player, d, track)
+    local list, all = {}, drivers.frame
+    for i = 1, #all do
+        local entry = all[i]
+        local on = true
+        if entry.has then
+            local ok, has = DanTraits_Guard(entry.tagHas, entry.has, player, d)
+            on = ok and has == true
+            if on then
+                entry.had[player] = true
+            elseif entry.had[player] ~= false then
+                entry.had[player] = false
+                if entry.clear then DanTraits_Guard(entry.tagClear, track, entry.label, entry.clear, player, d) end
+            end
+        end
+        if on and entry.active then
+            local ok, act = DanTraits_Guard(entry.tagActive, entry.active, player, d)
+            on = ok and act == true
+        end
+        if on then list[#list + 1] = entry end
+    end
+    return list
+end
+
+local function passthrough(_, fn, ...) return fn(...) end
+
+-- With the dashboard measuring (DanTraits_Attrib.lua switched on), each system
+-- runs through its attribution wrapper as the minute systems do; otherwise the
+-- system itself under one pcall, with nothing between (the wrapper, the guard and
+-- the varargs were about two microseconds a system a frame).
+local function runFrameSet(list, track, player, d)
+    if track then
+        for i = 1, #list do
+            local entry = list[i]
+            DanTraits_Guard(entry.tag, track, entry.label, entry.fn, player, d)
+        end
+        return
+    end
+    for i = 1, #list do
+        local entry = list[i]
+        local ok, err = pcall(entry.fn, player, d)
+        if not ok then guardFail(entry.tag, err) end
+    end
+end
+
+local function onPlayerUpdate(player)
     if not player or player:isDead() then return end
     if player.isLocalPlayer and not player:isLocalPlayer() then return end
-    frameSnap.player, frameSnap.state = player, readFrame(player, frameState)
+    local d = traitData(player)
+    -- a DanTraits_Track set without Attrib loaded (the tests) is honoured; Attrib's only while it measures
+    local track = DanTraits_Track
+    if track and DanTraits_AttribState and not DanTraits_AttribState.enabled then track = nil end
+    local set = frameSets[player]
+    if not set then set = { list = {} }; frameSets[player] = set end
+    if set.stamp ~= frameStamp then
+        set.stamp = frameStamp
+        traitMemo[player] = nil
+        traitMemoOn = true
+        local ok, list = pcall(buildFrameSet, player, d, track or passthrough)
+        traitMemoOn = false
+        set.list = ok and list or {}
+        if not ok then error(list, 0) end   -- only under DanTraits_STRICT: each ask is guarded
+    end
+    local list = set.list
+    if #list == 0 then return end
+    frameSnap.player, frameSnap.state = player, nil   -- the movement snapshot, read on the first ask
     traitMemoOn = true
-    local ok, err = pcall(runDrivers, drivers.frame, player, traitData(player))
+    DanTraits_RunningFor = player
+    local ok, err = pcall(runFrameSet, list, track, player, d)
+    DanTraits_RunningFor = nil
     traitMemoOn = false
     frameSnap.player, frameSnap.state = nil, nil
-    if not ok then error(err, 0) end   -- only under DanTraits_STRICT: the drivers guard every system
-end)
+    if not ok then error(err, 0) end   -- only under DanTraits_STRICT: the set guards every system
+end
+Events.OnPlayerUpdate.Add(onPlayerUpdate)
+-- a vehicle entered or left between minutes: Concussion's crash tracking needs frames in one
+if Events.OnEnterVehicle then Events.OnEnterVehicle.Add(function(character) DanTraits_FrameWake(character) end) end
+if Events.OnExitVehicle then Events.OnExitVehicle.Add(function(character) DanTraits_FrameWake(character) end) end
+
+-- console: frametime [n]  time n runs (default 2000) of the frame handler for the
+-- player, as the game calls it, and name the frame set: a microsecond figure for
+-- what a frame costs right now. The systems in the set run n times over, so with
+-- anything in it the character pays n frames' worth: a measuring command, not play.
+DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
+DanTraits_ExtraCommands.frametime = function(player, args)
+    local n = math.max(1, math.floor(tonumber(args and args[1]) or 2000))
+    local clock = getTimestampMs or function() return 0 end
+    local t0 = clock()
+    for _ = 1, n do onPlayerUpdate(player) end
+    local ms = clock() - t0
+    local set = frameSets[player]
+    local names = {}
+    if set then for i = 1, #set.list do names[i] = set.list[i].label end end
+    local setText = "empty"
+    if #names > 0 then setText = table.concat(names, ", ") end
+    return string.format("frame handler: %.2f us a run over %d runs (%d ms); frame set: ", ms * 1000 / n, n, ms) .. setText
+end
 
 -- The stat delta pipeline (see DanTraits_Util.lua): one place that scales how
 -- fast a stat recovers. Order 0, so it runs before every system that writes

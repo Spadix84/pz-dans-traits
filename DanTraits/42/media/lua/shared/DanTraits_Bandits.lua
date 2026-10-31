@@ -10,9 +10,9 @@ require "DanTraits"
 -- (DanTraits_Hallucinations.lua) is a real zombie for a few seconds, so
 -- bandits, hostile or friendly, would open fire at something only the player
 -- can see. Bandits' own handlers are file locals and cannot be wrapped, so this
--- adds an OnZombieUpdate of its own at game start, after Bandits' (handlers
--- run in the order they were added): on a phantom it takes it back out of
--- Bandits' lists and parks it again. Bandits' once-a-minute rebuild of the
+-- adds an OnZombieUpdate of its own while a phantom is out, after Bandits'
+-- (handlers run in the order they were added): on a phantom it takes it back
+-- out of Bandits' lists and parks it again. Bandits' once-a-minute rebuild of the
 -- lists can put a phantom back for the rest of that frame; the next update
 -- takes it out.
 --
@@ -65,12 +65,26 @@ local function wrapDamage()
 end
 
 -- Bandits' files load after this one: run at game start.
+-- The guard is on the zombie update only while a phantom is out. Bandits
+-- updates every zombie every frame, so a handler that is always there costs a
+-- call per zombie per frame for nothing (a 90 s profile with no phantom:
+-- 218,000 calls, 169 ms, the mod's biggest row). Hallucinations says how many
+-- are out after every spawn and release.
+local guardOn = false
+function DanTraits_PhantomsChanged(count)
+    if not installed then return end
+    local want = (tonumber(count) or 0) > 0
+    if want == guardOn then return end
+    guardOn = want
+    if want then Events.OnZombieUpdate.Add(hidePhantom) else Events.OnZombieUpdate.Remove(hidePhantom) end
+end
+
 local function install()
     if installed or type(BanditZombie) ~= "table" then return end
     installed = true
-    Events.OnZombieUpdate.Add(hidePhantom)
+    if DanTraits_PhantomCount then DanTraits_PhantomsChanged(DanTraits_PhantomCount()) end
     local hits = wrapDamage()
-    print("[DanTraits] Bandits found, phantom guard on, hits " .. tostring(hits))
+    print("[DanTraits] Bandits found, phantom guard ready, hits " .. tostring(hits))
 end
 DanTraits_BanditsInstall = install
 
