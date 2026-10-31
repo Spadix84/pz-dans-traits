@@ -1,3 +1,9 @@
+[h1]Next update (in progress)[/h1]
+[h2]Changed[/h2]
+[list]
+[*][b]Pace Yourself[/b] reads a swing from the game's swing events instead of every frame, and checks for a sprint only while you are sprinting. Same refund, less work each frame.
+[/list]
+
 [h1]1.5.0: Age 2.0, burnout and the crippled starts[/h1]
 Safe mid-save: your character keeps every level they have (Green comes off and nothing is taken back; a 20s character already made is not stripped), a character with the game's Smoker and a habit behind it is switched to this mod's Smoker once with a notice, Steady Hands, Fast Recovery and Deep Sleeper take back the Dexterous, Fast Healer or Wakeful the old version handed out, burnout starts at zero with your kills and days so far already counted as hardening, and the new sandbox options start at their defaults (Profession Levels (20s) keeps the value your save already has). Every detail is in CHANGELOG.md on GitHub.
 

@@ -3,6 +3,12 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Unreleased
+
+### Changed
+
+- **Pace Yourself off the frame path** (`DanTraits_AgeTraits.lua`): a swing's refund is read from OnWeaponSwing (endurance at the start) and OnPlayerAttackFinished (what went by the end; the game charges it at the hit point between them), so the frame no longer reads endurance on every frame for a swing. Sprinting has no event: the frame reads endurance only while sprinting and not swinging, from the shared frame snapshot. A swing starts a fresh sprint baseline, so a swing mid-sprint is refunded once. Same tenth back.
+
 ## 1.5.0 - 2026-10-31
 
 ### New

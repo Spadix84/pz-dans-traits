@@ -494,26 +494,46 @@ DanTraits_AddHook("filthStress", function(stress, player)
 end)
 
 -- Pace Yourself -------------------------------------------------------------------
--- per frame: endurance that went on a swing or a sprint since the last frame,
--- a share of it given back; the delta pipeline is told so it does not read
--- the refund as recovery
-local function updatePaceYourself(player, d)
-    if not hasTrait(player, "paceyourself") then d.pyEnd = nil return end
+-- a share of what a swing or a sprint spends is given back, and the delta
+-- pipeline is told so it does not read the refund as recovery. A swing is
+-- read from its events: endurance when it starts (OnWeaponSwing), and what
+-- went by the time it finishes (OnPlayerAttackFinished; the game charges it at
+-- the hit point between them). A finish that never comes only loses that
+-- swing's refund: the next swing starts over. Sprinting has no event, so the
+-- frame reads endurance only while sprinting and not swinging.
+local function refundSpent(player, d, was)
     local stats = player:getStats()
     local now = tonumber(stats:get(CharacterStat.ENDURANCE))
-    if not now then return end
-    local was = d.pyEnd
+    if not now then return nil end
     if was and now < was then
-        local working = false
-        pcall(function() working = player:isAttacking() or player:isSprinting() end)
-        if working then
-            local back = (was - now) * PY_SAVE
-            DanTraits_StatAdd(stats, CharacterStat.ENDURANCE, back)
-            now = math.min(1, now + back)
-            DanTraits_DeltaRemember(d, "enduranceRegen", now)
-        end
+        local back = (was - now) * PY_SAVE
+        DanTraits_StatAdd(stats, CharacterStat.ENDURANCE, back)
+        now = math.min(1, now + back)
+        DanTraits_DeltaRemember(d, "enduranceRegen", now)
     end
-    d.pyEnd = now
+    return now
+end
+
+local function updatePaceYourself(player, d)
+    local f = DanTraits_Frame(player)   -- this frame's movement snapshot (DanTraits.lua)
+    if not f.sprinting or f.attacking or not hasTrait(player, "paceyourself") then d.pyEnd = nil return end
+    d.pyEnd = refundSpent(player, d, d.pyEnd)
+end
+
+local function onPaceSwing(player)
+    if not DanTraits_IsLocalPlayer(player) or not hasTrait(player, "paceyourself") then return end
+    local d = DanTraits_Data(player)
+    d.pyEnd = nil   -- a sprint's baseline would count this swing again
+    d.pySwing = tonumber(player:getStats():get(CharacterStat.ENDURANCE))
+end
+
+local function onPaceSwingFinished(player)
+    if not DanTraits_IsLocalPlayer(player) then return end
+    local d = DanTraits_Data(player)
+    local was = d.pySwing
+    if not was then return end
+    d.pySwing = nil
+    if hasTrait(player, "paceyourself") then refundSpent(player, d, was) end
 end
 
 -- Settled -------------------------------------------------------------------------
@@ -622,3 +642,5 @@ DanTraits_OnPlayerReady("AgeTraits", onAgeTraitsCreate, 55)   -- Reading Glasses
 Events.AddXP.Add(onAgeTraitsAddXP)
 DanTraits_Every("minute", "AgeTraits", updateAgeTraitsMinute, 40)
 DanTraits_Every("frame", "AgeTraits", function(player, d) updateBadKneesFrame(player, d); updatePaceYourself(player, d); updateBadBackFrame(player, d) end, 40)
+Events.OnWeaponSwing.Add(onPaceSwing)
+Events.OnPlayerAttackFinished.Add(onPaceSwingFinished)
