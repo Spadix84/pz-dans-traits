@@ -1622,6 +1622,50 @@ kppppyypppppk
 y...........y
 """,
     # Newbie Gains: a light dumbbell, an arrow going up
+    # Hunted: a reticle on you
+    "hunted": """
+.....kkkkkk.....
+...kkrrrrrrkk...
+..krr..kk..rrk..
+.kr....kk....rk.
+.kr....kk....rk.
+kr.....kk.....rk
+kr.kkkkkkkkkk.rk
+kr.kkkkkkkkkk.rk
+kr.....kk.....rk
+.kr....kk....rk.
+.kr....kk....rk.
+..krr..kk..rrk..
+...kkrrrrrrkk...
+.....kkkkkk.....
+""",
+    # Wounded: a bone broken through, bleeding
+    "wounded": """
+.kk..........kk.
+kwwk........kwwk
+kwwwkkkkkkkkwwwk
+.kwwwwwwRwwwwwk.
+.kwwwwwRRwwwwwk.
+kwwwkkkkRkkkwwwk
+kwwk........kwwk
+.kk..........kk.
+.......kk.......
+......krrk......
+......krrk......
+.......kk.......
+""",
+    # Robbed: the pistol that did it, still smoking
+    "robbed": """
+.........kkkkkkkkk
+........kddddddddk
+..o....kdddddddddk
+.oyo.kkkkdddkkkkkk
+..o.kdddddddk.....
+....kkkkkdddk.....
+........kdddk.....
+........kdddk.....
+.........kkk......
+""",
     "newbiegains": """
 ......kk......
 .....kggk.....

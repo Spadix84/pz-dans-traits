@@ -38,7 +38,7 @@ Each decade has traits of its own, and Strong, Athletic, Fit and the daily habit
 [*][b]Hemophilia (-10):[/b] bleeds never stop on their own. Bandage everything, stitch the deep ones, carry clotting powder. A scratch costs you a day on the sofa.
 [*][b]Migraines (-10):[/b] each character has three personal triggers, worked out as you play. Sumatriptan cuts an attack short.
 [*][b]Sensory Issues (-8):[/b] scratchy clothes, noise, crowds, glare and smells build a sensory load that ends in a meltdown or a shutdown. Quiet, the dark, a fidget toy and headphones bring it down.
-[*][b]A Really Bad Day (-8):[/b] you wake up drunk and sick, with an infected cut and no clothes, and if you wake indoors, the house is on fire.
+[*][b]Crippled starts:[/b] A Really Bad Day (-8), drunk, sick, cut, naked, house on fire; Wounded (-10), broken arm, four wounds, one bandage; Robbed (-10), shot, naked, house emptied; Hunted (-8), a horde follows.
 [/list]
 
 [h2]Everything else[/h2]

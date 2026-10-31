@@ -53,7 +53,46 @@ module DanTraits {
         Cost = -8,
         UIName = UI_trait_DanBadDay,
         UIDescription = UI_trait_DanBadDaydesc,
-        MutuallyExclusiveTraits = DanTraits:hemophilia;DanTraits:straightedge,
+        MutuallyExclusiveTraits = DanTraits:hemophilia;DanTraits:straightedge;DanTraits:robbed,
+    }
+
+    /* A start to nurse your way out of: a fractured left upper arm, four fresh
+       wounds (one deep), one bandage. DanTraits_Wounded.lua. */
+    character_trait_definition DanTraits:wounded
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:wounded,
+        Cost = -10,
+        UIName = UI_trait_DanWounded,
+        UIDescription = UI_trait_DanWoundeddesc,
+        MutuallyExclusiveTraits = DanTraits:hemophilia,
+    }
+
+    /* Robbed, shot and left for dead: a bullet still in under your own rag of a
+       bandage, nothing on, nothing in the pockets, the house emptied. DanTraits_Robbed.lua. */
+    character_trait_definition DanTraits:robbed
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = false,
+        CharacterTrait = DanTraits:robbed,
+        Cost = -10,
+        UIName = UI_trait_DanRobbed,
+        UIDescription = UI_trait_DanRobbeddesc,
+        MutuallyExclusiveTraits = DanTraits:hemophilia;DanTraits:badday,
+    }
+
+    /* They followed you here: a horde on the house after a short grace, the
+       helicopter that afternoon, a group at dawn for three days. Singleplayer
+       only (free points on a server). DanTraits_Hunted.lua. */
+    character_trait_definition DanTraits:hunted
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = true,
+        CharacterTrait = DanTraits:hunted,
+        Cost = -8,
+        UIName = UI_trait_DanHunted,
+        UIDescription = UI_trait_DanHunteddesc,
     }
 
     character_trait_definition DanTraits:schizophrenia
@@ -187,7 +226,7 @@ module DanTraits {
         Cost = -10,
         UIName = UI_trait_DanHemophilia,
         UIDescription = UI_trait_DanHemophiliadesc,
-        MutuallyExclusiveTraits = DanTraits:badday,
+        MutuallyExclusiveTraits = DanTraits:badday;DanTraits:wounded;DanTraits:robbed,
     }
 
     character_trait_definition DanTraits:anemia

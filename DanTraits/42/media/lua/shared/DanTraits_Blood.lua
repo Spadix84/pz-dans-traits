@@ -435,9 +435,9 @@ function DanTraits_BloodTestWound(player, partName, kind)
     elseif kind == "deep" then
         ok, err = pcall(function() part:generateDeepWound() end)
     elseif kind == "cut" then
-        ok, err = pcall(function() part:setCut(true) end)
+        ok, err = pcall(function() part:setCut(true, false) end)      -- false: no Knox roll
     elseif kind == "scratch" then
-        ok, err = pcall(function() part:setScratched(true, true) end)
+        ok, err = pcall(function() part:setScratched(true, false) end)
     else
         return "wound: kind is scratch | cut | deep | glass"
     end

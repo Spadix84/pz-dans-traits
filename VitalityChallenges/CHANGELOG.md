@@ -16,6 +16,14 @@ Dan's Challenges mod (archived in `plans/archive/DanChallenges-2026-10-27.zip`, 
   scaffolding (low population, one dead, the stocked studio, the step van) is now
   `VitalityChallenges_Dev.lua`, reached through `VC.dev` hooks that do nothing without the file;
   TEST is still on there for play-testing, off before release.
+- **The Last Broadcast: the dial is silenced every minute, the evening settled any time after
+  20:00** (2026-10-30, review). `silenceVanilla` ran on the hour only, so a vanilla script a
+  station picked up at five past played until the next hour; it runs from `everyMinute` too (the
+  channels list is short, nothing fails in it). The 20:00 settle fired only on the hour `== 20`,
+  so a stall during sleep that carried the clock past 20:59 lost the evening (no miss, no loss,
+  no failure); it fires at any hour from 20 on, and `B.settle` already counts an evening once.
+  The scene's `VC.cut` passes `setCut(true, false)`: the game's one-argument cut rolls a 25% Knox
+  infection.
 - **The Last Broadcast: the walk there costs nothing** (2026-10-29, review; `B.settle`). The
   first evening, meant as the time to reach the studio, still took 15% of the listeners and
   said "Nobody heard you tonight"; a player airing the first show on the second evening started

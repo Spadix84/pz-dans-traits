@@ -401,8 +401,13 @@ DanTraits_HealthMedLines = medLines
 
 DanTraitsMedWindow = ISCollapsableWindow:derive("DanTraitsMedWindow")
 DanTraitsMedWindow.instances = {}
--- a new character (a new world too): the last one's window went with the UI
-Events.OnCreatePlayer.Add(function(playerNum) DanTraitsMedWindow.instances[playerNum] = nil end)
+-- a new character (a new world too, or a respawn in the same session): the
+-- last one's window is taken down, or it would go on drawing the old character
+Events.OnCreatePlayer.Add(function(playerNum)
+    local win = DanTraitsMedWindow.instances[playerNum]
+    DanTraitsMedWindow.instances[playerNum] = nil
+    if win then pcall(function() win:removeFromUIManager() end) end
+end)
 
 function DanTraitsMedWindow:new(x, y, character)
     local o = ISCollapsableWindow.new(self, x, y, HP_MED_MIN_W, 100)

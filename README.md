@@ -18,6 +18,9 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Brittle](#brittle--8) | -8 | Solid hits can fracture a limb. |
 | [Major Depressive Disorder](#major-depressive-disorder--8) | -8 | Episodes that hold mood down for days. |
 | [A Really Bad Day](#a-really-bad-day--8) | -8 | Drunk, sick, an infected cut, no clothes, house on fire. |
+| [Wounded](#wounded--10) | -10 | A broken left arm, four fresh wounds and one bandage. |
+| [Robbed](#robbed--10) | -10 | Shot, with the bullet still in; naked; the house stripped bare. |
+| [Hunted](#hunted--8) | -8 | A horde on your house a few hours in, a helicopter, a pack at dawn for three days. |
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
 | [Fear of Blood](#fear-of-blood--6-vanilla-reworked) | -6 | Slower first aid, and fainting at the sight of a wound. |
 | [In Their 50s](#age-in-their-20s-6-30s-40s--2-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
@@ -105,8 +108,41 @@ A CDDA-style start.
 - You begin drunk, sick, with an infected laceration on the left forearm, no clothes, and the house on fire.
 - The cut is already infected and won't heal until it is treated: about a day and a half before it spreads into the body. Disinfectant pushes it back; once it has spread, only antibiotics do (see [Wound infection](#wound-infection)).
 - Disinfectant and a bandage wait in a container in another house 15 to 40 tiles away. No marker; the trait text only says next door.
-- Not with Hemophilia or Straight Edge.
+- Not with Hemophilia, Straight Edge or Robbed.
 - Not balanced yet; see Status and known issues.
+
+#### Wounded (-10)
+
+A start you nurse your way out of. Sibling of A Really Bad Day; the two stack.
+
+- You begin with a fractured left upper arm (fracture time 70 to 84, the top of Brittle's range: about a fortnight even splinted) and four fresh wounds on random body parts: one deep wound on an arm or leg, one laceration and two scratches anywhere, the neck included. Never the fractured arm, never two on one part.
+- One bandage in your inventory. The deep wound bleeds at the blood system's rate until it is dressed or stitched; a laceration on the neck bleeds three times as fast as one on a limb. Which wound gets the bandage is the first decision.
+- Every open wound takes the hourly [wound infection](#wound-infection) roll, so disinfectant is the second thing to find. A splint (plank or branch plus ripped sheet) is the first thing to make; painkillers cover the rest.
+- The left arm on purpose: a one-handed weapon in the right hand still works.
+- Not with Hemophilia.
+- Console `wounded` replays the opening on the current character.
+
+#### Robbed (-10)
+
+Robbed, shot and left for dead. The third of the crippled starts.
+
+- A bullet wound on an arm, a leg or the torso (never the head, neck or groin): a deep wound with the bullet still in, which bleeds at the deep-wound rate, a third of it through a bandage, until tweezers get the bullet out and the wound is stitched (see [Blood](#blood)).
+- The rag you tied round it yourself is a ripped-sheet bandage already on the wound with 1.5 life left (a fresh bandage has 4). With the bullet in, the blood through it soaks it in a few minutes, and spent it still halves the bleed: left alone you are pale in about twenty minutes, in shock in about fifty and dead in about an hour. A fresh bandage buys a quarter of an hour more each; tweezers and stitches end it.
+- Nothing on and nothing in your pockets: worn clothes and the whole inventory are gone. The stripping runs before the starting kits are dealt, so with Starting Medication on a Type 1 diabetic still has insulin, an asthmatic an inhaler: the robbers were not after your pills.
+- The house you wake in is stripped: every container in the building is emptied when the game starts and kept empty for 48 hours against the game's first-look fill. The fridge, freezer and stove keep their food. The building is told by its definition, so in a row house the neighbour's shelves through the party wall are left alone.
+- Not with A Really Bad Day or Hemophilia. Stacks with Wounded, if you must.
+- Console `robbed` replays the opening on the current character; `robbed house` also empties the building you stand in.
+
+#### Hunted (-8)
+
+They followed you here. The fourth of the crippled starts, and the one you run from.
+
+- Two and three quarter hours after waking, 45 zombies in two groups are created at the farthest loaded distance from the house you woke in (the game keeps about 50 tiles around you loaded, so 50 to 65 tiles out, beyond sight; up to 200 when more is loaded) and pathed to it, with a notice. A shambler covers that in a quarter of an hour, so they arrive around hour three: time to loot the house and pack a bag, not to board windows.
+- For four hours after that the house calls: a world sound there every ten minutes, radius 120, so the neighbourhood's zombies converge on it too.
+- At four hours the helicopter flies over, the game's own event, wherever you are by then.
+- At 06:00 on the first three mornings after the horde is loose, 15 zombies are created at the farthest loaded distance from wherever you are (150 tiles down to 40) and pathed to you. Sleep somewhere new each night and keep moving; after the third morning it is over.
+- Singleplayer only: zombies are the server's to create, so the trait is disabled in multiplayer.
+- Console `hunted` reports the state; `hunted now` sets the horde on where you stand, `hunted dawn` the dawn pack, `hunted heli` the flyover.
 
 #### Arthritis (-12)
 
@@ -172,7 +208,7 @@ Airway irritation that builds through four tiers to an attack.
 - Bleeds never run down on their own while unbandaged: the bleeding clock is held where it is. A bandage runs it down as usual, and the clock is remembered under the dressing, so changing a bandage carries on from where the old one got to instead of starting the bleed over. Open wounds bleed again until bandaged, unless a bandage already ran their clock to nothing.
 - With [Blood](#blood) on: bleeds lose half as much again, and a bandage only slows one to a quarter. A soaked bandage, or one over a shard, is never worse than anyone else's open wound, so change it. Stitches stop a deep wound; a scratch stops only under a bandage.
 - With Blood off: every unbandaged bleed costs extra health instead.
-- Not with Good Clotter, Fast Recovery or A Really Bad Day.
+- Not with Good Clotter, Fast Recovery, A Really Bad Day, Wounded or Robbed.
 
 #### Major Depressive Disorder (-8)
 

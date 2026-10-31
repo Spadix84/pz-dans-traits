@@ -53,7 +53,9 @@ local BAD_DAY_STALE     = 60     -- odour of the clothes in the kit (stale, not 
 local function badDayWound(player, bd)
     local part = bd:getBodyPart(BodyPartType[BAD_DAY_PART])
     if not part then return end
-    pcall(function() part:setCut(true) end)
+    -- (true, false): a cut, with no Knox roll (setCut(b) alone is setCut(b, true),
+    -- a 25% zombie infection); the infection here is the mod's wound infection
+    pcall(function() part:setCut(true, false) end)
     if DanTraits_InfectWound then
         DanTraits_InfectWound(player, part, BAD_DAY_INFECTION)
     else

@@ -159,7 +159,7 @@ end
 function VC.cut(player, part, damage)
     local bp = bodyPart(player, part)
     if not bp then return false end
-    try(function() bp:setCut(true) end)
+    try(function() bp:setCut(true, false) end)   -- false: a cut with no Knox roll (setCut(b) alone rolls 25%)
     if damage then try(function() bp:AddDamage(damage) end) end
     return true
 end

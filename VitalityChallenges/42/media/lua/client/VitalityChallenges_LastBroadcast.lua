@@ -372,6 +372,7 @@ VC.define({
 
     everyMinute = function(ctx)
         local state = ctx.state
+        silenceVanilla(state)   -- a vanilla script picked up since the last minute goes quiet again
         if not state.lbStarted then return end
         local player = getSpecificPlayer(0)
         if not player or player:isDead() then return end
@@ -390,7 +391,9 @@ VC.define({
     everyHour = function(ctx)
         local state = ctx.state
         silenceVanilla(state)
-        if not state.lbStarted or VC.hour() ~= B.SETTLE_HOUR then return end
+        -- from 20:00 to midnight: B.settle counts an evening once, so a skipped
+        -- hour (a stall while asleep) still gets its evening settled
+        if not state.lbStarted or VC.hour() < B.SETTLE_HOUR then return end
         local player = getSpecificPlayer(0)
         if player and not player:isDead() then settle(state, player) end
     end,

@@ -618,7 +618,7 @@ end
 --           44  SpiffBoy (the hours on each cartridge; puts the console away asleep)
 --           45  Strain (reads the fever, withdrawal, the Good Meal, Pumped, fresh
 --               clothes and the hangover the systems above left; its unhappiness floors)
---           60  Relaxant (baclofen's clock)
+--           60  Hunted (the horde, the house's call, the helicopter, the dawn packs), Relaxant (baclofen's clock)
 --           90  SleepMenu (the outfit record for Undress and Sleep), Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --           96  Moodles (reads what every system above left in mod data; changes nothing)

@@ -48,6 +48,47 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   ways: Well Conditioned, Weightlifter, Regimented, Gym Regular, Endorphin Junkie; Natural Runner allowed).
   Icon `trait_newbiegains.png` (a light dumbbell under a green arrow, `make_icons.py`). Does nothing
   with `FitnessEnabled` off.
+- **Wounded** (-10, 2026-10-30, `DanTraits:wounded`, `DanTraits_Wounded.lua`; `tests/test_wounded.lua`).
+  A start to nurse your way out of, A Really Bad Day's sibling: on creation (once, `d.wdApplied`,
+  hours survived 0) the left upper arm is fractured (`setFractureTime` 70 to 84, the top of
+  Brittle's range: about a fortnight even splinted; the left so a one-handed weapon still works)
+  and four wounds are placed on four different parts, never the fractured arm: one deep wound on a
+  forearm, the right upper arm or a lower leg (`generateDeepWound`), one cut and two scratches
+  anywhere (`setCut(true, false)`, `setScratched(true, false)`: the second argument is the game's
+  Knox roll, off). One `Base.Bandage` in the inventory, a notice (`UI_DanTraits_WoundedWake`).
+  Exclusive with Hemophilia (both ways); stacks with A Really Bad Day. Console `wounded` replays
+  the opening. Icon `trait_wounded.png` (a bone broken through, bleeding).
+- **Robbed** (-10, 2026-10-30, `DanTraits:robbed`, `DanTraits_Robbed.lua`; `tests/test_robbed.lua`).
+  Robbed, shot and left for dead. A player-ready step at order 35 (`DanTraits_OnPlayerReady`,
+  before the starting kits at 40, so the Starting Medication kit survives; once, `d.rbApplied`,
+  hours survived 0): a deep wound on an arm, a leg or the torso with the bullet left in
+  (`setHaveBullet(true, 0)`: it bleeds at the deep-wound rate x0.35 through a bandage until
+  tweezers and stitches), a ripped-sheet bandage already on it with 1.5 life
+  (`setBandaged(true, 1.5, false, "Base.RippedSheets")`; WoundCare soaks it in a few minutes,
+  spent it still halves the bleed: pale in about 20 minutes, shock about 50, dead about an hour
+  if nothing is done), worn clothes removed from the inventory and the inventory cleared, a notice
+  (`UI_DanTraits_RobbedWake`). The house: at OnGameStart (once, `d.rbHouseDone`) the building
+  the player stands in (`getBuildingDef` rectangle, kept as `d.rbHouse`) has every container on
+  every floor emptied (`removeAllItems`, `setExplored(true)`), except fridge, freezer, stove,
+  microwave and oven; a square counts only in a room whose building definition starts where the
+  house's does (x2/y2 are one past the last tile; a row house's party wall). `OnFillContainer`
+  empties a container the game fills later inside the house, for 48 hours. Exclusive with
+  A Really Bad Day and Hemophilia (both ways). Console `robbed [house]`. Icon `trait_robbed.png`
+  (the pistol, still smoking).
+- **Hunted** (-8, 2026-10-30, `DanTraits:hunted`, `DanTraits_Hunted.lua`, minute order 60,
+  `DisabledInMultiplayer`; `tests/test_hunted.lua`). They followed you here. Creation remembers the
+  house (`d.htHome`, a notice). At 2.75 hours survived, two groups of 22 and 23 are created at the
+  farthest loaded distance along two bearings 40 degrees apart (200, 175, ..., 50, 40 tiles; the
+  game keeps about 50 tiles around the player loaded, IsoChunkMap 13 chunks of 8, so in practice
+  50 to 65: beyond sight, a quarter of an hour's shamble) and pathed to the house
+  (`createHordeFromTo`), with a notice; nothing loaded, the minute is retried, up to 30. For four
+  hours after, a world sound at the house (`addSound`, radius 120) every ten minutes. At four
+  hours the game's own helicopter (`testHelicopter`). At 06:00 on the first three mornings once
+  the horde is loose (the game counts a night survived at 07:00, so morning n is `getNightsSurvived`
+  n - 1), 15 zombies at the farthest loaded distance (150 down to 40) pathed to the player's
+  position, with a notice. Everything once, in mod data. Does nothing on a client or server.
+  Console `hunted [now|dawn|heli]`. Icon `trait_hunted.png` (a reticle). Guide, What's New and the
+  conditions page name all three; the description's trait list has a "Crippled starts" line.
 - **Strain** (2026-10-24, `DanTraits_Strain.lua` at minute order 45 plus the frame system
   `StrainKnock`, `ISStrainBreakdownAction`; design and tuning in `plans/strain.md` and
   `plans/strain_sim.py`; sandbox `StrainEnabled`, `StrainGain`, `StrainEase`, `StrainXpFloor`,
@@ -312,6 +353,16 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Fixed
 
+- **A Really Bad Day's cut rolled the Knox infection** (2026-10-30, review; `DanTraits_BadDay.lua`,
+  also the Blood console `wound` command and the Challenges' `VC.cut`). `BodyPart.setCut(b)` is
+  `setCut(b, true)`, and the `true` is `generateZombieInfection(25)`: a quarter of Bad Day starts
+  were already dying of the Knox virus (`setScratched(b, true)` rolls 7). Every cut and scratch the
+  mod makes now passes `false`. Found while reviewing Wounded, which would have had the same 35%.
+- **The Medication window outlived its character** (2026-10-30, review; `DanTraits_HealthPanel.lua`).
+  On a death and a new character in one session the old window was only forgotten, not removed,
+  so it went on drawing the dead character's list. It is taken down at `OnCreatePlayer`.
+- **Guide pictures looked up once** (2026-10-30, review; `DanTraits_Guide.lua`). A page's
+  `media/ui/Guide/<id>.png` was asked of the texture loader on every redraw; a miss is remembered.
 - **Split-screen: the starting grants reach player 2** (2026-10-30, review A2.14, with the
   player-ready refactor). The game-start handlers (mod-data migration, retired traits, starting
   kits, Age's levels, the folded-in vanilla traits of Positives, Sleep, Steady Hands, Gym Regular)

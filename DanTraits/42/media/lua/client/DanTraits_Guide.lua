@@ -32,10 +32,23 @@ local GD_HEAD_RGB = "<RGB:0.95,0.78,0.45>"
 
 local function t(key) return getText("UI_DanTraits_guide_" .. key) end
 
+-- a page's picture, looked up once (none ships yet; a miss is remembered, so
+-- the texture loader is not asked again on every redraw)
+local textures = {}
+local function pictureOf(id)
+    local tex = textures[id]
+    if tex == nil then
+        tex = getTexture("media/ui/Guide/" .. id .. ".png") or false
+        textures[id] = tex
+    end
+    return tex or nil
+end
+function DanTraits_GuideForgetPictures() textures = {} end   -- tests
+
 -- a page's lines as the rich text panel wants them; the picture no wider than imageW
 local function richText(page, imageW)
     local out = {}
-    local tex = getTexture("media/ui/Guide/" .. page.id .. ".png")
+    local tex = pictureOf(page.id)
     if tex then
         local w = math.max(120, math.min(GD_IMAGE_W, imageW or GD_IMAGE_W))
         local h = w * 9 / 16
