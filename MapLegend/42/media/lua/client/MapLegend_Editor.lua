@@ -253,6 +253,8 @@ function MapLegendEditor:createChildren()
     self.textBox.font = UIFont.Small
     self.textBox:setPlaceholderText(getText("IGUI_ML_TextHint"))
     self.textBox:setMaxTextLength(ML.MAX_TEXT)
+    -- Enter in the box saves, as the button does
+    self.textBox.onCommandEntered = function() self:onSave() end
     self:addChild(self.textBox)
     y = y + BUTTON_HGT + PAD
 
@@ -336,6 +338,7 @@ function MapLegendEditor:onPickRow(e)
     self.sym = e.sym
     self.color = { r = e.r, g = e.g, b = e.b }
     self.textBox:setText(e.text)
+    self.presets.selected = 1
     for _, tab in ipairs(self.tabs) do
         for _, sym in ipairs(self.byTab[tab]) do
             if sym == e.sym then self.tab = tab end
@@ -369,6 +372,7 @@ end
 function MapLegendEditor:onNew()
     self.editing = nil
     self.textBox:setText("")
+    self.presets.selected = 1
     self:status(nil)
     self:refresh()
 end
@@ -400,6 +404,7 @@ function MapLegendEditor:onSave()
     local entries = self:entries()
     local had = #entries
     self.editing = ML.put(entries, self.sym, self.color.r, self.color.g, self.color.b, text, self.editing)
+    self.presets.selected = 1
     self:status(#entries > had and "IGUI_ML_Added" or "IGUI_ML_Saved")
     ML.changed(self.character)
 end

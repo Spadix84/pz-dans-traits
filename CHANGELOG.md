@@ -3,6 +3,27 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Map Legend 1.0.0 - 2026-10-31 (separate mod, first Workshop release)
+
+- **Long legends scroll.** The mouse wheel over the legend scrolls its rows once there are more
+  than fit (the top 60% of the map); a thin bar on the right shows where you are, and the line
+  under the rows says "4-11 of 14: scroll for more" instead of "and N more". A legend that fits
+  leaves the wheel to the map (`ML.clampScroll`; `rowAt` returns entry indexes, so hover, click
+  and the outline follow the scroll).
+- **Row tooltip.** Hovering a row shows, beside the legend, the whole meaning (the row cuts long
+  ones short), the pen and how many are on the map, and what a click does ("Click to draw with
+  it." / "Click again to stop drawing."). `ISToolTip`, owned by the panel, so it goes when the
+  map closes.
+- **Polish.** Enter in the editor's meaning box saves; the Presets box goes back to "Presets..."
+  after a save or picking another entry; a row with none on the map shows its count dimmed;
+  typed `<` and `>` are left out of tooltips, where the game reads them as markup
+  (`ML.richSafe`).
+- **Workshop:** `mod.info` 1.0.0 with a poster; `python deploy.py --workshop MapLegend` builds
+  `~/Zomboid/Workshop/MapLegend` from `workshop/maplegend/` (workshop.txt, preview.png; the
+  description is in description.txt, the pictures on the page are mock-ups drawn by
+  `workshop/maplegend/make_images.py` from the game's own symbol icons). `deploy.py --workshop`
+  takes a mod name now; plain `--workshop` is still the main mod.
+
 ## 1.5.1 - 2026-10-31
 
 ### Changed

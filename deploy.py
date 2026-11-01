@@ -22,6 +22,9 @@
                                      Workshop uploader reads: workshop.txt, preview.png,
                                      Contents/mods/DanTraits; what the DanTraits row's `skip` names,
                                      tools/, is left out)
+    python deploy.py --workshop NAME the same for another mod with a `workshop` folder in its MODS
+                                     row (MapLegend: repo/workshop/maplegend ->
+                                     ~/Zomboid/Workshop/MapLegend)
     One mod (or --workshop) a run.
 
 The game only reads the mod folder, so edit here, deploy, then restart the
@@ -35,18 +38,20 @@ import shutil
 HERE = os.path.dirname(os.path.abspath(__file__))
 ZOMBOID = os.path.join(os.path.expanduser("~"), "Zomboid")
 # name: the folder in the repo and under ~/Zomboid/mods (the mod id); flag: the old
-# option that still selects it; skip: folders left out of the Workshop build
+# option that still selects it; workshop: the repo folder with its workshop.txt and
+# preview.png, for the mods that have a Workshop page; skip: folders left out of the
+# Workshop build
 MODS = [
-    {"name": "DanTraits", "flag": None, "help": "the main mod (the default)", "skip": {"tools"}},
+    {"name": "DanTraits", "flag": None, "help": "the main mod (the default)", "skip": {"tools"},
+     "workshop": "workshop"},
     {"name": "DansVanillaFixes", "flag": "--patch", "help": "the Dan's Vanilla Fixes mod"},
     {"name": "BaseUnloader", "flag": "--unloader", "help": "the Base Unloader mod"},
-    {"name": "MapLegend", "flag": "--legend", "help": "the Map Legend mod"},
+    {"name": "MapLegend", "flag": "--legend", "help": "the Map Legend mod",
+     "workshop": os.path.join("workshop", "maplegend")},
     {"name": "VitalityCartridges", "flag": "--cartridges", "help": "the Vitality Cartridges mod"},
     {"name": "VitalityChallenges", "flag": "--challenges", "help": "the Vitality Challenges mod"},
 ]
-MAIN = MODS[0]["name"]   # the mod the Workshop folder holds
-REPO_WORKSHOP = os.path.join(HERE, "workshop")
-GAME_WORKSHOP = os.path.join(ZOMBOID, "Workshop", MAIN)
+MAIN = MODS[0]["name"]   # the default mod
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}
 # Build 42 looks for a common/ folder beside 42/; git cannot hold an empty one
 KEEP_DIRS = {"common"}
@@ -110,27 +115,34 @@ def sync(src, dst, dry, skip=(), delete=True):
     return copied, removed, same
 
 
-def build_workshop(dry):
-    """Mirror the main mod into Contents/mods/DanTraits (without what its row's `skip`
-    names) and copy workshop.txt and preview.png beside it. The game writes the item's
-    id= into workshop.txt after the first upload; that line is kept so later uploads
-    update the same item instead of making a new one."""
-    main = mod(MAIN)
-    contents = os.path.join(GAME_WORKSHOP, "Contents", "mods", MAIN)
-    copied, removed, same = sync(repo_dir(main), contents, dry, skip=main.get("skip", ()))
-    copied = [os.path.join("Contents", "mods", MAIN, c) for c in copied]
-    removed = [os.path.join("Contents", "mods", MAIN, r) for r in removed]
-    preview = os.path.join(REPO_WORKSHOP, "preview.png")
-    target = os.path.join(GAME_WORKSHOP, "preview.png")
+def game_workshop(m):
+    """~/Zomboid/Workshop/NAME, the folder the in-game uploader reads."""
+    return os.path.join(ZOMBOID, "Workshop", m["name"])
+
+
+def build_workshop(m, dry):
+    """Mirror a mod into Contents/mods/NAME (without what its row's `skip` names) and
+    copy workshop.txt and preview.png from its row's `workshop` folder beside it. The
+    game writes the item's id= into workshop.txt after the first upload; that line is
+    kept so later uploads update the same item instead of making a new one."""
+    name = m["name"]
+    repo_workshop = os.path.join(HERE, m["workshop"])
+    out = game_workshop(m)
+    contents = os.path.join(out, "Contents", "mods", name)
+    copied, removed, same = sync(repo_dir(m), contents, dry, skip=m.get("skip", ()))
+    copied = [os.path.join("Contents", "mods", name, c) for c in copied]
+    removed = [os.path.join("Contents", "mods", name, r) for r in removed]
+    preview = os.path.join(repo_workshop, "preview.png")
+    target = os.path.join(out, "preview.png")
     if os.path.isfile(target) and filecmp.cmp(preview, target, shallow=False):
         same += 1
     else:
         copied.append("preview.png")
         if not dry:
             shutil.copy2(preview, target)
-    with open(os.path.join(REPO_WORKSHOP, "workshop.txt"), encoding="utf-8") as f:
+    with open(os.path.join(repo_workshop, "workshop.txt"), encoding="utf-8") as f:
         lines = f.read().splitlines()
-    target = os.path.join(GAME_WORKSHOP, "workshop.txt")
+    target = os.path.join(out, "workshop.txt")
     if not any(l.startswith("id=") for l in lines) and os.path.isfile(target):
         with open(target, encoding="utf-8") as f:
             ids = [l for l in f.read().splitlines() if l.startswith("id=") and l[3:].strip()]
@@ -171,7 +183,8 @@ def main():
         if m["flag"]:   # the old flags, kept as aliases of --mod NAME
             mode.add_argument(m["flag"], dest="mod", action="store_const", const=m["name"],
                               help="deploy %s (the same as --mod %s)" % (m["help"], m["name"]))
-    mode.add_argument("--workshop", action="store_true", help="build the Workshop upload folder")
+    ap.add_argument("--workshop", nargs="?", const=MAIN, metavar="NAME",
+                    help="build a mod's Workshop upload folder (default %s)" % MAIN)
     a = ap.parse_args()
     if not a.pull:
         first, second = (repo_dir(mod(n)) for n in SHARED_BETWEEN)
@@ -179,10 +192,13 @@ def main():
             if not filecmp.cmp(os.path.join(first, rel), os.path.join(second, rel), shallow=False):
                 raise SystemExit("%s differs between %s and %s: make them the same first" % ((rel,) + SHARED_BETWEEN))
     if a.workshop and a.pull:
-        ap.error("--workshop builds the main mod's upload folder; it cannot be combined with --pull")
+        ap.error("--workshop builds an upload folder; it cannot be combined with --pull")
     if a.workshop:
-        copied, removed, same = build_workshop(a.dry_run)
-        show(HERE, GAME_WORKSHOP, copied, removed, same, a.dry_run)
+        w = mod(a.workshop)
+        if not w.get("workshop"):
+            raise SystemExit("%s has no Workshop folder in MODS" % w["name"])
+        copied, removed, same = build_workshop(w, a.dry_run)
+        show(HERE, game_workshop(w), copied, removed, same, a.dry_run)
         return
     m = mod(a.mod)
     repo, game = repo_dir(m), game_dir(m)
@@ -191,12 +207,12 @@ def main():
         raise SystemExit("missing: " + src)
     copied, removed, same = sync(src, dst, a.dry_run, delete=not a.pull)   # a pull adds and updates, never removes
     show(src, dst, copied, removed, same, a.dry_run)
-    # The game loads ~/Zomboid/Workshop/DanTraits/Contents/mods/DanTraits in preference to
-    # ~/Zomboid/mods/DanTraits while the upload folder exists, so a deploy that left it
+    # The game loads ~/Zomboid/Workshop/NAME/Contents/mods/NAME in preference to
+    # ~/Zomboid/mods/NAME while the upload folder exists, so a deploy that left it
     # stale looked like it did nothing. Keep the two identical.
-    if not a.pull and m["name"] == MAIN and os.path.isdir(GAME_WORKSHOP):
-        copied, removed, same = build_workshop(a.dry_run)
-        show(HERE, GAME_WORKSHOP, copied, removed, same, a.dry_run, " (the game loads this copy while it exists)")
+    if not a.pull and m.get("workshop") and os.path.isdir(game_workshop(m)):
+        copied, removed, same = build_workshop(m, a.dry_run)
+        show(HERE, game_workshop(m), copied, removed, same, a.dry_run, " (the game loads this copy while it exists)")
 
 
 if __name__ == "__main__":

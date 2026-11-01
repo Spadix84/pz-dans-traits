@@ -19,7 +19,7 @@
 MapLegend = MapLegend or {}
 local ML = MapLegend
 
-ML.VERSION = "0.1.0"
+ML.VERSION = "1.0.0"
 ML.FILE = "MapLegend.txt"          -- under Zomboid/Lua, written by getFileWriter
 ML.HEADER = "MapLegend 1"
 ML.MOD_DATA = "MapLegend"
@@ -165,6 +165,19 @@ function ML.count(entries, symbols)
         if i then counts[i] = counts[i] + 1 else unlisted = unlisted + 1 end
     end
     return counts, unlisted
+end
+
+-- the first of `visible` rows when the legend has `total`: never past the
+-- last full page, never before the first
+function ML.clampScroll(scroll, total, visible)
+    local most = math.max(0, (total or 0) - (visible or 0))
+    return math.max(0, math.min(math.floor(tonumber(scroll) or 0), most))
+end
+
+-- typed text in a tooltip: the tooltip reads <...> as markup, so a typed
+-- < or > could swallow the rest of the line
+function ML.richSafe(text)
+    return (string.gsub(tostring(text or ""), "[<>]", ""))
 end
 
 -- the pen an entry is drawn with, from `colors` ({ item, r, g, b }), or nil

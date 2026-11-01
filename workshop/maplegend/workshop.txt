@@ -1,0 +1,41 @@
+version=1
+title=Map Legend
+description=[h1]Map Legend[/h1]
+description=[b]Your own key for the map.[/b] Pick a vanilla symbol and a pen colour, say what it means, and it sits in a legend in the corner of the world map, with how many of each you have drawn.
+description=
+description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/maplegend/legend.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/maplegend/legend.png[/img][/url]
+description=
+description=[h2]What it does[/h2]
+description=[list]
+description=[*][b]A symbol in a colour is an entry.[/b] A red X can mean Danger and a green X Cleared. Type the meaning, or pick one of 24 presets (Horde, Loot, Looted, Water, Fuel, Safehouse, To check and more).
+description=[*][b]Counts.[/b] Each row shows how many of that mark are on your map, plus a line for the marks the legend does not cover yet.
+description=[*][b]Hover a row[/b] and every mark of that kind is outlined on the map. A tooltip gives the full meaning and the pen.
+description=[*][b]Click a row to draw with it.[/b] The symbol and its pen are picked in the symbols panel, ready to place. Click the row again to put the pen down. Not carrying that pen? The row still outlines its marks and tells you which pen you need.
+description=[*][b]The symbols panel knows your legend.[/b] Hover a symbol to see what it means in each pen. Pick one and the pen switches to its legend colour, if you carry that pen.
+description=[*][b]Long legends scroll[/b] with the mouse wheel. The small button folds the legend down to its title.
+description=[/list]
+description=
+description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/maplegend/draw.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/maplegend/draw.png[/img][/url]
+description=
+description=[h2]The editor[/h2]
+description=Press [b]Edit[/b] on the legend. Pick a symbol from the vanilla tabs and a pen colour, then type what it means (Enter saves) or choose a preset. Click an entry to change it, move it up or down, or remove it. A symbol and colour that is already in the legend replaces that entry, so one mark never has two meanings.
+description=
+description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/maplegend/editor.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/maplegend/editor.png[/img][/url]
+description=
+description=[h2]One legend for every save[/h2]
+description=The legend is saved to your profile ([i]Zomboid/Lua/MapLegend.txt[/i]), and every save and character uses it, so a red skull means Horde in every run. Tick [b]This character keeps its own legend[/b] to give one character its own. It starts as a copy, and unticking goes back to the profile. [b]Copy to profile[/b] makes a character's legend the one everyone else uses.
+description=
+description=[h2]Good to know[/h2]
+description=[list]
+description=[*]Build 42. Vanilla symbols and pens only: no new items, and nothing on the map itself changes.
+description=[*]Safe to add to or remove from a running save.
+description=[*]Multiplayer: your legend is yours alone and stays on your computer. Nothing is sent to the server. To share a key with friends, send them your MapLegend.txt.
+description=[*]It shows on the world map (M), not on paper maps you read from your inventory.
+description=[*]Controller: the legend moves up out of the way of the button prompts, but the editor and the row clicks need a mouse.
+description=[*]Pens that other mods add to the symbols panel show up in the editor.
+description=[/list]
+description=
+description=Bugs and ideas are welcome in the comments.
+description=From the maker of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3811016852]Vitality Project[/url]. [url=https://github.com/Spadix84/pz-dans-traits/tree/master/MapLegend]Source on GitHub[/url]
+tags=Build 42;Interface;QoL
+visibility=public

@@ -7,7 +7,9 @@
 -- to draw (the cursor carries the symbol, as when it is picked in the panel),
 -- and keeps those symbols outlined; clicking it again puts the pen down. With
 -- no pen, or not the entry's pen, the row only outlines and a line under the
--- rows says which pen it needs. Edit opens the editor (MapLegend_Editor), the
+-- rows says which pen it needs. A row's tooltip gives the whole meaning, the
+-- pen and what a click does. A legend longer than the map has room for
+-- scrolls with the mouse wheel. Edit opens the editor (MapLegend_Editor), the
 -- small button folds the legend down to its title.
 --
 -- In the symbols panel: picking a symbol the legend has switches to the
@@ -16,6 +18,7 @@
 
 require "ISUI/ISPanel"
 require "ISUI/ISButton"
+require "ISUI/ISToolTip"
 require "ISUI/Maps/ISWorldMap"
 require "ISUI/Maps/ISWorldMapSymbols"
 require "MapLegend_Core"
@@ -185,7 +188,8 @@ function MapLegendPanel:layout(entries, collapsed)
     local rows = 0
     if not collapsed then
         rows = math.min(#entries, self:maxRows())
-        for i = 1, rows do
+        -- every entry, not only the rows in view, so scrolling does not change the width
+        for i = 1, #entries do
             local e = entries[i]
             local countText = self.counts and self.counts[i] and ("x" .. self.counts[i]) or ""
             local w = PAD + ICON + PAD + tm:MeasureStringX(UIFont.Small, e.text) + PAD + tm:MeasureStringX(UIFont.Small, countText) + PAD
@@ -207,16 +211,18 @@ function MapLegendPanel:layout(entries, collapsed)
     self:setWidth(width)
     self:setHeight(height)
     self:setX(PAD)
+    self.scroll = ML.clampScroll(self.scroll, #entries, rows)
     self:setY(self.mapUI.height - height - self:bottomMargin())
     self.foldBtn:setX(width - PAD - self.foldBtn.width)
     self.editBtn:setX(self.foldBtn.x - PAD / 2 - self.editBtn.width)
 end
 
+-- the entry under y (an index into the entries: the rows scroll), or nil
 function MapLegendPanel:rowAt(y)
     local top = self:headerHeight()
     if y < top then return nil end
     local i = math.floor((y - top) / ROW_HGT) + 1
-    if i >= 1 and i <= (self.rows or 0) then return i end
+    if i >= 1 and i <= (self.rows or 0) then return (self.scroll or 0) + i end
     return nil
 end
 
@@ -231,6 +237,7 @@ function MapLegendPanel:prerender()
     self.foldBtn:setTitle(collapsed and "+" or "-")
     self.hoverRow = nil
     if not collapsed and self:isMouseOver() then self.hoverRow = self:rowAt(self:getMouseY()) end
+    self:updateTooltip(entries)
     ISPanel.prerender(self)
     self:drawText(getText("IGUI_ML_Title"), PAD, PAD + (BUTTON_HGT - FONT_HGT_MEDIUM) / 2, 1, 1, 1, 1, UIFont.Medium)
 end
@@ -242,7 +249,9 @@ function MapLegendPanel:render()
     local tm = getTextManager()
     local pinned = self.pinned
     local y = self:headerHeight()
-    for i = 1, self.rows or 0 do
+    local scroll = self.scroll or 0
+    for row = 1, self.rows or 0 do
+        local i = scroll + row
         local e = entries[i]
         local isPinned = pinned and pinned.sym == e.sym and ML.sameColor(pinned.r, pinned.g, pinned.b, e.r, e.g, e.b)
         if i == self.hoverRow or isPinned then
@@ -265,14 +274,17 @@ function MapLegendPanel:render()
             text = text .. "..."
         end
         self:drawText(text, textX, textY, 1, 1, 1, 1, UIFont.Small)
-        self:drawText(countText, self.width - PAD - countW, textY, 0.6, 0.6, 0.6, 1, UIFont.Small)
+        -- none on the map yet: the count dims
+        local shade = (self.counts and (self.counts[i] or 0) > 0) and 0.6 or 0.35
+        self:drawText(countText, self.width - PAD - countW, textY, shade, shade, shade, 1, UIFont.Small)
         y = y + ROW_HGT
     end
+    self:renderScrollBar(#entries)
     if #entries == 0 then
         self:drawText(getText("IGUI_ML_Empty"), PAD, y + 2, 0.6, 0.6, 0.6, 1, UIFont.Small)
         y = y + FONT_HGT_SMALL + 4
     elseif #entries > (self.rows or 0) then
-        self:drawText(getText("IGUI_ML_More", #entries - self.rows), PAD, y + 2, 0.6, 0.6, 0.6, 1, UIFont.Small)
+        self:drawText(getText("IGUI_ML_Scroll", scroll + 1, scroll + self.rows, #entries), PAD, y + 2, 0.6, 0.6, 0.6, 1, UIFont.Small)
         y = y + FONT_HGT_SMALL + 4
     end
     if self.unlisted and self.unlisted > 0 then
@@ -283,6 +295,50 @@ function MapLegendPanel:render()
     if note then
         self:drawText(note, PAD, y + 2, HIGHLIGHT.r, HIGHLIGHT.g, HIGHLIGHT.b, 1, UIFont.Small)
     end
+end
+
+-- a thin bar down the right edge of the rows when they scroll
+function MapLegendPanel:renderScrollBar(total)
+    local rows = self.rows or 0
+    if total <= rows or rows == 0 then return end
+    local top, h = self:headerHeight(), rows * ROW_HGT
+    local x = self.width - 4
+    self:drawRect(x, top, 2, h, 0.25, 1, 1, 1)
+    local thumb = math.max(8, h * rows / total)
+    local at = top + (h - thumb) * (self.scroll or 0) / (total - rows)
+    self:drawRect(x, at, 2, thumb, 0.8, 1, 1, 1)
+end
+
+-- The hovered row's tooltip, beside the legend: the whole meaning (the row may
+-- cut it short), its pen and count, and what a click does.
+function MapLegendPanel:updateTooltip(entries)
+    local e = self.hoverRow and entries[self.hoverRow]
+    if not e then
+        if self.tooltipUI and self.tooltipUI:getIsVisible() then
+            self.tooltipUI:setVisible(false)
+            self.tooltipUI:removeFromUIManager()
+        end
+        return
+    end
+    if not self.tooltipUI then
+        self.tooltipUI = ISToolTip:new()
+        self.tooltipUI:setOwner(self)
+        self.tooltipUI:setVisible(false)
+        self.tooltipUI:setAlwaysOnTop(true)
+        self.tooltipUI.maxLineWidth = 300
+    end
+    if not self.tooltipUI:getIsVisible() then
+        self.tooltipUI:addToUIManager()
+        self.tooltipUI:setVisible(true)
+    end
+    local count = (self.counts and self.counts[self.hoverRow]) or 0
+    local pen = ML.colorName(e, ML.colors())
+    local lines = { ML.richSafe(e.text) }
+    lines[#lines + 1] = pen ~= "" and getText("IGUI_ML_TipPen", pen, count) or getText("IGUI_ML_TipCount", count)
+    lines[#lines + 1] = "<RGB:0.7,0.7,0.7> " .. getText(self:isArmed(e) and "IGUI_ML_TipStop" or "IGUI_ML_TipDraw")
+    self.tooltipUI.description = table.concat(lines, " <LINE> ")
+    local row = self.hoverRow - (self.scroll or 0) - 1
+    self.tooltipUI:setDesiredPosition(self:getAbsoluteX() + self.width + 8, self:getAbsoluteY() + self:headerHeight() + row * ROW_HGT)
 end
 
 -- a line for a few seconds under the rows: how to draw, or which pen is missing
@@ -327,8 +383,12 @@ function MapLegendPanel:onMouseUp(x, y)
     return true
 end
 
+-- the wheel scrolls a legend with more rows than fit; otherwise the map zooms
 function MapLegendPanel:onMouseWheel(del)
-    return false
+    local total = #self:entries()
+    if ML.profile().collapsed or total <= (self.rows or 0) then return false end
+    self.scroll = ML.clampScroll((self.scroll or 0) + del, total, self.rows)
+    return true
 end
 
 function MapLegendPanel:new(mapUI)
@@ -366,7 +426,8 @@ local function setTooltips(symbolsUI)
             local lines = {}
             for _, e in ipairs(ML.forSymbol(entries, btn.tex)) do
                 local pen = ML.colorName(e, colors)
-                lines[#lines + 1] = pen ~= "" and (pen .. ": " .. e.text) or e.text
+                local text = ML.richSafe(e.text)
+                lines[#lines + 1] = pen ~= "" and (pen .. ": " .. text) or text
             end
             if #lines > 0 then btn.tooltip = table.concat(lines, " <LINE> ") end
         end
