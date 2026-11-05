@@ -632,7 +632,11 @@ end
 --           20  Blood (loss this minute, sets bloodLossMin), HotWaterBottle (the bottle's warmth clock)
 --           21  Hemophilia (holds bleed times)
 --           22  WoundCare (reads BloodPartRate)
+--           22.5 Illness (catching, the courses and their symptoms; drives the game's cold; before
+--               Infection reads its fever)
+--           22.9 Antibiotics (the shared level decays, before Infection reads it)
 --           23  Infection
+--           23.2 Fever (every source's fever into SICKNESS, tiredness, thirst and the dangerous fever)
 --           23.5 Age (paces the fall of scratch and cut clocks and of stiffness; after
 --               Infection's hold, before the stiffness floors of Arthritis and MS)
 --           24  Concussion
@@ -653,7 +657,8 @@ end
 --           45  Strain (reads the fever, withdrawal, the Good Meal, Pumped, fresh
 --               clothes and the hangover the systems above left; its unhappiness floors)
 --           50  AgeWants (what each age wants: the cell, the slow morning, the routine's day; reads Home from 11)
---           60  Hunted (the horde, the house's call, the helicopter, the dawn packs), Relaxant (baclofen's clock)
+--           60  Hunted (the horde, the house's call, the helicopter, the dawn packs), Relaxant (baclofen's clock),
+--               Swarmed (the start cell's survey and fill, once)
 --           90  SleepMenu (the outfit record for Undress and Sleep), Vitality (reads everything above, scores the night, applies lifts)
 --           95  PainFloor (Util: applies the largest pain floor the systems above registered)
 --           96  Moodles (reads what every system above left in mod data; changes nothing)

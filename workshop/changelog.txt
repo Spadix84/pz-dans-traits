@@ -1,3 +1,26 @@
+[h1]1.5.2: Hunted by Sprinters, Swarmed[/h1]
+[h2]New[/h2]
+[list]
+[*][b]You can get sick.[/b] A cold (get wet and cold, and it comes a day later: sneezing and coughing zombies hear), the flu (November to March, once a winter: fever, aches, no stamina), pneumonia (a cold or the flu gone to the chest, likeliest if you keep running, stay soaked or smoke: antibiotics, or weeks), strep throat (after a cold), a stomach bug (eat with dirty hands) and food poisoning (rotten, raw or stale food; the thirst is what kills). Rest, sleep at home and drink to get over them; running about drags them out. Tired, hungry, stressed, older or run down, you catch more. Sandbox: on/off, how often, and each one.
+[*][b]Fevers add up.[/b] An illness and an infected wound make one fever, and two bad ones together can kill: pneumonia on top of the flu needs antibiotics fast. A sick body also fights a wound infection worse.
+[*][b]Six 1993 medicines:[/b] pink stomach relief, motion sickness tablets, promethazine, night-time and daytime cold and flu medicine, and DM cough syrup. They ease the symptoms (fewer coughs, less nausea, a lower fever), not the illness. The game's own herbs help a little too, eaten or in a tea: lemongrass, ginger or mint for nausea, chamomile for cramps, mallow, thyme or honey for the cough, black sage for aches. Antibiotics help pneumonia, strep and food poisoning, not a cold or the flu.
+[*][b]The health panel tells you what you have[/b], as well as your First Aid allows: the signs, a guess, the name and how long it has left.
+[*][b]Hunted by Sprinters (-16):[/b] Hunted, and every one of them runs. The horde on the house, the dawn packs, all sprinters: when the warning comes they are already there, so be gone before hour three. Not with Hunted. Singleplayer only.
+[*][b]Swarmed (-8):[/b] the neighbourhood you wake in is crawling: four times the zombies in your starting map cell (256 tiles a side), counted from the ground around you a minute in and added across the whole cell, never right on top of you. Get out of it, or clear it. Singleplayer only.
+[/list]
+
+[h2]Changed[/h2]
+[list]
+[*][b]Works with SpiffBoy's new console engine.[/b] Since SpiffBoy's update a console keeps running wherever you leave it; play time, the mood relief of a fresh game, Still Water and the Vitality cartridges read it again (they had quietly stopped). Spiffo Walk counts your steps only while you carry the console. Thanks to OhHoop for the heads-up.
+[*][b]Brittle can be taken at any age again.[/b] It was locked out of the 20s in 1.5.0; it still gets worse with age (a fracture is a quarter likelier in your 40s, half again in your 50s).
+[/list]
+
+[h2]Fixed[/h2]
+[list]
+[*][b]Slow to wake no longer lasts all day.[/b] In your 20s, a night that ended before seven left you Drowsy until the next night instead of for an hour. You now wake groggy and it fades over the first hour (a coffee or going back to sleep ends it at once), and the tiredness it added goes with it.
+[*][b]Clotting powder works alongside Replace Bandage.[/b] With that mod loaded, right-clicking a bleeding part in the health panel showed no "Pack with clotting powder": both mods hooked the menu the same way and its hook hid ours. The option is back whatever order the two load in.
+[/list]
+
 [h1]1.5.1: the frame, properly[/h1]
 [h2]Changed[/h2]
 [list]

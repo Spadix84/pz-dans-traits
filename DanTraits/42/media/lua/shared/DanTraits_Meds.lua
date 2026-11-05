@@ -197,6 +197,50 @@ DanTraits_Drugs = {
         overH = 4,
         over = { fatigue = 0.0008 },
     },
+    -- symptom relief for the catchable illnesses (2026-11-02; DanTraits_Illness.lua
+    -- reads the cover through DanTraits_IllnessRelief, DanTraits_Fever.lua the
+    -- fever reducers): all on a 1993 shelf. They ease, they do not cure.
+    bismuth = {   -- bismuth subsalicylate, the pink stomach liquid
+        items = { "bismuthliquid" }, treats = { "nausea" }, kind = "rescue",
+        halfH = 4, onAt = 0.5, overAt = 4,
+        overH = 4,
+        over = { sick = 40, stress = 0.001 },   -- salicylate: queasy, ringing, on edge
+    },
+    dimenhydrinate = {   -- the motion sickness tablet
+        items = { "dimenhydrinate" }, treats = { "nausea" }, kind = "rescue",
+        halfH = 6, onAt = 0.5, overAt = 3,
+        taking = { fatigue = 0.0003 },   -- drowsy while it works
+        side = { thirst = 0.0002 }, sideH = 6,   -- a dry mouth
+        overH = 4,
+        over = { fatigue = 0.0012, faint = 0.002 },
+    },
+    promethazine = {   -- prescription: the strongest, and very drowsy
+        items = { "promethazine" }, treats = { "nausea" }, kind = "rescue",
+        halfH = 10, onAt = 0.5, overAt = 2.5,
+        taking = { fatigue = 0.0006 },
+        overH = 6,
+        over = { fatigue = 0.0015, faint = 0.003 },
+    },
+    nightcold = {   -- night-time cold and flu liquid: acetaminophen, dextromethorphan, doxylamine (and a quarter alcohol)
+        items = { "nightcoldliquid" }, treats = { "cold" }, kind = "rescue",
+        halfH = 6, onAt = 0.5, overAt = 3,
+        taking = { fatigue = 0.0006 },   -- made to put you to sleep
+        overH = 6,
+        over = { fatigue = 0.0015, sick = 40 },   -- acetaminophen: too much is the liver
+    },
+    daycold = {   -- daytime cold and flu capsules: acetaminophen, dextromethorphan, pseudoephedrine
+        items = { "daycoldcapsules" }, treats = { "cold" }, kind = "rescue",
+        halfH = 5, onAt = 0.5, overAt = 3,
+        side = { stress = 0.0005 }, sideH = 4,   -- the decongestant: jittery
+        overH = 4,
+        over = { stress = 0.002, heart = true, sick = 40 },
+    },
+    coughsyrup = {   -- DM cough syrup: dextromethorphan, guaifenesin
+        items = { "coughsyrup" }, treats = { "cold" }, kind = "rescue",
+        halfH = 5, onAt = 0.5, overAt = 3,
+        overH = 4,
+        over = { fatigue = 0.001, stress = 0.001 },   -- dizzy and strange
+    },
     painkillers = {
         items = { "pills" }, treats = { "pain" }, kind = "rescue",
         halfH = 2, onAt = 0.5, overAt = 3.5,   -- four or more at once
@@ -623,6 +667,8 @@ local SPAWN_TYPES = {
     ["DanTraits.Sumatriptan"] = true, ["DanTraits.Nitroglycerin"] = true,
     ["DanTraits.Allopurinol"] = true, ["DanTraits.Colchicine"] = true, ["DanTraits.Levothyroxine"] = true,
     ["DanTraits.Antihistamines"] = true,
+    ["DanTraits.BismuthLiquid"] = true, ["DanTraits.Dimenhydrinate"] = true, ["DanTraits.Promethazine"] = true,
+    ["DanTraits.NightColdLiquid"] = true, ["DanTraits.DayColdCapsules"] = true, ["DanTraits.CoughSyrup"] = true,
 }
 
 function DanTraits_MedRandomFill(item)

@@ -2,7 +2,7 @@
 -- Every ten minutes there is a small chance of an attack, pushed up by a
 -- bad night (Vitality's sleep debt), thirst (the hours of it, the dehydration
 -- load, or the moment's), stress, a hangover, nicotine withdrawal, caffeine
--- withdrawal, a wound infection's fever, a concussion and the headache that
+-- withdrawal, a fever (an infected wound, an illness), a concussion and the headache that
 -- comes back after one, ringing ears (Tinnitus), a sensory overload (Sensory
 -- Issues), bright
 -- daylight outdoors, sleeping with the light on, heat (hot air or an
@@ -78,7 +78,7 @@ local MIG_CONCUSSION    = 3.0     -- added at the worst concussion
 local MIG_CONCUSSION_LATE = 2.0   -- added at the worst of the headache that comes back after one (DanTraits_Concussion.lua)
 local MIG_NOISE         = 1.5     -- added while the ears ring (Tinnitus)
 local MIG_OVERLOAD      = 1.5     -- added at a full sensory overload (Sensory Issues)
-local MIG_FEVER         = 2.0     -- added at full fever (wound infection)
+local MIG_FEVER         = 2.0     -- added at full fever (DanTraits_Fever)
 local MIG_CAFFEINE      = 2.0     -- added at full caffeine withdrawal (Caffeine Dependent)
 local MIG_HEAT          = 2.0     -- added at full heat: the hotter of the air...
 local MIG_HEAT_AIR      = { 27, 35 }      -- ...degrees C from the first to full...
@@ -341,7 +341,7 @@ local function migraineParts(player)
     if DanTraits_TinnitusRinging then parts.noise = MIG_NOISE * strength("DanTraits_TinnitusRinging", player) end
     if DanTraits_SensoryOverload then parts.overload = MIG_OVERLOAD * strength("DanTraits_SensoryOverload", player) end
     if DanTraits_CaffeineWithdrawalOf then parts.caffeine = MIG_CAFFEINE * strength("DanTraits_CaffeineWithdrawalOf", player) end
-    if DanTraits_InfectionFever then parts.fever = MIG_FEVER * strength("DanTraits_InfectionFever", player) end
+    if DanTraits_Fever then parts.fever = MIG_FEVER * strength("DanTraits_Fever", player) end
     parts.light = MIG_SLEEP_LIGHT * sleepLit(player) + (inBrightLight(player) and MIG_LIGHT or 0)
     parts.heat = MIG_HEAT * heatOf(player)
     if DanTraits_CorpsesNearby then parts.corpses = MIG_CORPSE * math.min(MIG_CORPSE_MAX, DanTraits_CorpsesNearby(player, MIG_CORPSE_TILES)) end

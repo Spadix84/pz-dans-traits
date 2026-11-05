@@ -18,9 +18,10 @@
 -- traits, in DanTraits_AgeTraits.lua) and the price table (AGE_PRICE in
 -- DanTraits_Age.lua). DanTraits_AgeOnly is still built from here for the
 -- files and tests that read it. The 2.0 pass added the 20s lock-outs the
--- user ticked: Hard of Hearing (age-related hearing loss), Brittle (bone
--- density is a later-life loss) and Type 2 Diabetes (which had a +1 price
--- row instead); Heart Condition stays available at full price in every band
+-- user ticked: Hard of Hearing (age-related hearing loss) and Type 2
+-- Diabetes (which had a +1 price row instead); Brittle was one too until
+-- 1.5.2, when the user opened it to every age again (the band table's
+-- x1.25 / x1.5 fracture rows still make it worse later); Heart Condition stays available at full price in every band
 -- (the user's call), and the 50s are locked out of nothing (Athletic at 55
 -- is allowed, just dearer).
 --
@@ -62,7 +63,6 @@ DanTraits_AgeRules = {
     anemia          = { price = { [20] = 1 } },   -- red cells x1.15, endurance
     -- the conditions of later life: not in the 20s
     arthritis       = { only = NOT20 },
-    brittle         = { only = NOT20 },           -- the x1.25 / x1.5 fracture rows stay in the band table
     diabetes2       = { only = NOT20 },
     gout            = { only = NOT20 },           -- the Age 2.0 conditions of later life
     thyroid         = { only = NOT20 },

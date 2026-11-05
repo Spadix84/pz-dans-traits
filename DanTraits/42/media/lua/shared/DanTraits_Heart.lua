@@ -88,7 +88,7 @@ local HC_VITALITY      = 0.3     -- x (1 - this x Vitality effect, -1..1)
 local HC_SCAR          = 0.2     -- x (1 + this x heart attacks survived)
 local HC_BLOOD         = 1.0     -- x (1 + this x the share of blood volume lost): half the blood gone, x1.5 (DanTraits_Blood.lua)
 local HC_IRON          = 0.5     -- x (1 + this x an anaemic's iron deficit, 0..1) (DanTraits_Anemia.lua)
-local HC_FEVER         = 0.5     -- x (1 + this x a wound infection's fever, 0..1) (DanTraits_Infection.lua)
+local HC_FEVER         = 0.5     -- x (1 + this x the fever, 0..1) (DanTraits_Fever.lua)
 local HC_BODY_COLD_C   = { 36, 34 }  -- body temperature from which a cold body counts, to where it counts in full...
 local HC_BODY_COLD     = 0.01    -- ...building this a minute at full, like cold air (a soaked body indoors)
 local HC_BETA_CUT      = 0.5     -- strain build and heart attacks x this, fully built up
@@ -166,7 +166,7 @@ local function strainRate(player, d)
     -- a heart racing to make up for what the blood cannot carry: volume lost, red cells short, a fever
     if DanTraits_BloodActive and DanTraits_BloodActive() and d.bloodVol then rate = rate * (1 + HC_BLOOD * clamp01(1 - d.bloodVol)) end
     rate = rate * (1 + HC_IRON * DanTraits_Strength("DanTraits_IronDeficit", player))
-    rate = rate * (1 + HC_FEVER * DanTraits_Strength("DanTraits_InfectionFever", player))
+    rate = rate * (1 + HC_FEVER * DanTraits_Strength("DanTraits_Fever", player))
     rate = rate * (1 + HC_SCAR * (d.hcAttacks or 0))
     rate = rate * betaCut(player)
     return math.max(0, rate)

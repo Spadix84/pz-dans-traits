@@ -35,7 +35,7 @@
 --   DanTraits_Is(obj, class)               instanceof under a guard, false on failure
 --   DanTraits_QueueHead(player)            the timed action at the head of the player's queue, or nil
 --   DanTraits_Strength(name, player)       another system's 0..1 by the name of its
---                                          getter ("DanTraits_InfectionFever"), resolved
+--                                          getter ("DanTraits_Fever"), resolved
 --                                          when called: 0 when that system is not loaded
 --   DanTraits_FloorUp(stats, stat, floor, ramp)
 --                                          raise the stat toward floor by at

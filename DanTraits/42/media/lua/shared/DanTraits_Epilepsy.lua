@@ -85,7 +85,7 @@ local function seizureRate(player, d)
     if tired > EP_TIRED_FROM then rate = rate * (1 + EP_TIRED * (tired - EP_TIRED_FROM) / (1 - EP_TIRED_FROM)) end
     rate = rate * (1 + EP_WITHDRAWAL * strength("DanTraits_AlcoholWithdrawal", player))
     rate = rate * (1 + EP_HANGOVER * strength("DanTraits_HangoverStrength", player))
-    rate = rate * (1 + EP_FEVER * strength("DanTraits_InfectionFever", player))
+    rate = rate * (1 + EP_FEVER * strength("DanTraits_Fever", player))
     rate = rate * (1 + EP_CONCUSSION * strength("DanTraits_ConcussionStrength", player))
     rate = rate * (1 + EP_STRESS * fraction(stats, CharacterStat.STRESS))
     rate = rate * (1 + EP_DEHYDRATION * strength("DanTraits_Dehydration", player))

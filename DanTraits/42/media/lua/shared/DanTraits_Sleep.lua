@@ -24,7 +24,7 @@
 --     (a depressive episode, a migraine, Night Shift by day, Tinnitus).
 --   The cost of bright light (slower rest, a worse score) goes through the
 --     "sleepBright" hook (Night Shift by day).
---   A wound infection's fever, anyone: the night scores x0.7 at full fever
+--   A fever (an infected wound, an illness), anyone: the night scores x0.7 at full fever
 --     and light wakes you x1.5 as easily.
 --   Deep Sleeper: x0.25.
 -- Desensitized: the things you have seen come back at night. A chance each
@@ -328,8 +328,8 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
         - clothesScaled(player, clothes, CL_QUALITY))
 end)
 
--- a fever is a bad night: a worse score, and lighter sleep (DanTraits_Infection.lua)
-local function feverOf(player) return DanTraits_Strength("DanTraits_InfectionFever", player) end
+-- a fever is a bad night: a worse score, and lighter sleep (DanTraits_Fever.lua)
+local function feverOf(player) return DanTraits_Strength("DanTraits_Fever", player) end
 DanTraits_AddHook("nightQuality", function(quality, player)
     local fever = feverOf(player)
     if fever <= 0 then return nil end

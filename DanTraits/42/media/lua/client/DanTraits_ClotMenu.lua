@@ -4,10 +4,16 @@
 -- the wound, dress it again.
 --
 -- The panel's handlers are locals of ISHealthPanel.lua, so the menu is
--- wrapped instead: ISContextMenu.get is caught for the length of the call to
--- learn which menu it built (the way ReplaceBandage adds its options), and
--- the option goes on the end. Wrapped through DanTraits_Wrap, tag
--- "clot-menu", at load and again on OnGameStart.
+-- wrapped instead and the option goes on the end of what it built. The menu
+-- is the player's one context menu (getPlayerContextMenu; ISContextMenu.get
+-- clears and reuses it), read after the original has run. ISContextMenu.get
+-- is also caught for the length of the call, as a fallback for a mod that
+-- builds its own menu, but it cannot be relied on: Replace Bandage wraps the
+-- same method, catches ISContextMenu.get the same way, and its catch calls
+-- the getter it saved at load, so a wrap outside its own never sees the
+-- call (the powder's option was missing with it loaded, 2026-11-04).
+-- Wrapped through DanTraits_Wrap, tag "clot-menu", at load and again on
+-- OnGameStart.
 require "DanTraits"
 require "XpSystem/ISUI/ISHealthPanel"
 require "TimedActions/ISVitalityClotAction"
@@ -65,6 +71,18 @@ local function wrapMenu()
         local ok, result = pcall(original, self, bodyPart, x, y, ...)
         ISContextMenu.get = get
         if not ok then error(result) end
+        if not caught and getPlayerContextMenu then
+            pcall(function()
+                local who = self.otherPlayer or self.character
+                local menu = who and getPlayerContextMenu(who:getPlayerNum())
+                -- the one the original just built (ISContextMenu.get writes where
+                -- it was asked for), not a stale menu; an empty one is hidden
+                if menu and menu.requestX == x + self:getAbsoluteX()
+                        and menu.requestY == y + self:getAbsoluteY() then
+                    caught = menu
+                end
+            end)
+        end
         if caught and not self.blockingMessage then
             local added = false
             pcall(function() added = addOption(self, caught, bodyPart) end)

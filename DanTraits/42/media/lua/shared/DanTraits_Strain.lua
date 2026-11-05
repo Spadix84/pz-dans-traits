@@ -502,7 +502,7 @@ end
 -- sleep -------------------------------------------------------------------------------
 
 local function feverish(player, d)
-    return (DanTraits_Strength("DanTraits_InfectionFever", player) or 0) > 0 or (d.infStage or 0) >= 4
+    return (DanTraits_Strength("DanTraits_Fever", player) or 0) > 0 or (d.infStage or 0) >= 4
 end
 
 local function sleepEase(player, d, quality)
@@ -769,7 +769,7 @@ local function updateStrainMinute(player, d)
 
     -- illness, awake or asleep
     local sick = 0
-    local fever = DanTraits_Strength("DanTraits_InfectionFever", player) or 0
+    local fever = DanTraits_Strength("DanTraits_Fever", player) or 0
     sick = sick + fever * ST.FEVER
     if (d.infStage or 0) >= 4 then sick = sick + ST.SEPSIS end
     sick = sick + DanTraits_StatFraction(stats, CharacterStat.FOOD_SICKNESS) * ST.FOOD_SICK

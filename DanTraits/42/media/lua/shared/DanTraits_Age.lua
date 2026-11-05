@@ -47,6 +47,8 @@
 --               food sickness (whatever they fell by since last minute,
 --               x this), and the half-life of daily and course medication
 --               (medHalfLife, divided; rescue drugs are left alone)
+--   illness     the chance to catch an illness (DanTraits_AgeIllness, read by
+--               DanTraits_Illness.lua): a little less young, more old
 --
 -- Age pricing (DanTraits_AgeRules, read by DanTraits_AgeSurcharge): a trait
 -- can cost more or fewer points in a band, drawn beside its cost on the
@@ -79,8 +81,8 @@
 --               Masonry) taken back and train those skills faster instead
 --               (handyXp, Events.AddXP): young hands learn the trade, they do
 --               not arrive knowing it
--- The traits some ages cannot take (In Their 20s: Arthritis, Brittle, Type 2,
--- Hard of Hearing; the traits of one age) are DanTraits_AgeRules' too.
+-- The traits some ages cannot take (In Their 20s: Arthritis, Type 2, Gout,
+-- Underactive Thyroid, Hard of Hearing; the traits of one age) are DanTraits_AgeRules' too.
 --
 -- Trait costs are fixed by the script, so age is priced through the Age
 -- traits' own cost and changes what other traits do: In Their 20s costs 5
@@ -108,16 +110,16 @@ local AGE = {
              cells = 1.15, concussion = 1.2, hangover = 0.85, dia = -0.05, heart = 0.8, gym = 65,
              learn = 1.15, learn3 = 1.3, combat = 1.15, hunger = 1.15, clear = 1.2,
              panic = 1.15, habit = 1.3, craving = 1.25, anger = 1.25, episode = 1.3, schizo = 1.25,
-             handyAll = -1, handyXp = 1.5 },
+             handyAll = -1, handyXp = 1.5, illness = 0.85 },
     [30] = { levels = 0 },
     [40] = { levels = 2, side = 1, endurance = 0.92, xp = 0.9, heal = 0.9, stiff = 0.85, wakes = 1.15,
              cells = 0.8, concussion = 0.75, hangover = 1.25, dia = 0.1, heart = 1.25,
              brittle = 1.25, arthritis = 1.3, handyLevels = { Woodwork = 1 },
-             trade = 1.1, hunger = 0.95, clear = 0.9 },
+             trade = 1.1, hunger = 0.95, clear = 0.9, illness = 1.15 },
     [50] = { levels = 3, side = 2, endurance = 0.85, xp = 0.8, heal = 0.8, stiff = 0.7, wakes = 1.3,
              cells = 0.65, concussion = 0.6, hangover = 1.5, dia = 0.2, heart = 1.5,
              brittle = 1.5, arthritis = 1.6, handyLevels = { Woodwork = 1 },
-             learn3 = 0.9, trade = 1.15, hunger = 0.9, clear = 0.8 },
+             learn3 = 0.9, trade = 1.15, hunger = 0.9, clear = 0.8, illness = 1.35 },
 }
 -- Age pricing and the traits only some ages may take are one table since Age
 -- 2.0: DanTraits_AgeRules (DanTraits_AgeRules.lua). DanTraits_AgeSurcharge
@@ -421,6 +423,11 @@ end)
 -- Heart Condition: the chest pain chance, x this (1 in the 30s and with age off)
 function DanTraits_AgeHeart(player)
     return ageValue(player, "heart") or 1
+end
+
+-- the chance to catch an illness, x this (1 in the 30s and with age off)
+function DanTraits_AgeIllness(player)
+    return ageValue(player, "illness") or 1
 end
 
 -- Add experience to a skill (or take it back, extra < 0) without the game's

@@ -31,7 +31,16 @@ local traitData = DanTraits_Data
 -- server's to make, so on a client or server nothing happens (the trait
 -- script disables it in multiplayer; this guard covers a character carried
 -- in). Console: `hunted [now|dawn|heli]`.
-local HT_SPAWN_H     = 2.75       -- hours survived when the horde is set loose
+--
+-- Hunted by Sprinters (huntedsprint) is the same start, at twice the points,
+-- with every zombie it sends a sprinter. createHordeFromTo only queues
+-- virtual zombies (made real later, at the world's speed), so these are
+-- created as real zombies at the same loaded spot (addZombiesInOutfit, which
+-- needs loaded open ground: a square that is not free is passed over), set
+-- sprinting and pathed to the house (or to you, at dawn). The sprint is set
+-- on the zombie as made: one that goes out of loaded range, or a save loaded
+-- with it on the map, comes back at the world's speed.
+local HT_SPAWN_H    = 2.75       -- hours survived when the horde is set loose
 local HT_GROUPS      = { 22, 23 } -- two groups, ~40 degrees apart
 local HT_SPREAD      = 0.7        -- radians between the groups
 local HT_DIST        = { 200, 175, 150, 125, 100, 80, 65, 50, 40 }  -- tiles out, farthest loaded distance wins
@@ -53,25 +62,57 @@ local function here(player)
     return { x = math.floor(player:getX()), y = math.floor(player:getY()), z = math.floor(player:getZ() or 0) }
 end
 
--- the farthest loaded square along `angle` from (cx, cy); nil when none of the distances is loaded
-local function loadedSpot(cx, cy, angle, dists)
+local function isHunted(player)
+    return hasTrait(player, "hunted") or hasTrait(player, "huntedsprint")
+end
+
+-- the farthest loaded square along `angle` from (cx, cy); nil when none of the
+-- distances is loaded. `open`: the square must also be free to stand on
+-- (real zombies are made there; a virtual horde does not care)
+local function loadedSpot(cx, cy, angle, dists, open)
     local cell = getCell()
     for _, dist in ipairs(dists) do
         local x, y = math.floor(cx + math.cos(angle) * dist), math.floor(cy + math.sin(angle) * dist)
         local sq = nil
         pcall(function() sq = cell:getGridSquare(x, y, 0) end)
+        if sq and open and sq.isFree then
+            local ok, free = pcall(function() return sq:isFree(false) end)
+            if ok and not free then sq = nil end
+        end
         if sq then return x, y end
     end
     return nil
 end
 
--- the groups, one per entry of `counts`, each pathed to (toX, toY); returns how many zombies were asked for
-local function release(counts, toX, toY, dists)
+-- `count` real zombies at (x, y), sprinting, pathed to (toX, toY); how many were made
+local function sprinters(x, y, toX, toY, count)
+    local list = nil
+    pcall(function() list = addZombiesInOutfit(x, y, 0, count, nil, 50) end)
+    if not list then return 0 end
+    local made = 0
+    pcall(function() made = list:size() end)
+    for i = 0, made - 1 do
+        local z = nil
+        pcall(function() z = list:get(i) end)
+        if z then
+            pcall(function() z:setWalkType("sprint" .. (1 + ZombRand(3))) end)
+            pcall(function() z:setSpeedTypeFromWalkType() end)
+            pcall(function() z:pathToLocationF(toX + 0.5, toY + 0.5, 0) end)
+        end
+    end
+    return made
+end
+
+-- the groups, one per entry of `counts`, each pathed to (toX, toY); returns how
+-- many zombies were asked for. `sprint`: real sprinters instead of a horde
+local function release(counts, toX, toY, dists, sprint)
     local base = ZombRand(360) * math.pi / 180
     local asked = 0
     for i, count in ipairs(counts) do
-        local x, y = loadedSpot(toX, toY, base + (i - 1) * HT_SPREAD, dists)
-        if x then
+        local x, y = loadedSpot(toX, toY, base + (i - 1) * HT_SPREAD, dists, sprint)
+        if x and sprint then
+            asked = asked + sprinters(x, y, toX, toY, count)
+        elseif x then
             local ok = pcall(function() createHordeFromTo(x, y, toX, toY, count) end)
             if ok then asked = asked + count end
         end
@@ -80,7 +121,7 @@ local function release(counts, toX, toY, dists)
 end
 
 local function onHuntedCreatePlayer(playerNum, player)
-    if not player or not hasTrait(player, "hunted") then return end
+    if not player or not isHunted(player) then return end
     if player:getHoursSurvived() > 0 then return end
     local d = traitData(player)
     if d.htHome then return end
@@ -93,16 +134,17 @@ local function huntedMinute(player, d)
     local home = d.htHome
     if not home then return end
     local hours = player:getHoursSurvived() or 0
+    local sprint = hasTrait(player, "huntedsprint")
 
     -- the horde
     if not d.htLoosed and hours >= HT_SPAWN_H then
-        local asked = release(HT_GROUPS, home.x, home.y, HT_DIST)
+        local asked = release(HT_GROUPS, home.x, home.y, HT_DIST, sprint)
         d.htTries = (d.htTries or 0) + 1
         if asked > 0 or d.htTries >= HT_MAX_TRIES then
             d.htLoosed = true
             d.htPullUntil = hours + HT_PULL_H
             d.htLastPull = nil
-            if asked > 0 then notify(player, "UI_DanTraits_HuntedComing") end
+            if asked > 0 then notify(player, sprint and "UI_DanTraits_HuntedSprintComing" or "UI_DanTraits_HuntedComing") end
         end
     end
 
@@ -130,23 +172,26 @@ local function huntedMinute(player, d)
     if d.htLoosed and morning and morning <= HT_DAWN_DAYS and hour == HT_DAWN_HOUR and d.htDawnDay ~= morning then
         d.htDawnDay = morning
         local at = here(player)
-        if release({ HT_DAWN_N }, at.x, at.y, HT_DAWN_DIST) > 0 then notify(player, "UI_DanTraits_HuntedDawn") end
+        if release({ HT_DAWN_N }, at.x, at.y, HT_DAWN_DIST, sprint) > 0 then notify(player, "UI_DanTraits_HuntedDawn") end
     end
 end
 
 -- Console `hunted [now|dawn|heli]` (Telemetry, via DanTraits_ExtraCommands):
 -- `now` sets the horde on where you stand (and makes it home for the pull),
 -- `dawn` the dawn group, `heli` the flyover; no argument lists the state.
+-- Sprinters when the character has Hunted by Sprinters.
 function DanTraits_HuntedReplay(player, what)
     if not player then return "hunted: no player" end
     local d = traitData(player)
+    local sprint = hasTrait(player, "huntedsprint")
     if what == "now" then
         local at = here(player)
         d.htHome, d.htLoosed, d.htPullUntil, d.htLastPull = at, true, (player:getHoursSurvived() or 0) + HT_PULL_H, nil
-        return "hunted: " .. tostring(release(HT_GROUPS, at.x, at.y, HT_DIST)) .. " zombies loosed on " .. at.x .. "," .. at.y
+        return "hunted: " .. tostring(release(HT_GROUPS, at.x, at.y, HT_DIST, sprint)) .. (sprint and " sprinters" or " zombies")
+            .. " loosed on " .. at.x .. "," .. at.y
     elseif what == "dawn" then
         local at = here(player)
-        return "hunted: dawn group, " .. tostring(release({ HT_DAWN_N }, at.x, at.y, HT_DAWN_DIST)) .. " zombies"
+        return "hunted: dawn group, " .. tostring(release({ HT_DAWN_N }, at.x, at.y, HT_DAWN_DIST, sprint)) .. (sprint and " sprinters" or " zombies")
     elseif what == "heli" then
         local ok = pcall(function() testHelicopter() end)
         return ok and "hunted: helicopter called" or "hunted: no helicopter (testHelicopter failed)"
@@ -160,4 +205,4 @@ DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}
 DanTraits_ExtraCommands.hunted = function(player, args) return DanTraits_HuntedReplay(player, args[1]) end
 
 Events.OnCreatePlayer.Add(onHuntedCreatePlayer)
-DanTraits_Every("minute", "Hunted", huntedMinute, 60, { trait = "hunted" })
+DanTraits_Every("minute", "Hunted", huntedMinute, 60, { trait = isHunted })

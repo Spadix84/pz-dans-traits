@@ -17,7 +17,7 @@ local SCHIZO_STRESS_WEIGHT   = 0.30   -- times stress (0..1)
 local SCHIZO_UNHAPPY_WEIGHT  = 0.20   -- times unhappiness/100
 local SCHIZO_FATIGUE_WEIGHT  = 0.20   -- times fatigue (0..1)
 local SCHIZO_NIGHT_BONUS     = 0.08
-local SCHIZO_FEVER_WEIGHT    = 0.30   -- times a wound infection's fever (0..1): delirium
+local SCHIZO_FEVER_WEIGHT    = 0.30   -- times the fever (0..1, DanTraits_Fever): delirium
 local SCHIZO_SLEEP_DEBT_WEIGHT  = 0.25 -- times Vitality's sleep debt (0..1)
 local SCHIZO_CONCUSSION_WEIGHT  = 0.20 -- times the concussion's strength (0..1)
 local SCHIZO_WITHDRAWAL_WEIGHT  = 0.30 -- times Alcoholic's withdrawal strength (0..1)
@@ -430,7 +430,7 @@ DanTraits_Episodes = {
 local strength = DanTraits_Strength   -- another system's 0..1, by the name of its getter (0 when not loaded)
 local function schizoDown(player)
     return strength("DanTraits_ConcussionStrength", player) > 0 or strength("DanTraits_ConcussionLateStrength", player) > 0
-        or strength("DanTraits_InfectionFever", player) > 0
+        or strength("DanTraits_Fever", player) > 0
 end
 
 local function schizoChance(player)
@@ -440,7 +440,7 @@ local function schizoChance(player)
         + (stats:get(CharacterStat.UNHAPPINESS) / 100) * SCHIZO_UNHAPPY_WEIGHT
         + stats:get(CharacterStat.FATIGUE) * SCHIZO_FATIGUE_WEIGHT
     if isNight() then chance = chance + SCHIZO_NIGHT_BONUS end
-    chance = chance + SCHIZO_FEVER_WEIGHT * strength("DanTraits_InfectionFever", player)
+    chance = chance + SCHIZO_FEVER_WEIGHT * strength("DanTraits_Fever", player)
     chance = chance + SCHIZO_SLEEP_DEBT_WEIGHT * strength("DanTraits_SleepDebt", player)
     chance = chance + SCHIZO_CONCUSSION_WEIGHT * strength("DanTraits_ConcussionStrength", player)
     chance = chance + SCHIZO_WITHDRAWAL_WEIGHT * strength("DanTraits_AlcoholWithdrawal", player)

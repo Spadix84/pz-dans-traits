@@ -103,6 +103,7 @@ A multiplier above 1 on a recovery row means faster.
 | Hangover severity | x0.85 | x1 | x1.25 | x1.5 |
 | Hunger builds | x1.15 | x1 | x0.95 | x0.9 |
 | Caffeine, drink, food sickness and daily or course medication clear | x1.2 | x1 | x0.9 | x0.8 |
+| The chance to catch an illness (cold, stomach bug, food poisoning) | x0.85 | x1 | x1.15 | x1.35 |
 
 ## Learning
 
@@ -161,7 +162,7 @@ characters are not affected; the table is read at creation only.
 | Asthma, Hemophilia (give) | +2 | 0 | 0 | 0 |
 | Anaemic (gives) | +1 | 0 | 0 | 0 |
 | Gym Regular, Meal Prepper, Early Riser | 0 | 0 | +1 | +2 |
-| Arthritis, Brittle, Type 2 Diabetes, Gout, Underactive Thyroid, Hard of Hearing | not offered | | | |
+| Arthritis, Type 2 Diabetes, Gout, Underactive Thyroid, Hard of Hearing | not offered | | | |
 | Quick Study, Bottomless Pit, Natural, Hot-Headed, Restless | | not offered | not offered | not offered |
 | Reading Glasses, Bad Back, Bad Knees, Old Hand, Delicate Stomach | not offered | not offered | | |
 | Pace Yourself, Settled | not offered | not offered | | not offered |
@@ -172,8 +173,9 @@ Hemophilia, Anaemic) give fewer points young rather than being locked out:
 the young do have them, and the band's endurance, healing and blood factors
 already take part of the sting out. Heart Condition stays available at full
 price in every band. The 50s are locked out of nothing: Athletic at 55 is
-allowed, just dearer. Hard of Hearing, Brittle and Type 2 (which had a +1
-row) joined the 20s lock-outs in 2.0.
+allowed, just dearer. Hard of Hearing and Type 2 (which had a +1 row)
+joined the 20s lock-outs in 2.0; Brittle did too, and was opened to every
+age again in 1.5.2 (it still worsens with age, below).
 
 ## Traits only one age can take
 
@@ -225,7 +227,7 @@ nothing. The bands' own effects are not behind it.
 |---|---|---|---|
 | Handy (vanilla) | none of its starting levels (read from Handy's definition, so a mod that changes Handy is followed; shown greyed, taken back at spawn); those skills train x1.5 instead | +1 Carpentry at the start | +1 Carpentry at the start |
 | Arthritis | cannot be taken | the cold and damp reach the joints x1.3 as fast | x1.6 |
-| Brittle | cannot be taken | fracture chance x1.25 | x1.5 |
+| Brittle | as written | fracture chance x1.25 | x1.5 |
 | Heart Condition | strain builds x0.8 | x1.25 | x1.5 |
 | Diabetes Type 2 | cannot be taken | resistance +0.10 | +0.20 |
 | Gout, Underactive Thyroid | cannot be taken | | |

@@ -18,8 +18,9 @@
 --     Restless (DanTraits_AgeTraits.lua): the days count double and the dip
 --     and the lift are doubled.
 --   Late sleeper. A night (not a nap) that ends before LS_EARLY o'clock: the
---     first hour after waking tiredness is held at the Drowsy edge unless a
---     coffee's worth of caffeine is in the system, and the night's sleep debt
+--     character wakes at the Drowsy edge and it fades back to their own
+--     tiredness over the first hour (all of it taken back at the end, at a
+--     coffee's worth of caffeine, or back to sleep), and the night's sleep debt
 --     counts x LS_DEBT. The deeper nights are the band's (x0.8 wakes).
 -- 40s
 --   Routine, lightly. A coffee or tea before RT_MORNING_END and a meal within
@@ -42,7 +43,8 @@
 --   (DanTraits_AgeWantsLines, read by DanTraits_HealthPanel.lua).
 --
 -- Mod data (aw prefix): awCells (visited cells, "cx,cy" = true), awCell (the
--- cell now), awStayH (hours in it), awItchy (0..1), awSlowMin, awDay (the day
+-- cell now), awStayH (hours in it), awItchy (0..1), awSlowMin, awSlowAdd (the
+-- tiredness the slow morning has lent), awDay (the day
 -- index scored), awMealHour, awMealHourY (today's and yesterday's main meal),
 -- awMealBig, awDrink (a morning drink today), awDrinkY, awMealKeptY (yesterday's,
 -- carried over at midnight for the night scored this morning), awBed (last night's bed), awKept,
@@ -151,20 +153,39 @@ DanTraits_AddHook("boredomRise", function(delta, player, d)
 end)
 
 -- Late sleeper -------------------------------------------------------------------------
-local function updateLateSleeper(player, d, awake)
-    if (d.awSlowMin or 0) <= 0 then return end
-    if not awake then return end
-    if (d.cafLevel or 0) >= LS_COFFEE then d.awSlowMin = nil return end
-    d.awSlowMin = d.awSlowMin - 1
-    if d.awSlowMin <= 0 then d.awSlowMin = nil return end
+-- the grogginess is lent, not spent: awSlowAdd is what the hold has put on top of the
+-- character's own tiredness, and it is taken back as the hour fades and when it ends
+-- (tiredness only falls asleep, so a plain hold left the 20s Drowsy all day)
+local function setGrog(player, d, add)
     pcall(function()
         local stats = player:getStats()
-        if (stats:get(CharacterStat.FATIGUE) or 0) < LS_FATIGUE then
-            stats:set(CharacterStat.FATIGUE, LS_FATIGUE)
-            -- the hold is the mod's, not a game rise: the fatigueRise pipeline must not scale the jump
-            if DanTraits_DeltaRemember then DanTraits_DeltaRemember(d, "fatigueRise", LS_FATIGUE) end
-        end
+        local own = math.max(0, (stats:get(CharacterStat.FATIGUE) or 0) - (d.awSlowAdd or 0))
+        local v = math.min(1, own + add)
+        stats:set(CharacterStat.FATIGUE, v)
+        -- the hold is the mod's, not a game rise or fall: the fatigueRise pipeline must not see the jump
+        if DanTraits_DeltaRemember then DanTraits_DeltaRemember(d, "fatigueRise", v) end
+        d.awSlowAdd = add > 0 and add or nil
     end)
+end
+
+local function endLateSleeper(player, d)
+    if d.awSlowAdd then setGrog(player, d, 0) end
+    d.awSlowMin, d.awSlowAdd = nil, nil
+end
+
+local function updateLateSleeper(player, d, awake)
+    if (d.awSlowMin or 0) <= 0 then
+        if d.awSlowAdd then endLateSleeper(player, d) end
+        return
+    end
+    -- back to sleep or a coffee's worth: awake properly
+    if not awake or (d.cafLevel or 0) >= LS_COFFEE then endLateSleeper(player, d) return end
+    d.awSlowMin = d.awSlowMin - 1
+    if d.awSlowMin <= 0 then endLateSleeper(player, d) return end
+    -- held at the Drowsy edge on waking, fading back to the character's own over the hour
+    local own = 0
+    pcall(function() own = (player:getStats():get(CharacterStat.FATIGUE) or 0) - (d.awSlowAdd or 0) end)
+    setGrog(player, d, math.max(0, LS_FATIGUE - own) * (d.awSlowMin + 1) / LS_SLOW_MIN)
 end
 
 -- Routine (40s) and Creature of Habit (50s) ---------------------------------------------------
@@ -316,11 +337,13 @@ end)
 -- the minute --------------------------------------------------------------------------
 local function updateWantsMinute(player, d)
     if not wantsOn(player) then
+        if d.awSlowAdd then endLateSleeper(player, d) end
         if d.awItchy or d.awSlowMin then d.awItchy, d.awSlowMin = nil, nil end
         return
     end
     local awake = not DanTraits_Asleep(player)
     local b = band(player)
+    if b ~= 20 and (d.awSlowMin or d.awSlowAdd) then endLateSleeper(player, d) end
     if b == 20 then
         updateItchyFeet(player, d, awake)
         updateLateSleeper(player, d, awake)

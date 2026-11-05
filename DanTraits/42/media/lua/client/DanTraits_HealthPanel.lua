@@ -34,6 +34,17 @@
 -- (DanTraits_BloodRelay.lua), so it shows a moment after the panel opens.
 -- Left out while there is nothing to tell: full, not bleeding, red cells whole.
 --
+-- Illness: under Blood, the catchable illnesses (DanTraits_Illness.lua) and
+-- the fever (DanTraits_Fever.lua, any source), by the examiner's First Aid:
+--   0-2  the signs: a runny nose and a cough, an upset stomach, feverish.
+--   3-5  a guess (a cold; a stomach bug or something eaten: the two are not
+--        told apart, so antibiotics are a gamble), how high the fever is.
+--   6-8  the name, viral or bacterial, the day, worse or easing; the fever
+--        to a tenth of a degree.
+--   9-10 how long it has left, and an illness still brewing.
+-- Yourself, or another player in split-screen (their mod data); not a
+-- patient in multiplayer.
+--
 -- Burnout (strain in the code): under that, your own character's tier
 -- (DanTraits_Strain.lua) and whether it got worse or eased over the last hour,
 -- then how hardened they are once that takes 5% or more off. Yourself only,
@@ -73,6 +84,7 @@ local HP_BLEED_SLOW    = 0.001   -- blood volume a minute: bleeding slowly under
 local HP_BLEED_HEAVY   = 0.004   -- ...heavily from this (24% an hour)
 local HP_BLOOD_SLIGHT  = 0.05    -- volume lost: "a little blood" from this (First Aid 3-5)
 local HP_BLOOD_FULL    = 0.005   -- short of full by less than this reads as full
+local HP_FEVER_HIGH    = 0.5     -- the fever (DanTraits_Fever.lua's total) reads high from here
 
 local RED, GREEN, ORANGE = { 0.89, 0.28, 0.28 }, { 0.28, 0.89, 0.28 }, { 1, 0.58, 0 }
 local GREY = { 0.7, 0.7, 0.7 }
@@ -358,6 +370,64 @@ end
 DanTraits_HealthBloodLines = bloodLines
 
 -- the bottle's name, as the game shows it
+-- what an illness looks like before it has a name: the signs and the guess
+-- are by this group, so two that look alike read the same (a stomach bug and
+-- food poisoning)
+local HP_ILL_GROUP = { cold = "cold", flu = "flu", pneumonia = "chest", strep = "throat", stomach = "gut", food = "gut" }
+
+-- the illness lines: { text, colour }
+local function illnessLines(patient, level)
+    local out = {}
+    if not DanTraits_IllnessState then return out end
+    local okS, list = pcall(DanTraits_IllnessState, patient)
+    if not okS or type(list) ~= "table" then list = {} end
+    local seen = {}
+    local function once(key, colour)
+        if seen[key] then return end
+        seen[key] = true
+        out[#out + 1] = { t(key), colour }
+    end
+    for _, ill in ipairs(list) do
+        local group = HP_ILL_GROUP[ill.id] or "gut"
+        if ill.brewing then
+            if level >= HP_EXPERT then
+                out[#out + 1] = { getText("UI_DanTraits_health_IllBrewing", t("IllName_" .. ill.id), inTime(ill.inH * 60)), GREY }
+            end
+        elseif level < HP_VAGUE_BELOW then
+            once("IllSigns_" .. group, ORANGE)
+        elseif level < HP_DETAIL then
+            once("IllGuess_" .. group, ORANGE)
+        else
+            local way = t(ill.rising and "IllRising" or "IllEasing")
+            local colour = ill.rising and ORANGE or GREY
+            if level >= HP_EXPERT then
+                out[#out + 1] = { getText("UI_DanTraits_health_IllDayLeft", t("IllName_" .. ill.id), tostring(ill.day), way, inTime(ill.leftH * 60)), colour }
+            else
+                out[#out + 1] = { getText("UI_DanTraits_health_IllDay", t("IllName_" .. ill.id), tostring(ill.day), way), colour }
+            end
+        end
+    end
+    -- the fever, whatever it is from
+    local total = DanTraits_FeverTotal and DanTraits_FeverTotal(patient) or 0
+    local raw = DanTraits_FeverRaw and DanTraits_FeverRaw(patient) or total
+    if total > 0 then
+        local colour = total >= HP_FEVER_HIGH and RED or ORANGE
+        if level < HP_VAGUE_BELOW then
+            out[#out + 1] = { t(total >= HP_FEVER_HIGH and "FeverFeel2" or "FeverFeel1"), colour }
+        elseif level < HP_DETAIL then
+            out[#out + 1] = { t(raw > 1 and "FeverMid3" or (total >= HP_FEVER_HIGH and "FeverMid2" or "FeverMid1")), raw > 1 and RED or colour }
+        else
+            local d = patient:getModData().DanTraits or {}
+            local temp = tonumber(d.fevBodyTemp) or 0
+            if temp < 30 then temp = 37 + 2 * (0.2 + 0.7 * math.min(1, total)) end
+            local shown = string.format("%.1f", temp)
+            out[#out + 1] = { getText(raw > 1 and "UI_DanTraits_health_FeverTempDanger" or "UI_DanTraits_health_FeverTemp", shown), raw > 1 and RED or colour }
+        end
+    end
+    return out
+end
+DanTraits_HealthIllnessLines = illnessLines
+
 local function medName(id)
     local drug = DanTraits_Drugs[id]
     local name = nil
@@ -552,6 +622,12 @@ local function wrapRender()
         DanTraits_Guard("med button", medButton, self, patient, here)
         local blood = bloodLines(patient, level, doctor)
         if #blood > 0 then sections[#sections + 1] = { t("BloodHeader"), blood, true } end
+        local ill = {}
+        if here then
+            local okI, lines = pcall(illnessLines, patient, level)
+            if okI then ill = lines end
+        end
+        if #ill > 0 then sections[#sections + 1] = { t("IllnessHeader"), ill, true } end
         local strain = here and strainLines(patient) or {}
         if #strain > 0 then sections[#sections + 1] = { t("StrainHeader"), strain, true } end
         -- the band, and the want that is up (DanTraits_AgeWants.lua): your own panel only

@@ -15,7 +15,7 @@ require "VitalityChallenges_Core"
 require "VitalityChallenges_Kit"
 local VC = VitalityChallenges
 
-local TEST = true
+local TEST = false
 local TEST_VAN = { script = "Base.StepVan", x = 12287, y = 3803, dir = "S" }
 local DEAD_INSIDE, DEAD_YARD = 1, 0
 

@@ -45,6 +45,37 @@ local function prescription(name, commonness)
     return spec
 end
 
+-- Over-the-counter medicine (the illness medicines, 2026-11-02): the
+-- antihistamines' spread, every other bathroom and every pharmacy shelf,
+-- times each one's own commonness.
+local OTC = {
+    procedural = {
+        BathroomCabinet = 3, BathroomCounter = 1.5, BathroomShelf = 1.5,
+        MedicalCabinet = 3, MedicalClinicDrugs = 3, MedicalStorageDrugs = 6, HospitalRoomShelves = 2,
+        DoctorTools = 3, NurseTools = 2, AmbulanceDriverTools = 1, StoreShelfMedical = 5,
+        SafehouseMedical = 4, SafehouseMedical_Mid = 2, SafehouseMedical_Late = 1,
+        DerelictHouseDrugs = 1, DrugShackDrugs = 0.5, ArmyStorageMedical = 2, TestingLab = 1,
+        KitchenRandom = 0.2,
+    },
+    suburbs = {
+        { { "all", "medicine", "items" }, 2 },
+        { { "all", "inventoryfemale", "items" }, 0.2 },
+        { { "all", "inventorymale", "items" }, 0.15 },
+        { { "MedicalCache1", "MedicalBox", "items" }, 4 },
+    },
+    bags = { HandbagsAndPurses = 0.05 },
+    clutter = { ClosetItems = 0.02, GloveBoxItems = 0.3 },
+}
+
+local function overTheCounter(name, commonness)
+    local spec = { name = name, procedural = {}, suburbs = {}, bags = {}, clutter = {} }
+    for list, weight in pairs(OTC.procedural) do spec.procedural[list] = weight * commonness end
+    for _, s in ipairs(OTC.suburbs) do spec.suburbs[#spec.suburbs + 1] = { s[1], s[2] * commonness } end
+    for list, weight in pairs(OTC.bags) do spec.bags[list] = weight * commonness end
+    for list, weight in pairs(OTC.clutter) do spec.clutter[list] = weight * commonness end
+    return spec
+end
+
 local ITEMS = {
     {
         name = "DanTraits.Inhaler",
@@ -194,6 +225,13 @@ local ITEMS = {
     prescription("DanTraits.Allopurinol", 0.9),     -- Gout: a common daily prescription (Age 2.0, 2026-10-31)
     prescription("DanTraits.Colchicine", 0.4),      -- Gout: the flare pill, rarer
     prescription("DanTraits.Levothyroxine", 1.0),   -- Underactive Thyroid: one of the commonest prescriptions there is
+    -- the illness medicines (2026-11-02): cold medicine and the pink stuff in most houses in 1993
+    overTheCounter("DanTraits.NightColdLiquid", 1.2),
+    overTheCounter("DanTraits.DayColdCapsules", 1.0),
+    overTheCounter("DanTraits.CoughSyrup", 1.2),
+    overTheCounter("DanTraits.BismuthLiquid", 1.2),
+    overTheCounter("DanTraits.Dimenhydrinate", 0.6),   -- motion sickness tablets: a travel kit, less often
+    prescription("DanTraits.Promethazine", 0.7),       -- the prescription anti-nausea tablet
     {
         -- antihistamines: over the counter, in every other bathroom (Hay Fever)
         name = "DanTraits.Antihistamines",

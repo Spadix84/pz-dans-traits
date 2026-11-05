@@ -20,20 +20,21 @@
 --                 antibiotics touch it now.
 --   sepsis        infS past INF_SEPSIS: high fever, health draining faster
 --                 the worse it gets. Untreated, about two days.
--- Fever is the game's SICKNESS stat, which nothing in vanilla sets: it
--- raises the body's set point 2 C per unit (Thermoregulator) and feeds the
--- Sick moodle (Moodle.Update: apparent infection / 100 + SICKNESS).
+-- The fever is a source of the one fever (DanTraits_Fever.lua), which sets
+-- the game's SICKNESS from it and every other fever, and brings the
+-- tiredness and thirst.
 --
 -- Antibiotics: the game's own pills, one a dose (a box holds 12; INF_COURSE
 -- doses, one every eight hours, is a finished course). Each dose tops up a level in the
--- blood that halves every INF_ABX_HALF hours; at INF_ABX_MIN or more the
--- infection falls back, under it the infection picks up again. Cleared
+-- blood that halves every six hours (DanTraits_Fever.lua keeps it, shared
+-- with the bacterial illnesses); while it is high enough the infection
+-- falls back, under it the infection picks up again. Cleared
 -- before INF_COURSE doses and left there, it has a coin flip to come back,
 -- as an infection inside (on no wound) that only antibiotics clear.
 -- Vanilla's one-shot effect (ReduceInfectionPower 50) is undone.
 --
--- Fever reaches other systems (each reads DanTraits_InfectionFever): a bad
--- night, migraines, blood sugar, asthma, and with a full-blown sepsis a small
+-- Fever reaches other systems through DanTraits_Fever: a bad night,
+-- migraines, blood sugar, asthma; and with a full-blown sepsis a small
 -- chance a minute of a phantom episode (delirium) for anyone.
 -- Zombie infection is untouched.
 --
@@ -43,6 +44,7 @@
 -- growth), Vitality (all three, both ways), Anemia (growth), Smoker (growth,
 -- by the meter).
 require "DanTraits"
+require "DanTraits_Fever"
 
 local notify = DanTraits_Notify
 local notifyGood = DanTraits_NotifyGood
@@ -71,13 +73,8 @@ local INF_S_ABX        = 0.4     -- per day off, on antibiotics
 local INF_FEVER        = 0.2     -- fever shows at this score
 local INF_SEPSIS       = 0.6     -- sepsis at this score
 local INF_SHOCK        = 0.85    -- septic shock at this score
-local INF_SICKNESS     = { 0.2, 0.9 }   -- SICKNESS from fever to septic shock (x2 C)
 local INF_HEALTH       = { 0.15, 1.5 }  -- health per minute from sepsis to the worst
 local INF_DELIRIUM      = 0.02    -- chance per minute, awake in sepsis, of a phantom episode (delirium)
-local INF_FATIGUE      = 0.0006  -- tiredness per minute at full fever, awake
-local INF_THIRST       = 0.0004  -- thirst per minute at full fever
-local INF_ABX_HALF     = 6       -- hours for the antibiotic level to halve
-local INF_ABX_MIN      = 0.5     -- therapeutic from here
 local INF_COURSE       = 10      -- doses for a finished course
 local INF_RELAPSE_H    = 24      -- hours off antibiotics after an unfinished course...
 local INF_RELAPSE      = 0.5     -- ...then this chance it comes back
@@ -176,7 +173,7 @@ local function holdHealing(part, rec)
     end
 end
 
-local function abxOn(d) return (d.infAbx or 0) >= INF_ABX_MIN end
+local function abxOn(player) return DanTraits_AntibioticOn(player) end
 
 -- An infection already showing (A Really Bad Day's laceration): the part
 -- goes straight to the local stage at `level`. With wound infection off,
@@ -245,7 +242,7 @@ local function updatePart(player, d, part, name, perMin)
         showLevel(part, 0)
         return 0
     end
-    if abxOn(d) then
+    if abxOn(player) then
         L = L - INF_ABX_L * perMin
     elseif treated and L < INF_SPREAD_L then
         L = L - INF_TOPICAL * perMin
@@ -273,21 +270,13 @@ local function updateMoodle(player, stage, S)
     DanTraits_BadMoodle(player, "Infection", v, INF_MOODLE_TIER)
 end
 
-local statAdd = DanTraits_StatAdd
-
 -- switched off mid-game (sandbox, a server admin): stand down once, so the
--- fever, the sickness it held and the moodle do not stay on for good. The
--- infection itself is kept and resumes if it is switched back on.
+-- fever and the moodle do not stay on for good (the fever system lets the
+-- sickness go the same minute). The infection itself is kept and resumes if
+-- it is switched back on.
 local function standDown(player, d)
-    if not d or ((d.infFever or 0) <= 0 and (d.infSickness or 0) <= 0 and (d.infStage or 0) <= 0) then return end
+    if not d or ((d.infFever or 0) <= 0 and (d.infStage or 0) <= 0) then return end
     d.infFever = 0
-    local held = d.infSickness or 0
-    pcall(function()
-        local stats = player:getStats()
-        local now = stats:get(CharacterStat.SICKNESS) or 0
-        if held > 0 and math.abs(now - held) < 0.002 then stats:set(CharacterStat.SICKNESS, 0) end
-    end)
-    d.infSickness = 0
     d.infStage = 0
     updateMoodle(player, 0, 0)
 end
@@ -296,13 +285,8 @@ local function updateInfectionMinute(player, d)
     if not sandboxOn() then standDown(player, d) return end
     d = infData(player)
     local perMin = 1 / 1440
-    -- vanilla's one antibiotic, spent here instead
+    -- vanilla's one antibiotic, spent here instead (the level decays in DanTraits_Fever.lua)
     pcall(function() if player:getReduceInfectionPower() > 0 then player:setReduceInfectionPower(0) end end)
-    -- the antibiotic level decays
-    if d.infAbx > 0 then
-        d.infAbx = d.infAbx * 0.5 ^ (1 / (INF_ABX_HALF * 60))
-        if d.infAbx < 0.01 then d.infAbx = 0 end
-    end
 
     local maxL, contaminated = 0, false
     DanTraits_EachPart(player, function(part, name)
@@ -316,7 +300,7 @@ local function updateInfectionMinute(player, d)
     -- wound in particular; grows like one, and only antibiotics clear it
     if (d.infFocus or 0) > 0 then
         local F = d.infFocus
-        if abxOn(d) then F = F - INF_ABX_L * perMin
+        if abxOn(player) then F = F - INF_ABX_L * perMin
         else F = F + INF_GROW * perMin * DanTraits_RunHooks("infectionGrowth", 1, player) end
         F = math.max(0, math.min(10, F))
         d.infFocus = F > 0 and F or nil
@@ -326,7 +310,7 @@ local function updateInfectionMinute(player, d)
 
     -- the whole body
     local S = d.infS
-    if abxOn(d) then
+    if abxOn(player) then
         S = S - INF_S_ABX * perMin
     elseif maxL >= INF_SPREAD_L then
         S = S + INF_S_GROW * perMin * (maxL - INF_SPREAD_L + 1) / (10 - INF_SPREAD_L + 1) * DanTraits_RunHooks("infectionGrowth", 1, player)
@@ -346,7 +330,7 @@ local function updateInfectionMinute(player, d)
     if d.infUnfinished then
         if d.infDoses >= INF_COURSE then
             d.infUnfinished, d.infOffH = nil, nil
-        elseif not abxOn(d) then
+        elseif not abxOn(player) then
             d.infOffH = (d.infOffH or 0) + 1 / 60
             if d.infOffH >= INF_RELAPSE_H then
                 d.infUnfinished, d.infOffH = nil, nil
@@ -374,29 +358,11 @@ local function updateInfectionMinute(player, d)
     d.infStage = stage
     updateMoodle(player, stage, S)
 
-    -- fever and what comes with it
-    local stats = player:getStats()
+    -- the fever (the fever system makes it SICKNESS, tiredness and thirst);
+    -- a hair over 0 from the moment it shows, so the fever is on at once
     local fever = 0
-    if S >= INF_FEVER then fever = (S - INF_FEVER) / (1 - INF_FEVER) end
+    if S >= INF_FEVER then fever = math.max(0.0001, (S - INF_FEVER) / (1 - INF_FEVER)) end
     d.infFever = fever
-    local sickness = 0
-    if S >= INF_FEVER then sickness = INF_SICKNESS[1] + (INF_SICKNESS[2] - INF_SICKNESS[1]) * fever end
-    -- SICKNESS is held at the fever's level, up or down; if something else
-    -- has it higher than we left it, that is theirs and left alone
-    local held = d.infSickness or 0
-    pcall(function()
-        local now = stats:get(CharacterStat.SICKNESS) or 0
-        if now < sickness or (held > 0 and now > sickness and math.abs(now - held) < 0.002) then
-            stats:set(CharacterStat.SICKNESS, sickness)
-        end
-    end)
-    d.infSickness = sickness
-    pcall(function() d.infBodyTemp = stats:get(CharacterStat.TEMPERATURE) end)
-    if fever > 0 then
-        local asleep = DanTraits_Asleep(player)
-        if not asleep then statAdd(stats, CharacterStat.FATIGUE, INF_FATIGUE * fever) end
-        statAdd(stats, CharacterStat.THIRST, INF_THIRST * fever)
-    end
     if S >= INF_SEPSIS then
         local t = (S - INF_SEPSIS) / (1 - INF_SEPSIS)
         local health = INF_HEALTH[1] + (INF_HEALTH[2] - INF_HEALTH[1]) * t
@@ -418,7 +384,7 @@ end
 function DanTraits_TakeAntibiotic(player, amount)
     local d = infData(player)
     amount = amount or 1
-    d.infAbx = (d.infAbx or 0) + amount
+    DanTraits_AntibioticDose(player, amount)
     d.infDoses = (d.infDoses or 0) + amount
     -- vanilla's one-shot effect is set inside the eat; undo it once it has been
     if DanTraits_Later then
@@ -435,12 +401,14 @@ DanTraits_AddHook("eat", function(_, player, item, fraction)
     return nil
 end)
 
--- 0..1 fever, for other systems
+-- 0..1, this infection's own fever: its source for the one fever (the
+-- systems that react to a fever read DanTraits_Fever)
 function DanTraits_InfectionFever(player)
     if not sandboxOn() then return 0 end
     local d = player and player:getModData().DanTraits
     return (d and d.infFever) or 0
 end
+DanTraits_FeverSource("infection", DanTraits_InfectionFever)
 
 -- console: infect <part> [level] | contaminate <part> | sepsis <score> | antibiotic | infection clear
 local function partName(arg) return DanTraits_PartNames[string.lower(tostring(arg or ""))] end

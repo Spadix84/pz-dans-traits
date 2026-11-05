@@ -93,6 +93,33 @@ module DanTraits {
         Cost = -8,
         UIName = UI_trait_DanHunted,
         UIDescription = UI_trait_DanHunteddesc,
+        MutuallyExclusiveTraits = DanTraits:huntedsprint,
+    }
+
+    /* Hunted, harder: the same start, every zombie it sends a sprinter.
+       Singleplayer only. DanTraits_Hunted.lua. */
+    character_trait_definition DanTraits:huntedsprint
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = true,
+        CharacterTrait = DanTraits:huntedsprint,
+        Cost = -16,
+        UIName = UI_trait_DanHuntedSprint,
+        UIDescription = UI_trait_DanHuntedSprintdesc,
+        MutuallyExclusiveTraits = DanTraits:hunted,
+    }
+
+    /* The cell you wake in holds four times the zombies: counted from the
+       loaded ground a minute in, the rest added to the game's population.
+       Singleplayer only. DanTraits_Swarmed.lua. */
+    character_trait_definition DanTraits:swarmed
+    {
+        IsProfessionTrait = false,
+        DisabledInMultiplayer = true,
+        CharacterTrait = DanTraits:swarmed,
+        Cost = -8,
+        UIName = UI_trait_DanSwarmed,
+        UIDescription = UI_trait_DanSwarmeddesc,
     }
 
     character_trait_definition DanTraits:schizophrenia
@@ -1389,6 +1416,96 @@ module DanTraits {
         UseWhileEquipped = false,
         StaticModel = PillBottle,
         WorldStaticModel = PillBottleGround,
+    }
+
+    item BismuthLiquid
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = BismuthLiquid,
+        Weight = 0.3,
+        Icon = BismuthLiquid,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_BismuthLiquid,
+        UseDelta = 0.1250,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = Disinfectant,
+    }
+
+    item Dimenhydrinate
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Dimenhydrinate,
+        Weight = 0.1,
+        Icon = Dimenhydrinate,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Dimenhydrinate,
+        UseDelta = 0.0833,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item Promethazine
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = Promethazine,
+        Weight = 0.1,
+        Icon = Promethazine,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_Promethazine,
+        UseDelta = 0.0500,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item NightColdLiquid
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = NightColdLiquid,
+        Weight = 0.3,
+        Icon = NightColdLiquid,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_NightColdLiquid,
+        UseDelta = 0.1666,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = Disinfectant,
+    }
+
+    item DayColdCapsules
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = DayColdCapsules,
+        Weight = 0.1,
+        Icon = DayColdCapsules,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_DayColdCapsules,
+        UseDelta = 0.0625,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = PillBottleGround,
+    }
+
+    item CoughSyrup
+    {
+        DisplayCategory = FirstAid,
+        ItemType = base:drainable,
+        DisplayName = CoughSyrup,
+        Weight = 0.3,
+        Icon = CoughSyrup,
+        Medical = true,
+        Tooltip = Tooltip_DanTraits_CoughSyrup,
+        UseDelta = 0.1250,
+        UseWhileEquipped = false,
+        StaticModel = PillBottle,
+        WorldStaticModel = Disinfectant,
     }
 
     item Anticonvulsants

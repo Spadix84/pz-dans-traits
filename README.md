@@ -9,6 +9,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | Trait | Cost | In one line |
 |---|---|---|
 | [Multiple Sclerosis](#multiple-sclerosis--16) | -16 | Heat is the enemy, and your energy is a daily budget of spoons. |
+| [Hunted by Sprinters](#hunted-by-sprinters--16) | -16 | Hunted, and every one of them runs. |
 | [Arthritis](#arthritis--12) | -12 | Stiff joints, flares in the cold and damp, a grip that slips. |
 | [Asthma](#asthma--10) | -10 | Irritated airways that build to an attack zombies can hear. |
 | [Diabetes Type 1](#diabetes-type-1--10-and-type-2--5) | -10 | A hidden blood sugar model with an insulin pen and a meter. |
@@ -21,6 +22,7 @@ Costs are trait points: negative traits give you points, positive ones cost them
 | [Wounded](#wounded--10) | -10 | A broken left arm, four fresh wounds and one bandage. |
 | [Robbed](#robbed--10) | -10 | Shot, with the bullet still in; naked; the house stripped bare. |
 | [Hunted](#hunted--8) | -8 | A horde on your house a few hours in, a helicopter, a pack at dawn for three days. |
+| [Swarmed](#swarmed--8) | -8 | Four times the zombies in the map cell you start in. |
 | [Epilepsy](#epilepsy--6) | -6 | Seizures with an aura; anticonvulsants cut them. |
 | [Fear of Blood](#fear-of-blood--6-vanilla-re-priced) | -6 | Vanilla's, one point more: slower first aid, and fainting at the sight of a wound. |
 | [In Their 50s](#age-in-their-20s-5-30s-40s-and-50s--6) | -6 | Three levels in the main skill, two in the rest of the trade; a body that recovers, heals and trains slower. |
@@ -151,6 +153,24 @@ They followed you here. The fourth of the crippled starts, and the one you run f
 - At 06:00 on the first three mornings after the horde is loose, 15 zombies are created at the farthest loaded distance from wherever you are (150 tiles down to 40) and pathed to you. Sleep somewhere new each night and keep moving; after the third morning it is over.
 - Singleplayer only: zombies are the server's to create, so the trait is disabled in multiplayer.
 - Console `hunted` reports the state; `hunted now` sets the horde on where you stand, `hunted dawn` the dawn pack, `hunted heli` the flyover.
+
+#### Hunted by Sprinters (-16)
+
+Hunted at twice the points: the same clock, and every zombie it sends runs.
+
+- The horde on the house (45, from the loaded edge at 2.75 hours), the four hours of the house calling, the helicopter and the three dawn packs of 15 are all as in Hunted, but each zombie the trait sends is a sprinter. A sprinter covers the 50 to 65 tiles in seconds, so the notice is the arrival: be gone from the house before hour two and three quarters.
+- They are made as real zombies on loaded, open ground and pathed to the house (at dawn, to you), since the game's horde call only queues zombies to be made later at the world's speed. The sprint is set as they are made: one that falls out of loaded range, or a save reloaded with it on the map, comes back at the world's speed. The neighbourhood the house calls in keeps the world's speed.
+- Not with Hunted. Singleplayer only. The `hunted` console commands send sprinters for this character.
+
+#### Swarmed (-8)
+
+The neighbourhood you wake in is crawling: the map cell you start in (256 tiles a side) holds four times the zombies it would.
+
+- The game keeps no count of a cell that a mod can read, so it is measured. A minute after waking the cell is surveyed in 32-tile blocks: the blocks around you that are loaded are counted, and the rest of the cell is taken to be as crowded as they are. Each block then gets three more zombies for every one there, at least 60 more over the whole cell, added to the game's own population in small groups.
+- None land within 12 tiles of where you woke or in that building, so the first moments are the usual ones; what is outside is not.
+- The extra zombies are ordinary ones from then on: they wander, follow noise, migrate and stay dead. Respawn refills a cell to the plain population only.
+- Stacks with Hunted and the other crippled starts. Singleplayer only: zombies are the server's to create, so the trait is disabled in multiplayer.
+- Console `swarmed` reports the cell and how many were added; `swarmed now` fills the cell you stand in again.
 
 #### Arthritis (-12)
 
@@ -737,6 +757,24 @@ Replaces vanilla's one-roll infection.
 - Zombie infection is untouched, except for [Resilient](#resilient-10-vanilla-re-priced)'s chance to beat it.
 - Moodle: Infection. A sandbox option turns it off.
 
+### Catchable illness
+
+Anyone can catch a cold, the flu, pneumonia, strep throat, a stomach bug or food poisoning (design: `plans/illness.md`).
+
+- **Common cold (viral):** getting wet and cold fills the game's own cold meter; full, it is a chance of a cold a day or so later rather than the game's instant one, and now and then one comes from nowhere (twice as often November to March). Sneezing and coughing (zombies hear them; a tissue muffles them), tiredness, a low fever in a bad one; three days to a week.
+- **Flu (viral):** goes round November to March; once you have had it you are immune for the season. A high fever, aches, stamina held under half, a cough zombies hear; five to ten days. Worse for Asthma, Heart Condition, Smoker, Diabetes and the 50s.
+- **Pneumonia (bacterial):** a cold or the flu going to the chest, far likelier running or sprinting, soaked, chilled, smoking or with Asthma. A high fever, stamina held low, a rattling cough, and at its worst health drains. Two to three weeks untreated, under a week on antibiotics. On top of the flu the two fevers stack past what the body can take: get antibiotics.
+- **Strep throat (bacterial):** most often while a cold runs. A very sore throat and a fever for a week or more; two or three days on antibiotics.
+- **Stomach bug (viral):** eating with dirty or bloody hands. Nausea, cramps, thirst and a low fever for one to three days. Wash your hands.
+- **Food poisoning (bacterial):** rotten, raw or stale food, 6 to 24 hours later, on top of the game's own queasiness. Sickness, cramps, a fever and hard thirst for a day or two: drink, or the game's Dying of Thirst costs health. Iron Gut halves the chance, Weak Stomach adds half.
+- **Getting over it:** sleep (best at home) speeds the course, running and sprinting slow it. Antibiotics shorten the bacterial ones (pneumonia, strep, food poisoning) and do nothing for the viral ones (a cold, the flu, a stomach bug). After a cold or the stomach bug you are immune for weeks.
+- **Catching it:** Prone to Illness, Resilient, Vitality, age (less in your 20s, more in your 40s and 50s), sleep debt, hunger and stress all count; smokers catch more colds.
+- **One fever:** an illness's fever and an infected wound's add up (the worst in full, the rest at half). Past the top, the fever itself drains health, so two bad ones together can kill. An illness's fever also lets a wound infection grow faster. Every system that reacts to a fever (sleep, migraines, seizures, MS, the heart, blood sugar, asthma, hallucinations, burnout) reacts to an illness's too.
+- **Medicine eases the symptoms, not the illness:** Pink Stomach Relief (bismuth: nausea, cramps, the runs), Motion Sickness Tablets (dimenhydrinate: nausea, drowsy), Promethazine (prescription: most of the nausea, very drowsy), Night-Time Cold and Flu Liquid (fewer coughs and sneezes, a lower fever, puts you to sleep), Daytime Cold and Flu Capsules (the same without the sleep), DM Cough Syrup (fewer coughs). Antihistamines help a cold a little. Painkillers and the two cold medicines bring a fever down, but not the danger of one past the top.
+- **Herbs help a little, for 3 hours** (eaten, or in a mug of tea or a dish): Lemongrass, ginger or mint for nausea, chamomile for cramps, Common Mallow, thyme or honey for the cough, Black Sage or honey for aches and a sore throat. Gentler than the medicine, and the only help on a primitive run.
+- **The health panel** tells you what you have by First Aid: the signs, a guess, the name and how it is going, then how long it has left (see [What First Aid tells you](#what-first-aid-tells-you)).
+- Sandbox (Health page): Catchable Illness, Illness Frequency, and each illness on its own. Off: the game's own cold and food sickness.
+
 ### Wound care
 
 - **Bandages** wear out over about a day, faster wet and faster still as blood soaks through. Spent, a bandage only halves a bleed and invites infection, and you are told to change it.
@@ -756,6 +794,7 @@ The health panel's wound list is written for the examiner's First Aid level: you
 - **3 to 5:** the game's own detail, plus infected, a dressing wearing thin, a badly set bone and rough stitches.
 - **6 to 8:** how far an infection has got and how stitches are holding.
 - **9 and 10:** an infection that has not shown yet, and how far a break has healed.
+- **Illness** (a section under Blood): at 0 to 2 the signs, at 3 to 5 a guess (a stomach bug and food poisoning look the same), at 6 to 8 the name, viral or bacterial, the day and the fever to a tenth of a degree, at 9 and 10 how long it has left and what is still brewing.
 - Wraps whichever list drawing is installed, so it works over mods that replace it (NestedHealthInfo), and leaves the debug view alone.
 
 ### Concussion

@@ -6,8 +6,12 @@ require "DanTraits"
 -- SpiffBoy makes vanilla's Base.VideoGame a working console. Playing opens its
 -- SpiffBoyHandheldWindow (one per local player, SpiffBoyHandheldWindow.forPlayer),
 -- and every real second it is on screen and powered SpiffBoy.Mood.applySecond
--- takes boredom and unhappiness off. A hit puts it away (hidden, still running
--- in the pocket); its put-away is what this file uses too.
+-- takes boredom and unhappiness off. A hit puts it away (the window closes, the
+-- game keeps running); its put-away is what this file uses too. Since its
+-- 2026-10-31 engine the running game is a SpiffBoyConsoleInstance (the window's
+-- .instance; SpiffBoyConsoleInstance.hostedBy lists a player's) that runs on in
+-- a bag, on the floor, in a crate or a car. The older engine kept it all on the
+-- window, hidden in the pocket; both are read.
 --
 -- The screen. DanTraits_ScreenTime(player) is nil, "screen" (powered and on
 -- screen: the boot logo, a crash, no cartridge) or "game" (a cartridge's game
@@ -36,14 +40,16 @@ require "DanTraits"
 -- "game": practice, not play).
 --
 -- The batch-2 cartridges (plans/cartridges-batch-2.md), each read or fed once a
--- game minute while its game runs, shown or in the pocket (gameOf):
+-- game minute while its game runs, shown or put away, wherever the console is
+-- (gameOf; not while SpiffBoy has it paused):
 --   Steady        writes vitality.tremor and vitality.slow (0..1) from the
 --                 character: drink, withdrawal shakes, a diabetic low, an MS
 --                 flare, panic, an adrenaline rush, caffeine withdrawal (Steady
 --                 Hands halves it, unless the hands are shaking); concussion,
 --                 drink, tiredness, a hangover, sumatriptan's day after
 --   Spiffo Walk   writes vitality.steps (tiles walked on foot x SB.WALK_STEP,
---                 counted only while it runs, d.cwSteps) and vitality.day;
+--                 counted only while it runs on the character, d.cwSteps) and
+--                 vitality.day;
 --                 its goalMet is Strain's comfort "walk", once a day
 --   First Aid Quiz  a finished round of SB.QUIZ_PASS or more, once a day, gives
 --                 First Aid SB.QUIZ_XP experience under level SB.QUIZ_LEVEL
@@ -103,15 +109,45 @@ local function shown(w)
     return w ~= nil and not w.closing and not w.hidden
 end
 
+-- The running console behind a window. Since SpiffBoy's 2026-10-31 engine the
+-- game lives on a SpiffBoyConsoleInstance (window.instance) that keeps running
+-- in a bag, on the floor, in a crate or a car; putting it away closes the window.
+-- Before that it all sat on the window, hidden in the pocket.
+local function consoleOf(w)
+    if type(w) ~= "table" then return nil end
+    return type(w.instance) == "table" and w.instance or w
+end
+
+-- the consoles this player is running, shown or not
+local function consolesOf(player)
+    local I = SpiffBoyConsoleInstance
+    if installed and type(I) == "table" and type(I.hostedBy) == "function" and player then
+        local list = nil
+        pcall(function() list = I.hostedBy(player:getPlayerNum()) end)
+        return type(list) == "table" and list or {}
+    end
+    local w = windowOf(player)
+    return w and { w } or {}
+end
+
+-- in the character's own inventory (old engine: always)
+local function carried(c)
+    return type(c.anchor) ~= "table" or c.anchor.kind == "player"
+end
+
+-- its cartridge's game running: past the boot logo, not crashed or frozen
+local function running(c)
+    local rt = c.runtime
+    return not c.closing and c.powered and c.definition ~= nil and not c.boot and not c.gameMissing
+        and c.glitch == nil and c.linkLost ~= true and rt ~= nil and rt.game ~= nil and not rt.crash
+end
+
 -- nil, "screen" or "game", and the cartridge's item type while a game runs
 local function screenOf(player)
     local w = windowOf(player)
-    if not shown(w) or not w.powered then return nil end
-    local rt = w.runtime
-    local frozen = w.glitch ~= nil or w.linkLost == true
-    if w.definition and not w.boot and not w.gameMissing and not frozen and rt and rt.game and not rt.crash then
-        return "game", w.definition.item
-    end
+    local c = shown(w) and consoleOf(w)
+    if not c or c.closing or not c.powered then return nil end
+    if running(c) then return "game", c.definition.item end
     return "screen"
 end
 
@@ -124,8 +160,8 @@ end
 function DanTraits_StillWaterCalm(player)
     local kind, itemType = screenOf(player)
     if kind ~= "game" or itemType ~= STILL_WATER then return 0 end
-    local w = windowOf(player)
-    local game = w and w.runtime and w.runtime.game
+    local c = consoleOf(windowOf(player))
+    local game = c and c.runtime and c.runtime.game
     local v = type(game) == "table" and game.vitality
     if type(v) ~= "table" or v.active ~= true then return 0 end
     local c = tonumber(v.calm) or 0
@@ -133,15 +169,18 @@ function DanTraits_StillWaterCalm(player)
     return c > 1 and 1 or c
 end
 
--- the vitality table of this cartridge's game while it runs, shown or in the pocket
-local function gameOf(player, itemType)
-    local w = windowOf(player)
-    if not w or w.closing or not w.powered or not w.definition or w.definition.item ~= itemType then return nil end
-    local rt = w.runtime
-    if w.boot or w.gameMissing or w.glitch ~= nil or w.linkLost == true or not rt or rt.crash then return nil end
-    local v = type(rt.game) == "table" and rt.game.vitality
-    if type(v) ~= "table" then return nil end
-    return v
+-- the vitality table of this cartridge's game while it runs, shown or put away
+-- (paused by SpiffBoy for want of room: not running); onPerson: only a console
+-- the character carries (a pedometer on the shelf counts no steps)
+local function gameOf(player, itemType, onPerson)
+    for _, c in ipairs(consolesOf(player)) do
+        if type(c) == "table" and not c.paused and running(c) and c.definition.item == itemType
+            and (not onPerson or carried(c)) then
+            local v = type(c.runtime.game) == "table" and c.runtime.game.vitality
+            if type(v) == "table" then return v end
+        end
+    end
+    return nil
 end
 DanTraits_SpiffBoyGameOf = gameOf
 
@@ -322,7 +361,7 @@ end
 local function cartridgesMinute(player, d)
     local v = gameOf(player, STEADY)
     if v then v.tremor, v.slow = DanTraits_SteadyTremor(player, d), DanTraits_SteadySlow(player, d) end
-    v = gameOf(player, WALK)
+    v = gameOf(player, WALK, true)
     if v then walkMinute(player, d, v) else d.cwX, d.cwY = nil, nil end
     v = gameOf(player, QUIZ)
     if v then quizMinute(player, d, v) end

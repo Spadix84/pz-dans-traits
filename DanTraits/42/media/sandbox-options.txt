@@ -54,6 +54,30 @@ option DanTraits.SunburnEnabled
 option DanTraits.DehydrationEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsDehydrationEnabled,}
 
+option DanTraits.IllnessEnabled
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessEnabled,}
+
+option DanTraits.IllnessFrequency
+{type = integer, min = 0, max = 300, default = 100, page = DanTraitsHealth, translation = DanTraitsIllnessFrequency,}
+
+option DanTraits.IllnessCold
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessCold,}
+
+option DanTraits.IllnessStomachBug
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessStomachBug,}
+
+option DanTraits.IllnessFoodPoisoning
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessFoodPoisoning,}
+
+option DanTraits.IllnessFlu
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessFlu,}
+
+option DanTraits.IllnessPneumonia
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessPneumonia,}
+
+option DanTraits.IllnessStrep
+{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessStrep,}
+
 option DanTraits.MedSideEffectChance
 {type = integer, min = 0, max = 100, default = 3, page = DanTraitsHealth, translation = DanTraitsMedSideEffectChance,}
 

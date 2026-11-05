@@ -196,7 +196,7 @@ local function ironPillsMenu(playerNum, context, items)
 end
 
 -- The Age 2.0 bottles (2026-10-31): allopurinol and colchicine (Gout), levothyroxine
--- (Underactive Thyroid), antihistamines (Hay Fever). One option each in place of the
+-- (Underactive Thyroid), antihistamines (Hay Fever); and the illness medicines. One option each in place of the
 -- vanilla pill option, greyed when the bottle is empty; the pill action tells the
 -- medication system (DanTraits_Meds.lua) by the item's type.
 local AGE2_PILLS = {
@@ -204,6 +204,13 @@ local AGE2_PILLS = {
     { item = "DanTraits.Colchicine", take = "ContextMenu_DanTraits_TakeColchicine" },
     { item = "DanTraits.Levothyroxine", take = "ContextMenu_DanTraits_TakeLevothyroxine" },
     { item = "DanTraits.Antihistamines", take = "ContextMenu_DanTraits_TakeAntihistamine" },
+    -- the illness medicines (2026-11-02)
+    { item = "DanTraits.BismuthLiquid", take = "ContextMenu_DanTraits_TakeDoseLiquid" },
+    { item = "DanTraits.Dimenhydrinate", take = "ContextMenu_DanTraits_TakeTablet" },
+    { item = "DanTraits.Promethazine", take = "ContextMenu_DanTraits_TakeTablet" },
+    { item = "DanTraits.NightColdLiquid", take = "ContextMenu_DanTraits_TakeDoseLiquid" },
+    { item = "DanTraits.DayColdCapsules", take = "ContextMenu_DanTraits_TakeTablet" },
+    { item = "DanTraits.CoughSyrup", take = "ContextMenu_DanTraits_TakeDoseLiquid" },
 }
 local function age2PillsMenu(playerNum, context, items)
     local playerObj = getSpecificPlayer(playerNum)

@@ -24,6 +24,142 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `workshop/maplegend/make_images.py` from the game's own symbol icons). `deploy.py --workshop`
   takes a mod name now; plain `--workshop` is still the main mod.
 
+## 1.5.2 - 2026-11-01
+
+### New
+
+- **Catchable illness** (`DanTraits_Illness.lua`, minute order 22.5; `plans/illness.md`;
+  `tests/test_illness.lua`): a common cold, a stomach bug and food poisoning, for everyone, from
+  one data table and one engine: caught (hidden 12-36 h, 12-48 h, 6-24 h), a course (3-7 days,
+  1-3 days, 1-2 days) whose severity climbs to a peak rolled at onset and eases, then immunity
+  (3-5 weeks, 4-8 weeks, none). The course runs x1.3 asleep (x1.5 asleep at home), x0.8 running or
+  sprinting; antibiotics run a bacterial one x2.5 and do nothing for a viral one. **The cold takes
+  over the game's:** its wet-and-cold meter (`catchACold`) catches one at 90 (a 75% chance, then
+  the incubation) instead of at 100 at once, plus 0.04% an hour (x2 November to March); we set
+  `hasACold` / `coldStrength` (20 to 70) from the course, so the game's sneezes and coughs and its
+  moodle stay; a cold anything else starts is adopted. **Stomach bug:** a meal eaten with dirty or
+  bloody hands (12% a full meal at the filthiest). **Food poisoning:** rotten 30% (cooked 15%), raw
+  meat, fish or eggs 35%, stale 4% a portion (Iron Gut x0.5, Weak Stomach x1.5), on top of the
+  game's own queasiness. Symptoms through the existing primitives: food sickness floors (50, 70),
+  thirst (up to x3 and x5: drink, or the game's Dying of Thirst kills), cramps (pain floors 15,
+  25), fevers (0.25 in a bad cold only, 0.15, 0.35), tiredness. Resistance x every chance: Prone
+  to Illness 1.3, Resilient 0.7, Vitality, age (the Age table's new `illness` row: 20s 0.85, 40s
+  1.15, 50s 1.35; `DanTraits_AgeIllness`), sleep debt, hunger and stress up to 1.3, 1.2, 1.2,
+  Smoker 1.15 for the cold. An illness's fever also makes a wound infection grow x(1 + 0.5 fever)
+  and clear x(1 - 0.5 fever). Sandbox (Health page): Catchable Illness, Illness Frequency (0-300%),
+  Common Cold, Stomach Bug, Food Poisoning. Console `ill [cold|stomach|food [now]] | ill clear`.
+- **The flu, pneumonia and strep throat** (illness phase 2, `DanTraits_Illness.lua`): three more
+  rows. The flu: 0.03% an hour November to March only, hidden 1-3 days, 5-10 days of fever 0.7,
+  aches (pain 30) and endurance held under half; immune 120-150 days after. Pneumonia: while a
+  cold or the flu runs, 0.04% or 0.1% an hour x its severity, x3 running or sprinting, x2 soaked,
+  x1.5 chilled (body under 36 C), x1.5 Smoker, x1.5 Asthma; 10-21 days of fever 0.8, chest pain,
+  endurance held to 0.4 and health 0.08 a minute at full severity (from 0.7), antibiotics x2.5. Strep
+  throat: 0.05% an hour while a cold runs (0.005% otherwise), 7-10 days of fever 0.4 and a sore
+  throat. The flu and pneumonia peak x1.3 for Asthma, Heart Condition, Smoker, Diabetes and the
+  50s (`DanTraits_IllnessAtRisk`). The cold, the flu and pneumonia all drive the game's cold, the
+  worst of them. The flu at its peak with pneumonia stacks to a dangerous fever (1.15); antibiotics
+  bring it back under 1. New engine fields `endCap`, `health`/`healthFrom`, `risky`, `shows`, `gut`;
+  the illnesses' aches are one pain floor, the worst. Sandbox: Flu, Pneumonia, Strep Throat.
+  Health panel: their own signs and guesses (aches and chills; a rattling cough; a very sore
+  throat).
+- **One fever** (`DanTraits_Fever.lua`, minute order 23.2; `tests/test_fever.lua`): every fever is a
+  source (`DanTraits_FeverSource`: wound infection and each illness); the total is the worst plus
+  half the rest, and this is now the only writer of the game's `SICKNESS` (0.2 to 0.9, held up and
+  down as Infection held it), the fever's tiredness and thirst. **Past a total of 1 the fever
+  itself drains health** (0.1 to 0.8 a minute up to 1.5, one notice), so two bad fevers together
+  can kill. The nine systems that react to a fever (Sleep, Migraine, Heart, Epilepsy, MS,
+  Hallucinations, Asthma, Diabetes, Strain) read `DanTraits_Fever` instead of the infection's own,
+  so an illness's fever does what an infection's did. The antibiotic level moved here
+  (`DanTraits_AntibioticDose` / `DanTraits_AntibioticOn`, key `infAbx` kept, decaying at order
+  22.9), shared by the infected wound and a bacterial illness; with wound infection off the game's
+  pill still counts for illness. Fever reducers (the game's painkillers, the two cold medicines)
+  take 40% off the felt fever (SICKNESS, the temperature, the readers) but not the danger past 1
+  (`DanTraits_FeverRaw`). A save mid-fever hands Infection's held SICKNESS over once.
+- **Six medicines, all on a 1993 shelf** (`DanTraits_Meds.lua` rescue drugs; items, icons, loot,
+  take options): Pink Stomach Relief (bismuth subsalicylate liquid: nausea x0.6, cramps x0.6, the
+  runs' thirst x0.7), Motion Sickness Tablets (dimenhydrinate: nausea x0.5, drowsy), Promethazine
+  (prescription: nausea x0.25, very drowsy), Night-Time Cold and Flu Liquid (acetaminophen,
+  dextromethorphan, doxylamine: the cold shown x0.5, fever reducer, puts you to sleep), Daytime
+  Cold and Flu Capsules (acetaminophen, dextromethorphan, pseudoephedrine: the cold x0.6, fever
+  reducer, jittery side effect), DM Cough Syrup (dextromethorphan, guaifenesin: the cold x0.5).
+  Antihistamines ease a cold x0.8. They ease symptoms, never the course
+  (`DanTraits_IllnessRelief`); each has a too-many effect. Over the counter they turn up like
+  antihistamines (promethazine like the other prescriptions).
+- **Herbs ease illness too** (`DanTraits_Illness.lua`, `HERBS`): the game's own herbs, eaten or as
+  a spice in a hot drink or a dish, give a gentler relief for 3 hours, the strongest of each kind
+  counting: Lemongrass nausea x0.7, Ginger Root x0.8, pickled ginger and mint x0.85; Chamomile
+  cramps x0.8; Common Mallow the cold x0.8, Thyme x0.9; Honey the cold and aches x0.9; Black Sage
+  aches x0.8 (a new `ache` relief kind on every illness's pain floor, a sore throat included).
+  The game's own effect still lands once, but the illness floors used to undo it within minutes,
+  so a primitive run had no relief at all. A notice ("That helps, a little") when it touches
+  something running; `ill` lists the herbs working.
+- **The health panel's Illness section** (`DanTraits_HealthPanel.lua`), by First Aid: 0-2 the
+  signs (a runny nose and a cough, an upset stomach, feverish), 3-5 a guess (a stomach bug and food
+  poisoning are not told apart, so antibiotics are a gamble), 6-8 the name, viral or bacterial,
+  the day and the way it is going, the fever to a tenth of a degree, 9-10 how long it has left and
+  what is still brewing. Yourself and split-screen only.
+- **Hunted by Sprinters (-16)** (`DanTraits_Hunted.lua`, `huntedsprint`): Hunted at twice the
+  points, every zombie it sends a sprinter. Same clock (horde at 2.75 h, the house calling for 4 h,
+  the helicopter at 4 h, three dawn packs of 15). `createHordeFromTo` only queues virtual zombies
+  that are made real later at the world's speed, so this one makes them real at the same loaded
+  spot (`addZombiesInOutfit`; the spot must be free to stand on, else the next nearer distance),
+  sets each `sprint1-3` + `setSpeedTypeFromWalkType` (as the phantom charge does) and paths it to
+  the house (dawn: to the player). The sprint is set once: a sprinter that unloads or is reloaded
+  from a save comes back at the world's speed. Its own arrival notice. Mutually exclusive with
+  Hunted (both script blocks say so); the minute system's gate takes either trait; the `hunted`
+  console commands send sprinters for this character. Icon: the reticle gone red. test_hunted
+  section 9.
+- **Swarmed (-8)** (`DanTraits_Swarmed.lua`, `swarmed`, minute order 60, `DisabledInMultiplayer`;
+  `tests/test_swarmed.lua`): the start cell (256 tiles a side) holds four times the zombies. The
+  game keeps the population in native code with no per-cell count for Lua, so it is measured: a
+  game minute after waking the cell is surveyed in 8 x 8 blocks of 32 tiles (a chunk-centre square
+  per chunk tells loaded ground; `getCell():getZombieList()` the zombies). A block at least half
+  loaded keeps its own count, scaled to the whole block; the rest take the loaded blocks' density.
+  Each block gets three more per zombie (at least 60 over the cell), in groups of up to 4 through
+  `createHordeInAreaTo` (virtual zombies, an 8-tile patch, walking a few tiles inside it; unlike
+  `createHordeFromTo` it has no loaded-ground guard in the Java). Nothing lands within 12 tiles of
+  where you woke or 3 of that building; a group with no room in its block goes elsewhere in the
+  cell. Once, in mod data (swCell, swHome, swHouse, swDone, swSeen, swAdded). Console
+  `swarmed [now]`. Icon: five red-eyed heads. Unverified in game: that the population manager
+  takes zombies on unloaded ground, and how many zombies a fresh start has loaded a minute in.
+
+### Changed
+
+- **SpiffBoy's new console engine** (`DanTraits_SpiffBoy.lua`): SpiffBoy's 2026-10-31 update
+  (its author's heads-up on the Workshop page) moved the running game off the window onto a
+  `SpiffBoyConsoleInstance` (`window.instance`) that keeps running in a bag, on the floor, in a
+  crate or a car; putting it away now closes the window (`forPlayer` gives nil) instead of hiding
+  it. Read straight off the window, the pcall guards kept it from crashing but screen time never
+  saw a game (no old-games relief scaling, no Strain "game" comfort, no Still Water calm) and the
+  batch-2 cartridges stopped being fed once put away. The screen is now read through the shown
+  window's instance, and the cartridges from every console `SpiffBoyConsoleInstance.hostedBy`
+  lists (not one SpiffBoy has paused for room). Spiffo Walk counts steps only from a console the
+  character carries (`anchor.kind == "player"`); one left on a shelf forgets the place, so the
+  walk back is not counted either. The old engine (everything on the window) is still read.
+  test_spiffboy section 12.
+- **Brittle: any age again** (`DanTraits_AgeRules.lua`): Age 2.0 locked it out of the 20s; the
+  row is gone, so the creation screen offers it to every age and its description loses the
+  "Age: 30s, 40s, 50s" line. The band table's fracture rows stay (x1.25 in the 40s, x1.5 in
+  the 50s). The Guide's Age page and `docs/age.md` say so.
+
+### Fixed
+
+- **Slow to wake no longer leaves you Drowsy all day (20s).** A night that ended before seven
+  set tiredness to the Drowsy edge for the first hour and never gave it back: tiredness only
+  falls in sleep, so the character stayed Drowsy until the next night. The grogginess is now
+  lent, not spent (`awSlowAdd` in `DanTraits_AgeWants.lua`): it starts at the Drowsy edge and
+  fades back to the character's own tiredness over the hour, and every bit is taken back at the
+  end, at a coffee's worth of caffeine, back to sleep, with Age Wants off or out of the 20s. The
+  game's own rise while awake is kept under it.
+- **Clotting powder's option is back on the health panel with Replace Bandage loaded.** The
+  "Pack with clotting powder" option found its menu by catching `ISContextMenu.get` for the
+  length of the game's `doBodyPartContextMenu`; Replace Bandage wraps the same method and
+  catches the same call through the getter it saved at load, so with its layer inside ours the
+  call never reached us and the option was never added (no error, the menu just lacked it). The
+  menu is now the player's own one, read by `getPlayerContextMenu` after the original has run,
+  taken only when it was built for this call (its request position matches); the catch stays as
+  a fallback (`DanTraits_ClotMenu.lua`; `tests/test_clotmenu.lua`).
+
 ## 1.5.1 - 2026-10-31
 
 ### Changed
