@@ -1,4 +1,6 @@
-[h1]1.5.2: Hunted by Sprinters, Swarmed[/h1]
+[h1]1.5.2: you can get sick; Hunted by Sprinters, Swarmed[/h1]
+Safe mid-save: nobody starts ill and no immunity is assumed, a wound infection's fever carries straight over, the new sandbox options start at their defaults (illness on, every one of them, normal frequency: Vitality: Health), and the Guide's companion mods page reads the mods you have loaded. Every detail is in CHANGELOG.md on GitHub.
+
 [h2]New[/h2]
 [list]
 [*][b]You can get sick.[/b] A cold (get wet and cold, and it comes a day later: sneezing and coughing zombies hear), the flu (November to March, once a winter: fever, aches, no stamina), pneumonia (a cold or the flu gone to the chest, likeliest if you keep running, stay soaked or smoke: antibiotics, or weeks), strep throat (after a cold), a stomach bug (eat with dirty hands) and food poisoning (rotten, raw or stale food; the thirst is what kills). Rest, sleep at home and drink to get over them; running about drags them out. Tired, hungry, stressed, older or run down, you catch more. Sandbox: on/off, how often, and each one.

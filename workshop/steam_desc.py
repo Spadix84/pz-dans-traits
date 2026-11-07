@@ -31,7 +31,7 @@ def steam_count(lines):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     check = "--check" in sys.argv[1:]
-    folder = os.path.join(HERE, args[0]) if args else HERE
+    folder = os.path.abspath(args[0]) if args else HERE
     desc_path = os.path.join(folder, "description.txt")
     ws_path = os.path.join(folder, "workshop.txt")
     with io.open(desc_path, encoding="utf-8") as f:

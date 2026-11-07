@@ -38,7 +38,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `workshop/maplegend/make_images.py` from the game's own symbol icons). `deploy.py --workshop`
   takes a mod name now; plain `--workshop` is still the main mod.
 
-## 1.5.2 - 2026-11-01
+## 1.5.2 - 2026-11-07
 
 ### New
 

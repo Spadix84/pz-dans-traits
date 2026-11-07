@@ -1,0 +1,29 @@
+[h1]1.5.2: you can get sick; Hunted by Sprinters, Swarmed[/h1]
+Safe mid-save: nobody starts ill and no immunity is assumed, a wound infection's fever carries straight over, the new sandbox options start at their defaults (illness on, every one of them, normal frequency: Vitality: Health), and the Guide's companion mods page reads the mods you have loaded. Every detail is in CHANGELOG.md on GitHub.
+
+[h2]New[/h2]
+[list]
+[*][b]You can get sick.[/b] A cold (get wet and cold, and it comes a day later: sneezing and coughing zombies hear), the flu (November to March, once a winter: fever, aches, no stamina), pneumonia (a cold or the flu gone to the chest, likeliest if you keep running, stay soaked or smoke: antibiotics, or weeks), strep throat (after a cold), a stomach bug (eat with dirty hands) and food poisoning (rotten, raw or stale food; the thirst is what kills). Rest, sleep at home and drink to get over them; running about drags them out. Tired, hungry, stressed, older or run down, you catch more. Sandbox: on/off, how often, and each one.
+[*][b]Fevers add up.[/b] An illness and an infected wound make one fever, and two bad ones together can kill: pneumonia on top of the flu needs antibiotics fast. A sick body also fights a wound infection worse.
+[*][b]Six 1993 medicines:[/b] pink stomach relief, motion sickness tablets, promethazine, night-time and daytime cold and flu medicine, and DM cough syrup. They ease the symptoms (fewer coughs, less nausea, a lower fever), not the illness. The game's own herbs help a little too, eaten or in a tea: lemongrass, ginger or mint for nausea, chamomile for cramps, mallow, thyme or honey for the cough, black sage for aches. Antibiotics help pneumonia, strep and food poisoning, not a cold or the flu.
+[*][b]The health panel tells you what you have[/b], as well as your First Aid allows: the signs, a guess, the name and how long it has left.
+[*][b]Hunted by Sprinters (-16):[/b] Hunted, and every one of them runs. The horde on the house, the dawn packs, all sprinters: when the warning comes they are already there, so be gone before hour three. Not with Hunted. Singleplayer only.
+[*][b]Swarmed (-8):[/b] the neighbourhood you wake in is crawling: four times the zombies in your starting map cell (256 tiles a side), counted from the ground around you a minute in and added across the whole cell, never right on top of you. Get out of it, or clear it. Singleplayer only.
+[*][b]The companion mods in the Guide.[/b] The Guide tab's companion mods page now says which you have installed and which are on the Workshop, and each one you have adds a page of its own after it: Dan's Vanilla Fixes, Base Unloader, Map Legend, the Slow Cooker, Vitality Cartridges, Vitality Challenges. Any mod can add a page the same way.
+[*][b]For modders: an API.[/b] API.md and DanTraits_API.lua in the mod folder. Read a character's traits, Vitality, burnout, blood, illness and fever; add a Guide page; mark food as home cooking; adjust the values this mod computes; run on its clocks. Loaded with pcall(require), so your mod runs with or without this one.
+[/list]
+
+[h2]Changed[/h2]
+[list]
+[*][b]Home cooking from the Slow Cooker mod counts.[/b] Anything served from its crock moves your diet score half again as much, and each of its named dishes counts as variety of its own. Neither mod needs the other.
+[*][b]Lighter with Wound Damage off.[/b] With that sandbox option off the mod gives the game's wound damage back every frame, and it was checking all seventeen body parts to do it, hurt or not: the whole of what the profiler showed (thanks again to Arkantos Eli). It now asks the game once whether you are injured at all, and only then looks at the wounded parts. With the option on (the default) nothing changes.
+[*][b]Works with SpiffBoy's new console engine.[/b] Since SpiffBoy's update a console keeps running wherever you leave it; play time, the mood relief of a fresh game, Still Water and the Vitality cartridges read it again (they had quietly stopped). Spiffo Walk counts your steps only while you carry the console. Thanks to OhHoop for the heads-up.
+[*][b]Brittle can be taken at any age again.[/b] It was locked out of the 20s in 1.5.0; it still gets worse with age (a fracture is a quarter likelier in your 40s, half again in your 50s).
+[/list]
+
+[h2]Fixed[/h2]
+[list]
+[*][b]Revolvers and shotguns reload with a chest rig on.[/b] A bug in the game's own reload script: wearing a chest rig, ALICE belt or shoulder holster with no ammo strap, reloading a revolver or shotgun threw errors every frame and the gun never loaded. Magazine guns were never affected.
+[*][b]Slow to wake no longer lasts all day.[/b] In your 20s, a night that ended before seven left you Drowsy until the next night instead of for an hour. You now wake groggy and it fades over the first hour (a coffee or going back to sleep ends it at once), and the tiredness it added goes with it.
+[*][b]Clotting powder works alongside Replace Bandage.[/b] With that mod loaded, right-clicking a bleeding part in the health panel showed no "Pack with clotting powder": both mods hooked the menu the same way and its hook hid ours. The option is back whatever order the two load in.
+[/list]

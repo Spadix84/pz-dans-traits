@@ -2,7 +2,7 @@
 <html><head><meta charset="utf-8"><title>Vitality Project: how the systems fit together</title>
 <style>
   html, body { margin: 0; background: #1b2838; color: #e6edf3; font-family: "Segoe UI", Arial, sans-serif; }
-  body { width: 1600px; height: 2440px; position: relative; overflow: hidden; }
+  body { width: 1600px; height: 2560px; position: relative; overflow: hidden; }
   h1 { position: absolute; left: 40px; top: 22px; margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0.2px; }
   .sub { position: absolute; left: 40px; top: 62px; font-size: 16px; color: #8fa3b7; }
   .col-title { position: absolute; top: 108px; font-size: 14px; text-transform: uppercase; letter-spacing: 1.5px; color: #66c0f4; }
@@ -13,7 +13,7 @@
   .box b { display: block; font-size: 16px; font-weight: 600; color: #ffffff; margin-bottom: 3px; }
   .box span { display: block; font-size: 13px; line-height: 1.3; color: #c6d4df; }
   .box em { display: block; font-size: 12px; line-height: 1.3; color: #8fc9f0; font-style: normal; margin-top: 4px; }
-  svg { position: absolute; left: 0; top: 0; width: 1600px; height: 2440px; pointer-events: none; }
+  svg { position: absolute; left: 0; top: 0; width: 1600px; height: 2560px; pointer-events: none; }
   .foot { position: absolute; left: 40px; bottom: 16px; font-size: 13px; color: #8fa3b7; }
 </style></head>
 <body>
@@ -37,6 +37,7 @@
 <div id="s2" class="box sys" style="left:500px"><b>Sleep and the night's score</b><span>The light on your square sets how deep you sleep and whether it wakes you. Each night is scored: hours, waking, light, fever, the clothes you sleep in.</span><em>Also feeds: Vitality, Spoons, Migraines, Depression, Epilepsy, Hallucinations.</em></div>
 <div id="s3" class="box sys" style="left:500px"><b>Blood</b><span>Bleeding drains blood instead of health, by wound, place and dressing; an open wound still hurts its body part until dressed (a sandbox switch). Pale, light-headed, shock and passing out, bleeding out. Volume returns in a day, red cells in a week.</span><em>Also feeds: Fear of Blood, Anaemic, Hemophilia, Good Clotter, Fast Recovery, endurance recovery.</em></div>
 <div id="s4" class="box sys" style="left:500px"><b>Wound infection and antibiotics</b><span>An hourly roll per wound by depth, dressing and dirt. Incubates unseen, climbs, stops healing, brings fever, then sepsis. Antibiotics are a course with a level in the blood.</span><em>Also feeds: the night's score, Migraines, Hallucinations, MS flares, Asthma, blood sugar, Epilepsy.</em></div>
+<div id="s19" class="box sys" style="left:500px"><b>Illness and one fever</b><span>A cold from being wet and cold, the flu each winter, pneumonia on top of either, strep throat, a stomach bug from dirty hands, food poisoning from bad food. Each incubates unseen, climbs to a peak and eases; rest and sleep at home speed it, running drags it out; antibiotics clear the bacterial ones only. Every fever is one: wound infections and illnesses add up, and past the top of the scale it drains health.</span><em>Also feeds: Vitality (resists it), Smoker, Asthma, Heart, Diabetes and the 50s (worse); the night's score, Migraines, Epilepsy, Spoons, Hallucinations, Burnout; six 1993 medicines and the game's herbs ease the symptoms.</em></div>
 <div id="s5" class="box sys" style="left:500px"><b>Wound care and what First Aid tells you</b><span>Bandages wear out, unstitched wounds heal slowly and reopen, stitches tear; stitching and splinting are First Aid rolls. Clotting powder stops a small bleed. The health panel is written for the examiner's level.</span><em>Also feeds: Infection (open or spent dressings), Blood (bandages, stitches), pain.</em></div>
 <div id="s6" class="box sys" style="left:500px"><b>Concussion and passing out</b><span>Falls, crashes and head hits: headache, nausea, dizzy falls, knockouts, a headache that comes back days later. Shock and faints put you on the floor in real time.</span><em>Also feeds: Migraines, Hallucinations, Epilepsy, light waking you.</em></div>
 <div id="s7" class="box sys" style="left:500px"><b>Pain</b><span>Every lasting ache (hangover, migraine, withdrawal, gut flares, a gout flare, MS heat, concussion) is held on one pain stat. Drink dulls it by how drunk you are; painkillers blank it for a while.</span><em>Also feeds: Depression (mood), Spoons (spent faster), Arthritis slips.</em></div>
@@ -57,8 +58,8 @@
 <div id="o3" class="box out" style="left:1260px"><b>Notices over the head</b><span>Every turn for the worse or better is said once, ten seconds over the head, and published as a story event for other mods.</span></div>
 <div id="o4" class="box out" style="left:1260px"><b>The stats you already watch</b><span>Endurance recovery, pain, mood, stress, panic, tiredness, thirst, sickness, and carry weight.</span></div>
 
-<svg id="arrows" viewBox="0 0 1600 2440"></svg>
-<div class="foot">Vitality Project 1.5.0 for Project Zomboid Build 42. Singleplayer. Most systems have a switch on the Vitality sandbox pages.</div>
+<svg id="arrows" viewBox="0 0 1600 2560"></svg>
+<div class="foot">Vitality Project 1.5.2 for Project Zomboid Build 42. Singleplayer. Most systems have a switch on the Vitality sandbox pages.</div>
 
 <script>
 // stack each column with even gaps between the top and the bottom line
@@ -69,9 +70,9 @@ function stack(ids, top, bottom) {
   let y = top;
   for (const e of els) { e.style.top = y + "px"; y += e.offsetHeight + gap; }
 }
-stack(["i1","i2","i3","i4","i5","i6","i8","i7"], 170, 2370);
-stack(["s1","s2","s3","s4","s5","s6","s7","s8","s9","s10","s11","s13","s14","s15","s16","s17","s18","s12"], 145, 2390);
-stack(["o1","o2","o3","o4"], 300, 2230);
+stack(["i1","i2","i3","i4","i5","i6","i8","i7"], 170, 2490);
+stack(["s1","s2","s3","s4","s19","s5","s6","s7","s8","s9","s10","s11","s13","s14","s15","s16","s17","s18","s12"], 145, 2510);
+stack(["o1","o2","o3","o4"], 300, 2350);
 
 const svg = document.getElementById("arrows");
 function side(id, which) {
@@ -101,6 +102,7 @@ arrow("i7","s13",blue); arrow("i7","s14",blue); arrow("i7","s15",blue);
 arrow("i2","s16",blue); arrow("i1","s17",blue); arrow("i3","s16",blue,1.2);
 arrow("i3","s13",blue,1.2); arrow("i2","s14",blue,1.2); arrow("i5","s14",blue,1.2);
 arrow("i8","s18",blue); arrow("i4","s18",blue,1.2); arrow("i3","s18",blue,1.2);
+arrow("i5","s19",blue); arrow("i1","s19",blue); arrow("i3","s19",blue,1.2); arrow("i2","s19",blue,1.2); arrow("i6","s19",blue,1.2);
 // systems -> what you see: one bracket, drawn as lines from the column edge
 const sysRight = side("s1","right").x + 8;
 const yTop = side("s1","right").y, yBot = side("s12","right").y;

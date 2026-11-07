@@ -16,7 +16,7 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 MEDIA = os.path.join(HERE, "..", "..", "DanTraits", "42", "media")
 EN = os.path.join(MEDIA, "lua", "shared", "Translate", "EN")
-VERSION = "1.5.0"
+VERSION = "1.5.2"
 
 RETIRED = {"jinxed", "ironstomach", "bouncesback", "green"}
 # items kept in the script for old saves only
@@ -221,7 +221,7 @@ def main():
         while n < len(tip) and tip[n - 1].endswith(","):
             n += 1
         items.append(cell(icon_url("textures", f), name, desc=ITEM_DESC.get(iid) or " ".join(tip[:n])))
-    write("items", title="Items", cols=5, gap=4, box=44, img=40, ds=12,
+    write("items", title="Items", cols=6, gap=4, box=40, img=36, ds=11,
           h1="The pharmacy <span>and the rest of the kit</span>",
           sub="Medicine you have to find, ration and keep on you, and what you need for insulin, laundry, training and a quiet head.",
           cells="\n".join(items),

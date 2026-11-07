@@ -1,0 +1,9 @@
+[h1]1.1.0: for other mods[/h1]
+[list]
+[*][b]An API.[/b] MapLegend_API.lua and API.md in the mod folder: add a preset, read the entries and what a symbol and colour mean, set and unset a meaning, and a "changed" event. Loaded with pcall(require), so a mod runs with or without Map Legend.
+[*][b]A page in the Vitality Project's Guide tab[/b] when that mod is loaded too: the legend, the editor and the one-legend-for-every-save rule.
+[/list]
+Safe mid-save: your legend is untouched.
+
+[h1]1.0.0[/h1]
+First release: a scrolling legend on the world map, a row for every symbol and colour you have used, a tooltip on each row, click a row to draw with it.
