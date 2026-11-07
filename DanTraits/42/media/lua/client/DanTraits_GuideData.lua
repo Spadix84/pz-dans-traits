@@ -14,6 +14,11 @@
 -- sleephome, burnout, blood, illness, body, medication, food, fitness, laundry, reading,
 -- conditions, age, mods.
 --
+-- The "mods" page is built from DanTraits_GuideData.companions (below) each time
+-- the window opens, so it says which companion mods are installed and which are
+-- on the Workshop. Other mods add pages of their own through DanTraits_GuideExtra
+-- (DanTraits_Guide.lua, API.md); the companions each ship one.
+--
 -- Plain English only: this file is not translated (the tab name, the buttons
 -- and the headers are, in UI.json). Written 2026-10-29.
 
@@ -321,26 +326,75 @@ DanTraits_GuideData.pages = {
     },
     {
         id = "mods", title = "The companion mods",
-        body = {
-            "Five smaller mods from the same project, each on the Workshop on its own and each doing one job.",
-            "",
-            "## Dan's Vanilla Fixes",
-            "Small fixes and conveniences: working cold packs and coolers that keep food fresh, rarity colours on every item name, item info in tooltips (read time, what a thing is for), a collection checklist for books, tapes, CDs and mementos, and store stock that makes sense.",
-            "",
-            "## Base Unloader",
-            "Puts a loot run away for you. Right-click the car or any container, say once where each kind of thing lives (drag, or let it suggest), and the character walks the lot round the base. Draw base zones, tag containers, keep some off limits, and open a base inventory that knows where everything is.",
-            "",
-            "## Map Legend",
-            "A symbol and colour key on the world map so your marks mean something a month later, shared across characters or kept per character; click a row to draw with that symbol.",
-            "",
-            "## Vitality Cartridges",
-            "Games for the SpiffBoy handheld console mod: Still Water (paced breathing that calms a sensory overload and eases stress), Steady (a reflex test that shows what drink, a sugar low or a concussion are doing to you), Spiffo Walk (a pedometer pet), First Aid Quiz (this mod's medicine, and it teaches a little First Aid) and Spiffo Pup (a pet to look after).",
-            "",
-            "## Vitality Challenges",
-            "Scenarios in the Challenges menu: Pile-Up, Nomad (walk to the Louisville tower, no driving, one life) and The Last Broadcast (keep a radio station on air, one show a night, as the listeners grow).",
-        },
+        body = {},   -- built below from DanTraits_GuideData.companions (DanTraits_GuideModsPage)
     },
 }
+
+-- The companion mods, from the same project. id is the mod id (mod.info), workshop
+-- the Steam Workshop item id once published (nil until then), needs another mod
+-- the companion requires. DanTraits_GuideModsPage builds the "mods" page from
+-- this list: each one's blurb and a line saying whether it is installed (the
+-- game's active mod list), on the Workshop, or not yet released; an installed
+-- companion that put a page in DanTraits_GuideExtra is pointed at.
+DanTraits_GuideData.companions = {
+    { id = "DansVanillaFixes", name = "Dan's Vanilla Fixes",
+      blurb = "Small fixes and conveniences: working cold packs and coolers that keep food fresh, rarity colours on every item name, item info in tooltips (read time, uses left, what clothing covers and how it compares), a collection checklist for books, tapes, CDs and mementos, and store stock that makes sense." },
+    { id = "BaseUnloader", name = "Base Unloader",
+      blurb = "Puts a loot run away for you. Right-click the car or any container, say once where each kind of thing lives (drag, or let it suggest), and the character walks the lot round the base. Draw base zones, tag containers, keep some off limits, and open a base inventory that knows where everything is." },
+    { id = "MapLegend", name = "Map Legend", workshop = "3831306437",
+      blurb = "A symbol and colour key on the world map so your marks mean something a month later, shared across characters or kept per character; click a row to draw with that symbol." },
+    { id = "SlowCooker", name = "Slow Cooker",
+      blurb = "A countertop slow cooker with a removable crock: four times slower than a stove, never burns, keeps food from spoiling while it is on, and nine Kentucky home-cooking recipes. Anything from the crock counts as home cooking for Vitality and each dish as variety of its own." },
+    { id = "VitalityCartridges", name = "Vitality Cartridges", needs = "SpiffBoy",
+      blurb = "Games for the SpiffBoy handheld console mod: Still Water (paced breathing that calms a sensory overload and eases stress), Steady (a reflex test that shows what drink, a sugar low or a concussion are doing to you), Spiffo Walk (a pedometer pet), First Aid Quiz (this mod's medicine, and it teaches a little First Aid) and Spiffo Pup (a pet to look after)." },
+    { id = "VitalityChallenges", name = "Vitality Challenges",
+      blurb = "Scenarios in the Challenges menu: Pile-Up, Nomad (walk to the Louisville tower, no driving, one life) and The Last Broadcast (keep a radio station on air, one show a night, as the listeners grow)." },
+}
+
+-- is that mod loaded (the game's active mod list; false when it cannot be asked)
+local function modInstalled(id)
+    local found = false
+    pcall(function() found = getActivatedMods():contains(id) == true end)
+    return found
+end
+DanTraits_GuideModInstalled = modInstalled
+
+-- the page another mod registered for itself, if any
+local function pageOfMod(id)
+    for _, p in ipairs(DanTraits_GuideExtra or {}) do
+        if type(p) == "table" and p.mod == id then return p end
+    end
+end
+
+-- the "mods" page, built now: template is the page in pages above (id, title, picture)
+function DanTraits_GuideModsPage(template)
+    local body = {
+        "Smaller mods from the same project, each doing one job and each working on its own. This mod reaches into them where it helps (the Slow Cooker's meals count as home cooking, a cartridge calms a sensory overload), and the ones that are installed add a page of their own further down this list.",
+        "",
+    }
+    for _, c in ipairs(DanTraits_GuideData.companions) do
+        body[#body + 1] = "## " .. c.name
+        body[#body + 1] = c.blurb
+        local status
+        if modInstalled(c.id) then
+            status = pageOfMod(c.id) and "Installed: its own page is further down this list." or "Installed."
+        elseif c.workshop then
+            status = "On the Workshop: search for \"" .. c.name .. "\" (item " .. c.workshop .. ")."
+        else
+            status = "Not yet on the Workshop."
+        end
+        if c.needs then status = status .. " Needs the " .. c.needs .. " mod." end
+        body[#body + 1] = status
+        body[#body + 1] = ""
+    end
+    body[#body] = nil   -- the trailing blank
+    return { id = template.id, title = template.title, picture = template.picture, body = body }
+end
+
+-- the page as data too (the tab rebuilds it live each time the window opens)
+for i, p in ipairs(DanTraits_GuideData.pages) do
+    if p.id == "mods" then DanTraits_GuideData.pages[i] = DanTraits_GuideModsPage(p) end
+end
 
 -- What's new: shown once per installed version, the first time a game loads after
 -- the update (DanTraits_WhatsNew.lua), and kept as the guide's last page. The
@@ -365,12 +419,21 @@ DanTraits_GuideData.whatsNew = {
         "- Hunted by Sprinters (-16): Hunted at twice the points, and every zombie it sends runs.",
         "- Swarmed (-8): the map cell you start in holds four times the zombies. Stacks with Hunted. Singleplayer only.",
         "",
+        "## The companion mods in this guide",
+        "The companion mods page now says which of them you have installed and which are on the Workshop, and each one you have adds a page of its own after it: Dan's Vanilla Fixes, Base Unloader, Map Legend, the Slow Cooker, Vitality Cartridges, Vitality Challenges. Any mod can add a page the same way.",
+        "",
         "## Changed",
+        "- Home cooking from the Slow Cooker mod counts: anything served from its crock moves your diet score half again as much, and each of its named dishes counts as variety of its own. Neither mod needs the other.",
         "- SpiffBoy's new console engine (its 2026-10-31 update) is supported: screen time, the old-games relief, the burnout comfort and the Vitality Cartridges all read the console wherever it is, in a bag, on the floor or in a car. Spiffo Walk counts steps only from a console you carry.",
         "- Brittle is open to every age again (Age 2.0 had locked it out of the 20s).",
+        "- Lighter with Wound Damage off: with that sandbox option off the mod gives the game's wound damage back every frame, and it was checking all seventeen body parts to do it, hurt or not. It now asks the game once whether you are injured at all. With the option on (the default) nothing changes.",
         "",
         "## Fixed",
-        "A 20s character who woke before seven stayed Drowsy all day: the slow morning now lends the tiredness and takes it back after the hour.",
+        "- Revolvers and shotguns reload with a chest rig on. A bug in the game's own reload script: wearing a chest rig, ALICE belt or shoulder holster with no ammo strap, reloading a revolver or shotgun threw errors every frame and the gun never loaded.",
+        "- A 20s character who woke before seven stayed Drowsy all day: the slow morning now lends the tiredness and takes it back after the hour.",
+        "",
+        "## For modders",
+        "An API: DanTraits_API.lua and API.md in the mod folder. Read a character's traits, Vitality, burnout, blood, illness and fever; add a Guide page; mark food as home cooking; adjust the values this mod computes; run on its clocks. Map Legend has one too.",
         "",
         "## Before this",
         "1.5.0 brought Age 2.0, burnout, the first four crippled starts and the game's traits left alone, 1.5.1 a much lighter frame path; both are in the changelog on the Workshop page.",

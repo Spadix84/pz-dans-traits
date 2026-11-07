@@ -673,6 +673,17 @@ function DanTraits_IllnessState(player)
     return out
 end
 
+-- for other mods (DanTraits_API.lua): catch an illness by id, hidden for its
+-- incubation, or with now = true start the symptoms at once. Returns true when
+-- it took (nothing while it already runs, the body is immune, or it is off).
+function DanTraits_IllnessCatch(player, id, now)
+    if not player or not ILLNESSES[id] or not sandboxOn() then return false end
+    local d = illData(player)
+    if not catch(player, d, id) then return false end
+    if now then onset(player, d, id) end
+    return true
+end
+
 -- console ------------------------------------------------------------------------
 
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}

@@ -31,7 +31,8 @@
 --     CombatManager.applyDamage, so part:ReduceHealth unless invulnerable.
 --     Kept by default: the injury hurts until it is dressed and stitched.
 --     With the Wound Damage sandbox option off it is given back each frame
---     too (the neck weighs 0.7 in overall health, a hand 0.1).
+--     too, to the wounded parts only, and not at all while BodyDamage.HasInjury
+--     says there is nothing (the neck weighs 0.7 in overall health, a hand 0.1).
 --   a shard left in holds bleedingTime and deepWoundTime at 3 or more (the
 --     wound never closes) and grows wound infection ten times faster.
 --   a bandage clears the bleeding/cut/deep wound/stitched flags but keeps
@@ -116,18 +117,6 @@ local function undoGeneralHealthLoss(player, amount)
     end, "Blood") > 0
 end
 
-local function onBloodGetDamage(character, damageType, amount)
-    if damageType ~= "BLEEDING" or not sandboxOn() then return end
-    if not DanTraits_IsLocalPlayer(character) then return end
-    local player = character
-    amount = tonumber(amount) or 0
-    if amount <= 0 then return end
-    local d = traitData(player)
-    if undoGeneralHealthLoss(player, amount) then
-        d.bloodRefunded = (d.bloodRefunded or 0) + amount
-    end
-end
-
 local partIs = DanTraits_PartIs
 
 local function partTime(part, getter)
@@ -158,18 +147,94 @@ end
 -- whichever goes first the part is at most one frame's damage short. A part
 -- already at 0 is left alone (vanilla's ReduceHealth stops at 0, so the
 -- full amount may not have come off).
+--
+-- Not a walk over every part each frame: that walk (seventeen parts, five
+-- guarded getters each) was the mod's whole frame cost for anyone with the
+-- option off (a Workshop profile, 2026-11-01: 0.1 ms a frame, all of it
+-- here). Each frame asks the game once whether there is any injury at all
+-- (BodyDamage.HasInjury: bites, scratches, cuts, deep wounds, bleeding,
+-- fractures, bullets, burns) and returns if not; with one, it walks only the
+-- parts a scan found wounded (an open wound time or a bullet, bandaged or
+-- not, so a bandage coming off is seen the same frame). The scan runs when
+-- an injury first shows, each minute tick while injured, and after a hit the
+-- game reports (a weapon, a fall, a car; zombie scratches report nothing).
+-- A second wound landing on another part between those is picked up at the
+-- next scan: at most a minute of the game's damage on that part, a few
+-- hundredths of its health.
+local wounded = setmetatable({}, { __mode = "k" })   -- player -> { parts = { part... }, injured = bool }
+local HIT_TYPES = { WEAPONHIT = true, FALLDOWN = true, CARHITDAMAGE = true, CARCRASHDAMAGE = true }
+
+-- a wound the frames may have to pay back: an open wound clock or a bullet
+local function woundOpen(part)
+    return partTime(part, "getDeepWoundTime") > 0 or partTime(part, "getScratchTime") > 0
+        or partTime(part, "getCutTime") > 0 or partTime(part, "getBiteTime") > 0 or partIs(part, "haveBullet")
+end
+
+local function scanWounds(player, st)
+    local parts = {}
+    DanTraits_EachPart(player, function(part) if woundOpen(part) then parts[#parts + 1] = part end end, "Blood")
+    st.parts = parts
+end
+
+-- the scan is due again at the next frame with an injury
+local function rescanWounds(player)
+    local st = wounded[player]
+    if st then st.injured = false end
+end
+
+-- true unless the game says there is no injury (a stand-in without the method walks)
+local function hasInjury(player)
+    local ok, bd = pcall(player.getBodyDamage, player)
+    if not ok or bd == nil then return true end
+    local injured
+    ok, injured = pcall(bd.HasInjury, bd)
+    if not ok then return true end
+    return injured ~= false
+end
+
+local function refundPart(part, mult)
+    local dmg = woundDamage(part)
+    if dmg <= 0 or part:getHealth() <= 0 then return end
+    local scaler = WD_SCALER
+    local ok, s = pcall(part.getDamageScaler, part)
+    if ok and s then scaler = s end
+    part:AddHealth(dmg * scaler * mult)
+end
+
 local function refundWoundDamage(player)
+    local st = wounded[player]
+    if not st then st = { parts = {}, injured = false } wounded[player] = st end
+    if not hasInjury(player) then st.injured = false return end
+    if not st.injured then st.injured = true scanWounds(player, st) end
+    local parts = st.parts
+    if #parts == 0 then return end
     if DanTraits_PartIs(player, "isInvulnerable") then return end
-    local mult = 0
-    pcall(function() mult = getGameTime():getMultiplier() or 0 end)
-    if mult <= 0 then return end
-    DanTraits_EachPart(player, function(part)
-        local dmg = woundDamage(part)
-        if dmg <= 0 or part:getHealth() <= 0 then return end
-        local scaler = WD_SCALER
-        pcall(function() scaler = part:getDamageScaler() or scaler end)
-        part:AddHealth(dmg * scaler * mult)
-    end, "Blood")
+    local ok, gt = pcall(getGameTime)
+    if not ok or gt == nil then return end
+    local mult
+    ok, mult = pcall(gt.getMultiplier, gt)
+    if not ok or type(mult) ~= "number" or mult <= 0 then return end
+    for i = 1, #parts do
+        if DanTraits_Guard then DanTraits_Guard("part:Blood", refundPart, parts[i], mult) else pcall(refundPart, parts[i], mult) end
+    end
+end
+DanTraits_BloodWoundedParts = function(player) local st = wounded[player] return st and st.parts or nil end
+
+local function onBloodGetDamage(character, damageType, amount)
+    if not sandboxOn() then return end
+    if damageType ~= "BLEEDING" then
+        -- a hit the game reports may have opened a wound: scan again (refundWoundDamage, below)
+        if HIT_TYPES[damageType] and not woundDamageOn() and DanTraits_IsLocalPlayer(character) then rescanWounds(character) end
+        return
+    end
+    if not DanTraits_IsLocalPlayer(character) then return end
+    local player = character
+    amount = tonumber(amount) or 0
+    if amount <= 0 then return end
+    local d = traitData(player)
+    if undoGeneralHealthLoss(player, amount) then
+        d.bloodRefunded = (d.bloodRefunded or 0) + amount
+    end
 end
 
 -- volume lost per minute from one part, before hooks; nil when not bleeding.
@@ -455,6 +520,7 @@ Events.OnPlayerGetDamage.Add(onBloodGetDamage)
 DanTraits_Every("minute", "Blood", function(player, d)
     updateBloodMinute(player, d)
     updateBloodDebug(player, d)
+    if not woundDamageOn() then rescanWounds(player) end   -- the wounded parts, fresh each minute
 end, 20)
 DanTraits_Every("frame", "Blood", function(player, d)
     if not sandboxOn() then return end

@@ -31,6 +31,8 @@ The legend is saved to your profile ([i]Zomboid/Lua/MapLegend.txt[/i]), and ever
 [*]It shows on the world map (M), not on paper maps you read from your inventory.
 [*]Controller: the legend moves up out of the way of the button prompts, but the editor and the row clicks need a mouse.
 [*]Pens that other mods add to the symbols panel show up in the editor.
+[*]With the Vitality Project loaded, its Guide tab gets a Map Legend page.
+[*]Modders: API.md in the mod folder. Presets, meanings, set and unset, a changed event, with or without the mod loaded.
 [/list]
 
 Bugs and ideas are welcome in the comments.

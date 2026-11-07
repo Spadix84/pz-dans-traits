@@ -6,6 +6,9 @@ Dan's Challenges mod (archived in `plans/archive/DanChallenges-2026-10-27.zip`, 
 
 ## 0.1.0 (in progress)
 
+- **A page in the Vitality Project's Guide tab** (2026-11-07, `VitalityChallenges_Guide.lua`): the
+  three challenges, registered through `DanTraits_GuideExtra`; nothing without that mod.
+  `README.md` for the folder.
 - **Shared pieces moved into the frame** (2026-10-29, review C7). The paper map's `LootMaps.Init`
   is one `VC.paperMap(id, bounds, stamps)` in Kit, used by Nomad and The Last Broadcast; the
   weapon-by-profession and trait tables are Kit's `VC.weaponsFor(player)` / `VC.forged(level)`

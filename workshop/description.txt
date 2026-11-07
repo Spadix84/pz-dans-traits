@@ -25,7 +25,7 @@ Each decade has traits and wants of its own, the conditions of later life are no
 [*][b]Training.[/b] Arms, chest, core and legs tire and recover. A rested group pays more; a sore one can pull a muscle. Improvised weights, stretching, training plans.
 [*][b]Cooking.[/b] A proper cooked meal eases low mood and stress for hours and fuels your training: protein for recovery, carbs for stamina, fat against hunger.
 [*][b]Burnout.[/b] Fighting wears on you over days: kills, panic, wounds and withdrawal build it; sleep, calm hours and comforts ease it. It never makes you fight worse, only slows what fighting teaches.
-[*][b]Sleep.[/b] Sleeping dressed means shallower sleep (warm clothes are free in the cold). A hot water bottle eases sore muscles and warms a cold bed.
+[*][b]Sleep.[/b] Sleeping dressed means shallower sleep (warm clothes are free in the cold).
 [*][b]Home.[/b] Where you sleep most nights becomes home: boredom, low mood and stress ease there and nights score better. Two days away and you miss it.
 [*][b]Laundry.[/b] Hand washing only gets clothes so clean, damp clothes go musty, sweat makes them stale, old blood sets in. Fresh clothes lift your mood.
 [*][b]Reading for pleasure.[/b] Novels, comics and magazines have genres and real pages; each page eases stress and low mood.
@@ -57,11 +57,14 @@ Each decade has traits and wants of its own, the conditions of later life are no
 [*][b]Too hard?[/b] Most systems have a sandbox switch, and the conditions are traits you choose.
 [*][b]Lost?[/b] The character window has a Guide tab: a page on every system, and What's New.
 [*][b]A wound still takes health?[/b] As in vanilla, until dressed. Turn off Wound Damage (Vitality: Health) and wounds cost only blood.
-[*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandits, This Is Your Life, SpiffBoy, Wound Expansion and Dynamic Traits and Expanded Moodles (its duplicate traits are hidden, its addictions become this mod's) are supported.
+[*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandits, This Is Your Life, SpiffBoy, Wound Expansion and Dynamic Traits and Expanded Moodles (its duplicate traits are hidden, its addictions become this mod's) are supported. The Slow Cooker's meals count as home cooking.
 [*][b]Bugs?[/b] Leave a comment, or open an issue on GitHub. Your console.txt helps.
 [/list]
 
+[h2]More from the same project[/h2]
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3831306437]Map Legend[/url]: a symbol and colour key on the world map; click a row to draw with it.
+[b]Modders:[/b] API.md in the mod folder.
+
 [url=https://github.com/Spadix84/pz-dans-traits]Source and full changelog on GitHub[/url]
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img][/url]
-[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png[/img][/url]
 Moodle Framework optional.

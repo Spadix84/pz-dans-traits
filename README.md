@@ -1,6 +1,22 @@
 # Project Zomboid Vitality Project
 
-A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compatibility): realistic, balanced traits that add complications to work around, plus a Vitality system that makes fresh food, exercise and sleep matter for everyone.
+A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compatibility): realistic, balanced traits that add complications to work around, plus a Vitality system that makes fresh food, exercise and sleep matter for everyone. On the Workshop as [Vitality Project (Traits and Health Overhaul)](https://steamcommunity.com/sharedfiles/filedetails/?id=3811016852).
+
+## The mods
+
+This repository holds the Vitality Project and five smaller mods from the same project, each doing one job and each working on its own. With the Vitality Project loaded they add a page to its Guide tab; the Slow Cooker lives in its own repository.
+
+| Mod | What it does | Where |
+|---|---|---|
+| **Vitality Project** | Traits as conditions to live with, Age, Vitality, burnout, blood, illness, medication, fitness, cooking, laundry, reading, a Guide tab | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3811016852), `DanTraits/`, [API for modders](DanTraits/API.md) |
+| **Map Legend** | A symbol and colour key on the world map; click a row to draw with it | [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3831306437), [`MapLegend/`](MapLegend/), [API](MapLegend/API.md) |
+| **Dan's Vanilla Fixes** | Cold packs and coolers that work, item info in tooltips, rarity colours, a collection checklist, full cigarette packs | [`DansVanillaFixes/`](DansVanillaFixes/), not yet on the Workshop |
+| **Base Unloader** | Puts a loot run away for you: rules, zones, a base inventory | [`BaseUnloader/`](BaseUnloader/), not yet on the Workshop |
+| **Vitality Cartridges** | Five games for the SpiffBoy handheld console, each reaching the character | [`VitalityCartridges/`](VitalityCartridges/), needs SpiffBoy, not yet on the Workshop |
+| **Vitality Challenges** | Pile-Up, Nomad and The Last Broadcast in the Challenges menu | [`VitalityChallenges/`](VitalityChallenges/), not yet on the Workshop |
+| **Slow Cooker** | A countertop slow cooker, nine Kentucky recipes; its meals count as home cooking here | its own repository (`pz-slow-cooker`), not yet on the Workshop |
+
+Other mods can build on the Vitality Project and Map Legend: each ships an `API.md` and a `*_API.lua` loaded with `pcall(require, ...)`, so a mod runs with or without them. The Slow Cooker's API is the same pattern.
 
 ## Traits
 
@@ -942,7 +958,7 @@ A proper cooked meal does more than fill you (`DanTraits_Cooking.lua`; design an
 
 ### The Guide tab and What's New
 
-The character window has a Guide tab for everyone (`DanTraits_Guide.lua`, pages in `DanTraits_GuideData.lua`): fourteen short pages on the systems above and how they fit together, overviews and need-to-know only, each with a picture when `media/ui/Guide/<id>.png` exists, and What's New last. The first time a game loads after an update, a What's New window shows the headline changes once per install (`~/Zomboid/Lua/DanTraits_whatsnew.txt` remembers the version; a tick box turns it off for good), with a button to the guide.
+The character window has a Guide tab for everyone (`DanTraits_Guide.lua`, pages in `DanTraits_GuideData.lua`): fourteen short pages on the systems above and how they fit together, overviews and need-to-know only, each with a picture when `media/ui/Guide/<id>.png` exists, then a page from each companion mod that is loaded (any mod can add one through the `DanTraits_GuideExtra` table, see [API.md](DanTraits/API.md)), and What's New last. The companion-mods page is built when the window opens, so it says which are installed and which are on the Workshop. The first time a game loads after an update, a What's New window shows the headline changes once per install (`~/Zomboid/Lua/DanTraits_whatsnew.txt` remembers the version; a tick box turns it off for good), with a button to the guide.
 
 ### Moodles
 
@@ -957,7 +973,7 @@ Every effect that lasts has one. All of them need [Moodle Framework](https://ste
 
 ## Base Unloader
 
-A separate mod in this repo (`BaseUnloader/`, its own Workshop item once uploaded) that puts a loot run away for you. Design talked through on 2026-10-16; built the same day, not yet play-tested.
+A separate mod in this repo (`BaseUnloader/`, its own Workshop item once uploaded) that puts a loot run away for you. Designed and built 2026-10-16, play-tested since; zones, tags, Off limits and the base inventory came later in October.
 
 - Right-click the car (**Unload trunk to base**), any container, or items in a loot window (**Unload to base**), or your own items (**Put away what I am carrying**). A window opens: left, what is in the source grouped by type with where each type goes; right, every container in the base with its name, kind, room, floor, distance from you and how full it is, zone by zone, with each zone's tagged containers (blue stripe, under "Tagged") apart from the rest (under "Not tagged"). The base is the base zones you draw (**Base zones...** on the world right-click menu, or **Zones** in the window) within Zone Reach (40 tiles) of the source. Drawing uses the game's click-and-drag zone tool, but the zones are Base Unloader's own, never animal zones. Pieces with the same name are one zone, each side up to 60 tiles, and a zone takes in Floors Searched (3) above and below its floor. With no zone drawn nearby, the base is the building you are in or next to plus a margin, together with a circle round the source (sandbox: Building Margin 4, Nearby Radius 12).
 - Drag a type onto a container to say that type lives there; the rule is remembered for the save, so the next run needs almost no dragging. Items dragged straight out of the vanilla inventory windows onto a container row do the same. Ctrl while dropping sends just those items, this run only. **Suggest** fills the gaps from what the base already holds (the container with most of that type, then the fridge or freezer for perishables, then the category, then a container of a suitable kind). Right-click a type to unassign it or its whole category; right-click a container to send everything unassigned there or clear its assignments.
@@ -969,6 +985,7 @@ A separate mod in this repo (`BaseUnloader/`, its own Workshop item once uploade
 ## Layout
 
 ```
+DanTraits/API.md         what other mods may build on (DanTraits_API.lua, the VitalityProject table)
 DanTraits/42/            the mod as the game sees it (mod.info, poster.png, media/...)
 DanTraits/common/        empty; Build 42 expects it beside 42/
   media/lua/shared/      one file per trait + DanTraits.lua (core helpers, eat/pill hooks)
@@ -985,12 +1002,14 @@ tests/                   offline tests (fengari) and the checks run_tests.py run
                          matches the registrations); python tests/run_tests.py
 DansVanillaFixes/        Dan's Vanilla Fixes, a separate mod (python deploy.py --mod DansVanillaFixes)
 BaseUnloader/            Base Unloader, a separate mod (python deploy.py --mod BaseUnloader)
-MapLegend/               Map Legend, a separate mod (--mod MapLegend)
+MapLegend/               Map Legend, a separate mod (--mod MapLegend); MapLegend/API.md for other mods
 VitalityCartridges/      cartridges for the SpiffBoy console mod (--mod VitalityCartridges; Common.lua is
                          what the five games share; tools/ has their SDK tests)
 VitalityChallenges/      challenge scenarios (--mod VitalityChallenges; VitalityChallenges_Dev.lua is the
                          play-test scaffolding behind its TEST switch)
-workshop/                workshop.txt and preview.png for the Steam Workshop page
+workshop/                the Steam Workshop page: description.txt (the text), workshop.txt (what the game
+                         uploads), preview.png, changelog.txt, the charts; steam_desc.py rebuilds workshop.txt
+                         from description.txt and counts it as Steam does; maplegend/ is Map Legend's page
 deploy.py                copy a mod to ~/Zomboid/mods (--mod NAME; the old flags --patch, --unloader,
                          --legend, --cartridges, --challenges still work; --pull adds and updates only;
                          --workshop builds the upload folder)
@@ -1005,13 +1024,13 @@ Mod data is one table per player (`getModData().DanTraits`) with a prefix per sy
 3. `python deploy.py` then restart the game (traits, items and Lua are read at boot). While the Workshop upload folder (`~/Zomboid/Workshop/DanTraits`) exists the game loads that copy instead of `~/Zomboid/mods/DanTraits`, so the deploy mirrors into both and they never differ.
 4. The companion app (the `pz-companion` repo beside this one, `Companion.bat`) for a live readout at http://127.0.0.1:8642 with buttons to trigger any trait's events, the console log, and later Chronicle and music. The game writes the telemetry while the companion is running (it leaves a heartbeat file in `~/Zomboid/Lua`) or in debug mode (`-debug`); the command channel only works in debug mode, and nothing runs in multiplayer. Design: `plans/companion.md`.
 
-To publish: `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` (workshop.txt, preview.png and `Contents/mods/DanTraits` without the dev tools), then upload it from the game's main menu, Workshop. After the first upload the game writes the item's `id=` into that workshop.txt; the build keeps it, so later uploads update the same item.
+To publish: edit `workshop/description.txt`, run `python workshop/steam_desc.py` (it rewrites `workshop.txt` and fails past 8000 characters as Steam counts them, a line break being two), then `python deploy.py --workshop` builds `~/Zomboid/Workshop/DanTraits` (workshop.txt, preview.png and `Contents/mods/DanTraits` without the dev tools), then upload it from the game's main menu, Workshop. After the first upload the game writes the item's `id=` into that workshop.txt; the build keeps it, so later uploads update the same item.
 
 The game's Lua (Kahlua) allows 200 locals and 60 upvalues per function, the file's top level included, so new traits go in their own file (`require "DanTraits"` for the shared helpers). It also lacks `next`, `assert`, `xpcall`, `string.gmatch` and `string.rep`. The offline tests run on standard Lua and would not notice any of that, so `tests/lint_kahlua.py` (run first by `run_tests.py`) checks for it, and checks the translation files too: valid JSON, no duplicate keys, and no bare `%` (the game formats UI strings; write `%%` for a percent sign, `%1` for a placeholder). Calling a Java method an object doesn't have fails quietly inside `pcall` but dumps a stack trace to the log every time, and the tests' stand-ins can't notice, so `tests/check_api.py` (also run by `run_tests.py`) checks the method names called on body parts, body damage, players, stats, weapons, radio channels, vehicles, rooms and map symbols against the installed game's jar. Two more checks run with it: `tests/check_wraps.py` confirms every vanilla method the mods wrap (`DanTraits_Wrap`, `DanTraits_ScaleActionTime`) still exists in the installed game's Lua, which is what catches a game update renaming one; `tests/check_drivers.py` keeps the clock-order comment in `DanTraits.lua` honest against the `DanTraits_Every` registrations.
 
 ## Status and known issues
 
-Version 1.5.0, Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
+Version 1.5.2 (built, not yet uploaded), Build 42, singleplayer only (multiplayer is untested and not supported). What changed in each update is in [CHANGELOG.md](CHANGELOG.md); the Workshop page carries the short version.
 
 - **Split-screen** co-op works: the clocks run for every local player, and since the 2026-10-29 review so do the damage, swing and hit events (bleeding, concussion, fractures, tinnitus, wound strain). The grants at game start (starting kits, the folded-in vanilla traits) still go to player 1 only. Multiplayer over a network is a separate matter (`plans/multiplayer.md`).
 - **A Really Bad Day** is not balanced yet. Its glass shard killed even a character with no other traits, so for now the wound is an infected cut and the trait gives 8 points instead of 12, until a proper balance is found.
@@ -1026,11 +1045,10 @@ Version 1.5.0, Build 42, singleplayer only (multiplayer is untested and not supp
 
 ## Requests
 
-Ideas from the Reddit thread still under review (sumatriptan, personal migraine triggers, the Arthritis weak swing and the stitching roll from the same thread shipped in 1.1.0):
+Ideas from the Reddit thread still under review (sumatriptan, personal migraine triggers, the Arthritis weak swing and the stitching roll from the same thread shipped in 1.1.0; the illnesses without a trait shipped in 1.5.2):
 
 - **Fructose Intolerance**: a trait on the Gluten and Lactose pattern for fruit and sugary drinks.
 - **A sleep mask**: an item that makes a lit room dark for the sleep system.
-- **Illnesses without a trait**: a cold, flu or food poisoning that has to be diagnosed from symptoms, not announced.
 - **Evolving Traits World compatibility**: ETW hands out and removes Smoker at runtime; the nicotine meter should follow it.
 
 ## Bug reports

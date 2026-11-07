@@ -27,10 +27,11 @@
 -- Not with Dexterous (the same effect) or All Thumbs. A character the old
 -- version granted Dexterous to has it taken off once (DanTraits_UngrantFoldIn).
 require "DanTraits"
+require "DanTraits_ReloadGuard"
 
 local hasTrait = DanTraits_HasTrait
 
-local SH_BADSET        = 0.5     -- bad-set and rough-stitch chance x this
+local SH_BADSET       = 0.5     -- bad-set and rough-stitch chance x this
 local SH_TEAR          = 0.5     -- stitch tear chance x this
 local SH_FAST          = 0.75    -- first aid time x this
 local SH_FAST_ACTIONS  = { "ISStitch", "ISRemoveGlass", "ISRemoveBullet" }

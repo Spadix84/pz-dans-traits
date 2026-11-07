@@ -46,6 +46,7 @@ local VIT_GRADE_JUNK        = -0.35   -- packaged snacks, candy, soda
 local VIT_GRADE_ROTTEN      = -0.50
 local VIT_GRADE_BURNT       = -0.30
 local VIT_VARIETY_HOURS     = 72      -- window for counting distinct food types
+local VIT_HOME_WEIGHT       = 1.5     -- a home-cooked meal (Slow Cooker mod) moves the diet score this much more
 local VIT_VARIETY           = { [0] = -0.10, -0.05, -0.05, 0, 0, 0.05, 0.10 }  -- by distinct types, capped at six
 local VIT_STARVE_HUNGER     = 0.5     -- hunger above this (0..1) drags the diet score down
 local VIT_STARVE_RATE       = 1 / 4320 -- per minute: three days from full to empty
@@ -182,15 +183,30 @@ local function pruneTypes(player, d, hour)
     return count
 end
 
-local function recordMeal(player, d, name, grade, kcal, why)
+local function recordMeal(player, d, name, grade, kcal, why, weight)
     local hour = 0
     pcall(function() hour = player:getHoursSurvived() end)
-    local w = math.max(VIT_MEAL_W_MIN, math.min(VIT_MEAL_W_MAX, kcal / VIT_MEAL_KCAL_FULL))
+    local w = math.max(VIT_MEAL_W_MIN, math.min(VIT_MEAL_W_MAX, kcal * (weight or 1) / VIT_MEAL_KCAL_FULL))
     d.vitDiet = clamp01(d.vitDiet + (grade - d.vitDiet) * w)
     d.vitMeals = d.vitMeals or {}
     table.insert(d.vitMeals, 1, { name = name, grade = grade, kcal = math.floor(kcal + 0.5), hour = hour, why = why })
     while #d.vitMeals > VIT_MEALS_KEEP do table.remove(d.vitMeals) end
 end
+
+-- Home cooking from the Slow Cooker mod: anything served from its crock carries
+-- slowCookerHome in its mod data (the crock's own dish is Base.CrockOfStew), and a
+-- named recipe carries slowCookerDish. No dependency: without that mod nothing has
+-- the marks. Returns home-cooked, and the dish id or nil.
+local function homeCooked(item)
+    local home, dish = false, nil
+    pcall(function()
+        local md = item:getModData()
+        home = md.slowCookerHome == true or item:getFullType() == "Base.CrockOfStew"
+        dish = md.slowCookerDish
+    end)
+    return home or dish ~= nil, dish
+end
+DanTraits_VitalityHomeCooked = homeCooked
 
 -- called from the core eat hook with the portion actually eaten
 function DanTraits_VitalityOnEat(player, item, fraction)
@@ -215,7 +231,19 @@ function DanTraits_VitalityOnEat(player, item, fraction)
         pcall(function() hour = player:getHoursSurvived() end)
         d.vitFoodTypes[tostring(foodType)] = hour
     end
-    recordMeal(player, d, name, grade, kcal, why)
+    -- home cooking counts for more, and each named dish is variety of its own
+    local home, dish = homeCooked(item)
+    local weight = 1
+    if home then
+        weight = VIT_HOME_WEIGHT
+        why = why .. ", home-cooked"
+        if dish then
+            local hour = 0
+            pcall(function() hour = player:getHoursSurvived() end)
+            d.vitFoodTypes["SlowCooker:" .. tostring(dish)] = hour
+        end
+    end
+    recordMeal(player, d, name, grade, kcal, why, weight)
     return true
 end
 

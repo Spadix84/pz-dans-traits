@@ -4,9 +4,11 @@
 -- (the Notes tab beside it is per character and per condition). Left, the list
 -- of pages; right, the page as rich text, with its picture above the text when
 -- media/ui/Guide/<id>.png exists. The pages are DanTraits_GuideData.pages
--- (DanTraits_GuideData.lua, plain lines: "## heading", "- bullet", a paragraph);
--- the last page is What's New (DanTraits_GuideData.whatsNew), which
--- DanTraits_WhatsNew.lua also shows once after an update.
+-- (DanTraits_GuideData.lua, plain lines: "## heading", "- bullet", a paragraph),
+-- then any page another mod put in DanTraits_GuideExtra (below), then What's
+-- New (DanTraits_GuideData.whatsNew), which DanTraits_WhatsNew.lua also shows
+-- once after an update. The companion-mods page is built when the window opens
+-- (DanTraits_GuideModsPage), so it says which are installed.
 --
 -- The tab is added when the window is built (createChildren), like the Notes
 -- tab. DanTraits_OpenGuide(playerNum, pageId) opens the window on the tab and
@@ -32,14 +34,66 @@ local GD_HEAD_RGB = "<RGB:0.95,0.78,0.45>"
 
 local function t(key) return getText("UI_DanTraits_guide_" .. key) end
 
--- a page's picture, looked up once (none ships yet; a miss is remembered, so
--- the texture loader is not asked again on every redraw)
+-- Pages from other mods. A mod adds a page by putting it in DanTraits_GuideExtra,
+-- a plain global list that exists whether or not this mod is loaded, so the
+-- other mod needs no require and no check:
+--     DanTraits_GuideExtra = DanTraits_GuideExtra or {}
+--     table.insert(DanTraits_GuideExtra, { id = "maplegend", title = "Map Legend", body = { ... } })
+-- A page is { id, title, body, order?, picture?, mod? }: body as the pages in
+-- DanTraits_GuideData (plain lines: "## heading", "- bullet", a paragraph, "");
+-- order sorts the extra pages (default 100, then by title); picture is a
+-- texture path (default media/ui/Guide/<id>.png; the game looks textures up
+-- across every loaded mod's media, so the other mod ships its own); mod is its
+-- mod id, which the companion-mods page uses to say the page is here. The
+-- extras come after this mod's pages and before What's New; a later page with
+-- the same id replaces the earlier one. The list is read when the window is
+-- built, so load order does not matter. DanTraits_GuideAddPage(page) does the
+-- same with the checks up front (API.md).
+DanTraits_GuideExtra = DanTraits_GuideExtra or {}
+function DanTraits_GuideAddPage(page)
+    if type(page) ~= "table" or type(page.id) ~= "string" or page.id == "" then return false end
+    if type(page.title) ~= "string" or type(page.body) ~= "table" then return false end
+    local list = DanTraits_GuideExtra
+    for i = #list, 1, -1 do
+        if type(list[i]) == "table" and list[i].id == page.id then table.remove(list, i) end
+    end
+    list[#list + 1] = page
+    return true
+end
+
+-- the extra pages, checked, one per id (the last registered wins), by order then title
+local function extraPages()
+    local byId, out = {}, {}
+    for _, p in ipairs(DanTraits_GuideExtra or {}) do
+        if type(p) == "table" and type(p.id) == "string" and p.id ~= "" and type(p.title) == "string" and type(p.body) == "table" then
+            local earlier = byId[p.id]
+            if earlier then
+                for i, q in ipairs(out) do if q == earlier then table.remove(out, i) break end end
+            end
+            byId[p.id] = p
+            out[#out + 1] = p
+        end
+    end
+    table.sort(out, function(a, b)
+        local oa, ob = tonumber(a.order) or 100, tonumber(b.order) or 100
+        if oa ~= ob then return oa < ob end
+        return a.title < b.title
+    end)
+    return out
+end
+DanTraits_GuideExtraPages = extraPages
+
+local function picturePath(page) return page.picture or ("media/ui/Guide/" .. page.id .. ".png") end
+
+-- a page's picture, looked up once (a miss is remembered, so the texture
+-- loader is not asked again on every redraw)
 local textures = {}
-local function pictureOf(id)
-    local tex = textures[id]
+local function pictureOf(page)
+    local path = picturePath(page)
+    local tex = textures[path]
     if tex == nil then
-        tex = getTexture("media/ui/Guide/" .. id .. ".png") or false
-        textures[id] = tex
+        tex = getTexture(path) or false
+        textures[path] = tex
     end
     return tex or nil
 end
@@ -48,7 +102,7 @@ function DanTraits_GuideForgetPictures() textures = {} end   -- tests
 -- a page's lines as the rich text panel wants them; the picture no wider than imageW
 local function richText(page, imageW)
     local out = {}
-    local tex = pictureOf(page.id)
+    local tex = pictureOf(page)
     if tex then
         local w = math.max(120, math.min(GD_IMAGE_W, imageW or GD_IMAGE_W))
         local h = w * 9 / 16
@@ -56,7 +110,7 @@ local function richText(page, imageW)
             local tw, th = tex:getWidth(), tex:getHeight()
             if tw and th and tw > 0 then h = math.floor(w * th / tw + 0.5) end
         end)
-        out[#out + 1] = "<IMAGECENTRE:media/ui/Guide/" .. page.id .. ".png," .. w .. "," .. h .. "> <LINE> <LINE> "
+        out[#out + 1] = "<IMAGECENTRE:" .. picturePath(page) .. "," .. w .. "," .. h .. "> <LINE> <LINE> "
     end
     out[#out + 1] = "<SIZE:medium>" .. page.title .. " <SIZE:small> <LINE> <LINE> "
     for _, line in ipairs(page.body or {}) do
@@ -74,10 +128,21 @@ local function richText(page, imageW)
 end
 DanTraits_GuideRichText = richText
 
--- every page, What's New last
+-- every page: this mod's (the companion-mods page built live), other mods'
+-- pages (never one with a built-in id), What's New last
 local function pages()
-    local list = {}
-    for _, p in ipairs(DanTraits_GuideData and DanTraits_GuideData.pages or {}) do list[#list + 1] = p end
+    local list, builtIn = {}, {}
+    for _, p in ipairs(DanTraits_GuideData and DanTraits_GuideData.pages or {}) do
+        if p.id == "mods" and DanTraits_GuideModsPage then
+            local ok, live = pcall(DanTraits_GuideModsPage, p)
+            if ok and type(live) == "table" then p = live end
+        end
+        list[#list + 1] = p
+        builtIn[p.id] = true
+    end
+    for _, p in ipairs(extraPages()) do
+        if not builtIn[p.id] then list[#list + 1] = p end
+    end
     local wn = DanTraits_GuideData and DanTraits_GuideData.whatsNew
     if wn and wn.lines then
         list[#list + 1] = { id = "whatsnew", title = getText("UI_DanTraits_whatsnew_Page", tostring(wn.version or "")), body = wn.lines }

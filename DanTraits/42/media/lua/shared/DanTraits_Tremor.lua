@@ -20,6 +20,7 @@
 -- Mod data: etShake, etDrinkMin (minutes a drink is still steadying), etIntox
 -- (intoxication last minute), etTold, etKitGiven.
 require "DanTraits"
+require "DanTraits_ReloadGuard"
 
 local hasTrait = DanTraits_HasTrait
 local notify = DanTraits_Notify

@@ -3,6 +3,20 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Map Legend 1.1.0 - 2026-11-07 (separate mod)
+
+- **An API for other mods** (`MapLegend_API.lua`, `MapLegend/API.md`, `MapLegend.API_VERSION`
+  1): `addPreset(name, text)` (a plain-text preset when no translation ships), `entries`,
+  `meaning`, `meaningsFor`, `set`, `unset` (saved at once, the panel redrawn), and
+  `on("changed", fn)` / `off`: the core's `ML.changed` now runs a listeners list after the
+  panel's own redraw, each under pcall. `presetText` falls back to the given text, then the
+  name. Loaded with `pcall(require, "MapLegend_API")`, so a mod runs with or without this one.
+  `tests/test_maplegend_api.lua`.
+- **A page in the Vitality Project's Guide tab** (`client/MapLegend_Guide.lua`): the legend,
+  the editor and the one-legend-for-every-save rule, registered through `DanTraits_GuideExtra`
+  and doing nothing without that mod.
+- `MapLegend/README.md` for the folder; the Workshop page names the Guide page and the API.
+
 ## Map Legend 1.0.0 - 2026-10-31 (separate mod, first Workshop release)
 
 - **Long legends scroll.** The mouse wheel over the legend scrolls its rows once there are more
@@ -123,7 +137,70 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `swarmed [now]`. Icon: five red-eyed heads. Unverified in game: that the population manager
   takes zombies on unloaded ground, and how many zombies a fresh start has loaded a minute in.
 
+- **The companion mods in the Guide, and a hook for any mod** (`DanTraits_Guide.lua`,
+  `DanTraits_GuideData.lua`; `tests/test_guide.lua` section 5, `tests/test_companionguide.lua`).
+  `DanTraits_GuideExtra` is a plain global list: a mod inserts `{ id, title, body, order?,
+  picture?, mod? }` and needs no require and no check (without this mod the table sits unused);
+  `DanTraits_GuideAddPage(page)` does the same with the checks up front. The extras come after
+  this mod's pages, by order then title, and before What's New; a later page with the same id
+  replaces the earlier one, a built-in id cannot be taken over; a page's picture is its own
+  texture path (default `media/ui/Guide/<id>.png`, looked up across every loaded mod's media).
+  The companion-mods page is built from `DanTraits_GuideData.companions` each time the window
+  opens (`DanTraits_GuideModsPage`): each mod's blurb and a line saying Installed (and that its
+  own page is further down when it registered one), On the Workshop with the item id, or Not
+  yet on the Workshop (`getActivatedMods`), so it can no longer claim five Workshop items when
+  one is up. The Slow Cooker is on it. Each companion ships a page: `DansVanillaFixes_Guide.lua`,
+  `BaseUnloader_Guide.lua`, `MapLegend_Guide.lua`, `VitalityCartridges/Guide.lua`,
+  `VitalityChallenges_Guide.lua`, and `SlowCooker_Guide.lua` in the Slow Cooker's repository.
+- **An API for other mods** (`DanTraits_API.lua`, `DanTraits/API.md`; `tests/test_api.lua`). The
+  global table `VitalityProject`, `API_VERSION` 1, loaded with `pcall(require, "DanTraits_API")`
+  so a mod runs with or without this one: thin, guarded wrappers over the seams the companion
+  mods and the Slow Cooker already lean on, each answering nil when its system is not loaded.
+  Traits (`hasTrait`, `hasVanillaTrait`, `traits`), options, `data`, `isLocalPlayer`; the clocks
+  (`every`, `onPlayerReady`, `later`), `addHook` / `runHooks` with the eighteen hook names kept
+  across versions (`V.HOOKS`, with their arguments), `wrap`; `notify` and `story` (the
+  `OnStoryEvent` event); `knockHead`, `passOut`, `painFloor`, `blood`; `vitality` (score, tier,
+  name, effect), `homeCooked` and the `slowCookerHome` / `slowCookerDish` marks, `foodTags`;
+  `burnout`, `comfort`, `strainAdd`, `strainEase`; `illness`, `catchIllness` (new
+  `DanTraits_IllnessCatch(player, id, now)` in Illness), `fever`, `feverSource`, `relief`;
+  `guidePage`. `tests/check_wraps.py` knows the API's wrap pass-through. Everything else stays
+  internal and may move.
+- **Home cooking from the Slow Cooker mod counts** (`DanTraits_Vitality.lua`, `homeCooked`,
+  `VIT_HOME_WEIGHT` 1.5): anything served from its crock carries `slowCookerHome` in its mod
+  data (the crock's own dish is `Base.CrockOfStew`) and a named recipe `slowCookerDish`; such
+  a meal moves the diet score x1.5 and each named dish counts as a food type of its own for
+  variety (`SlowCooker:<id>`). No dependency: without that mod nothing has the marks.
+  `test_vitality` covers it.
+- **Documentation.** A mods index at the top of the README (what each does, Workshop link or
+  status, folder) and a README in each companion folder, for the Workshop pages' "Source on
+  GitHub" links; `workshop/steam_desc.py` counts a Workshop description as Steam does (two per
+  line break) and rebuilds `workshop.txt` from `description.txt`, so the two cannot drift and an
+  upload never fails at the limit again; the Workshop page gained a "More from the same
+  project" block (Map Legend now, the others as they are uploaded) and a modders' line, and
+  lost the trait-matrix chart and the hot water bottle aside to stay under 8000;
+  `plans/docs-2026-11-07.md` is the plan.
+
 ### Changed
+
+- **Wound Damage off no longer costs a frame walk** (`DanTraits_Blood.lua`, `refundWoundDamage`).
+  Arkantos Eli's third profile (2026-11-01, 1.5.1, standing still) put the mod at 137 ms per
+  10 s, and his Hooks view showed where: `DanTraits_EachPart` once a frame at 0.1 ms a call, 132
+  of the 137 ms. That is Blood giving the game's wound damage back part by part, which runs
+  every frame only with the Wound Damage sandbox option off (his setting, not the default; the
+  profile is clean with it on). The walk visited all seventeen parts with five guarded getters
+  each whether or not any was hurt. Now a frame asks the game once whether there is any injury
+  at all (`BodyDamage.HasInjury`: bites, scratches, cuts, deep wounds, bleeding, fractures,
+  bullets, burns) and returns if not; with one, it walks only the parts a scan found wounded (an
+  open wound clock or a bullet, bandaged or not, so a bandage coming off is paid back the same
+  frame). The scan runs when an injury first shows, each minute tick while injured, and after a
+  hit the game reports (`OnPlayerGetDamage` WEAPONHIT, FALLDOWN, CARHITDAMAGE, CARCRASHDAMAGE;
+  zombie scratches report nothing). A second wound landing on another part between scans is
+  picked up at the next one: at most a minute of the game's damage on that part, a few hundredths
+  of its health. The per-frame multiplier and scaler reads lost their closures too. Unhurt, the
+  frame now costs two sandbox reads and one game call; test_blood section 11c covers the gate,
+  the scan triggers and the bandage case. Still a full walk, and still owed: the bleed refund
+  (`undoGeneralHealthLoss`) walks every part on each BLEEDING report, which the game sends every
+  update while a part bleeds unbandaged.
 
 - **SpiffBoy's new console engine** (`DanTraits_SpiffBoy.lua`): SpiffBoy's 2026-10-31 update
   (its author's heads-up on the Workshop page) moved the running game off the window onto a
@@ -143,6 +220,13 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   the 50s). The Guide's Age page and `docs/age.md` say so.
 
 ### Fixed
+
+- **Reload crash in the game's own script.** `ISReloadWeaponAction.setReloadSpeed` calls
+  `strap:getClothingItemName()` without checking a strap is worn. A quick-reload tag (chest rig,
+  ALICE belt, shoulder holster) with no ammo strap and a shotgun or a gun with no magazine ended
+  there; `initVars` never set `ammoCount`, so `update()` then errored every frame and the gun
+  never loaded. `DanTraits_ReloadGuard.lua` spots exactly that path and sets the plain speed (no
+  strap, no bonus); it is the innermost wrap, so Steady Hands and Essential Tremor still apply.
 
 - **Slow to wake no longer leaves you Drowsy all day (20s).** A night that ended before seven
   set tiredness to the Drowsy edge for the first hour and never gave it back: tiredness only

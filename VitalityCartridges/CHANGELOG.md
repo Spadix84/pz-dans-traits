@@ -5,6 +5,9 @@ the SpiffBoy SDK (3825220785). Requires SpiffBoy. Plan: `plans/still-water.md`.
 
 ## 0.1.0 (in progress)
 
+- **A page in the Vitality Project's Guide tab** (2026-11-07, `client/VitalityCartridges/Guide.lua`):
+  the five cartridges and what each does to the character, registered through
+  `DanTraits_GuideExtra`; nothing without that mod. `README.md` for the folder.
 - **One Common module for the games** (2026-10-29, review C8). `ink`, `clamp`, `readNumber`,
   `readSound` and the menu move (up/down or left/right with wrap and the move cue) lived line
   for line in every Game.lua; they are `VitalityCartridges.Common` now

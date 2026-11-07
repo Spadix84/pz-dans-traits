@@ -28,7 +28,7 @@ description=[list]
 description=[*][b]Training.[/b] Arms, chest, core and legs tire and recover. A rested group pays more; a sore one can pull a muscle. Improvised weights, stretching, training plans.
 description=[*][b]Cooking.[/b] A proper cooked meal eases low mood and stress for hours and fuels your training: protein for recovery, carbs for stamina, fat against hunger.
 description=[*][b]Burnout.[/b] Fighting wears on you over days: kills, panic, wounds and withdrawal build it; sleep, calm hours and comforts ease it. It never makes you fight worse, only slows what fighting teaches.
-description=[*][b]Sleep.[/b] Sleeping dressed means shallower sleep (warm clothes are free in the cold). A hot water bottle eases sore muscles and warms a cold bed.
+description=[*][b]Sleep.[/b] Sleeping dressed means shallower sleep (warm clothes are free in the cold).
 description=[*][b]Home.[/b] Where you sleep most nights becomes home: boredom, low mood and stress ease there and nights score better. Two days away and you miss it.
 description=[*][b]Laundry.[/b] Hand washing only gets clothes so clean, damp clothes go musty, sweat makes them stale, old blood sets in. Fresh clothes lift your mood.
 description=[*][b]Reading for pleasure.[/b] Novels, comics and magazines have genres and real pages; each page eases stress and low mood.
@@ -40,7 +40,7 @@ description=[*][b]Type 1 Diabetes (-10):[/b] a hidden blood sugar, a meter and i
 description=[*][b]Heart Condition (-12):[/b] effort, panic, a heavy pack and the cold strain the heart. Chest pain stops you running; push on and it gives out. Beta blockers and nitroglycerin help.
 description=[*][b]Gout (-8):[/b] rich food, drink and thirst build up until a flare takes a foot for days. Allopurinol keeps it down, colchicine cuts a flare short.
 description=[*][b]Sensory Issues (-8):[/b] scratchy clothes, noise, crowds, glare and smells build a load that ends in a meltdown or a shutdown. Quiet, the dark and headphones bring it down.
-description=[*][b]Crippled starts:[/b] A Really Bad Day (-8), drunk, sick, cut, naked, house on fire; Wounded (-10), broken arm, four wounds, one bandage; Robbed (-10), shot, naked, house emptied; Hunted (-8), a horde follows; Hunted by Sprinters (-16), and they all run.
+description=[*][b]Crippled starts:[/b] A Really Bad Day (-8), drunk, sick, cut, naked, house on fire; Wounded (-10), broken arm, four wounds, one bandage; Robbed (-10), shot, naked, house emptied; Hunted (-8), a horde follows; Hunted by Sprinters (-16), and they all run; Swarmed (-8), four times the zombies in the cell you start in.
 description=[/list]
 description=
 description=[h2]Everything else[/h2]
@@ -60,13 +60,16 @@ description=[*][b]Point signs?[/b] Minus means a flaw and plus a perk. The creat
 description=[*][b]Too hard?[/b] Most systems have a sandbox switch, and the conditions are traits you choose.
 description=[*][b]Lost?[/b] The character window has a Guide tab: a page on every system, and What's New.
 description=[*][b]A wound still takes health?[/b] As in vanilla, until dressed. Turn off Wound Damage (Vitality: Health) and wounds cost only blood.
-description=[*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandits, This Is Your Life, SpiffBoy, Wound Expansion and Dynamic Traits and Expanded Moodles (its duplicate traits are hidden, its addictions become this mod's) are supported.
+description=[*][b]Other mods?[/b] Take A Bath And Shower, Project A-Life, Bandits, This Is Your Life, SpiffBoy, Wound Expansion and Dynamic Traits and Expanded Moodles (its duplicate traits are hidden, its addictions become this mod's) are supported. The Slow Cooker's meals count as home cooking.
 description=[*][b]Bugs?[/b] Leave a comment, or open an issue on GitHub. Your console.txt helps.
 description=[/list]
 description=
+description=[h2]More from the same project[/h2]
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3831306437]Map Legend[/url]: a symbol and colour key on the world map; click a row to draw with it.
+description=[b]Modders:[/b] API.md in the mod folder.
+description=
 description=[url=https://github.com/Spadix84/pz-dans-traits]Source and full changelog on GitHub[/url]
 description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img][/url]
-description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/trait-matrix.png[/img][/url]
 description=Moodle Framework optional.
 tags=Build 42;Traits;Realistic;Hardmode
 visibility=public

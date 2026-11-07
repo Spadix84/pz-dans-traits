@@ -19,7 +19,7 @@
 MapLegend = MapLegend or {}
 local ML = MapLegend
 
-ML.VERSION = "1.0.0"
+ML.VERSION = "1.1.0"
 ML.FILE = "MapLegend.txt"          -- under Zomboid/Lua, written by getFileWriter
 ML.HEADER = "MapLegend 1"
 ML.MOD_DATA = "MapLegend"
@@ -318,11 +318,17 @@ function ML.copyToProfile(player)
 end
 
 -- After any edit: the profile is written out at once (a character's mod data
--- saves with the character), and the UI is told to redraw.
+-- saves with the character), the UI is told to redraw (ML.onChanged, the
+-- panel's), and other mods' listeners run (MapLegend_API.lua's ML.on).
+ML.listeners = ML.listeners or { changed = {} }
 function ML.changed(player)
     if not ML.isOwn(player) then ML.writeProfile() end
     ML.revision = ML.revision + 1
     if ML.onChanged then pcall(ML.onChanged) end
+    for _, fn in ipairs(ML.listeners.changed) do
+        local ok, err = pcall(fn, player)
+        if not ok then print("[MapLegend] a changed listener failed: " .. tostring(err)) end
+    end
 end
 
 function ML.setCollapsed(collapsed)
@@ -334,8 +340,20 @@ end
 
 -- translations ----------------------------------------------------------------------------
 
+-- a preset's text: its translation (IGUI_ML_Preset_<name>), else the plain
+-- text another mod gave with it (ML.addPreset), else the name itself
+ML.PRESET_TEXT = ML.PRESET_TEXT or {}
 function ML.presetText(name)
-    return getText("IGUI_ML_Preset_" .. name)
+    local key = "IGUI_ML_Preset_" .. name
+    local text
+    if getTextOrNull then
+        text = getTextOrNull(key)
+    else
+        text = getText(key)
+        if text == key then text = nil end
+    end
+    if text == nil then text = ML.PRESET_TEXT[name] or name end
+    return text
 end
 
 -- "Red Pen", from the pen's item, for tooltips; "" when there is no pen for it
