@@ -60,7 +60,8 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   to Illness 1.3, Resilient 0.7, Vitality, age (the Age table's new `illness` row: 20s 0.85, 40s
   1.15, 50s 1.35; `DanTraits_AgeIllness`), sleep debt, hunger and stress up to 1.3, 1.2, 1.2,
   Smoker 1.15 for the cold. An illness's fever also makes a wound infection grow x(1 + 0.5 fever)
-  and clear x(1 - 0.5 fever). Sandbox (Health page): Catchable Illness, Illness Frequency (0-300%),
+  and clear x(1 - 0.5 fever). Sandbox (Health page): Catchable Illness (off by default for this
+  release, until it has been played; the tooltip says so), Illness Frequency (0-300%),
   Common Cold, Stomach Bug, Food Poisoning. Console `ill [cold|stomach|food [now]] | ill clear`.
 - **The flu, pneumonia and strep throat** (illness phase 2, `DanTraits_Illness.lua`): three more
   rows. The flu: 0.03% an hour November to March only, hidden 1-3 days, 5-10 days of fever 0.7,
@@ -98,7 +99,7 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   reducer, jittery side effect), DM Cough Syrup (dextromethorphan, guaifenesin: the cold x0.5).
   Antihistamines ease a cold x0.8. They ease symptoms, never the course
   (`DanTraits_IllnessRelief`); each has a too-many effect. Over the counter they turn up like
-  antihistamines (promethazine like the other prescriptions).
+  antihistamines (promethazine like the other prescriptions). In the loot only while Catchable Illness is on (`needs` on the loot spec, `lootScale` 0 when the boolean option is off; 2026-11-07).
 - **Herbs ease illness too** (`DanTraits_Illness.lua`, `HERBS`): the game's own herbs, eaten or as
   a spice in a hot drink or a dish, give a gentler relief for 3 hours, the strongest of each kind
   counting: Lemongrass nausea x0.7, Ginger Root x0.8, pickled ginger and mint x0.85; Chamomile

@@ -55,7 +55,7 @@ option DanTraits.DehydrationEnabled
 {type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsDehydrationEnabled,}
 
 option DanTraits.IllnessEnabled
-{type = boolean, default = true, page = DanTraitsHealth, translation = DanTraitsIllnessEnabled,}
+{type = boolean, default = false, page = DanTraitsHealth, translation = DanTraitsIllnessEnabled,}
 
 option DanTraits.IllnessFrequency
 {type = integer, min = 0, max = 300, default = 100, page = DanTraitsHealth, translation = DanTraitsIllnessFrequency,}

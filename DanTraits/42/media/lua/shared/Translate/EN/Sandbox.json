@@ -54,7 +54,7 @@
     "Sandbox_DanTraitsDehydrationEnabled": "Dehydration",
     "Sandbox_DanTraitsDehydrationEnabled_tooltip": "Hours spent thirsty bring a headache, tiredness and slower endurance recovery until you drink.<br>Off: vanilla thirst only.",
     "Sandbox_DanTraitsIllnessEnabled": "Catchable Illness",
-    "Sandbox_DanTraitsIllnessEnabled_tooltip": "Anyone can catch a cold, the flu, pneumonia, strep throat, a stomach bug or food poisoning. Each is hidden for a while, then runs a course of days; rest and sleep (best at home) shorten it, running and sprinting drag it out. Sleep debt, hunger, stress, age and a low Vitality make you likelier to catch one. Fevers from illness and an infected wound add up, and two bad ones can kill.<br>Off: the game's own cold and food sickness only.",
+    "Sandbox_DanTraitsIllnessEnabled_tooltip": "Off unless you turn it on. Anyone can catch a cold, the flu, pneumonia, strep throat, a stomach bug or food poisoning. Each is hidden for a while, then runs a course of days; rest and sleep (best at home) shorten it, running and sprinting drag it out. Sleep debt, hunger, stress, age and a low Vitality make you likelier to catch one. Fevers from illness and an infected wound add up, and two bad ones can kill.<br>Off: the game's own cold and food sickness only.",
     "Sandbox_DanTraitsIllnessFrequency": "Illness Frequency (%%)",
     "Sandbox_DanTraitsIllnessFrequency_tooltip": "How likely every illness is to be caught, as a share of normal (pneumonia and strep after a cold or the flu included). 50: half as often. 0: never (the game's own cold included).",
     "Sandbox_DanTraitsIllnessCold": "Common Cold",

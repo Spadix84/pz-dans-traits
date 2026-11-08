@@ -76,6 +76,13 @@ local function overTheCounter(name, commonness)
     return spec
 end
 
+-- The six illness medicines only ease what Catchable Illness brings, so with
+-- that sandbox option off (the 1.5.2 default) they are left out of the loot.
+local function illnessOnly(spec)
+    spec.needs = "IllnessEnabled"
+    return spec
+end
+
 local ITEMS = {
     {
         name = "DanTraits.Inhaler",
@@ -226,12 +233,12 @@ local ITEMS = {
     prescription("DanTraits.Colchicine", 0.4),      -- Gout: the flare pill, rarer
     prescription("DanTraits.Levothyroxine", 1.0),   -- Underactive Thyroid: one of the commonest prescriptions there is
     -- the illness medicines (2026-11-02): cold medicine and the pink stuff in most houses in 1993
-    overTheCounter("DanTraits.NightColdLiquid", 1.2),
-    overTheCounter("DanTraits.DayColdCapsules", 1.0),
-    overTheCounter("DanTraits.CoughSyrup", 1.2),
-    overTheCounter("DanTraits.BismuthLiquid", 1.2),
-    overTheCounter("DanTraits.Dimenhydrinate", 0.6),   -- motion sickness tablets: a travel kit, less often
-    prescription("DanTraits.Promethazine", 0.7),       -- the prescription anti-nausea tablet
+    illnessOnly(overTheCounter("DanTraits.NightColdLiquid", 1.2)),
+    illnessOnly(overTheCounter("DanTraits.DayColdCapsules", 1.0)),
+    illnessOnly(overTheCounter("DanTraits.CoughSyrup", 1.2)),
+    illnessOnly(overTheCounter("DanTraits.BismuthLiquid", 1.2)),
+    illnessOnly(overTheCounter("DanTraits.Dimenhydrinate", 0.6)),   -- motion sickness tablets: a travel kit, less often
+    illnessOnly(prescription("DanTraits.Promethazine", 0.7)),       -- the prescription anti-nausea tablet
     {
         -- antihistamines: over the counter, in every other bathroom (Hay Fever)
         name = "DanTraits.Antihistamines",
@@ -533,8 +540,10 @@ local function walk(root, path)
     return node
 end
 
--- a spec's weights x its boost and its sandbox percent
+-- a spec's weights x its boost and its sandbox percent; 0 when the boolean
+-- option it needs is off
 local function lootScale(spec)
+    if spec.needs and not DanTraits_SandboxOn(spec.needs) then return 0 end
     local k = spec.boost or 1
     if spec.sandbox then
         local pct = DanTraits_SandboxNum(spec.sandbox)   -- DanTraits_Util.lua (shared loads before server)

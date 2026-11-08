@@ -52,7 +52,7 @@
 --
 -- Resistance (DanTraits_IllnessResistance, x every chance to catch): Prone to
 -- Illness, Resilient, Vitality, age (DanTraits_AgeIllness), sleep debt,
--- hunger, stress, and Smoker for the cold. Sandbox: IllnessEnabled (all of
+-- hunger, stress, and Smoker for the cold. Sandbox: IllnessEnabled (off by default; all of
 -- it), IllnessFrequency (percent, x every chance), IllnessCold,
 -- IllnessStomachBug, IllnessFoodPoisoning, IllnessFlu, IllnessPneumonia,
 -- IllnessStrep.
