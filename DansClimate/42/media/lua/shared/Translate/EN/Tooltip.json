@@ -1,0 +1,13 @@
+{
+    "Tooltip_DansClimate_InstallFacing": "The controls face the side you're standing on. Install it from inside the room you want to cool.",
+    "Tooltip_DansClimate_NotAWindow": "This isn't a window that can hold an air conditioner.",
+    "Tooltip_DansClimate_HasUnit": "There's already an air conditioner in this window.",
+    "Tooltip_DansClimate_Barricaded": "Take the barricade down first.",
+    "Tooltip_DansClimate_NeedScrewdriver": "Needs a screwdriver.",
+    "Tooltip_DansClimate_NoPower": "No power.",
+    "Tooltip_DansClimate_HvacNoPower": "No power: the building's heating and cooling are off.",
+    "Tooltip_DansClimate_Thermostat_OFF": "The building's heating and cooling are switched off.",
+    "Tooltip_DansClimate_Thermostat_HEAT": "Heats the building to %1. No cooling.",
+    "Tooltip_DansClimate_Thermostat_COOL": "Cools the building to %2. No heating.",
+    "Tooltip_DansClimate_Thermostat_AUTO": "Heats the building to %1 and cools it to %2."
+}

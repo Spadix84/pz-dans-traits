@@ -1,3 +1,15 @@
+[h1]Next update (in progress)[/h1]
+
+[h2]Changed[/h2]
+[list]
+[*][b]Moodle Framework is now required.[/b] The game will not enable the mod without it. Before, the mod loaded without it and showed no moodles at all. Subscribe to and enable Moodle Framework before loading your save.
+[/list]
+
+[h2]Fixed[/h2]
+[list]
+[*][b]Smoking off a stove clears the craving.[/b] With I Don't Need A Lighter, a cigarette lit off a stove, fire, barbecue or car lighter did nothing for a Smoker's craving; it now counts like any other.
+[/list]
+
 [h1]1.5.2: you can get sick; Hunted by Sprinters, Swarmed[/h1]
 Safe mid-save: nobody starts ill and no immunity is assumed, a wound infection's fever carries straight over, Catchable Illness starts OFF (turn it on under Vitality: Health when you want it; how often and each illness on its own are there too), the other new options start at their defaults, and the Guide's companion mods page reads the mods you have loaded. Every detail is in CHANGELOG.md on GitHub.
 

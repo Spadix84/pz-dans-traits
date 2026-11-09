@@ -492,3 +492,17 @@ end, 24, {
 if Events.OnEnterVehicle then Events.OnEnterVehicle.Add(function(ch) if DanTraits_IsLocalPlayer(ch) then stateOf(ch).inVehicle = true end end) end
 if Events.OnExitVehicle then Events.OnExitVehicle.Add(function(ch) if DanTraits_IsLocalPlayer(ch) then stateOf(ch).inVehicle = false end end) end
 Events.OnWeaponSwing.Add(onConcussionSwing)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- the late headache: waiting to come on, then running
+DanTraits_Machine("concussion.late", {
+    states = { "none", "waiting", "headache" },
+    on = function() return DanTraits_SandboxOn("ConcussionEnabled") end,
+    of = function(player, d)
+        local late = d.ccLate
+        if type(late) ~= "table" then return "none" end
+        if late.left then return "headache", { hoursLeft = late.left } end
+        if late.wait then return "waiting", { hours = late.wait } end
+        return "none"
+    end,
+})

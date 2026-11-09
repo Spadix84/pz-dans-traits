@@ -335,3 +335,14 @@ DanTraits_ExtraCommands.adhd = function(player, args)
         .. (wait > 0 and (", calm for " .. tostring(math.floor(wait)) .. " more minutes") or "")
         .. ", buildings seen " .. tostring(d.adhdSeenN or 0)
 end
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+DanTraits_Machine("adhd.focus", {
+    states = { "idle", "building", "hyperfocus" },
+    trait = "adhd",
+    of = function(player, d)
+        if d.adhdHyper == true then return "hyperfocus" end
+        if (d.adhdFocus or 0) > 0 then return "building", { focus = d.adhdFocus } end
+        return "idle"
+    end,
+})

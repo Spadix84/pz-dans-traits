@@ -191,14 +191,27 @@ local function updateAsthmaMinute(player, d)
         end
     end
 
-    build = build + ASTHMA_FEVER_RATE * DanTraits_Strength("DanTraits_Fever", player)
+    -- a fever is a steady pressure, not a trigger: at rest it eats into the
+    -- easing and builds only past it. (Any fever at all used to count as a
+    -- build and stop the easing outright, so with a cold, the flu or the
+    -- trace of fever a healing wound keeps, an attack could not end without
+    -- the inhaler. Heart had the same with the cold; 2026-10-28.)
+    local fever = ASTHMA_FEVER_RATE * DanTraits_Strength("DanTraits_Fever", player)
     if build > 0 then
+        build = build + fever
         if DanTraits_VitalityAsthmaBuild then build = build * DanTraits_VitalityAsthmaBuild(player) end
         irritation = irritation + build
     else
         local decay = asleep and ASTHMA_DECAY_ASLEEP or ASTHMA_DECAY_CALM
         if d.asthmaAttack then decay = ASTHMA_DECAY_ATTACK end
-        irritation = irritation - decay * (1 - ASTHMA_LUNGS_DECAY * lungs)
+        local net = decay * (1 - ASTHMA_LUNGS_DECAY * lungs) - fever
+        if net >= 0 then
+            irritation = irritation - net
+        else
+            local rise = -net
+            if DanTraits_VitalityAsthmaBuild then rise = rise * DanTraits_VitalityAsthmaBuild(player) end
+            irritation = irritation + rise
+        end
     end
     pcall(function() d.asthmaEndPrev = stats:get(CharacterStat.ENDURANCE) end)
     asthmaSetIrritation(player, d, irritation)
@@ -318,3 +331,17 @@ function DanTraits_IsInhaler(item) return DanTraits_IsItem(item, INHALER_ITEM) e
 DanTraits_StartingKit({ trait = "asthma", flag = "asthmaKitGiven", items = { INHALER_ITEM } })
 
 DanTraits_Every("minute", "Asthma", updateAsthmaMinute, 40, { trait = "asthma", clear = clearAsthma })
+
+-- declared state machine (DanTraits_Machine in core): clear, irritated (tier 1-3),
+-- attack (from 0.9 until it eases under 0.75)
+DanTraits_Machine("asthma.airway", {
+    states = { "clear", "irritated", "attack" },
+    trait = "asthma",
+    of = function(player, d)
+        local v = d.asthma or 0
+        local info = { irritation = math.floor(v * 100 + 0.5) / 100, tier = asthmaEffectiveTier(d) }
+        if d.asthmaAttack then return "attack", info end
+        if asthmaTierOf(v) >= 1 then return "irritated", info end
+        return "clear", info
+    end,
+})

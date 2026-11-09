@@ -3,6 +3,63 @@
 All notable changes to the Vitality Project. The Workshop page carries a shorter
 version of each entry (`workshop/changelog.txt`); this file has the detail.
 
+## Unreleased
+
+### Changed
+
+- **Moodle Framework is now required.** `mod.info` carries `require=\MoodleFramework`, so the
+  game will not enable the Vitality Project without it. Before, the mod loaded without it and
+  all 48 moodles were skipped without a word, which left most conditions with nothing on
+  screen. A save made without Moodle Framework needs it subscribed and enabled before it is
+  loaded again. The Lua still checks for `MF` before each call (a server has none).
+
+### Fixed
+
+- **A cigarette lit off a stove, fire or car lighter clears the Smoker's craving.** I Don't
+  Need A Lighter smokes those through its own actions (`IsStoveSmoking`, `IsCarSmoking`), whose
+  `complete()` calls `Eat(item, 1)` without the eat action, so nothing of ours saw the
+  cigarette: the game used it up and the craving, the quitting clock, the lungs and the
+  habit stood still. Core now wraps those two `complete()`s into `DanTraits_OnEat` (the
+  whole cigarette), with the same refusal check as the eat action, at load and again at game
+  start. Its lighter path already went through the eat action.
+- **Breaking Point no longer sticks after a save.** A save made while the character sat
+  through a breakdown loaded with `stBreak = "active"` and no action to end it: strain never
+  eased again, held at 100, Breaking Point moodle on for good. On load it is pending again,
+  and once a minute an "active" with no breakdown action running goes back to pending.
+- **Asthma eases through a fever.** Any fever counted as a trigger and stopped the easing
+  outright; most illnesses carry one for their whole course, so an attack could not end
+  without the inhaler. A fever now eats into the easing and only builds past it.
+- **A wound that closes while an infection is incubating is clean.** It used to flash
+  "infected", with its notice, for one minute.
+- **Alcoholic taken off by the console or another mod takes its withdrawal with it** (the
+  Steady cartridge kept shaking); **a full caffeine dose clears the withdrawal at once**, not
+  a minute later.
+- **Vitality switched off asleep, before any night was scored,** no longer turns the hours
+  until it is switched back on into one long night.
+- **Reading switched off with a genre buff running** takes the XP multiplier off at once.
+- **The 50s' same-bed sliver** is paid once a day, as the meal and drink ones are, not once
+  a save.
+- **Base Unloader:** a step that fails pauses the run (plan kept, Resume offered) instead of
+  leaving it "running" with nothing to move it on.
+
+### Added
+
+- **Declared state machines** (`DanTraits_Machine` in core). 22 systems name their phases
+  next to their keys: none, pending, active; clear, aura, attack, refractory; and so on.
+  Telemetry carries them as `machines` beside the raw mod data, the debug console lists them
+  (`states`, `states all`), and other files can ask with `DanTraits_StateOf`. Keys and
+  saves are unchanged. `docs/state-machines.md` maps every machine in the repo, declared or
+  not, with the open defects the survey found. `tests/test_machines.lua` and
+  `tests/check_machines.py` keep the code and the page in step.
+- **Vanilla test commands for the companion's test bench** (`DanTraits_DebugCommands.lua`,
+  debug mode only, single player): `skill <id|name|all> <0..10>` sets a skill and its XP bar;
+  `time <H[:MM]>` and `time +<hours>` move the clock forward only, counting nights at 07:00
+  and days at midnight as the game does, so world-hour timers never run backwards; `speed
+  <0..4>`; `weather clear | storm | tropical | blizzard | rain | snow | fog | clouds | wind |
+  natural` and `temp <C> | natural` hold the same admin climate values the game's admin panel
+  sets. Telemetry now carries `world` (skills by category, clock, speed, weather and any
+  overrides held), `traitKeys`, and body temperature in `stats`.
+
 ## Map Legend 1.1.0 - 2026-11-07 (separate mod)
 
 - **An API for other mods** (`MapLegend_API.lua`, `MapLegend/API.md`, `MapLegend.API_VERSION`

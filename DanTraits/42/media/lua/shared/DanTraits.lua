@@ -132,6 +132,8 @@ end
 --   20  retire      the retired traits swapped out (DanTraits_RetireTraits)
 --   30  traits      the vanilla trait cache dropped (DanTraits_TraitsChanged), so
 --                   the steps below see the traits as the character now has them
+--   15  machine:<id> each declared state machine's spec.load (DanTraits_Machine
+--                   below): a state that cannot outlive a save is settled
 --   40  kits        the starting kits (DanTraits_StartingKit), in registration order
 --   50  Age         the age band's trait and starting levels
 --   55  AgeTraits   Reading Glasses' pair
@@ -455,6 +457,99 @@ DanTraits_HasVanillaTrait = hasVanillaTrait
 DanTraits_Notify = notify
 DanTraits_NotifyGood = notifyGood
 DanTraits_Data = traitData
+
+-- Declared state machines ---------------------------------------------------------------
+-- Most systems carry a phase in a few mod-data keys: an attack flag, a stage
+-- number, a countdown that is nil between episodes, a "pending" string. Read
+-- raw, every reader re-derives the phase its own way (Strain reads eight
+-- files' keys; the companion app got all 511). DanTraits_Machine names the
+-- phases once, in the owner's file next to the keys, and everyone else asks:
+--
+--   DanTraits_Machine(id, spec)
+--     id           "owner.name" ("strain.breakdown"); the same id again replaces it (a reload)
+--     spec.states  every state it can be in, the rest state first: { "none", "pending", "active" }
+--     spec.of      fn(player, d) -> state[, info]: read from the owner's keys, never writes;
+--                  nil means the rest state. info: an optional flat table (minutes left,
+--                  a stage) for the console and the companion app
+--     spec.trait   optional, a mod trait key or fn(player, d) -> bool: without it the
+--                  machine is at rest whatever its keys say (keys a trait taken off
+--                  mid-game left behind are not a state)
+--     spec.on      optional fn() -> bool, the system's sandbox switch; off reads as rest
+--     spec.load    optional fn(player, d), a player-ready step at 15 (after the key
+--                  renames): settles a state that cannot outlive a save. A timed action
+--                  in progress is not saved, so its state goes back to where it can start
+--                  again. Runs twice a load, as every ready step does: idempotent.
+--
+--   DanTraits_StateOf(player, id[, d]) -> state, info     nil for an id nobody registered
+--   DanTraits_States(player[, d]) -> { [id] = { state = s, info = t or nil } }, every machine:
+--     the Telemetry snapshot's `machines`, the console's `states`
+--
+-- A state the spec does not declare is a bug in the spec or the owner: logged
+-- once and read as the rest state (under STRICT, the tests, it raises).
+-- docs/state-machines.md lists every machine, declared or not yet.
+DanTraits_Machines = {}            -- id -> spec; read-only for everyone but DanTraits_Machine
+local machineLoadStep = {}         -- id -> true once its ready step is in the list
+
+function DanTraits_Machine(id, spec)
+    if type(id) ~= "string" or type(spec) ~= "table" or type(spec.of) ~= "function"
+        or type(spec.states) ~= "table" or spec.states[1] == nil then return false end
+    spec.id, spec.rest, spec.set = id, spec.states[1], {}
+    for _, s in ipairs(spec.states) do spec.set[s] = true end
+    local trait = spec.trait
+    if type(trait) == "string" then
+        spec.has = function(player) return hasTrait(player, trait) end
+    elseif type(trait) == "function" then
+        spec.has = trait
+    end
+    DanTraits_Machines[id] = spec
+    if type(spec.load) == "function" and not machineLoadStep[id] then
+        machineLoadStep[id] = true
+        DanTraits_OnPlayerReady("machine:" .. id, function(player)
+            local m = DanTraits_Machines[id]   -- the spec as it is now, after any reload
+            if m and m.load then m.load(player, traitData(player)) end
+        end, 15)
+    end
+    return true
+end
+
+local function machineState(spec, player, d)
+    local tag = "machine:" .. spec.id
+    if spec.on then
+        local ok, on = pcall(spec.on)
+        if not ok then guardFail(tag .. " on", on) return spec.rest end
+        if on == false then return spec.rest end
+    end
+    if spec.has then
+        local ok, has = pcall(spec.has, player, d)
+        if not ok then guardFail(tag .. " trait", has) return spec.rest end
+        if has ~= true then return spec.rest end
+    end
+    local ok, state, info = pcall(spec.of, player, d)
+    if not ok then guardFail(tag, state) return spec.rest end
+    if state == nil then return spec.rest end
+    if not spec.set[state] then
+        guardFail(tag, "undeclared state " .. tostring(state))
+        return spec.rest
+    end
+    return state, type(info) == "table" and info or nil
+end
+
+function DanTraits_StateOf(player, id, d)
+    local spec = DanTraits_Machines[id]
+    if not spec or not player then return nil end
+    return machineState(spec, player, d or traitData(player))
+end
+
+function DanTraits_States(player, d)
+    local out = {}
+    if not player then return out end
+    d = d or traitData(player)
+    for id, spec in pairs(DanTraits_Machines) do
+        local state, info = machineState(spec, player, d)
+        out[id] = { state = state, info = info }
+    end
+    return out
+end
 
 -- Value hooks: a system (Vitality, mostly) offers a value, every file that
 -- registered for that name gets to adjust it, in load order, or by order
@@ -904,6 +999,28 @@ DanTraits_ExtraCommands.frametime = function(player, args)
     return string.format("frame handler: %.2f us a run over %d runs (%d ms); frame set: ", ms * 1000 / n, n, ms) .. setText
 end
 
+-- console: states [all]  the declared state machines (DanTraits_Machine) not at
+-- rest, with their info, sorted by id; "all" lists the ones at rest too
+DanTraits_ExtraCommands.states = function(player, args)
+    local all = args and args[1] == "all"
+    local ids, lines = {}, {}
+    for id in pairs(DanTraits_Machines) do ids[#ids + 1] = id end
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        local state, info = DanTraits_StateOf(player, id)
+        if all or state ~= DanTraits_Machines[id].rest then
+            local extra = {}
+            if info then
+                for k, v in pairs(info) do extra[#extra + 1] = tostring(k) .. "=" .. tostring(v) end
+                table.sort(extra)
+            end
+            lines[#lines + 1] = id .. ": " .. tostring(state) .. (#extra > 0 and (" (" .. table.concat(extra, ", ") .. ")") or "")
+        end
+    end
+    if #lines == 0 then return "every machine at rest (" .. #ids .. " declared)" end
+    return table.concat(lines, "; ")
+end
+
 -- The stat delta pipeline (see DanTraits_Util.lua): one place that scales how
 -- fast a stat recovers. Order 0, so it runs before every system that writes
 -- the stat in the same tick.
@@ -973,6 +1090,20 @@ local function wrapEatAction()
         DanTraits_OnEat(self.character, self.item, (tonumber(self.percentage) or 1) * progress)
         return original(self, food, percentage, ...)
     end)
+    -- I Don't Need A Lighter smokes off a stove, fire or car lighter through its
+    -- own actions, whose complete() calls Eat(item, 1) without the eat action:
+    -- the whole cigarette, fed through the same path. Looked up by global name
+    -- again at game start, since that mod may load after this file.
+    for _, name in ipairs({ "IsStoveSmoking", "IsCarSmoking" }) do
+        local class = _G[name]
+        if type(class) == "table" then
+            DanTraits_Wrap(class, "complete", "core-eat", function(original, self, ...)
+                if refused(self) then return true end
+                DanTraits_OnEat(self.character, self.item, 1)
+                return original(self, ...)
+            end)
+        end
+    end
 end
 wrapEatAction()
 Events.OnGameStart.Add(wrapEatAction)

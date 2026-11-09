@@ -4,7 +4,10 @@
 --
 -- Twice a second (real time) the whole picture is written as JSON to
 -- <user>/Zomboid/Lua/DanTraits_Telemetry.json: vanilla stats, body, the
--- mod-data table every trait keeps its state in, and a few derived values.
+-- mod-data table every trait keeps its state in, a few derived values, and
+-- `machines`: each declared state machine by name ({ "migraine.attack":
+-- { "state": "aura", "info": { "hoursLeft": 0.4 } } }; DanTraits_Machine in core,
+-- the list in docs/state-machines.md). Read a phase there, not from the raw keys.
 -- Once a second <user>/Zomboid/Lua/DanTraits_Commands.txt is read, each
 -- line run as a command, and the file emptied. Single player only.
 --
@@ -40,6 +43,7 @@
 --   trait <add|remove> <id>  a trait on the character, by its registry key
 --   lua <code>               run a line of Lua (debug mode)
 --   badday [fire]            A Really Bad Day: replay the opening (DanTraits_BadDay.lua)
+--   skill | time | speed | weather | temp   vanilla test commands (DanTraits_DebugCommands.lua)
 --   halo <text>
 --   echo <text>
 -- plus whatever the trait files register in DanTraits_ExtraCommands (grep for it:
@@ -149,7 +153,7 @@ DanTraits_JsonEncode = encode
 
 -- Snapshot ------------------------------------------------------------------------
 local STAT_NAMES = { "PANIC", "ENDURANCE", "FATIGUE", "THIRST", "HUNGER", "UNHAPPINESS", "STRESS", "BOREDOM",
-    "INTOXICATION", "FOOD_SICKNESS", "PAIN", "WETNESS", "DRUNKENNESS", "SICKNESS", "ANGER", "NICOTINE_WITHDRAWAL" }
+    "INTOXICATION", "FOOD_SICKNESS", "PAIN", "WETNESS", "DRUNKENNESS", "SICKNESS", "ANGER", "NICOTINE_WITHDRAWAL", "TEMPERATURE" }
 
 local function safe(fn, default)
     local ok, res = pcall(fn)
@@ -214,6 +218,18 @@ local function snapshot(player)
     if has("spiraling") and DanTraits_MddBenefit then derived.mddBenefit = safe(function() return DanTraits_MddBenefit(player) end) end
     if DanTraits_MddRegularity then derived.exerciseRegularity = safe(function() return DanTraits_MddRegularity(player) end) end
     out.derived = derived
+    -- every declared state machine (DanTraits_Machine): { [id] = { state, info } }, so a
+    -- reader asks "is a migraine running" by name instead of decoding the raw keys in `mod`
+    if DanTraits_States then out.machines = safe(function() return DanTraits_States(player, out.mod) end) end
+    -- skills, clock, game speed and weather for the companion's test bench (DanTraits_DebugCommands.lua)
+    if DanTraits_WorldSnapshot then out.world = safe(function() return DanTraits_WorldSnapshot(player) end) end
+    -- every trait key the trait command takes, for the bench's picker
+    if DanTraitsRegistry then
+        local keys = {}
+        for k in pairs(DanTraitsRegistry) do keys[#keys + 1] = k end
+        table.sort(keys)
+        if #keys > 0 then out.traitKeys = keys end
+    end
     if DanTraits_AttribReport then out.attrib = safe(function() return DanTraits_AttribReport(player) end) end
     if DanTraits_ActiveMoodles then out.moodles = safe(function() return DanTraits_ActiveMoodles(player) end) end
     -- this mod's own moodle levels (DanTraits_Moodles.lua): 1..4 bad, -1 good; only the ones showing

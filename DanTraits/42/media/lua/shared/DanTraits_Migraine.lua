@@ -686,3 +686,16 @@ end
 DanTraits_Every("minute", "Migraine", updateMigraineMinute, 40, { trait = "migraine", clear = clearMigraine })
 DanTraits_Every("minute", "Triptan", updateTriptanMinute, 40)
 DanTraits_Every("ten", "Migraine", updateMigraineTen, 40, { trait = "migraine" })
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- clear, aura, attack, then the refractory hours after one when no new one rolls
+DanTraits_Machine("migraine.attack", {
+    states = { "clear", "aura", "attack", "refractory" },
+    trait = "migraine",
+    of = function(player, d)
+        if d.migActive then return "attack", { hoursLeft = d.migHoursLeft or 0 } end
+        if d.migAuraLeft then return "aura", { hoursLeft = d.migAuraLeft } end
+        if (d.migSinceEnd or MIG_REFRACTORY_H) < MIG_REFRACTORY_H then return "refractory" end
+        return "clear"
+    end,
+})

@@ -251,7 +251,13 @@ local function updateDependent(player, d)
     d.alcDrinking = drinking
     d.alcMeter = meter
 
-    if has then withdrawal(player, d, stats, intox, meter) end
+    if has then
+        withdrawal(player, d, stats, intox, meter)
+    elseif d.alcWithdrawing or (d.alcStage or 0) > 0 or (d.alcShakes or 0) > 0 then
+        -- the trait taken off another way (the console, another mod): the withdrawal
+        -- goes with it, or its shakes stay on for the Steady cartridge and the telemetry
+        clearWithdrawal(d)
+    end
 
     local angerFloor = 0
     if has and d.alcWithdrawing and not DanTraits_Asleep(player) then
@@ -298,3 +304,14 @@ DanTraits_AddHook("swingDrop", function(chance, player)
     if withdrawalOf(player, d) <= 0 then return nil end
     return chance + (d.alcShakes or 0)
 end)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+DanTraits_Machine("dependent.withdrawal", {
+    states = { "none", "craving", "shakes", "delirium" },
+    trait = "dependent",
+    of = function(player, d)
+        if not d.alcWithdrawing then return "none" end
+        local names = { "craving", "shakes", "delirium" }
+        return names[d.alcStage or 0] or "none", { dryHours = math.floor(d.alcDryHours or 0), strength = d.alcW or 0 }
+    end,
+})

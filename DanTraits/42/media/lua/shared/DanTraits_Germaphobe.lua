@@ -129,3 +129,12 @@ DanTraits_ExtraCommands.germ = function(player, args)
 end
 
 DanTraits_Every("minute", "Germaphobe", updateGermMinute, 40)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+DanTraits_Machine("germaphobe.grime", {
+    states = { "clean", "filthy" },
+    trait = "germaphobe",
+    of = function(player, d)
+        return d.gmFilthy and "filthy" or "clean", { grime = d.gmGrime or 0 }
+    end,
+})

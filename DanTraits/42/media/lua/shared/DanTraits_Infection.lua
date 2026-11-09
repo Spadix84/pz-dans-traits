@@ -217,7 +217,14 @@ local function updatePart(player, d, part, name, perMin)
         return 0
     end
     if rec.inc then
-        -- contaminated: cleaning now ends it
+        -- contaminated: cleaning now ends it, and so does the wound closing
+        -- (it used to run on to the end of the clock and show a closed wound
+        -- infected, with its notice, for the one minute before the check below)
+        if not woundOpen(part) then
+            d.infParts[name] = nil
+            showLevel(part, 0)
+            return 0
+        end
         if treated then
             rec.inc, rec.L = nil, 0
             showLevel(part, 0)
@@ -444,3 +451,14 @@ DanTraits_ExtraCommands.infection = function(player, args)
 end
 
 DanTraits_Every("minute", "Infection", updateInfectionMinute, 23)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- the body's stage (infStage): contaminated, a local infection, fever, sepsis
+DanTraits_Machine("infection", {
+    states = { "none", "contaminated", "local", "fever", "sepsis" },
+    on = function() return DanTraits_SandboxOn("InfectionEnabled") end,
+    of = function(player, d)
+        local names = { "contaminated", "local", "fever", "sepsis" }
+        return names[d.infStage or 0] or "none", { spread = d.infS or 0 }
+    end,
+})

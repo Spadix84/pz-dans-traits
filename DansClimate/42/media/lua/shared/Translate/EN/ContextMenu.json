@@ -1,0 +1,16 @@
+{
+    "ContextMenu_DansClimate_InstallAC": "Install Window Air Conditioner",
+    "ContextMenu_DansClimate_RemoveAC": "Remove Window Air Conditioner",
+    "ContextMenu_DansClimate_TurnOn": "Turn On Air Conditioner",
+    "ContextMenu_DansClimate_TurnOff": "Turn Off Air Conditioner",
+    "ContextMenu_DansClimate_Thermostat": "Thermostat (room %1)",
+    "ContextMenu_DansClimate_ThermostatNoReading": "Thermostat",
+    "ContextMenu_DansClimate_Mode_OFF": "Off",
+    "ContextMenu_DansClimate_Mode_HEAT": "Heat only",
+    "ContextMenu_DansClimate_Mode_COOL": "Cool only",
+    "ContextMenu_DansClimate_Mode_AUTO": "Heat and cool",
+    "ContextMenu_DansClimate_HeatTo": "Heat to %1",
+    "ContextMenu_DansClimate_CoolTo": "Cool to %1",
+    "ContextMenu_DansClimate_Current": "%1 (set)",
+    "ContextMenu_DansClimate_Readout": "Room climate (debug)"
+}

@@ -1,0 +1,14 @@
+module Base
+{
+    /* The window air conditioner, as carried. It isn't a vanilla moveable: the mod's
+       own install action puts it in a window as tile appliances_windowac_01_0-3
+       (off; 4-7 on), and its remove action gives this item back. */
+    item WindowAC
+    {
+        DisplayCategory = Electronics,
+        ItemType = base:normal,
+        Weight = 12.0,
+        Icon = WindowAC,
+        MetalValue = 40.0,
+    }
+}

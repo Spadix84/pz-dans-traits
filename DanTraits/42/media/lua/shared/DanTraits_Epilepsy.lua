@@ -195,3 +195,15 @@ end
 DanTraits_StartingKit({ trait = "epilepsy", flag = "epKitGiven", meds = { "anticonvulsant" }, items = { EP_MEDS_ITEM } })
 
 DanTraits_Every("minute", "Epilepsy", updateEpilepsyMinute, 40)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- idle, the aura (minutes to the seizure), the aftermath; the seizure itself is instant
+DanTraits_Machine("epilepsy.seizure", {
+    states = { "idle", "aura", "aftermath" },
+    trait = "epilepsy",
+    of = function(player, d)
+        if d.epAuraMin then return "aura", { minutes = d.epAuraMin } end
+        if (d.epAfterMin or 0) > 0 then return "aftermath", { minutes = d.epAfterMin } end
+        return "idle"
+    end,
+})

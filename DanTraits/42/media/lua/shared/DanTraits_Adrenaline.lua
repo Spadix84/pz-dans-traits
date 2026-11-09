@@ -227,3 +227,16 @@ DanTraits_ExtraCommands.adrenaline = function(player, args)
 end
 
 DanTraits_Every("minute", "Adrenaline", updateAdrenalineMinute, 35)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- the rush, the tiredness coming back, the crash (the heart risk runs beside it)
+DanTraits_Machine("adrenaline", {
+    states = { "calm", "rush", "returning", "crash" },
+    of = function(player, d)
+        local info = d.adAttackIn and { attackIn = d.adAttackIn } or nil
+        if (d.adRushMin or 0) > 0 then return "rush", info end
+        if (d.adRetMin or 0) > 0 then return "returning", info end
+        if (d.adCrashMin or 0) > 0 then return "crash", info end
+        return "calm", info
+    end,
+})

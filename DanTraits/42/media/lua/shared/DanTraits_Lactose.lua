@@ -134,3 +134,15 @@ DanTraits_ExtraCommands.lactose = function(player, args)
 end
 
 DanTraits_Every("minute", "Lactose", updateLactoseMinute, 40)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- none, onset (eaten, waiting to hit), flare (rising or easing)
+DanTraits_Machine("lactose.flare", {
+    states = { "none", "onset", "flare" },
+    trait = "lactose",
+    of = function(player, d)
+        if (d.lacFlare or 0) > 0 then return "flare", { level = d.lacFlare } end
+        if (d.lacOnset or 0) > 0 or (d.lacPending or 0) > 0 then return "onset", { minutes = d.lacOnset or 0 } end
+        return "none"
+    end,
+})

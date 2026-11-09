@@ -311,7 +311,7 @@ Attacks that cost you hours.
 The mod's own Smoker since Age 2.0 (2026-10-31). The game's Smoker is left alone and hidden on the creation screen; the sandbox option *Show Vanilla Smoker* brings it back beside this one, tagged "vanilla", and a character can take one or the other. A character from an older save with the game's Smoker and a habit behind it is switched over once, with a notice.
 
 - A cigarette holds the craving off for an hour and a half (a drag for its share); then it builds with the habit (the stat's range in four hours at full pace; half that pace for a Smoker taken at creation, faster the heavier the habit, faster drunk). Withdrawal brings irritability (the vanilla Angry moodle, which now has [effects of its own](#anger)), stress, a low mood, hunger and restless sleep.
-- A cigarette relieves only the craving it answers, and clears it. To anyone else it is a buzz that fades as tolerance builds (and the game's nausea, which a Smoker never feels).
+- A cigarette relieves only the craving it answers, and clears it, lit however it is lit (I Don't Need A Lighter's stove, fire and car-lighter smoking count too). To anyone else it is a buzz that fades as tolerance builds (and the game's nausea, which a Smoker never feels).
 - Damaged lungs recover endurance slower and cough, worse on exertion and in the morning. How much smoke is on the lungs at the start depends on age: a 20s Smoker starts nearly clean, a 50s one with over half gone.
 - Anyone who smokes regularly gains the trait; three weeks without tobacco loses it. After that, drink and stress bring cravings back, and a smoke is a coin flip to relapse.
 - Smoking speeds up caffeine clearance, lets a wound infection climb faster and slows a deep wound's healing.
@@ -962,7 +962,7 @@ The character window has a Guide tab for everyone (`DanTraits_Guide.lua`, pages 
 
 ### Moodles
 
-Every effect that lasts has one. All of them need [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795); everything else works without it.
+Every effect that lasts has one. They are drawn by [Moodle Framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3396446795), which the mod requires.
 
 - The older systems feed their own: Airway Irritation, Vitality, Slept Badly, Hangover, Migraine, Blood Loss, Infection, Concussion, Blood Sugar.
 - The rest are fed from one place (`DanTraits_Moodles.lua`): Chest Pain, Seizure, Tinnitus, Gut Flare, Filthy, Sunburn, Dehydration, Caffeine Withdrawal, Alcohol Withdrawal, Nicotine Craving, Depression, Low Iron, Stiff Joints, MS Heat, MS Flare, Spoons.

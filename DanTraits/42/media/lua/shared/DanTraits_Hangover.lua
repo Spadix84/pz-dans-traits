@@ -198,3 +198,16 @@ DanTraits_AddHook("pill", function(_, player, kind)
 end)
 
 DanTraits_Every("minute", "Hangover", updateHangoverMinute, 40)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- drinking, then a hangover pending while asleep, then the hangover itself
+DanTraits_Machine("hangover", {
+    states = { "none", "drinking", "pending", "hungover" },
+    on = function() return DanTraits_SandboxOn("HangoverEnabled") end,
+    of = function(player, d)
+        if d.hoActive then return "hungover", { hoursLeft = d.hoHoursLeft or 0, severity = d.hoSeverity or 0 } end
+        if d.hoPending then return "pending" end
+        if d.hoDrinking then return "drinking" end
+        return "none"
+    end,
+})

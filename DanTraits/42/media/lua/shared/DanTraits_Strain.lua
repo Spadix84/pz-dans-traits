@@ -722,7 +722,33 @@ function DanTraits_StrainBreakdownDone(player)
     notifyGood(player, "UI_DanTraits_StrainBrokeDown")
 end
 
+-- whether the breakdown is the action running now: true, false, or nil when
+-- the queue cannot be read (then "active" is left as it is)
+local function breakdownRunning(player)
+    local running = nil
+    pcall(function()
+        local q = ISTimedActionQueue and ISTimedActionQueue.getTimedActionQueue(player)
+        if q and q.queue then
+            local first = q.queue[1]
+            running = first ~= nil and first.Type == "ISStrainBreakdownAction"
+        end
+    end)
+    return running
+end
+
+-- "active" is the action's own state, and the action is not saved: a breakdown
+-- loaded mid-way, or one taken off the queue without its stop (a queue cleared
+-- by another action), would leave "active" with nothing to end it, and while
+-- it is set nothing eases strain. Either way it is pending again and comes at
+-- the next safe moment.
+local function settleBreakdown(player, d)
+    if d.stBreak == "active" and breakdownRunning(player) == false then
+        d.stBreak, d.stBreakTry = "pending", nil
+    end
+end
+
 local function tryBreakdown(player, d, asleep)
+    settleBreakdown(player, d)
     if d.stBreak ~= "pending" or asleep then return end
     if d.stBreakTry and d.stBreakTry > 0 then
         d.stBreakTry = d.stBreakTry - 1
@@ -842,6 +868,20 @@ end
 
 DanTraits_Every("minute", "Strain", updateStrainMinute, 45)
 DanTraits_Every("frame", "StrainKnock", updateStrainFrame, 40, { active = strainOn })   -- one knocked-down read a frame while strain is on
+
+-- Breaking Point as a declared state machine (DanTraits_Machine in core): none,
+-- pending (held at 100, waiting for a safe moment), active (the timed action
+-- running). On load "active" goes back to pending: no timed action survives a save.
+DanTraits_Machine("strain.breakdown", {
+    states = { "none", "pending", "active" },
+    on = function() return strainOn() and DanTraits_SandboxOn("StrainBreakdown") end,
+    of = function(player, d)
+        return d.stBreak, { strain = math.floor((d.strain or 0) + 0.5) }
+    end,
+    load = function(player, d)
+        if d.stBreak == "active" then d.stBreak, d.stBreakTry = "pending", nil end
+    end,
+})
 
 -- console: strain | strain set <0..100> | strain kill [n] | strain comfort <kind>
 DanTraits_ExtraCommands = DanTraits_ExtraCommands or {}

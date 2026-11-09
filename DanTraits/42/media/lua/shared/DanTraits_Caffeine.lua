@@ -71,6 +71,7 @@ local function dose(player, amount, what)
     d.cafLastDose = what
     if amount >= CAF_DOSE_MIN then
         d.cafDryHours = 0
+        d.cafWithdraw = 0   -- at once, as the small dose does: Migraine and Steady read it before the next minute
         if d.cafWithdrawing then
             d.cafWithdrawing = false
             DanTraits_NotifyGood(player, "UI_DanTraits_CaffeineSated")
@@ -178,3 +179,12 @@ DanTraits_AddHook("pill", function(_, player, kind)
 end)
 
 DanTraits_Every("minute", "Caffeine", updateCaffeineMinute, 40)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+DanTraits_Machine("caffeine.withdrawal", {
+    states = { "sated", "withdrawing" },
+    trait = "caffeine",
+    of = function(player, d)
+        return d.cafWithdrawing and "withdrawing" or "sated", { dryHours = math.floor(d.cafDryHours or 0), strength = d.cafWithdraw or 0 }
+    end,
+})

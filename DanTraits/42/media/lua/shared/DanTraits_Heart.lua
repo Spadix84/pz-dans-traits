@@ -449,3 +449,17 @@ DanTraits_Every("frame", "Heart", updateHeartFrame, 40, { active = function(play
     return (hasTrait(player, "heart") and (d.hcAnginaMin or 0) > 0) or weak(player, d) ~= nil
 end })
 Events.OnWeaponSwing.Add(onHeartSwing)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- not trait-gated: the weak week after a heart attack runs for anyone (Adrenaline's
+-- attack included); the angina is cleared with the trait
+DanTraits_Machine("heart", {
+    states = { "calm", "angina", "weakened" },
+    of = function(player, d)
+        local stage = DanTraits_HeartWeakStage(player, d)
+        local info = { strain = d.hcStrain or 0, weakStage = stage }
+        if (d.hcAnginaMin or 0) > 0 then info.minutes = d.hcAnginaMin return "angina", info end
+        if stage > 0 then return "weakened", info end
+        return "calm", info
+    end,
+})

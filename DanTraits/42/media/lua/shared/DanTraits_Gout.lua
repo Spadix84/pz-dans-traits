@@ -242,3 +242,13 @@ DanTraits_Every("minute", "Gout", updateGoutMinute, 40, { trait = "gout", clear 
 DanTraits_Every("frame", "Gout", updateGoutFrame, 40, { trait = "gout", active = function(player, d) return inFlare(d) end })   -- frames only in a flare
 
 DanTraits_StartingKit({ trait = "gout", flag = "gtKitGiven", items = { GT_START_ALLO, GT_START_PILLS }, meds = { "allopurinol" } })
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+DanTraits_Machine("gout.flare", {
+    states = { "calm", "flare" },
+    trait = "gout",
+    of = function(player, d)
+        if (d.gtFlareMin or 0) > 0 then return "flare", { minutes = d.gtFlareMin } end
+        return "calm"
+    end,
+})

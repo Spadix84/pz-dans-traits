@@ -120,3 +120,15 @@ local function updateGlutenMinute(player, d)
 end
 
 DanTraits_Every("minute", "Gluten", updateGlutenMinute, 40)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- none, onset (eaten, waiting to hit), flare (rising or easing)
+DanTraits_Machine("gluten.flare", {
+    states = { "none", "onset", "flare" },
+    trait = "gluten",
+    of = function(player, d)
+        if (d.gluten or 0) > 0 then return "flare", { level = d.gluten } end
+        if (d.glutenOnset or 0) > 0 or (d.glutenPending or 0) > 0 then return "onset", { minutes = d.glutenOnset or 0 } end
+        return "none"
+    end,
+})

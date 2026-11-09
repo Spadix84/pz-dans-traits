@@ -210,6 +210,7 @@ local function rollDay(player, d)
     -- yesterday's, for the night that is scored this morning
     d.awMealHourY, d.awDrinkY, d.awMealKeptY = d.awMealHour, d.awDrink, d.awMealKept
     d.awMealHour, d.awMealBig, d.awDrink, d.awMealKept, d.awMealTouch, d.awDrinkTouch = nil, nil, nil, nil, nil, nil
+    d.awBedTouch = nil   -- the same bed's sliver is once a day too (it was never reset: once a save)
 end
 
 local function kept(player, d, flag, touch)

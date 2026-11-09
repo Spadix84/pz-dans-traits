@@ -413,11 +413,22 @@ function R.onTick()
     for num, state in pairs(R.active) do
         if state.pending then
             state.pending = false
-            R.step(state)
+            -- a step that throws would leave the run neither pending nor in a step:
+            -- running (Stop and Resume hidden) with nothing to move it on. Paused
+            -- instead, the plan kept, so Resume picks it up.
+            local ok, err = pcall(R.step, state)
+            if not ok then
+                print("[BaseUnloader] step failed: " .. tostring(err))
+                R.pause(state, "IGUI_BU_Stuck")
+            end
         elseif state.inStep then
             if state.stepDone then
                 state.inStep = false
-                afterStep(state)
+                local ok, err = pcall(afterStep, state)
+                if not ok then
+                    print("[BaseUnloader] step failed: " .. tostring(err))
+                    R.pause(state, "IGUI_BU_Stuck")
+                end
             else
                 local q = ISTimedActionQueue.getTimedActionQueue(state.player)
                 if q and #q.queue == 0 then R.pause(state) end

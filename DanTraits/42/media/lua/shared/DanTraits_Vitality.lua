@@ -302,9 +302,12 @@ local function updateVitalityMinute(player, d)
             pcall(function() player:setMaxWeightBase(d.vitCarryBase or (player:getMaxWeightBase() - d.vitCarryKg)) end)
             d.vitCarryKg = 0
         end
-        if d and d.vitSleepDebt then
+        if d and (d.vitSleepDebt ~= nil or d.vitSleepStart ~= nil or d.vitNightHours ~= nil) then
             -- the debt would otherwise sit there for MDD, Hallucinations and Migraine
-            -- (DanTraits_SleepDebt) for the rest of the save; the night in progress goes too
+            -- (DanTraits_SleepDebt) for the rest of the save; the night in progress goes too.
+            -- (Only the debt used to open this, and it is nil until the first night is
+            -- scored: switched off asleep before then, the sleep's start stayed, and
+            -- switched back on every hour since counted as one long night.)
             d.vitSleepDebt, d.vitNightHours, d.vitNightWakes, d.vitNightFatigue, d.vitNightBedFatigue = nil, nil, nil, nil, nil
             d.vitAsleep, d.vitSleepStart, d.vitAwakeMin = nil, nil, nil
         end
@@ -504,3 +507,15 @@ end
 Events.AddXP.Add(onAddXP)
 
 DanTraits_Every("minute", "Vitality", updateVitalityMinute, 90)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- the night in progress: asleep, between two segments (up, not yet scored), awake
+DanTraits_Machine("vitality.night", {
+    states = { "awake", "asleep", "between" },
+    on = vitOn,
+    of = function(player, d)
+        if d.vitAsleep then return "asleep", { since = d.vitSleepStart } end
+        if (d.vitNightHours or 0) > 0 then return "between", { hours = d.vitNightHours, upMin = d.vitAwakeMin or 0 } end
+        return "awake"
+    end,
+})

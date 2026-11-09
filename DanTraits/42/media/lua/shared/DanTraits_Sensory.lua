@@ -884,3 +884,16 @@ DanTraits_ExtraCommands.sensory = function(player, args)
         .. (d.siToll and (", worn thin x" .. d.siToll) or "")
         .. "; " .. table.concat(parts, ", ")
 end
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+DanTraits_Machine("sensory.load", {
+    states = { "calm", "loaded", "overloaded", "meltdown", "shutdown" },
+    trait = "sensory",
+    of = function(player, d)
+        local info = { load = math.floor(d.siLoad or 0), tier = d.siTier or 0 }
+        if d.siOver == "meltdown" or d.siOver == "shutdown" then return d.siOver, info end
+        if (d.siTier or 0) >= 3 then return "overloaded", info end
+        if (d.siTier or 0) >= 1 then return "loaded", info end
+        return "calm", info
+    end,
+})

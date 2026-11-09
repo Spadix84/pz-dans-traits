@@ -14,6 +14,8 @@
                                          MapLegend         --legend
                                          VitalityCartridges --cartridges  the SpiffBoy cartridges
                                          VitalityChallenges --challenges  the challenge scenarios
+                                         DansClimate       --climate  Dan's Climate Control (ZombieBuddy;
+                                                                      build the jar first with DansClimate/tools/build.py)
     python deploy.py --pull          ~/Zomboid/mods/NAME -> repo  (for edits made in place while
                                      testing; adds and updates only, nothing in the repo is removed).
                                      Goes with --mod or any of the old flags.
@@ -50,6 +52,7 @@ MODS = [
      "workshop": os.path.join("workshop", "maplegend")},
     {"name": "VitalityCartridges", "flag": "--cartridges", "help": "the Vitality Cartridges mod"},
     {"name": "VitalityChallenges", "flag": "--challenges", "help": "the Vitality Challenges mod"},
+    {"name": "DansClimate", "flag": "--climate", "help": "the Dan's Climate Control mod (build its jar first: DansClimate/tools/build.py)"},
 ]
 MAIN = MODS[0]["name"]   # the default mod
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}

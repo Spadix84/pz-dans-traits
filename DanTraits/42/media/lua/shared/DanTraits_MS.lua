@@ -449,3 +449,13 @@ end
 DanTraits_StartingKit({ trait = "ms", flag = "msKitGiven", meds = MS_START, items = MS_KIT })
 
 DanTraits_Every("minute", "MS", updateMSMinute, 40, { trait = "ms", clear = clearMS })
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+DanTraits_Machine("ms.flare", {
+    states = { "calm", "flare" },
+    trait = "ms",
+    of = function(player, d)
+        if (d.msFlareH or 0) > 0 then return "flare", { hoursLeft = d.msFlareH } end
+        return "calm"
+    end,
+})

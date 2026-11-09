@@ -71,6 +71,6 @@ description=[b]Modders:[/b] API.md in the mod folder.
 description=
 description=[url=https://github.com/Spadix84/pz-dans-traits]Source and changelog on GitHub[/url]
 description=[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img][/url]
-description=Moodle Framework optional.
+description=[b]Needs Moodle Framework.[/b]
 tags=Build 42;Traits;Realistic;Hardmode
 visibility=public

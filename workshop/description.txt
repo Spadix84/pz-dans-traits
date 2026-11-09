@@ -68,4 +68,4 @@ Each decade has traits and wants of its own; the conditions of later life skip t
 
 [url=https://github.com/Spadix84/pz-dans-traits]Source and changelog on GitHub[/url]
 [url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/systems-flow.png[/img][/url]
-Moodle Framework optional.
+[b]Needs Moodle Framework.[/b]

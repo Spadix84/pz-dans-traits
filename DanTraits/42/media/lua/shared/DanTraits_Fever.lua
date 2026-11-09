@@ -195,3 +195,14 @@ end
 
 DanTraits_Every("minute", "Antibiotics", decayAntibiotic, 22.9)
 DanTraits_Every("minute", "Fever", updateFeverMinute, 23.2)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- every source's fever composed: none, a fever, a dangerous one (over the top, hurting)
+DanTraits_Machine("fever", {
+    states = { "none", "fever", "dangerous" },
+    of = function(player, d)
+        if d.fevDanger then return "dangerous", { raw = d.fevRaw or 0 } end
+        if (d.fevRaw or 0) > 0 then return "fever", { raw = d.fevRaw } end
+        return "none"
+    end,
+})

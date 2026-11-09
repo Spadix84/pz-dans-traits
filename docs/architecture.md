@@ -71,6 +71,12 @@ registers *into* core rather than with the game. The seams, in the order a new s
   tag, then is quiet; under `DanTraits_STRICT` (the tests) it raises instead.
 - **`DanTraits_Data(player)`**: the per-player mod-data table, created and migrated
   (`DanTraits_MigrateModData` renames old keys at ready step 10).
+- **`DanTraits_Machine(id, spec)`**: a system's phases declared once, next to its keys:
+  `states` (rest first), a reader `of(player, d) -> state, info`, optional `trait` / `on`
+  gates and a `load` step for a state that cannot outlive a save. Read through
+  `DanTraits_StateOf(player, id)`, Telemetry's `machines`, the `states` console command.
+  22 declared; the full list, the undeclared ones and the open defects are in
+  `docs/state-machines.md`, which `tests/check_machines.py` keeps in step with the code.
 - **`DanTraits_SetTrait` / `DanTraits_HasTrait` / `DanTraits_HasVanillaTrait`**: trait lookups, memoised
   per player for the frame driver and dropped once a minute or when the mod changes a trait.
 - **`DanTraits_Notify` / `DanTraits_Story`**: a halo line that is also published as the Lua event

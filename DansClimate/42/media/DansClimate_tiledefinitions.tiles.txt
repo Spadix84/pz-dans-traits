@@ -1,0 +1,95 @@
+version = 1
+tileset
+{
+    file = appliances_windowac_01
+    size = 8,1
+    id = 1
+    // appliances_windowac_01_0
+    tile
+    {
+        xy = 0,0
+        CustomName = Window Air Conditioner
+        Facing = S
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedN = 
+    }
+    // appliances_windowac_01_1
+    tile
+    {
+        xy = 1,0
+        CustomName = Window Air Conditioner
+        Facing = E
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedW = 
+    }
+    // appliances_windowac_01_2
+    tile
+    {
+        xy = 2,0
+        CustomName = Window Air Conditioner
+        Facing = N
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedN = 
+    }
+    // appliances_windowac_01_3
+    tile
+    {
+        xy = 3,0
+        CustomName = Window Air Conditioner
+        Facing = W
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedW = 
+    }
+    // appliances_windowac_01_4
+    tile
+    {
+        xy = 4,0
+        CustomName = Window Air Conditioner
+        Facing = S
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedN = 
+    }
+    // appliances_windowac_01_5
+    tile
+    {
+        xy = 5,0
+        CustomName = Window Air Conditioner
+        Facing = E
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedW = 
+    }
+    // appliances_windowac_01_6
+    tile
+    {
+        xy = 6,0
+        CustomName = Window Air Conditioner
+        Facing = N
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedN = 
+    }
+    // appliances_windowac_01_7
+    tile
+    {
+        xy = 7,0
+        CustomName = Window Air Conditioner
+        Facing = W
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        attachedW = 
+    }
+}

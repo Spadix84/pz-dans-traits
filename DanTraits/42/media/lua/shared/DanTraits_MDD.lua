@@ -270,3 +270,15 @@ end)
 
 DanTraits_Every("minute", "MDD", updateMddMinute, 40)
 DanTraits_Every("ten", "MDD", updateMddTen, 40)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- well, an episode, then the refractory hours after one when no new one can start
+DanTraits_Machine("mdd.episode", {
+    states = { "well", "episode", "recovering" },
+    trait = "spiraling",
+    of = function(player, d)
+        if d.mddEpisode then return "episode", { hoursLeft = d.mddHoursLeft or 0, severity = d.mddSeverity or 0 } end
+        if (d.mddSinceEnd or MDD_REFRACTORY_HOURS) < MDD_REFRACTORY_HOURS then return "recovering" end
+        return "well"
+    end,
+})

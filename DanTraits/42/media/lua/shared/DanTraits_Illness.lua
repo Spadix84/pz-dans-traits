@@ -717,3 +717,21 @@ DanTraits_ExtraCommands.ill = function(player, args)
 end
 
 DanTraits_Every("minute", "Illness", updateIllnessMinute, 22.5)
+
+-- declared state machine (DanTraits_Machine in core; docs/state-machines.md)
+-- the catchable illnesses together: well, one incubating, sick (info names which)
+DanTraits_Machine("illness", {
+    states = { "well", "incubating", "sick" },
+    on = sandboxOn,
+    of = function(player, d)
+        local sick, brewing = {}, {}
+        for _, id in ipairs(ILL_ORDER) do
+            local rec = d.ill and d.ill[id]
+            if rec and rec.inc then brewing[#brewing + 1] = id elseif rec then sick[#sick + 1] = id end
+        end
+        local info = { sick = table.concat(sick, ","), incubating = table.concat(brewing, ",") }
+        if #sick > 0 then return "sick", info end
+        if #brewing > 0 then return "incubating", info end
+        return "well"
+    end,
+})

@@ -717,7 +717,17 @@ end
 -- events --------------------------------------------------------------------------------
 
 local function everyMinute()
-    if not R.on() then return end
+    if not R.on() then
+        -- switched off with a moodle running: its XP buff comes off now, not never
+        -- (R.minute, which ends it on time, does not run while Reading is off)
+        for i = 0, R.PLAYERS - 1 do
+            local player = getSpecificPlayer(i)
+            local md = player and player:getModData()
+            local d = md and md[R.KEY]
+            if type(d) == "table" and d.moodle then pcall(R.endMoodle, player) end
+        end
+        return
+    end
     for i = 0, R.PLAYERS - 1 do
         local player = getSpecificPlayer(i)
         if player then pcall(R.minute, player) end
