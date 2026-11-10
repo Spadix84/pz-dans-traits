@@ -1,0 +1,4 @@
+VERSION = 1,
+
+option DansClimate.WindowACLoot
+{type = integer, min = 0, max = 500, default = 100, page = DansClimate, translation = DansClimateWindowACLoot,}

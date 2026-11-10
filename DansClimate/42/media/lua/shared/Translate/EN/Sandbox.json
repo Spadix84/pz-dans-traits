@@ -1,0 +1,5 @@
+{
+    "Sandbox_DansClimate": "Climate Control",
+    "Sandbox_DansClimateWindowACLoot": "Window Air Conditioner Loot (%%)",
+    "Sandbox_DansClimateWindowACLoot_tooltip": "How often window air conditioners turn up, in percent of the mod's normal rate. 100 is normal, 200 twice as often.<br>0: none spawn as loot.<br>They are found in appliance shops and big-store electronics aisles, sometimes in hardware stores, and rarely in warehouse crates and garages. Places you have already visited keep the loot they rolled."
+}

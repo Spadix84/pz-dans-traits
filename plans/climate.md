@@ -171,7 +171,12 @@ to click.
 
 **Items:** Window AC and Space Heater as moveables you can pick up and place. They
 appear in appliance and hardware store loot and, rarely, in house garages and
-storage rooms. Art: the vanilla `industry_01_4` sprite is an outdoor unit, so
+storage rooms. The window AC's loot was built 2026-11-09
+(`server/Items/DansClimate_Distributions.lua`, `tests/test_climateloot.lua`): weight
+10 on an appliance shop's shelf (`ElectronicStoreAppliances`, one roll), 1.5 in
+`GigamartHouseElectronics`, 1 in `ToolStoreMisc`, 0.3 in `CrateElectronics`, 0.2 in
+`GarageTools`, 0.1 in `CrateTools` and `CrateRandomJunk`, times the sandbox option
+Window Air Conditioner Loot (%), 0 to 500. Not yet seen in game. Art: the vanilla `industry_01_4` sprite is an outdoor unit, so
 both need new sprites. The Blender pipeline from `pz-slow-cooker/art` can make
 them.
 
