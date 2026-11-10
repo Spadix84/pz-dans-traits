@@ -24,6 +24,7 @@ table.insert(DanTraits_GuideExtra, {
         "",
         "## The collection",
         "A Collection button on the sidebar opens a checklist for each character of the skill books, recipe magazines, VHS tapes, CDs, key rings, mementos and tools they own. Tick what you have: those items say so in their tooltip and are set Unwanted, so they grey out and Take All leaves them.",
+        "The rest of the game's reading is on it too, by title: every book, magazine, comic, newspaper, flier, brochure, catalogue and RPG manual. Right-click a copy and choose Add to collection, or tick it in the window. A ticked title is set Unwanted like the rest, that title only: the next paperback may be one you do not have, and it stays white. A magazine or a comic counts by its name, whatever the issue, and the issues you add are the ones set Unwanted. Tapes and CDs work the same way, title by title.",
         "",
         "## Store stock",
         "Cigarette packs on gas station, convenience store, liquor store and tobacconist shelves come full, not half-smoked.",

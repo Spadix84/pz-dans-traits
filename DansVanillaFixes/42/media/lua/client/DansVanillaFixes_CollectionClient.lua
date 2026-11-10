@@ -80,8 +80,10 @@ end
 
 -- right-click -------------------------------------------------------------------
 
-local function onCollect(entries, player, on)
-    for _, e in ipairs(entries) do C.set(player, e, on) end
+-- copies[entry]: the selected items that are that entry, so a title can be
+-- set Unwanted by what is written on the copies in hand (a magazine's issue)
+local function onCollect(entries, player, on, copies)
+    for _, e in ipairs(entries) do C.set(player, e, on, copies and copies[e]) end
     local win = DVF_CollectionWindow.instances[player:getPlayerNum()]
     if win then win:changed() end
 end
@@ -89,21 +91,25 @@ end
 function C.onContextMenu(playerNum, context, items)
     local player = getSpecificPlayer(playerNum)
     if not player then return end
-    local entries, seen, allOwned = {}, {}, true
+    local entries, copies, allOwned = {}, {}, true
     for _, item in ipairs(ISInventoryPane.getActualItems(items)) do
         local e = C.entryFor(item)
-        if e and not seen[e] then
-            seen[e] = true
-            entries[#entries + 1] = e
-            if not C.has(player, e) then allOwned = false end
+        if e then
+            if not copies[e] then
+                copies[e] = {}
+                entries[#entries + 1] = e
+            end
+            table.insert(copies[e], item)
+            if C.needsAdding(player, e, item) then allOwned = false end
         end
     end
     if #entries == 0 then return end
     if allOwned then
         context:addOption(getText("ContextMenu_DVF_CollectionRemove"), entries, onCollect, player, false)
     else
-        -- adds the ones not yet ticked; the ones already in stay in
-        context:addOption(getText("ContextMenu_DVF_CollectionAdd"), entries, onCollect, player, true)
+        -- adds the ones not yet ticked; the ones already in stay in, and an
+        -- issue of a ticked magazine that is not Unwanted yet is set so
+        context:addOption(getText("ContextMenu_DVF_CollectionAdd"), entries, onCollect, player, true, copies)
     end
 end
 

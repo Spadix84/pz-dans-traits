@@ -43,6 +43,15 @@ the same hidden list as vanilla's (`ISLiteratureUI.SetItemHidden`).
 
 ## VHS tapes are the exception
 
+**Wrong, corrected 2026-11-09** (user: tapes are not set Unwanted, fix it).
+`InventoryItem.isUnwanted(player)` in the jar asks the player about, in order:
+the media id of recorded media, the copy's `literatureTitle`, its `printMedia`
+table (as a string, so never a match), its `collectibleKey`, and only then the
+item type. So `player:setUnwanted(mediaId, true)` greys one title, and ticking a
+tape or CD now does that (`media[id]` = WE_SET | WAS_SET; data `v = 2`, a v 1
+character's ticked tapes are set on the first read). The same goes for titled
+reading: see the 2026-11-09 section. What was built on 2026-10-09:
+
 Every retail tape is the same item type (`Base.VHS_Retail`); the film is in the
 item's media data (`item:getMediaData():getId()`). Unwanted works by item type,
 so setting it would grey out **every** tape. So for tapes:
@@ -130,3 +139,36 @@ tested in MP.
   manager would restore a saved "closed" state onto a freshly opened window.
 - Sidebar icon: `DansVanillaFixes/tools/make_sidebar_icon.py` writes
   `media/ui/DVF/Collection_{Off,On}_<width>.png`.
+
+## Added 2026-11-09: all of the game's reading (user asked)
+
+Five tabs after Recipe Magazines (the old Magazines tab, renamed): Books,
+Magazines, Comics, Newspapers, Fliers. Kept by title like the tapes. Unwanted
+is set by the string on the copy: from the list for a title every copy carries
+the same string for (`entry.exact`), from the copies Add to collection was
+chosen on for a dated magazine or a numbered comic; `marks` records what the
+checklist set.
+
+- What the game writes on a copy (`ItemCodeOnCreate` in the jar), item mod data
+  `literatureTitle` unless noted:
+  - book: `IGUI_BookTitle_<id>` (the translation key)
+  - magazine: `IGUI_MagazineTitle_<id>_<month>_<year>`; TV guide `TVMagazine_m_y`;
+    HottieZ `HottieZ_m_y` or `HunkZ_m_y`
+  - comic: `IGUI_ComicTitle_<id>` or `IGUI_ComicTitle_<id>#<issue>`
+  - catalogue `Catalog_IGUI_<id>`, RPG manual `RPGmanual_IGUI_RPG_<id>` (item type in front)
+  - dated newspaper, flier, brochure: `Print_Media_<id>_title` (and a `printMedia` table)
+  - old newspaper: `collectibleKey` = its whole translated name ("Newspaper: Knox Knews"),
+    no `literatureTitle`
+  - photos carry both keys but are unique per copy; they stay mementos by type
+- My choices, not asked: magazines and comics count by name, not by issue (issues
+  are random dates and numbers, the list could never be finished); RPG manuals sit
+  in Books and catalogues in Magazines to keep the tab count down; schematics,
+  crosswords, the phone book, paper and junk documents are left off.
+- The registries (`Registries.BOOK` and so on) are reachable from Lua but the
+  classes in them are not exposed, and `ResourceLocation` lower-cases the id, so
+  the keys cannot be rebuilt in game: `tools/gen_collection_titles.py` reads the
+  class constants from the jar and keeps the ones the English translation has a
+  key for (the translation alone lists 12 books the game never registers).
+  42.x at the time: 1,187 books, 16 RPG manuals, 167 magazines, 56 catalogues,
+  224 comics, 22 old newspapers, 22 dated issues, 111 fliers, 22 brochures.
+- Not checked in game yet.

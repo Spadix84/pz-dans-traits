@@ -17,7 +17,12 @@ Workshop.
   when the game starts, modded items included. The tooltip names the tier; no extra column.
 - **The collection.** A sidebar button opens a per-character checklist of skill books,
   recipe magazines, VHS tapes, CDs, key rings, mementos and tools; ticked items say so in
-  their tooltip and are set Unwanted, so Take All leaves them.
+  their tooltip and are set Unwanted, so Take All leaves them. The game's titled reading is
+  on it by title (1,187 books, 167 magazines, 224 comics, newspapers, fliers, brochures,
+  catalogues, RPG manuals): right-click a copy, Add to collection. Tapes, CDs and titles
+  are set Unwanted one title at a time (the game keeps Unwanted for them by title, not by
+  item type). A magazine or a comic counts by its name, whatever the issue; the issues you
+  add are the ones set Unwanted.
 - **Store stock.** Cigarette packs on shop shelves come full.
 
 | Layout | |
@@ -28,6 +33,7 @@ Workshop.
 | `42/media/lua/shared/DansVanillaFixes_Collection.lua`, `client/..._CollectionUI.lua`, `..._CollectionClient.lua` | the checklist |
 | `42/media/lua/shared/DansVanillaFixes_StoreStock.lua` | full packs on shelves |
 | `42/media/lua/client/DansVanillaFixes_Guide.lua` | its page in the Vitality Project's Guide tab (does nothing without it) |
+| `42/media/lua/shared/DansVanillaFixes_CollectionTitles.lua`, `tools/gen_collection_titles.py` | the checklist's book, magazine, comic and newspaper titles, read out of the game's jar: rerun the tool after a game update (`--check` says whether the file is out of date) |
 | `tools/make_sidebar_icon.py` | draws the Collection button |
 | `../tests/test_coolers.lua`, `test_collection.lua`, `test_raritypatch.lua`, `test_vanillaprices.lua` | offline tests |
 

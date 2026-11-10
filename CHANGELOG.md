@@ -20,6 +20,14 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   `complete()` calls `Eat(item, 1)` without the eat action, so nothing of ours saw the
   cigarette: the game used it up and the craving, the quitting clock, the lungs and the
   habit stood still. Core now wraps those two `complete()`s into `DanTraits_OnEat` (the
+- **Dan's Vanilla Fixes: a collected tape or CD is set Unwanted.** The checklist left tapes
+  alone on the belief that Unwanted goes by item type and would grey every tape. It does
+  not: `InventoryItem.isUnwanted(player)` asks the player about the media id for recorded
+  media (then `literatureTitle`, then `collectibleKey`, and only then the item type). So
+  ticking a title now calls `player:setUnwanted(mediaId, true)`, with the same rule as item
+  types: unticking clears it only if the tick set it (`media[id]` is `WE_SET` or `WAS_SET`,
+  was `true`). The character's data goes to `v = 2`; on the first read of a `v = 1` one,
+  every tape already ticked is set Unwanted.
   whole cigarette), with the same refusal check as the eat action, at load and again at game
   start. Its lighter path already went through the eat action.
 - **Breaking Point no longer sticks after a save.** A save made while the character sat
@@ -49,6 +57,35 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   Telemetry carries them as `machines` beside the raw mod data, the debug console lists them
   (`states`, `states all`), and other files can ask with `DanTraits_StateOf`. Keys and
   saves are unchanged. `docs/state-machines.md` maps every machine in the repo, declared or
+- **Dan's Vanilla Fixes: the collection checklist takes all of the game's reading.** It had
+  skill books and recipe magazines; five new tabs list the rest by title: Books (1,187 titles
+  and the 16 RPG manuals), Magazines (167, the 56 catalogues, the TV guide, HottieZ and
+  HunkZ), Comics (224), Newspapers (22 old papers and the 22 dated issues of the outbreak)
+  and Fliers (with the brochures). Right-click a copy > Add to collection, or tick the row;
+  the tooltip line works on every copy. The old Magazines tab reads Recipe Magazines.
+  - A novel is one of a few item types and the game writes the title on each copy as it
+    spawns (item mod data `literatureTitle`; `collectibleKey`, the whole name, on an old
+    newspaper), so these are entries of a new kind, `title`, kept in the character's
+    `DVF_Collection.titles` by the title's translation key. A magazine or a comic is kept
+    by its name, not the issue (`C.seriesKey` drops `_month_year` and `#issue`).
+  - Unwanted: the game keeps it for these by the string on the copy, so a ticked title is
+    set Unwanted by that string where the list knows it (`entry.exact`: a book, a comic
+    without issue numbers, a flier, a newspaper; `RPGmanual_` or `Catalog_` in front for
+    those two) and only that title greys out. A dated magazine has no one string, so Add to
+    collection sets Unwanted for the issue of each copy it was chosen on, and a tick in the
+    window sets none; an issue of a ticked magazine that is not Unwanted yet still offers
+    Add to collection. `DVF_Collection.marks` remembers every string the checklist set and
+    the title it was for, so unticking clears those and leaves the player's own.
+  - The titles live in registries inside the jar that Lua cannot read (the classes are not
+    exposed and the registry ids are lower-cased), so `tools/gen_collection_titles.py` reads
+    them out of the jar into `shared/DansVanillaFixes_CollectionTitles.lua`. Rerun it after a
+    game update; `--check` says whether the file is out of date. A title the file does not
+    have (a mod's, or a newer game's) gets a row the first time a copy is seen, and a ticked
+    one keeps its name so the row comes back next session (`C.adopt`, `C.adoptStored`).
+  - The window counts a tab once per change, not every frame.
+  - Left off on purpose: seed packets, notebooks and paper, receipts, ID and business cards,
+    letters, crossword and wordsearch magazines, the phone book, and schematics (each copy
+    teaches a different recipe).
   not, with the open defects the survey found. `tests/test_machines.lua` and
   `tests/check_machines.py` keep the code and the page in step.
 - **Vanilla test commands for the companion's test bench** (`DanTraits_DebugCommands.lua`,

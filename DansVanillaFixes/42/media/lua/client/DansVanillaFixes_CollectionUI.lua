@@ -2,11 +2,12 @@
 -- shared/DansVanillaFixes_Collection.lua; the sidebar button that opens it is
 -- in client/DansVanillaFixes_CollectionClient.lua).
 --
--- One tab per kind: Skill Books (a row per skill, a box per volume),
--- Magazines, one per recorded media kind (VHS, Home VHS, CD), Key Rings,
--- Mementos and Tools. Click a row (or a volume's box) to tick it. A search
--- box and a Hide collected tick sit above the tabs, with the active tab's
--- count.
+-- One tab per kind: Skill Books (a row per skill, a box per volume), Recipe
+-- Magazines, the titled reading (Books, Magazines, Comics, Newspapers,
+-- Fliers), one per recorded media kind (VHS, Home VHS, CD), Key Rings,
+-- Mementos and Tools; the tab strip scrolls when they do not fit. Click a
+-- row (or a volume's box) to tick it. A search box and a Hide collected tick
+-- sit above the tabs, with the active tab's count.
 
 require "ISUI/ISCollapsableWindow"
 require "ISUI/ISScrollingListBox"
@@ -200,6 +201,8 @@ function DVF_CollectionWindow:shows(row, filter)
 end
 
 function DVF_CollectionWindow:fill()
+    self.revision = C.revision
+    self.counts = {}
     local filter = string.lower(self.filterBox:getInternalText() or "")
     for _, list in ipairs(self.lists) do
         local scroll = list:getYScroll()
@@ -213,7 +216,20 @@ end
 
 -- a tick changed: only Hide collected makes the rows themselves change
 function DVF_CollectionWindow:changed()
+    self.counts = {}
     if self.hideOwned then self:fill() end
+end
+
+-- how many of a tab are ticked, counted once per change, not every frame
+-- (the Books tab is over a thousand rows)
+function DVF_CollectionWindow:countOf(tab)
+    self.counts = self.counts or {}
+    local n = self.counts[tab.id]
+    if not n then
+        n = C.count(self.character, tab)
+        self.counts[tab.id] = n
+    end
+    return n
 end
 
 function DVF_CollectionWindow:render()
@@ -221,14 +237,19 @@ function DVF_CollectionWindow:render()
     if self.isCollapsed then return end
     local list = self.tabs and self.tabs:getActiveView()
     if not list or not list.tab then return end
-    local text = getText("IGUI_DVF_Collection_Count", C.count(self.character, list.tab), list.tab.total)
+    local text = getText("IGUI_DVF_Collection_Count", self:countOf(list.tab), list.tab.total)
     local w = getTextManager():MeasureStringX(UIFont.Small, text)
     self:drawText(text, self.width - w - PAD * 2, self.filterBox:getY() + 3, 1, 1, 1, 1, UIFont.Small)
 end
 
 function DVF_CollectionWindow:prerender()
     ISCollapsableWindow.prerender(self)
-    if self.character:isDead() then self:close() end
+    if self.character:isDead() then
+        self:close()
+    elseif self.revision ~= C.revision then
+        -- a title the lists did not know got a row while the window was open
+        self:fill()
+    end
 end
 
 function DVF_CollectionWindow:close()
@@ -264,6 +285,7 @@ function DVF_CollectionWindow.toggle(character)
     local at = DVF_CollectionWindow.last[playerNum] or {
         x = getPlayerScreenLeft(playerNum) + 120, y = getPlayerScreenTop(playerNum) + 50,
         w = 560, h = math.min(700, getPlayerScreenHeight(playerNum) - 100) }
+    C.adoptStored(character)
     local win = DVF_CollectionWindow:new(at.x, at.y, at.w, at.h, character)
     win:initialise()
     win:instantiate()
