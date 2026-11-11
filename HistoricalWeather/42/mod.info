@@ -1,0 +1,7 @@
+name=Historical Weather
+id=HistoricalWeather
+url=https://github.com/Spadix84/pz-dans-traits
+modversion=0.1.0
+poster=poster.png
+versionMin=42.0.0
+description=Knox County's real weather from 9 July 1993 to 9 July 1995, day by day, from the NOAA record for Barbourville, Kentucky: the real highs and lows, the rain on the days it rained, and the snow of January 1994 with the cold that followed it, and thunder in the heavy summer storms. Before and after those two years the game's own weather runs as usual.

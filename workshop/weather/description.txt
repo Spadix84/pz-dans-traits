@@ -1,0 +1,40 @@
+[h1]Historical Weather[/h1]
+[b]Knox County's real weather, day by day.[/b] The game starts on 9 July 1993, so this mod plays the weather that actually happened from then until 9 July 1995. It comes from NOAA's daily record for Barbourville, Kentucky, in the real Knox County: the real highs and lows, rain on the days it rained, the January 1994 blizzard and the bitter cold after it, and the summer thunderstorms.
+
+[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/weather/record.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/weather/record.png[/img][/url]
+
+[h2]What you get[/h2]
+[list]
+[*][b]The real temperature.[/b] Each day's recorded low comes around dawn and its high mid-afternoon, with a smooth curve between. A cold snap in the record is a cold snap in your game.
+[*][b]Rain on the days it rained.[/b] The record gives each day's total. Light totals are drizzle, heavy ones are downpours. Summer rain comes as an afternoon storm, winter rain as a longer grey spell.
+[*][b]Snow[/b] when it is cold enough, and a little above freezing on the days the record has snowfall. That includes the 8.5 inches of 17 January 1994.
+[*][b]Thunderstorms.[/b] The 35 heavy summer storms in the record bring thunder and lightning for as long as the rain lasts. The strongest come right overhead.
+[*][b]Clouds, fog and wind[/b] to match. Clouds gather before the rain and clear after it. A day that barely warmed up is a grey day, one with a wide swing is a clear one. There is fog at dawn after a wet day, and valley fog on clear autumn mornings.
+[*][b]No surprise storms.[/b] While the record runs, the game does not start weather of its own, so a dry day in 1993 stays dry.
+[/list]
+
+[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/weather/day.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/weather/day.png[/img][/url]
+
+[h2]January 1994[/h2]
+A blizzard on the 17th, then two mornings at -30C (-22F). Water, fuel and a warm place to sleep matter that week.
+
+[url=https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/weather/january.png][img]https://raw.githubusercontent.com/Spadix84/pz-dans-traits/master/workshop/weather/january.png[/img][/url]
+
+[h2]Before and after[/h2]
+Before 9 July 1993 and after 9 July 1995, the game's own weather runs as usual. The mod goes by the calendar date, so a game that starts on another date picks the record up when its calendar reaches 9 July 1993.
+
+[h2]Good to know[/h2]
+[list]
+[*]Build 42. No sandbox options, no items. Safe to add to or remove from a running save: the game does not save the mod's weather, so nothing is left behind.
+[*]Where the record has gaps, the game fills in. Most of October and early November 1993 has no temperature readings, so the game's own temperature runs there, eased in and out over a few hours with no sudden jump. Nine scattered days with no rain figure use the game's own sky.
+[*]The record has only a daily total for rain, so the hours it falls in are worked out once when the data is built. Every game gets the same weather on the same day.
+[*]An admin's weather override (the debug weather panel) still wins over the record.
+[*]Multiplayer: the server decides the weather and every player sees the same. Not yet tested on a dedicated server, so please report anything odd.
+[*]Other mods that drive the outdoor weather will fight with this one. Mods that only change indoor temperature, like heaters, are fine.
+[/list]
+
+[h2]The data[/h2]
+NOAA NCEI Record of Climatological Observations, station USC00150381 (Barbourville, KY). The observer read the instruments at 7am, so each reading is moved onto the day it belongs to: a morning's high was really the afternoon before. The source PDF, the converted daily table and the converter are all on GitHub.
+
+Bugs and ideas are welcome in the comments.
+From the maker of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3811016852]Vitality Project[/url]. [url=https://github.com/Spadix84/pz-dans-traits/tree/master/HistoricalWeather]Source on GitHub[/url]
