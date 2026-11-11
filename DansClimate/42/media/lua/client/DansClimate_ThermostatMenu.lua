@@ -1,6 +1,10 @@
 -- The thermostat: a right-click option anywhere inside a map building, for the
 -- building you're standing in. Map buildings have no thermostat object to click.
 --   Thermostat (room 23 °C) > Off / Heat / Cool / Auto, Heat to > 16..26, Cool to > 20..30
+-- Once the grid is down the building's heating and cooling is dead, generator or not:
+-- the entry stays for its reading of the room, greyed, with nothing under it. Unless
+-- the player has installed a furnace or a central air conditioner in the building
+-- (DansClimate_Central.lua): then the thermostat runs those, and works as before.
 -- In debug mode there's also "Room climate (debug)": the model's readout for the room
 -- as a tooltip (and printed to the console when clicked), and the DanTraits command
 -- channel gets a "climate" command that returns it.
@@ -34,12 +38,21 @@ local function setCool(_, bx, by, value)
     C.setThermostat(bx, by, mode, math.min(heat, value), value)
 end
 
-local function status(mode, heat, cool, powered)
-    if not powered then return getText("Tooltip_DansClimate_HvacNoPower") end
+local function status(mode, heat, cool)
     return getText("Tooltip_DansClimate_Thermostat_" .. mode, C.format(heat), C.format(cool))
 end
 
-function C.addThermostatOptions(context, worldobjects, sq)
+-- " <LINE> Dressed as you are, ..." for the tooltip: the band Comfort last worked out
+-- for this character, or "" (Comfort off, not loaded, or no reading yet)
+local function comfortLine(playerObj)
+    local Comfort = DansClimate.Comfort
+    if not Comfort or not playerObj or not Comfort.enabled() then return "" end
+    local c = Comfort.get(playerObj)
+    if not c.low or not c.high then return "" end
+    return " <LINE> " .. getText("Tooltip_DansClimate_ComfortBand", C.format(c.low), C.format(c.high))
+end
+
+function C.addThermostatOptions(context, worldobjects, sq, playerObj)
     local bx, by = C.buildingOf(sq)
     if not bx or not sq:getRoom() then return nil end
     local temp = C.temperatureAt(sq)
@@ -47,7 +60,19 @@ function C.addThermostatOptions(context, worldobjects, sq)
     local label = temp and getText("ContextMenu_DansClimate_Thermostat", C.format(temp))
         or getText("ContextMenu_DansClimate_ThermostatNoReading")
     local option = context:addOption(label, worldobjects, nil)
-    option.toolTip = tooltip(status(mode, heat, cool, C.powered(sq)))
+    local text = status(mode, heat, cool)
+    if not C.powered() then
+        local central = C.centralKinds(sq)
+        if not central then
+            -- the grid is down: it still reads the room, and there is nothing left to set
+            option.notAvailable = true
+            option.toolTip = tooltip(getText("Tooltip_DansClimate_HvacNoPower") .. comfortLine(playerObj))
+            return option
+        end
+        -- the player's own furnace or central air conditioner answers it now
+        text = text .. " <LINE> " .. getText("Tooltip_DansClimate_ThermostatCentral_" .. central)
+    end
+    option.toolTip = tooltip(text .. comfortLine(playerObj))
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(option, sub)
 
@@ -94,7 +119,7 @@ local function onFillMenu(player, context, worldobjects, test)
     if not playerObj or playerObj:getVehicle() then return end
     local sq = playerObj:getCurrentSquare()
     if not sq or not sq:getRoom() then return end
-    C.addThermostatOptions(context, worldobjects, sq)
+    C.addThermostatOptions(context, worldobjects, sq, playerObj)
     if isDebugEnabled() then C.addReadoutOption(context, worldobjects, sq) end
 end
 

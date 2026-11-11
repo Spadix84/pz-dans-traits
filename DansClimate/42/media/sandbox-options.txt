@@ -1,4 +1,25 @@
 VERSION = 1,
 
+option DansClimate.ComfortEnabled
+{type = boolean, default = true, page = DansClimate, translation = DansClimateComfortEnabled,}
+
+option DansClimate.ComfortStrength
+{type = integer, min = 0, max = 300, default = 100, page = DansClimate, translation = DansClimateComfortStrength,}
+
 option DansClimate.WindowACLoot
 {type = integer, min = 0, max = 500, default = 100, page = DansClimate, translation = DansClimateWindowACLoot,}
+
+option DansClimate.SpaceHeaterLoot
+{type = integer, min = 0, max = 500, default = 100, page = DansClimate, translation = DansClimateSpaceHeaterLoot,}
+
+option DansClimate.CentralUnitLoot
+{type = integer, min = 0, max = 500, default = 100, page = DansClimate, translation = DansClimateCentralUnitLoot,}
+
+option DansClimate.CentralBookLoot
+{type = integer, min = 0, max = 500, default = 100, page = DansClimate, translation = DansClimateCentralBookLoot,}
+
+option DansClimate.ACNoise
+{type = integer, min = 0, max = 30, default = 8, page = DansClimate, translation = DansClimateACNoise,}
+
+option DansClimate.UnitPowerDraw
+{type = integer, min = 0, max = 500, default = 100, page = DansClimate, translation = DansClimateUnitPowerDraw,}

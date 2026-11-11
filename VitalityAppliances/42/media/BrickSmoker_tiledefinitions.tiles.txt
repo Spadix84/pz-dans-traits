@@ -1,0 +1,87 @@
+version = 1
+tileset
+{
+    file = crafted_smoker_01
+    size = 8,1
+    id = 1
+    // crafted_smoker_01_0
+    tile
+    {
+        xy = 0,0
+        BlocksPlacement = 
+        ContainerCapacity = 20
+        CustomName = Smoker
+        Facing = E
+        GroupName = Brick
+        Material = Stone
+        ScrapSize = Small
+        ScrapUseSkill = 
+        container = smoker
+        solidtrans = 
+    }
+    // crafted_smoker_01_1
+    tile
+    {
+        xy = 1,0
+        BlocksPlacement = 
+        ContainerCapacity = 20
+        CustomName = Smoker
+        Facing = S
+        GroupName = Brick
+        Material = Stone
+        ScrapSize = Small
+        ScrapUseSkill = 
+        container = smoker
+        solidtrans = 
+    }
+    // crafted_smoker_01_2
+    tile
+    {
+        xy = 2,0
+        BlocksPlacement = 
+        ContainerCapacity = 20
+        CustomName = Smoker
+        Facing = W
+        GroupName = Brick
+        Material = Stone
+        ScrapSize = Small
+        ScrapUseSkill = 
+        container = smoker
+        solidtrans = 
+    }
+    // crafted_smoker_01_3
+    tile
+    {
+        xy = 3,0
+        BlocksPlacement = 
+        ContainerCapacity = 20
+        CustomName = Smoker
+        Facing = N
+        GroupName = Brick
+        Material = Stone
+        ScrapSize = Small
+        ScrapUseSkill = 
+        container = smoker
+        solidtrans = 
+    }
+    // crafted_smoker_01_4
+    tile
+    {
+        xy = 4,0
+    }
+    // crafted_smoker_01_5
+    tile
+    {
+        xy = 5,0
+    }
+    // crafted_smoker_01_6
+    tile
+    {
+        xy = 6,0
+    }
+    // crafted_smoker_01_7
+    tile
+    {
+        xy = 7,0
+    }
+}

@@ -1,0 +1,82 @@
+module Base
+{
+    /* Built from the Build menu, Masonry. The tile (crafted_smoker_01, from
+       art/build_pack.py) has the "smoker" container; Smoker_Core.lua runs the fire.
+       Tiles 0-3 face E, S, W, N. */
+    entity Brick_Smoker
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_Brick_Smoker,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            health = 200,
+            skillBaseHealth = 50,
+            face S
+            {
+                layer
+                {
+                    row = crafted_smoker_01_1,
+                }
+            }
+            face E
+            {
+                layer
+                {
+                    row = crafted_smoker_01_0,
+                }
+            }
+            face N
+            {
+                layer
+                {
+                    row = crafted_smoker_01_3,
+                }
+            }
+            face W
+            {
+                layer
+                {
+                    row = crafted_smoker_01_2,
+                }
+            }
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildCairn,
+            time = 300,
+            category = Masonry,
+            Tags = Outdoors,
+            SkillRequired = Masonry:3,
+            xpAward = Masonry:30,
+            Tooltip = Tooltip_craft_brickSmokerDesc,
+            inputs
+            {
+                item 1 tags[base:masonstrowel] mode:keep flags[Prop1;MayDegradeLight],
+                item 3 tags[base:concrete] flags[DontRecordInput],
+                item 16 [Base.ClayBrick],
+                item 1 [Base.SheetMetal],
+                item 2 [Base.MetalBar],
+            }
+        }
+        component CraftBenchSounds
+        {
+            AddFuel = CampfireAddFuel,
+            LightFire = CampfireLight,
+            Running = CampfireRunning,
+        }
+    }
+
+    xuiSkin default
+    {
+        entity ES_Brick_Smoker
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName = Brick Smoker,
+            Icon = Build_BrickSmoker,
+        }
+    }
+}

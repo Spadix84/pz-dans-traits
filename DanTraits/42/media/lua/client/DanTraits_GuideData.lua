@@ -335,7 +335,7 @@ DanTraits_GuideData.pages = {
 -- the companion requires. DanTraits_GuideModsPage builds the "mods" page from
 -- this list: each one's blurb and a line saying whether it is installed (the
 -- game's active mod list), on the Workshop, or not yet released; an installed
--- companion that put a page in DanTraits_GuideExtra is pointed at.
+-- companion that put a page (or pages) in DanTraits_GuideExtra is pointed at.
 DanTraits_GuideData.companions = {
     { id = "DansVanillaFixes", name = "Dan's Vanilla Fixes",
       blurb = "Small fixes and conveniences: working cold packs and coolers that keep food fresh, rarity colours on every item name, item info in tooltips (read time, uses left, what clothing covers and how it compares), a collection checklist for books, tapes, CDs and mementos, and store stock that makes sense." },
@@ -343,8 +343,8 @@ DanTraits_GuideData.companions = {
       blurb = "Puts a loot run away for you. Right-click the car or any container, say once where each kind of thing lives (drag, or let it suggest), and the character walks the lot round the base. Draw base zones, tag containers, keep some off limits, and open a base inventory that knows where everything is." },
     { id = "MapLegend", name = "Map Legend", workshop = "3831306437",
       blurb = "A symbol and colour key on the world map so your marks mean something a month later, shared across characters or kept per character; click a row to draw with that symbol." },
-    { id = "SlowCooker", name = "Slow Cooker",
-      blurb = "A countertop slow cooker with a removable crock: four times slower than a stove, never burns, keeps food from spoiling while it is on, and nine Kentucky home-cooking recipes. Anything from the crock counts as home cooking for Vitality and each dish as variety of its own." },
+    { id = "VitalityAppliances", name = "Vitality Appliances",
+      blurb = "Two appliances. The Slow Cooker sits on a counter with a removable crock: four times slower than a stove, never burns, keeps food from spoiling while it is on, and nine Kentucky home-cooking recipes; anything from the crock counts as home cooking for Vitality and each dish as variety of its own. The Brick Smoker is built outdoors with Masonry: feed it wood and 8 hours of smoke makes meat, poultry or fish Smoked (keeps about two weeks), a full day Smoke-Dried (about four months)." },
     { id = "VitalityCartridges", name = "Vitality Cartridges", needs = "SpiffBoy",
       blurb = "Games for the SpiffBoy handheld console mod: Still Water (paced breathing that calms a sensory overload and eases stress), Steady (a reflex test that shows what drink, a sugar low or a concussion are doing to you), Spiffo Walk (a pedometer pet), First Aid Quiz (this mod's medicine, and it teaches a little First Aid) and Spiffo Pup (a pet to look after)." },
     { id = "VitalityChallenges", name = "Vitality Challenges",
@@ -359,11 +359,14 @@ local function modInstalled(id)
 end
 DanTraits_GuideModInstalled = modInstalled
 
--- the page another mod registered for itself, if any
-local function pageOfMod(id)
+-- how many pages another mod registered for itself (Vitality Appliances has one
+-- an appliance)
+local function pagesOfMod(id)
+    local n = 0
     for _, p in ipairs(DanTraits_GuideExtra or {}) do
-        if type(p) == "table" and p.mod == id then return p end
+        if type(p) == "table" and p.mod == id then n = n + 1 end
     end
+    return n
 end
 
 -- the "mods" page, built now: template is the page in pages above (id, title, picture)
@@ -377,7 +380,9 @@ function DanTraits_GuideModsPage(template)
         body[#body + 1] = c.blurb
         local status
         if modInstalled(c.id) then
-            status = pageOfMod(c.id) and "Installed: its own page is further down this list." or "Installed."
+            local own = pagesOfMod(c.id)
+            status = own > 1 and "Installed: its own pages are further down this list."
+                or own == 1 and "Installed: its own page is further down this list." or "Installed."
         elseif c.workshop then
             status = "On the Workshop: search for \"" .. c.name .. "\" (item " .. c.workshop .. ")."
         else

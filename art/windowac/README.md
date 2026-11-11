@@ -7,7 +7,6 @@ modelled and rendered from a script, the same way as the Slow Cooker's art.
 |---|---|
 | `build_windowac.py` | builds the model in Blender and renders the tile sprites, or 3/4 previews |
 | `make_sprites.py` | turns the renders into 128x256 game sprites, the sheet, its depth map, the icon, and an in-wall mock-up |
-| `build_pack.py` | writes the texture pack, tile definitions, depth map and icon into `DansClimate/42/media` |
 | `windowac.blend` | the model, saved by the last sprite run (open it to look around) |
 | `renders/preview_*.png` | 3/4 close-ups, front (indoors) and back (outdoors), off and on |
 | `sprites/` | the game sprites, `appliances_windowac_01.png` (S,E,N,W off, then on) and `mockup.png` |
@@ -26,7 +25,7 @@ blender --background --factory-startup --python build_windowac.py -- --out <abs>
 blender --background --factory-startup --python build_windowac.py -- --out <abs>/renders --icon
 blender --background --factory-startup --python build_windowac.py -- --out <abs>/renders --preview
 python make_sprites.py renders sprites --vanilla <folder of extracted vanilla sprites>
-python build_pack.py sprites ../../DansClimate/42/media
+python ../../DansClimate/tools/build_pack.py
 ```
 
 Blender wants an absolute `--out` path. The mock-up and depth check need
@@ -39,7 +38,8 @@ window depth map, grey = 177.2 + 103.2 x metres away from the camera, measured f
 tile's floor centre, the same for both wall edges. `make_sprites.py` checks that over
 solid wall the unit never sorts behind the wall plane; through the opening it may.
 
-**Packing** (`build_pack.py`) writes `DansClimate.pack`, the tile definitions (file number
-6743, beside the Slow Cooker's 6742), the depth map and the inventory icon into the mod.
-The tiles carry `attachedN` or `attachedW` like vanilla curtains, and no `IsMoveAble`, so
-only the mod's own install action can place one.
+**Packing** (`DansClimate/tools/build_pack.py`) writes `DansClimate.pack`, the tile
+definitions (file number 6743, beside the Slow Cooker's 6742; this tileset is id 1, the
+space heater's is 2), the depth maps and the inventory icon into the mod. The tiles carry
+`attachedN` or `attachedW` like vanilla curtains, and no `IsMoveAble`, so only the mod's
+own install action can place one.

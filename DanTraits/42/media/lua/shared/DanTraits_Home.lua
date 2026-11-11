@@ -273,7 +273,9 @@ local function updateHomeMinute(player, d)
     -- what it does, awake
     if not asleep then
         if atHome and s > 0 then
-            local k = s * mult(player)
+            -- homeGood: x1 on what being at home does (Dan's Climate Control: more when
+            -- the place is comfortable, less when it is cold or stifling)
+            local k = s * mult(player) * math.max(0, tonumber(DanTraits_RunHooks("homeGood", 1, player, d)) or 1)
             DanTraits_StatAdd(stats, CharacterStat.BOREDOM, -DanTraits_RunHooks("homeBoredom", HM_BOREDOM * k, player))   -- ADHD: half
             DanTraits_StatAdd(stats, CharacterStat.UNHAPPINESS, -HM_UNHAPPY * k)
             DanTraits_StatAdd(stats, CharacterStat.STRESS, -HM_STRESS * k)

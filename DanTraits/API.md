@@ -33,8 +33,8 @@ Two things need no API at all and work with the mod absent:
   global; without the mod it sits unused.
 - **Home cooking.** Set `item:getModData().slowCookerHome = true` on a dish, and
   `.slowCookerDish = "<id>"` for a named dish, and Vitality counts it as home cooking
-  (1.5x on the diet score) and the dish as variety of its own. The Slow Cooker mod does
-  exactly this.
+  (1.5x on the diet score) and the dish as variety of its own. The Slow Cooker (in Vitality
+  Appliances) does exactly this.
 
 ## Traits and options
 
@@ -147,6 +147,7 @@ list):
 | `infectionGrowth` | x1 on how fast infections grow | player |
 | `woundHeal` | x1 on how fast a wound heals | player, part |
 | `strainRelief` | x1 on how much a comfort eases burnout | player, d |
+| `homeGood` | x1 on how much good being at home does this minute | player, d |
 | `enduranceRegen` | stamina regained this frame | player, d |
 | `panicRise` | panic gained this frame | player, d |
 | `hungerRise`, `fatigueRise`, `boredomRise` | the stat's rise this minute | player, d |
@@ -210,5 +211,5 @@ replaces the earlier one; a built-in id cannot be taken over.
   players only, so your hooks and clocks see those.
 - Everything here is a thin wrapper. If you need something that is not, open an issue on
   GitHub and say what for: promising it is cheap, guessing at it is not.
-- The companion mods (Vitality Cartridges, Vitality Challenges, the Slow Cooker) are
-  worked examples in this repository and theirs.
+- The companion mods (Vitality Cartridges, Vitality Challenges, Vitality Appliances) are
+  worked examples in this repository.

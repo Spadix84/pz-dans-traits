@@ -1,0 +1,224 @@
+module Base
+{
+    item Mov_SlowCooker
+    {
+        DisplayCategory = Furniture,
+        ItemType = base:moveable,
+        Icon = default,
+        Weight = 5.0,
+        WorldObjectSprite = appliances_slowcooker_01_1,
+    }
+
+    /* The stoneware insert. The cooker only holds this; ingredients go into it
+       through the evolved recipe below or the Slow Cooker window. */
+    item SlowCookerCrock
+    {
+        DisplayCategory = Cooking,
+        ItemType = base:normal,
+        Weight = 2.5,
+        Icon = Pot,
+        EatType = Pot,
+        PourType = Pot,
+        StaticModel = CookingPot,
+        WorldStaticModel = CookingPotGround,
+        FillFromDispenserSound = GetWaterFromDispenserCeramic,
+        FillFromLakeSound = GetWaterFromLakeSmall,
+        FillFromTapSound = GetWaterFromTapCeramic,
+        FillFromToiletSound = GetWaterFromToilet,
+        IsCookable = true,
+        Tags = base:cookable,
+        component FluidContainer
+        {
+            ContainerName = SlowCookerCrock,
+            RainFactor = 0.8,
+            Capacity = 4.0,
+            CustomDrinkSound = DrinkingFromMug,
+            TransferRate = 5.0,
+        }
+    }
+
+    /* Whatever is cooking in the crock. Free-form crock stew and the named
+       recipes are both this item; a named recipe sets its name and mod data. */
+    item CrockOfStew
+    {
+        DisplayCategory = Food,
+        ItemType = base:food,
+        Weight = 4.5,
+        Icon = PotFull,
+        BadCold = true,
+        CookingSound = BoilingFood,
+        EatType = Pot,
+        PourType = Pot,
+        IsCookable = true,
+        ReplaceOnUse = Base.SlowCookerCrock,
+        MinutesToCook = 70,
+        MinutesToBurn = 140,
+        DaysFresh = 3,
+        DaysTotallyRotten = 5,
+        HungerChange = -40.0,
+        ThirstChange = -40.0,
+        UnhappyChange = -20,
+        Calories = 310.0,
+        Carbohydrates = 26.3,
+        Lipids = 14.5,
+        Proteins = 3.8,
+        StaticModel = CookingPotSoup_Ground,
+        WorldStaticModel = CookingPotSoup_Ground,
+        SoundMap = DumpContents EmptyPot,
+    }
+
+    /* Anything that can go in a stew can go in the crock. */
+    evolvedrecipe CrockStew
+    {
+        BaseItem = Base.SlowCookerCrock,
+        MaxItems = 12,
+        ResultItem = Base.CrockOfStew,
+        Cookable = true,
+        Name = Prepare Crock Stew,
+        Template = Stew,
+    }
+
+    /* A 1993 recipe pamphlet. Reading it teaches every Slow Cooker recipe
+       (the window checks for the SlowCookerFavorites recipe). */
+    item SlowCookerBooklet
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.2,
+        Icon = MagazineFood,
+        BoredomChange = -10,
+        StressChange = -5,
+        LearnedRecipes = SlowCookerFavorites,
+        StaticModel = Magazine,
+        WorldStaticModel = MagazineCook1Ground,
+        Tags = base:magazine,
+    }
+
+    /* One recipe each, clipped from a newspaper or a church cookbook. Reading one
+       teaches that dish whatever your Cooking level (SlowCooker.knows). */
+    item SlowCookerCard_soupbeans
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_soupbeans,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_chili
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_chili,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_beefstew
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_beefstew,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_cornchowder
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_cornchowder,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_potroast
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_potroast,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_sloppyjoes
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_sloppyjoes,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_chickendumplings
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_chickendumplings,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_pulledpork
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_pulledpork,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+
+    item SlowCookerCard_burgoo
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.1,
+        Icon = RecipeClipping,
+        ReadType = photo,
+        BoredomChange = -2,
+        LearnedRecipes = SlowCooker_burgoo,
+        StaticModel = RecipeClipping,
+        WorldStaticModel = RecipeClipping,
+        Tags = base:newspaperread,
+    }
+}

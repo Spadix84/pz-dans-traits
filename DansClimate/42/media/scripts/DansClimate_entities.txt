@@ -1,0 +1,215 @@
+module Base
+{
+    /* Central heating and cooling, from the build menu. All three recipes have to be
+       learned (the two installer's manuals in DansClimate_items.txt) and need Welding,
+       Maintenance and Electrical. The furnace and the central air conditioner are
+       installed from a heavy item that has to be found; the vent is sheet metal.
+       Tiles are appliances_hvac_01 (art/hvac, packed by tools/build_pack.py):
+       0-3 furnace and 8-11 central air conditioner facing S, E, N, W; 16-17 the vent.
+       What they do is in lua/shared/DansClimate_Central.lua and the Java room model. */
+
+    entity DansClimate_Furnace
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_DansClimate_Furnace,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            health = 300,
+            skillBaseHealth = 50,
+            face S
+            {
+                layer
+                {
+                    row = appliances_hvac_01_0,
+                }
+            }
+            face E
+            {
+                layer
+                {
+                    row = appliances_hvac_01_1,
+                }
+            }
+            face N
+            {
+                layer
+                {
+                    row = appliances_hvac_01_2,
+                }
+            }
+            face W
+            {
+                layer
+                {
+                    row = appliances_hvac_01_3,
+                }
+            }
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 400,
+            NeedToBeLearn = true,
+            SkillRequired = MetalWelding:5;Maintenance:5;Electricity:5,
+            xpAward = MetalWelding:30;Electricity:30,
+            category = Furniture,
+            Tags = Welding,
+            Tooltip = Tooltip_craft_DansClimateFurnaceDesc,
+            inputs
+            {
+                item 1 [Base.HVACFurnace],
+                item 1 tags[base:weldingmask] mode:keep,
+                item 1 tags[base:screwdriver] mode:keep,
+                item 4 [Base.BlowTorch] flags[DontRecordInput],
+                item 2 [Base.WeldingRods] flags[DontRecordInput],
+                item 2 [Base.SheetMetal],
+                item 4 [Base.ElectricWire],
+                item 8 [Base.Screws],
+            }
+        }
+    }
+
+    entity DansClimate_CentralAC
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_DansClimate_CentralAC,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            health = 300,
+            skillBaseHealth = 50,
+            face S
+            {
+                layer
+                {
+                    row = appliances_hvac_01_8,
+                }
+            }
+            face E
+            {
+                layer
+                {
+                    row = appliances_hvac_01_9,
+                }
+            }
+            face N
+            {
+                layer
+                {
+                    row = appliances_hvac_01_10,
+                }
+            }
+            face W
+            {
+                layer
+                {
+                    row = appliances_hvac_01_11,
+                }
+            }
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 400,
+            NeedToBeLearn = true,
+            SkillRequired = MetalWelding:6;Maintenance:6;Electricity:7,
+            xpAward = MetalWelding:30;Electricity:40,
+            category = Furniture,
+            Tags = Welding,
+            Tooltip = Tooltip_craft_DansClimateCentralACDesc,
+            inputs
+            {
+                item 1 [Base.HVACCondenser],
+                item 1 tags[base:weldingmask] mode:keep,
+                item 1 tags[base:screwdriver] mode:keep,
+                item 6 [Base.BlowTorch] flags[DontRecordInput],
+                item 3 [Base.WeldingRods] flags[DontRecordInput],
+                item 2 [Base.MetalPipe],
+                item 1 [Base.SmallSheetMetal],
+                item 6 [Base.ElectricWire],
+                item 8 [Base.Screws],
+            }
+        }
+    }
+
+    entity DansClimate_Vent
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_DansClimate_Vent,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            health = 100,
+            skillBaseHealth = 20,
+            face S
+            {
+                layer
+                {
+                    row = appliances_hvac_01_16,
+                }
+            }
+            face E
+            {
+                layer
+                {
+                    row = appliances_hvac_01_17,
+                }
+            }
+            /* Two faces only: the game refuses an entity that names a sprite twice
+               (SpriteConfigScript.checkScripts), and the world then won't load. */
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 200,
+            NeedToBeLearn = true,
+            SkillRequired = MetalWelding:4;Maintenance:3;Electricity:2,
+            xpAward = MetalWelding:15,
+            category = Furniture,
+            Tags = Welding,
+            Tooltip = Tooltip_craft_DansClimateVentDesc,
+            inputs
+            {
+                item 1 tags[base:weldingmask] mode:keep,
+                item 1 tags[base:screwdriver] mode:keep,
+                item 2 [Base.BlowTorch] flags[DontRecordInput],
+                item 1 [Base.WeldingRods] flags[DontRecordInput],
+                item 1 [Base.SheetMetal],
+                item 2 [Base.SmallSheetMetal],
+                item 4 [Base.Screws],
+            }
+        }
+    }
+
+    xuiSkin default
+    {
+        entity ES_DansClimate_Furnace
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName = Furnace,
+            Icon = Build_DansClimateFurnace,
+        }
+        entity ES_DansClimate_CentralAC
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName = Central Air Conditioner,
+            Icon = Build_DansClimateCentralAC,
+        }
+        entity ES_DansClimate_Vent
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName = Vent,
+            Icon = Build_DansClimateVent,
+        }
+    }
+}

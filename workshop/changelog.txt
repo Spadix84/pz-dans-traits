@@ -2,18 +2,20 @@
 
 [h2]New[/h2]
 [list]
+[*][b]Dan's Vanilla Fixes: placed items stay put.[/b] Things you put down with Place Item to decorate are no longer swept up by the floor's Loot All, Take Same Type or Grab All. Their names are faded in the floor list and the tooltip says Placed. Right-click anything on the floor to Keep it in place (an old drop) or Let Loot All take it. Taking one by hand still works, and items you placed before the update count too. Sandbox option Placed Items Stay.
 [*][b]Dan's Vanilla Fixes: all of the game's reading in the collection.[/b] The checklist had skill books and recipe magazines; now every book (1,187 titles), magazine, comic, newspaper, flier, brochure, catalogue and RPG manual is on it, each in its own tab. Right-click a copy and choose Add to collection, or tick it in the window; its tooltip then says you have it, on any copy you find, and that title is set Unwanted (only that title: other books stay white). A magazine or a comic counts by its name whatever the issue, and the issues you add are the ones set Unwanted. The old Magazines tab is now Recipe Magazines.
 [/list]
 
 [h2]Changed[/h2]
 [list]
 [*][b]Moodle Framework is now required.[/b] The game will not enable the mod without it. Before, the mod loaded without it and showed no moodles at all. Subscribe to and enable Moodle Framework before loading your save.
+[*][b]Vitality Appliances in the Guide.[/b] The Slow Cooker and the Brick Smoker are now one companion mod, Vitality Appliances, and the Guide's companion mods page lists it under that name. Home cooking from the crock counts as before.
 [/list]
 
 [h2]Fixed[/h2]
 [list]
-[*][b]Smoking off a stove clears the craving.[/b] With I Don't Need A Lighter, a cigarette lit off a stove, fire, barbecue or car lighter did nothing for a Smoker's craving; it now counts like any other.
 [*][b]Dan's Vanilla Fixes: collected tapes and CDs are set Unwanted.[/b] Adding a VHS tape or a CD to the collection ticked it but left it white, and Take All still took it. Now that title greys out like anything else on the checklist, and only that title. Tapes you had ticked already are set the first time you use the checklist after updating.
+[*][b]Smoking off a stove clears the craving.[/b] With I Don't Need A Lighter, a cigarette lit off a stove, fire, barbecue or car lighter did nothing for a Smoker's craving; it now counts like any other.
 [/list]
 
 [h1]1.5.2: you can get sick; Hunted by Sprinters, Swarmed[/h1]

@@ -1,0 +1,13 @@
+name=Vitality Appliances
+id=VitalityAppliances
+url=https://github.com/Spadix84/pz-dans-traits
+modversion=1.0.0
+versionMin=42.13.0
+author=Dan
+icon=icon.png
+pack=SlowCooker
+pack=BrickSmoker
+tiledef=SlowCooker_tiledefinitions 6742
+tiledef=BrickSmoker_tiledefinitions 7318
+incompatible=\SlowCooker,\BrickSmoker
+description=Two appliances for the kitchen and the yard. The Slow Cooker: a countertop cooker with a removable crock that cooks four times slower than a stove, never burns, and keeps food from spoiling while it's on; throw in any stew ingredients, or cook one of nine Kentucky home-cooking recipes, learned as your Cooking improves or from recipe cards and a booklet. The Brick Smoker: built outdoors with Masonry; feed the firebox wood and load the chamber with meat, poultry or fish, and 8 hours of smoke makes it Smoked (keeps about two weeks), a full day Smoke-Dried (keeps about four months). Smoked meat still goes in stews, and in the crock. Replaces the separate Slow Cooker and Brick Smoker mods.

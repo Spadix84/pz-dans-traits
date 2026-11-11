@@ -4,7 +4,7 @@ A Project Zomboid (Build 42) mod (internal id `DanTraits`, kept for save compati
 
 ## The mods
 
-This repository holds the Vitality Project and five smaller mods from the same project, each doing one job and each working on its own. With the Vitality Project loaded they add a page to its Guide tab; the Slow Cooker lives in its own repository.
+This repository holds the Vitality Project and six smaller mods from the same project, each doing one job and each working on its own. With the Vitality Project loaded they add pages to its Guide tab.
 
 | Mod | What it does | Where |
 |---|---|---|
@@ -14,9 +14,9 @@ This repository holds the Vitality Project and five smaller mods from the same p
 | **Base Unloader** | Puts a loot run away for you: rules, zones, a base inventory | [`BaseUnloader/`](BaseUnloader/), not yet on the Workshop |
 | **Vitality Cartridges** | Five games for the SpiffBoy handheld console, each reaching the character | [`VitalityCartridges/`](VitalityCartridges/), needs SpiffBoy, not yet on the Workshop |
 | **Vitality Challenges** | Pile-Up, Nomad and The Last Broadcast in the Challenges menu | [`VitalityChallenges/`](VitalityChallenges/), not yet on the Workshop |
-| **Slow Cooker** | A countertop slow cooker, nine Kentucky recipes; its meals count as home cooking here | its own repository (`pz-slow-cooker`), not yet on the Workshop |
+| **Vitality Appliances** | A countertop Slow Cooker with nine Kentucky recipes (its meals count as home cooking here) and a Brick Smoker built outdoors for smoked and smoke-dried meat and fish | [`VitalityAppliances/`](VitalityAppliances/), [API](VitalityAppliances/API.md), not yet on the Workshop under this name |
 
-Other mods can build on the Vitality Project and Map Legend: each ships an `API.md` and a `*_API.lua` loaded with `pcall(require, ...)`, so a mod runs with or without them. The Slow Cooker's API is the same pattern.
+Other mods can build on the Vitality Project, Map Legend and Vitality Appliances: each ships an `API.md` and a `*_API.lua` loaded with `pcall(require, ...)` (the appliances have one each, `SlowCooker_API.lua` and `Smoker_API.lua`), so a mod runs with or without them.
 
 ## Traits
 

@@ -1,5 +1,8 @@
 package com.spadix84.dansclimate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * The room temperature model, without any game types so it can be tested on its own
  * (java/test/ZoneModelTest.java). GameBridge fills in the zones and the weather.
@@ -10,11 +13,11 @@ package com.spadix84.dansclimate;
  *         + kGnd  (Tground - T)   floor slab or basement walls
  *         + kVent (Tout    - T)   open or broken windows and open outer doors, x wind
  *         + kMix  (Tbldg   - T)   air shared with the building's other rooms
- *         + Qsun + Qfire + Qac + Qhvac
+ *         + Qsun + Qfire + Qac + Qheater + Qhvac + Qcentral
  *
- * in degrees C per game hour. The sources (sun, fire, window AC) are scaled by
- * REF_AREA / the room's area, so a fire warms a closet faster than a hall; the
- * building's own heating and cooling is sized for the building and isn't.
+ * in degrees C per game hour. The sources (sun, fire, window AC, space heater) are
+ * scaled by REF_AREA / the room's area, so a fire warms a closet faster than a hall;
+ * the building's own heating and cooling is sized for the building and isn't.
  * The numbers are the design note's starting values (plans/climate.md), to balance.
  */
 public final class ZoneModel {
@@ -27,8 +30,17 @@ public final class ZoneModel {
     public static final double SOL_TOP = 8, SOL_OTHER = 3;
     public static final double SUN_PER_WINDOW = 0.6;
     public static final double FIRE = 3.0, MAX_FIRES = 4;
-    public static final double AC_COOL = 3.0, AC_SETPOINT = 22.0;
+    /** A window AC on low and on high, and what it cools to if its dial was never touched. */
+    public static final double AC_LOW = 1.5, AC_HIGH = 3.0, AC_SETPOINT = 22.0;
+    /** A space heater on low and on high, and what it heats to if its dial was never touched. */
+    public static final double HEATER_LOW = 2.0, HEATER_HIGH = 4.0, HEATER_SETPOINT = 21.0;
     public static final double HVAC_HEAT = 6.0, HVAC_COOL = 4.0;
+    /**
+     * A furnace or a central air conditioner the player installed: what one gives each
+     * room with a vent, in degrees an hour, while the vented floor is CENTRAL_AREA tiles
+     * or less. Past that the same output is shared, so every extra room slows them all.
+     */
+    public static final double CENTRAL_HEAT = 6.0, CENTRAL_COOL = 4.0, CENTRAL_AREA = 120;
     /** How hard a thermostat or an AC pushes per degree off its setpoint (per hour). */
     public static final double GAIN = 6.0;
     public static final double REF_AREA = 20;
@@ -60,9 +72,22 @@ public final class ZoneModel {
         }
     }
 
+    /**
+     * A window AC or a space heater working on a room: how hard it can push, in
+     * degrees an hour in a REF_AREA room, and the temperature its dial is set to.
+     */
+    public static final class Unit {
+        public final double power, setpoint;
+
+        public Unit(double power, double setpoint) {
+            this.power = power;
+            this.setpoint = setpoint;
+        }
+    }
+
     // The terms, in the order the readout lists them.
-    public static final int ENV = 0, GND = 1, VENT = 2, MIX = 3, SUN = 4, FIRES = 5, AC = 6, HVAC = 7, TERMS = 8;
-    public static final String[] TERM_NAMES = { "walls", "ground", "drafts", "other rooms", "sun", "fire", "window AC", "heating/cooling" };
+    public static final int ENV = 0, GND = 1, VENT = 2, MIX = 3, SUN = 4, FIRES = 5, AC = 6, HVAC = 7, HEATER = 8, CENTRAL = 9, TERMS = 10;
+    public static final String[] TERM_NAMES = { "walls", "ground", "drafts", "other rooms", "sun", "fire", "window AC", "heating/cooling", "space heater", "furnace/central air" };
 
     public static final class Zone {
         public final long id;
@@ -81,11 +106,20 @@ public final class ZoneModel {
         public double sunWindows;
         public int fires;
         /** Window ACs switched on and powered, blowing into this room. */
-        public int acUnits;
-        /** The building's heating and cooling has power. */
+        public final List<Unit> acs = new ArrayList<>();
+        /** Space heaters switched on and powered, standing in this room. */
+        public final List<Unit> heaters = new ArrayList<>();
+        /** The building's heating and cooling has power: the grid, never a generator. */
         public boolean powered;
         /** The building's thermostat; null for a building without heating and cooling. */
         public Thermostat thermostat = Thermostat.DEFAULT;
+        /** Vents the player built in this room: with one, the furnace and central air reach it. */
+        public int vents;
+        /**
+         * What the building's running furnaces and central air conditioners can give
+         * this room, in degrees an hour (centralShare); 0 without a vent or a unit.
+         */
+        public double centralHeat, centralCool;
 
         public double t;
         /** The last step's terms, for the readout. */
@@ -131,10 +165,24 @@ public final class ZoneModel {
         return FIRE * Math.min(MAX_FIRES, z.fires) * scale(z);
     }
 
-    /** Window ACs pull the room down toward their setpoint, never below it. */
+    /** Window ACs pull the room down toward their setpoints, never below them. */
     public static double qAc(Zone z, double t) {
-        if (z.acUnits <= 0 || t <= AC_SETPOINT) return 0;
-        return -Math.min(AC_COOL * z.acUnits * scale(z), GAIN * (t - AC_SETPOINT));
+        double q = 0;
+        for (int i = 0; i < z.acs.size(); i++) {
+            Unit u = z.acs.get(i);
+            if (t > u.setpoint) q -= Math.min(u.power * scale(z), GAIN * (t - u.setpoint));
+        }
+        return q;
+    }
+
+    /** Space heaters push the room up toward their setpoints, never above them. */
+    public static double qHeater(Zone z, double t) {
+        double q = 0;
+        for (int i = 0; i < z.heaters.size(); i++) {
+            Unit u = z.heaters.get(i);
+            if (t < u.setpoint) q += Math.min(u.power * scale(z), GAIN * (u.setpoint - t));
+        }
+        return q;
     }
 
     /** The building's heating and cooling, toward the thermostat's setpoints. */
@@ -145,6 +193,36 @@ public final class ZoneModel {
         boolean cool = th.mode == Mode.COOL || th.mode == Mode.AUTO;
         if (heat && t < th.heat) return Math.min(HVAC_HEAT, GAIN * (th.heat - t));
         if (cool && t > th.cool) return -Math.min(HVAC_COOL, GAIN * (t - th.cool));
+        return 0;
+    }
+
+    /**
+     * What each vented room gets from `units` running furnaces (or central air
+     * conditioners) of `full` strength sharing `ventedArea` tiles of floor.
+     */
+    public static double centralShare(double full, int units, double ventedArea) {
+        if (units <= 0 || ventedArea <= 0) return 0;
+        return Math.min(full, full * units * CENTRAL_AREA / ventedArea);
+    }
+
+    /** The thermostat calls for heat (or for cooling) in a room at temperature t. */
+    public static boolean wantsHeat(Thermostat th, double t) {
+        return th != null && (th.mode == Mode.HEAT || th.mode == Mode.AUTO) && t < th.heat;
+    }
+
+    public static boolean wantsCool(Thermostat th, double t) {
+        return th != null && (th.mode == Mode.COOL || th.mode == Mode.AUTO) && t > th.cool;
+    }
+
+    /**
+     * The player's furnace and central air conditioner, through this room's vent,
+     * toward the building thermostat's setpoints. They don't need the grid.
+     */
+    public static double qCentral(Zone z, double t) {
+        Thermostat th = z.thermostat;
+        if (z.vents <= 0) return 0;
+        if (z.centralHeat > 0 && wantsHeat(th, t)) return Math.min(z.centralHeat, GAIN * (th.heat - t));
+        if (z.centralCool > 0 && wantsCool(th, t)) return -Math.min(z.centralCool, GAIN * (t - th.cool));
         return 0;
     }
 
@@ -162,6 +240,8 @@ public final class ZoneModel {
         q[FIRES] = qFire(z);
         q[AC] = qAc(z, t);
         q[HVAC] = qHvac(z, t);
+        q[HEATER] = qHeater(z, t);
+        q[CENTRAL] = qCentral(z, t);
         double sum = 0;
         for (double v : q) sum += v;
         return sum;
@@ -172,7 +252,9 @@ public final class ZoneModel {
      * stable however many windows are open or however long the step.
      */
     public static void step(Zone z, Env e, double tBldg, double hours) {
-        double k = kEnv(z) + kGnd(z) + kVent(z, e) + (Double.isNaN(tBldg) ? 0 : K_MIX) + GAIN;
+        // every thermostat (the building's, the central units', each unit's) can be as steep as GAIN
+        double k = kEnv(z) + kGnd(z) + kVent(z, e) + (Double.isNaN(tBldg) ? 0 : K_MIX)
+            + GAIN * (2 + z.acs.size() + z.heaters.size());
         int n = (int) Math.ceil(hours * k / 0.2);
         n = Math.max(1, Math.min(n, 10000));
         double dt = hours / n;

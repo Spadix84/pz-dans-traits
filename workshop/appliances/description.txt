@@ -1,0 +1,80 @@
+[h1]Vitality Appliances[/h1]
+[b]Two ways to make food last and taste like home.[/b] A countertop slow cooker with nine Kentucky recipes from 1993, and a brick smoker you build yourself, for Build 42.
+
+[h1]Slow Cooker[/h1]
+[b]Dump it in, switch it on, go loot. Dinner's ready when you get back.[/b]
+
+[h2]The cooker[/h2]
+[list]
+[*][b]Low and slow.[/b] It cooks about four times slower than a stove and never burns anything.
+[*][b]Keeps warm.[/b] Food in a cooker that's switched on doesn't spoil. Switch it off and the clock starts again.
+[*][b]Runs on power.[/b] Grid or generator, and on a generator it uses about a fifth of a stove's fuel.
+[*][b]Fits the kitchen.[/b] It sits on a counter or table and lines up with the vanilla microwave and toaster. Pick it up and move it like any furniture.
+[*][b]Removable crock.[/b] The cooker only takes its stoneware crock. Crocks come with cookers found as loot.
+[*][b]Uncommon.[/b] Found in kitchen cupboards, kitchenware aisles and appliance stores. Most Kentucky kitchens had one.
+[/list]
+
+[h2]Two ways to cook[/h2]
+[list]
+[*][b]Crock stew:[/b] throw in anything that goes in a stew, up to 12 ingredients, and it's named from what went in.
+[*][b]Recipes:[/b] right-click the cooker, choose [i]Slow Cooker...[/i], pick a dish and tick the ingredients you're carrying. Your survivor takes the crock out, fills it and puts it back.
+[/list]
+
+[h2]The recipes[/h2]
+[table]
+[tr][th]Cooking[/th][th]Dishes[/th][/tr]
+[tr][td]0[/td][td]Soup Beans & Ham, Chili[/td][/tr]
+[tr][td]2[/td][td]Beef Stew, Corn Chowder[/td][/tr]
+[tr][td]4[/td][td]Pot Roast, Sloppy Joes[/td][/tr]
+[tr][td]6[/td][td]Chicken & Dumplings, Pulled Pork[/td][/tr]
+[tr][td]8[/td][td]Kentucky Burgoo[/td][/tr]
+[/table]
+Every ingredient is a vanilla food. A named dish lifts your mood more than plain stew.
+[list]
+[*][b]Level up:[/b] dishes unlock as your Cooking skill rises.
+[*][b]Recipe cards:[/b] each dish has its own clipping, found where vanilla recipe clippings turn up. Read one to learn that dish at any level.
+[*][b]The booklet:[/b] [i]Kentucky Slow Cooker Favorites[/i] teaches all nine. Look in kitchen bookshelves and libraries.
+[/list]
+
+[h2]Serving[/h2]
+[list]
+[*][b]Serve a Bowl:[/b] right-click the cooked crock with an empty bowl in your inventory. The rest stays warm in the cooker.
+[*][b]Move to Cooking Pot:[/b] pour the whole meal into a pot to carry it or keep it for later.
+[*][b]Pour on Ground:[/b] dump a batch that's gone off.
+[/list]
+
+[h1]Brick Smoker[/h1]
+[b]Light a fire, load the meat, come back tomorrow to jerky.[/b] For making the hunt last.
+
+[h2]Building it[/h2]
+[list]
+[*][b]Masonry build.[/b] 16 clay bricks, 3 units of mortar or concrete, a sheet of metal and 2 metal bars, with a mason's trowel. Needs Masonry 3.
+[*][b]Outdoors only.[/b] It needs open sky to draw. Roof it over and the fire chokes.
+[/list]
+
+[h2]The fire[/h2]
+[list]
+[*][b]Wood only.[/b] A log burns 6 hours, a plank or firewood 2, a branch or charcoal 1. The firebox holds a day's worth.
+[*][b]Fill It Up[/b] takes the biggest pieces in reach: your inventory, a crate, the floor.
+[*][b]Light it[/b] with a lighter or matches. Put it out whenever you like and the fuel left keeps for next time.
+[/list]
+
+[h2]Smoking[/h2]
+[list]
+[*][b]8 hours: Smoked.[/b] Ready to eat, keeps about two weeks.
+[*][b]24 hours: Smoke-Dried.[/b] Like jerky. Lighter to carry, keeps about four months.
+[*][b]Nothing spoils while the fire burns.[/b]
+[*][b]Every cut keeps its own nutrition[/b] and its name: Smoked Venison, Smoke-Dried Bass Fillet. It still goes in stews, soups and sandwiches, and in the crock.
+[*]Meat, game, poultry, fish and seafood. Hover the menu to see each piece's progress.
+[*]Time away counts: leave it lit, go looting, and it catches up when you get back, as far as the fuel lasts.
+[/list]
+
+[h1]Need to know[/h1]
+[list]
+[*][b]Coming from the separate Slow Cooker or Brick Smoker mods?[/b] This replaces both and cannot run beside them. Swap them for this one in your save's mod list: cookers, crocks, smokers, food and learned recipes carry over.
+[*][b]Mid-save?[/b] Safe to add. Containers you haven't opened yet can roll cookers, cards and booklets; the smoker is in the Build menu straight away.
+[*][b]Vitality Project?[/b] Food from the crock counts as home cooking: it moves your diet score half again as much, and each named dish counts towards variety. Its Guide tab gets a Slow Cooker page and a Brick Smoker page. Neither mod needs the other.
+[*][b]For modders:[/b] add recipes, recipe cards, bowls and pots to the cooker; fuel, foods and your own smoked products to the smoker; and hook into both. Each is an optional dependency behind one [i]pcall(require, ...)[/i]. The guide is [b]API.md[/b] in the mod folder.
+[*][b]Multiplayer?[/b] Built for singleplayer. Multiplayer is untested.
+[*][b]Bugs?[/b] Leave a comment. Your console.txt helps.
+[/list]

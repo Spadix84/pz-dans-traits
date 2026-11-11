@@ -1,13 +1,15 @@
 -- Room temperatures: the Lua side of the Java model (GameBridge and ZoneModel in
 -- java/src). The model runs in Java, because the game asks for a square's
 -- temperature in Java many times a tick; Lua drives it once a game minute, keeps the
--- thermostats in global ModData, and hands them over.
+-- thermostats in global ModData, and hands them over. It also tells Java when a window
+-- air conditioner or a space heater appears or changes (C.track, C.refresh).
 --
 -- DansClimateJava is the Java API (Api.java, exposed by ZombieBuddy). Without
 -- ZombieBuddy or the approved jar it's nil, and everything here does nothing.
 --
 -- A thermostat belongs to a map building, named by its BuildingDef's corner (x, y).
--- Buildings never set run on the default: Auto, heat to 21 C, cool to 24 C.
+-- Buildings never set run on the default: Auto, heat to 21 C, cool to 24 C. All of it
+-- stops when the grid goes down (C.powered).
 
 DansClimate = DansClimate or {}
 local C = {}
@@ -92,16 +94,65 @@ function C.readout(sq)
     return text
 end
 
--- look at the windows and units around a square again (after one changes)
+-- look at the windows and units around a square again (after one changes), and have
+-- the generators in range add up their load again
 function C.refresh(sq)
     local java = DansClimateJava
     if java and sq then java.refreshAt(sq:getX(), sq:getY(), sq:getZ()) end
 end
 
--- the building's heating and cooling has power: the grid, or a generator reaching it
-function C.powered(sq)
-    if not sq then return false end
-    return getWorld():isHydroPowerOn() or sq:haveElectricity()
+-- a unit is on this square now (placed, or loaded with its chunk): a window air
+-- conditioner gets the hum the player hears
+function C.track(sq)
+    local java = DansClimateJava
+    if java and sq then java.trackUnits(sq:getX(), sq:getY(), sq:getZ()) end
+end
+
+-- A number about the player's furnaces, central air conditioners and vents in the
+-- building at a square (Api.central lists what can be asked); 0 without the model.
+function C.central(sq, what)
+    local java = DansClimateJava
+    if not java or not sq then return 0 end
+    return tonumber(java.central(sq:getX(), sq:getY(), sq:getZ(), what)) or 0
+end
+
+-- What the player has installed in the building at a square: "Heat" (a furnace),
+-- "Cool" (a central air conditioner), "Both", or nil for neither.
+function C.centralKinds(sq)
+    local heat = C.central(sq, "furnaces") > 0
+    local cool = C.central(sq, "condensers") > 0
+    if heat and cool then return "Both" end
+    if heat then return "Heat" end
+    if cool then return "Cool" end
+    return nil
+end
+
+-- a furnace or a central air conditioner on this square is working right now
+function C.centralRunning(sq)
+    local java = DansClimateJava
+    if not java or not sq then return false end
+    return java.centralRunning(sq:getX(), sq:getY(), sq:getZ()) == true
+end
+
+-- a sandbox option of the mod's, or the fallback without it (an old save, the tests)
+function C.sandbox(name, fallback)
+    local sv = SandboxVars and SandboxVars.DansClimate
+    local value = sv and tonumber(sv[name])
+    if value == nil then return fallback end
+    return value
+end
+
+-- hand the sandbox's Unit Generator Draw (%) to Java, which answers the generators
+function C.pushConfig()
+    local java = DansClimateJava
+    if java then java.setDrawFactor(math.max(0, C.sandbox("UnitPowerDraw", 100)) / 100) end
+end
+
+-- The building's own heating and cooling works: only while the grid is up. Once the
+-- power goes out it is dead for good, generator or not, and it is down to fires, space
+-- heaters and window air conditioners (as GameBridge.grid on the Java side).
+function C.powered()
+    return getWorld():isHydroPowerOn() == true
 end
 
 function C.tick()
@@ -120,7 +171,13 @@ function C.format(celsius)
     return getText(key, tostring(math.floor(value + 0.5)))
 end
 
-Events.OnInitGlobalModData.Add(C.pushAll)
+-- as a save loads: the thermostats and the sandbox options, to Java
+function C.onLoad()
+    C.pushAll()
+    C.pushConfig()
+end
+
+Events.OnInitGlobalModData.Add(C.onLoad)
 if not isClient() then Events.EveryOneMinute.Add(C.tick) end
 
 return C

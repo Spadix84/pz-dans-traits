@@ -12,14 +12,20 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   all 48 moodles were skipped without a word, which left most conditions with nothing on
   screen. A save made without Moodle Framework needs it subscribed and enabled before it is
   loaded again. The Lua still checks for `MF` before each call (a server has none).
+- **The Guide's companion mods page lists Vitality Appliances** in place of the Slow Cooker
+  (`DanTraits_GuideData.companions`: id `VitalityAppliances`, the blurb covers the cooker and
+  the Brick Smoker). A companion with more than one page of its own (it has two) reads
+  "its own pages are further down" (`pagesOfMod` counts them). The home-cooking marks
+  (`slowCookerHome`, `slowCookerDish`) are unchanged.
+
+- **A new hook for other mods, `homeGood`:** x1 on how much good being at home does each
+  minute (the boredom, unhappiness and stress it eases), with the player and their data
+  (`DanTraits_Home.lua`, `VitalityProject.HOOKS`, `API.md`). Nothing in Vitality uses it.
+  Dan's Climate Control does: home does a quarter more while the place is cosy and half
+  in a full chill or stifling heat.
 
 ### Fixed
 
-- **A cigarette lit off a stove, fire or car lighter clears the Smoker's craving.** I Don't
-  Need A Lighter smokes those through its own actions (`IsStoveSmoking`, `IsCarSmoking`), whose
-  `complete()` calls `Eat(item, 1)` without the eat action, so nothing of ours saw the
-  cigarette: the game used it up and the craving, the quitting clock, the lungs and the
-  habit stood still. Core now wraps those two `complete()`s into `DanTraits_OnEat` (the
 - **Dan's Vanilla Fixes: a collected tape or CD is set Unwanted.** The checklist left tapes
   alone on the belief that Unwanted goes by item type and would grey every tape. It does
   not: `InventoryItem.isUnwanted(player)` asks the player about the media id for recorded
@@ -28,6 +34,11 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   types: unticking clears it only if the tick set it (`media[id]` is `WE_SET` or `WAS_SET`,
   was `true`). The character's data goes to `v = 2`; on the first read of a `v = 1` one,
   every tape already ticked is set Unwanted.
+- **A cigarette lit off a stove, fire or car lighter clears the Smoker's craving.** I Don't
+  Need A Lighter smokes those through its own actions (`IsStoveSmoking`, `IsCarSmoking`), whose
+  `complete()` calls `Eat(item, 1)` without the eat action, so nothing of ours saw the
+  cigarette: the game used it up and the craving, the quitting clock, the lungs and the
+  habit stood still. Core now wraps those two `complete()`s into `DanTraits_OnEat` (the
   whole cigarette), with the same refusal check as the eat action, at load and again at game
   start. Its lighter path already went through the eat action.
 - **Breaking Point no longer sticks after a save.** A save made while the character sat
@@ -52,11 +63,23 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Added
 
-- **Declared state machines** (`DanTraits_Machine` in core). 22 systems name their phases
-  next to their keys: none, pending, active; clear, aura, attack, refractory; and so on.
-  Telemetry carries them as `machines` beside the raw mod data, the debug console lists them
-  (`states`, `states all`), and other files can ask with `DanTraits_StateOf`. Keys and
-  saves are unchanged. `docs/state-machines.md` maps every machine in the repo, declared or
+- **Dan's Vanilla Fixes: placed items stay put.** Items put down with Place Item (decorations)
+  are left behind by the floor's Loot All (`ISInventoryPane:lootAll`, its lone-heavy-item
+  equip too, and the button hides when only placed or Unwanted items are left), the floor's
+  Take Same Type button and the world menu's Grab All / Grab Half (unless every item of that
+  kind is placed: then they were picked out on purpose). Their names are faded in the floor
+  list (a stack only when every copy is placed), the tooltip says "Placed: Loot All leaves
+  it", and right-click on anything on the floor offers Keep in place / Let Loot All take it
+  (singleplayer). Dragging, double-clicking or grabbing one on its own still takes it.
+  Sandbox option Placed Items Stay (on).
+  - No state of our own: the place cursor's `ISDropWorldItemAction` already sets the world
+    item's `ignoreRemoveSandbox` (so the world-item cleanup spares it), it is saved, and a
+    plain drop never sets it, so items placed before the update count too. The other path
+    that sets it, dropping out of a car door (`ISDropVehicleItemAction`), marks the item
+    `DVF_Loose` first; Place Item clears the mark. Picking an item up removes its world item
+    and the flag with it. `DVF_Rarity.nameRow` (which text is a name) is shared by the fade
+    and the rarity colours (`DansVanillaFixes_Placed.lua`, `DansVanillaFixes_PlacedClient.lua`).
+
 - **Dan's Vanilla Fixes: the collection checklist takes all of the game's reading.** It had
   skill books and recipe magazines; five new tabs list the rest by title: Books (1,187 titles
   and the 16 RPG manuals), Magazines (167, the 56 catalogues, the TV guide, HottieZ and
@@ -86,6 +109,11 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   - Left off on purpose: seed packets, notebooks and paper, receipts, ID and business cards,
     letters, crossword and wordsearch magazines, the phone book, and schematics (each copy
     teaches a different recipe).
+- **Declared state machines** (`DanTraits_Machine` in core). 22 systems name their phases
+  next to their keys: none, pending, active; clear, aura, attack, refractory; and so on.
+  Telemetry carries them as `machines` beside the raw mod data, the debug console lists them
+  (`states`, `states all`), and other files can ask with `DanTraits_StateOf`. Keys and
+  saves are unchanged. `docs/state-machines.md` maps every machine in the repo, declared or
   not, with the open defects the survey found. `tests/test_machines.lua` and
   `tests/check_machines.py` keep the code and the page in step.
 - **Vanilla test commands for the companion's test bench** (`DanTraits_DebugCommands.lua`,
@@ -96,6 +124,29 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   natural` and `temp <C> | natural` hold the same admin climate values the game's admin panel
   sets. Telemetry now carries `world` (skills by category, clock, speed, weather and any
   overrides held), `traitKeys`, and body temperature in `stats`.
+
+## Vitality Appliances 1.0.0 - unreleased (separate mod)
+
+- **The Slow Cooker and the Brick Smoker are one mod**, `VitalityAppliances/` (id
+  `VitalityAppliances`), brought into this repository from `pz-slow-cooker` and `pz-smoker`.
+  Each appliance keeps its Lua files, global table (`SlowCooker`, `Smoker`), API file, item
+  types (module `Base`), tile sets (`appliances_slowcooker_01` 6742, `crafted_smoker_01`
+  7318), texture pack and mod data, so saves and mods written against either carry over;
+  `mod.info` lists both packs and both tile definitions and is `incompatible=` with the two
+  old ids. The six translation files the two shared by name are merged key by key (no key
+  was in both). One `API.md` holds both guides; a hard dependency is now
+  `require=\VitalityAppliances`.
+- **Two Guide pages** (`SlowCooker_Guide.lua`, `Smoker_Guide.lua`), both registered for mod
+  `VitalityAppliances`.
+- **Fixed: the Slow Cooker window called `next()`**, which the game's Lua does not have
+  (`SlowCooker_Window.lua`, the Clear button's enabled state, every frame the window drew).
+  It asks `chosenCount()` now. Found by `tests/lint_kahlua.py`, which the mod is now under,
+  with `check_api.py` and `check_wraps.py`.
+- In the repository: `deploy.py --mod VitalityAppliances` (`--appliances`) and `--workshop
+  VitalityAppliances`; the Steam page and `make_images.py` (the preview and the mod icon, both
+  appliances together) in `workshop/appliances/`; the art in `art/slowcooker/` and
+  `art/smoker/` (the smoker's `build_pack.py` no longer writes the mod icon); the tests as
+  `tests/test_slowcooker.lua` and `tests/test_bricksmoker.lua`.
 
 ## Map Legend 1.1.0 - 2026-11-07 (separate mod)
 

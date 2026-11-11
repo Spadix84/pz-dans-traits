@@ -30,8 +30,8 @@ import zombie.iso.objects.IsoWindow;
 import zombie.iso.weather.ClimateManager;
 
 /**
- * Reads the game into ZoneModel: which rooms there are, their windows, doors, fires
- * and window ACs, the weather and the power. Map buildings only (rooms with an
+ * Reads the game into ZoneModel: which rooms there are, their windows, doors, fires,
+ * window ACs and space heaters (Units), the weather and the power. Map buildings only (rooms with an
  * IsoRoom); a room the player built has none and keeps the vanilla rule for now.
  *
  * A building's rooms become zones the first time anything asks for the temperature
@@ -45,6 +45,8 @@ public final class GameBridge {
 
     /** Every few game minutes the windows, doors, fires and units are looked at again. */
     static final int REFRESH_MINUTES = 10;
+    /** A furnace or a central air conditioner counts as working once a room is this far off its setpoint. */
+    static final double DEADBAND = 0.05;
 
     static final class Building {
         final long id;
@@ -52,6 +54,15 @@ public final class GameBridge {
         final List<Zone> zones = new ArrayList<>();
         int refreshed = Integer.MIN_VALUE / 2;
         volatile boolean dirty;
+        /** The player's furnaces in its rooms and central air conditioners against its walls. */
+        final List<IsoObject> furnaces = new ArrayList<>(), condensers = new ArrayList<>();
+        /** How many of those are switched on and powered. */
+        int furnacesOn, condensersOn;
+        /** Vents in its rooms, and the floor of the rooms that have one. */
+        int vents;
+        double ventedArea;
+        /** Working right now: a unit is on and powered, a room has a vent, the thermostat is asking. */
+        boolean heating, cooling;
 
         Building(long id, String key) {
             this.id = id;
@@ -63,7 +74,6 @@ public final class GameBridge {
     static final class Room {
         IsoRoom room;
         final int x, y, z;   // one of its squares, to tell whether it's still loaded
-        boolean generator;   // a generator reaches it
 
         Room(IsoRoom room, IsoGridSquare sample) {
             this.room = room;
@@ -80,6 +90,12 @@ public final class GameBridge {
     static volatile boolean envReady;
     static volatile boolean enabled = true;
     static int minute;
+    /**
+     * The grid is up. A building's own heating and cooling runs on it and on nothing
+     * else: once the power goes out it stays off, generator or not, and the player is
+     * left with fires, space heaters and window ACs (user, 2026-11-10; a simple
+     * player-run HVAC is for later).
+     */
     static boolean grid;
 
     // -- the hot path -----------------------------------------------------------------
@@ -106,6 +122,7 @@ public final class GameBridge {
         if (b == null || b.def == null) return null;
         updateEnv();
         Building bld = buildings.computeIfAbsent(b.def.id, id -> new Building(id, key(b.def)));
+        List<Zone> fresh = new ArrayList<>();
         for (IsoRoom r : new ArrayList<>(b.rooms)) {
             if (r == null || r.def == null || zones.containsKey(r.def.id)) continue;
             List<IsoGridSquare> squares = r.getSquares();
@@ -118,10 +135,15 @@ public final class GameBridge {
             z.top = r.def.level >= b.def.getMaxLevel();
             z.residential = b.isResidential();
             z.handle = new Room(r, squares.get(0));
-            refresh(z, bld);
-            z.t = ZoneModel.steadyState(z, env);
             bld.zones.add(z);
             zones.put(z.id, z);
+            fresh.add(z);
+        }
+        if (!fresh.isEmpty()) {
+            // the whole building, so a new room gets its share of the furnace before it settles
+            refresh(bld);
+            for (Zone z : fresh) z.t = ZoneModel.steadyState(z, env);
+            working(bld);
         }
         return zones.get(room.def.id);
     }
@@ -149,18 +171,75 @@ public final class GameBridge {
         return (a == room && b == null) || (b == room && a == null);
     }
 
+    /**
+     * Look at every room of the building again, then share its furnaces and central air
+     * conditioners out over the rooms that have a vent.
+     */
+    static void refresh(Building bld) {
+        bld.furnaces.clear();
+        bld.condensers.clear();
+        bld.furnacesOn = bld.condensersOn = bld.vents = 0;
+        bld.ventedArea = 0;
+        for (Zone z : bld.zones) {
+            refresh(z, bld);
+            bld.vents += z.vents;
+            if (z.vents > 0) bld.ventedArea += z.area;
+        }
+        // central air conditioners stand outdoors, against the building
+        for (IsoObject c : Units.condensers()) {
+            if (c.getObjectIndex() == -1 || !Units.isCondenser(c)) continue;
+            IsoGridSquare inner = Units.condenserInner(c);
+            IsoRoom room = inner == null ? null : inner.getRoom();
+            IsoBuilding b = room == null ? null : room.getBuilding();
+            if (b == null || b.def == null || b.def.id != bld.id) continue;
+            bld.condensers.add(c);
+            if (Units.centralOn(c) && Units.centralPowered(c)) bld.condensersOn++;
+        }
+        double heat = ZoneModel.centralShare(ZoneModel.CENTRAL_HEAT, bld.furnacesOn, bld.ventedArea);
+        double cool = ZoneModel.centralShare(ZoneModel.CENTRAL_COOL, bld.condensersOn, bld.ventedArea);
+        for (Zone z : bld.zones) {
+            z.centralHeat = z.vents > 0 ? heat : 0;
+            z.centralCool = z.vents > 0 ? cool : 0;
+        }
+    }
+
+    /**
+     * Whether the building's furnaces and central air conditioners are working: a room
+     * with a vent is off its setpoint by more than a hair. Units says so to the
+     * generators (which then add up their load again), the hum and the look.
+     */
+    static void working(Building bld) {
+        boolean heating = false, cooling = false;
+        for (Zone z : bld.zones) {
+            if (z.vents <= 0) continue;
+            if (z.centralHeat > 0 && ZoneModel.wantsHeat(z.thermostat, z.t + DEADBAND)) heating = true;
+            if (z.centralCool > 0 && ZoneModel.wantsCool(z.thermostat, z.t - DEADBAND)) cooling = true;
+        }
+        bld.heating = heating;
+        bld.cooling = cooling;
+        for (IsoObject f : bld.furnaces) {
+            boolean on = heating && Units.centralOn(f) && Units.centralPowered(f);
+            if (Units.setRunning(f, on)) Units.generatorsLookAgain(f.getSquare());
+        }
+        for (IsoObject c : bld.condensers) {
+            boolean on = cooling && Units.centralOn(c) && Units.centralPowered(c);
+            if (Units.setRunning(c, on)) Units.generatorsLookAgain(c.getSquare());
+        }
+    }
+
     /** Look at the room's windows, doors, fires and units again. */
     static void refresh(Zone z, Building bld) {
         Room r = (Room) z.handle;
         IsoRoom room = r.room;
         z.thermostat = thermostats.getOrDefault(bld.key, Thermostat.DEFAULT);
         z.ventWindows = z.ventDoors = z.sunWindows = 0;
-        z.fires = z.acUnits = 0;
-        r.generator = false;
+        z.fires = 0;
+        z.acs.clear();
+        z.heaters.clear();
+        z.vents = 0;
         Set<IsoObject> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         for (IsoGridSquare sq : room.getSquares()) {
             if (sq == null) continue;
-            if (!r.generator && sq.haveElectricity()) r.generator = true;
             // edge objects in this square's north and west edges, and in its south and
             // east edges (which belong to the squares beyond them)
             scanEdges(z, room, sq, seen);
@@ -171,9 +250,15 @@ public final class GameBridge {
                 IsoObject o = objects.get(i);
                 if (o instanceof IsoFireplace f && f.isLit()) z.fires++;
                 else if (o instanceof IsoFire) z.fires++;
+                else if (Units.heaterOn(o) && Units.heaterPowered(o)) z.heaters.add(Units.heaterUnit(o));
+                else if (Units.isVent(o)) z.vents++;
+                else if (Units.isFurnace(o)) {
+                    bld.furnaces.add(o);
+                    if (Units.centralOn(o) && Units.centralPowered(o)) bld.furnacesOn++;
+                }
             }
         }
-        z.powered = grid || r.generator;
+        z.powered = grid;
     }
 
     static void scanEdges(Zone z, IsoRoom room, IsoGridSquare sq, Set<IsoObject> seen) {
@@ -192,10 +277,14 @@ public final class GameBridge {
     }
 
     static void window(Zone z, IsoRoom room, IsoWindow w) {
-        int unit = WindowClimbPatch.unitTile(w);
-        if (unit >= 0) {
+        IsoObject unit = Units.acIn(w);
+        if (unit != null) {
             // the unit and its side panels fill the opening, and it may blow into this room
-            if (unit >= 4 && unitRoom(w, unit) == room && unitPowered(w, unit)) z.acUnits++;
+            int tile = Units.acTile(unit);
+            IsoGridSquare front = Units.acFront(unit, tile);
+            if (tile >= 4 && front != null && front.getRoom() == room && Units.acPowered(unit, tile)) {
+                z.acs.add(Units.acUnit(unit));
+            }
             z.sunWindows += 0.5;
             return;
         }
@@ -207,26 +296,6 @@ public final class GameBridge {
         IsoCurtain curtain = w.HasCurtains();
         if (curtain != null && !curtain.IsOpen()) sun = Math.min(sun, 0.3);
         z.sunWindows += sun;
-    }
-
-    /** The square a unit blows into: its own for S and E, the one north or west for N and W. */
-    static IsoGridSquare unitFront(IsoWindow w, int tile) {
-        IsoGridSquare sq = w.getSquare();
-        int facing = tile % 4;   // 0 S, 1 E, 2 N, 3 W
-        if (facing == 0 || facing == 1) return sq;
-        return across(sq, facing == 2);
-    }
-
-    static IsoRoom unitRoom(IsoWindow w, int tile) {
-        IsoGridSquare front = unitFront(w, tile);
-        return front == null ? null : front.getRoom();
-    }
-
-    /** As DansClimate_WindowAC.lua's isPowered: a generator on either side, or the grid indoors. */
-    static boolean unitPowered(IsoWindow w, int tile) {
-        IsoGridSquare front = unitFront(w, tile);
-        if (w.getSquare().haveElectricity() || (front != null && front.haveElectricity())) return true;
-        return front != null && front.getRoom() != null && grid;
     }
 
     // -- the weather ----------------------------------------------------------------------
@@ -275,15 +344,16 @@ public final class GameBridge {
                 bld.dirty = false;
                 bld.refreshed = minute;
             }
+            if (refresh) refresh(bld);
             double sum = 0, area = 0;
             for (Zone z : bld.zones) {
-                if (refresh) refresh(z, bld);
-                else z.powered = grid || ((Room) z.handle).generator;
+                z.powered = grid;
                 sum += z.t * z.area;
                 area += z.area;
             }
             double tBldg = bld.zones.size() > 1 ? sum / area : Double.NaN;
             for (Zone z : bld.zones) ZoneModel.step(z, env, tBldg, 1.0 / 60);
+            if (refresh) working(bld);
         }
     }
 
@@ -299,7 +369,9 @@ public final class GameBridge {
         Thermostat th = new Thermostat(m, heat, cool);
         thermostats.put(key, th);
         for (Building bld : buildings.values()) {
-            if (bld.key.equals(key)) for (Zone z : bld.zones) z.thermostat = th;
+            if (!bld.key.equals(key)) continue;
+            for (Zone z : bld.zones) z.thermostat = th;
+            bld.dirty = true;   // a furnace may start or stop working
         }
     }
 
@@ -309,18 +381,46 @@ public final class GameBridge {
 
     /** Look at a building's windows and units again on the next tick (after the player changes one). */
     static void dirty(IsoGridSquare sq) {
-        if (sq == null) return;
+        // a unit's own square is often outdoors (a window AC facing W or N, a central air
+        // conditioner): buildingAt tries its neighbours
+        Building bld = buildingAt(sq);
+        if (bld != null) bld.dirty = true;
+    }
+
+    /** The building a square is in or, for a unit standing against a wall, beside. */
+    static Building buildingAt(IsoGridSquare sq) {
+        if (sq == null) return null;
         Zone z = zoneFor(sq);
         if (z == null) {
-            // a unit's own square is often outdoors (W and N facings): try its neighbours
             for (int[] d : new int[][] { { 0, -1 }, { -1, 0 }, { 0, 1 }, { 1, 0 } }) {
                 IsoGridSquare n = square(sq.getX() + d[0], sq.getY() + d[1], sq.getZ());
                 if (n != null && (z = zoneFor(n)) != null) break;
             }
         }
-        if (z == null) return;
-        Building bld = buildings.get(z.building);
-        if (bld != null) bld.dirty = true;
+        return z == null ? null : buildings.get(z.building);
+    }
+
+    /** A number about the furnaces, central air conditioners and vents of the building at a square. */
+    static synchronized double central(IsoGridSquare sq, String what) {
+        Building bld = buildingAt(sq);
+        if (bld == null || what == null) return 0;
+        Zone z = sq == null ? null : zoneFor(sq);
+        switch (what) {
+            case "furnaces": return bld.furnaces.size();
+            case "furnacesOn": return bld.furnacesOn;
+            case "condensers": return bld.condensers.size();
+            case "condensersOn": return bld.condensersOn;
+            case "vents": return bld.vents;
+            case "area": return bld.ventedArea;
+            case "heat": return ZoneModel.centralShare(ZoneModel.CENTRAL_HEAT, bld.furnacesOn, bld.ventedArea);
+            case "cool": return ZoneModel.centralShare(ZoneModel.CENTRAL_COOL, bld.condensersOn, bld.ventedArea);
+            case "heatShare": return ZoneModel.centralShare(1, bld.furnacesOn, bld.ventedArea);
+            case "coolShare": return ZoneModel.centralShare(1, bld.condensersOn, bld.ventedArea);
+            case "heating": return bld.heating ? 1 : 0;
+            case "cooling": return bld.cooling ? 1 : 0;
+            case "here": return z == null ? 0 : z.vents;
+            default: return 0;
+        }
     }
 
     static String readout(IsoGridSquare sq) {
@@ -335,9 +435,21 @@ public final class GameBridge {
         Thermostat th = z.thermostat;
         s.append(String.format(Locale.ROOT, "Thermostat %s, heat %.0f C, cool %.0f C, %s\n",
             th == null ? "none" : th.mode.name(), th == null ? 0 : th.heat, th == null ? 0 : th.cool,
-            z.powered ? "powered" : "no power"));
-        s.append(String.format(Locale.ROOT, "Open windows %.1f, open doors %.1f, sunlit windows %.1f, fires %d, window ACs on %d\n",
-            z.ventWindows, z.ventDoors, z.sunWindows, z.fires, z.acUnits));
+            z.powered ? "grid on" : "grid off, the building's own heating and cooling is dead"));
+        s.append(String.format(Locale.ROOT, "Open windows %.1f, open doors %.1f, sunlit windows %.1f, fires %d, window ACs on %d, space heaters on %d\n",
+            z.ventWindows, z.ventDoors, z.sunWindows, z.fires, z.acs.size(), z.heaters.size()));
+        for (ZoneModel.Unit u : z.acs) {
+            s.append(String.format(Locale.ROOT, "Window AC: up to %.1f C/h, cooling to %.0f C\n", u.power, u.setpoint));
+        }
+        for (ZoneModel.Unit u : z.heaters) {
+            s.append(String.format(Locale.ROOT, "Space heater: up to %.1f C/h, heating to %.0f C\n", u.power, u.setpoint));
+        }
+        if (bld != null && (bld.vents > 0 || !bld.furnaces.isEmpty() || !bld.condensers.isEmpty())) {
+            s.append(String.format(Locale.ROOT,
+                "Central: furnaces %d (on %d), central ACs %d (on %d), vents %d over %.0f tiles, here %d; a vented room gets up to +%.1f / -%.1f C/h; heating %s, cooling %s\n",
+                bld.furnaces.size(), bld.furnacesOn, bld.condensers.size(), bld.condensersOn, bld.vents, bld.ventedArea,
+                z.vents, z.centralHeat, z.centralCool, bld.heating ? "yes" : "no", bld.cooling ? "yes" : "no"));
+        }
         s.append("Per hour:");
         double sum = 0;
         for (int i = 0; i < ZoneModel.TERMS; i++) {

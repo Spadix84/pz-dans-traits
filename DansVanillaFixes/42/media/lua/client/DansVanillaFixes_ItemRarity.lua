@@ -271,14 +271,24 @@ end
 -- Unwanted item keeps its greyed name, the red of a full container stays
 -- red, and a Common item keeps the pane's own colour. The names of dragged
 -- items (doDragged) are left alone: no rows are added while they are drawn.
-function M.nameColour(pane, text, x, r, g, b)
-    if type(text) ~= "string" or (r == 0.7 and g == 0 and b == 0) then return nil end
+--
+-- M.nameRow gives the row's items (the stack's list, the item first) when the
+-- text is a name, or nil; Placed items (DansVanillaFixes_PlacedClient.lua)
+-- use it too.
+function M.nameRow(pane, text, x)
+    if type(text) ~= "string" then return nil end
     local rows = pane.items
     local row = rows and rows[#rows]
-    if type(row) ~= "table" or type(row.items) ~= "table" then return nil end
+    if type(row) ~= "table" or type(row.items) ~= "table" or not row.items[1] then return nil end
     local left, right = pane.column2 or 0, pane.column3
     if x < left or (right and x >= right) then return nil end
-    local item = row.items[1]
+    return row.items
+end
+
+function M.nameColour(pane, text, x, r, g, b)
+    if r == 0.7 and g == 0 and b == 0 then return nil end
+    local items = M.nameRow(pane, text, x)
+    local item = items and items[1]
     if not item then return nil end
     local ok, unwanted = pcall(item.isUnwanted, item, getSpecificPlayer(pane.player))
     if ok and unwanted then return nil end

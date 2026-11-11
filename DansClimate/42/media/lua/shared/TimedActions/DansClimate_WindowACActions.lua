@@ -1,6 +1,7 @@
 -- Putting a window air conditioner in a window and taking it out, with a screwdriver.
 -- The character stands by the window on the side the unit will face (the menu walks
--- them there); the unit comes out of their inventory and goes back into it.
+-- them there); the unit comes out of their inventory and goes back into it. And its
+-- controls: the switch, the fan and the dial.
 require "TimedActions/ISBaseTimedAction"
 require "DansClimate_WindowAC"
 
@@ -171,6 +172,48 @@ function DansClimateToggleACAction:new(character, unit, on)
     local o = ISBaseTimedAction.new(self, character)
     o.unit = unit
     o.on = on
+    o.maxTime = o:getDuration()
+    return o
+end
+
+-- The fan (low or high) and the dial: either may be nil to leave it as it is. Neither
+-- needs power: they are knobs.
+DansClimateSetACAction = ISBaseTimedAction:derive("DansClimateSetACAction")
+
+function DansClimateSetACAction:isValid()
+    return self.unit:getObjectIndex() ~= -1 and AC.isUnit(self.unit)
+end
+
+function DansClimateSetACAction:waitToStart()
+    self.character:faceThisObjectAlt(self.unit)
+    return self.character:shouldBeTurning()
+end
+
+function DansClimateSetACAction:update()
+    self.character:faceThisObjectAlt(self.unit)
+end
+
+function DansClimateSetACAction:start()
+    self:setActionAnim("Loot")
+    self.character:SetVariable("LootPosition", "Mid")
+end
+
+function DansClimateSetACAction:complete()
+    if not self:isValid() then return false end
+    if self.level then AC.setLevel(self.unit, self.level) end
+    if self.setpoint then AC.setSetpoint(self.unit, self.setpoint) end
+    return true
+end
+
+function DansClimateSetACAction:getDuration()
+    return instant(self.character, 20)
+end
+
+function DansClimateSetACAction:new(character, unit, level, setpoint)
+    local o = ISBaseTimedAction.new(self, character)
+    o.unit = unit
+    o.level = level
+    o.setpoint = setpoint
     o.maxTime = o:getDuration()
     return o
 end

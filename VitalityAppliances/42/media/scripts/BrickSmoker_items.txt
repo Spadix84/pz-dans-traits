@@ -1,0 +1,110 @@
+module Base
+{
+    /* What comes out of the smoker. Smoker.makeProduct (Smoker_Core.lua) gives each
+       piece the hunger, calories, macros and weight of the meat that went in, and
+       names it after it ("Smoked Venison"). The values below are only defaults for an
+       item spawned some other way; shelf life and mood come from here. */
+
+    item SmokedMeat
+    {
+        DisplayCategory = Food,
+        ItemType = base:food,
+        Weight = 0.3,
+        Icon = Ham,
+        FoodType = Meat,
+        DaysFresh = 14,
+        DaysTotallyRotten = 28,
+        HungerChange = -30.0,
+        UnhappyChange = -5,
+        Calories = 320.0,
+        Carbohydrates = 0.0,
+        Lipids = 16.0,
+        Proteins = 40.0,
+        EvolvedRecipe = Soup:15;Stew:15;Pie:15;Stir fry:15;Sandwich:10;Burger:10;Salad:10;Rice:15;Pasta:15;Burrito:10;Taco:10,
+        StaticModel = Ham,
+        WorldStaticModel = Ham,
+    }
+
+    item SmokedPoultry
+    {
+        DisplayCategory = Food,
+        ItemType = base:food,
+        Weight = 0.3,
+        Icon = ChickenFried,
+        FoodType = Poultry,
+        DaysFresh = 12,
+        DaysTotallyRotten = 24,
+        HungerChange = -30.0,
+        UnhappyChange = -5,
+        Calories = 280.0,
+        Carbohydrates = 0.0,
+        Lipids = 10.0,
+        Proteins = 42.0,
+        EvolvedRecipe = Soup:15;Stew:15;Pie:15;Stir fry:15;Sandwich:10;Burger:10;Salad:10;Rice:15;Pasta:15;Burrito:10;Taco:10,
+        StaticModel = FriedChicken,
+        WorldStaticModel = ChickenFried_Ground,
+    }
+
+    item SmokedFish
+    {
+        DisplayCategory = Food,
+        ItemType = base:food,
+        Weight = 0.2,
+        Icon = FishFried,
+        FoodType = Fish,
+        DaysFresh = 10,
+        DaysTotallyRotten = 20,
+        HungerChange = -25.0,
+        UnhappyChange = -5,
+        Calories = 220.0,
+        Carbohydrates = 0.0,
+        Lipids = 8.0,
+        Proteins = 34.0,
+        EvolvedRecipe = Soup:15;Stew:15;Pie:15;Stir fry:15;Sandwich:10;Salad:10;Rice:15;Pasta:15;Burrito:10;Taco:10,
+        StaticModel = FishFried_Ground,
+        WorldStaticModel = FishFried_Ground,
+    }
+
+    /* A day of smoke dries it out: lighter, chewier, keeps for months. */
+    item SmokeDriedMeat
+    {
+        DisplayCategory = Food,
+        ItemType = base:food,
+        Weight = 0.15,
+        Icon = BeefJerky,
+        FoodType = Meat,
+        DaysFresh = 120,
+        DaysTotallyRotten = 180,
+        HungerChange = -30.0,
+        ThirstChange = 5,
+        UnhappyChange = -2,
+        Calories = 320.0,
+        Carbohydrates = 0.0,
+        Lipids = 16.0,
+        Proteins = 40.0,
+        EvolvedRecipe = Soup:15;Stew:15;Pie:15;Stir fry:15;Sandwich:5;Salad:5;Rice:15;Pasta:15,
+        StaticModel = BeefJerky_Hand,
+        WorldStaticModel = BeefJerky,
+    }
+
+    item SmokeDriedFish
+    {
+        DisplayCategory = Food,
+        ItemType = base:food,
+        Weight = 0.12,
+        Icon = FishFried,
+        FoodType = Fish,
+        DaysFresh = 90,
+        DaysTotallyRotten = 150,
+        HungerChange = -25.0,
+        ThirstChange = 5,
+        UnhappyChange = -2,
+        Calories = 220.0,
+        Carbohydrates = 0.0,
+        Lipids = 8.0,
+        Proteins = 34.0,
+        EvolvedRecipe = Soup:15;Stew:15;Pie:15;Stir fry:15;Sandwich:5;Salad:5;Rice:15;Pasta:15,
+        StaticModel = FishFried_Ground,
+        WorldStaticModel = FishFried_Ground,
+    }
+}

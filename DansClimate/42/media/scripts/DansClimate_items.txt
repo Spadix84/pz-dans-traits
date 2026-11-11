@@ -11,4 +11,69 @@ module Base
         Icon = WindowAC,
         MetalValue = 40.0,
     }
+
+    /* The electric space heater, as carried: a vanilla moveable. Put down it is tile
+       appliances_spaceheater_01_0-3, which names this item (CustomItem). */
+    item Mov_SpaceHeater
+    {
+        DisplayCategory = Furniture,
+        ItemType = base:moveable,
+        Icon = default,
+        Weight = 6.0,
+        WorldObjectSprite = appliances_spaceheater_01_0,
+    }
+
+    /* The electric furnace and the central air conditioner's outdoor unit, as found:
+       heavy things to haul home. The build recipes in DansClimate_entities.txt install
+       one (DansClimate_Furnace, DansClimate_CentralAC), and taking the unit out again
+       gives the item back. */
+    item HVACFurnace
+    {
+        DisplayCategory = Electronics,
+        ItemType = base:normal,
+        Weight = 40.0,
+        Icon = HVACFurnace,
+        MetalValue = 400.0,
+        Tooltip = Tooltip_DansClimate_HVACFurnaceItem,
+        Tags = base:hasmetal;base:ignorezombiedensity,
+    }
+
+    item HVACCondenser
+    {
+        DisplayCategory = Electronics,
+        ItemType = base:normal,
+        Weight = 40.0,
+        Icon = HVACCondenser,
+        MetalValue = 400.0,
+        Tooltip = Tooltip_DansClimate_HVACCondenserItem,
+        Tags = base:hasmetal;base:ignorezombiedensity,
+    }
+
+    /* The two installer's manuals: long reads (the game's thickest skill books are 380
+       pages) that teach the build recipes. Either one teaches the vent. No vanilla
+       item has both pages and recipes: the read action times the book by its pages
+       and teaches the recipes at the end (ISReadABook:complete, ReadLiterature). */
+    item BookHVACHeating
+    {
+        DisplayCategory = SkillBook,
+        ItemType = base:literature,
+        Weight = 1.0,
+        Icon = Book7,
+        NumberOfPages = 380,
+        LearnedRecipes = DansClimate_Furnace;DansClimate_Vent,
+        StaticModel = BookGrey,
+        WorldStaticModel = BookClosedGrey_Ground,
+    }
+
+    item BookHVACCooling
+    {
+        DisplayCategory = SkillBook,
+        ItemType = base:literature,
+        Weight = 1.0,
+        Icon = Book8,
+        NumberOfPages = 380,
+        LearnedRecipes = DansClimate_CentralAC;DansClimate_Vent,
+        StaticModel = BookBrown,
+        WorldStaticModel = BookClosedBrown_Ground,
+    }
 }

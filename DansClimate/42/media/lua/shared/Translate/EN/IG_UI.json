@@ -1,5 +1,11 @@
 {
     "IGUI_DansClimate_ACInWindow": "There's an air conditioner in the window.",
     "IGUI_DansClimate_Celsius": "%1 °C",
-    "IGUI_DansClimate_Fahrenheit": "%1 °F"
+    "IGUI_DansClimate_Fahrenheit": "%1 °F",
+    "IGUI_DansClimate_Comfort_Chilly": "It's chilly in here.",
+    "IGUI_DansClimate_Comfort_Cold": "I'm cold to the bone.",
+    "IGUI_DansClimate_Comfort_TooWarm": "It's too warm.",
+    "IGUI_DansClimate_Comfort_Sweltering": "This heat is stifling.",
+    "IGUI_DansClimate_Comfort_Cosy": "Warm in here. That's better.",
+    "IGUI_DansClimate_Comfort_Cool": "Cool in here. That's better."
 }

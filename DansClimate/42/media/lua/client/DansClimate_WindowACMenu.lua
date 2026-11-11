@@ -2,15 +2,21 @@
 --
 -- On a window, carrying a unit: Install Window Air Conditioner. The front faces the side
 -- you stand on, so install it from inside the room it should cool.
--- On a unit: Turn On / Turn Off, and Remove Window Air Conditioner.
+-- On a unit:
+--   Window Air Conditioner (room 27 °C) > Turn On / Turn Off, Low, High (its fan),
+--                                         Cool to > 16..30, Remove Window Air Conditioner
+-- The temperature is the room's it cools, from the model; a unit blowing into a room
+-- the model doesn't cover shows none.
 -- A window with a unit in it can't be opened or climbed through: the vanilla actions
 -- (from any route: the click, the interact key, a controller, the menu) refuse.
+require "DansClimate_Climate"
 require "DansClimate_WindowAC"
 require "TimedActions/DansClimate_WindowACActions"
 require "TimedActions/ISOpenCloseWindow"
 require "TimedActions/ISClimbThroughWindow"
 
 local AC = DansClimate.WindowAC
+local C = DansClimate.Climate
 
 -- The windows and units the click could mean: the clicked squares' own, plus those on
 -- the squares to the south and east, whose north and west edges are this square's far
@@ -86,14 +92,41 @@ local function onRemove(_, playerObj, unit)
     ISTimedActionQueue.add(DansClimateRemoveACAction:new(playerObj, unit, screwdriver))
 end
 
-local function onToggle(_, playerObj, unit, on)
+-- walk up to the unit's controls, on the room side of its window
+local function walkToControls(playerObj, unit)
     local window = AC.windowOf(unit)
-    if window then
-        if not walkTo(playerObj, AC.roomSquare(unit), window) then return end
-    elseif not luautils.walkAdj(playerObj, unit:getSquare()) then
-        return
-    end
+    if window then return walkTo(playerObj, AC.roomSquare(unit), window) end
+    return luautils.walkAdj(playerObj, unit:getSquare())
+end
+
+local function onToggle(_, playerObj, unit, on)
+    if not walkToControls(playerObj, unit) then return end
     ISTimedActionQueue.add(DansClimateToggleACAction:new(playerObj, unit, on))
+end
+
+local function onSet(_, playerObj, unit, level, setpoint)
+    if not walkToControls(playerObj, unit) then return end
+    ISTimedActionQueue.add(DansClimateSetACAction:new(playerObj, unit, level, setpoint))
+end
+
+local function current(label, isCurrent)
+    if isCurrent then return getText("ContextMenu_DansClimate_Current", label) end
+    return label
+end
+
+-- the temperature of the room the unit cools, from the model; nil without one
+function AC.roomTemperature(unit)
+    return C.temperatureAt(AC.roomSquare(unit))
+end
+
+-- what the unit is doing, for the tooltip
+function AC.status(unit)
+    local set = C.format(AC.setpoint(unit))
+    local level = getText("ContextMenu_DansClimate_Level_" .. AC.level(unit))
+    if not AC.isOn(unit) then return getText("Tooltip_DansClimate_ACOff", set, level) end
+    local temp = AC.roomTemperature(unit)
+    if temp and temp <= AC.setpoint(unit) then return getText("Tooltip_DansClimate_ACIdle", set, level) end
+    return getText("Tooltip_DansClimate_ACCooling", set, level)
 end
 
 local function installOption(context, worldobjects, playerObj, window)
@@ -113,18 +146,42 @@ local function installOption(context, worldobjects, playerObj, window)
 end
 
 local function unitOptions(context, worldobjects, playerObj, unit)
+    local temp = AC.roomTemperature(unit)
+    local label = temp and getText("ContextMenu_DansClimate_ACRoom", C.format(temp))
+        or getText("ContextMenu_DansClimate_AC")
+    local top = context:addOption(label, worldobjects, nil)
+    top.toolTip = tooltip(AC.status(unit))
+    local sub = ISContextMenu:getNew(context)
+    context:addSubMenu(top, sub)
+
     if AC.isOn(unit) then
-        context:addGetUpOption(getText("ContextMenu_DansClimate_TurnOff"), worldobjects, onToggle, playerObj, unit, false)
+        sub:addGetUpOption(getText("ContextMenu_DansClimate_TurnOff"), worldobjects, onToggle, playerObj, unit, false)
     else
-        local option = context:addGetUpOption(getText("ContextMenu_DansClimate_TurnOn"), worldobjects,
+        local option = sub:addGetUpOption(getText("ContextMenu_DansClimate_TurnOn"), worldobjects,
             onToggle, playerObj, unit, true)
         if not AC.isPowered(unit) then unavailable(option, "Tooltip_DansClimate_NoPower") end
     end
-    local option = context:addGetUpOption(getText("ContextMenu_DansClimate_RemoveAC"), worldobjects,
+
+    local level = AC.level(unit)
+    for _, l in ipairs(AC.LEVELS) do
+        sub:addGetUpOption(current(getText("ContextMenu_DansClimate_Level_" .. l), l == level), worldobjects,
+            onSet, playerObj, unit, l, nil)
+    end
+
+    local set = AC.setpoint(unit)
+    local dial = sub:addOption(getText("ContextMenu_DansClimate_CoolTo", C.format(set)), worldobjects, nil)
+    local dialMenu = ISContextMenu:getNew(sub)
+    sub:addSubMenu(dial, dialMenu)
+    for _, v in ipairs(AC.SETPOINTS) do
+        dialMenu:addGetUpOption(current(C.format(v), v == set), worldobjects, onSet, playerObj, unit, nil, v)
+    end
+
+    local option = sub:addGetUpOption(getText("ContextMenu_DansClimate_RemoveAC"), worldobjects,
         onRemove, playerObj, unit)
     if not AC.findScrewdriver(playerObj:getInventory()) then
         unavailable(option, "Tooltip_DansClimate_NeedScrewdriver")
     end
+    return top
 end
 
 local function onFillMenu(player, context, worldobjects, test)

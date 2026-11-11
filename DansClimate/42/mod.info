@@ -1,7 +1,7 @@
 name=Dan's Climate Control
 id=DansClimate
 url=https://github.com/Spadix84/pz-dans-traits
-modversion=0.1.0
+modversion=0.4.0
 versionMin=42.0.0
 require=\ZombieBuddy
 javaJarFile=media/java/DansClimate.jar
@@ -9,4 +9,4 @@ javaPkgName=com.spadix84.dansclimate
 ZBVersionMin=2.3.4
 pack=DansClimate
 tiledef=DansClimate_tiledefinitions 6743
-description=Buildings hold heat like real ones: walls, roofs, basements, open and broken windows, the sun and fires all change a room's temperature, and it changes slowly. Powered buildings have heating and air conditioning with a thermostat; without power, install a window air conditioner or an electric space heater. Needs ZombieBuddy. In development.
+description=Buildings hold heat like real ones: walls, roofs, basements, open and broken windows, the sun and fires all change a room's temperature, and it changes slowly. While the grid is up, buildings have heating and air conditioning with a thermostat. Once the power is out it is down to fires, electric space heaters and window air conditioners, or, with the know-how from a rare manual, a furnace and a central air conditioner of your own with a vent in each room. Being cold or too warm for what you wear wears on mood and energy, and a comfortable room in bad weather lifts them. Needs ZombieBuddy. In development.

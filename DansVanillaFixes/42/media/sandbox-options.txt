@@ -11,3 +11,6 @@ option DansVanillaFixes.ItemInfoWeaponSkill
 
 option DansVanillaFixes.RarityColours
 {type = boolean, default = true, page = DansVanillaFixesItemInfo, translation = DansVanillaFixesRarityColours,}
+
+option DansVanillaFixes.PlacedItemsStay
+{type = boolean, default = true, page = DansVanillaFixes, translation = DansVanillaFixesPlacedItemsStay,}

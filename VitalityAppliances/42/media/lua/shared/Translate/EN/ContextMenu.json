@@ -1,0 +1,15 @@
+{
+    "ContextMenu_EvolvedRecipe_CrockStew": "Crock Stew",
+    "ContextMenu_SlowCooker_Serve": "Serve a Bowl",
+    "ContextMenu_SlowCooker_ToPot": "Move to Cooking Pot",
+    "ContextMenu_SlowCooker_Open": "Slow Cooker...",
+    "ContextMenu_Smoker": "Brick Smoker",
+    "ContextMenu_Smoker_Status": "Status...",
+    "ContextMenu_Smoker_AddFuel": "Add Fuel",
+    "ContextMenu_Smoker_FillUp": "Fill It Up (%1 pieces, %2)",
+    "ContextMenu_Smoker_FuelItem": "%1 (%2 in reach, %3 each)",
+    "ContextMenu_Smoker_Light": "Light Fire",
+    "ContextMenu_Smoker_PutOut": "Put Out Fire",
+    "ContextMenu_Smoker_PutIn": "Put In Meat and Fish (%1)",
+    "ContextMenu_Smoker_TakeOut": "Take Out Smoked Food (%1)"
+}

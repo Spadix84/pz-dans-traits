@@ -1,4 +1,6 @@
 {
     "ContextMenu_DVF_CollectionAdd": "Add to collection",
-    "ContextMenu_DVF_CollectionRemove": "Remove from collection"
+    "ContextMenu_DVF_CollectionRemove": "Remove from collection",
+    "ContextMenu_DVF_PlacedKeep": "Keep in place",
+    "ContextMenu_DVF_PlacedFree": "Let Loot All take it"
 }

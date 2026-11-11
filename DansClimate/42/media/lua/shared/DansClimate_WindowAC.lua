@@ -7,7 +7,10 @@
 -- The facing is the way the front grille points, so the room it cools is on that side.
 -- S and N sit in a window on the square's north edge, E and W in its west edge.
 -- Its ModData (DansClimateAC) keeps the item's condition, so taking it out gives the
--- same unit back.
+-- same unit back, and its controls: level ("LOW" or "HIGH", the fan) and set (the
+-- temperature its dial is at, in C). The Java room model reads the same table (Units).
+-- Taken out of the window, the item carries the fan and the dial in its own ModData,
+-- so the unit goes back in as it was set, switched off.
 
 DansClimate = DansClimate or {}
 local AC = {}
@@ -18,6 +21,16 @@ AC.ITEM = "Base.WindowAC"
 AC.FACINGS = { "S", "E", "N", "W" }    -- tile order
 AC.ON_OFFSET = 4
 AC.MODDATA = "DansClimateAC"
+AC.LEVELS = { "LOW", "HIGH" }
+AC.DEFAULT_LEVEL = "HIGH"
+AC.DEFAULT_SET = 22
+AC.SETPOINTS = { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 }
+-- How far zombies hear one running on High, in squares, when the sandbox doesn't say
+-- (Window Air Conditioner Noise); on Low it carries LOW_NOISE of that. It hums every
+-- HUM_MINUTES game minutes (server/DansClimate_WindowACServer.lua).
+AC.NOISE = 8
+AC.LOW_NOISE = 0.6
+AC.HUM_MINUTES = 5
 
 local INDEX = { S = 0, E = 1, N = 2, W = 3 }
 
@@ -141,7 +154,12 @@ function AC.install(window, facing, item, character)
     if window:IsOpen() and not window:isSmashed() then window:ToggleWindow(character) end
     local sq = window:getSquare()
     local unit = IsoObject.new(getCell(), sq, AC.spriteName(facing, false))
-    unit:getModData()[AC.MODDATA] = { condition = item and item:getCondition() or nil }
+    local carried = item and item:getModData()[AC.MODDATA]
+    unit:getModData()[AC.MODDATA] = {
+        condition = item and item:getCondition() or nil,
+        level = carried and carried.level or nil,
+        set = carried and tonumber(carried.set) or nil,
+    }
     sq:AddSpecialObject(unit, insertIndex(sq, window))
     if isServer() then unit:transmitCompleteItemToClients() end
     sq:RecalcProperties()
@@ -162,6 +180,9 @@ function AC.remove(unit)
     changed(sq)
     local item = instanceItem(AC.ITEM)
     if item and data and data.condition then item:setCondition(data.condition) end
+    if item and data and (data.level or data.set) then
+        item:getModData()[AC.MODDATA] = { level = data.level, set = data.set }
+    end
     return item
 end
 
@@ -187,6 +208,66 @@ function AC.setOn(unit, on)
     unit:setSpriteFromName(AC.spriteName(facing, on))
     if isServer() then unit:transmitUpdatedSpriteToClients() end
     changed(AC.roomSquare(unit) or unit:getSquare())
+end
+
+local function data(unit, create)
+    local md = unit:getModData()
+    local d = md[AC.MODDATA]
+    if not d and create then
+        d = {}
+        md[AC.MODDATA] = d
+    end
+    return d
+end
+
+-- the fan: "LOW" or "HIGH"
+function AC.level(unit)
+    local d = data(unit)
+    return d and d.level == "LOW" and "LOW" or AC.DEFAULT_LEVEL
+end
+
+-- the temperature its dial is at, in C: it cools the room down to this and no further
+function AC.setpoint(unit)
+    local d = data(unit)
+    return d and tonumber(d.set) or AC.DEFAULT_SET
+end
+
+local function controlsChanged(unit)
+    if isServer() then unit:transmitModData() end
+    changed(AC.roomSquare(unit) or unit:getSquare())
+end
+
+function AC.setLevel(unit, level)
+    if not AC.isUnit(unit) or (level ~= "LOW" and level ~= "HIGH") then return end
+    data(unit, true).level = level
+    controlsChanged(unit)
+end
+
+function AC.setSetpoint(unit, value)
+    value = tonumber(value)
+    if not AC.isUnit(unit) or not value then return end
+    data(unit, true).set = value
+    controlsChanged(unit)
+end
+
+-- How far zombies hear this unit, in squares: 0 switched off, without power, or with
+-- the sandbox's noise at 0.
+function AC.noiseRadius(unit)
+    if not AC.isOn(unit) or not AC.isPowered(unit) then return 0 end
+    local climate = DansClimate.Climate
+    local radius = climate and climate.sandbox("ACNoise", AC.NOISE) or AC.NOISE
+    if AC.level(unit) == "LOW" then radius = radius * AC.LOW_NOISE end
+    return math.max(0, math.ceil(radius))
+end
+
+-- One hum: a world sound at the unit that zombies in range turn towards. (What the
+-- player hears is a loop the Java side plays, UnitHum.) Returns the radius, 0 for none.
+function AC.hum(unit)
+    local radius = AC.noiseRadius(unit)
+    local sq = unit:getSquare()
+    if radius <= 0 or not sq then return 0 end
+    addSound(unit, sq:getX(), sq:getY(), sq:getZ(), radius, radius)
+    return radius
 end
 
 return AC

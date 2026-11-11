@@ -1,7 +1,8 @@
 """Build DansClimate.jar from java/src with the JDK's javac and jar.
 
     python DansClimate/tools/build.py            compile java/src, write 42/media/java/DansClimate.jar
-    python DansClimate/tools/build.py --test     also compile java/test and run every *Test class
+    python DansClimate/tools/build.py --test     also compile java/test and run every *Test class,
+                                                 then tools/check_scripts.py
     python DansClimate/tools/build.py --game DIR the Project Zomboid folder, if not the default Steam one
 
 Compiles against the game's projectzomboid.jar and the ZombieBuddy.jar in the game
@@ -147,6 +148,8 @@ def main():
                     if name.endswith("Test"):
                         print("== " + name)
                         run([java, "-cp", os.pathsep.join([tclasses, tcp]), name])
+            # the scripts against each other (recipes, manuals, items, translations)
+            run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "check_scripts.py")])
         manifest = os.path.join(tmp, "MANIFEST.MF")
         with open(manifest, "w", newline="\n") as f:
             f.write("Implementation-Title: DansClimate\n")

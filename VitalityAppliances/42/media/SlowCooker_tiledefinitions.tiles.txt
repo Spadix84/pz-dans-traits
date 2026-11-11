@@ -1,0 +1,127 @@
+version = 1
+tileset
+{
+    file = appliances_slowcooker_01
+    size = 8,1
+    id = 1
+    // appliances_slowcooker_01_0
+    tile
+    {
+        xy = 0,0
+        BlocksPlacement = 
+        CanScrap = 
+        ContainerCapacity = 10
+        CustomItem = Base.Mov_SlowCooker
+        CustomName = Slow Cooker
+        Facing = E
+        GroupName = Harvest
+        IsMoveAble = 
+        IsSurfaceOffset = 
+        IsTableTop = 
+        IsoType = IsoStove
+        ItemHeight = 15
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 50
+        ScrapSize = Small
+        Surface = 34
+        attachedSurface = 
+        container = slowcooker
+    }
+    // appliances_slowcooker_01_1
+    tile
+    {
+        xy = 1,0
+        BlocksPlacement = 
+        CanScrap = 
+        ContainerCapacity = 10
+        CustomItem = Base.Mov_SlowCooker
+        CustomName = Slow Cooker
+        Facing = S
+        GroupName = Harvest
+        IsMoveAble = 
+        IsSurfaceOffset = 
+        IsTableTop = 
+        IsoType = IsoStove
+        ItemHeight = 15
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 50
+        ScrapSize = Small
+        Surface = 34
+        attachedSurface = 
+        container = slowcooker
+    }
+    // appliances_slowcooker_01_2
+    tile
+    {
+        xy = 2,0
+        BlocksPlacement = 
+        CanScrap = 
+        ContainerCapacity = 10
+        CustomItem = Base.Mov_SlowCooker
+        CustomName = Slow Cooker
+        Facing = W
+        GroupName = Harvest
+        IsMoveAble = 
+        IsSurfaceOffset = 
+        IsTableTop = 
+        IsoType = IsoStove
+        ItemHeight = 15
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 50
+        ScrapSize = Small
+        Surface = 34
+        attachedSurface = 
+        container = slowcooker
+    }
+    // appliances_slowcooker_01_3
+    tile
+    {
+        xy = 3,0
+        BlocksPlacement = 
+        CanScrap = 
+        ContainerCapacity = 10
+        CustomItem = Base.Mov_SlowCooker
+        CustomName = Slow Cooker
+        Facing = N
+        GroupName = Harvest
+        IsMoveAble = 
+        IsSurfaceOffset = 
+        IsTableTop = 
+        IsoType = IsoStove
+        ItemHeight = 15
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 50
+        ScrapSize = Small
+        Surface = 34
+        attachedSurface = 
+        container = slowcooker
+    }
+    // appliances_slowcooker_01_4
+    tile
+    {
+        xy = 4,0
+    }
+    // appliances_slowcooker_01_5
+    tile
+    {
+        xy = 5,0
+    }
+    // appliances_slowcooker_01_6
+    tile
+    {
+        xy = 6,0
+    }
+    // appliances_slowcooker_01_7
+    tile
+    {
+        xy = 7,0
+    }
+}

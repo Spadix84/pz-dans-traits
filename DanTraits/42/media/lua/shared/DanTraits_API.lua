@@ -92,6 +92,7 @@ V.HOOKS = {
     infectionGrowth = "x1: how fast infections grow this minute; player",
     woundHeal      = "x1: how fast a wound heals; player, part",
     strainRelief   = "x1: how much a comfort eases burnout; player, d",
+    homeGood       = "x1: how much good being at home does this minute (boredom, unhappiness and stress eased); player, d",
     -- the stat pipelines: the stat's rise since the last run (scale it; never add)
     enduranceRegen = "stamina regained this frame; player, d",
     panicRise      = "panic gained this frame; player, d",

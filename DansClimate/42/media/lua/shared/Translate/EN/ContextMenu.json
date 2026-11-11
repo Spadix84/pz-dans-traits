@@ -1,8 +1,16 @@
 {
     "ContextMenu_DansClimate_InstallAC": "Install Window Air Conditioner",
     "ContextMenu_DansClimate_RemoveAC": "Remove Window Air Conditioner",
-    "ContextMenu_DansClimate_TurnOn": "Turn On Air Conditioner",
-    "ContextMenu_DansClimate_TurnOff": "Turn Off Air Conditioner",
+    "ContextMenu_DansClimate_AC": "Window Air Conditioner",
+    "ContextMenu_DansClimate_ACRoom": "Window Air Conditioner (room %1)",
+    "ContextMenu_DansClimate_TurnOn": "Turn On",
+    "ContextMenu_DansClimate_TurnOff": "Turn Off",
+    "ContextMenu_DansClimate_Heater": "Space Heater",
+    "ContextMenu_DansClimate_HeaterRoom": "Space Heater (room %1)",
+    "ContextMenu_DansClimate_HeaterTurnOn": "Turn On",
+    "ContextMenu_DansClimate_HeaterTurnOff": "Turn Off",
+    "ContextMenu_DansClimate_Level_LOW": "Low",
+    "ContextMenu_DansClimate_Level_HIGH": "High",
     "ContextMenu_DansClimate_Thermostat": "Thermostat (room %1)",
     "ContextMenu_DansClimate_ThermostatNoReading": "Thermostat",
     "ContextMenu_DansClimate_Mode_OFF": "Off",
@@ -12,5 +20,13 @@
     "ContextMenu_DansClimate_HeatTo": "Heat to %1",
     "ContextMenu_DansClimate_CoolTo": "Cool to %1",
     "ContextMenu_DansClimate_Current": "%1 (set)",
-    "ContextMenu_DansClimate_Readout": "Room climate (debug)"
+    "ContextMenu_DansClimate_Readout": "Room climate (debug)",
+    "ContextMenu_DansClimate_Furnace": "Furnace",
+    "ContextMenu_DansClimate_FurnaceRoom": "Furnace (room %1)",
+    "ContextMenu_DansClimate_CentralAC": "Central Air Conditioner",
+    "ContextMenu_DansClimate_CentralACRoom": "Central Air Conditioner (room %1)",
+    "ContextMenu_DansClimate_Vent": "Vent",
+    "ContextMenu_DansClimate_RemoveFurnace": "Remove Furnace",
+    "ContextMenu_DansClimate_RemoveCentralAC": "Remove Central Air Conditioner",
+    "ContextMenu_DansClimate_RemoveVent": "Remove Vent"
 }

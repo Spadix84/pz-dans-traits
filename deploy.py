@@ -16,6 +16,7 @@
                                          VitalityChallenges --challenges  the challenge scenarios
                                          DansClimate       --climate  Dan's Climate Control (ZombieBuddy;
                                                                       build the jar first with DansClimate/tools/build.py)
+                                         VitalityAppliances --appliances  the Slow Cooker and the Brick Smoker
     python deploy.py --pull          ~/Zomboid/mods/NAME -> repo  (for edits made in place while
                                      testing; adds and updates only, nothing in the repo is removed).
                                      Goes with --mod or any of the old flags.
@@ -26,7 +27,8 @@
                                      tools/, is left out)
     python deploy.py --workshop NAME the same for another mod with a `workshop` folder in its MODS
                                      row (MapLegend: repo/workshop/maplegend ->
-                                     ~/Zomboid/Workshop/MapLegend)
+                                     ~/Zomboid/Workshop/MapLegend; VitalityAppliances:
+                                     repo/workshop/appliances)
     One mod (or --workshop) a run.
 
 The game only reads the mod folder, so edit here, deploy, then restart the
@@ -53,6 +55,8 @@ MODS = [
     {"name": "VitalityCartridges", "flag": "--cartridges", "help": "the Vitality Cartridges mod"},
     {"name": "VitalityChallenges", "flag": "--challenges", "help": "the Vitality Challenges mod"},
     {"name": "DansClimate", "flag": "--climate", "help": "the Dan's Climate Control mod (build its jar first: DansClimate/tools/build.py)"},
+    {"name": "VitalityAppliances", "flag": "--appliances", "help": "the Vitality Appliances mod (Slow Cooker, Brick Smoker)",
+     "workshop": os.path.join("workshop", "appliances")},
 ]
 MAIN = MODS[0]["name"]   # the default mod
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}

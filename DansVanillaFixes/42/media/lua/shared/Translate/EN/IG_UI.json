@@ -47,5 +47,6 @@
     "IGUI_DVF_Rarity_Rare": "Rare",
     "IGUI_DVF_Rarity_Uncommon": "Uncommon",
     "IGUI_DVF_Rarity_Common": "Common",
-    "IGUI_DVF_Rarity_Crafted": "Crafted"
+    "IGUI_DVF_Rarity_Crafted": "Crafted",
+    "IGUI_DVF_Placed": "Placed: Loot All leaves it"
 }

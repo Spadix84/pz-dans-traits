@@ -93,3 +93,273 @@ tileset
         attachedW = 
     }
 }
+tileset
+{
+    file = appliances_spaceheater_01
+    size = 8,1
+    id = 2
+    // appliances_spaceheater_01_0
+    tile
+    {
+        xy = 0,0
+        CanScrap = 
+        CustomItem = Base.Mov_SpaceHeater
+        CustomName = Space Heater
+        Facing = S
+        IsMoveAble = 
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 60
+        ScrapSize = Small
+    }
+    // appliances_spaceheater_01_1
+    tile
+    {
+        xy = 1,0
+        CanScrap = 
+        CustomItem = Base.Mov_SpaceHeater
+        CustomName = Space Heater
+        Facing = E
+        IsMoveAble = 
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 60
+        ScrapSize = Small
+    }
+    // appliances_spaceheater_01_2
+    tile
+    {
+        xy = 2,0
+        CanScrap = 
+        CustomItem = Base.Mov_SpaceHeater
+        CustomName = Space Heater
+        Facing = N
+        IsMoveAble = 
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 60
+        ScrapSize = Small
+    }
+    // appliances_spaceheater_01_3
+    tile
+    {
+        xy = 3,0
+        CanScrap = 
+        CustomItem = Base.Mov_SpaceHeater
+        CustomName = Space Heater
+        Facing = W
+        IsMoveAble = 
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        PickUpWeight = 60
+        ScrapSize = Small
+    }
+    // appliances_spaceheater_01_4
+    tile
+    {
+        xy = 4,0
+    }
+    // appliances_spaceheater_01_5
+    tile
+    {
+        xy = 5,0
+    }
+    // appliances_spaceheater_01_6
+    tile
+    {
+        xy = 6,0
+    }
+    // appliances_spaceheater_01_7
+    tile
+    {
+        xy = 7,0
+    }
+}
+tileset
+{
+    file = appliances_hvac_01
+    size = 8,3
+    id = 3
+    // appliances_hvac_01_0
+    tile
+    {
+        xy = 0,0
+        BlocksPlacement = 
+        CustomName = Furnace
+        Facing = S
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_1
+    tile
+    {
+        xy = 1,0
+        BlocksPlacement = 
+        CustomName = Furnace
+        Facing = E
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_2
+    tile
+    {
+        xy = 2,0
+        BlocksPlacement = 
+        CustomName = Furnace
+        Facing = N
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_3
+    tile
+    {
+        xy = 3,0
+        BlocksPlacement = 
+        CustomName = Furnace
+        Facing = W
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_4
+    tile
+    {
+        xy = 4,0
+    }
+    // appliances_hvac_01_5
+    tile
+    {
+        xy = 5,0
+    }
+    // appliances_hvac_01_6
+    tile
+    {
+        xy = 6,0
+    }
+    // appliances_hvac_01_7
+    tile
+    {
+        xy = 7,0
+    }
+    // appliances_hvac_01_8
+    tile
+    {
+        xy = 0,1
+        BlocksPlacement = 
+        CustomName = Central Air Conditioner
+        Facing = S
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_9
+    tile
+    {
+        xy = 1,1
+        BlocksPlacement = 
+        CustomName = Central Air Conditioner
+        Facing = E
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_10
+    tile
+    {
+        xy = 2,1
+        BlocksPlacement = 
+        CustomName = Central Air Conditioner
+        Facing = N
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_11
+    tile
+    {
+        xy = 3,1
+        BlocksPlacement = 
+        CustomName = Central Air Conditioner
+        Facing = W
+        Material = MetalScrap
+        Material2 = Electric
+        MaterialType = Metal_Light
+        solidtrans = 
+    }
+    // appliances_hvac_01_12
+    tile
+    {
+        xy = 4,1
+    }
+    // appliances_hvac_01_13
+    tile
+    {
+        xy = 5,1
+    }
+    // appliances_hvac_01_14
+    tile
+    {
+        xy = 6,1
+    }
+    // appliances_hvac_01_15
+    tile
+    {
+        xy = 7,1
+    }
+    // appliances_hvac_01_16
+    tile
+    {
+        xy = 0,2
+        CustomName = Vent
+    }
+    // appliances_hvac_01_17
+    tile
+    {
+        xy = 1,2
+        CustomName = Vent
+    }
+    // appliances_hvac_01_18
+    tile
+    {
+        xy = 2,2
+    }
+    // appliances_hvac_01_19
+    tile
+    {
+        xy = 3,2
+    }
+    // appliances_hvac_01_20
+    tile
+    {
+        xy = 4,2
+    }
+    // appliances_hvac_01_21
+    tile
+    {
+        xy = 5,2
+    }
+    // appliances_hvac_01_22
+    tile
+    {
+        xy = 6,2
+    }
+    // appliances_hvac_01_23
+    tile
+    {
+        xy = 7,2
+    }
+}
