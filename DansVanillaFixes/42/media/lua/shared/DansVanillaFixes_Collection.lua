@@ -35,6 +35,12 @@
 -- list cannot set Unwanted for the name; Add to collection on a copy sets it
 -- for that copy's issue, and a tick in the window sets none.
 --
+-- With Vitality, some novels are real books ("Jurassic Park", by Michael
+-- Crichton): its reading swaps them in as loot spawns and writes its own key
+-- on the copy, IGUI_DVF_BookTitle_<key>, which has no translation. The titles
+-- and authors are in Vitality's table (DanTraits_ReadingData.real), read here
+-- if it is loaded, so they are rows in Books like any other.
+--
 -- Player mod data DVF_Collection:
 --   { v = 2, items = { [fullType] = WE_SET | WAS_SET }, media = { [id] = WE_SET | WAS_SET },
 --     titles = { [title key] = true | the name, for a title the lists did not know },
@@ -89,8 +95,10 @@ C.TITLE_EXTRA = {
 }
 -- a title on none of the lists (a mod's, or a game update's) joins the tab its
 -- key belongs to the first time a copy is seen
+C.REAL_PREFIX = "IGUI_DVF_BookTitle_"   -- Vitality's real books
 C.TITLE_ADOPT = {
     { prefix = "IGUI_BookTitle_",     tab = "Books",       icon = "Base.Book" },
+    { prefix = C.REAL_PREFIX,         tab = "Books",       icon = "Base.Book" },
     { prefix = "IGUI_MagazineTitle_", tab = "Periodicals", icon = "Base.Magazine", dated = true },
     { prefix = "IGUI_ComicTitle_",    tab = "Comics",      icon = "Base.ComicBook" },
     { prefix = "Print_Media_",        tab = "Fliers",      icon = "Base.Flier" },
@@ -402,6 +410,35 @@ local function scriptName(fullType)
     return script and script:getDisplayName() or nil
 end
 
+-- Vitality's table of real books, { [key] = { title, author, ... } }, or nil
+-- without Vitality
+local function realBooks()
+    local D = DanTraits_ReadingData
+    local real = type(D) == "table" and D.real or nil
+    return type(real) == "table" and real or nil
+end
+
+-- whether Vitality is putting them in the loot: its reading on and the chance
+-- above 0. With it off they are not listed, and a copy from before is adopted.
+local function realBooksSpawn()
+    local R = DanTraits_Reading
+    if type(R) ~= "table" or not realBooks() then return false end
+    local ok, yes = pcall(function()
+        return R.on() and (tonumber(R.opt("ReadingRealBookChance", 8)) or 0) > 0
+    end)
+    return ok and yes == true
+end
+
+-- "Jurassic Park, by Michael Crichton" for a real book's key, or nil
+local function realName(key)
+    local real = realBooks()
+    if not real or string.sub(key, 1, #C.REAL_PREFIX) ~= C.REAL_PREFIX then return nil end
+    local row = real[string.sub(key, #C.REAL_PREFIX + 1)]
+    if type(row) ~= "table" or not row.title then return nil end
+    if not row.author then return row.title end
+    return getText("IGUI_DVF_Collection_BookBy", row.title, row.author)
+end
+
 -- rows per tab from the generated lists; a title two registries share (a
 -- brochure that is also a flier) is one row
 local function buildTitleLists()
@@ -425,6 +462,14 @@ local function buildTitleLists()
     for _, x in ipairs(C.TITLE_EXTRA) do
         table.insert(found[x.tab], titleEntry(x.key, x.name or scriptName(x.icon) or x.key, x.tab, x.icon))
     end
+    if realBooksSpawn() then
+        for id in pairs(realBooks()) do
+            local key = C.REAL_PREFIX .. id
+            if not C.byTitle[key] then
+                table.insert(found.Books, titleEntry(key, realName(key) or id, "Books", "Base.Book", key))
+            end
+        end
+    end
     for _, id in ipairs(C.TITLE_TABS) do table.sort(found[id], byName) end
     return found
 end
@@ -445,7 +490,7 @@ function C.adopt(key, name)
     for _, a in ipairs(C.TITLE_ADOPT) do
         if string.sub(key, 1, #a.prefix) == a.prefix then
             local text = getText(key)
-            if text == key then text = name or key end
+            if text == key then text = realName(key) or name or key end
             local entry = titleEntry(key, text, a.tab, a.icon, not a.dated and key or nil)
             entry.adopted = true
             local tab = C.tabById[a.tab]

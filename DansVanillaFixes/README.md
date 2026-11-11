@@ -22,7 +22,8 @@ Workshop.
   catalogues, RPG manuals): right-click a copy, Add to collection. Tapes, CDs and titles
   are set Unwanted one title at a time (the game keeps Unwanted for them by title, not by
   item type). A magazine or a comic counts by its name, whatever the issue; the issues you
-  add are the ones set Unwanted.
+  add are the ones set Unwanted. With the Vitality Project loaded, its 203 real books are
+  in the Books tab as well, by title and author.
 - **Store stock.** Cigarette packs on shop shelves come full.
 
 | Layout | |

@@ -172,3 +172,22 @@ checklist set.
   42.x at the time: 1,187 books, 16 RPG manuals, 167 magazines, 56 catalogues,
   224 comics, 22 old newspapers, 22 dated issues, 111 fliers, 22 brochures.
 - Not checked in game yet.
+
+### 2026-11-10: Vitality's real books (user: "paperbacks don't work")
+
+The two paperbacks that had no Add to collection in the user's save were
+"Mere Christianity" and "Love Story": Vitality's real books, not vanilla
+paperbacks. Its reading (`DanTraits_Reading.lua`, `R.maybeReal`) swaps a novel
+for a real one as loot spawns and writes `IGUI_DVF_BookTitle_<key>` on the copy,
+a key with no translation and on none of the lists, and no adoption prefix
+matched it. Vanilla paperbacks were fine (same `onCreateSubjectBook` and keys as
+hardbacks).
+
+- With Vitality loaded, its reading on and `ReadingRealBookChance` above 0, the
+  203 rows of `DanTraits_ReadingData.real` are listed in Books as "Title, by
+  Author" (`IGUI_DVF_Collection_BookBy`), `exact` = the key, so they are set
+  Unwanted like any book.
+- Otherwise they are not listed (they cannot be found), and a copy from before
+  is adopted on sight (`C.TITLE_ADOPT` has the prefix), named from the table,
+  or after the copy without the table.
+- Read softly: Dan's Vanilla Fixes still loads without Vitality.

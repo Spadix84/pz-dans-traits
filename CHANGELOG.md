@@ -105,6 +105,13 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
     game update; `--check` says whether the file is out of date. A title the file does not
     have (a mod's, or a newer game's) gets a row the first time a copy is seen, and a ticked
     one keeps its name so the row comes back next session (`C.adopt`, `C.adoptStored`).
+  - Vitality's real books are on it too. Its reading swaps some novels for real ones and
+    writes its own key on the copy (`IGUI_DVF_BookTitle_<key>`, no translation), which the
+    first build did not know, so a real paperback had no Add to collection. With Vitality
+    loaded, its reading on and the real-book chance above 0, the 203 are rows in Books as
+    "Title, by Author" (read softly from `DanTraits_ReadingData.real`), set Unwanted by that
+    key. With the chance at 0 or reading off they are not listed, and a copy from before is
+    adopted on sight, named from the table.
   - The window counts a tab once per change, not every frame.
   - Left off on purpose: seed packets, notebooks and paper, receipts, ID and business cards,
     letters, crossword and wordsearch magazines, the phone book, and schematics (each copy
