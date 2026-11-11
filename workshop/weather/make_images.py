@@ -377,7 +377,6 @@ def preview_page(days, storms):
         svg.append('<line x1="%.2f" y1="%.1f" x2="%.2f" y2="%.1f" stroke="%s" stroke-width="1"/>' % (
             x0 + i * dx, Y(lo), x0 + i * dx, Y(hi), temp_colour((lo + hi) / 2)))
     svg.append(bolt(214, 128, 1.5))
-    svg.append(flake(108, 222, 6, SNOW))
     body = ('<svg width="%d" height="%d">%s</svg>' % (S, S, "".join(svg)) +
             '<div style="position:absolute; left:0; right:0; top:0; height:84px; background:rgba(28,24,18,.92);'
             ' border-bottom:3px solid #ffd933; text-align:center">'
