@@ -10,8 +10,11 @@ two years the game's own weather runs as usual.
 | `data/knoxCountyHistoricalWeatherData.pdf` | the source: NCEI's "Record of Climatological Observations", 32 monthly pages |
 | `data/daily.csv` | the record moved onto the right days, in C and inches, gaps filled where short (see below); hand edits here, then `build_data.py --csv` |
 | `tools/build_data.py` | PDF -> `daily.csv` -> `HistoricalWeather_Data.lua` (needs `pip install pypdf`) |
-| `42/media/lua/shared/HistoricalWeather_Data.lua` | generated: one row a day, `{ high, low, rain start, rain hours, rain intensity, snow, thunder }` |
-| `42/media/lua/shared/HistoricalWeather.lua` | the hour's weather from the day's row, and putting it into the game's climate |
+| `42/media/lua/shared/HistoricalWeather_Data.lua` | generated: one row a day, `{ high, low, rain start, rain hours, rain intensity, snow, thunder, rain inches, snowfall inches }` |
+| `42/media/lua/shared/HistoricalWeather.lua` | the hour's weather from the day's row, and putting it into the game's climate; a calendar day in a word for the forecast (`HistoricalWeather.day`, `.forecast`) |
+| `42/media/lua/client/HistoricalWeather_Forecast.lua` | the Forecast tab of the character window (sandbox option, off by default) |
+| `42/media/ui/HistoricalWeather/*.png` | the calendar's weather icons, drawn by `tools/make_icons.py` (needs Pillow) |
+| `42/media/sandbox-options.txt` | `HistoricalWeather.Forecast` |
 
     python -I HistoricalWeather/tools/build_data.py         rebuild everything from the PDF
     python -I HistoricalWeather/tools/build_data.py --csv   rebuild the Lua from daily.csv
@@ -82,6 +85,14 @@ that day.
 - **Multiplayer.** Every machine works out the same hour from the same date and sets the
   slots; only the server (or single player) switches the game's own weather off. Not yet
   tried on a server.
+- **The Forecast tab** (sandbox option *Forecast Calendar*, off by default) is a calendar in
+  the character window of the next 30 days, a week to a row, each with its sky as an icon and
+  its high and low; pointing at a day (or the d-pad on a controller) gives its line underneath,
+  with the record's rain or snow in inches (millimetres and centimetres when the game shows
+  Celsius). Each day is summed from the same half-hours the game is given, so it is never
+  wrong; a spell that runs past midnight is shared between its two days, inches and all.
+  Days outside the record or with no rain figure show a question mark (vanilla's foraging
+  icon). Worked out once a game day.
 - **The calendar date decides.** A game started on another date picks the record up when its
   calendar reaches 9 July 1993, and lets go after 9 July 1995.
 

@@ -18,6 +18,8 @@
                                                                       build the jar first with DansClimate/tools/build.py)
                                          VitalityAppliances --appliances  the Slow Cooker and the Brick Smoker
                                          DansStorage       --storage  Dan's Storage (the water jug rack)
+                                         HistoricalWeather --weather  Historical Weather (Knox County's 1993-95 record;
+                                                                      rebuild its data with HistoricalWeather/tools/build_data.py)
     python deploy.py --pull          ~/Zomboid/mods/NAME -> repo  (for edits made in place while
                                      testing; adds and updates only, nothing in the repo is removed).
                                      Goes with --mod or any of the old flags.
@@ -29,7 +31,8 @@
     python deploy.py --workshop NAME the same for another mod with a `workshop` folder in its MODS
                                      row (MapLegend: repo/workshop/maplegend ->
                                      ~/Zomboid/Workshop/MapLegend; VitalityAppliances:
-                                     repo/workshop/appliances)
+                                     repo/workshop/appliances; HistoricalWeather: repo/workshop/weather, without
+                                     its tools/ and data/)
     One mod (or --workshop) a run.
 
 The game only reads the mod folder, so edit here, deploy, then restart the
@@ -59,6 +62,8 @@ MODS = [
     {"name": "VitalityAppliances", "flag": "--appliances", "help": "the Vitality Appliances mod (Slow Cooker, Brick Smoker)",
      "workshop": os.path.join("workshop", "appliances")},
     {"name": "DansStorage", "flag": "--storage", "help": "the Dan's Storage mod (the water jug rack)"},
+    {"name": "HistoricalWeather", "flag": "--weather", "help": "the Historical Weather mod (Knox County 1993-95)",
+     "skip": {"tools", "data"}, "workshop": os.path.join("workshop", "weather")},
 ]
 MAIN = MODS[0]["name"]   # the default mod
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}

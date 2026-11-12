@@ -1,0 +1,5 @@
+{
+    "Sandbox_HistoricalWeather": "Historical Weather",
+    "Sandbox_HistoricalWeatherForecast": "Forecast Calendar",
+    "Sandbox_HistoricalWeatherForecast_tooltip": "A Forecast tab in the character window: a calendar of the next 30 days of Knox County's recorded weather, with each day's high and low, rain, snow and thunderstorms.<br>It is the real record, so it is always right."
+}

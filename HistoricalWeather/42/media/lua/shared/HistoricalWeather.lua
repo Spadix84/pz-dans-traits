@@ -195,6 +195,103 @@ function HW.at(y, m, d, h)
     }
 end
 
+-- the forecast calendar -----------------------------------------------------------------
+-- A day's weather in a word, from the same hours the game is given: the sky the record
+-- makes of the daytime, the rain and snow in the calendar day (a spell that starts in the
+-- evening is shared between the two days it falls in) and the record's own inches.
+
+-- the date (year, month 1..12, day) of a day number: Hinnant's civil_from_days
+local function civil(z)
+    local era = floor(z / 146097)
+    local doe = z - era * 146097
+    local yoe = floor((doe - floor(doe / 1460) + floor(doe / 36524) - floor(doe / 146096)) / 365)
+    local doy = doe - (365 * yoe + floor(yoe / 4) - floor(yoe / 100))
+    local mp = floor((5 * doy + 2) / 153)
+    local d = doy - floor((153 * mp + 2) / 5) + 1
+    local m = mp < 10 and mp + 3 or mp - 9
+    local y = yoe + era * 400
+    if m <= 2 then y = y + 1 end
+    return y, m, d
+end
+HW.civil = civil
+
+local SUNDAY = dayNumber(1993, 7, 4)
+-- 0 Sunday .. 6 Saturday
+function HW.weekday(y, m, d) return (dayNumber(y, m, d) - SUNDAY) % 7 end
+
+-- the share of row j's rain spell that falls on calendar day i, 0..1
+local function spellShare(j, i)
+    local s, f = spell(j)
+    if not s then return 0 end
+    s, f = s + 24 * (j - i), f + 24 * (j - i)
+    local inside = max(0, min(f, 24) - max(s, 0))
+    return inside / (f - s)
+end
+
+-- a calendar day's weather; nil outside the record. Fields:
+--   high, low      the record's (C), nil in a gap (the game's own)
+--   sky            "clear" | "partly" | "cloudy" | "fog" | "showers" | "rain" | "snow" | "storm",
+--                  or "unknown" where the record has no rain figure (the game's own sky)
+--   rainHours      hours of rain or snow in the day
+--   rainInches     the record's inches that fell in the day; snowInches the same for snow
+--   fog            morning fog
+function HW.day(y, m, d)
+    local i = HW.index(y, m, d)
+    if not i then return nil end
+    local r = row(i)
+    local out = { index = i, high = r[1], low = r[2], rainHours = 0, rainInches = 0, snowInches = 0 }
+    -- no rain figure for the day: the game's own sky (an unknown morning from the day
+    -- before is only left out)
+    local unknown, peak, snowy, storm, cloud, cloudN, fog = r[3] == false, 0, 0, false, 0, 0, 0
+    local snowLine = r[6] and 3 or 0.5
+    for n = 0, 47 do
+        local h = n / 2
+        local p = HW.precipitation(i, h)
+        if p and p > 0 then
+            out.rainHours = out.rainHours + 0.5
+            peak = max(peak, p)
+            local temp, share = HW.temperature(i, h)
+            if (temp and share >= 0.5 and temp <= snowLine) or (not temp and r[6]) then snowy = snowy + 0.5 end
+            if HW.storm(i, h) then storm = true end
+        end
+        if p ~= nil and h >= 8 and h <= 18 then
+            cloud, cloudN = cloud + HW.clouds(i, h), cloudN + 1
+        end
+        fog = max(fog, HW.fog(i, h, m) or 0)
+    end
+    for j = i - 1, i do
+        local rj = row(j)
+        local share = rj and spellShare(j, i) or 0
+        if share > 0 then
+            out.rainInches = out.rainInches + share * (rj[8] or 0)
+            out.snowInches = out.snowInches + share * (rj[9] or 0)
+        end
+    end
+    out.fog = fog >= 0.2
+    cloud = cloudN > 0 and cloud / cloudN or 0
+    if unknown then out.sky = "unknown"
+    elseif storm then out.sky = "storm"
+    elseif snowy > 0 and snowy >= out.rainHours / 2 then out.sky = "snow"
+    elseif out.rainHours >= 3 or peak >= 0.5 then out.sky = "rain"
+    elseif out.rainHours > 0 then out.sky = "showers"
+    elseif out.fog and cloud < 0.5 then out.sky = "fog"
+    elseif cloud >= 0.55 then out.sky = "cloudy"
+    elseif cloud >= 0.3 then out.sky = "partly"
+    else out.sky = "clear" end
+    return out
+end
+
+-- count days from a date: { y, m, d, weekday, day = HW.day(...) or nil }
+function HW.forecast(y, m, d, count)
+    local start = dayNumber(y, m, d)
+    local out = {}
+    for n = 0, count - 1 do
+        local yy, mm, dd = civil(start + n)
+        out[#out + 1] = { y = yy, m = mm, d = dd, weekday = (start + n - SUNDAY) % 7, day = HW.day(yy, mm, dd) }
+    end
+    return out
+end
+
 -- the game ------------------------------------------------------------------------------
 -- Once every ten game minutes (a quarter of a real minute at the default day length). The
 -- game keeps a mod slot's value until it is changed, so only a value that has moved is sent

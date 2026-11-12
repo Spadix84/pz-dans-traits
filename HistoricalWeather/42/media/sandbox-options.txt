@@ -1,0 +1,4 @@
+VERSION = 1,
+
+option HistoricalWeather.Forecast
+{type = boolean, default = false, page = HistoricalWeather, translation = HistoricalWeatherForecast,}
