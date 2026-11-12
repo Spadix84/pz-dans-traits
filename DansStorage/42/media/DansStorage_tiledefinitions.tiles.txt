@@ -1,0 +1,835 @@
+version = 1
+tileset
+{
+    file = storage_waterjugrack_01
+    size = 8,3
+    id = 1
+    // storage_waterjugrack_01_0
+    tile
+    {
+        xy = 0,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = S
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_1
+    tile
+    {
+        xy = 1,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = S
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 1,0
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_2
+    tile
+    {
+        xy = 2,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = E
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,1
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_3
+    tile
+    {
+        xy = 3,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = E
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_4
+    tile
+    {
+        xy = 4,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = N
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_5
+    tile
+    {
+        xy = 5,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = N
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 1,0
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_6
+    tile
+    {
+        xy = 6,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = W
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,1
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_7
+    tile
+    {
+        xy = 7,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 200
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Rack
+        Facing = W
+        GroupName = Water Jug
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = waterjugrack
+        solidtrans = 
+    }
+    // storage_waterjugrack_01_8
+    tile
+    {
+        xy = 0,1
+    }
+    // storage_waterjugrack_01_9
+    tile
+    {
+        xy = 1,1
+    }
+    // storage_waterjugrack_01_10
+    tile
+    {
+        xy = 2,1
+    }
+    // storage_waterjugrack_01_11
+    tile
+    {
+        xy = 3,1
+    }
+    // storage_waterjugrack_01_12
+    tile
+    {
+        xy = 4,1
+    }
+    // storage_waterjugrack_01_13
+    tile
+    {
+        xy = 5,1
+    }
+    // storage_waterjugrack_01_14
+    tile
+    {
+        xy = 6,1
+    }
+    // storage_waterjugrack_01_15
+    tile
+    {
+        xy = 7,1
+    }
+    // storage_waterjugrack_01_16
+    tile
+    {
+        xy = 0,2
+    }
+    // storage_waterjugrack_01_17
+    tile
+    {
+        xy = 1,2
+    }
+    // storage_waterjugrack_01_18
+    tile
+    {
+        xy = 2,2
+    }
+    // storage_waterjugrack_01_19
+    tile
+    {
+        xy = 3,2
+    }
+    // storage_waterjugrack_01_20
+    tile
+    {
+        xy = 4,2
+    }
+    // storage_waterjugrack_01_21
+    tile
+    {
+        xy = 5,2
+    }
+    // storage_waterjugrack_01_22
+    tile
+    {
+        xy = 6,2
+    }
+    // storage_waterjugrack_01_23
+    tile
+    {
+        xy = 7,2
+    }
+}
+tileset
+{
+    file = storage_gascanshelf_01
+    size = 8,3
+    id = 2
+    // storage_gascanshelf_01_0
+    tile
+    {
+        xy = 0,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = S
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_1
+    tile
+    {
+        xy = 1,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = S
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 1,0
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_2
+    tile
+    {
+        xy = 2,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = E
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,1
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_3
+    tile
+    {
+        xy = 3,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = E
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_4
+    tile
+    {
+        xy = 4,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = N
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_5
+    tile
+    {
+        xy = 5,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = N
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 1,0
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_6
+    tile
+    {
+        xy = 6,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = W
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,1
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_7
+    tile
+    {
+        xy = 7,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 220
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = W
+        GroupName = Gas Can
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = gascanshelf
+        solidtrans = 
+    }
+    // storage_gascanshelf_01_8
+    tile
+    {
+        xy = 0,1
+    }
+    // storage_gascanshelf_01_9
+    tile
+    {
+        xy = 1,1
+    }
+    // storage_gascanshelf_01_10
+    tile
+    {
+        xy = 2,1
+    }
+    // storage_gascanshelf_01_11
+    tile
+    {
+        xy = 3,1
+    }
+    // storage_gascanshelf_01_12
+    tile
+    {
+        xy = 4,1
+    }
+    // storage_gascanshelf_01_13
+    tile
+    {
+        xy = 5,1
+    }
+    // storage_gascanshelf_01_14
+    tile
+    {
+        xy = 6,1
+    }
+    // storage_gascanshelf_01_15
+    tile
+    {
+        xy = 7,1
+    }
+    // storage_gascanshelf_01_16
+    tile
+    {
+        xy = 0,2
+    }
+    // storage_gascanshelf_01_17
+    tile
+    {
+        xy = 1,2
+    }
+    // storage_gascanshelf_01_18
+    tile
+    {
+        xy = 2,2
+    }
+    // storage_gascanshelf_01_19
+    tile
+    {
+        xy = 3,2
+    }
+    // storage_gascanshelf_01_20
+    tile
+    {
+        xy = 4,2
+    }
+    // storage_gascanshelf_01_21
+    tile
+    {
+        xy = 5,2
+    }
+    // storage_gascanshelf_01_22
+    tile
+    {
+        xy = 6,2
+    }
+    // storage_gascanshelf_01_23
+    tile
+    {
+        xy = 7,2
+    }
+}
+tileset
+{
+    file = storage_propaneshelf_01
+    size = 8,3
+    id = 3
+    // storage_propaneshelf_01_0
+    tile
+    {
+        xy = 0,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = S
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_1
+    tile
+    {
+        xy = 1,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = S
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 1,0
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_2
+    tile
+    {
+        xy = 2,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = E
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,1
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_3
+    tile
+    {
+        xy = 3,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = E
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_4
+    tile
+    {
+        xy = 4,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = N
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_5
+    tile
+    {
+        xy = 5,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = N
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 1,0
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_6
+    tile
+    {
+        xy = 6,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = W
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,1
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_7
+    tile
+    {
+        xy = 7,0
+        BlocksPlacement = 
+        CanBreak = 
+        CanScrap = 
+        ContainerCapacity = 70
+        ContainerPutSound = ShelfMetalTransferItem
+        ContainerTakeSound = ShelfMetalTransferItem
+        CustomName = Shelf
+        Facing = W
+        GroupName = Propane
+        IsMoveAble = 
+        ItemHeight = 100
+        Material = MetalBars
+        Material2 = MetalPlates
+        MaterialType = Metal_Light
+        PickUpLevel = 2
+        PickUpWeight = 150
+        SpriteGridPos = 0,0
+        container = propaneshelf
+        solidtrans = 
+    }
+    // storage_propaneshelf_01_8
+    tile
+    {
+        xy = 0,1
+    }
+    // storage_propaneshelf_01_9
+    tile
+    {
+        xy = 1,1
+    }
+    // storage_propaneshelf_01_10
+    tile
+    {
+        xy = 2,1
+    }
+    // storage_propaneshelf_01_11
+    tile
+    {
+        xy = 3,1
+    }
+    // storage_propaneshelf_01_12
+    tile
+    {
+        xy = 4,1
+    }
+    // storage_propaneshelf_01_13
+    tile
+    {
+        xy = 5,1
+    }
+    // storage_propaneshelf_01_14
+    tile
+    {
+        xy = 6,1
+    }
+    // storage_propaneshelf_01_15
+    tile
+    {
+        xy = 7,1
+    }
+    // storage_propaneshelf_01_16
+    tile
+    {
+        xy = 0,2
+    }
+    // storage_propaneshelf_01_17
+    tile
+    {
+        xy = 1,2
+    }
+    // storage_propaneshelf_01_18
+    tile
+    {
+        xy = 2,2
+    }
+    // storage_propaneshelf_01_19
+    tile
+    {
+        xy = 3,2
+    }
+    // storage_propaneshelf_01_20
+    tile
+    {
+        xy = 4,2
+    }
+    // storage_propaneshelf_01_21
+    tile
+    {
+        xy = 5,2
+    }
+    // storage_propaneshelf_01_22
+    tile
+    {
+        xy = 6,2
+    }
+    // storage_propaneshelf_01_23
+    tile
+    {
+        xy = 7,2
+    }
+}

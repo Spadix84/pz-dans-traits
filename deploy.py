@@ -17,6 +17,7 @@
                                          DansClimate       --climate  Dan's Climate Control (ZombieBuddy;
                                                                       build the jar first with DansClimate/tools/build.py)
                                          VitalityAppliances --appliances  the Slow Cooker and the Brick Smoker
+                                         DansStorage       --storage  Dan's Storage (the water jug rack)
     python deploy.py --pull          ~/Zomboid/mods/NAME -> repo  (for edits made in place while
                                      testing; adds and updates only, nothing in the repo is removed).
                                      Goes with --mod or any of the old flags.
@@ -57,6 +58,7 @@ MODS = [
     {"name": "DansClimate", "flag": "--climate", "help": "the Dan's Climate Control mod (build its jar first: DansClimate/tools/build.py)"},
     {"name": "VitalityAppliances", "flag": "--appliances", "help": "the Vitality Appliances mod (Slow Cooker, Brick Smoker)",
      "workshop": os.path.join("workshop", "appliances")},
+    {"name": "DansStorage", "flag": "--storage", "help": "the Dan's Storage mod (the water jug rack)"},
 ]
 MAIN = MODS[0]["name"]   # the default mod
 IGNORE = {"__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep"}

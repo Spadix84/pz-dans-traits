@@ -15,6 +15,7 @@ This repository holds the Vitality Project and six smaller mods from the same pr
 | **Vitality Cartridges** | Five games for the SpiffBoy handheld console, each reaching the character | [`VitalityCartridges/`](VitalityCartridges/), needs SpiffBoy, not yet on the Workshop |
 | **Vitality Challenges** | Pile-Up, Nomad and The Last Broadcast in the Challenges menu | [`VitalityChallenges/`](VitalityChallenges/), not yet on the Workshop |
 | **Vitality Appliances** | A countertop Slow Cooker with nine Kentucky recipes (its meals count as home cooking here) and a Brick Smoker built outdoors for smoked and smoke-dried meat and fish | [`VitalityAppliances/`](VitalityAppliances/), [API](VitalityAppliances/API.md), not yet on the Workshop under this name |
+| **Dan's Storage** | Shelves made for one thing, each showing how full it is: a water jug rack, a gas can shelf and a propane shelf | [`DansStorage/`](DansStorage/), in development |
 
 Other mods can build on the Vitality Project, Map Legend and Vitality Appliances: each ships an `API.md` and a `*_API.lua` loaded with `pcall(require, ...)` (the appliances have one each, `SlowCooker_API.lua` and `Smoker_API.lua`), so a mod runs with or without them.
 

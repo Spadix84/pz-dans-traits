@@ -1,0 +1,8 @@
+name=Dan's Storage
+id=DansStorage
+url=https://github.com/Spadix84/pz-dans-traits
+modversion=0.1.0
+versionMin=42.0.0
+pack=DansStorage
+tiledef=DansStorage_tiledefinitions 6744
+description=Shelves made for one thing. Welded steel, two tiles long, each takes only its own items and shows how full it is: a water jug rack (nine jugs a tile), a gas can shelf (nine petrol or jerry cans a tile) and a propane shelf (six tanks a tile). Build them from the build menu. In development.

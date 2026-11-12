@@ -1,0 +1,218 @@
+module Base
+{
+    /* The storage shelves, from the build menu under Furniture: welded from pipe, bar and
+       sheet, no book needed. Each is two tiles and every tileset has the same layout
+       (art/storage, packed by tools/build_pack.py): S 0-1, E 2-3, N 4-5, W 6-7. A row
+       lists x = 0, 1; rows go y = 0, 1 (so E and W name the north tile, 3 and 7, first),
+       as vanilla's piano does. What each holds is in lua/shared/DansStorage_Shelves.lua. */
+
+    entity DansStorage_WaterJugRack
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_DansStorage_WaterJugRack,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            OnCreate = DansStorage.Shelves.onBuilt,
+            face S
+            {
+                layer
+                {
+                    row = storage_waterjugrack_01_0 storage_waterjugrack_01_1,
+                }
+            }
+            face E
+            {
+                layer
+                {
+                    row = storage_waterjugrack_01_3,
+                    row = storage_waterjugrack_01_2,
+                }
+            }
+            face N
+            {
+                layer
+                {
+                    row = storage_waterjugrack_01_4 storage_waterjugrack_01_5,
+                }
+            }
+            face W
+            {
+                layer
+                {
+                    row = storage_waterjugrack_01_7,
+                    row = storage_waterjugrack_01_6,
+                }
+            }
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 200,
+            SkillRequired = MetalWelding:3,
+            xpAward = MetalWelding:40,
+            category = Furniture,
+            Tags = Welding;Furniture,
+            Tooltip = Tooltip_craft_DansStorageWaterJugRackDesc,
+            inputs
+            {
+                item 1 tags[base:weldingmask] mode:keep,
+                item 3 [Base.BlowTorch] flags[DontRecordInput],
+                item 2 [Base.WeldingRods] flags[DontRecordInput],
+                item 4 [Base.MetalPipe],
+                item 4 [Base.MetalBar],
+            }
+        }
+    }
+
+    entity DansStorage_GasCanShelf
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_DansStorage_GasCanShelf,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            OnCreate = DansStorage.Shelves.onBuilt,
+            face S
+            {
+                layer
+                {
+                    row = storage_gascanshelf_01_0 storage_gascanshelf_01_1,
+                }
+            }
+            face E
+            {
+                layer
+                {
+                    row = storage_gascanshelf_01_3,
+                    row = storage_gascanshelf_01_2,
+                }
+            }
+            face N
+            {
+                layer
+                {
+                    row = storage_gascanshelf_01_4 storage_gascanshelf_01_5,
+                }
+            }
+            face W
+            {
+                layer
+                {
+                    row = storage_gascanshelf_01_7,
+                    row = storage_gascanshelf_01_6,
+                }
+            }
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 250,
+            SkillRequired = MetalWelding:3,
+            xpAward = MetalWelding:50,
+            category = Furniture,
+            Tags = Welding;Furniture,
+            Tooltip = Tooltip_craft_DansStorageGasCanShelfDesc,
+            inputs
+            {
+                item 1 tags[base:weldingmask] mode:keep,
+                item 4 [Base.BlowTorch] flags[DontRecordInput],
+                item 3 [Base.WeldingRods] flags[DontRecordInput],
+                item 4 [Base.MetalPipe],
+                item 2 [Base.MetalBar],
+                item 3 [Base.SheetMetal],
+            }
+        }
+    }
+
+    entity DansStorage_PropaneShelf
+    {
+        component UiConfig
+        {
+            xuiSkin = default,
+            entityStyle = ES_DansStorage_PropaneShelf,
+            uiEnabled = false,
+        }
+        component SpriteConfig
+        {
+            OnCreate = DansStorage.Shelves.onBuilt,
+            face S
+            {
+                layer
+                {
+                    row = storage_propaneshelf_01_0 storage_propaneshelf_01_1,
+                }
+            }
+            face E
+            {
+                layer
+                {
+                    row = storage_propaneshelf_01_3,
+                    row = storage_propaneshelf_01_2,
+                }
+            }
+            face N
+            {
+                layer
+                {
+                    row = storage_propaneshelf_01_4 storage_propaneshelf_01_5,
+                }
+            }
+            face W
+            {
+                layer
+                {
+                    row = storage_propaneshelf_01_7,
+                    row = storage_propaneshelf_01_6,
+                }
+            }
+        }
+        component CraftRecipe
+        {
+            timedAction = BuildMetalStructureMedium,
+            time = 250,
+            SkillRequired = MetalWelding:3,
+            xpAward = MetalWelding:45,
+            category = Furniture,
+            Tags = Welding;Furniture,
+            Tooltip = Tooltip_craft_DansStoragePropaneShelfDesc,
+            inputs
+            {
+                item 1 tags[base:weldingmask] mode:keep,
+                item 3 [Base.BlowTorch] flags[DontRecordInput],
+                item 3 [Base.WeldingRods] flags[DontRecordInput],
+                item 4 [Base.MetalPipe],
+                item 4 [Base.MetalBar],
+                item 2 [Base.SheetMetal],
+            }
+        }
+    }
+
+    xuiSkin default
+    {
+        entity ES_DansStorage_WaterJugRack
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName = Water Jug Rack,
+            Icon = Build_DansStorageWaterJugRack,
+        }
+        entity ES_DansStorage_GasCanShelf
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName = Gas Can Shelf,
+            Icon = Build_DansStorageGasCanShelf,
+        }
+        entity ES_DansStorage_PropaneShelf
+        {
+            LuaWindowClass = ISEntityWindow,
+            DisplayName = Propane Shelf,
+            Icon = Build_DansStoragePropaneShelf,
+        }
+    }
+}
