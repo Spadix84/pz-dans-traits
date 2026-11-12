@@ -102,19 +102,34 @@ end
 
 -- Keep-warm: hold the age a food had when it went in (or when the power came
 -- back). Clearing the mark when it stops lets it age again from there.
-function SlowCooker.keepWarm(food, running)
+--
+-- In singleplayer the game only brings a food's age up to date when something
+-- draws it or moves it, so it is brought up to date here first. Without that the
+-- age read here never moves, and the whole time in the cooker lands on the food
+-- the moment the crock is taken out.
+--
+-- last, now: the cooker's previous run and this one. The mark is stamped with the
+-- run that confirmed it (slowCookerAt). A dish taken out of a running cooker keeps
+-- its mark, so when it comes back its stamp is not this cooker's previous run and
+-- it starts again from the age it has now, not the age it once went in at. A mark
+-- with no stamp (from before stamps) is taken as this cooker's.
+function SlowCooker.keepWarm(food, running, last, now)
     local md = food:getModData()
     if not running then
         md.slowCookerAge = nil
+        md.slowCookerAt = nil
         return
     end
+    food:updateAge()
     local held = md.slowCookerAge
-    if held == nil then
+    local at = md.slowCookerAt
+    if held == nil or (at ~= nil and at ~= last) then
         md.slowCookerAge = food:getAge()
     elseif food:getAge() > held then
         food:setAge(held)
         if isServer() then sendItemStats(food) end
     end
+    md.slowCookerAt = now
 end
 
 local function syncOverlay(obj, running)
@@ -151,7 +166,7 @@ function SlowCooker.update(obj, now)
     for i = 0, items:size() - 1 do
         local item = items:get(i)
         if instanceof(item, "Food") then
-            SlowCooker.keepWarm(item, running)
+            SlowCooker.keepWarm(item, running, last, now)
             if running and item:isCookable() then
                 SlowCooker.cookFood(item, minutes)
             end

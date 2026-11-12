@@ -132,9 +132,11 @@ end
 local function huntedMinute(player, d)
     if multiplayer() then return end
     local home = d.htHome
-    if not home then return end
+    if not home or d.htDone then return end   -- every piece has run: nothing left to watch for
     local hours = player:getHoursSurvived() or 0
     local sprint = hasTrait(player, "huntedsprint")
+    local nights, hour = nil, nil
+    pcall(function() local gt = getGameTime(); nights, hour = gt:getNightsSurvived(), gt:getHour() end)
 
     -- the horde
     if not d.htLoosed and hours >= HT_SPAWN_H then
@@ -142,6 +144,7 @@ local function huntedMinute(player, d)
         d.htTries = (d.htTries or 0) + 1
         if asked > 0 or d.htTries >= HT_MAX_TRIES then
             d.htLoosed = true
+            d.htNight0 = nights   -- the world's nights so far: the dawns are counted from here
             d.htPullUntil = hours + HT_PULL_H
             d.htLastPull = nil
             if asked > 0 then notify(player, sprint and "UI_DanTraits_HuntedSprintComing" or "UI_DanTraits_HuntedComing") end
@@ -165,16 +168,39 @@ local function huntedMinute(player, d)
 
     -- dawn: the game counts a night survived at 07:00, so at 06:00 the nights
     -- so far number the mornings before this one; the first HT_DAWN_DAYS
-    -- mornings once the horde is loose (a 05:00 start is not hunted at 06:00)
-    local nights, hour = nil, nil
-    pcall(function() local gt = getGameTime(); nights, hour = gt:getNightsSurvived(), gt:getHour() end)
-    local morning = nights and nights + 1
+    -- mornings once the horde is loose (a 05:00 start is not hunted at 06:00).
+    -- The game's count is the world's, not the character's, so the mornings are
+    -- numbered from the nights there were when the horde was loosed (htNight0;
+    -- a save from before it was kept counts from the world's start, as it did):
+    -- a Hunted character made on day ten has three dawns too.
+    local morning = nights and nights - (d.htNight0 or 0) + 1
     if d.htLoosed and morning and morning <= HT_DAWN_DAYS and hour == HT_DAWN_HOUR and d.htDawnDay ~= morning then
         d.htDawnDay = morning
         local at = here(player)
         if release({ HT_DAWN_N }, at.x, at.y, HT_DAWN_DIST, sprint) > 0 then notify(player, "UI_DanTraits_HuntedDawn") end
     end
+
+    -- over: the horde out, the house quiet, the helicopter gone, the last dawn served or past
+    if d.htLoosed and d.htHeliDone and hours >= (d.htPullUntil or 0)
+        and ((d.htDawnDay or 0) >= HT_DAWN_DAYS or (morning ~= nil and morning > HT_DAWN_DAYS)) then
+        d.htDone = true
+    end
 end
+
+-- The phases, for the console and the companion app: waiting (the grace), calling
+-- (the horde loose and the house pulling), dawns (the packs still to come), done.
+DanTraits_Machine("hunted", {
+    states = { "none", "waiting", "calling", "dawns", "done" },
+    trait = isHunted,
+    on = function() return not multiplayer() end,
+    of = function(player, d)
+        if not d.htHome then return "none" end
+        if d.htDone then return "done" end
+        if not d.htLoosed then return "waiting", { tries = d.htTries } end
+        if d.htPullUntil and (player:getHoursSurvived() or 0) < d.htPullUntil then return "calling", { untilH = d.htPullUntil } end
+        return "dawns", { day = d.htDawnDay or 0 }
+    end,
+})
 
 -- Console `hunted [now|dawn|heli]` (Telemetry, via DanTraits_ExtraCommands):
 -- `now` sets the horde on where you stand (and makes it home for the pull),
@@ -186,6 +212,10 @@ function DanTraits_HuntedReplay(player, what)
     local sprint = hasTrait(player, "huntedsprint")
     if what == "now" then
         local at = here(player)
+        if not d.htLoosed then   -- the first horde: the dawns count from tonight, as in the minute
+            pcall(function() d.htNight0 = getGameTime():getNightsSurvived() end)
+        end
+        d.htDone = nil   -- the pull runs again
         d.htHome, d.htLoosed, d.htPullUntil, d.htLastPull = at, true, (player:getHoursSurvived() or 0) + HT_PULL_H, nil
         return "hunted: " .. tostring(release(HT_GROUPS, at.x, at.y, HT_DIST, sprint)) .. (sprint and " sprinters" or " zombies")
             .. " loosed on " .. at.x .. "," .. at.y

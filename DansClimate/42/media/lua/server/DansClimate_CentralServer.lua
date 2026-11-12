@@ -31,7 +31,9 @@ local function untrack(obj)
 end
 
 local function gone(obj)
-    return obj:getObjectIndex() == -1 or not Central.kind(obj)
+    if obj:getObjectIndex() == -1 or not Central.kind(obj) then return true end
+    local sq = obj:getSquare()   -- its chunk has unloaded: off the list
+    return sq == nil or (sq.getChunk ~= nil and sq:getChunk() == nil)
 end
 
 function Central.check()
@@ -48,6 +50,11 @@ local minutes = 0
 
 -- every game minute: each HUM_MINUTES, the working central air conditioners hum
 function Central.humAll()
+    -- the working tile each minute (a handful of objects): Java decides who works on
+    -- its own minute, so a look every ten left the tile up to ten minutes behind
+    for obj in pairs(Central.loaded) do
+        if not gone(obj) then Central.syncOverlay(obj) end
+    end
     minutes = minutes + 1
     if minutes < Central.HUM_MINUTES then return end
     minutes = 0

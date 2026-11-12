@@ -40,6 +40,17 @@ DanTraits_AddHook("bloodBleed", function(rate, player, _, bandaged, open)
 end)
 
 local partIs = DanTraits_PartIs
+local num = DanTraits_PartNum
+
+-- An open wound on the part, by its clocks as well as its flags: a bandage
+-- clears the scratched, cut and deep wound flags and keeps only the times
+-- (BodyPart.setBandaged), so under a dressing the flags alone say there is no
+-- wound, and a clock the bandage ran to nothing was forgotten instead of kept:
+-- the wound then opened again at HEMO_REOPEN_TIME on every change of dressing.
+local function woundedPart(part)
+    return partIs(part, "scratched") or partIs(part, "isCut") or partIs(part, "deepWounded")
+        or num(part, "getScratchTime") > 0 or num(part, "getCutTime") > 0 or num(part, "getDeepWoundTime") > 0
+end
 
 -- The clock, held and remembered (d.hemoClock[part] = the bleeding time
 -- last seen). Uncovered and bleeding: never lower than remembered (the game
@@ -58,7 +69,7 @@ local function updateHemophiliaMinute(player, d)
     DanTraits_EachPart(player, function(part, name, i)
         local key = name ~= "" and name or tostring(i)
         local covered = partIs(part, "bandaged") or partIs(part, "IsBleedingStemmed")
-        local wounded = partIs(part, "scratched") or partIs(part, "isCut") or partIs(part, "deepWounded")
+        local wounded = woundedPart(part)
         local t = 0
         pcall(function() t = tonumber(part:getBleedingTime()) or 0 end)
         if covered then
@@ -100,4 +111,7 @@ local function updateHemophiliaMinute(player, d)
     end)
 end
 
-DanTraits_Every("minute", "Hemophilia", updateHemophiliaMinute, 21)
+-- the trait taken off (the console, another mod): the clocks go with it, so one
+-- given back later does not hold a new bleed up to a clock from weeks before
+DanTraits_Every("minute", "Hemophilia", updateHemophiliaMinute, 21, { trait = "hemophilia",
+    clear = function(player, d) d.hemoClock, d.hemoOpen, d.hemoWarned = nil, nil, nil end })

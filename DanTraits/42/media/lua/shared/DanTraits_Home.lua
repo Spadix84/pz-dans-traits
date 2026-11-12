@@ -202,6 +202,14 @@ local function onNightScored(_, player, d, quality, hours, wakes, isNap)
 end
 DanTraits_AddHook("nightScored", onNightScored)
 
+-- Vitality is off, so no night will be scored (its nightDropped hook, each awake
+-- minute): where the sleep began goes, or it would wait for the first night after
+-- Vitality is switched back on and be filed, and judged, as that night's place
+DanTraits_AddHook("nightDropped", function(_, player, d)
+    if d then d.hmNightLoc = nil end
+    return nil
+end)
+
 -- a night slept at home scores better; a Homebody's night away scores worse;
 -- a Nomad's night under the sky scores better
 DanTraits_AddHook("nightQuality", function(quality, player, d)

@@ -524,10 +524,26 @@ local CADDY_CONTENTS = {
     },
 }
 
+-- Set an item's weight in one flat (name, weight, name, weight...) list: added
+-- when it is not there, changed when it is, taken out at 0. Found by name each
+-- time, never by a remembered place: other mods add to these lists too.
 local function append(list, name, weight)
     if type(list) ~= "table" then return false end
-    table.insert(list, name)
-    table.insert(list, weight)
+    for i = #list - 1, 1, -2 do
+        if list[i] == name then
+            if weight > 0 then
+                list[i + 1] = weight
+            else
+                table.remove(list, i + 1)
+                table.remove(list, i)
+            end
+            return true
+        end
+    end
+    if weight > 0 then
+        table.insert(list, name)
+        table.insert(list, weight)
+    end
     return true
 end
 
@@ -552,9 +568,12 @@ local function lootScale(spec)
     return k
 end
 
-local function addLoot(spec)
+local function addLoot(spec, again)
     local k = lootScale(spec)
-    if k <= 0 then return end
+    if again and k == spec.applied then return false end   -- as it was merged: nothing to put right
+    local was = spec.applied
+    spec.applied = k
+    if k <= 0 and not (was and was > 0) then return again == true end   -- none wanted, none there
     local added, missing = 0, {}
     for name, weight in pairs(spec.procedural) do
         local entry = ProceduralDistributions and ProceduralDistributions.list and ProceduralDistributions.list[name]
@@ -571,6 +590,7 @@ local function addLoot(spec)
     for name, weight in pairs(spec.clutter) do
         if append(ClutterTables and ClutterTables[name], spec.name, weight * k) then added = added + 1 else missing[#missing + 1] = "ClutterTables." .. name end
     end
+    if again then return true end
     if not (isDebugEnabled and isDebugEnabled()) then return end
     print("[DanTraits] " .. spec.name .. " added to " .. added .. " loot lists" .. (#missing > 0 and ("; not found: " .. table.concat(missing, ", ")) or ""))
 end
@@ -585,4 +605,23 @@ local function addAllLoot()
     addCaddyContents()
 end
 
+-- The loot lists are merged before a continued save's sandbox options are read
+-- (IsoWorld.init: the merge events, then SandboxOptions.load, then the loot is
+-- parsed), so on Continue the options above were still the defaults. Catchable
+-- Illness defaults to off, so its six medicines stopped spawning from a save's
+-- second session on, and the Inhaler and Insulin Loot percents went back to 100.
+-- Once the save's own options are in (OnInitGlobalModData) each spec is looked at
+-- again; where its scale differs the weights are put right (added, changed or
+-- taken out) and the game parses the lists once more. With the defaults nothing
+-- differs and nothing is parsed twice.
+local function fixLoot()
+    local changed = false
+    for _, spec in ipairs(ITEMS) do
+        if spec.applied ~= nil and addLoot(spec, true) then changed = true end
+    end
+    if changed and ItemPickerJava and ItemPickerJava.Parse then ItemPickerJava.Parse() end
+    return changed
+end
+
 Events.OnPreDistributionMerge.Add(addAllLoot)
+Events.OnInitGlobalModData.Add(fixLoot)

@@ -256,13 +256,69 @@ local function stall(state)
     return true
 end
 
+-- the last action in the character's queue, nil when it is empty
+local function lastQueued(player)
+    local action
+    pcall(function()
+        local q = ISTimedActionQueue.getTimedActionQueue(player).queue
+        action = q[#q]
+    end)
+    return action
+end
+
+-- luautils.walkToContainer with the walk it queued kept as state.walk (nil when
+-- the character already stands beside the container, and for a vehicle, whose
+-- path action keeps no result). Vanilla's walk stores what the pathfinder said
+-- in its `result` and, on a path that failed, stops and wipes the queue: with
+-- the action in hand R.onTick can tell that from the player interrupting.
+local function walkTo(state, container)
+    local before = lastQueued(state.player)
+    local ok, reached = pcall(luautils.walkToContainer, container, state.playerNum)
+    local after = lastQueued(state.player)
+    state.walk = nil
+    if ok and reached and after ~= nil and after ~= before and after.Type == "ISWalkToTimedAction" then
+        state.walk = after
+    end
+    return ok, reached
+end
+
+local function walkFailed(state)
+    local walk = state.walk
+    return walk ~= nil and BehaviorResult ~= nil and walk.result == BehaviorResult.Failed
+end
+
+-- The step's walk found no path (a locked room, a floor with no stairs, a
+-- fenced-off crate). Paused like an interruption, Resume planned the same stop
+-- from the same spot and paused again, for ever, and nothing for the stops
+-- after it was ever delivered. Instead the items for that stop are given up
+-- (they stay in the bag) and the run goes on; a source that cannot be reached
+-- pauses and says so.
+local function unreachable(state)
+    state.inStep = false
+    state.walk = nil
+    local expect = state.expect or {}
+    state.expect = nil
+    local delivering = false
+    for _, e in ipairs(expect) do
+        if e.delivering then
+            delivering = true
+            giveUp(state, e.record, "lost")
+        end
+    end
+    if not delivering then
+        R.pause(state, "IGUI_BU_CantReach")
+        return
+    end
+    stall(state)
+end
+
 local function deliverStep(state, carried)
     local rows = containersFor(state)
     local stop, lost = nextStop(state, carried, rows)
     for _, r in ipairs(lost) do giveUp(state, r, "lost") end
     if not stop then return false end
     local row = rowsByKey(rows)[stop.key]
-    local ok, reached = pcall(luautils.walkToContainer, row.container, state.playerNum)
+    local ok, reached = walkTo(state, row.container)
     if not ok or not reached then
         -- cannot get there: those items stay in the bag and leave the plan
         for _, r in ipairs(stop.items) do giveUp(state, r, "lost") end
@@ -330,7 +386,7 @@ local function loadStep(state)
     state.tooHeavy = trip.skipped.tooHeavy
     if #trip.stops == 0 then return false end
     state.route = nil
-    local ok, reached = pcall(luautils.walkToContainer, src.container, state.playerNum)
+    local ok, reached = walkTo(state, src.container)
     if not ok then
         R.pause(state, "IGUI_BU_LeaveVehicle")
         return true
@@ -431,7 +487,19 @@ function R.onTick()
                 end
             else
                 local q = ISTimedActionQueue.getTimedActionQueue(state.player)
-                if q and #q.queue == 0 then R.pause(state) end
+                if q and #q.queue == 0 then
+                    -- the queue went without the marker: a walk with no path gives up
+                    -- on that stop, anything else is an interruption and pauses
+                    if walkFailed(state) then
+                        local ok, err = pcall(unreachable, state)
+                        if not ok then
+                            print("[BaseUnloader] step failed: " .. tostring(err))
+                            R.pause(state, "IGUI_BU_Stuck")
+                        end
+                    else
+                        R.pause(state)
+                    end
+                end
             end
         end
     end
@@ -484,9 +552,15 @@ function R.forget(player)
     R.active[player:getPlayerNum()] = nil
 end
 
+-- Stop means stop: the step's queued walk and transfers go too. Without this
+-- the run was "paused" while the character carried on moving the whole step
+-- (thirty transfers, on a load step). The plan is kept; Resume reconciles what
+-- is carried against it.
 function R.stop(player)
     local state = R.active[player:getPlayerNum()]
-    if state then R.pause(state) end
+    if not state then return end
+    if state.inStep then pcall(function() ISTimedActionQueue.clear(player) end) end
+    R.pause(state)
 end
 
 -- Whatever the player puts in a base container by hand marks it as used, so

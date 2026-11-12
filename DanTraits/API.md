@@ -141,6 +141,7 @@ list):
 | `pill` | nil | player, kind (this mod's medicine id: `Antibiotics`, `Painkillers`, ...) |
 | `prePill` | nil | player, kind, item (about to be taken) |
 | `nightQuality` | the night's score 0..1 | player, d, hoursSlept |
+| `nightDropped` | nil; Vitality is off and the character is up, so no night will be scored (run each awake minute): drop what you kept for `nightQuality` | player, d |
 | `foodGrade` | a food's diet grade 0..1 | player, item, why |
 | `refuseFood` | nil; return anything true-ish to refuse | player, item |
 | `infectionHazard` | a wound's infection chance | player, part |

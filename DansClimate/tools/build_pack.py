@@ -28,8 +28,11 @@ can't put it anywhere but a window.
 
 appliances_spaceheater_01 (id 2). Tiles 0-3 are the heater, facing S, E, N, W: a
 vanilla moveable (IsMoveAble, item Base.Mov_SpaceHeater), so the game's own furniture
-tools pick it up, place it and turn it. 4-7 are the same views with the elements
-glowing, and carry no properties: the mod draws them over 0-3 while it runs.
+tools pick it up, place it and turn it. Turning needs each tile to say where its other
+three facings are (Noffset, Eoffset, Soffset, Woffset: how many tiles along the sheet),
+or the game takes it for a one-sided object. It blocks its square (solidtrans), as the
+game's floor appliances do, so nobody stands inside it. 4-7 are the same views with the
+elements glowing, and carry no properties: the mod draws them over 0-3 while it runs.
 
 appliances_hvac_01 (id 3), three rows of eight. 0-3 the furnace and 8-11 the central air
 conditioner's outdoor unit, facing S, E, N, W: both block their square. 4-7 and 12-15 are
@@ -63,12 +66,20 @@ def windowac_props(facing):
     ]
 
 
+def facing_offsets(facing):
+    """Where a tile's other facings are, in tiles along the sheet: what the game's
+    furniture tools need to turn an object (ISMoveableSpriteProps.getFaces)."""
+    here = FACINGS.index(facing)
+    return [("%soffset" % f, str(i - here)) for i, f in enumerate(FACINGS) if f != facing]
+
+
 def spaceheater_props(facing):
-    return [
+    return sorted([
         ("CanScrap", ""), ("CustomItem", "Base.Mov_SpaceHeater"), ("CustomName", "Space Heater"),
         ("Facing", facing), ("IsMoveAble", ""), ("Material", "MetalScrap"), ("Material2", "Electric"),
         ("MaterialType", "Metal_Light"), ("PickUpWeight", "60"), ("ScrapSize", "Small"),
-    ]
+        ("solidtrans", ""),
+    ] + facing_offsets(facing))
 
 
 def central_props(name, facing):

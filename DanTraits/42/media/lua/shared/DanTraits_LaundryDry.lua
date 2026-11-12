@@ -434,7 +434,6 @@ function L.tendLine(obj, t, atHome)
     md = md or {}
     local last = md.dtlLast or t
     local hours = math.max(0, math.min(L.LINE_CATCHUP_H, t - last))
-    md.dtlLast = t
     local n = 0
     local outside = false
     pcall(function() outside = obj:getSquare():isOutside() end)
@@ -450,6 +449,11 @@ function L.tendLine(obj, t, atHome)
             end
         end
     end)
+    -- an empty line has no clock. The stamp used to stay from the last look, the
+    -- empty post dropped off the watch list, and the next wash hung there was
+    -- charged the whole gap at the next look: up to a day's drying (or a day's
+    -- rain) on clothes hung a minute ago
+    md.dtlLast = n > 0 and t or nil
     return n
 end
 
@@ -467,9 +471,14 @@ function L.watchLines(player, d)
     for x = px - r, px + r do
         for y = py - r, py + r do
             local sq = squareAt(x, y, pz)
+            -- only a post with a load is watched: every post walked or driven past
+            -- used to go on the saved list, and one whose square had unloaded by
+            -- the next look stayed on it for good
             if sq then postsOn(sq, function(obj)
-                L.ensureLine(obj)
-                d.lnLines[x .. "," .. y .. "," .. pz] = true
+                local c = L.ensureLine(obj)
+                local loaded = false
+                if c then pcall(function() loaded = c:getItems():size() > 0 end) end
+                if loaded then d.lnLines[x .. "," .. y .. "," .. pz] = true end
             end) end
         end
     end
@@ -481,8 +490,7 @@ function L.watchLines(player, d)
             local n = 0
             local atHome = DanTraits_RunHooks("laundryAtHome", false, player, tonumber(x), tonumber(y), tonumber(z)) == true
             postsOn(sq, function(obj) n = n + L.tendLine(obj, t, atHome) end)
-            local near = math.abs(tonumber(x) - px) <= r and math.abs(tonumber(y) - py) <= r
-            if n == 0 and not near then d.lnLines[key] = nil end
+            if n == 0 then d.lnLines[key] = nil end
         end
     end
 end

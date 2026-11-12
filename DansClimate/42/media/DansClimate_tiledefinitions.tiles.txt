@@ -105,13 +105,17 @@ tileset
         CanScrap = 
         CustomItem = Base.Mov_SpaceHeater
         CustomName = Space Heater
+        Eoffset = 1
         Facing = S
         IsMoveAble = 
         Material = MetalScrap
         Material2 = Electric
         MaterialType = Metal_Light
+        Noffset = 2
         PickUpWeight = 60
         ScrapSize = Small
+        Woffset = 3
+        solidtrans = 
     }
     // appliances_spaceheater_01_1
     tile
@@ -125,8 +129,12 @@ tileset
         Material = MetalScrap
         Material2 = Electric
         MaterialType = Metal_Light
+        Noffset = 1
         PickUpWeight = 60
         ScrapSize = Small
+        Soffset = -1
+        Woffset = 2
+        solidtrans = 
     }
     // appliances_spaceheater_01_2
     tile
@@ -135,6 +143,7 @@ tileset
         CanScrap = 
         CustomItem = Base.Mov_SpaceHeater
         CustomName = Space Heater
+        Eoffset = -1
         Facing = N
         IsMoveAble = 
         Material = MetalScrap
@@ -142,6 +151,9 @@ tileset
         MaterialType = Metal_Light
         PickUpWeight = 60
         ScrapSize = Small
+        Soffset = -2
+        Woffset = 1
+        solidtrans = 
     }
     // appliances_spaceheater_01_3
     tile
@@ -150,13 +162,17 @@ tileset
         CanScrap = 
         CustomItem = Base.Mov_SpaceHeater
         CustomName = Space Heater
+        Eoffset = -2
         Facing = W
         IsMoveAble = 
         Material = MetalScrap
         Material2 = Electric
         MaterialType = Metal_Light
+        Noffset = -1
         PickUpWeight = 60
         ScrapSize = Small
+        Soffset = -3
+        solidtrans = 
     }
     // appliances_spaceheater_01_4
     tile

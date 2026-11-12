@@ -373,6 +373,7 @@ BU.KIND_HINTS = {
 }
 
 local roomFitOf = nil      -- category -> { rooms, clash }, built on first use
+local roomFitMemo = {}   -- category -> room id -> 1 / 0 / -1
 local function hit(s, words)
     for _, w in ipairs(words) do
         if string.find(s, w, 1, true) then return true end
@@ -391,10 +392,17 @@ function BU.roomFit(category, roomId)
     end
     local g = roomFitOf[category]
     if not g then return 0 end
-    local room = string.lower(roomId)
-    if hit(room, g.rooms) then return 1 end
-    if hit(room, g.clash) then return -1 end
-    return 0
+    -- a pure function of two static lists, asked for every item against every
+    -- container: answered once per (category, room name)
+    local memo = roomFitMemo[category]
+    if not memo then memo = {}; roomFitMemo[category] = memo end
+    local fit = memo[roomId]
+    if fit == nil then
+        local room = string.lower(roomId)
+        fit = (hit(room, g.rooms) and 1) or (hit(room, g.clash) and -1) or 0
+        memo[roomId] = fit
+    end
+    return fit
 end
 
 -- does the kind of container suit the category
@@ -405,19 +413,35 @@ end
 
 -- the resolver ---------------------------------------------------------------------------------
 
-local function lowerKind(c) return string.lower(c.kind or "") end
-local function isBin(c) return BU.GARBAGE_KINDS[lowerKind(c)] == true end
-local function isLaundryKind(c) return BU.LAUNDRY_KINDS[lowerKind(c)] ~= nil end
-local function isColdKind(c) return BU.COLD_KINDS[lowerKind(c)] ~= nil end
-local function isAppliance(c)
-    local k = lowerKind(c)
-    return BU.APPLIANCE_KINDS[k] == true or hit(k, BU.APPLIANCE_WORDS)
+-- What a container's kind says about it. The resolver asks this of every
+-- container for every item it routes (a trunk of 150 items into a base of 60
+-- containers was ~300,000 string calls a trip), and the answer depends only on
+-- the kind string and the static tables above: worked out once per kind.
+local kindMemo = {}
+local function kindInfo(c)
+    local raw = c.kind or ""
+    local info = kindMemo[raw]
+    if not info then
+        local k = string.lower(raw)
+        local rank = BU.COLD_KINDS[k]
+        local freezer = rank == 1 or (not rank and string.find(k, "freezer", 1, true) ~= nil)
+        local fridge = rank == 2 or (not rank and string.find(k, "fridge", 1, true) ~= nil)
+        info = {
+            bin = BU.GARBAGE_KINDS[k] == true,
+            laundry = BU.LAUNDRY_KINDS[k] ~= nil,
+            appliance = BU.APPLIANCE_KINDS[k] == true or hit(k, BU.APPLIANCE_WORDS),
+            -- any fridge or freezer, a modded one too (its type names it)
+            cold = rank ~= nil or string.find(k, "fridge", 1, true) ~= nil or string.find(k, "freezer", 1, true) ~= nil,
+            coldRank = (freezer and 2) or (fridge and 1) or 0,   -- fresh food: a freezer, else a fridge
+        }
+        kindMemo[raw] = info
+    end
+    return info
 end
--- any fridge or freezer, a modded one too (its type names it)
-local function isCold(c)
-    local k = lowerKind(c)
-    return isColdKind(c) or string.find(k, "fridge", 1, true) ~= nil or string.find(k, "freezer", 1, true) ~= nil
-end
+local function isBin(c) return kindInfo(c).bin end
+local function isLaundryKind(c) return kindInfo(c).laundry end
+local function isAppliance(c) return kindInfo(c).appliance end
+local function isCold(c) return kindInfo(c).cold end
 
 -- does this item belong in the cold: fresh food that goes off within LONG_LIFE_DAYS
 -- (only food is ever perishable)
@@ -533,13 +557,7 @@ function BU.resolve(item, ctx)
     local holds = most(mine, heldType) or most(fits, heldType)
     if holds then return holds.key, "contains" end
     if cold then
-        local cold = most(shown, function(c)
-            local k = lowerKind(c)
-            local rank = BU.COLD_KINDS[k]   -- a modded one by its name, as isCold reads it
-            if rank == 1 or (not rank and string.find(k, "freezer", 1, true)) then return 2 end
-            if rank == 2 or (not rank and string.find(k, "fridge", 1, true)) then return 1 end
-            return 0
-        end)
+        local cold = most(shown, function(c) return kindInfo(c).coldRank end)
         if cold then return cold.key, "freezer" end
     end
     local tagged = BU.tagDestination(item, ctx.tags, open)

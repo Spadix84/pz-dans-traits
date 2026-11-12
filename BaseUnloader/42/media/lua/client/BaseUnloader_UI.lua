@@ -89,7 +89,10 @@ function BU_ItemList:doDrawItem(y, item, alt)
     local name = g.laundry and getText("IGUI_BU_Dirty", g.name) or g.name
     self:drawText(name, tx, line1, 1, 1, 1, 1, UIFont.Small)
     self:drawText(count, self.width - cw - PAD - 14, line1, 0.7, 0.7, 0.7, 1, UIFont.Small)
-    local dest, how = win:destinationLabel(g)
+    -- the destination is fill()'s (g.destName / g.destHow): working it out runs the
+    -- whole resolver over every container, far too much for every row of every frame
+    if not g.destKnown then win:noteDestination(g) end
+    local dest, how = g.destName, g.destHow
     if dest then
         local r, gg, b = 0.6, 0.85, 0.6
         if how == "oneoff" then r, gg, b = 0.6, 0.75, 0.95 end
@@ -97,10 +100,7 @@ function BU_ItemList:doDrawItem(y, item, alt)
         if how == "laundry" or how == "garbage" or how == "freezer" then r, gg, b = 0.75, 0.7, 0.95 end
         if how == "nearest" or how == "category" or how == "contains" or how == "room" or how == "kind" then r, gg, b = 0.65, 0.8, 0.8 end
         if how == "last" then r, gg, b = 0.85, 0.8, 0.5 end
-        local why = getTextOrNull("IGUI_BU_Why_" .. tostring(how))
-        local text = getText("IGUI_BU_GoesTo", dest)
-        if why then text = text .. "  (" .. why .. ")" end
-        self:drawText(text, tx, line2, r, gg, b, 1, UIFont.Small)
+        self:drawText(g.destText, tx, line2, r, gg, b, 1, UIFont.Small)
     else
         self:drawText(getText("IGUI_BU_Unassigned"), tx, line2, 0.95, 0.55, 0.5, 1, UIFont.Small)
     end
@@ -247,7 +247,8 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     local hidden = win:isHidden(row)
     local off = not row.pinned and win:isOffLimits(row)
     local shade = (row.pinned or hidden or off) and 0.7 or 1
-    drawIcon(self, containerIcon(row), PAD, y)
+    if row.icon == nil then row.icon = containerIcon(row) or false end
+    drawIcon(self, row.icon or nil, PAD, y)
     local tx = PAD + ICON + PAD
     self:drawText(row.name, tx, line1, shade, shade, shade, 1, UIFont.Small)
     local after = tx + nameW + 8
@@ -262,7 +263,10 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     end
     if hidden then self:drawText(getText("IGUI_BU_HiddenTag"), after, line1, 0.6, 0.5, 0.5, 1, UIFont.Small) end
     local n = win.ruleCounts[row.key] or 0
-    local right = row.pinned and getText("IGUI_BU_Source") or getText("IGUI_BU_Fill", BU.fmtWeight(row.used), BU.fmtWeight(row.capacity))
+    if not row.fillText then
+        row.fillText = row.pinned and getText("IGUI_BU_Source") or getText("IGUI_BU_Fill", BU.fmtWeight(row.used), BU.fmtWeight(row.capacity))
+    end
+    local right = row.fillText
     local rw = getTextManager():MeasureStringX(UIFont.Small, right)
     self:drawText(right, self.width - rw - PAD - 14, line1, 0.7, 0.7, 0.7, 1, UIFont.Small)
     -- second line: the room (outdoors, which way), the floor, how far; then the categories
@@ -271,7 +275,8 @@ function BU_ContainerList:doDrawItem(y, item, alt)
     if away then place = place .. ", " .. away end
     self:drawText(place, tx, line2, 0.6, 0.6, 0.6, 1, UIFont.Small)
     local px = tx + getTextManager():MeasureStringX(UIFont.Small, place) + 10
-    local tagText = win:tagLabel(row)
+    local tagText = row.tagText
+    if tagText == nil then tagText = win:tagLabel(row) or false; row.tagText = tagText end
     if tagText then
         self:drawText(tagText, px, line2, TAG_COLOR.r, TAG_COLOR.g, TAG_COLOR.b, 1, UIFont.Small)
     elseif not row.pinned then
@@ -529,6 +534,21 @@ function BU_Window:destinationLabel(g)
     return name, how
 end
 
+-- Where a group goes, kept on the group for the list to draw. fill() calls this
+-- for every group, and fill() runs after every edit that can change the answer
+-- (rules, tags, one-offs, hidden, off limits, a rescan).
+function BU_Window:noteDestination(g)
+    local name, how = self:destinationLabel(g)
+    g.destKnown, g.destName, g.destHow, g.destText = true, name, how, nil
+    if name then
+        local why = getTextOrNull("IGUI_BU_Why_" .. tostring(how))
+        local text = getText("IGUI_BU_GoesTo", name)
+        if why then text = text .. "  (" .. why .. ")" end
+        g.destText = text
+    end
+    return name, how
+end
+
 -- tags ---------------------------------------------------------------------------------------------------------
 
 function BU_Window:categoryLabel(cat)
@@ -612,11 +632,19 @@ function BU_Window:clearAllTags()
     return n
 end
 
+-- "12 m away": drawn for every row of every frame, so the text is kept per row
+-- for as long as the player stands on the same square
 function BU_Window:distanceLabel(row)
     local sq = S.squareOf(self.character)
     if not sq then return nil end
-    local d = BU.dist({ x = sq:getX(), y = sq:getY(), z = sq:getZ() }, row)
-    return getText("IGUI_BU_Away", math.floor(d + 0.5))
+    local x, y, z = sq:getX(), sq:getY(), sq:getZ()
+    local at = row.awayAt
+    if at and at.x == x and at.y == y and at.z == z then return row.awayText end
+    at = at or {}
+    at.x, at.y, at.z = x, y, z
+    row.awayAt = at
+    row.awayText = getText("IGUI_BU_Away", math.floor(BU.dist(at, row) + 0.5))
+    return row.awayText
 end
 
 function BU_Window:fill()
@@ -626,7 +654,7 @@ function BU_Window:fill()
     self.itemList:clear()
     self.unassigned = 0
     for _, g in ipairs(self.groups) do
-        if not self:destinationLabel(g) then self.unassigned = self.unassigned + 1 end
+        if not self:noteDestination(g) then self.unassigned = self.unassigned + 1 end
         if filter == "" or string.find(string.lower(g.name), filter, 1, true) then
             self.itemList:addItem(g.name, g)
         end
@@ -645,7 +673,9 @@ function BU_Window:fill()
         h.height = height
     end
     local function shown(row, hidden)
-        local text = string.lower(row.name .. " " .. (row.place or "") .. " " .. row.kindLabel .. " " .. (self:tagLabel(row) or ""))
+        row.tagText = self:tagLabel(row) or false   -- the list draws this; false = none
+        row.fillText = nil                          -- rebuilt on the next draw (a rescan changes the weights)
+        local text = string.lower(row.name .. " " .. (row.place or "") .. " " .. row.kindLabel .. " " .. (row.tagText or ""))
         return (row.pinned or filter == "" or string.find(text, filter, 1, true)) and (self.showHidden or not hidden)
     end
     -- the source, then zone by zone (nearest first) its tagged containers and

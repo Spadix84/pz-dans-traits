@@ -272,9 +272,6 @@ local function updateSleepMinute(player, d)
             notify(player, "UI_DanTraits_SleepClothed")
         end
         d.slAsleepMin, d.slLastFatigue, d.slClothSum, d.slClothMin = nil, nil, nil, nil
-        if (d.slNightMin or 0) > 0 and not DanTraits_SandboxOn("VitalityEnabled") then
-            d.slNightDark, d.slNightClothes, d.slNightMin = 0, 0, 0   -- no scorer to hand it to
-        end
         return
     end
     local light = lightLevel(player)
@@ -326,6 +323,15 @@ DanTraits_AddHook("nightQuality", function(quality, player, d)
     d.slNightDark, d.slNightClothes, d.slNightMin = 0, 0, 0
     return clamp01(quality + scaled(player, dark, SL_QUALITY_DARK, SL_QUALITY_BRIGHT)
         - clothesScaled(player, clothes, CL_QUALITY))
+end)
+
+-- With Vitality off nothing scores the night (its nightDropped hook, each awake
+-- minute, at order 90): the tally is dropped instead of growing for ever. Here and
+-- not in the minute above, which runs at 10: Spoons (39) reads the tally on the
+-- minute the character gets up, and used to find it already zeroed.
+DanTraits_AddHook("nightDropped", function(_, player, d)
+    if d and (d.slNightMin or 0) > 0 then d.slNightDark, d.slNightClothes, d.slNightMin = 0, 0, 0 end
+    return nil
 end)
 
 -- a fever is a bad night: a worse score, and lighter sleep (DanTraits_Fever.lua)

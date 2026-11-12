@@ -135,7 +135,16 @@ if not ISReadABook.danTraitsReadingWrapped then
         if not info then return end
         pcall(function()
             local p = self.readPlan or plan(self, info)
-            local reread = R.finished(self.character, info.key)
+            -- the plan was made when the action was queued. Queued behind another read
+            -- of the same title, the bookmark has moved since: start from where it is
+            -- now, or the same pages are read, and paid for, twice
+            local from = R.mark(self.character, self.item, info)
+            if from >= info.pages then from = 0 end
+            if from ~= p.from then
+                p.from = from
+                p.span = math.min(p.span, math.max(1, info.pages - from))
+            end
+            local reread = R.finished(self.character, (info.id or info.key))
             if not reread and info.raw then
                 local ok, yes = pcall(function() return self.character:isLiteratureRead(info.raw) end)
                 reread = ok and yes == true

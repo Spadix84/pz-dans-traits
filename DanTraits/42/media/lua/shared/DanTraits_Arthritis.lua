@@ -13,8 +13,9 @@
 -- a pill) and prednisone cuts it to a third; the stronger counts, they do
 -- not stack, and neither touches the everyday stiffness. Stiffness is not
 -- the pain stat, so painkillers also ease the ache but not the slowness.
--- Mornings are the worst: getting up from a night's sleep (Vitality's
--- nightScored hook; not a nap) adds 15 to the floor, fading over half an
+-- Mornings are the worst: getting up from a night's sleep (three hours or
+-- more, counted here from the wake itself, with the earlier half of a night
+-- slept in two; not a nap) adds 15 to the floor, fading over half an
 -- hour; a coffee or tea in that half hour halves what is left. The floor
 -- never goes past a full flare's 45.
 -- A new Arthritis character starts with a bottle of painkillers and a
@@ -29,7 +30,9 @@
 -- Mod data: artJoint (the flare as felt), artWeather (before relief),
 -- artRelief (the x applied), artSkin (the joints' mean skin temperature, 0
 -- with no reading), artStiffTarget, artMorningMin (minutes of morning
--- stiffness left), artCombatSet, artKitGiven; on the weapon,
+-- stiffness left), artSleepMin (minutes asleep in the sleep in progress),
+-- artCombatSet (the combat speed as the game holds it after the slow),
+-- artKitGiven; on the weapon,
 -- DanTraitsSlip = { min, max } while a slipped swing is weakened.
 require "DanTraits"
 
@@ -153,6 +156,25 @@ local function clearArthritis(player, d)
         end)
     end
     d.artWeather, d.artRelief, d.artJoint, d.artStiffTarget, d.artCombatSet, d.artMorningMin = nil, nil, nil, nil, nil, nil
+    d.artSleepMin = nil
+end
+
+-- getting up: the morning starts at the wake itself. (It used to start when
+-- Vitality scored the night, which is an hour after getting up, three for a
+-- Restless Sleeper, and never with Vitality off: the first coffee did nothing.)
+-- The minutes asleep are counted here; a night slept in two halves counts the
+-- hours Vitality already has for the earlier half (it adds this one after us).
+local function morningWake(player, d)
+    if DanTraits_Asleep(player) then
+        d.artSleepMin = (d.artSleepMin or 0) + 1
+        return
+    end
+    local slept = d.artSleepMin
+    if not slept then return end
+    d.artSleepMin = nil
+    local hours = slept / 60
+    if DanTraits_SandboxOn("VitalityEnabled") then hours = hours + (d.vitNightHours or 0) end
+    if hours >= DanTraits_NIGHT.napMaxHours then d.artMorningMin = ART_MORNING_MIN end
 end
 
 -- the morning: the half hour after a night's sleep is the stiffest, fading
@@ -167,6 +189,7 @@ local function morningStiffness(d)
 end
 
 local function updateArthritisMinute(player, d)
+    morningWake(player, d)
     local weather = DanTraits_RunHooks("arthritisJoint", jointFactor(player), player)   -- Age: sooner in the 40s
     local relief = reliefScale(player)
     local joint = weather * relief
@@ -186,15 +209,22 @@ local function updateArthritisMinute(player, d)
     end)
 end
 
--- per frame: the game sets combat speed when an attack starts; scale it once each time it changes
+-- per frame: the game sets combat speed when an attack starts; scale it once each time it changes.
+-- The game keeps the speed as a Java float, so what it hands back next frame is
+-- not the double that was written (0.85 comes back as 0.8500000238): remembering
+-- the double asked for never matched, and the speed was scaled again every frame.
+-- What the game holds after the write is remembered instead.
 local function updateArthritisFrame(player, d)
     if not d then return end
-    local cs = nil
-    pcall(function() cs = player:getCombatSpeed() end)
-    if not cs or cs <= 0 or cs == d.artCombatSet then return end
+    local ok, cs = pcall(player.getCombatSpeed, player)   -- the method itself: no closure a frame
+    if not ok or not cs or cs <= 0 or cs == d.artCombatSet then return end
     local slowed = cs * (1 - ART_COMBAT_SLOW - ART_COMBAT_FLARE * (d.artJoint or 0))
-    pcall(function() player:setCombatSpeed(slowed) end)
-    d.artCombatSet = slowed
+    local held = slowed
+    pcall(function()
+        player:setCombatSpeed(slowed)
+        held = player:getCombatSpeed() or slowed
+    end)
+    d.artCombatSet = held
 end
 
 -- grip ---------------------------------------------------------------------
@@ -329,12 +359,7 @@ end
 Events.OnWeaponSwing.Add(onWeaponSwing)
 Events.OnPlayerAttackFinished.Add(onAttackFinished)
 DanTraits_Every("frame", "ArthritisGrip", restoreDue, 40, { active = function() return #pending > 0 end })   -- frames only with a weapon to restore
--- getting up from a night's sleep (not a nap) starts the morning stiffness (Vitality scores the night)
-DanTraits_AddHook("nightScored", function(_, player, d, quality, hours, wakes, isNap)
-    if isNap or not d or not hasTrait(player, "arthritis") then return nil end
-    d.artMorningMin = ART_MORNING_MIN
-    return nil
-end)
+-- (the morning stiffness starts in the minute system, at the wake itself: morningWake above)
 
 -- a hot drink in that half hour loosens the joints (the drink action names the fluid, DanTraits_Diabetes.lua)
 DanTraits_AddHook("drink", function(_, player, container, litres, name)

@@ -14,6 +14,20 @@
 
 [h2]Fixed[/h2]
 [list]
+[*][b]Medicines and loot settings on a continued save.[/b] The six cold and stomach medicines stopped spawning after the first time a save was continued, and the Inhaler Loot and Insulin Loot percents went back to 100. The loot now follows the save's own settings every session. The same for Climate Control's four loot percents.
+[*][b]Vitality Appliances: keep-warm and keep-fresh really hold.[/b] Food in a running slow cooker or a lit smoker could take all its ageing at once the moment it was taken out. And food taken out and put back much later no longer comes back fresh.
+[*][b]Arthritis:[/b] the swing slow was applied again every frame; it is applied once. Morning stiffness now starts when you get up, not an hour later, so the first coffee helps.
+[*][b]Hemophilia:[/b] changing the dressing on a wound that had stopped bleeding no longer starts the bleed again.
+[*][b]Hunted:[/b] a Hunted character made after the world's third night (a new character in an old world) now gets its three dawn packs.
+[*][b]Robbed:[/b] a new Robbed character in an existing world has its house emptied too.
+[*][b]Depression:[/b] the comfort of being at home applied everywhere on the map; now only at home.
+[*][b]With Vitality switched off,[/b] where you slept and the night's light are no longer kept for weeks and judged on the first night after switching it back on.
+[*][b]Reading:[/b] finishing one issue of a magazine or comic made every other issue of that series count as read (no relief, no moodle). Each issue is its own now. Two chapters queued one after the other no longer read the same pages twice.
+[*][b]Laundry:[/b] clothes hung on a line that had stood empty could dry (or soak) a whole day in one go. Taking a poncho off, getting bloody and putting it back on no longer cleans the clothes underneath.
+[*][b]Spiffo Pup:[/b] a pup that ran away no longer costs its unhappiness again every time the console is switched on.
+[*][b]Climate Control:[/b] a furnace, central air conditioner or vent built from the build menu works at once (it used to do nothing until you left the area and came back). Loading a second save in one sitting no longer brings the first save's thermostats and ground temperature with it. A room split across a map chunk no longer heats or cools several times too fast. A unit left running is no longer switched off by driving away from it. A window unit whose window is smashed out switches off.
+[*][b]Base Unloader:[/b] Stop now stops at once; a container that cannot be walked to is skipped, where the run used to pause for ever; the window is much lighter on big bases.
+[*][b]Performance:[/b] moodles that did not change are no longer set again every game minute.
 [*][b]Dan's Vanilla Fixes: collected tapes and CDs are set Unwanted.[/b] Adding a VHS tape or a CD to the collection ticked it but left it white, and Take All still took it. Now that title greys out like anything else on the checklist, and only that title. Tapes you had ticked already are set the first time you use the checklist after updating.
 [*][b]Smoking off a stove clears the craving.[/b] With I Don't Need A Lighter, a cigarette lit off a stove, fire, barbecue or car lighter did nothing for a Smoker's craving; it now counts like any other.
 [/list]

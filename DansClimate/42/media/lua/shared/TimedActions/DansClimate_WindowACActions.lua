@@ -141,7 +141,7 @@ DansClimateToggleACAction = ISBaseTimedAction:derive("DansClimateToggleACAction"
 
 function DansClimateToggleACAction:isValid()
     if self.unit:getObjectIndex() == -1 or not AC.isUnit(self.unit) then return false end
-    return not self.on or AC.isPowered(self.unit)
+    return not self.on or (AC.isPowered(self.unit) and AC.windowOf(self.unit) ~= nil)
 end
 
 function DansClimateToggleACAction:waitToStart()

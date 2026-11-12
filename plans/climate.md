@@ -171,7 +171,9 @@ a few dozen at most, so a per-minute step costs very little.
   runs (`UnitHum`, a `PerObjectLogic` added to the unit's chunk).
 - **The space heater** is a vanilla moveable (`Base.Mov_SpaceHeater`, tiles
   `appliances_spaceheater_01_0-3`), so the furniture tools pick it up, place it and turn
-  it; it doesn't block the square. Tiles 4-7 (elements glowing) are drawn over it
+  it (each tile carries `Noffset`/`Eoffset`/`Soffset`/`Woffset`, without which the game
+  won't turn a moveable); it blocks its square (`solidtrans`). The glow is checked each
+  minute, because turning changes the sprite in place with no event. Tiles 4-7 (elements glowing) are drawn over it
   while it's switched on. While its elements are on it is also an `IsoHeatSource`
   (radius 3 at 38 °C on High, radius 2 at 34 °C on Low); the elements cut out once the
   room is half a degree over the dial. The game doesn't save heat sources or overlays,
@@ -495,8 +497,10 @@ it), the hot water bottle mattering less in a heated room, a Guide page.
   first time it loads.
 - ~~Art for the window AC and the space heater.~~ Both built: `art/windowac/`,
   `art/spaceheater/`.
-- ~~Should the heater block its square?~~ No, for now (user, 2026-11-10): it has no
-  `solidtrans` and you walk through it.
+- ~~Should the heater block its square?~~ Yes (2026-11-10, later the same day): first
+  left walkable, but in play the character stood inside it and was drawn behind it, and
+  the user said that shouldn't happen. It now has `solidtrans`, as the game's floor
+  appliances do.
 - ~~Generator draw for the building's own heating and cooling.~~ Moot since
   2026-11-10: it runs on the grid only. The player's own furnace and central air
   conditioner draw 0.40 and 0.35 L/h while working.

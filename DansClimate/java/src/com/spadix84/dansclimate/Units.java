@@ -64,7 +64,7 @@ public final class Units {
         String name = sprite == null ? null : sprite.getName();
         if (name == null || !name.startsWith(prefix)) return -1;
         try {
-            int n = Integer.parseInt(name.substring(prefix.length()));
+            int n = Integer.parseInt(name, prefix.length(), name.length(), 10);   // no substring: asked every frame for each unit in earshot
             return n >= 0 && n < count ? n : -1;
         } catch (NumberFormatException e) {
             return -1;

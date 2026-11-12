@@ -17,15 +17,26 @@ local function track(obj)
     DansClimate.Climate.track(obj:getSquare())
 end
 
+-- A unit whose chunk has just unloaded is still an object for a moment (the chunk
+-- waits in the save queue), but its square has no chunk, so no power and no room:
+-- judged then, it read as "power gone" and was switched off, and that is what was
+-- saved. It is off the list instead, as it was left.
+local function unloaded(unit)
+    local sq = unit:getSquare()
+    return sq == nil or (sq.getChunk ~= nil and sq:getChunk() == nil)
+end
+
 local function gone(unit)
-    return unit:getObjectIndex() == -1 or not AC.isUnit(unit)
+    return unit:getObjectIndex() == -1 or not AC.isUnit(unit) or unloaded(unit)
 end
 
 function AC.checkPower()
     for unit in pairs(AC.loaded) do
         if gone(unit) then
             AC.loaded[unit] = nil
-        elseif AC.isOn(unit) and not AC.isPowered(unit) then
+        -- no power, or no window any more (smashed out, the wall taken down): a unit
+        -- left running there cooled nothing and still hummed, drew fuel and called zombies
+        elseif AC.isOn(unit) and (not AC.isPowered(unit) or not AC.windowOf(unit)) then
             AC.setOn(unit, false)
         end
     end

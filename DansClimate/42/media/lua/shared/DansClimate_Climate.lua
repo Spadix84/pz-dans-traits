@@ -172,7 +172,11 @@ function C.format(celsius)
 end
 
 -- as a save loads: the thermostats and the sandbox options, to Java
+-- (Java outlives an exit to the menu: the last world's rooms, thermostats and
+-- units are cleared first)
 function C.onLoad()
+    local java = DansClimateJava
+    if java and java.reset then java.reset() end
     C.pushAll()
     C.pushConfig()
 end

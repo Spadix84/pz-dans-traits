@@ -335,7 +335,13 @@ end
 
 local function pupMinute(player, d, v)
     local now = nowHours()
+    -- The game reads the cartridge's save again on every power-on, and the save
+    -- only changes on a press: until it has the hours it shows the pup as last
+    -- saved, alive and fed, however long ago that was. So the minute the hours
+    -- are first handed over reads nothing; by the next the pup is caught up.
+    local first = v.hours == nil
     v.hours = now
+    if first then return end
     local cared = tonumber(v.cared) or 0
     if cared > (v.dtCared or 0) then
         v.dtCared = cared

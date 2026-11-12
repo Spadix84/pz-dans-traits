@@ -109,8 +109,10 @@ local function mddRelief(player, d)
     relief = relief + regular * MDD_RELIEF_EXERCISE
     local outdoors = math.min(1, d.mddOutside / MDD_OUTDOORS_FULL_MIN)
     relief = relief + outdoors * MDD_RELIEF_OUTDOORS
-    -- home is a comfort too: the floor eases by the home's strength while you are there (not a habit: it does not shorten an episode)
-    if DanTraits_HomeAtPlace and DanTraits_HomeAtPlace(player) then
+    -- home is a comfort too: the floor eases by the home's strength while you are there (not a habit: it does not shorten an episode).
+    -- Home's own flag says where you are (hmAtHome, set each minute at order 11): its place test
+    -- takes a place and a position, and asked with the player alone it said "at home" everywhere
+    if d.hmAtHome then
         relief = relief + MDD_RELIEF_HOME * DanTraits_Strength("DanTraits_HomeStrength", player) * (hasTrait(player, "homebody") and 2 or 1)
     end
     -- a pup to look after (SpiffBoy's Spiffo Pup cartridge): not a habit either
@@ -268,7 +270,15 @@ DanTraits_AddHook("sleepWake", function(m, player, d)
     return m * MDD_SLEEP_WAKE
 end)
 
-DanTraits_Every("minute", "MDD", updateMddMinute, 40)
+-- the trait gone (the console, another mod, a save without it): the episode in
+-- progress ends with it. Nothing else would end it (both clocks stop at the
+-- trait check), and a reader of the raw key would see an episode for good.
+local function clearMdd(player, d)
+    if not d or not d.mddEpisode then return end
+    d.mddEpisode, d.mddHoursLeft = false, 0
+end
+
+DanTraits_Every("minute", "MDD", updateMddMinute, 40, { trait = "spiraling", clear = clearMdd })
 DanTraits_Every("ten", "MDD", updateMddTen, 40)
 
 -- declared state machine (DanTraits_Machine in core; docs/state-machines.md)

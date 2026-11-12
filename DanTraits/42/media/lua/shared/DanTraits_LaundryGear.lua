@@ -115,6 +115,10 @@ function L.shield(player, d)
         if L.isClothing(item) and not L.isPoncho(item) then
             local s = L.state(item, false)
             local protected = s ~= nil and (s.pr or 0) > 0
+            -- uncovered: the per-part readings are no baseline any more. Kept, they
+            -- were compared again when the poncho went back on, and the blood and
+            -- dirt gained while uncovered were taken for a hit and removed
+            if not any and not protected and s and s.pb then s.pb = nil end
             if any or protected then
                 s = s or L.state(item, true)
                 local snap = L.snapshot(item)

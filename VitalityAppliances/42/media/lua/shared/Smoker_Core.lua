@@ -209,7 +209,7 @@ function Smoker.makeProduct(src, fullType, dried, make)
     local name = baseName(src)
     local from, to = src:getModData(), dst:getModData()
     for k, v in pairs(from) do
-        if k ~= "smokerAge" then to[k] = v end
+        if k ~= "smokerAge" and k ~= "smokerAt" then to[k] = v end
     end
     to.smokerName = name
     to.smokerKind = Smoker.kindOf(src)
@@ -243,17 +243,47 @@ function Smoker.smokeItem(item, hours, make)
 end
 
 -- While the fire burns: hold the age a food had when the fire caught it.
-function Smoker.keepFresh(food, burning)
+--
+-- In singleplayer the game only brings a food's age up to date when something
+-- draws it or moves it, so it is brought up to date here first. Without that the
+-- age read here never moves, and the whole time in the chamber lands on the food
+-- the moment it is taken out.
+--
+-- last, now: the smoker's previous run and this one. The mark is stamped with the
+-- run that confirmed it (smokerAt). Food taken out of a lit smoker keeps its mark,
+-- so when it comes back its stamp is not this smoker's previous run and it starts
+-- again from the age it has now. A mark with no stamp (from before stamps) is
+-- taken as this smoker's.
+function Smoker.keepFresh(food, burning, last, now)
     local md = food:getModData()
     if not burning then
         md.smokerAge = nil
+        md.smokerAt = nil
         return
     end
+    food:updateAge()
     local held = md.smokerAge
-    if held == nil then
+    local at = md.smokerAt
+    if held == nil or (at ~= nil and at ~= last) then
         md.smokerAge = food:getAge()
     elseif food:getAge() > held then
         food:setAge(held)
+        if isServer() then sendItemStats(food) end
+    end
+    md.smokerAt = now
+end
+
+-- The fire burned out partway through this run (a trip away that outlasted the
+-- fuel). The food was kept for the burning share of the time, so only the rest of
+-- its ageing since the last run stays. Only for food this smoker was holding.
+local function lastHold(food, last, share)
+    local md = food:getModData()
+    local held = md.smokerAge
+    if held == nil or (md.smokerAt ~= nil and md.smokerAt ~= last) then return end
+    food:updateAge()
+    local age = food:getAge()
+    if age > held then
+        food:setAge(held + (age - held) * (1 - share))
         if isServer() then sendItemStats(food) end
     end
 end
@@ -389,7 +419,8 @@ function Smoker.update(obj, now, make)
             elseif smoke > 0 and isServer() then
                 sendItemStats(item)
             end
-            Smoker.keepFresh(out, burning and Smoker.isLit(obj))
+            if outReason == "fuel" and elapsed > 0 then lastHold(out, last, smoke / elapsed) end
+            Smoker.keepFresh(out, burning and Smoker.isLit(obj), last, now)
         end
     end
     if burning ~= Smoker.isLit(obj) or smoke > 0 then changed(obj) end

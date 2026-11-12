@@ -29,8 +29,9 @@ local traitData = DanTraits_Data
 -- RB_READY_ORDER, before the starting kits at 40: the robbers took what you
 -- had on you, not the medication the Starting Medication option deals out
 -- after (a Type 1 diabetic still starts with insulin). The house: every
--- container in the building you wake in is emptied at the first game start
--- and kept empty for RB_GUARD_H hours (the game fills containers the first
+-- container in the building you wake in is emptied when the character is made
+-- (the ready step again, so a respawn's house is emptied too; a new game's at
+-- the first game start at the latest) and kept empty for RB_GUARD_H hours (the game fills containers the first
 -- time they are looked in, so OnFillContainer is watched too); the fridge,
 -- freezer and stove keep what is in them, the robbers were not after your
 -- dinner. The building is told by its definition's origin, not only its
@@ -97,13 +98,6 @@ local function applyRobbed(player)
     strip(player)
     notify(player, RB_NOTICE)
     return shot
-end
-
-local function onRobbedReady(player)
-    local d = robbedFresh(player)
-    if not d or d.rbApplied then return end
-    d.rbApplied = true
-    d.rbShot = applyRobbed(player)
 end
 
 -- The house. Its footprint (the building definition's rectangle) is kept in
@@ -184,25 +178,69 @@ local function ransackHouse(box)
     return n
 end
 
-local function onRobbedGameStart()
-    local player = getSpecificPlayer(0)
-    local d = robbedFresh(player)
-    if not d or d.rbHouseDone then return end
+-- The house step, once per character: the building they stand in is emptied and
+-- its footprint kept for the fill guard. It runs from the ready step, so a
+-- character made after the world is up (a respawn, a split-screen join: the game
+-- fires OnCreatePlayer for those and never OnGameStart) gets it too. A character
+-- with no building under them yet is left for the next call; `last` (game start,
+-- when everything is in place) settles it either way: outdoors, no house.
+local function robbedHouse(player, d, last)
+    if d.rbHouseDone then return end
+    local box = houseOf(player)
+    if not box and not last then return end
     d.rbHouseDone = true
-    d.rbHouse = houseOf(player)
-    ransackHouse(d.rbHouse)
+    d.rbHouse = box
+    ransackHouse(box)
+end
+
+local function onRobbedReady(player)
+    local d = robbedFresh(player)
+    if not d then return end
+    if not d.rbApplied then
+        d.rbApplied = true
+        d.rbShot = applyRobbed(player)
+    end
+    robbedHouse(player, d, false)
+end
+
+-- fn(player) for every local player (split-screen has up to four), each once
+local function eachLocal(fn)
+    local seen = {}
+    for i = 0, 3 do
+        local player = getSpecificPlayer(i)
+        if player and not seen[player] then
+            seen[player] = true
+            if fn(player) then return end
+        end
+    end
+end
+
+local function onRobbedGameStart()
+    eachLocal(function(player)
+        local d = robbedFresh(player)
+        if d then robbedHouse(player, d, true) end
+    end)
 end
 
 -- the game filled a container in the house after it was emptied: empty it again
+-- (any local player's house: the second player's is theirs to wake in too)
 local function onRobbedFillContainer(roomName, containerType, container)
     if not container or not instanceof(container, "ItemContainer") then return end   -- the game sometimes passes a loot-table entry
-    local player = getSpecificPlayer(0)
-    local d = player and hasTrait(player, "robbed") and traitData(player)
-    local box = d and d.rbHouse
-    if not box or player:getHoursSurvived() > RB_GUARD_H then return end
-    local sq = nil
-    pcall(function() sq = container:getParent():getSquare() end)
-    if houseSquare(sq, box) then ransack(container) end
+    local sq, read = nil, false
+    eachLocal(function(player)
+        local d = hasTrait(player, "robbed") and traitData(player)
+        local box = d and d.rbHouse
+        if not box or player:getHoursSurvived() > RB_GUARD_H then return false end
+        if not read then
+            read = true
+            pcall(function() sq = container:getParent():getSquare() end)
+        end
+        if houseSquare(sq, box) then
+            ransack(container)
+            return true
+        end
+        return false
+    end)
 end
 
 -- Console `robbed [house]` (Telemetry, via DanTraits_ExtraCommands): replay

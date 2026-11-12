@@ -103,15 +103,36 @@ local function lootScale(option)
     return math.max(0, pct) / 100
 end
 
+-- Set an item's weight in one flat (name, weight, name, weight...) list: added
+-- when it is not there, changed when it is, taken out at 0. Found by name each
+-- time, never by a remembered place: other mods add to these lists too.
+local function setWeight(items, name, weight)
+    for i = #items - 1, 1, -2 do
+        if items[i] == name then
+            if weight > 0 then
+                items[i + 1] = weight
+            else
+                table.remove(items, i + 1)
+                table.remove(items, i)
+            end
+            return
+        end
+    end
+    if weight > 0 then
+        table.insert(items, name)
+        table.insert(items, weight)
+    end
+end
+
 local function addItem(entry)
     local k = lootScale(entry.option)
+    entry.applied = k
     if k <= 0 then return end
     local added, missing = 0, {}
     for name, weight in pairs(entry.places) do
         local list = ProceduralDistributions and ProceduralDistributions.list and ProceduralDistributions.list[name]
         if list and type(list.items) == "table" then
-            table.insert(list.items, entry.item)
-            table.insert(list.items, weight * k)
+            setWeight(list.items, entry.item, weight * k)
             added = added + 1
         else
             missing[#missing + 1] = name
@@ -126,4 +147,29 @@ local function addLoot()
     for _, entry in ipairs(LOOT) do addItem(entry) end
 end
 
+-- The loot lists are merged before a continued save's sandbox options are read
+-- (IsoWorld.init: the merge events, then SandboxOptions.load, then the loot is
+-- parsed), so on Continue the percents above were still the defaults: a save set
+-- to 0 or 500 got 100 from its second session on. Once the save's own options
+-- are in (OnInitGlobalModData) the percents are read again; where one differs
+-- the weights are put right and the game parses the lists once more. With the
+-- defaults nothing differs and nothing is parsed twice.
+local function fixLoot()
+    local changed = false
+    for _, entry in ipairs(LOOT) do
+        local k = lootScale(entry.option)
+        if entry.applied ~= nil and k ~= entry.applied then
+            entry.applied = k
+            changed = true
+            for name, weight in pairs(entry.places) do
+                local list = ProceduralDistributions and ProceduralDistributions.list and ProceduralDistributions.list[name]
+                if list and type(list.items) == "table" then setWeight(list.items, entry.item, weight * k) end
+            end
+        end
+    end
+    if changed and ItemPickerJava and ItemPickerJava.Parse then ItemPickerJava.Parse() end
+    return changed
+end
+
 Events.OnPreDistributionMerge.Add(addLoot)
+Events.OnInitGlobalModData.Add(fixLoot)

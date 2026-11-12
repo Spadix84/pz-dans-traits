@@ -429,7 +429,9 @@ local function eachPieceSquare(piece, floors, seen, fn)
     for z = piece.z - floors, piece.z + floors do
         for y = piece.y1, piece.y2 do
             for x = piece.x1, piece.x2 do
-                local at = x .. "," .. y .. "," .. z
+                -- one number per square (a zone is at most 60 x 60 on 7 floors: a
+                -- string key here was three concatenations for each of up to 25,000 squares)
+                local at = (z + 32) * 4294967296 + x * 65536 + y
                 if not seen[at] then
                     seen[at] = true
                     local sq = cell:getGridSquare(x, y, z)
@@ -515,6 +517,7 @@ local function stockOfContainer(inv, depth, key, name, out)
 end
 
 -- everything on a square: in its containers, and lying on the floor
+local floorLabel = nil   -- "On the floor", fetched once
 function S.stockOnSquare(sq, out)
     local objs = sq:getObjects()
     for i = 0, objs:size() - 1 do
@@ -534,7 +537,9 @@ function S.stockOnSquare(sq, out)
     end
     pcall(function()
         local floor = sq:getWorldObjects()
-        local label = getText("IGUI_BU_OnFloor")
+        if floor:size() == 0 then return end   -- nearly every square: no label to fetch
+        floorLabel = floorLabel or getText("IGUI_BU_OnFloor")
+        local label = floorLabel
         for i = 0, floor:size() - 1 do
             local it = floor:get(i):getItem()
             if it then

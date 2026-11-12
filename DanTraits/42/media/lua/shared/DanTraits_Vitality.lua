@@ -311,6 +311,12 @@ local function updateVitalityMinute(player, d)
             d.vitSleepDebt, d.vitNightHours, d.vitNightWakes, d.vitNightFatigue, d.vitNightBedFatigue = nil, nil, nil, nil, nil
             d.vitAsleep, d.vitSleepStart, d.vitAwakeMin = nil, nil, nil
         end
+        -- Nothing scores a night while this is off, so what the other systems kept for
+        -- the scorer (where the sleep began, a seizure or a low in the night, the
+        -- light's tally) is theirs to drop: told once the character is up, every
+        -- awake minute, or the first night after switching back on would be judged
+        -- by flags from weeks ago. Each owner clears its own keys.
+        if d and not DanTraits_Asleep(player) then DanTraits_RunHooks("nightDropped", nil, player, d) end
         updateMoodle(player, 0.5)
         updateDebtMoodle(player, 0)
         return
@@ -373,11 +379,15 @@ local function updateVitalityMinute(player, d)
                 d.vitSleepDebt = (d.vitSleepDebt or 0) * (1 - 0.5 * math.min(1, d.vitNightHours / VIT_DEBT_NAP_HOURS))
             else
                 d.vitSleepDebt = 1 - quality
-                local tier = DanTraits_TierOf(d.vitSleepDebt, VIT_DEBT_TIER)
-                if tier > 0 then notify(player, "UI_DanTraits_SleptBadly" .. tier) end
             end
             -- the scored night, for anything that refills on it (the spoon budget, DanTraits_Spoons.lua)
             DanTraits_RunHooks("nightScored", nil, player, d, quality, d.vitNightHours, wakes, isNap)
+            -- the notice after the hook: a subscriber may still change the debt (the 50s'
+            -- slow morning makes it heavier), and the notice names the tier the moodle shows
+            if not isNap then
+                local tier = DanTraits_TierOf(d.vitSleepDebt, VIT_DEBT_TIER)
+                if tier > 0 then notify(player, "UI_DanTraits_SleptBadly" .. tier) end
+            end
             d.vitNightHours, d.vitNightWakes, d.vitNightFatigue, d.vitNightBedFatigue = 0, 0, nil, nil
         end
         if d.vitAwakeMin > VIT_AWAKE_TIRED_HOURS * 60 then d.vitSleep = clamp01(d.vitSleep - VIT_AWAKE_RATE) end

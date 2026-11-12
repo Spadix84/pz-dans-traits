@@ -19,6 +19,17 @@ public class Api {
         return GameBridge.enabled;
     }
 
+    /**
+     * A world is loading: forget the last one. The JVM outlives an exit to the main
+     * menu (Lua does not), so without this the next save met the last save's
+     * thermostats, its ground temperature, its rooms and units, and a model an error
+     * had switched off stayed off until the game was restarted. Lua calls it first as
+     * a save loads, then sends that save's thermostats.
+     */
+    public static void reset() {
+        GameBridge.reset();
+    }
+
     /** One game minute: Lua's EveryOneMinute calls it, so it pauses and speeds up with the game. */
     public static void tick() {
         if (!GameBridge.enabled) return;

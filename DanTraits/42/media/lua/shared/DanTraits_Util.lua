@@ -551,20 +551,38 @@ end
 
 -- Moodle Framework is client side and optional; without it the trait still
 -- works, you just do not get the icon.
+-- Both updaters are called every minute for every moodle, and Moodle
+-- Framework's setValue is not cheap when nothing changes (it works the level
+-- out nine times over, each time turning the character into a string to find
+-- its data). So what was last set is remembered on the moodle object itself
+-- (a new character's moodle is a new object and starts unset), and a call
+-- that would set the same thresholds and value again does nothing, as long
+-- as the framework still holds that value: if another mod wiped its data the
+-- value there reads 0.5 again and the moodle is set afresh.
 function DanTraits_BadMoodle(player, name, value01, tiers)
     if not MF or not MF.getMoodle then return end
     pcall(function()
         local moodle = MF.getMoodle(name, player:getPlayerNum())
         if not moodle then return end
+        local b4, b3, b2, b1
         local th = tiers.thresholds
         if th then
-            moodle:setThresholds(th[1], th[2], th[3], th[4])
+            b4, b3, b2, b1 = th[1], th[2], th[3], th[4]
         elseif #tiers >= 4 then
-            moodle:setThresholds(0.5 * (1 - tiers[4]), 0.5 * (1 - tiers[3]), 0.5 * (1 - tiers[2]), 0.5 * (1 - tiers[1]))
+            b4, b3, b2, b1 = 0.5 * (1 - tiers[4]), 0.5 * (1 - tiers[3]), 0.5 * (1 - tiers[2]), 0.5 * (1 - tiers[1])
         else
-            moodle:setThresholds(nil, 0.5 * (1 - tiers[3]), 0.5 * (1 - tiers[2]), 0.5 * (1 - tiers[1]))
+            b4, b3, b2, b1 = nil, 0.5 * (1 - tiers[3]), 0.5 * (1 - tiers[2]), 0.5 * (1 - tiers[1])
         end
-        moodle:setValue(0.5 * (1 - value01))
+        local value = 0.5 * (1 - value01)
+        if moodle.danTraitsValue == value and moodle.danTraitsB4 == b4 and moodle.danTraitsB3 == b3
+            and moodle.danTraitsB2 == b2 and moodle.danTraitsB1 == b1
+            and moodle.getValue and moodle:getValue() == value then
+            return
+        end
+        moodle:setThresholds(b4, b3, b2, b1)
+        moodle:setValue(value)
+        moodle.danTraitsValue, moodle.danTraitsLevel = value, nil
+        moodle.danTraitsB4, moodle.danTraitsB3, moodle.danTraitsB2, moodle.danTraitsB1 = b4, b3, b2, b1
     end)
 end
 
@@ -576,14 +594,17 @@ function DanTraits_LevelMoodle(player, name, level)
     pcall(function()
         local moodle = MF.getMoodle(name, player:getPlayerNum())
         if not moodle then return end
-        moodle:setThresholds(0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9)
+        local value = 0.5
         if level > 0 then
-            moodle:setValue(0.45 - 0.1 * level)
+            value = 0.45 - 0.1 * level
         elseif level < 0 then
-            moodle:setValue(0.55 - 0.1 * level)
-        else
-            moodle:setValue(0.5)
+            value = 0.55 - 0.1 * level
         end
+        -- the level it already shows (see above): nothing to set
+        if moodle.danTraitsLevel == level and moodle.getValue and moodle:getValue() == value then return end
+        moodle:setThresholds(0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9)
+        moodle:setValue(value)
+        moodle.danTraitsLevel, moodle.danTraitsValue = level, nil
     end)
 end
 

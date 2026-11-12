@@ -112,6 +112,8 @@ def main():
         if e is None:
             continue
         check("NeedToBeLearn = true," in e, "%s has to be learned" % recipe)
+        # the game fires no OnObjectAdded for a built entity: without this a new unit is not tracked
+        check("OnCreate = DansClimate.Central.onBuilt," in e, "%s is tracked when built (OnCreate)" % recipe)
         check("SkillRequired = %s," % skills in e, "%s needs %s" % (recipe, skills))
         named = re.findall(r"row\s*=\s*(\w+)\s*,", e)
         rows = set(named)
@@ -141,6 +143,25 @@ def main():
         check(recipe in text, "%s is named in Recipes.json" % recipe)
         tip = re.search(r"Tooltip\s*=\s*(\w+)\s*,", e)
         check(tip is not None and tip.group(1) in text, "%s has its build-menu tooltip" % recipe)
+    # -- the space heater's tiles: the furniture tools can turn it, and it blocks ---------
+    # A moveable turns only if each tile says where its other facings are
+    # (ISMoveableSpriteProps.getFaces: sheet name + (own index + <F>offset)).
+    heater = "appliances_spaceheater_01_"
+    faces = {}
+    for n in range(4):
+        m = re.search(r"// %s%d\n\s*tile\s*\{(.*?)\}" % (heater, n), tiledefs, re.S)
+        props = {k: v.strip() for k, v in re.findall(r"^\s*(\w+) = ?(.*)$", m.group(1), re.M)} if m else {}
+        faces[n] = props
+        check("IsMoveAble" in props and props.get("CustomItem") == "Base.Mov_SpaceHeater",
+              "%s%d is the space heater's moveable" % (heater, n))
+        check("solidtrans" in props, "%s%d blocks its square" % (heater, n))
+    for n, props in faces.items():
+        for other, theirs in faces.items():
+            if other == n or "Facing" not in theirs:
+                continue
+            key = "%soffset" % theirs["Facing"]
+            check(props.get(key) == str(other - n),
+                  "%s%d finds its %s facing at tile %d (%s = %s)" % (heater, n, theirs["Facing"], other, key, props.get(key)))
     check('HVAC_TILES = "%s"' % TILES in java, "Units.java looks for the same tiles")
     check('Central.TILESET = "%s"' % TILES.rstrip("_") in central, "and so does DansClimate_Central.lua")
 

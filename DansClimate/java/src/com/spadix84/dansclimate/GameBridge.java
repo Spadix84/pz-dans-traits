@@ -98,6 +98,18 @@ public final class GameBridge {
      */
     static boolean grid;
 
+    /** Everything the last world left behind (Api.reset). */
+    static synchronized void reset() {
+        zones.clear();
+        buildings.clear();
+        thermostats.clear();
+        Units.condensers.clear();
+        Units.running.clear();
+        envReady = false;
+        minute = 0;
+        enabled = true;
+    }
+
     // -- the hot path -----------------------------------------------------------------
 
     /** The zone for an indoor square, made on first sight; null outdoors or in a player-built room. */
@@ -231,6 +243,11 @@ public final class GameBridge {
     static void refresh(Zone z, Building bld) {
         Room r = (Room) z.handle;
         IsoRoom room = r.room;
+        // the floor as it is loaded now: a room across a chunk edge was registered with
+        // only the squares of the first chunk in, and everything scaled by floor area
+        // (a heater, a window AC, the sun, its share of the furnace) was several times
+        // too strong until the room was dropped and met again
+        z.area = Math.max(1, room.getSquares().size());
         z.thermostat = thermostats.getOrDefault(bld.key, Thermostat.DEFAULT);
         z.ventWindows = z.ventDoors = z.sunWindows = 0;
         z.fires = 0;

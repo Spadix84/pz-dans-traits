@@ -26,6 +26,52 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
 
 ### Fixed
 
+- **Loot that depends on a sandbox option follows a continued save's own settings.** The game
+  merges the loot lists before it reads a continued save's sandbox options (`IsoWorld.init`: the
+  merge events, `SandboxOptions.load`, then `ItemPickerJava.Parse`), so
+  `DanTraits_Distributions.lua` and `DansClimate_Distributions.lua` saw the defaults from a
+  save's second session on: Catchable Illness (default off) dropped its six medicines, and
+  Inhaler Loot, Insulin Loot and Climate Control's four percents read 100. Both files now look
+  again at `OnInitGlobalModData`, put the weights right by name (added, changed or taken out)
+  and call `ItemPickerJava.Parse()` once, only when something differs.
+- **Vitality Appliances: the held age.** Food age is lazy in singleplayer, so keep-warm and
+  keep-fresh call `updateAge()` before they read it; the mark is stamped with the appliance's
+  run (`slowCookerAt`, `smokerAt`), so food taken out and put back later is re-marked, not
+  rolled back; a smoker whose fuel ran out mid catch-up holds for the share it burned.
+- **Arthritis:** the combat-speed slow compared a Lua double with the Java float the game hands
+  back and never matched, so it was applied every frame; what the game holds is remembered.
+  Morning stiffness starts in the minute pass at the wake itself (`artSleepMin`), not at
+  `nightScored`.
+- **Hemophilia:** `wounded` is read from the wound clocks as well as the flags (a bandage
+  clears the flags), so a clock a bandage ran to nothing is kept and a change of dressing does
+  not reopen it. Registered with the trait and a clear.
+- **Hunted:** dawn packs are counted from the world night the horde was loosed (`htNight0`); a
+  `htDone` latch ends the minute pass; machine `hunted` declared.
+- **Robbed:** the house step runs from the ready step for any local player, so a respawn gets it.
+- **MDD:** the at-home relief reads Home's own flag (`hmAtHome`); the place test was called with
+  the wrong arguments and was always true. Registered with the trait and a clear.
+- **A new hook, `nightDropped`:** Vitality runs it each awake minute while it is switched off;
+  Home and Sleep drop the night keys only a scored night used to clear. Sleep no longer zeroes
+  its tally before Spoons reads it on the wake minute. The Slept Badly notice is picked after
+  `nightScored`, so it names the tier the moodle shows.
+- **Reading:** `R.info` carries `id` (the title with its issue numbers) beside `key` (the table
+  row); `read`, `marks` and the sitting go by `id`. Old records of magazines and comics, kept
+  under the series key, are simply not matched again. The read plan is re-anchored to the
+  bookmark when the action starts.
+- **Laundry:** an empty line has no clock (`dtlLast` cleared), and only posts with a load go on
+  the watch list; the poncho's per-part baseline is dropped while uncovered; the clothesline
+  action picks its materials once.
+- **Spiffo Pup:** the first minute of a power-on is not read (the game still shows the saved pup).
+- **Climate Control:** the three build entities name `OnCreate = DansClimate.Central.onBuilt`
+  (a built entity fires no `OnObjectAdded`); `Api.reset()` clears Java's statics as a save
+  loads; a zone's area is re-read at each refresh; a unit whose square has no chunk is dropped
+  from the lists untouched; a window unit with no window is switched off; the furnace's working
+  tile is looked at each minute; `Units.tile` parses without a substring.
+- **Base Unloader:** the item list draws a destination worked out in `fill()`, not by running
+  the resolver per row per frame; container kind and room fit are memoised; `R.stop` clears the
+  queue; a walk whose path failed gives up that stop.
+- **Moodles:** `DanTraits_LevelMoodle` and `DanTraits_BadMoodle` return early when the moodle
+  already shows that level.
 - **Dan's Vanilla Fixes: a collected tape or CD is set Unwanted.** The checklist left tapes
   alone on the belief that Unwanted goes by item type and would grey every tape. It does
   not: `InventoryItem.isUnwanted(player)` asks the player about the media id for recorded
@@ -131,6 +177,28 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   natural` and `temp <C> | natural` hold the same admin climate values the game's admin panel
   sets. Telemetry now carries `world` (skills by category, clock, speed, weather and any
   overrides held), `traitKeys`, and body temperature in `stats`.
+
+## Dan's Storage 0.1.0 - unreleased (separate mod)
+
+- **A new mod, `DansStorage/` (id `DansStorage`): shelves made for one thing.** Each is
+  plain galvanised steel, two tiles long, welded from the build menu under Furniture
+  (Metalworking 3, a welding mask, no book), facing any of the four ways, and the
+  furniture tools pick it up and put it down like the game's two-tile shelves. Each tile
+  is its own container that takes only the shelf's items, and shows how full it is: bare,
+  half while it holds some, full only when every place is taken (the game's own container
+  overlays would say full from 7 items, so the mod sets the look itself after every
+  transfer and once a game minute).
+  - **Water Jug Rack:** water dispenser jugs (`Base.WaterDispenserBottle`), full or empty,
+    lying on their sides, nine a tile.
+  - **Gas Can Shelf:** petrol cans (`Base.PetrolCan`) and jerry cans (`Base.JerryCan`),
+    standing on three sheet decks, nine a tile.
+  - **Propane Shelf:** propane tanks (`Base.PropaneTank`), standing on two decks, six a
+    tile.
+  Tiles `storage_waterjugrack_01`, `storage_gascanshelf_01`, `storage_propaneshelf_01`
+  (ids 1-3) in tile definitions file 6744; art in `art/storage/` (Blender, shared frame in
+  `shelf_common.py`), packed by `DansStorage/tools/build_pack.py`. Test
+  `tests/test_storageshelves.lua`; the lint and the API checks cover the mod;
+  `deploy.py --mod DansStorage`.
 
 ## Vitality Appliances 1.0.0 - unreleased (separate mod)
 

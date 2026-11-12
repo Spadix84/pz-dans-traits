@@ -35,7 +35,22 @@ local function L() return DanTraits_Laundry end
 function ISLaundryAction:isValid()
     local inv = self.character:getInventory()
     if self.kind == "putup" then
-        return L().lineMaterials(self.character) ~= nil and L().lineSquares(self.source, self.dir) ~= nil
+        -- asked every frame of the action: the four pieces are found once (a walk of
+        -- everything carried, bags included) and after that only checked to be there
+        local mats = self.mats
+        if mats then
+            for _, list in ipairs({ mats.posts, mats.ties }) do
+                for _, item in ipairs(list) do
+                    if not inv:containsRecursive(item) then mats = nil break end
+                end
+                if not mats then break end
+            end
+        end
+        if not mats then
+            mats = L().lineMaterials(self.character)
+            self.mats = mats
+        end
+        return mats ~= nil and L().lineSquares(self.source, self.dir) ~= nil
     elseif self.kind == "takedown" then
         local there = false
         pcall(function() there = self.source:getSquare() ~= nil end)

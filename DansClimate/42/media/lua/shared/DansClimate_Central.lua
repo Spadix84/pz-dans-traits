@@ -168,7 +168,21 @@ function Central.setOn(obj, on)
     data(obj, true).on = on and true or false
     if isServer() then obj:transmitModData() end
     changed(obj)
-    Central.syncOverlay(obj)
+    if on then
+        Central.syncOverlay(obj)
+    elseif obj:getOverlaySprite() then
+        obj:setOverlaySprite(nil, isServer())   -- switched off: the working tile goes now, not when Java next looks
+    end
+end
+
+-- A unit built from the build menu. The game puts a built entity on its square
+-- without firing OnObjectAdded (only a multiplayer client's copy gets that), so
+-- nothing tracked it: a new central air conditioner cooled nothing, and a new
+-- furnace had no working tile, until its chunk was unloaded and loaded again.
+-- Each of the three entities names this as its OnCreate.
+function Central.onBuilt(params)
+    local obj = params and params.thumpable
+    if obj then triggerEvent("OnObjectAdded", obj) end
 end
 
 -- Take a unit or a vent out. A furnace or a central air conditioner comes back as the

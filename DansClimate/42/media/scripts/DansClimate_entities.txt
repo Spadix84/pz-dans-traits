@@ -18,6 +18,7 @@ module Base
         }
         component SpriteConfig
         {
+            OnCreate = DansClimate.Central.onBuilt,
             health = 300,
             skillBaseHealth = 50,
             face S
@@ -83,6 +84,7 @@ module Base
         }
         component SpriteConfig
         {
+            OnCreate = DansClimate.Central.onBuilt,
             health = 300,
             skillBaseHealth = 50,
             face S
@@ -149,6 +151,7 @@ module Base
         }
         component SpriteConfig
         {
+            OnCreate = DansClimate.Central.onBuilt,
             health = 100,
             skillBaseHealth = 20,
             face S

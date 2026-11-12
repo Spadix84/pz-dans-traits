@@ -65,6 +65,7 @@ as they are next touched.
 | `gout.flare` | Gout | calm, flare | gtFlareMin | trait gout |
 | `hangover` | Hangover | none, drinking, pending, hungover | hoDrinking, hoPending, hoActive | HangoverEnabled |
 | `heart` | Heart | calm, angina, weakened | hcAnginaMin, hcWeakH | none (the weak week is for anyone) |
+| `hunted` | Hunted | none, waiting, calling, dawns, done | htHome, htLoosed, htPullUntil, htDawnDay, htDone (htNight0, htTries in info) | trait hunted or huntedsprint; not in multiplayer |
 | `illness` | Illness | well, incubating, sick | ill[id] {inc} / {t,...} | IllnessEnabled |
 | `infection` | Infection | none, contaminated, local, fever, sepsis | infStage | InfectionEnabled |
 | `lactose.flare` | Lactose | none, onset, flare | lacOnset, lacPending, lacFlare | trait lactose |
@@ -91,7 +92,7 @@ for item, object and Lua-only state).
   - Item and object state: Laundry per garment (item `DTL`), the washer and dryer watch,
     the Hot Water Bottle (item `dtHwb*`).
   - SleepMenu's undress record, Bathing's mode (Lua-only).
-- **Creation one-shots:** Hunted, Swarmed, Robbed, Wounded and Bad Day's `*Done`/`*Applied` flags.
+- **Creation one-shots:** Swarmed, Robbed, Wounded and Bad Day's `*Done`/`*Applied` flags.
 - **Core:** the ready sequence (idempotent by design), the trait-gate latch `entry.had`, the
   frame-set stamp, the `DanTraits_Later` queue, the guard-failure latch.
 - **Sibling mods:**

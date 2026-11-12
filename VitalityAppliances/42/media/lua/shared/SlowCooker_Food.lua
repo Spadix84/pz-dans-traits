@@ -55,7 +55,7 @@ function SlowCooker.copyFood(src, dst)
     try(function() if src:getSpices() then dst:setSpices(src:getSpices()) end end)
     local from, to = src:getModData(), dst:getModData()
     for k, v in pairs(from) do
-        if k ~= "slowCookerAge" then to[k] = v end
+        if k ~= "slowCookerAge" and k ~= "slowCookerAt" then to[k] = v end
     end
     to.slowCookerHome = true      -- it came out of the crock: home cooking (read by Vitality)
 end

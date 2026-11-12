@@ -167,16 +167,17 @@ function R.parseKey(raw)
         local prefix, kind = p[1], p[2]
         if raw:sub(1, #prefix) == prefix then
             local key = raw:sub(#prefix + 1)
+            local whole = key   -- the title itself, issue number and all (R.info's id)
             local t = tableFor(kind)
             local tries = 0
             while key ~= "" and tries < 4 do
-                if t[key] then return kind, key end
+                if t[key] then return kind, key, whole end
                 local shorter = key:match("^(.-)_?%d+$")
                 if not shorter or shorter == key then break end
                 key = shorter
                 tries = tries + 1
             end
-            return kind, key
+            return kind, key, whole
         end
     end
     return nil, raw
@@ -244,10 +245,16 @@ end
 function R.info(item)
     if not R.handles(item) then return nil end
     local raw = R.rawTitle(item)
-    local kind, key = R.parseKey(raw)
+    local kind, key, whole = R.parseKey(raw)
     local row = kind and R.lookup(kind, key)
     local medium = R.medium(item, kind)
     local info = { raw = raw, kind = kind, key = key or raw or item:getFullType(), medium = medium, known = row ~= nil }
+    -- key finds the table row, and a magazine's or a comic's has its month or issue
+    -- number taken off to find it: every issue of a series shares one row. id is
+    -- which title this is, numbers kept, and is what "read", the bookmark and the
+    -- sitting go by. They went by key, so one issue finished made every other issue
+    -- of the series a re-read worth nothing. A book has no numbers: id is its key.
+    info.id = whole or info.key
     if row then
         info.family, info.pages, info.quality = row.family, row.pages, row.quality
         info.real = kind == "real" and D.real[key] or nil
@@ -418,7 +425,7 @@ end
 -- the same title put down less than GRACE minutes ago, else 0
 function R.sittingStart(player, info)
     local s = R.data(player).sitting
-    if not s or s.key ~= info.key then return 0 end
+    if not s or s.key ~= (info.id or info.key) then return 0 end
     local ago = (now() - (tonumber(s.at) or 0)) * 60
     if ago < 0 or ago > R.IMMERSION_GRACE_MIN then return 0 end
     return tonumber(s.minutes) or 0
@@ -427,7 +434,7 @@ end
 -- pages turned: where the sitting stands now (not transmitted; the client
 -- that reads is the one that resumes)
 function R.sittingNote(player, info, minutes)
-    R.data(player).sitting = { key = info.key, minutes = minutes, at = now() }
+    R.data(player).sitting = { key = (info.id or info.key), minutes = minutes, at = now() }
 end
 
 -- n pages read: the relief, applied at once; minutes is how far into the
@@ -478,14 +485,14 @@ end
 -- whichever is further, never past the end
 function R.mark(player, item, info)
     local d = R.data(player)
-    local mine = tonumber(d.marks[info.key]) or 0
+    local mine = tonumber(d.marks[info.id or info.key]) or 0
     local pages = math.max(mine, itemMark(item))
     return math.max(0, math.min(info.pages, math.floor(pages)))
 end
 
 function R.setMark(player, item, info, pages)
     pages = math.max(0, math.min(info.pages, math.floor(pages)))
-    R.data(player).marks[info.key] = pages > 0 and pages or nil
+    R.data(player).marks[info.id or info.key] = pages > 0 and pages or nil
     pcall(function() item:getModData()[R.ITEM_KEY] = pages > 0 and pages or nil end)
 end
 
@@ -532,10 +539,10 @@ function R.finish(player, info, reread)
     local d = R.data(player)
     local level = reread and 0 or R.moodleLevel(player, info)
     -- a re-read keeps the verdict the first reading gave (recomputed at level 0 it turned "loved" into "great")
-    local prior = reread and d.read[info.key]
+    local prior = reread and d.read[info.id or info.key]
     local verdict = (prior and prior.verdict) or R.verdictFor(info, level)
-    d.read[info.key] = { q = info.quality, family = info.family, when = now(), verdict = verdict, title = R.titleText(info) }
-    d.marks[info.key] = nil
+    d.read[info.id or info.key] = { q = info.quality, family = info.family, when = now(), verdict = verdict, title = R.titleText(info) }
+    d.marks[info.id or info.key] = nil
     local result = { level = level, hours = 0, verdict = verdict, reread = reread }
     if level > 0 then
         local hours = R.moodleHours(info, level)
@@ -559,7 +566,7 @@ function R.finish(player, info, reread)
 end
 
 function R.verdict(player, info)
-    local r = R.data(player).read[info.key]
+    local r = R.data(player).read[info.id or info.key]
     return r and r.verdict or nil
 end
 
