@@ -1,0 +1,93 @@
+module Base
+{
+    /* Built by art/weapons/hockeycleaver (the model is written straight to the
+       game's .X format, in the game's weapon space: +Y away from the hand, the
+       cleaver's edge towards -Z, as the fire axe's is). The hand attachment is
+       the fire axe's; the ground one is the fire axe's turn with the ice hockey
+       stick's offset. Neither has been settled in the attachment editor yet. */
+    model HockeyStickCleaver
+    {
+        mesh = weapons/2handed/HockeyStickCleaver,
+        texture = weapons/2handed/HockeyStickCleaver,
+        attachment world
+        {
+            offset = 0.0 0.3 0.0,
+            rotate = 180.0 -21.0 180.0,
+        }
+        attachment Bip01_Prop2
+        {
+            offset = 0.0 0.0 0.0,
+            rotate = 180.0 -86.0322 180.0,
+        }
+    }
+
+    /* art/weapons/glaive. The knife's edge is towards -Z, so the hockey stick
+       cleaver's attachments (which were right in game) are used as they are. */
+    model BreadKnifeGlaive
+    {
+        mesh = weapons/2handed/BreadKnifeGlaive,
+        texture = weapons/2handed/BreadKnifeGlaive,
+        attachment world
+        {
+            offset = 0.0 0.3 0.0,
+            rotate = 180.0 -21.0 180.0,
+        }
+        attachment Bip01_Prop2
+        {
+            offset = 0.0 0.0 0.0,
+            rotate = 180.0 -86.0322 180.0,
+        }
+    }
+
+    /* art/weapons/cutlerymace. The same all the way round: the rolling pin's
+       hand attachment. */
+    model CutleryMace
+    {
+        mesh = weapons/1handed/CutleryMace,
+        texture = weapons/1handed/CutleryMace,
+        attachment world
+        {
+            offset = 0.0 0.15 0.0,
+            rotate = 0.0 0.0 0.0,
+        }
+        attachment Bip01_Prop2
+        {
+            offset = -0.0073 -0.0017 0.0004,
+            rotate = 0.0 -86.9102 0.0,
+        }
+    }
+
+    /* art/weapons/sock: two models, one texture. The sock sags towards -Z,
+       the way a blade's edge faces; the rolling pin's hand attachment. */
+    model LockInASock
+    {
+        mesh = weapons/1handed/LockInASock,
+        texture = weapons/1handed/LockInASock,
+        attachment world
+        {
+            offset = 0.0 0.14 0.0,
+            rotate = 0.0 0.0 0.0,
+        }
+        attachment Bip01_Prop2
+        {
+            offset = -0.0073 -0.0017 0.0004,
+            rotate = 0.0 -86.9102 0.0,
+        }
+    }
+
+    model SockFlail
+    {
+        mesh = weapons/1handed/SockFlail,
+        texture = weapons/1handed/LockInASock,
+        attachment world
+        {
+            offset = 0.0 0.19 0.0,
+            rotate = 0.0 0.0 0.0,
+        }
+        attachment Bip01_Prop2
+        {
+            offset = -0.0073 -0.0017 0.0004,
+            rotate = 0.0 -86.9102 0.0,
+        }
+    }
+}

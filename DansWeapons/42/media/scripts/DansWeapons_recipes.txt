@@ -1,0 +1,166 @@
+module Base
+{
+    /* The game's taped and wired spears in one: the cleaver is the head (its
+       condition and edge carry over), the stick is the handle (its condition
+       carries over). No skill and nothing to learn, as with the taped spear. */
+    craftRecipe MakeHockeyStickCleaver
+    {
+        time = 400,
+        Tags = AnySurfaceCraft,
+        category = Weaponry,
+        NeedToBeLearn = false,
+        timedAction = CraftWeapon2H,
+        xpAward = Maintenance:10,
+        inputs
+        {
+            item 1 [Base.MeatCleaver] flags[IsHeadPart;InheritSharpness],
+            item 1 [Base.IceHockeyStick] flags[Prop2;InheritCondition],
+            item 2 [Base.DuctTape],
+            item 1 [Base.Wire;Base.ElectricWire],
+            item 1 tags[base:pliers] mode:keep flags[Prop1;MayDegradeLight],
+        }
+        outputs
+        {
+            item 1 Base.HockeyStickCleaver,
+        }
+    }
+
+    /* Cut the tape: the cleaver and the stick back, each with its own wear
+       (DansWeapons.dismantle). The tape and wire are lost. */
+    craftRecipe ReclaimFromHockeyStickCleaver
+    {
+        time = 60,
+        Tags = InHandCraft,
+        category = Assembly,
+        timedAction = CraftWeapon2H,
+        OnCreate = DansWeapons.dismantle,
+        inputs
+        {
+            item 1 [Base.HockeyStickCleaver] flags[Prop2;InheritSharpness],
+        }
+        outputs
+        {
+            item 1 Base.MeatCleaver,
+            item 1 Base.IceHockeyStick,
+        }
+    }
+
+    /* The pole is a long handle, or a broom or mop (its head comes off; taken
+       apart or broken it is a long handle from then on). */
+    craftRecipe MakeBreadKnifeGlaive
+    {
+        time = 300,
+        Tags = AnySurfaceCraft,
+        category = Weaponry,
+        NeedToBeLearn = false,
+        timedAction = CraftWeapon2H,
+        xpAward = Maintenance:10,
+        inputs
+        {
+            item 1 [Base.BreadKnife] flags[IsHeadPart],
+            item 1 [Base.LongHandle;Base.Broom;Base.Mop] flags[Prop2;InheritCondition],
+            item 2 [Base.DuctTape],
+        }
+        outputs
+        {
+            item 1 Base.BreadKnifeGlaive,
+        }
+    }
+
+    craftRecipe ReclaimFromBreadKnifeGlaive
+    {
+        time = 60,
+        Tags = InHandCraft,
+        category = Assembly,
+        timedAction = CraftWeapon2H,
+        OnCreate = DansWeapons.dismantle,
+        inputs
+        {
+            item 1 [Base.BreadKnifeGlaive] flags[Prop2],
+        }
+        outputs
+        {
+            item 1 Base.BreadKnife,
+            item 1 Base.LongHandle,
+        }
+    }
+
+    /* The club is a handle or a rolling pin. */
+    craftRecipe MakeCutleryMace
+    {
+        time = 400,
+        Tags = AnySurfaceCraft,
+        category = Weaponry,
+        NeedToBeLearn = false,
+        timedAction = CraftWeapon1H,
+        xpAward = Maintenance:10,
+        inputs
+        {
+            item 1 [Base.Handle;Base.RollingPin] flags[Prop2;InheritCondition],
+            item 3 [Base.Fork],
+            item 3 [Base.ButterKnife],
+            item 3 [Base.DuctTape],
+        }
+        outputs
+        {
+            item 1 Base.CutleryMace,
+        }
+    }
+
+    /* No tools, no surface: drop the padlock in and tie a knot. */
+    craftRecipe MakeLockInASock
+    {
+        time = 80,
+        Tags = InHandCraft,
+        category = Weaponry,
+        NeedToBeLearn = false,
+        timedAction = CraftWeapon1H,
+        inputs
+        {
+            item 1 [Base.Socks_Long;Base.Socks_Long_White;Base.Socks_Long_Black;Base.Socks_Heavy] flags[IsNotWorn],
+            item 1 [Base.Padlock],
+        }
+        outputs
+        {
+            item 1 Base.LockInASock,
+        }
+    }
+
+    craftRecipe ReclaimFromLockInASock
+    {
+        time = 40,
+        Tags = InHandCraft,
+        category = Assembly,
+        timedAction = CraftWeapon1H,
+        inputs
+        {
+            item 1 [Base.LockInASock] flags[Prop2],
+        }
+        outputs
+        {
+            item 1 Base.Padlock,
+            item 1 Base.Socks_Long,
+        }
+    }
+
+    /* The sock's wear carries over. */
+    craftRecipe MakeSockFlail
+    {
+        time = 200,
+        Tags = InHandCraft,
+        category = Weaponry,
+        NeedToBeLearn = false,
+        timedAction = CraftWeapon1H,
+        xpAward = Maintenance:5,
+        inputs
+        {
+            item 1 [Base.LockInASock] flags[Prop2;InheritCondition],
+            item 1 [Base.SmallHandle],
+            item 1 [Base.DuctTape],
+        }
+        outputs
+        {
+            item 1 Base.SockFlail,
+        }
+    }
+}

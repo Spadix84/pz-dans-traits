@@ -178,6 +178,74 @@ version of each entry (`workshop/changelog.txt`); this file has the detail.
   sets. Telemetry now carries `world` (skills by category, clock, speed, weather and any
   overrides held), `traitKeys`, and body temperature in `stats`.
 
+## Dan's Weapons 0.1.0 - unreleased (separate mod)
+
+- **A new mod, `DansWeapons/` (id `DansWeapons`): improvised weapons with their own
+  models.** The first is the **Hockey Stick Cleaver** (`Base.HockeyStickCleaver`): a meat
+  cleaver taped and wired to the far end of an ice hockey stick. Two-handed, bat swing,
+  Axe skill (`base:improvised;base:axe`): damage 0.7 to 1.4 (a hand axe is 0.7 to 1.5),
+  reach 1.45 (the bare stick 1.6, a fire axe 1.2), 2 hits, critical 15% x4, weight 2.5.
+  Two conditions like the game's knife spears: the stick's 8 (lowers 1 in 6) and the
+  cleaver's 10. Sharpenable, repaired with tape or glue, no tree felling, not in the loot.
+  - **Make** (`MakeHockeyStickCleaver`, Weaponry, any surface, no skill): an ice hockey
+    stick, a meat cleaver, 2 duct tape, 1 wire or electric wire, pliers kept. The stick's
+    condition and the cleaver's condition and edge carry over.
+  - **Take apart** (`ReclaimFromHockeyStickCleaver`, Assembly): the cleaver and the stick
+    back, each with its own wear (`DansWeapons.dismantleHockeyStickCleaver`).
+  - **Breaking** (`OnBreak.HockeyStickCleaver`): splinters, the cleaver dropped with the
+    head's condition, a broken long stick in the hands.
+  The model (168 triangles, one 256x256 texture) is scripted in `art/weapons/hockeycleaver/`
+  and written straight to the game's `.X` format; the icon is drawn by `make_icon.py`;
+  `art/weapons/install.py` copies both into the mod. The hand and ground attachments are
+  the fire axe's and have not been settled in game. Test `tests/test_weapons.lua` (the
+  test runner gained `readfile` for it); the lint and the API checks cover the mod;
+  `deploy.py --mod DansWeapons`. Spawned and used in game 2026-11-16: it sat right in the
+  hands.
+- **Four more, from household things** (2026-11-16; none run in game yet). All Weaponry
+  recipes with no skill and nothing to learn, and the three handle sizes are each a way
+  into one:
+  - **Bread Knife Glaive** (`Base.BreadKnifeGlaive`): a bread knife taped along the end of
+    a **long handle**, broom or mop (2 duct tape, any surface). Two-handed Long Blade
+    (`base:improvised;base:longblade`), 0.9 to 1.6 (a machete is 2.0 to 3.0), reach 1.5,
+    2 hits, critical 20% x4, pole condition 8 (1 in 6) and knife condition 8, weight 2.2.
+    Taken apart: the knife and a long handle. Broken: splinters, the knife, a broken long
+    handle.
+  - **Cutlery Mace** (`Base.CutleryMace`): 3 forks and 3 butter knives taped round the
+    head of a **handle** or a rolling pin (3 duct tape, any surface). One-handed Short
+    Blunt that draws blood, 0.6 to 1.1 (a nightstick), reach 1.1, condition 9 (1 in 8),
+    weight 1.8. Broken: splinters, one fork, one butter knife, the handle at zero.
+  - **Lock in a Sock** (`Base.LockInASock`): a padlock in a pair of long or heavy socks,
+    made in the hands with no tools. One-handed Short Blunt, 0.5 to 1.0 (a hammer), reach
+    0.95, swing time 2, one target, condition 5 (1 in 4), weight 0.5. Untied: the padlock
+    and the socks. Broken: the padlock drops, a rag in the hand.
+  - **Sock Flail** (`Base.SockFlail`): the lock in a sock taped over the end of a **small
+    handle** (1 duct tape, in the hands; the sock's wear carries over). 0.7 to 1.3, reach
+    1.15, swing time 3, condition 6 (1 in 5), weight 1.0. Broken: the padlock and the
+    small handle.
+  A weapon model is one rigid shape, so the sock is modelled mid-swing (pulled straight
+  by the padlock, a slight sag) rather than hanging. `DansWeapons.lua` now has one table,
+  `DansWeapons.PARTS` (head, shaft, what is left), behind every `OnBreak.<weapon>` and
+  one `DansWeapons.dismantle` for the reclaim recipes (the hockey stick cleaver's moved
+  to it). Art: `art/weapons/glaive`, `cutlerymace`, `sock` (two models, one texture), on
+  new shared helpers (`weapon_common.py`: `ring`, `Mesh.loft` for round and bent shafts,
+  `Mesh.plate` for thin sheets, `run`; `texture_common.py`; `icon_common.py`). The glaive
+  uses the cleaver's hand attachment, the one-handed three the rolling pin's.
+  `tests/test_weapons.lua` covers all five.
+- **Played, and a Workshop page** (2026-11-16). All five were spawned and used in game and
+  look and sit right in the hands. `workshop/weapons/` is the page, ready but not uploaded:
+  `description.txt` (4,295 of Steam's 8,000 characters), `workshop.txt` (title "Dan's
+  Weapons: Improvised Household Weapons", tags Build 42, Weapons, Items, Models, public),
+  and three pictures drawn by `make_images.py`: `preview.png` (256x256, also the mod's new
+  `42/poster.png`), `lineup.png` (the five from the side at one scale with damage, reach
+  and weight read from the item script) and `recipes.png` (a card each: what it is made
+  from, where, taken apart, when it breaks). The weapons in them are Blender renders of
+  the mod's own `.X` files and textures (`render_weapons.py`, transparent, denoised); the
+  script stops if a Make recipe no longer names what its card says. The page links the two
+  big pictures by raw GitHub address, so they need the push. `deploy.py` has the
+  `workshop` row: `python deploy.py --workshop DansWeapons` builds
+  `~/Zomboid/Workshop/DansWeapons`. `art/weapons/.gitignore` keeps the inspection renders
+  (`preview_*.png`, about 35 MB) out of git.
+
 ## Dan's Storage 0.1.0 - unreleased (separate mod)
 
 - **A new mod, `DansStorage/` (id `DansStorage`): shelves made for one thing.** Each is

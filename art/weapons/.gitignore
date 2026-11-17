@@ -1,0 +1,4 @@
+# inspection renders and contact sheets: each build script draws them again
+preview_*.png
+icon_preview*.png
+*.blend1

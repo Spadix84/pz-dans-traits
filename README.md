@@ -17,6 +17,7 @@ This repository holds the Vitality Project and six smaller mods from the same pr
 | **Vitality Appliances** | A countertop Slow Cooker with nine Kentucky recipes (its meals count as home cooking here) and a Brick Smoker built outdoors for smoked and smoke-dried meat and fish | [`VitalityAppliances/`](VitalityAppliances/), [API](VitalityAppliances/API.md), not yet on the Workshop under this name |
 | **Dan's Storage** | Shelves made for one thing, each showing how full it is: a water jug rack, a gas can shelf and a propane shelf | [`DansStorage/`](DansStorage/), in development |
 | **Historical Weather** | Knox County's real weather, day by day, from 9 July 1993 to 9 July 1995 (NOAA's Barbourville, KY record) | [`HistoricalWeather/`](HistoricalWeather/), in development |
+| **Dan's Weapons** | Improvised weapons with their own models, made from household things with no skill and little more than duct tape: Hockey Stick Cleaver, Bread Knife Glaive, Cutlery Mace, Lock in a Sock, Sock Flail | [`DansWeapons/`](DansWeapons/), Workshop page ready in `workshop/weapons/`, not yet uploaded |
 
 Other mods can build on the Vitality Project, Map Legend and Vitality Appliances: each ships an `API.md` and a `*_API.lua` loaded with `pcall(require, ...)` (the appliances have one each, `SlowCooker_API.lua` and `Smoker_API.lua`), so a mod runs with or without them.
 
